@@ -1,0 +1,1 @@
+# write output cambam files from the project object serially

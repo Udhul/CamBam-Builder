@@ -1,0 +1,1 @@
+# reader to import cambam files serially
