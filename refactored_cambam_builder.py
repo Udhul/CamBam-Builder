@@ -146,7 +146,27 @@ class BoundingBox:
         return BoundingBox(min_x, min_y, max_x, max_y)
 
 class XmlPrimitiveIdResolver:
-    """Helper class to resolve Primitive UUIDs/groups to integer XML IDs."""
+    """
+    Helper class to resolve Primitive UUIDs/groups to integer XML IDs.
+    
+    This class translates between the internal UUID-based identification system
+    and the integer IDs used in XML representations of primitives. It can resolve
+    either individual primitive UUIDs or named groups of primitives.
+    
+    Attributes:
+        _uuid_to_xml_id: Mapping from primitive UUIDs to their integer XML IDs
+        _primitive_groups: Mapping from group names to sets of primitive UUIDs
+        _all_primitives: Mapping from UUIDs to actual Primitive objects
+        
+    Usage:
+        resolver = XmlPrimitiveIdResolver(uuid_to_xml_id, primitive_groups, all_primitives)
+        
+        # Resolve a named group to XML IDs
+        xml_ids = resolver.resolve("outline_group")
+        
+        # Resolve a list of UUIDs to XML IDs
+        xml_ids = resolver.resolve([uuid1, uuid2, uuid3])
+    """
     def __init__(self,
                  uuid_to_xml_id: Dict[uuid.UUID, int],
                  primitive_groups: Dict[str, Set[uuid.UUID]],
@@ -156,6 +176,21 @@ class XmlPrimitiveIdResolver:
         self._all_primitives = all_primitives
 
     def resolve(self, pid_source: Union[str, List[uuid.UUID]]) -> List[int]:
+        """
+        Resolve primitive identifiers to their corresponding XML IDs.
+        
+        Args:
+            pid_source: Either a group name (str) or a list of primitive UUIDs
+            
+        Returns:
+            A sorted list of integer XML IDs corresponding to the primitives
+            
+        Notes:
+            - If a group name is provided but doesn't exist, a warning is logged
+            - If a UUID is provided but doesn't exist, a warning is logged
+            - If a UUID exists but has no XML ID mapping, an error is logged
+            - Returns an empty list if the input type is invalid
+        """
         primitive_uuids: Set[uuid.UUID] = set()
         if isinstance(pid_source, str):
             group_uuids = self._primitive_groups.get(pid_source)
@@ -182,9 +217,6 @@ class XmlPrimitiveIdResolver:
         return sorted(resolved_ids)
 
 # --- Base Classes ---
-
-Identifiable = Union[str, uuid.UUID, 'CamBamEntity']
-T = TypeVar('T', bound='CamBamEntity')
 
 @dataclass
 class CamBamEntity:
@@ -958,6 +990,7 @@ class DrillMop(Mop):
 
 # --- CamBamProject Class ---
 
+Identifiable = Union[str, uuid.UUID, CamBamEntity]
 T = TypeVar('T', bound=CamBamEntity)
 
 class CamBamProject:
