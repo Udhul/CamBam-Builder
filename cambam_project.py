@@ -15,7 +15,8 @@ import logging
 from copy import deepcopy
 from typing import Dict, List, Set, Tuple, Optional, Union, Type, TypeVar, Any
 
-from cad_transformations import translation_matrix, identity_matrix, rotation_matrix_deg
+from cad_transformations import (translation_matrix, identity_matrix, rotation_matrix_deg, 
+scale_matrix, mirror_x_matrix, mirror_y_matrix, skew_matrix, rotation_matrix_rad)
 from cambam_entities import (
     CamBamEntity, Layer, Part, Primitive, XmlPrimitiveIdResolver,
     Pline, Circle, Rect, Arc, Points, Text, Mop, ProfileMop, PocketMop, EngraveMop, DrillMop, BoundingBox
@@ -90,7 +91,7 @@ class CamBamProject:
         if layer:
             layer.primitive_ids.add(primitive.internal_id)
         else:
-            logger.error(f"Primitive {primitive.user_identifier} references non-existent layer.")
+            logger.error(f"Primitive {primitive.user_identifier} references non-existent layer {primitive.layer_id}.")
         if primitive.groups:
             for group_name in primitive.groups:
                 self._primitive_groups.setdefault(group_name, set()).add(primitive.internal_id)
@@ -276,9 +277,8 @@ class CamBamProject:
             if existing.internal_id not in self._part_order:
                 self._part_order.append(existing.internal_id)
             return existing
-        new_part = Part(user_identifier=identifier, enabled=enabled,
-                        stock_thickness=stock_thickness, stock_width=stock_width,
-                        stock_height=stock_height, stock_material=stock_material,
+        new_part = Part(user_identifier=identifier, enabled=enabled, stock_thickness=stock_thickness,
+                        stock_width=stock_width, stock_height=stock_height, stock_material=stock_material,
                         stock_color=stock_color, machining_origin=machining_origin,
                         default_tool_diameter=default_tool_diameter, default_spindle_speed=default_spindle_speed)
         self._register_entity(new_part, self._parts)
@@ -367,7 +367,7 @@ class CamBamProject:
         if isinstance(pid_source, str):
             resolved_pid_source = pid_source
         elif isinstance(pid_source, list):
-            resolved_pid_list = []
+            resolved_pid_list: List[uuid.UUID] = []
             for item in pid_source:
                 uid = self._resolve_identifier(item, Primitive)
                 if uid:
@@ -376,7 +376,7 @@ class CamBamProject:
                     logger.warning(f"Could not resolve primitive identifier '{item}' for MOP '{name}'.")
             resolved_pid_source = resolved_pid_list
         else:
-            raise TypeError(f"Invalid pid_source type for MOP '{name}'.")
+            raise TypeError(f"Invalid pid_source type for MOP '{name}': {type(pid_source)}")
         mop_id = identifier if identifier else f"{name}_{uuid.uuid4().hex[:6]}"
         mop = MopClass(user_identifier=mop_id, part_id=part.internal_id,
                        pid_source=resolved_pid_source, name=name, **kwargs)
@@ -439,12 +439,305 @@ class CamBamProject:
             try:
                 center_x, center_y = primitive.get_geometric_center()
             except Exception as e:
-                logger.error(f"Cannot calculate center for {primitive.user_identifier}: {e}")
+                logger.error(f"Could not calculate geometric center for {primitive.user_identifier}: {e}")
                 return False
         else:
             center_x, center_y = cx, cy
         rot_mat = rotation_matrix_deg(angle_deg, center_x, center_y)
         return self.transform_primitive_globally(primitive_identifier, rot_mat, bake=bake)
+
+    # --- Additional Transformation Methods for Primitives ---
+    
+    def scale_primitive(self, primitive_identifier: Identifiable, sx: float, sy: Optional[float] = None, 
+                         cx: Optional[float] = None, cy: Optional[float] = None, bake: bool = False) -> bool:
+        """
+        Scale a primitive by the given factors.
+        
+        Args:
+            primitive_identifier: Identifier of the primitive to scale
+            sx: Scale factor in X direction
+            sy: Scale factor in Y direction (if None, uses sx for uniform scaling)
+            cx: X coordinate of scaling center (if None, uses primitive's geometric center)
+            cy: Y coordinate of scaling center (if None, uses primitive's geometric center)
+            bake: Whether to bake the transformation into the geometry
+            
+        Returns:
+            Success status
+        """
+        primitive = self._resolve_primitive(primitive_identifier)
+        if not primitive:
+            return False
+            
+        if cx is None or cy is None:
+            try:
+                center_x, center_y = primitive.get_geometric_center()
+            except Exception as e:
+                logger.error(f"Could not calculate geometric center for {primitive.user_identifier}: {e}")
+                return False
+        else:
+            center_x, center_y = cx, cy
+            
+        scale_mat = scale_matrix(sx, sy, center_x, center_y)
+        return self.transform_primitive_globally(primitive_identifier, scale_mat, bake=bake)
+    
+    def mirror_primitive_x(self, primitive_identifier: Identifiable, cy: Optional[float] = None, 
+                            bake: bool = False) -> bool:
+        """
+        Mirror a primitive across a horizontal line.
+        
+        Args:
+            primitive_identifier: Identifier of the primitive to mirror
+            cy: Y coordinate of the mirror line (if None, uses primitive's center Y)
+            bake: Whether to bake the transformation into the geometry
+            
+        Returns:
+            Success status
+        """
+        primitive = self._resolve_primitive(primitive_identifier)
+        if not primitive:
+            return False
+            
+        if cy is None:
+            try:
+                _, center_y = primitive.get_geometric_center()
+                cy = center_y
+            except Exception as e:
+                logger.error(f"Could not calculate geometric center for {primitive.user_identifier}: {e}")
+                return False
+                
+        mirror_mat = mirror_x_matrix(cy)
+        return self.transform_primitive_globally(primitive_identifier, mirror_mat, bake=bake)
+    
+    def mirror_primitive_y(self, primitive_identifier: Identifiable, cx: Optional[float] = None, 
+                            bake: bool = False) -> bool:
+        """
+        Mirror a primitive across a vertical line.
+        
+        Args:
+            primitive_identifier: Identifier of the primitive to mirror
+            cx: X coordinate of the mirror line (if None, uses primitive's center X)
+            bake: Whether to bake the transformation into the geometry
+            
+        Returns:
+            Success status
+        """
+        primitive = self._resolve_primitive(primitive_identifier)
+        if not primitive:
+            return False
+            
+        if cx is None:
+            try:
+                center_x, _ = primitive.get_geometric_center()
+                cx = center_x
+            except Exception as e:
+                logger.error(f"Could not calculate geometric center for {primitive.user_identifier}: {e}")
+                return False
+                
+        mirror_mat = mirror_y_matrix(cx)
+        return self.transform_primitive_globally(primitive_identifier, mirror_mat, bake=bake)
+    
+    def skew_primitive(self, primitive_identifier: Identifiable, angle_x_deg: float = 0.0, 
+                         angle_y_deg: float = 0.0, bake: bool = False) -> bool:
+        """
+        Apply skew (shear) transformation to a primitive.
+        
+        Args:
+            primitive_identifier: Identifier of the primitive to skew
+            angle_x_deg: Skew angle in X direction (degrees)
+            angle_y_deg: Skew angle in Y direction (degrees)
+            bake: Whether to bake the transformation into the geometry
+            
+        Returns:
+            Success status
+        """
+        skew_mat = skew_matrix(angle_x_deg, angle_y_deg)
+        return self.transform_primitive_globally(primitive_identifier, skew_mat, bake=bake)
+    
+    def rotate_primitive_rad(self, primitive_identifier: Identifiable, angle_rad: float, 
+                               cx: Optional[float] = None, cy: Optional[float] = None, 
+                               bake: bool = False) -> bool:
+        """
+        Rotate a primitive by the given angle in radians.
+        
+        Args:
+            primitive_identifier: Identifier of the primitive to rotate
+            angle_rad: Rotation angle in radians (positive is counterclockwise)
+            cx: X coordinate of rotation center (if None, uses primitive's geometric center)
+            cy: Y coordinate of rotation center (if None, uses primitive's geometric center)
+            bake: Whether to bake the transformation into the geometry
+            
+        Returns:
+            Success status
+        """
+        primitive = self._resolve_primitive(primitive_identifier)
+        if not primitive:
+            return False
+            
+        if cx is None or cy is None:
+            try:
+                center_x, center_y = primitive.get_geometric_center()
+            except Exception as e:
+                logger.error(f"Could not calculate geometric center for {primitive.user_identifier}: {e}")
+                return False
+        else:
+            center_x, center_y = cx, cy
+            
+        rot_mat = rotation_matrix_rad(angle_rad, center_x, center_y)
+        return self.transform_primitive_globally(primitive_identifier, rot_mat, bake=bake)
+    
+    def align_primitive(self, primitive_identifier: Identifiable, 
+                         reference_identifier: Identifiable,
+                         alignment: str = "center", 
+                         offset_x: float = 0.0, offset_y: float = 0.0) -> bool:
+        """
+        Align a primitive to a reference primitive.
+        
+        Args:
+            primitive_identifier: Identifier of the primitive to align
+            reference_identifier: Identifier of the reference primitive
+            alignment: Alignment type ("center", "top", "bottom", "left", "right",
+                      "top-left", "top-right", "bottom-left", "bottom-right")
+            offset_x: Additional X offset after alignment
+            offset_y: Additional Y offset after alignment
+            
+        Returns:
+            Success status
+        """
+        primitive = self._resolve_primitive(primitive_identifier)
+        reference = self._resolve_primitive(reference_identifier)
+        
+        if not primitive or not reference:
+            return False
+            
+        try:
+            primitive_bbox = primitive.get_bounding_box()
+            reference_bbox = reference.get_bounding_box()
+            
+            if not primitive_bbox.is_valid() or not reference_bbox.is_valid():
+                logger.error("Cannot align primitives with invalid bounding boxes")
+                return False
+                
+            tx, ty = 0.0, 0.0
+            
+            # Horizontal alignment
+            if alignment in ["left", "top-left", "bottom-left"]:
+                tx = reference_bbox.min_x - primitive_bbox.min_x
+            elif alignment in ["right", "top-right", "bottom-right"]:
+                tx = reference_bbox.max_x - primitive_bbox.max_x
+            elif "center" in alignment or alignment in ["top", "bottom"]:
+                tx = (reference_bbox.min_x + reference_bbox.max_x)/2 - (primitive_bbox.min_x + primitive_bbox.max_x)/2
+                
+            # Vertical alignment
+            if alignment in ["top", "top-left", "top-right"]:
+                ty = reference_bbox.max_y - primitive_bbox.max_y
+            elif alignment in ["bottom", "bottom-left", "bottom-right"]:
+                ty = reference_bbox.min_y - primitive_bbox.min_y
+            elif "center" in alignment or alignment in ["left", "right"]:
+                ty = (reference_bbox.min_y + reference_bbox.max_y)/2 - (primitive_bbox.min_y + primitive_bbox.max_y)/2
+                
+            # Apply additional offset
+            tx += offset_x
+            ty += offset_y
+            
+            # Translate the primitive
+            return self.translate_primitive(primitive_identifier, tx, ty)
+                
+        except Exception as e:
+            logger.error(f"Error aligning primitives: {e}")
+            return False
+    
+    def distribute_primitives(self, primitive_identifiers: List[Identifiable], 
+                               direction: str = "horizontal",
+                               spacing: Optional[float] = None,
+                               equal_spacing: bool = True) -> bool:
+        """
+        Distribute primitives evenly along a direction.
+        
+        Args:
+            primitive_identifiers: List of primitives to distribute
+            direction: "horizontal" or "vertical"
+            spacing: Fixed spacing between primitives (if equal_spacing is False)
+            equal_spacing: Whether to distribute with equal spacing
+            
+        Returns:
+            Success status
+        """
+        if len(primitive_identifiers) < 2:
+            return True  # Nothing to distribute
+            
+        primitives = []
+        for pid in primitive_identifiers:
+            prim = self._resolve_primitive(pid)
+            if prim:
+                primitives.append(prim)
+                
+        if len(primitives) < 2:
+            return False
+            
+        try:
+            # Sort primitives by position
+            if direction == "horizontal":
+                primitives.sort(key=lambda p: p.get_bounding_box().min_x)
+            else:  # vertical
+                primitives.sort(key=lambda p: p.get_bounding_box().min_y)
+                
+            first = primitives[0]
+            last = primitives[-1]
+            first_bbox = first.get_bounding_box()
+            last_bbox = last.get_bounding_box()
+            
+            if equal_spacing:
+                # Calculate total available space
+                if direction == "horizontal":
+                    total_space = last_bbox.min_x - first_bbox.max_x
+                    for p in primitives[1:-1]:
+                        total_space -= (p.get_bounding_box().max_x - p.get_bounding_box().min_x)
+                else:  # vertical
+                    total_space = last_bbox.min_y - first_bbox.max_y
+                    for p in primitives[1:-1]:
+                        total_space -= (p.get_bounding_box().max_y - p.get_bounding_box().min_y)
+                
+                # Calculate equal spacing
+                equal_gap = total_space / (len(primitives) - 1)
+                
+                # Position each primitive
+                current_pos = first_bbox.max_x if direction == "horizontal" else first_bbox.max_y
+                for i, p in enumerate(primitives[1:-1], 1):
+                    p_bbox = p.get_bounding_box()
+                    if direction == "horizontal":
+                        target_pos = current_pos + equal_gap
+                        delta_x = target_pos - p_bbox.min_x
+                        self.translate_primitive(p, delta_x, 0)
+                        current_pos = p_bbox.min_x + delta_x + (p_bbox.max_x - p_bbox.min_x)
+                    else:  # vertical
+                        target_pos = current_pos + equal_gap
+                        delta_y = target_pos - p_bbox.min_y
+                        self.translate_primitive(p, 0, delta_y)
+                        current_pos = p_bbox.min_y + delta_y + (p_bbox.max_y - p_bbox.min_y)
+            else:
+                # Use fixed spacing
+                if spacing is None:
+                    spacing = 10.0  # Default spacing
+                    
+                current_pos = first_bbox.max_x if direction == "horizontal" else first_bbox.max_y
+                for p in primitives[1:]:
+                    p_bbox = p.get_bounding_box()
+                    if direction == "horizontal":
+                        target_pos = current_pos + spacing
+                        delta_x = target_pos - p_bbox.min_x
+                        self.translate_primitive(p, delta_x, 0)
+                        current_pos = p_bbox.min_x + delta_x + (p_bbox.max_x - p_bbox.min_x)
+                    else:  # vertical
+                        target_pos = current_pos + spacing
+                        delta_y = target_pos - p_bbox.min_y
+                        self.translate_primitive(p, 0, delta_y)
+                        current_pos = p_bbox.min_y + delta_y + (p_bbox.max_y - p_bbox.min_y)
+                        
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error distributing primitives: {e}")
+            return False
 
     # --- Copy/Transfer Methods ---
 
@@ -498,7 +791,7 @@ class CamBamProject:
     def remove_mop(self, mop_identifier: Identifiable) -> bool:
         uid = self._resolve_identifier(mop_identifier, Mop)
         if not uid:
-            logger.error(f"MOP '{mop_identifier}' not found for removal.")
+            logger.error(f"Cannot remove: MOP '{mop_identifier}' not found.")
             return False
         mop = self._mops.pop(uid, None)
         if mop:
@@ -517,7 +810,7 @@ class CamBamProject:
         layer = self.get_layer(uid)
         if not layer:
             return False
-        target_layer = None
+        target_layer: Optional[Layer] = None
         if transfer_primitives_to:
             target_layer = self.get_layer_by_identifier(transfer_primitives_to)
             if not target_layer:

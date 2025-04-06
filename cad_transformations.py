@@ -117,7 +117,7 @@ def to_4x4_matrix(matrix: np.ndarray) -> np.ndarray:
 def to_cambam_matrix(matrix_3x3: np.ndarray) -> str:
     """
     Convert a 3x3 transformation matrix to a CamBam XML 4x4 matrix string.
-    The CamBam format expects a 4x4 matrix in column‐major order.
+    The CamBam format expects a 4x4 matrix in column-major order.
     """
     tx = matrix_3x3[0, 2]
     ty = matrix_3x3[1, 2]

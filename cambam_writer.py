@@ -20,8 +20,8 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
     # 1. Assign XML primitive IDs
     uuid_to_xml_id: Dict[uuid.UUID, int] = {}
     xml_id_counter = 1
-    sorted_ids = sorted(project._primitives.keys(), key=lambda u: u.int)
-    for uid in sorted_ids:
+    sorted_primitive_ids = sorted(project._primitives.keys(), key=lambda u: u.int)
+    for uid in sorted_primitive_ids:
         uuid_to_xml_id[uid] = xml_id_counter
         xml_id_counter += 1
 
@@ -47,13 +47,13 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
     for lid, layer in project._layers.items():
         layer_elem = layer.to_xml_element()
         layers_container.append(layer_elem)
-        if layer._xml_objects_element is not None:
-            layer_objects_map[lid] = layer._xml_objects_element
-        else:
-            logger.error(f"Layer {layer.user_identifier} missing objects element.")
+        if layer._xml_objects_element is None:
+            logger.error(f"Layer {layer.user_identifier} missing objects element; re-creating container.")
+            layer._xml_objects_element = ET.SubElement(layer_elem, "objects")
+        layer_objects_map[lid] = layer._xml_objects_element
 
     # 5. Build Primitives (place primitives in the correct layer container)
-    for uid in sorted_ids:
+    for uid in sorted_primitive_ids:
         primitive = project.get_primitive(uid)
         if not primitive:
             continue
@@ -63,13 +63,21 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
         except Exception as e:
             logger.error(f"Error building XML for primitive {primitive.user_identifier}: {e}")
             continue
-        layer_container = layer_objects_map.get(primitive.layer_id)
-        if layer_container:
-            layer_container.append(prim_elem)
-        else:
-            logger.error(f"Layer container not found for primitive {primitive.user_identifier}.")
-            if layer_objects_map:
-                next(iter(layer_objects_map.values())).append(prim_elem)
+        # Get container from primitive.layer_id.
+        container = layer_objects_map.get(primitive.layer_id)
+        if container is None:
+            # Attempt to re-create container if missing.
+            layer_obj = project.get_layer(primitive.layer_id)
+            if layer_obj:
+                layer_elem = layer_obj.to_xml_element()
+                layers_container.append(layer_elem)
+                container = layer_obj._xml_objects_element
+                layer_objects_map[primitive.layer_id] = container
+                logger.info(f"Re-created container for layer {layer_obj.user_identifier}.")
+            else:
+                logger.error(f"Layer container not found for primitive {primitive.user_identifier}.")
+                continue
+        container.append(prim_elem)
 
     # 6. Build Parts structure
     parts_container = ET.SubElement(root, "parts")
@@ -77,10 +85,10 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
     for pid, part in project._parts.items():
         part_elem = part.to_xml_element()
         parts_container.append(part_elem)
-        if part._xml_machineops_element is not None:
-            part_machineops_map[pid] = part._xml_machineops_element
-        else:
-            logger.error(f"Part {part.user_identifier} missing machineops element.")
+        if part._xml_machineops_element is None:
+            logger.error(f"Part {part.user_identifier} missing machineops element; re-creating.")
+            part._xml_machineops_element = ET.SubElement(part_elem, "machineops")
+        part_machineops_map[pid] = part._xml_machineops_element
 
     # 7. Build MOPs (placed in correct part)
     resolver = XmlPrimitiveIdResolver(uuid_to_xml_id, project._primitive_groups, project._primitives)

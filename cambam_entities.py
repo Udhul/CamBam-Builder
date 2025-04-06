@@ -176,12 +176,12 @@ class Part(CamBamEntity):
 class Primitive(CamBamEntity, ABC):
     """
     Abstract Base Class for geometric primitives.
-    Assignment properties are decoupled as separate attributes.
+    Assignment properties are stored in separate attributes.
     """
     layer_id: uuid.UUID = field(kw_only=True)
     groups: List[str] = field(default_factory=list)
-    description: str = ""                  # Free-text description
-    assigned_mops: List[str] = field(default_factory=list)  # Mop assignments
+    description: str = ""         # Free-text description
+    mop_ids: List[uuid.UUID] = field(default_factory=list)  # Associated MOPs (by UUID)
     effective_transform: np.ndarray = field(default_factory=identity_matrix)
     parent_primitive_id: Optional[uuid.UUID] = None
     _child_primitive_ids: Set[uuid.UUID] = field(default_factory=set, init=False, repr=False)
@@ -257,13 +257,12 @@ class Primitive(CamBamEntity, ABC):
 
     def _add_common_xml_attributes(self, element: ET.Element, xml_primitive_id: int):
         element.set("id", str(xml_primitive_id))
-        # Save structured classification data
         tag_data = {
+            "user_id": self.user_identifier,
+            "internal_id": str(self.internal_id),
             "groups": self.groups,
-            "description": self.description,
-            "assigned_mops": self.assigned_mops,
-            "layer": str(self.layer_id),
             "parent": str(self.parent_primitive_id) if self.parent_primitive_id else None,
+            "description": self.description
         }
         ET.SubElement(element, "Tag").text = json.dumps(tag_data)
 
@@ -562,7 +561,9 @@ M = TypeVar('M', bound='Mop')
 
 @dataclass
 class Mop(CamBamEntity, ABC):
-    """Abstract Base Class for machine operations."""
+    """
+    Abstract Base Class for Machine Operations.
+    """
     part_id: uuid.UUID = field(kw_only=True)
     name: str = field(kw_only=True)
     pid_source: Union[str, List[uuid.UUID]] = field(kw_only=True)
