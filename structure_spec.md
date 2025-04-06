@@ -1,170 +1,183 @@
 # CamBam CAD/CAM Framework – Fundamental Project Structure Specification
 
-This specification outlines the design and core architecture of the CamBam CAD/CAM project management framework. Its primary goals are to provide a robust, decoupled management of entities and their relationships while allowing for transformation propagation through linked entities and seamless serialization between CamBam XML files and project objects.
+This specification describes the core architecture for the CamBam CAD/CAM framework. It explains how the project manages its entities, stores relationships, and enables robust serialization and transferring between projects. The focus is on the management of assignments and relationships, while the fine‐grained transformation functions (although supported) are abstracted away.
 
 ---
 
 ## 1. Overview
 
-The framework is designed to support the creation and manipulation of CamBam projects through a central project class. It manages multiple entity types:
-- **Layers:** Represent drawing canvases in which primitives reside.
-- **Parts:** Define machining parts, including their stock dimensions and associated machine operations.
-- **Primitives:** Basic geometric entities (such as lines, circles, rectangles, arcs, text, etc.) that are drawn on layers.
-- **MOPs (Machine Operations):** Represent machining instructions that reference primitives (via groups or direct identifiers).
-
-At the heart of the framework is the **Project Manager (CamBamProject)**, which maintains registries for all entities, provides robust reference resolution, and supports operations such as adding, removing, copying, and transferring entities.
+The framework is built around a central **Project Manager** (the `CamBamProject` class) which:
+- Maintains registries for all entities: layers, parts, primitives, and machine operations (MOPs).
+- Provides robust reference resolution so that every entity may be referenced by its object instance, unique UUID, or a user-friendly identifier (user ID).
+- Manages relationships between entities such as:
+  - **Layer assignment:** Each primitive stores a `layer_id` (a UUID or unique layer name) that determines its placement.
+  - **MOP assignment:** Primitives store a list of MOP associations in an attribute (e.g. `mop_ids`) using UUIDs.
+  - **Parent/Child Linking:** Primitives can be linked together; a primitive may have a parent (stored as `parent_primitive_id`) and a list of child IDs is maintained. This supports hierarchical relationships and transformation propagation.
+- Supports transferring or copying entire linked trees of primitives between projects.
+- Provides serialization through both a native pickled object and an XML format that is compatible with external CamBam files.
 
 ---
 
-## 2. Entity and Relationship Model
+## 2. Entity Model and Relationship Management
 
-### 2.1 Entities
+### 2.1 Core Entity Types
 
 - **CamBamEntity (Base Class):**  
-  Every entity (layer, part, primitive, MOP) inherits from a common base that defines:
-  - **Internal ID:** A unique UUID that serves as the primary key.
-  - **User Identifier:** A human-friendly string identifier.  
-  This base class ensures that each entity can be referenced unambiguously throughout the project.
-
+  - Every entity has:
+    - An **internal ID** (a UUID) used as the primary key.
+    - A **user identifier** (a human-friendly string) which must be unique within the project.
+  
 - **Layer:**  
-  - **Purpose:** Serves as the container for primitives.  
-  - **Attributes:**  
-    - `color`, `alpha`, `pen_width`, `visible`, `locked`
-    - **Primitive IDs:** A set of UUIDs corresponding to the primitives assigned to this layer.
-  - **Linking:**  
-    - When a primitive is created and assigned a layer, its `layer_id` stores the UUID of that layer.  
-    - The project registers the layer and its ordering so that XML output places primitives into the proper container.
+  - **Purpose:** Acts as a drawing canvas; primitives are ultimately placed on layers.
+  - **Assignment:**  
+    - A primitive’s layer is determined solely by its `layer_id`.  
+    - Layers themselves are registered in the project with unique names.
+  - **Runtime Behavior:**  
+    - During XML file generation, the project iterates over the unique layer assignments and builds a container for each layer.
+    - If a primitive references a layer that is not found (by its UUID or name), the project automatically creates a new layer using that name.
 
 - **Part:**  
-  - **Purpose:** Represents a machining part.  
-  - **Attributes:**  
-    - Stock dimensions, machining origin, and default parameters (such as tool diameter and spindle speed).
-    - **MOP IDs:** A list of UUIDs that reference the machine operations associated with the part.
-
+  - **Purpose:** Represents a machining part with stock definitions and default machining parameters.
+  - **Assignment:**  
+    - A part maintains a list of MOP associations.
+  
 - **Primitive (Abstract Base Class):**  
-  - **Purpose:** Represents a drawable geometric entity.  
-  - **Key Assignment Attributes:**  
-    - `layer_id`: The UUID of the layer on which the primitive is drawn.
-    - `groups`: A list of group names for classification.
-    - `description`: Free-text description.
-    - `mop_ids`: A list of UUIDs referencing the associated MOPs (if any).
-    - `parent_primitive_id`: Optional UUID of a parent primitive (used to define hierarchical, linked structures).
-  - **Linking:**  
-    - **Parent/Child Relationship:**  
-      - Each primitive may have a parent.  
-      - When a primitive is created with a parent, it stores the parent’s UUID in `parent_primitive_id` and registers its own UUID in the parent’s child list.
-    - **Transformation Propagation (Conceptual):**  
-      - Although transformation methods are defined on primitives, the design requires that when a transformation is applied to a parent, the change propagates recursively to all linked child primitives.
+  - **Purpose:** Represents a geometric element (line, circle, rectangle, arc, text, etc.).
+  - **Assignment Attributes:**  
+    - `layer_id`: Stores the UUID (or unique name) of the layer where the primitive belongs.
+    - `mop_ids`: A list of UUIDs that indicate which machine operations (MOPs) should process this primitive.
+    - `groups`: A list of group names used for organizational or filtering purposes.
+    - `description`: A free-text description.
+    - `parent_primitive_id`: A UUID linking to a parent primitive (if any).
+  - **Linking and Propagation:**  
+    - When a primitive is created with a parent, the project updates both the primitive’s `parent_primitive_id` and adds its UUID to the parent’s child list.
+    - **Transformation Propagation:**  
+      - While transformation methods may be called at the project level, when a transformation is applied to a parent, the system recursively updates all linked children based on their stored relationships.
   - **Serialization:**  
-    - When generating XML, each primitive outputs a `<Tag>` element that stores a JSON object with:
+    - When generating the XML file, each primitive writes a `<Tag>` element. This element contains a JSON object with:
       - `user_id`: The user-friendly identifier.
-      - `internal_id`: The UUID.
-      - `groups`: The list of groups.
-      - `parent`: The parent primitive’s UUID (if any).
+      - `internal_id`: The entity’s UUID.
+      - `groups`: The groups to which it belongs.
+      - `parent`: The parent primitive’s UUID (or null).
       - `description`: The free-text description.
-    - The layer assignment is implicit via the placement of the primitive XML in the correct layer container.
-  
+    - The layer association is maintained via the placement of the primitive in the layer container rather than within the tag.
+
 - **MOP (Machine Operation, Abstract Base Class):**  
-  - **Purpose:** Represents machining instructions that reference primitives.
-  - **Attributes:**  
-    - `pid_source`: A reference (either a group name or a list of primitive UUIDs) that indicates which primitives are targeted.
-    - Additional machining parameters.
-  - **Linking:**  
-    - The association between MOPs and primitives is established indirectly: primitives are classified into groups and/or directly referenced via UUIDs. The XML writer uses this information to list the primitives under each MOP.
-  
+  - **Purpose:** Represents machining operations that reference primitives.
+  - **Assignment:**  
+    - A MOP does not directly store a list of primitives; instead, primitives reference the MOPs they belong to via their `mop_ids`.
+    - At file build time, the project reconciles which primitives are associated with which MOPs based on groups and direct references.
+  - **Fallback Mechanism:**  
+    - If a MOP referenced by a primitive is not found, the system can create a disabled dummy part and a dummy MOP so that the error is visible in the output.
+
 ---
 
 ## 3. Project Management Structure
 
-### 3.1 Central Project Object
+### 3.1 CamBamProject Object
 
-- **CamBamProject:**  
-  This object is the central manager and contains:
-  - **Registries:**  
-    - Dictionaries mapping UUIDs to entities (primitives, layers, parts, MOPs).
-    - An identifier registry mapping user-friendly names to UUIDs.
-    - A grouping registry for primitives (to support MOP lookup via group names).
-  - **Entity Order Lists:**  
-    - Lists to preserve the ordering of layers and parts for XML output.
-  - **Transformation Context:**  
-    - A stack of transformation matrices used to compute the effective transformation for newly created primitives.
-  - **Cursor Position:**  
-    - A global offset (cursor) used when creating primitives.
-  
+The `CamBamProject` class serves as the central hub for the framework. It is responsible for:
+- **Registries:**  
+  - Maintaining dictionaries (registries) for layers, parts, primitives, and MOPs, keyed by their UUIDs.
+  - An identifier registry mapping user-friendly names (IDs) to UUIDs.
+  - A grouping registry that maps group names to sets of primitive UUIDs.
+- **Entity Relationships:**  
+  - Keeping track of which primitives belong to which layers.  
+    - When a primitive is created or its layer assignment is updated via project methods, the project updates the primitive’s `layer_id` and the corresponding layer registry.
+  - Maintaining parent/child relationships for primitives.
+    - Helper methods update both the source object (by setting `parent_primitive_id` and updating the child list) and the project registry.
+  - Managing MOP assignments.
+    - Primitives store a list of MOP UUIDs. The project holds a registry of MOPs and, when building the XML, uses the project-level associations to assign primitives to MOPs.
+    - If a referenced MOP is not found, a dummy (disabled) part and MOP are created.
+- **Transformation Context:**  
+  - A stack of transformation matrices is maintained at the project level.
+  - When a transformation is applied to a primitive (via a project method), the project consults the registry for any linked child primitives and propagates the change recursively.
 - **Entity Creation and Lookup:**  
-  - **Reference Resolution:**  
-    - Methods (e.g., `_resolve_identifier`) allow the project to accept references as an object, a UUID, or a user-friendly string.
-  - **Creation Methods:**  
-    - Methods such as `add_layer`, `add_part`, and `add_rect` create new entities, register them in the project, and set assignment attributes (e.g., storing the correct `layer_id`).
-  - **Linking and Parent/Child Management:**  
-    - When a primitive is added with a parent reference, the project updates the primitive’s `parent_primitive_id` and adds the primitive’s UUID to the parent’s child list.
-  - **Copy and Transfer:**  
-    - Methods allow for recursively copying a primitive along with its entire child tree. This ensures that, when transferring between projects, the complete linked structure is maintained.
+  - All creation methods (e.g., `add_layer`, `add_part`, `add_rect`, etc.) ensure that entities are registered with correct assignments.
+  - The project provides a resolver that accepts an entity reference as an object, UUID, or user-friendly identifier.
+- **Copying and Transferring:**  
+  - The project supports copying an entire primitive tree (a primitive plus all its linked children) and transferring the tree to another project while preserving relative relationships.
   
-### 3.2 Decoupling Assignments from Transformation Logic
+### 3.2 Decoupled Assignment Updates
 
-- **Separation of Concerns:**  
-  - The project object manages assignments (layer, part, groups, MOPs) and linking independently from the transformation operations.
-  - Transformation methods are defined on the primitive base class and are responsible for updating the effective transformation matrix. They are designed to also trigger updates (or “baking”) on all linked children.
-- **Link Propagation:**  
-  - The parent/child relationship is maintained as a set of child UUIDs on each primitive. When a transformation is applied to a parent, the propagation method ensures that each child’s transformation is updated consistently.
-- **Serialization Considerations:**  
-  - During XML output, the linking information is encoded in the `<Tag>` element.  
-  - When transferring a primitive between projects, the entire linked tree is processed, reassigning new UUIDs as needed, while preserving the relative linking structure.
-  
+Relationship updates are managed by helper methods that update both the object and the project registries:
+- **Layer Assignment:**  
+  - When a primitive is created or its layer is changed, the project updates the primitive’s `layer_id` and, if needed, registers the primitive under the corresponding layer in the project registry.
+  - At file build time, the project iterates over all unique layers and assigns primitives based on their `layer_id`.
+- **MOP Assignment:**  
+  - Primitives store MOP assignment in the `mop_ids` attribute.
+  - The project maintains a registry of MOPs and, during file generation, places primitive references (as integer XML IDs) under the appropriate MOP element.
+  - Helper methods allow adding or removing MOP associations for a primitive.
+- **Parent/Child Links:**  
+  - When a primitive is created with a parent reference, the project records the link by storing the parent's UUID in `parent_primitive_id` and adding the child's UUID to the parent's child list.
+  - Transformation propagation and copying methods use these links to recursively affect all children.
+
 ---
 
-## 4. Serialization and Transfer
+## 4. Serialization and File Building
 
 ### 4.1 XML Serialization
 
-- **XML Structure:**  
-  - **Layer Containers:**  
-    - Each layer’s XML container is built from the layer registry.  
-    - Primitives are placed into the container corresponding to their `layer_id`.
-  - **Primitive Tagging:**  
-    - Each primitive outputs a `<Tag>` element containing a JSON object with:
-      - `user_id`, `internal_id`, `groups`, `parent`, and `description`
-    - The association to MOPs is not directly encoded here since primitives are later associated with MOPs based on groups or direct references.
-  - **Parts and MOPs:**  
-    - Parts are output with their associated machine operations.  
-    - MOPs include references to primitives via the previously established identifier or group linkage.
+The system supports generating a complete CamBam XML file from a project:
+- **Layer Containers:**  
+  - The XML writer module iterates over the layer registry. Each layer produces an XML container (e.g., a `<layer>` element with an `<objects>` subelement).
+  - Primitives are placed into these containers by matching their stored `layer_id` (which is a UUID or unique layer name).
+  - If a primitive’s layer is not found in the registry, the project creates a new layer (using the primitive’s stored layer name) to ensure that every primitive is output.
+- **Primitive Tagging:**  
+  - Each primitive outputs a `<Tag>` element that stores a JSON object with keys:
+    - `user_id`
+    - `internal_id`
+    - `groups`
+    - `parent`
+    - `description`
+- **Part and MOP Structure:**  
+  - Parts are output in a `<parts>` element.
+  - Each part contains a `<machineops>` container in which MOPs are listed.
+  - Under each MOP element, there is a `<primitive>` element listing the XML IDs (as integers) of the primitives associated with that MOP.
+- **Reconstruction:**  
+  - The reader module (or a separate import process) is designed to reconstruct a CamBamProject object by:
+    - Iterating over layers to extract primitives (and reading the `<Tag>` JSON to recover user_id, internal_id, groups, parent, description).
+    - Iterating over parts and MOPs to rebuild MOP associations.
+  - This process reverses the file‐writing procedure so that a project can be rebuilt even from a CamBam file not produced by this framework.
 
 ### 4.2 Pickle Serialization
 
-- **Project State Saving:**  
-  - The project object can be serialized using Python’s pickle mechanism.
-  - Custom `__getstate__` and `__setstate__` methods in primitives and other entities ensure that non-serializable attributes (like weak references) are excluded.
+- **Native Serialization:**  
+  - The project can also be serialized using Python’s pickle mechanism.
+  - Custom state methods ensure that non-serializable attributes (e.g. weak references) are removed before pickling.
   
 ### 4.3 Transferring Entities Between Projects
 
-- **Inter-Project Transfer:**  
-  - When a primitive (and its linked children) is transferred from one project to another, the entire tree is copied.  
-  - The project’s copy/transfer methods reassign new UUIDs where necessary while maintaining relative parent/child relationships.
-  - The linking data stored in the XML `<Tag>` element enables reconstructing these relationships when importing a CamBam file.
+- **Linked Primitive Transfer:**  
+  - The framework supports copying (or transferring) an entire tree of linked primitives.
+  - The project-level transfer method reassigns new UUIDs as needed while preserving parent/child relationships.
+  - All associations (layer, MOP, groups) are updated in the registries.
   
 ---
 
-## 5. Future Extension: Transformation Propagation
+## 5. Transformation Propagation Consideration
 
-While the details of transformation methods are not covered here, note the following design considerations:
+While the detailed transformation methods are not the focus of this specification, the design requires that:
+- Transformation operations are ideally executed at the project level.
+- When a transformation is applied to a parent primitive, the project consults the registry for any linked children (using the stored parent/child links) and recursively applies the transformation.
+- This design decouples transformation propagation from the primitive objects themselves and ensures consistency when entities are transferred or reloaded.
 
-- **Primitive Transformation Methods:**  
-  - Each primitive will have methods (e.g., translate, rotate, scale) that update its effective transformation matrix.
-- **Propagation to Linked Children:**  
-  - When a transformation is applied to a primitive, all primitives linked as children must have their transformation matrices updated accordingly.
-  - This propagation must work seamlessly even when the primitive tree is transferred between projects or when reloaded from serialized files.
-  
 ---
 
 ## 6. Summary
 
-This specification defines a fundamental project structure for the CamBam framework that:
+This specification describes a fundamental project structure for the CamBam CAD/CAM framework that:
 
-- Separates management of entity assignments (layers, parts, groups, descriptions, MOP associations) from transformation logic.
-- Uses a central project object (CamBamProject) that maintains registries for all entities, an identifier registry for robust reference resolution, and supports linking between primitives (via parent/child relationships).
-- Supports XML serialization in which each primitive’s classification (user ID, internal ID, groups, parent, and description) is stored in a structured JSON object within a `<Tag>` element. Layer and MOP associations are derived from the entity’s placement in the XML structure.
-- Provides for the transfer and copying of linked entities between projects, ensuring that the complete hierarchical structure is preserved.
-- Leaves room for the future integration of transformation propagation across linked primitives.
+- **Decouples Assignment from Transformation:**  
+  The project manages relationships (layer, MOP, parent/child) via a central registry and helper methods. Primitives store their own assignment attributes (e.g. `layer_id`, `mop_ids`, `groups`, `description`, and `parent_primitive_id`), while the project is responsible for maintaining consistent registries and updating these relationships when changes occur.
 
-This design lays a solid foundation for a decoupled, maintainable framework that can later be extended with full transformation and CAD helper functionality.
+- **Robust Serialization:**  
+  The XML writer module builds a complete CamBam file by placing primitives in layer containers and MOP sections, while encoding structured metadata (via a JSON object in `<Tag>`) to capture user-friendly identifiers, groups, parent links, and descriptions. A reader module can reconstruct a project from this XML file. In addition, native pickle serialization is supported with custom state management.
+
+- **Inter-Project Transferability:**  
+  The project-level transfer and copy methods allow entire linked trees of primitives (with their hierarchical relationships) to be moved between projects, with all associations updated accordingly.
+
+- **Transformation Propagation:**  
+  Although transformation details are deferred, the design ensures that any transformation applied to a parent primitive is recursively propagated to its linked children by consulting the project’s relationship registries.
+
+This architecture forms a robust, decoupled foundation for the CamBam framework, allowing future extension with detailed transformation operations and additional CAD helper functions while ensuring that entity relationships and serialization remain consistent and transparent.
