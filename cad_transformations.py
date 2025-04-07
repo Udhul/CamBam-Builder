@@ -14,6 +14,8 @@ from typing import Tuple, List, Optional, Union, Sequence
 
 logger = logging.getLogger(__name__)
 
+# --- Matrix Creation Functions ---
+
 def identity_matrix() -> np.ndarray:
     """Return a 3x3 identity matrix."""
     return np.identity(3, dtype=float)
@@ -38,12 +40,13 @@ def rotation_matrix_deg(angle_deg: float, cx: float = 0.0, cy: float = 0.0) -> n
         [sin_a,  cos_a, 0],
         [0,      0,     1]
     ], dtype=float)
+    # If center is not origin, translate to origin, rotate, translate back
     if not (math.isclose(cx, 0.0) and math.isclose(cy, 0.0)):
         return translation_matrix(cx, cy) @ rot_mat @ translation_matrix(-cx, -cy)
     return rot_mat
 
 def rotation_matrix_rad(angle_rad: float, cx: float = 0.0, cy: float = 0.0) -> np.ndarray:
-    """Return a 3x3 rotation matrix using radians."""
+    """Return a 3x3 rotation matrix using radians, rotating about point (cx, cy)."""
     cos_a = math.cos(angle_rad)
     sin_a = math.sin(angle_rad)
     rot_mat = np.array([
@@ -51,6 +54,7 @@ def rotation_matrix_rad(angle_rad: float, cx: float = 0.0, cy: float = 0.0) -> n
         [sin_a,  cos_a, 0],
         [0,      0,     1]
     ], dtype=float)
+    # If center is not origin, translate to origin, rotate, translate back
     if not (math.isclose(cx, 0.0) and math.isclose(cy, 0.0)):
         return translation_matrix(cx, cy) @ rot_mat @ translation_matrix(-cx, -cy)
     return rot_mat
@@ -68,25 +72,28 @@ def scale_matrix(sx: float, sy: Optional[float] = None, cx: float = 0.0, cy: flo
         [0,  sy, 0],
         [0,  0,  1]
     ], dtype=float)
+    # If center is not origin, translate to origin, scale, translate back
     if not (math.isclose(cx, 0.0) and math.isclose(cy, 0.0)):
         return translation_matrix(cx, cy) @ scale_mat @ translation_matrix(-cx, -cy)
     return scale_mat
 
 def mirror_x_matrix(cy: float = 0.0) -> np.ndarray:
     """Return a 3x3 matrix to mirror across the horizontal line at y=cy."""
+    # Equivalent to scaling by (1, -1) around the point (0, cy)
     return scale_matrix(1, -1, 0, cy)
 
 def mirror_y_matrix(cx: float = 0.0) -> np.ndarray:
     """Return a 3x3 matrix to mirror across the vertical line at x=cx."""
+    # Equivalent to scaling by (-1, 1) around the point (cx, 0)
     return scale_matrix(-1, 1, cx, 0)
 
 def skew_matrix(angle_x_deg: float = 0.0, angle_y_deg: float = 0.0) -> np.ndarray:
     """Return a 3x3 skew (shear) matrix with the given angles (in degrees)."""
-    tan_x = math.tan(math.radians(angle_x_deg))
-    tan_y = math.tan(math.radians(angle_y_deg))
+    tan_x = math.tan(math.radians(angle_x_deg)) # Shear parallel to x-axis based on y
+    tan_y = math.tan(math.radians(angle_y_deg)) # Shear parallel to y-axis based on x
     return np.array([
-        [1,     tan_y, 0],
-        [tan_x, 1,     0],
+        [1,     tan_y, 0], # y-shear affects x
+        [tan_x, 1,     0], # x-shear affects y
         [0,     0,     1]
     ], dtype=float)
 
@@ -100,54 +107,7 @@ def combine_transformations(*matrices: np.ndarray) -> np.ndarray:
         result = result @ m
     return result
 
-def to_4x4_matrix(matrix: np.ndarray) -> np.ndarray:
-    """
-    Convert a 3x3 matrix to a 4x4 matrix.
-    The 3x3 is embedded into the upper-left; remaining elements come from the identity.
-    """
-    result = np.identity(4, dtype=float)
-    rows = min(matrix.shape[0], 3)
-    cols = min(matrix.shape[1], 3)
-    result[:rows, :cols] = matrix[:rows, :cols]
-    # Place translation values into the last column (except bottom-right element)
-    result[0, 3] = matrix[0, 2]
-    result[1, 3] = matrix[1, 2]
-    return result
-
-def to_cambam_matrix(matrix_3x3: np.ndarray) -> str:
-    """
-    Convert a 3x3 transformation matrix to a CamBam XML 4x4 matrix string.
-    The CamBam format expects a 4x4 matrix in column-major order.
-    """
-    tx = matrix_3x3[0, 2]
-    ty = matrix_3x3[1, 2]
-    tz = 0.0  # Z translation is zero for 2D
-    cambam_matrix = np.identity(4, dtype=float)
-    cambam_matrix[0:2, 0:2] = matrix_3x3[0:2, 0:2]
-    cambam_matrix[0, 3] = tx
-    cambam_matrix[1, 3] = ty
-    cambam_matrix[2, 3] = tz
-    # Flatten in column-major order
-    flat = []
-    for col in range(4):
-        for row in range(4):
-            flat.append(str(cambam_matrix[row, col]))
-    return " ".join(flat)
-
-def from_cambam_matrix(cambam_matrix_str: str) -> np.ndarray:
-    """
-    Convert a CamBam XML 4x4 matrix string back to a 3x3 transformation matrix.
-    """
-    values = [float(v) for v in cambam_matrix_str.split()]
-    matrix_4x4 = np.zeros((4,4), dtype=float)
-    for col in range(4):
-        for row in range(4):
-            matrix_4x4[row, col] = values[col*4 + row]
-    matrix_3x3 = np.identity(3, dtype=float)
-    matrix_3x3[0:2, 0:2] = matrix_4x4[0:2, 0:2]
-    matrix_3x3[0, 2] = matrix_4x4[0, 3]
-    matrix_3x3[1, 2] = matrix_4x4[1, 3]
-    return matrix_3x3
+# --- Point Transformation ---
 
 def apply_transform(points: Sequence[Union[Tuple[float, float], np.ndarray]], matrix: np.ndarray) -> List[Tuple[float, float]]:
     """
@@ -179,3 +139,56 @@ def get_transformed_point(point: Tuple[float, float], matrix: np.ndarray) -> Tup
     if not res:
         raise ValueError(f"Invalid transformation for point: {point}")
     return res[0]
+
+# --- CamBam Matrix Format Conversion ---
+
+# TODO: Revise to both functions follow cb mat forrmat, putting tx, ty, tz in bottom row
+# TEST them!
+def to_cambam_matrix_str(matrix_3x3: np.ndarray) -> str:
+    """
+    Convert a 3x3 transformation matrix to a CamBam XML 4x4 matrix string.
+    The CamBam format expects a 4x4 matrix in a particular column-major order,
+    where the translations are registered in the bottom row [..., [tx, ty, tz, 1]].
+    The output is a string for of the flattened matrix, listing one row at a time,
+    from the top down, separating the numbers with a space. 
+    Example: 'sx 0 0 0 0 sy 0 0 0 0 sz 0 tx ty tz 1'
+    """
+    tx = matrix_3x3[0, 2]
+    ty = matrix_3x3[1, 2]
+    tz = 0.0  # Z translation is zero for 2D
+    cambam_matrix = np.identity(4, dtype=float)
+    cambam_matrix[0:2, 0:2] = matrix_3x3[0:2, 0:2]
+    cambam_matrix[0, 3] = tx
+    cambam_matrix[1, 3] = ty
+    cambam_matrix[2, 3] = tz
+    # Flatten in column-major order
+    flat = []
+    for col in range(4):
+        for row in range(4):
+            flat.append(str(cambam_matrix[row, col]))
+    return " ".join(flat)
+
+
+def from_cambam_matrix_str(cambam_matrix_str: str) -> np.ndarray:
+    """
+    Convert a CamBam XML 4x4 matrix string back to a 3x3 transformation matrix,
+    from CamBams unique matrix format.
+    """
+    matrix_3x3 = np.identity(3, dtype=float)
+
+    # If registered as "Identity", just return an identity matrix
+    if cambam_matrix_str.lower() == "identity":
+        return matrix_3x3
+    
+    # Else, convert the string to a 4x4 matrix and encode it in a 3x3 matrix to be returned
+    values = [float(v) for v in cambam_matrix_str.split()]
+    matrix_4x4 = np.zeros((4,4), dtype=float)
+    for col in range(4):
+        for row in range(4):
+            matrix_4x4[row, col] = values[col*4 + row]
+
+    matrix_3x3[0:2, 0:2] = matrix_4x4[0:2, 0:2]
+    matrix_3x3[0, 2] = matrix_4x4[0, 3]
+    matrix_3x3[1, 2] = matrix_4x4[1, 3]
+    return matrix_3x3
+
