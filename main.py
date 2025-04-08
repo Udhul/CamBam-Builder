@@ -242,7 +242,69 @@ def run_demo_2():
     logger.info("--- Demo 2 Finished ---")
 
 
+def run_demo_3():
+    logger.info("--- Demo 3: Loading from CamBam file ---")
+    proj = CamBamProject("Project Test with linking and transformations", default_tool_diameter=5.0)
+
+    # Layers
+    layer_frame_top = proj.add_layer("Frame Top", color="Cyan")
+    layer_frame_bottom = proj.add_layer("Frame Bottom", color="Red")
+
+    # Parts
+    part_a = proj.add_part("12.4 | EM6.0", stock_thickness=12.4, machining_origin=(0,0), default_spindle_speed=20000, default_tool_diameter=3.175)
+    part_b = proj.add_part("9.3 | EM3.175", stock_thickness=9.3, machining_origin=(1220,0), default_spindle_speed=24000, default_tool_diameter=3.175)
+
+    # Top and Bottom Frame Boards primitives
+    # proj.set_cursor(20,20) # Set machine origin offset
+
+    rect_frame_top = proj.add_rect(layer=layer_frame_top, identifier="frame_top", width=800, height=300, groups=["frame_cutout", "frame"])
+    rect_frame_top_edge_left = proj.add_rect(layer=layer_frame_top, identifier="frame_top_edge_left", corner=(0,-3.175), width=12.4, height=300+2*3.175, groups=["frame_edge_groove", "frame"], parent=rect_frame_top)
+    rect_frame_top_edge_right = proj.add_rect(layer=layer_frame_top, identifier="frame_top_edge_right", corner=(800-12.4,-3.175), width=12.4, height=300+2*3.175, groups=["frame_edge_groove", "frame"], parent=rect_frame_top)
+    rect_frame_top_edge_back = proj.add_rect(layer=layer_frame_top, identifier="frame_top_edge_back", corner=(0-3.175,300-12.4), width=800+2*3.175, height=12.4, groups=["frame_edge_groove", "frame"], parent=rect_frame_top)
+    rect_frame_top_groove_1 = proj.add_rect(layer=layer_frame_top, identifier="frame_top_groove_1", corner=(200-12.4/2,10), width=12.4, height=300-10+3.175, groups=["frame_groove", "frame"], parent=rect_frame_top)
+    rect_frame_top_groove_2 = proj.add_rect(layer=layer_frame_top, identifier="frame_top_groove_2", corner=(400-12.4/2,10), width=12.4, height=300-10+3.175, groups=["frame_groove", "frame"], parent=rect_frame_top)
+    text_frame_top = proj.add_text(layer=layer_frame_top, identifier="frame_top_id", text="Frame Top Board", position=(800/2,300/2), height=20, groups=["frame_id"], parent=rect_frame_top)
+
+    rect_frame_bottom = proj.add_rect(layer=layer_frame_bottom, identifier="frame_bottom", width=800, height=300, groups=["frame_cutout", "frame"])
+    rect_frame_bottom_edge_left = proj.add_rect(layer=layer_frame_bottom, identifier="frame_bottom_edge_left", corner=(0,-3.175), width=12.4, height=300+2*3.175, groups=["frame_edge_groove", "frame"], parent=rect_frame_bottom)
+    rect_frame_bottom_edge_right = proj.add_rect(layer=layer_frame_bottom, identifier="frame_bottom_edge_right", corner=(800-12.4,-3.175), width=12.4, height=300+2*3.175, groups=["frame_edge_groove", "frame"], parent=rect_frame_bottom)
+    rect_frame_bottom_edge_back = proj.add_rect(layer=layer_frame_bottom, identifier="frame_bottom_edge_back", corner=(0-3.175,300-12.4), width=800+2*3.175, height=12.4, groups=["frame_edge_groove", "frame"], parent=rect_frame_bottom)
+    rect_frame_bottom_groove_1 = proj.add_rect(layer=layer_frame_bottom, identifier="frame_bottom_groove_1", corner=(200-12.4/2,10), width=12.4, height=300-10+3.175, groups=["frame_groove", "frame"], parent=rect_frame_bottom)
+    rect_frame_bottom_groove_2 = proj.add_rect(layer=layer_frame_bottom, identifier="frame_bottom_groove_2", corner=(400-12.4/2,10), width=12.4, height=300-10+3.175, groups=["frame_groove", "frame"], parent=rect_frame_bottom)
+    # text_frame_bottom_id = proj.add_text(layer=layer_frame_bottom, identifier="frame_bottom_id", text="Frame Bottom Board", position=(800/2,300/2), height=20, groups=["frame_id"], parent=rect_frame_bottom)
+
+    # Transformations
+    # proj.translate_primitive(rect_frame_top, 20, 20)
+    proj.translate_primitive(rect_frame_bottom, 300, 0)
+    # proj.translate_primitive(rect_frame_bottom, 20+800+30, 20)
+    proj.mirror_primitive_y(rect_frame_bottom, rect_frame_bottom.get_absolute_coordinates()[0][0], bake=True)
+    # rect_frame_bottom.bake()
+    text_frame_bottom_id = proj.add_text(layer=layer_frame_bottom, identifier="frame_bottom_id", text="Frame Bottom Board", position=rect_frame_bottom.get_geometric_center(), height=20, groups=["frame_id"], parent=rect_frame_bottom)
+    c = rect_frame_bottom.get_absolute_coordinates()[0]
+    proj.rotate_primitive_deg(rect_frame_bottom, 90, cx=c[0], cy=c[1])
+    # proj.align_primitive(rect_frame_bottom, "lower_left", (0,0))
+
+
+    # MOP
+    proj.add_pocket_mop(part=part_a, pid_source="frame_edge_groove", name="frame_edge_groove", target_depth=-12.4*(1-0.75), roughing_clearance=-0.1)
+    proj.add_pocket_mop(part=part_a, pid_source="frame_groove", name="frame_groove", target_depth=-12.4*(1-0.75), roughing_clearance=-0.2)
+    proj.add_profile_mop(part=part_a, pid_source="frame_cutout", name="frame_id", profile_side="Outside", target_depth=-12.9, roughing_clearance=-0.1)
+    
+    output_dir = "./test_output"
+    # proj.save(os.path.join(output_dir, "v5.cb"))
+    # proj.save_state(os.path.join(output_dir, "v5.pkl"))
+
+    # --- Load Test ---
+    loaded = CamBamProject.load_state(os.path.join(output_dir, "v5.pkl"))
+    print(f"\nLoaded Project '{loaded.project_name}'")
+    print(f" Bounding Box: {loaded.get_bounding_box()}")
+    print(f" Primitives: {len(loaded.list_primitives())}")
+
+
+
 if __name__ == '__main__':
     # run_demo_1()
     # print("\n" + "="*60 + "\n") # Separator
-    run_demo_2()
+    run_demo_3()
+
+# TODO FIX BAKING COMBINE MATRIX
