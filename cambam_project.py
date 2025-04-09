@@ -863,11 +863,13 @@ class CamBamProject:
 
         # Apply transform to the target primitive
         if bake:
-             # Baking applies the matrix combined with the current effective transform
-             # then resets the effective transform.
-             combined_matrix = primitive.effective_transform @ matrix
-             primitive.bake_geometry(combined_matrix) # Primitive needs bake_geometry(matrix) method
-             primitive.effective_transform = identity_matrix()
+            # Baking applies the matrix combined with the current effective transform
+            # then resets the effective transform.
+            combined_matrix = primitive.effective_transform @ matrix
+            # primitive.bake_geometry(combined_matrix) # TODO: Primitive needs bake_geometry(matrix) method
+            primitive.bake_geometry() # Use full bake for now
+            primitive.effective_transform = identity_matrix()
+            primitive.effective_transform = primitive.effective_transform @ matrix
         else:
             # Non-baking just multiplies the effective transform
             # Apply the new matrix AFTER the existing one

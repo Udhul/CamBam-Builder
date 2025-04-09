@@ -313,8 +313,6 @@ class Primitive(CamBamEntity, ABC):
         pass
 
 # --- Concrete Primitive Classes ---
-# (Minimal changes: Remove layer_id, parent_id, etc. from __init__/fields.
-# Update to_xml_element signature and implementation.)
 
 @dataclass
 class Pline(Primitive):
