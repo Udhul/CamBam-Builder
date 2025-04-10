@@ -140,6 +140,119 @@ def get_transformed_point(point: Tuple[float, float], matrix: np.ndarray) -> Tup
         raise ValueError(f"Invalid transformation for point: {point}")
     return res[0]
 
+# --- Single Transformation Component ---
+
+def extract_transform_component(matrix: np.ndarray, component_type: str) -> np.ndarray:
+    """
+    Extracts a specific component from a transformation matrix.
+    
+    Args:
+        matrix: The 3x3 transformation matrix
+        component_type: The type of transformation to extract ('translation', 'rotation', 'scale', 'mirror')
+        
+    Returns:
+        A 3x3 matrix containing only the requested component
+    """
+    if matrix.shape != (3, 3):
+        raise ValueError(f"Matrix must be 3x3, got {matrix.shape}")
+    
+    result = identity_matrix()
+    
+    if component_type == 'translation':
+        # Extract only the translation component
+        result[0, 2] = matrix[0, 2]
+        result[1, 2] = matrix[1, 2]
+    elif component_type == 'rotation':
+        # Extract rotation (ignoring scale)
+        # First, calculate the scale factors
+        sx = np.linalg.norm(matrix[0:2, 0])
+        sy = np.linalg.norm(matrix[0:2, 1])
+        
+        # Remove scale to get pure rotation
+        if not (math.isclose(sx, 0.0) or math.isclose(sy, 0.0)):
+            # Normalized rotation component
+            result[0:2, 0:2] = matrix[0:2, 0:2].copy()
+            result[0, 0] /= sx
+            result[0, 1] /= sy
+            result[1, 0] /= sx
+            result[1, 1] /= sy
+    elif component_type == 'scale':
+        # Extract only the scale component (diagonal)
+        sx = np.linalg.norm(matrix[0:2, 0])
+        sy = np.linalg.norm(matrix[0:2, 1])
+        
+        # Apply scale to identity matrix
+        result[0, 0] = sx
+        result[1, 1] = sy
+    elif component_type == 'mirror_x':
+        # Extract only x-mirror (check if determinant is negative and y-scale is positive)
+        if np.linalg.det(matrix[0:2, 0:2]) < 0:
+            det_sign = np.sign(np.linalg.det(matrix[0:2, 0:2]))
+            sy_sign = np.sign(np.linalg.norm(matrix[0:2, 1]))
+            
+            if det_sign * sy_sign < 0:  # X-mirror
+                result[0, 0] = -1.0
+    elif component_type == 'mirror_y':
+        # Extract only y-mirror (check if determinant is negative and x-scale is positive)
+        if np.linalg.det(matrix[0:2, 0:2]) < 0:
+            det_sign = np.sign(np.linalg.det(matrix[0:2, 0:2]))
+            sx_sign = np.sign(np.linalg.norm(matrix[0:2, 0]))
+            
+            if det_sign * sx_sign < 0:  # Y-mirror
+                result[1, 1] = -1.0
+    else:
+        raise ValueError(f"Unknown component_type: {component_type}")
+    
+    return result
+
+def remove_transform_component(matrix: np.ndarray, component_type: str) -> np.ndarray:
+    """
+    Removes a specific component from a transformation matrix.
+    
+    Args:
+        matrix: The 3x3 transformation matrix
+        component_type: The type of transformation to remove ('translation', 'rotation', 'scale', 'mirror')
+        
+    Returns:
+        A 3x3 matrix with the specified component removed
+    """
+    if matrix.shape != (3, 3):
+        raise ValueError(f"Matrix must be 3x3, got {matrix.shape}")
+        
+    result = matrix.copy()
+    
+    if component_type == 'translation':
+        # Remove translation
+        result[0, 2] = 0.0
+        result[1, 2] = 0.0
+    elif component_type == 'rotation':
+        # Remove rotation while preserving scale and translation
+        # Extract scale
+        sx = np.linalg.norm(matrix[0:2, 0])
+        sy = np.linalg.norm(matrix[0:2, 1])
+        
+        # Apply scale without rotation
+        result[0:2, 0:2] = np.array([[sx, 0], [0, sy]])
+    elif component_type in ('mirror_x', 'mirror_y', 'mirror'):
+        # Convert any negative scale to positive (remove mirroring)
+        sx = np.linalg.norm(matrix[0:2, 0])
+        sy = np.linalg.norm(matrix[0:2, 1])
+        
+        det = np.linalg.det(matrix[0:2, 0:2])
+        if det < 0:  # There's a mirror
+            if component_type == 'mirror' or component_type == 'mirror_x':
+                # Remove x-mirror
+                result[0, 0] = abs(result[0, 0])
+                result[1, 0] = abs(result[1, 0])
+            if component_type == 'mirror' or component_type == 'mirror_y':
+                # Remove y-mirror
+                result[0, 1] = abs(result[0, 1])
+                result[1, 1] = abs(result[1, 1])
+    else:
+        raise ValueError(f"Unknown component_type: {component_type}")
+    
+    return result
+
 # --- CamBam Matrix Format Conversion ---
 
 # TODO: Revise to both functions follow cb mat forrmat, putting tx, ty, tz in bottom row
