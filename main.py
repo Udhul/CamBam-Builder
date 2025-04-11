@@ -271,15 +271,15 @@ def run_demo_3():
     rect_frame_bottom_edge_back = project.add_rect(layer=layer_frame_bottom, identifier="frame_bottom_edge_back", corner=(0-3.175,300-12.4), width=800+2*3.175, height=12.4, groups=["frame_edge_groove", "frame"], parent=rect_frame_bottom)
     rect_frame_bottom_groove_1 = project.add_rect(layer=layer_frame_bottom, identifier="frame_bottom_groove_1", corner=(200-12.4/2,10), width=12.4, height=300-10+3.175, groups=["frame_groove", "frame"], parent=rect_frame_bottom)
     rect_frame_bottom_groove_2 = project.add_rect(layer=layer_frame_bottom, identifier="frame_bottom_groove_2", corner=(400-12.4/2,10), width=12.4, height=300-10+3.175, groups=["frame_groove", "frame"], parent=rect_frame_bottom)
-    # text_frame_bottom_id = project.add_text(layer=layer_frame_bottom, identifier="frame_bottom_id", text="Frame Bottom Board", position=(800/2,300/2), height=20, groups=["frame_id"], parent=rect_frame_bottom)
+    text_frame_bottom_id = project.add_text(layer=layer_frame_bottom, identifier="frame_bottom_id", text="Frame Bottom Board", position=rect_frame_bottom.get_geometric_center(), height=20, groups=["frame_id"], parent=rect_frame_bottom)
 
     # Transformations
-    # project.translate_primitive(rect_frame_top, 20, 20)
-    # project.translate_primitive(rect_frame_bottom, 300, 0)
+    project.translate_primitive(rect_frame_top, 20, 20)
+    project.translate_primitive(rect_frame_bottom, 20, 20)
+    project.translate_primitive(rect_frame_bottom, 300, 0)
     # project.translate_primitive(rect_frame_bottom, 20+800+30, 20)
-    project.mirror_primitive_y(rect_frame_bottom)
-    rect_frame_bottom.bake_geometry()
-    text_frame_bottom_id = project.add_text(layer=layer_frame_bottom, identifier="frame_bottom_id", text="Frame Bottom Board", position=rect_frame_bottom.get_geometric_center(), height=20, groups=["frame_id"], parent=rect_frame_bottom)
+    project.mirror_primitive_y(rect_frame_bottom, bake=True)
+    # rect_frame_bottom.bake_geometry()
     # c = rect_frame_bottom.get_absolute_coordinates()[0]
     # project.rotate_primitive_deg(rect_frame_bottom, 90, cx=c[0], cy=c[1])
     # project.align_primitive(rect_frame_bottom, "lower_left", (0,0))
