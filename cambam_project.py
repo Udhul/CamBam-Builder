@@ -23,7 +23,7 @@ import numpy as np
 from cad_transformations import (
     identity_matrix, translation_matrix, rotation_matrix_deg, scale_matrix,
     mirror_x_matrix, mirror_y_matrix, skew_matrix, rotation_matrix_rad,
-    apply_transform, get_transformed_point
+    apply_transform, get_transformed_point, extract_transform_component, remove_transform_component
 )
 # Import entity types
 from cambam_entities import (
@@ -852,7 +852,17 @@ class CamBamProject:
     # Transformations are applied globally and propagated down the hierarchy
 
     def transform_primitive(self, primitive_identifier: Identifiable, matrix: np.ndarray, bake: bool = False) -> bool:
-        """Applies a transformation matrix globally to a primitive and its descendants."""
+        """
+        Applies a transformation matrix globally to a primitive and its descendants.
+        
+        Args:
+            primitive_identifier: The primitive to transform
+            matrix: The transformation matrix to apply (3x3)
+            bake: If True, bakes the matrix directly into geometry; if False, updates effective_transform
+            
+        Returns:
+            True if successful, False otherwise
+        """
         primitive = self.get_primitive(primitive_identifier)
         if not primitive:
             logger.error(f"Primitive '{primitive_identifier}' not found for transformation.")
@@ -863,27 +873,31 @@ class CamBamProject:
 
         # Apply transform to the target primitive
         if bake:
-            # Baking applies the matrix combined with the current effective transform
-            # then resets the effective transform.
-            combined_matrix = primitive.effective_transform @ matrix
-            # primitive.bake_geometry(combined_matrix) # TODO: Primitive needs bake_geometry(matrix) method
-            primitive.bake_geometry() # Use full bake for now
-            primitive.effective_transform = identity_matrix()
-            primitive.effective_transform = primitive.effective_transform @ matrix
+            # Directly bake the provided matrix into the geometry
+            try:
+                primitive.bake_geometry(matrix)
+                logger.debug(f"Baked transformation matrix directly into primitive {primitive.user_identifier}")
+            except Exception as e:
+                logger.error(f"Error baking matrix into primitive {primitive.user_identifier}: {e}")
+                return False
         else:
             # Non-baking just multiplies the effective transform
             # Apply the new matrix AFTER the existing one
             primitive.effective_transform = primitive.effective_transform @ matrix
 
-        # Recursively apply the SAME delta matrix to children
-        # Children's total transform will automatically include the parent's change
-        child_ids = self.get_children_of_primitive(primitive.internal_id)
-        for child_id in child_ids:
-            # Recursive call
-            # If parent was baked, children should probably also be baked relative to the parent's new state?
-            # If parent was not baked, children just get the same matrix applied to their effective_transform.
-            # Let's keep bake consistent down the tree for now.
-            self.transform_primitive(child_id, matrix, bake=bake) # Pass the same delta matrix
+        # # Recursively apply the SAME matrix to children for consistency
+        # child_ids = self.get_children_of_primitive(primitive.internal_id)
+        # for child_id in child_ids:
+        #     # Recursive call - pass the exact same matrix and bake setting
+        #     self.transform_primitive(child_id, matrix, bake=bake)
+
+        # return True
+        
+        # Only for baking mode, we need to apply the transform to each child's geometry, else they gets applied twice: Now, and during output when they receive the parent's effective transform
+        if bake:
+            child_ids = self.get_children_of_primitive(primitive.internal_id)
+            for child_id in child_ids:
+                self.transform_primitive(child_id, matrix, bake=bake)
 
         return True
 
@@ -954,49 +968,143 @@ class CamBamProject:
         return self.transform_primitive(primitive_identifier, rotation_matrix_rad(angle_rad, center_x, center_y), bake=bake)
 
     # --- Recursive Bake ---
-    def bake_primitive_transform(self, primitive_identifier: Identifiable, recursive: bool = True):
+    def bake_primitive_transform(self, primitive_identifier: Identifiable, recursive: bool = True) -> bool:
         """
         Applies the effective transform of a primitive (and optionally its children)
         directly to its geometry, resetting the effective transform to identity.
+        
+        This is an improved version that correctly handles parent-child transform propagation.
         """
         primitive = self.get_primitive(primitive_identifier)
         if not primitive:
             logger.error(f"Primitive '{primitive_identifier}' not found for baking.")
             return False
 
-        # Get the transform to bake (just the primitive's *own* effective transform)
+        # Get the transform to bake (the primitive's own effective transform)
         transform_to_bake = primitive.effective_transform.copy()
 
-        # Bake the primitive's geometry using its *own* transform
+        # Bake the primitive's geometry using its own transform
         if not np.allclose(transform_to_bake, identity_matrix()):
-             try:
-                 primitive.bake_geometry() # Primitive bake method applies its own eff_tf
-                 logger.debug(f"Baked transform for primitive {primitive.user_identifier}")
-             except Exception as e:
-                 logger.error(f"Error baking geometry for {primitive.user_identifier}: {e}")
-                 # Continue to children even if parent bake fails? Or stop? Let's stop.
-                 return False
+            try:
+                # Apply baking to the primitive's geometry
+                primitive.bake_geometry()
+                logger.debug(f"Baked transform for primitive {primitive.user_identifier}")
+                
+                # Reset the primitive's transform to identity after baking
+                primitive.effective_transform = identity_matrix()
+            except Exception as e:
+                logger.error(f"Error baking geometry for {primitive.user_identifier}: {e}")
+                return False
 
-        # Reset the primitive's transform *after* potential use by bake_geometry
-        primitive.effective_transform = identity_matrix()
-
-        # Handle children
+        # Handle children recursively
         if recursive:
             child_ids = self.get_children_of_primitive(primitive.internal_id)
             for child_id in child_ids:
                 child = self.get_primitive(child_id)
                 if child:
-                    # The child's transform needs to incorporate the parent's baked transform
+                    # Apply the parent's baked transform to the child's transform
+                    # This maintains the child's position relative to the parent
                     # ChildNew = ParentBaked * ChildOldEffective * ChildRelativeGeom
-                    # We want ChildNew = ChildNewEffective * ChildBakedRelativeGeom
-                    # So, ChildNewEffective = ParentBaked * ChildOldEffective
-                    # Apply the parent's baked transform *before* the child's current effective transform
                     child.effective_transform = transform_to_bake @ child.effective_transform
-                    # Recursively bake the child (which will apply its new combined effective transform)
+                    # Then recursively bake the child with its updated transform
                     self.bake_primitive_transform(child_id, recursive=True)
 
         return True
 
+    def bake_primitive_transform_component(self, primitive_identifier: Identifiable, 
+                                        component_type: str, recursive: bool = True) -> bool:
+        """
+        Bakes a specific transformation component (translation, rotation, scale, mirror)
+        into a primitive's geometry, while preserving other transformation components.
+        
+        Args:
+            primitive_identifier: The primitive to bake
+            component_type: The type of transformation to bake ('translation', 'rotation', 'scale', 'mirror_x', 'mirror_y', 'mirror')
+            recursive: Whether to recursively apply to children
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        primitive = self.get_primitive(primitive_identifier)
+        if not primitive:
+            logger.error(f"Primitive '{primitive_identifier}' not found for component baking.")
+            return False
+            
+        # Get the primitive's current transform
+        current_transform = primitive.effective_transform.copy()
+        
+        # If identity matrix, nothing to bake
+        if np.allclose(current_transform, identity_matrix()):
+            logger.debug(f"Primitive '{primitive.user_identifier}' has identity transform, nothing to bake.")
+            return True
+        
+        try:
+            # Extract the component to bake
+            component_to_bake = extract_transform_component(current_transform, component_type)
+            
+            # Skip if component is identity (nothing to bake)
+            if np.allclose(component_to_bake, identity_matrix()):
+                logger.debug(f"No {component_type} component to bake for '{primitive.user_identifier}'")
+                return True
+                
+            # Apply just this component to the geometry
+            orig_transform = primitive.effective_transform
+            primitive.effective_transform = component_to_bake
+            primitive.bake_geometry()
+            
+            # Update effective transform to contain everything except the baked component
+            remaining_transform = remove_transform_component(current_transform, component_type)
+            primitive.effective_transform = remaining_transform
+            
+            logger.debug(f"Baked {component_type} for primitive '{primitive.user_identifier}'")
+            
+            # Handle children if recursive
+            if recursive:
+                child_ids = self.get_children_of_primitive(primitive.internal_id)
+                for child_id in child_ids:
+                    child = self.get_primitive(child_id)
+                    if child:
+                        # For children, we need to apply the parent's baked component to their transforms
+                        # This maintains their relative position to the parent
+                        child.effective_transform = component_to_bake @ child.effective_transform
+                        # Then recursively bake the same component
+                        self.bake_primitive_transform_component(child_id, component_type, recursive=True)
+            
+            return True
+        except Exception as e:
+            logger.error(f"Error baking {component_type} for primitive '{primitive.user_identifier}': {e}")
+            # Restore original transform in case of error
+            primitive.effective_transform = current_transform
+            return False
+
+    def bake_all_primitives(self, component_type: Optional[str] = None) -> bool:
+        """
+        Bakes transformations for all primitives in the project.
+        
+        Args:
+            component_type: Optional specific component to bake. If None, bakes entire transform.
+            
+        Returns:
+            True if all primitives were successfully baked, False if any failed
+        """
+        # First identify root primitives (those without parents)
+        root_primitives = []
+        for prim_id in self._primitives:
+            if prim_id not in self._primitive_parent_link:
+                root_primitives.append(prim_id)
+        
+        # Bake each root primitive (and its descendants)
+        all_success = True
+        for root_id in root_primitives:
+            if component_type:
+                success = self.bake_primitive_transform_component(root_id, component_type, recursive=True)
+            else:
+                success = self.bake_primitive_transform(root_id, recursive=True)
+            all_success = all_success and success
+        
+        return all_success
+
+# , transform_to_bake: Optional[np.ndarray] = None
 
     # --- Public API: MOP Primitive Resolution ---
 
