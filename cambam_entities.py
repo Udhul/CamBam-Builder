@@ -303,12 +303,20 @@ class Primitive(CamBamEntity, ABC):
         ET.SubElement(element, "mat", {"m": mat_str})
 
     @abstractmethod
-    def bake_geometry(self) -> None:
+    def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
         """
-        Applies the current 'effective_transform' to the primitive's relative geometry
-        and resets 'effective_transform' to identity.
-        This permanently changes the primitive's definition.
-        The project manager will handle recursive baking.
+        Applies a transformation matrix directly to the primitive's relative geometry.
+        
+        Args:
+            transform_to_bake: The transformation matrix to bake into the geometry.
+                            If None, the primitive's current effective_transform is used
+                            and then reset to identity.
+        
+        When a specific matrix is provided, that transformation is baked into the actual
+        geometry points without modifying the primitive's effective_transform.
+        
+        When no matrix is provided, the primitive's effective_transform is applied to
+        its geometry and then reset to identity.
         """
         pass
 
@@ -360,27 +368,46 @@ class Pline(Primitive):
                  return abs_coords[0][0], abs_coords[0][1]
         return (0.0, 0.0) # Default fallback
 
-    def bake_geometry(self) -> None:
-        """Applies effective_transform to relative_points and resets transform."""
-        if np.allclose(self.effective_transform, identity_matrix()):
-            return # Nothing to bake
-
+    def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
+        """
+        Applies a transformation matrix to relative_points.
+        
+        If transform_to_bake is None, uses and resets the effective_transform.
+        """
+        # Determine which transformation to apply
+        if transform_to_bake is None:
+            # Use current effective transform
+            transform_to_apply = self.effective_transform
+            reset_transform = True
+        else:
+            # Use provided transform
+            transform_to_apply = transform_to_bake
+            reset_transform = False
+            
+        # Skip if identity matrix (nothing to bake)
+        if np.allclose(transform_to_apply, identity_matrix()):
+            return
+            
         try:
             # Transform XY coordinates
             rel_pts_xy = [(p[0], p[1]) for p in self.relative_points]
-            baked_pts_xy = apply_transform(rel_pts_xy, self.effective_transform)
+            baked_pts_xy = apply_transform(rel_pts_xy, transform_to_apply)
 
             # Rebuild relative points with original bulge values
             new_relative_points = []
             for i, (x, y) in enumerate(baked_pts_xy):
-                 if i < len(self.relative_points):
-                     bulge = self.relative_points[i][2] if len(self.relative_points[i]) > 2 else 0.0
-                     new_relative_points.append((x, y, bulge))
-                 else:
-                     logger.warning(f"Point mismatch during baking for Pline {self.user_identifier}. Skipping point.")
+                if i < len(self.relative_points):
+                    bulge = self.relative_points[i][2] if len(self.relative_points[i]) > 2 else 0.0
+                    new_relative_points.append((x, y, bulge))
+                else:
+                    logger.warning(f"Point mismatch during baking for Pline {self.user_identifier}. Skipping point.")
 
             self.relative_points = new_relative_points
-            self.effective_transform = identity_matrix()
+            
+            # Reset effective transform if using it
+            if reset_transform:
+                self.effective_transform = identity_matrix()
+                
         except Exception as e:
             logger.error(f"Failed to bake Pline {self.user_identifier}: {e}")
 
@@ -435,25 +462,42 @@ class Circle(Primitive):
         # Center is simply the transformed relative center
         return get_transformed_point(self.relative_center, self.get_total_transform())
 
-    def bake_geometry(self) -> None:
-        """Applies effective_transform to center and diameter, resets transform."""
-        if np.allclose(self.effective_transform, identity_matrix()):
+    def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
+        """
+        Applies a transformation matrix to center and diameter.
+        
+        If transform_to_bake is None, uses and resets the effective_transform.
+        """
+        # Determine which transformation to apply
+        if transform_to_bake is None:
+            # Use current effective transform
+            transform_to_apply = self.effective_transform
+            reset_transform = True
+        else:
+            # Use provided transform
+            transform_to_apply = transform_to_bake
+            reset_transform = False
+            
+        # Skip if identity matrix (nothing to bake)
+        if np.allclose(transform_to_apply, identity_matrix()):
             return
-
+            
         try:
             # Bake center position
-            self.relative_center = get_transformed_point(self.relative_center, self.effective_transform)
+            self.relative_center = get_transformed_point(self.relative_center, transform_to_apply)
 
             # Bake diameter (using average scale factor)
-            sx = np.linalg.norm(self.effective_transform[:, 0])
-            sy = np.linalg.norm(self.effective_transform[:, 1])
+            sx = np.linalg.norm(transform_to_apply[:, 0])
+            sy = np.linalg.norm(transform_to_apply[:, 1])
             avg_scale = (sx + sy) / 2.0
             self.diameter *= avg_scale
-
-            self.effective_transform = identity_matrix()
+            
+            # Reset effective transform if using it
+            if reset_transform:
+                self.effective_transform = identity_matrix()
+                
         except Exception as e:
-             logger.error(f"Failed to bake Circle {self.user_identifier}: {e}")
-
+            logger.error(f"Failed to bake Circle {self.user_identifier}: {e}")
 
     def to_xml_element(self, xml_primitive_id: int, parent_uuid: Optional[uuid.UUID]) -> ET.Element:
         """Creates the <circle> XML element."""
@@ -471,7 +515,7 @@ class Rect(Primitive):
     # Intrinsic geometry defined by corner, width, height
     # Note: CamBam rect XML uses 'p' (corner), 'w', 'h' but seems to store it as a Pline internally.
     # We'll keep w/h definition for ease of use but might need adjustments based on CamBam behavior.
-    relative_corner: Tuple[float, float] = (0.0, 0.0) # Usually bottom-left
+    relative_corner: Tuple[float, float] = (0.0, 0.0) # Bottom-left
     width: float = 1.0
     height: float = 1.0
 
@@ -496,50 +540,180 @@ class Rect(Primitive):
         # Transform relative center to absolute
         return get_transformed_point((rel_cx, rel_cy), self.get_total_transform())
 
-    def bake_geometry(self) -> None:
-        """Applies effective_transform, converting Rect to potentially skewed Pline."""
-        # Baking a rectangle under rotation or shear turns it into a general Pline.
-        # To keep it simple, we'll bake the corner and adjust width/height based on
-        # axis-aligned bounding box of the transformed corners. This loses rotation/shear.
-        # A more accurate bake would convert this Rect instance into a Pline instance.
-        # For now, we do the approximate bake.
+    def is_rectangular_after_transform(self) -> bool:
+        """
+        Determines if the rectangle's geometry is still rectangular after applying
+        the effective transformation.
+        
+        Returns:
+            True if the transformed corners still form a rectangle, False otherwise
+        """
         if np.allclose(self.effective_transform, identity_matrix()):
+            return True  # With identity transform, it's definitely rectangular
+        
+        # Get the rectangle corners
+        corners = self._get_relative_corners()
+        
+        # Transform the corners
+        transformed_corners = apply_transform(corners, self.effective_transform)
+        
+        # Check if the transformed corners still form a rectangle
+        # This requires adjacent sides to be perpendicular
+        if len(transformed_corners) == 4:
+            # Calculate vectors for adjacent sides
+            v1 = (transformed_corners[1][0] - transformed_corners[0][0], 
+                  transformed_corners[1][1] - transformed_corners[0][1])
+            v2 = (transformed_corners[3][0] - transformed_corners[0][0], 
+                  transformed_corners[3][1] - transformed_corners[0][1])
+            v3 = (transformed_corners[2][0] - transformed_corners[1][0],
+                  transformed_corners[2][1] - transformed_corners[1][1])
+            v4 = (transformed_corners[2][0] - transformed_corners[3][0],
+                  transformed_corners[2][1] - transformed_corners[3][1])
+            
+            # Calculate dot products to check perpendicularity
+            dot1 = v1[0]*v2[0] + v1[1]*v2[1]
+            dot2 = v2[0]*v4[0] + v2[1]*v4[1]
+            dot3 = v4[0]*v3[0] + v4[1]*v3[1]
+            dot4 = v3[0]*v1[0] + v3[1]*v1[1]
+            
+            # All dot products should be close to 0 for a rectangle
+            return (math.isclose(dot1, 0, abs_tol=1e-10) and
+                    math.isclose(dot2, 0, abs_tol=1e-10) and
+                    math.isclose(dot3, 0, abs_tol=1e-10) and
+                    math.isclose(dot4, 0, abs_tol=1e-10))
+        
+        return False
+    
+    def to_pline_representation(self) -> Pline:
+        """
+        Creates a Pline representation of this rectangle, applying any transformations.
+        
+        Returns:
+            A new Pline object representing the same geometry with the transformation applied
+        """
+        # Get the rectangle corners
+        corners = self._get_relative_corners()
+        
+        # Transform the corners
+        transformed_corners = apply_transform(corners, self.effective_transform)
+        
+        # Create points for Pline (adding the first point again to close the loop if needed)
+        pline_points = [(p[0], p[1], 0.0) for p in transformed_corners]
+        
+        # Create a new Pline
+        pline = Pline(
+            user_identifier=f"{self.user_identifier}_as_pline",
+            groups=self.groups.copy() if self.groups else [],
+            description=f"Converted from Rect: {self.description}",
+            effective_transform=identity_matrix(),  # Use identity since we've already applied the transform
+            relative_points=pline_points,
+            closed=True
+        )
+        
+        return pline
+
+    def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
+        """Applies transformation to relative_corner, width, and height."""
+        # Determine which transformation to apply
+        if transform_to_bake is None:
+            # Use current effective transform
+            transform_to_apply = self.effective_transform
+            reset_transform = True
+        else:
+            # Use provided transform
+            transform_to_apply = transform_to_bake
+            reset_transform = False
+            
+        # Skip if identity matrix (nothing to bake)
+        if np.allclose(transform_to_apply, identity_matrix()):
             return
 
-        logger.warning(f"Baking Rect {self.user_identifier}: Applying transform approximately. Rotation/shear will be lost.")
         try:
-            abs_corners = apply_transform(self._get_relative_corners(), self.effective_transform)
-            if not abs_corners:
-                raise ValueError("Transformation resulted in no valid points.")
-
+            # Get the rectangle corners
+            corners = self._get_relative_corners()
+            
+            # Transform the corners
+            transformed_corners = apply_transform(corners, transform_to_apply)
+            
             # Find new axis-aligned bounding box
-            min_x = min(p[0] for p in abs_corners)
-            min_y = min(p[1] for p in abs_corners)
-            max_x = max(p[0] for p in abs_corners)
-            max_y = max(p[1] for p in abs_corners)
-
-            # Update relative geometry based on AABB
+            min_x = min(p[0] for p in transformed_corners)
+            min_y = min(p[1] for p in transformed_corners)
+            max_x = max(p[0] for p in transformed_corners)
+            max_y = max(p[1] for p in transformed_corners)
+            
+            # Update rectangle properties
             self.relative_corner = (min_x, min_y)
             self.width = max_x - min_x
             self.height = max_y - min_y
-
-            self.effective_transform = identity_matrix()
+            
+            # Check if geometry is not rectangular
+            if not self.is_rectangular_after_transform() and transform_to_apply is self.effective_transform:
+                logger.warning(f"Baking Rect {self.user_identifier}: Applied transform approximately. Rotation/shear will be lost.")
+            
+            # Reset effective transform if using it
+            if reset_transform:
+                self.effective_transform = identity_matrix()
+                
         except Exception as e:
             logger.error(f"Failed to bake Rect {self.user_identifier}: {e}")
 
-
     def to_xml_element(self, xml_primitive_id: int, parent_uuid: Optional[uuid.UUID]) -> ET.Element:
-        """Creates the <rect> XML element."""
-        # CamBam XML for <rect> is simple, assumes axis-aligned before transform
+        """
+        Creates an XML element for this Rect.
+        If the geometry is not rectangular after transformation, converts to a Pline representation.
+        """
+        # Check if we need to convert to Pline for XML output
+        if not self.is_rectangular_after_transform():
+            # Create a Pline representation
+            pline_repr = self.to_pline_representation()
+            
+            # Get the Pline's XML element, but with our metadata
+            pline_elem = pline_repr.to_xml_element(xml_primitive_id, parent_uuid)
+            
+            # Update the Tag element to maintain our identity (but no rect-specific data)
+            tag_data = {
+                "user_id": self.user_identifier,
+                "internal_id": str(self.internal_id),
+                "groups": self.groups,
+                "description": self.description
+            }
+            
+            # Add parent reference if provided
+            if parent_uuid:
+                tag_data["parent"] = str(parent_uuid)
+            
+            # Update or add the Tag element
+            tag_node = pline_elem.find("Tag")
+            if tag_node is None:
+                tag_node = ET.SubElement(pline_elem, "Tag")
+            tag_node.text = json.dumps(tag_data)
+
+            # Log that this Rect was converted to Pline
+            logger.info(f"Rect '{self.user_identifier}' converted to Pline for XML output due to non-rectangular geometry.")
+
+            return pline_elem
+        
+        # Otherwise, create a normal Rect XML element
         rect_elem = ET.Element("rect", {
             "Closed": "true", # Rectangles are implicitly closed
             "p": f"{self.relative_corner[0]},{self.relative_corner[1]},0", # Corner (x,y,z)
             "w": str(self.width),
             "h": str(self.height)
         })
+        
         # Add common ID, Tag (with parent), and Matrix
         self._add_common_xml_attributes(rect_elem, xml_primitive_id, parent_uuid)
+        
         return rect_elem
+
+
+
+
+
+
+
+
+
 
 @dataclass
 class Arc(Primitive):
@@ -592,34 +766,54 @@ class Arc(Primitive):
         # TODO: A more accurate center would be the midpoint of the arc chord or centroid.
         return get_transformed_point(self.relative_center, self.get_total_transform())
 
-    def bake_geometry(self) -> None:
-        """Applies effective_transform to center, radius, start_angle."""
-        if np.allclose(self.effective_transform, identity_matrix()):
+    def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
+        """
+        Applies a transformation matrix to center, radius, and angles.
+        
+        If transform_to_bake is None, uses and resets the effective_transform.
+        """
+        # Determine which transformation to apply
+        if transform_to_bake is None:
+            # Use current effective transform
+            transform_to_apply = self.effective_transform
+            reset_transform = True
+        else:
+            # Use provided transform
+            transform_to_apply = transform_to_bake
+            reset_transform = False
+            
+        # Skip if identity matrix (nothing to bake)
+        if np.allclose(transform_to_apply, identity_matrix()):
             return
-
+            
         try:
-            # Bake center
-            self.relative_center = get_transformed_point(self.relative_center, self.effective_transform)
-
-            # Bake radius
-            sx = np.linalg.norm(self.effective_transform[:, 0])
-            sy = np.linalg.norm(self.effective_transform[:, 1])
+            # Bake center position
+            self.relative_center = get_transformed_point(self.relative_center, transform_to_apply)
+            
+            # Bake radius (using average scale factor)
+            sx = np.linalg.norm(transform_to_apply[:, 0])
+            sy = np.linalg.norm(transform_to_apply[:, 1])
             avg_scale = (sx + sy) / 2.0
             self.radius *= avg_scale
-
+            
             # Bake start angle
-            rotation_rad = math.atan2(self.effective_transform[1, 0], self.effective_transform[0, 0])
+            rotation_rad = math.atan2(transform_to_apply[1, 0], transform_to_apply[0, 0])
             rotation_deg = math.degrees(rotation_rad)
             self.start_angle = (self.start_angle + rotation_deg) % 360
-
-            # Extent angle is assumed unchanged (approximation for non-uniform scale)
-            if not math.isclose(sx, sy):
-                 logger.warning(f"Baked Arc {self.user_identifier} with non-uniform scale. Extent angle preserved but shape is distorted.")
-
-            self.effective_transform = identity_matrix()
+            
+            # Handle mirroring which can affect angle direction
+            det = np.linalg.det(transform_to_apply[0:2, 0:2])
+            if det < 0:  # Mirroring detected
+                # Flip the direction of the arc
+                self.start_angle = (self.start_angle + self.extent_angle) % 360
+                self.extent_angle = -self.extent_angle
+            
+            # Reset effective transform if using it
+            if reset_transform:
+                self.effective_transform = identity_matrix()
+                
         except Exception as e:
-             logger.error(f"Failed to bake Arc {self.user_identifier}: {e}")
-
+            logger.error(f"Failed to bake Arc {self.user_identifier}: {e}")
 
     def to_xml_element(self, xml_primitive_id: int, parent_uuid: Optional[uuid.UUID]) -> ET.Element:
         """Creates the <arc> XML element."""
@@ -658,16 +852,36 @@ class Points(Primitive):
                  return abs_coords[0] # Fallback to first point
         return (0.0, 0.0)
 
-    def bake_geometry(self) -> None:
-        """Applies effective_transform to relative_points."""
-        if np.allclose(self.effective_transform, identity_matrix()):
+    def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
+        """
+        Applies a transformation matrix to relative_points.
+        
+        If transform_to_bake is None, uses and resets the effective_transform.
+        """
+        # Determine which transformation to apply
+        if transform_to_bake is None:
+            # Use current effective transform
+            transform_to_apply = self.effective_transform
+            reset_transform = True
+        else:
+            # Use provided transform
+            transform_to_apply = transform_to_bake
+            reset_transform = False
+            
+        # Skip if identity matrix (nothing to bake)
+        if np.allclose(transform_to_apply, identity_matrix()):
             return
+            
         try:
-            self.relative_points = apply_transform(self.relative_points, self.effective_transform)
-            self.effective_transform = identity_matrix()
+            # Transform the points
+            self.relative_points = apply_transform(self.relative_points, transform_to_apply)
+            
+            # Reset effective transform if using it
+            if reset_transform:
+                self.effective_transform = identity_matrix()
+                
         except Exception as e:
             logger.error(f"Failed to bake Points {self.user_identifier}: {e}")
-
 
     def to_xml_element(self, xml_primitive_id: int, parent_uuid: Optional[uuid.UUID]) -> ET.Element:
         """Creates the <points> XML element."""
@@ -748,26 +962,63 @@ class Text(Primitive):
         # A better center might be the center of the approximate bounding box.
         return get_transformed_point(self.relative_position, self.get_total_transform())
 
-    def bake_geometry(self) -> None:
-        """Applies effective_transform to position and height."""
-        if np.allclose(self.effective_transform, identity_matrix()):
+    def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
+        """
+        Applies a transformation matrix to position and height.
+        
+        If transform_to_bake is None, uses and resets the effective_transform.
+        """
+        # Determine which transformation to apply
+        if transform_to_bake is None:
+            # Use current effective transform
+            transform_to_apply = self.effective_transform
+            reset_transform = True
+        else:
+            # Use provided transform
+            transform_to_apply = transform_to_bake
+            reset_transform = False
+            
+        # Skip if identity matrix (nothing to bake)
+        if np.allclose(transform_to_apply, identity_matrix()):
             return
-
+            
         try:
             # Bake position
-            self.relative_position = get_transformed_point(self.relative_position, self.effective_transform)
-
-            # Bake height
-            sx = np.linalg.norm(self.effective_transform[:, 0])
-            sy = np.linalg.norm(self.effective_transform[:, 1])
+            self.relative_position = get_transformed_point(self.relative_position, transform_to_apply)
+            
+            # Bake height (using average scale factor)
+            sx = np.linalg.norm(transform_to_apply[:, 0])
+            sy = np.linalg.norm(transform_to_apply[:, 1])
             avg_scale = (sx + sy) / 2.0
             self.height *= avg_scale
-
-            # Font, style etc are not changed by bake
-            self.effective_transform = identity_matrix()
+            
+            # Handle text mirroring - affects alignment
+            det = np.linalg.det(transform_to_apply[0:2, 0:2])
+            if det < 0:  # Mirroring detected
+                # Determine axis of mirroring
+                sx_sign = np.sign(transform_to_apply[0, 0]) 
+                sy_sign = np.sign(transform_to_apply[1, 1])
+                
+                # For x-mirroring (negative x scale)
+                if sx_sign < 0:
+                    if self.align_horizontal == 'left':
+                        self.align_horizontal = 'right'
+                    elif self.align_horizontal == 'right':
+                        self.align_horizontal = 'left'
+                
+                # For y-mirroring (negative y scale)
+                if sy_sign < 0:
+                    if self.align_vertical == 'top':
+                        self.align_vertical = 'bottom'
+                    elif self.align_vertical == 'bottom':
+                        self.align_vertical = 'top'
+            
+            # Reset effective transform if using it
+            if reset_transform:
+                self.effective_transform = identity_matrix()
+                
         except Exception as e:
             logger.error(f"Failed to bake Text {self.user_identifier}: {e}")
-
 
     def to_xml_element(self, xml_primitive_id: int, parent_uuid: Optional[uuid.UUID]) -> ET.Element:
         """Creates the <text> XML element."""
