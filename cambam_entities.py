@@ -143,10 +143,10 @@ class Part(CamBamEntity):
         if self.default_tool_diameter is not None:
             ET.SubElement(part_elem, "ToolDiameter").text = str(self.default_tool_diameter)
         if self.default_spindle_speed is not None:
-             # CamBam doesn't seem to have a direct default spindle speed at part level in XML?
-             # MOPs inherit if not set, but storing it here is useful for the framework.
-             # We won't write it to XML unless a specific field is found later.
-             pass
+            # CamBam doesn't seem to have a direct default spindle speed at part level in XML?
+            # MOPs inherit if not set, but storing it here is useful for the framework.
+            # We won't write it to XML unless a specific field is found later.
+            pass
 
         # Add other common Part elements expected by CamBam
         ET.SubElement(part_elem, "ToolProfile").text = "EndMill" # Default, can be overridden by MOPs
@@ -341,7 +341,7 @@ class Pline(Primitive):
                 bulge = self.relative_points[i][2] if len(self.relative_points[i]) > 2 else 0.0
                 abs_pts_with_bulge.append((x, y, bulge))
             else:
-                 logger.warning(f"Point mismatch after transformation for Pline {self.user_identifier}. Skipping bulge.")
+                logger.warning(f"Point mismatch after transformation for Pline {self.user_identifier}. Skipping bulge.")
 
         return abs_pts_with_bulge
 
@@ -353,7 +353,7 @@ class Pline(Primitive):
         # TODO: Bulges affect the bounding box! This is an approximation.
         # A proper calculation would need to find the extrema of the arcs.
         if any(abs(p[2]) > 1e-6 for p in absolute_geometry):
-             logger.debug(f"Bounding box for Pline {self.user_identifier} with bulges is approximate.")
+            logger.debug(f"Bounding box for Pline {self.user_identifier} with bulges is approximate.")
         return BoundingBox.from_points(points_xy)
 
     def get_geometric_center(self) -> Tuple[float, float]:
@@ -362,10 +362,10 @@ class Pline(Primitive):
         if bbox.is_valid():
             return ((bbox.min_x + bbox.max_x) / 2, (bbox.min_y + bbox.max_y) / 2)
         elif self.relative_points:
-             # Fallback to first point if bbox is invalid (e.g., single point pline)
-             abs_coords = self.get_absolute_coordinates()
-             if abs_coords:
-                 return abs_coords[0][0], abs_coords[0][1]
+            # Fallback to first point if bbox is invalid (e.g., single point pline)
+            abs_coords = self.get_absolute_coordinates()
+            if abs_coords:
+                return abs_coords[0][0], abs_coords[0][1]
         return (0.0, 0.0) # Default fallback
 
     def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
@@ -502,8 +502,8 @@ class Circle(Primitive):
     def to_xml_element(self, xml_primitive_id: int, parent_uuid: Optional[uuid.UUID]) -> ET.Element:
         """Creates the <circle> XML element."""
         circle_elem = ET.Element("circle", {
-             "c": f"{self.relative_center[0]},{self.relative_center[1]},0", # Center (x,y,z)
-             "d": str(self.diameter)                                   # Diameter
+            "c": f"{self.relative_center[0]},{self.relative_center[1]},0", # Center (x,y,z)
+            "d": str(self.diameter)                                   # Diameter
          })
         # Add common ID, Tag (with parent), and Matrix
         self._add_common_xml_attributes(circle_elem, xml_primitive_id, parent_uuid)
@@ -707,14 +707,6 @@ class Rect(Primitive):
         return rect_elem
 
 
-
-
-
-
-
-
-
-
 @dataclass
 class Arc(Primitive):
     # Intrinsic geometry
@@ -818,11 +810,11 @@ class Arc(Primitive):
     def to_xml_element(self, xml_primitive_id: int, parent_uuid: Optional[uuid.UUID]) -> ET.Element:
         """Creates the <arc> XML element."""
         arc_elem = ET.Element("arc", {
-             "p": f"{self.relative_center[0]},{self.relative_center[1]},0", # Center (x,y,z)
-             "r": str(self.radius),                                     # Radius
-             "s": str(self.start_angle % 360),                          # Start Angle (degrees)
-             "w": str(self.extent_angle)                                # Sweep Angle (degrees)
-         })
+            "p": f"{self.relative_center[0]},{self.relative_center[1]},0", # Center (x,y,z)
+            "r": str(self.radius),                                     # Radius
+            "s": str(self.start_angle % 360),                          # Start Angle (degrees)
+            "w": str(self.extent_angle)                                # Sweep Angle (degrees)
+        })
         # Add common ID, Tag (with parent), and Matrix
         self._add_common_xml_attributes(arc_elem, xml_primitive_id, parent_uuid)
         return arc_elem
@@ -847,9 +839,9 @@ class Points(Primitive):
         if bbox.is_valid():
             return ((bbox.min_x + bbox.max_x) / 2, (bbox.min_y + bbox.max_y) / 2)
         elif self.relative_points:
-             abs_coords = self.get_absolute_coordinates()
-             if abs_coords:
-                 return abs_coords[0] # Fallback to first point
+            abs_coords = self.get_absolute_coordinates()
+            if abs_coords:
+                return abs_coords[0] # Fallback to first point
         return (0.0, 0.0)
 
     def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
@@ -889,7 +881,7 @@ class Points(Primitive):
         pts_elem = ET.SubElement(points_elem, "pts")
         for x, y in self.relative_points:
             # CamBam point format: x,y,z (z is usually 0)
-             ET.SubElement(pts_elem, "p").text = f"{x},{y},0"
+            ET.SubElement(pts_elem, "p").text = f"{x},{y},0"
 
         # Add common ID, Tag (with parent), and Matrix
         self._add_common_xml_attributes(points_elem, xml_primitive_id, parent_uuid)
@@ -950,9 +942,9 @@ class Text(Primitive):
         if self.align_vertical == 'top':
             min_y, max_y = py - est_total_height, py
         elif self.align_vertical == 'bottom':
-             min_y, max_y = py, py + est_total_height
+            min_y, max_y = py, py + est_total_height
         else: # middle/center
-             min_y, max_y = py - est_total_height / 2, py + est_total_height / 2
+            min_y, max_y = py - est_total_height / 2, py + est_total_height / 2
 
         return BoundingBox(min_x, min_y, max_x, max_y)
 
@@ -1161,9 +1153,9 @@ class Mop(CamBamEntity, ABC):
             # Special case: TargetDepth needs a value even if default? Check CamBam output.
             # Assuming empty text is okay for unresolved optional defaults.
             if value is None and tag in ["TargetDepth", "DepthIncrement", "SpindleSpeed", "ToolDiameter"]:
-                 logger.warning(f"MOP '{self.name}': Parameter '{tag}' resolved to None. Writing empty element.")
-                 # CamBam might require a default value here, e.g., "0" or "-1"
-                 # text_value = "0" # Or handle based on specific parameter
+                logger.warning(f"MOP '{self.name}': Parameter '{tag}' resolved to None. Writing empty element.")
+                # CamBam might require a default value here, e.g., "0" or "-1"
+                # text_value = "0" # Or handle based on specific parameter
 
             ET.SubElement(parent, tag, {"state": state}).text = text_value
 
@@ -1193,7 +1185,7 @@ class Mop(CamBamEntity, ABC):
             for pid in sorted(resolved_primitive_xml_ids): # Sort for consistency
                 ET.SubElement(primitive_container, "prim").text = str(pid)
         # else: # CamBam seems to omit the <primitive> tag entirely if empty
-             # pass
+            # pass
 
     def _add_lead_in_out_elements(self, parent_elem: ET.Element, lead_type: str = "Spiral", spiral_angle: float = 30.0, tangent_radius: float = 0.0, feedrate: float = 0.0):
         """Adds LeadInMove and LeadOutMove elements (common pattern)."""

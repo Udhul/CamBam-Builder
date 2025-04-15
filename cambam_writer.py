@@ -52,8 +52,8 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
     for layer_uuid in project._layer_order:
         layer = project.get_layer(layer_uuid)
         if not layer:
-             logger.warning(f"Layer UUID {layer_uuid} found in order list but not in registry. Skipping.")
-             continue
+            logger.warning(f"Layer UUID {layer_uuid} found in order list but not in registry. Skipping.")
+            continue
 
         # Create the <layer> element itself
         layer_elem = layer.to_xml_element()
@@ -67,21 +67,23 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
 
         # Add primitive XML elements to this layer's <objects> container
         for primitive in sorted(primitives_on_layer, key=lambda p: uuid_to_xml_id[p.internal_id]): # Sort by XML ID for consistency
-             xml_id = uuid_to_xml_id.get(primitive.internal_id)
-             if xml_id is None:
-                 logger.error(f"Primitive {primitive.user_identifier} ({primitive.internal_id}) on layer {layer.user_identifier} has no assigned XML ID. Skipping.")
-                 continue
+            xml_id = uuid_to_xml_id.get(primitive.internal_id)
+            if xml_id is None:
+                logger.error(f"Primitive {primitive.user_identifier} ({primitive.internal_id}) on layer {layer.user_identifier} has no assigned XML ID. Skipping.")
+                continue
 
-             # Get parent UUID from project registry to inject into the Tag
-             parent_uuid = project.get_parent_of_primitive(primitive.internal_id)
+            # Get parent UUID from project registry to inject into the Tag
+            parent_uuid = project.get_parent_of_primitive(primitive.internal_id)
 
-             try:
-                 # Generate the primitive's specific XML element (<pline>, <circle>, etc.)
-                 # Pass the required XML ID and parent UUID
-                 prim_elem = primitive.to_xml_element(xml_id, parent_uuid)
-                 objects_container.append(prim_elem)
-             except Exception as e:
-                 logger.error(f"Error building XML for primitive {primitive.user_identifier} ({primitive.internal_id}): {e}", exc_info=True)
+            try:
+                # Generate the primitive's specific XML element (<pline>, <circle>, etc.)
+                # Pass the required XML ID and parent UUID
+                prim_elem = primitive.to_xml_element(xml_id, parent_uuid)
+                objects_container.append(prim_elem)
+
+
+            except Exception as e:
+                logger.error(f"Error building XML for primitive {primitive.user_identifier} ({primitive.internal_id}): {e}", exc_info=True)
 
 
     # 5. Build <parts> container
@@ -90,8 +92,8 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
     for part_uuid in project._part_order:
         part = project.get_part(part_uuid)
         if not part:
-             logger.warning(f"Part UUID {part_uuid} found in order list but not in registry. Skipping.")
-             continue
+            logger.warning(f"Part UUID {part_uuid} found in order list but not in registry. Skipping.")
+            continue
 
         # Create the <part> element itself
         part_elem = part.to_xml_element()
@@ -118,8 +120,8 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
                         logger.warning(f"MOP {mop.name} references primitive {prim_uuid} which has no XML ID assigned.")
 
                 if not resolved_primitive_xml_ids and mop.pid_source:
-                     # Log if the source wasn't empty but resolution yielded nothing valid
-                     logger.warning(f"MOP '{mop.name}' ({mop.user_identifier}) resolved to zero primitives for source: {mop.pid_source}")
+                    # Log if the source wasn't empty but resolution yielded nothing valid
+                    logger.warning(f"MOP '{mop.name}' ({mop.user_identifier}) resolved to zero primitives for source: {mop.pid_source}")
 
                 # Generate the MOP's specific XML element (<profile>, <pocket>, etc.)
                 # Pass the project context and the resolved XML IDs
@@ -151,7 +153,7 @@ def save_cambam_file(project: CamBamProject, file_path: str, pretty_print: bool 
         # Ensure output directory exists
         output_dir = os.path.dirname(output_path)
         if output_dir: # Handle case where path is just filename in current dir
-             os.makedirs(output_dir, exist_ok=True)
+            os.makedirs(output_dir, exist_ok=True)
 
         # Build the XML tree
         logger.info(f"Building XML tree for project '{project.project_name}'...")
@@ -167,7 +169,7 @@ def save_cambam_file(project: CamBamProject, file_path: str, pretty_print: bool 
             except AttributeError:
                 logger.warning("XML pretty-printing (indentation) requires Python 3.9 or later.")
             except Exception as e_indent:
-                 logger.warning(f"XML indentation failed: {e_indent}")
+                logger.warning(f"XML indentation failed: {e_indent}")
 
 
         # Write the XML file
