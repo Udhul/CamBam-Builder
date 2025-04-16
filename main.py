@@ -331,4 +331,31 @@ if __name__ == '__main__':
     run_demo_3()
 
 # TODO FIX BAKING COMBINE MATRIX
-# Bake children when baking parent. Bake method should be added to project, so it can iterate over links correctly
+# Bake children when baking parent. Bake method should be added to project, so it can iterate over links correctly.
+# There should be methods to bake the whole transform matrix into a primitive, or only a specific transformation,
+# for example a mirror transformation. When baking a single transformation, it updates the geometry with the change, but keeps the transformationo stack.
+# Children are always transformed relative to their parent, so they keep their relative placement to a parent after any transform.
+
+
+
+
+
+
+
+# # Bake a specific primitive's complete transform
+# project.bake_primitive_transform("my_circle")
+
+# # Bake just the translation component of a primitive
+# project.bake_primitive_transform_component("my_circle", "translation")
+
+# # Bake just the mirroring for a primitive
+# project.bake_primitive_transform_component("my_rectangle", "mirror")
+
+# # Bake x-axis mirroring only
+# project.bake_primitive_transform_component("my_text", "mirror_x")
+
+# # Bake all primitives in the project
+# project.bake_all_primitives()
+
+# # Bake just the rotation component for all primitives
+# project.bake_all_primitives("rotation")
