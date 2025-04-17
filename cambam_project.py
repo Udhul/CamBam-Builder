@@ -967,6 +967,127 @@ class CamBamProject:
         else: center_x, center_y = cx, cy
         return self.transform_primitive(primitive_identifier, rotation_matrix_rad(angle_rad, center_x, center_y), bake=bake)
 
+    def align_primitive(self, primitive_identifier: Identifiable, 
+                    alignment_point: Union[Tuple[float, float], float],
+                    align_x: Optional[str] = None,
+                    align_y: Optional[str] = None,
+                    bake: bool = False) -> bool:
+        """
+        Aligns a primitive to a global point based on its transformed bounding box.
+        
+        The alignment respects the primitive's current transformation. For example,
+        if a rectangle is rotated 90 degrees, aligning its "left" side will align
+        what was originally the bottom side before rotation.
+        
+        Args:
+            primitive_identifier: The primitive to align
+            alignment_point: The global point to align to. Can be:
+                            - A tuple (x, y) for both axes alignment
+                            - A single float value when aligning only one axis
+            align_x: Horizontal alignment - 'left', 'right', 'center', or None for no horizontal alignment
+            align_y: Vertical alignment - 'top', 'bottom', 'center', or None for no vertical alignment
+            bake: If True, bakes the translation into geometry; if False, updates effective_transform
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        primitive = self.get_primitive(primitive_identifier)
+        if not primitive:
+            logger.error(f"Primitive '{primitive_identifier}' not found for alignment.")
+            return False
+        
+        # Get the bounding box in its transformed state
+        try:
+            bbox = primitive.get_bounding_box()
+        except Exception as e:
+            logger.error(f"Error getting bounding box for primitive '{primitive.user_identifier}': {e}")
+            return False
+        
+        if not bbox.is_valid():
+            logger.error(f"Invalid bounding box for primitive '{primitive.user_identifier}'")
+            return False
+        
+        # Handle the alignment_point parameter
+        x_point = None
+        y_point = None
+        
+        if isinstance(alignment_point, (int, float)):
+            # Single value - use it for the specified axis only
+            if align_x is not None:
+                x_point = float(alignment_point)
+            if align_y is not None:
+                y_point = float(alignment_point)
+            if align_x is not None and align_y is not None:
+                logger.warning(f"Single value {alignment_point} provided but both align_x and align_y specified. "
+                            "Consider using a tuple (x,y) for clarity.")
+        elif isinstance(alignment_point, (tuple, list)) and len(alignment_point) >= 2:
+            # Tuple - extract x and y components
+            x_point = alignment_point[0] if align_x is not None else None
+            y_point = alignment_point[1] if align_y is not None else None
+        else:
+            logger.error(f"Invalid alignment_point: {alignment_point}. Must be a number or tuple (x,y).")
+            return False
+        
+        # Calculate required translation for each specified alignment
+        dx, dy = 0.0, 0.0
+        
+        # Ensure lower case alignment string
+        if isinstance(align_x, str):
+            align_x = align_x.lower()
+        if isinstance(align_y, str):
+            align_y = align_y.lower()
+
+        # X-axis alignment
+        if align_x is not None and x_point is not None:
+            if align_x == 'left':
+                dx = x_point - bbox.min_x
+            elif align_x == 'right':
+                dx = x_point - bbox.max_x
+            elif align_x == 'center' or align_x == 'middle' or align_x == 'c':
+                dx = x_point - (bbox.min_x + bbox.max_x) / 2
+            else:
+                logger.warning(f"Invalid x alignment '{align_x}'. Use 'left', 'right', or 'center'")
+        
+        # Y-axis alignment
+        if align_y is not None and y_point is not None:
+            if align_y == 'top' or align_y == 'upper':
+                dy = y_point - bbox.max_y
+            elif align_y == 'bottom' or align_y == 'lower':
+                dy = y_point - bbox.min_y
+            elif align_y == 'center' or align_y == 'middle' or align_y == 'c':
+                dy = y_point - (bbox.min_y + bbox.max_y) / 2
+            else:
+                logger.warning(f"Invalid y alignment '{align_y}'. Use 'top'/'upper', 'bottom'/'lower', or 'center'")
+        
+        # If no movement needed, return early
+        if (dx == 0 and dy == 0):
+            return True
+        
+        # Create the translation matrix for the alignment
+        translation = translation_matrix(dx, dy)
+        
+        if bake:
+            # Bake the translation directly into the geometry
+            try:
+                # Store the original transform
+                orig_transform = primitive.effective_transform.copy()
+                # For baking, temporarily set the effective transform to just the translation
+                primitive.effective_transform = translation
+                primitive.bake_geometry()
+                # Restore the original transform
+                primitive.effective_transform = orig_transform
+                logger.debug(f"Baked alignment translation ({dx}, {dy}) into primitive '{primitive.user_identifier}'")
+            except Exception as e:
+                logger.error(f"Error baking alignment for {primitive.user_identifier}: {e}")
+                return False
+        else:
+            # For non-baking mode, we need to apply the translation in global coordinates,
+            # so we need to apply it BEFORE the existing transforms in the chain
+            primitive.effective_transform = translation @ primitive.effective_transform
+            logger.debug(f"Applied alignment translation ({dx}, {dy}) to primitive '{primitive.user_identifier}'")
+        
+        return True
+
     # --- Recursive Bake ---
     def bake_primitive_transform(self, primitive_identifier: Identifiable, recursive: bool = True) -> bool:
         """
