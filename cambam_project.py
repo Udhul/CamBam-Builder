@@ -935,7 +935,8 @@ class CamBamProject:
         return self.transform_primitive(primitive_identifier, scale_matrix(sx, sy, center_x, center_y), bake=bake)
 
     def mirror_primitive_x(self, primitive_identifier: Identifiable, cy: Optional[float] = None, bake: bool = False) -> bool:
-        """Mirrors a primitive and descendants across a horizontal line y=cy."""
+        """Mirrors a primitive and descendants across a horizontal line y=cy.
+        If cy is None, the center of the primitive is used."""
         primitive = self.get_primitive(primitive_identifier)
         if not primitive: return False
         if cy is None:
@@ -944,7 +945,8 @@ class CamBamProject:
         return self.transform_primitive(primitive_identifier, mirror_x_matrix(cy), bake=bake)
 
     def mirror_primitive_y(self, primitive_identifier: Identifiable, cx: Optional[float] = None, bake: bool = False) -> bool:
-        """Mirrors a primitive and descendants across a vertical line x=cx."""
+        """Mirrors a primitive and descendants across a vertical line x=cx.
+        If cx is None, the center of the primitive is used."""
         primitive = self.get_primitive(primitive_identifier)
         if not primitive: return False
         if cx is None:
