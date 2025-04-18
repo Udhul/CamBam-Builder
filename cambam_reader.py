@@ -583,7 +583,7 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
              prim_specific_kwargs["font"] = font
              prim_specific_kwargs["style"] = style
              prim_specific_kwargs["line_spacing"] = linespace
-             prim_specific_kwargs["align_vertical"] = v_align if v_align != 'center' else 'middle' # Map back
+             prim_specific_kwargs["align_vertical"] = v_align
              prim_specific_kwargs["align_horizontal"] = h_align
              prim_specific_kwargs["text_content"] = text_content
 

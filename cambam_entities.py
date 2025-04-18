@@ -898,7 +898,7 @@ class Text(Primitive):
     style: str = '' # e.g., 'bold', 'italic', 'bold,italic'
     line_spacing: float = 1.0 # Multiplier
     align_horizontal: str = 'center' # 'left', 'center', 'right'
-    align_vertical: str = 'middle' # 'top', 'middle', 'bottom' CamBam uses 'center' for middle
+    align_vertical: str = 'center' # 'top', 'center', 'bottom'
 
     def _calculate_absolute_geometry(self, total_transform: np.ndarray) -> Dict[str, Any]:
         """Returns absolute anchor position and scaled height."""
@@ -938,12 +938,12 @@ class Text(Primitive):
             min_x, max_x = px - est_width, px
         else: # center
             min_x, max_x = px - est_width / 2, px + est_width / 2
-        # Vertical ('middle' or 'center')
+        # Vertical
         if self.align_vertical == 'top':
             min_y, max_y = py - est_total_height, py
         elif self.align_vertical == 'bottom':
             min_y, max_y = py, py + est_total_height
-        else: # middle/center
+        else: # center
             min_y, max_y = py - est_total_height / 2, py + est_total_height / 2
 
         return BoundingBox(min_x, min_y, max_x, max_y)

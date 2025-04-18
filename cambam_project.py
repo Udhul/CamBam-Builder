@@ -699,14 +699,12 @@ class CamBamProject:
 
     def add_text(self, layer: Identifiable, text: str, position: Tuple[float, float], height: float = 10.0,
                  font: str = 'Arial', style: str = '', line_spacing: float = 1.0, align_horizontal: str = 'center',
-                 align_vertical: str = 'middle', identifier: Optional[str] = None, groups: Optional[List[str]] = None,
+                 align_vertical: str = 'center', identifier: Optional[str] = None, groups: Optional[List[str]] = None,
                  description: str = "", parent: Optional[Identifiable] = None) -> Optional[Text]:
-        # Map 'middle' to CamBam's 'center' if necessary for consistency, though stored as 'middle' maybe
-        cb_vertical_align = align_vertical # Keep 'middle' internally if desired
         return self._add_primitive_internal(Text, layer, identifier, groups, description, parent,
                                             text_content=text, relative_position=position,
                                             height=height, font=font, style=style, line_spacing=line_spacing,
-                                            align_horizontal=align_horizontal, align_vertical=cb_vertical_align) # type: ignore
+                                            align_horizontal=align_horizontal, align_vertical=align_vertical) # type: ignore
 
     def _add_mop_internal(self, MopClass: Type[MopType], part_identifier: Identifiable,
                           pid_source: Union[str, List[Identifiable]], name: str,
