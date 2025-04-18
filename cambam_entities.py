@@ -169,7 +169,8 @@ class Primitive(CamBamEntity, ABC):
     # Intrinsic Attributes
     effective_transform: np.ndarray = field(default_factory=identity_matrix)
     groups: List[str] = field(default_factory=list) # Classification
-    description: str = ""                          # Classification
+    description: str = ""                           # Classification
+    output_decimals: Optional[int] = 9              # For XML serialization
 
     # Reference back to the project (transient, for context)
     _project_ref: Optional[weakref.ReferenceType] = field(default=None, init=False, repr=False)
@@ -299,7 +300,7 @@ class Primitive(CamBamEntity, ABC):
         # Add Transformation Matrix
         # The matrix stored in XML is the *total* transformation relative to world origin
         total_tf = self.get_total_transform()
-        mat_str = to_cambam_matrix_str(total_tf)
+        mat_str = to_cambam_matrix_str(total_tf, output_decimals=self.output_decimals)
         ET.SubElement(element, "mat", {"m": mat_str})
 
     @abstractmethod
@@ -421,10 +422,12 @@ class Pline(Primitive):
         pts_elem = ET.SubElement(pline_elem, "pts")
         for pt in self.relative_points:
             # CamBam point format: x,y,z (z is usually 0 for 2D)
-            x = pt[0]
-            y = pt[1]
+            x = round(pt[0], self.output_decimals) if self.output_decimals is not None else pt[0]
+            y = round(pt[1], self.output_decimals) if self.output_decimals is not None else pt[1]
             z = 0.0
             bulge = pt[2] if len(pt) > 2 else 0.0
+            bulge = round(bulge, self.output_decimals) if self.output_decimals is not None else bulge
+            
             ET.SubElement(pts_elem, "p", {"b": str(bulge)}).text = f"{x},{y},{z}"
 
         # Add common ID, Tag (with parent), and Matrix
@@ -501,9 +504,14 @@ class Circle(Primitive):
 
     def to_xml_element(self, xml_primitive_id: int, parent_uuid: Optional[uuid.UUID]) -> ET.Element:
         """Creates the <circle> XML element."""
+        cx = round(self.relative_center[0], self.output_decimals) if self.output_decimals is not None else self.relative_center[0]
+        cy = round(self.relative_center[1], self.output_decimals) if self.output_decimals is not None else self.relative_center[1]
+        cz = 0.0
+        c_diam = round(self.diameter, self.output_decimals) if self.output_decimals is not None else self.diameter
+        
         circle_elem = ET.Element("circle", {
-            "c": f"{self.relative_center[0]},{self.relative_center[1]},0", # Center (x,y,z)
-            "d": str(self.diameter)                                   # Diameter
+            "c": f"{cx},{cy},{cz}", # Center (x,y,z)
+            "d": str(c_diam) # Diameter
          })
         # Add common ID, Tag (with parent), and Matrix
         self._add_common_xml_attributes(circle_elem, xml_primitive_id, parent_uuid)
@@ -694,11 +702,17 @@ class Rect(Primitive):
             return pline_elem
         
         # Otherwise, create a normal Rect XML element
+        x = round(self.relative_corner[0], self.output_decimals) if self.output_decimals is not None else self.relative_corner[0]
+        y = round(self.relative_corner[1], self.output_decimals) if self.output_decimals is not None else self.relative_corner[1]
+        z = 0.0
+        w = round(self.width, self.output_decimals) if self.output_decimals is not None else self.width
+        h = round(self.height, self.output_decimals) if self.output_decimals is not None else self.height
+        
         rect_elem = ET.Element("rect", {
             "Closed": "true", # Rectangles are implicitly closed
-            "p": f"{self.relative_corner[0]},{self.relative_corner[1]},0", # Corner (x,y,z)
-            "w": str(self.width),
-            "h": str(self.height)
+            "p": f"{x},{y},{z}", # Corner (x,y,z)
+            "w": str(w),
+            "h": str(h)
         })
         
         # Add common ID, Tag (with parent), and Matrix
@@ -809,12 +823,20 @@ class Arc(Primitive):
 
     def to_xml_element(self, xml_primitive_id: int, parent_uuid: Optional[uuid.UUID]) -> ET.Element:
         """Creates the <arc> XML element."""
+        cx = round(self.relative_center[0], self.output_decimals) if self.output_decimals is not None else self.relative_center[0]
+        cy = round(self.relative_center[1], self.output_decimals) if self.output_decimals is not None else self.relative_center[1]
+        cz = 0.0
+        radius = round(self.radius, self.output_decimals) if self.output_decimals is not None else self.radius
+        start_angle = round(self.start_angle % 360, self.output_decimals) if self.output_decimals is not None else self.start_angle % 360
+        extent_angle = round(self.extent_angle, self.output_decimals) if self.output_decimals is not None else self.extent_angle
+        
         arc_elem = ET.Element("arc", {
-            "p": f"{self.relative_center[0]},{self.relative_center[1]},0", # Center (x,y,z)
-            "r": str(self.radius),                                     # Radius
-            "s": str(self.start_angle % 360),                          # Start Angle (degrees)
-            "w": str(self.extent_angle)                                # Sweep Angle (degrees)
+            "p": f"{cx},{cy},{cz}", # Center (x,y,z)
+            "r": str(radius),       # Radius
+            "s": str(start_angle),  # Start Angle (degrees)
+            "w": str(extent_angle)  # Sweep Angle (degrees)
         })
+
         # Add common ID, Tag (with parent), and Matrix
         self._add_common_xml_attributes(arc_elem, xml_primitive_id, parent_uuid)
         return arc_elem
@@ -880,8 +902,11 @@ class Points(Primitive):
         points_elem = ET.Element("points")
         pts_elem = ET.SubElement(points_elem, "pts")
         for x, y in self.relative_points:
+            px = round(x, self.output_decimals) if self.output_decimals is not None else x
+            py = round(y, self.output_decimals) if self.output_decimals is not None else y
+            pz = 0.0
             # CamBam point format: x,y,z (z is usually 0)
-            ET.SubElement(pts_elem, "p").text = f"{x},{y},0"
+            ET.SubElement(pts_elem, "p").text = f"{px},{py},{pz}"
 
         # Add common ID, Tag (with parent), and Matrix
         self._add_common_xml_attributes(points_elem, xml_primitive_id, parent_uuid)
@@ -1016,11 +1041,16 @@ class Text(Primitive):
         """Creates the <text> XML element."""
         # CamBam text uses p1, p2 (often same), Height, Font, align etc.
         # Align format seems to be "Vertical,Horizontal" e.g., "center,center"
-        cb_v_align = self.align_vertical if self.align_vertical != 'middle' else 'center'
+        cb_v_align = self.align_vertical
         cb_h_align = self.align_horizontal
+        p1x = round(self.relative_position[0], self.output_decimals) if self.output_decimals is not None else self.relative_position[0]
+        p1y = round(self.relative_position[1], self.output_decimals) if self.output_decimals is not None else self.relative_position[1]
+        p1z = 0.0
+        p2x, p2y, p2z = p1x, p1y, p1z
+
         text_elem = ET.Element("text", {
-            "p1": f"{self.relative_position[0]},{self.relative_position[1]},0",
-            "p2": f"{self.relative_position[0]},{self.relative_position[1]},0", # p2 seems unused often?
+            "p1": f"{p1x},{p1y},{p1z}",
+            "p2": f"{p2x},{p2y},{p2z}", # p2 seems unused?
             "Height": str(self.height),
             "Font": self.font,
             "linespace": str(self.line_spacing),

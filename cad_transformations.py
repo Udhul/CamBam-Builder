@@ -257,7 +257,7 @@ def remove_transform_component(matrix: np.ndarray, component_type: str) -> np.nd
 
 # TODO: Revise to both functions follow cb mat forrmat, putting tx, ty, tz in bottom row
 # TEST them!
-def to_cambam_matrix_str(matrix_3x3: np.ndarray) -> str:
+def to_cambam_matrix_str(matrix_3x3: np.ndarray, output_decimals: Optional[int] = None) -> str:
     """
     Convert a 3x3 transformation matrix to a CamBam XML 4x4 matrix string.
     The CamBam format expects a 4x4 matrix in a particular column-major order,
@@ -274,11 +274,15 @@ def to_cambam_matrix_str(matrix_3x3: np.ndarray) -> str:
     cambam_matrix[0, 3] = tx
     cambam_matrix[1, 3] = ty
     cambam_matrix[2, 3] = tz
+
     # Flatten in column-major order
     flat = []
     for col in range(4):
         for row in range(4):
-            flat.append(str(cambam_matrix[row, col]))
+            if output_decimals is not None:
+                flat.append(str(round(cambam_matrix[row, col], output_decimals)))
+            else:
+                flat.append(str(cambam_matrix[row, col]))
     return " ".join(flat)
 
 
