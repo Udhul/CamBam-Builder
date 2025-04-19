@@ -49,7 +49,7 @@ class CamBamProject:
     def __init__(self, project_name: str, default_tool_diameter: float = 6.0):
         self.project_name: str = project_name
         self.default_tool_diameter: float = default_tool_diameter
-        # Add other project-level defaults as needed (e.g., default_spindle_speed)
+        self.output_decimals: int = 9 # Decimal precision when generating the output CamBam xml file
 
         # --- Entity Registries ---
         # Store entities keyed by their internal UUID
@@ -1395,3 +1395,16 @@ class CamBamProject:
         except Exception as e:
             logger.error(f"An unexpected error occurred loading project state from {file_path}: {e}")
             raise # Re-raise other exceptions
+
+
+    # --- Export ---
+    def save(self, file_path: str, pretty_print: bool = True):
+        """Save the CamBam project file to a .cb file.
+        Same as export()"""
+        from cambam_writer import save_cambam_file
+        save_cambam_file(self, file_path, pretty_print)
+
+    def export(self, file_path: str, pretty_print: bool = True):
+        """Save the CamBam project file to a .cb file.
+        Same as save()"""
+        self.save(file_path, pretty_print)

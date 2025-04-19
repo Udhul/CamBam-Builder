@@ -297,7 +297,8 @@ def run_demo_3():
     # Save CamBam XML file
     cb_file_path = os.path.join(output_dir, project.project_name + ".cb")
     logger.info(f"Saving CamBam file to: {cb_file_path}")
-    save_cambam_file(project, cb_file_path, pretty_print=True)
+    # save_cambam_file(project, cb_file_path, pretty_print=True)
+    project.export(cb_file_path)
 
     # Save Project State (Pickle)
     state_file_path = os.path.join(output_dir, project.project_name + ".pkl")

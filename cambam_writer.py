@@ -155,6 +155,13 @@ def save_cambam_file(project: CamBamProject, file_path: str, pretty_print: bool 
         if output_dir: # Handle case where path is just filename in current dir
             os.makedirs(output_dir, exist_ok=True)
 
+        # Set the output decimal precision in all primitives, based on the project setting
+        output_decimals = project.output_decimals
+        for primitive in project._primitives.values():
+            if not isinstance(primitive, Primitive):
+                continue
+            primitive.output_decimals = output_decimals
+
         # Build the XML tree
         logger.info(f"Building XML tree for project '{project.project_name}'...")
         tree = build_xml_tree(project)
