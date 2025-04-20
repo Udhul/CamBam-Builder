@@ -1176,8 +1176,9 @@ class Mop(CamBamEntity, ABC):
         eff_cut_feedrate = self._calculate_effective_cut_feedrate(project)
 
         # Helper to create elements with state attribute
-        def add_param(parent, tag, value, mop_attr):
-            state = "Value" if getattr(self, mop_attr, None) is not None else "Default"
+        def add_param(parent, tag, value, mop_attr, state=None):
+            if state is None:
+                state = "Value" if getattr(self, mop_attr, None) is not None else "Default"
             # Handle optional values that might resolve to None
             text_value = str(value) if value is not None else ""
             # Special case: TargetDepth needs a value even if default? Check CamBam output.
@@ -1189,25 +1190,25 @@ class Mop(CamBamEntity, ABC):
 
             ET.SubElement(parent, tag, {"state": state}).text = text_value
 
-        add_param(mop_root_elem, "TargetDepth", eff_target_depth, 'target_depth')
-        add_param(mop_root_elem, "DepthIncrement", eff_depth_inc, 'depth_increment')
-        add_param(mop_root_elem, "StockSurface", self.stock_surface, 'stock_surface')
-        add_param(mop_root_elem, "RoughingClearance", self.roughing_clearance, 'roughing_clearance')
-        add_param(mop_root_elem, "ClearancePlane", self.clearance_plane, 'clearance_plane')
-        add_param(mop_root_elem, "SpindleDirection", self.spindle_direction, 'spindle_direction')
-        add_param(mop_root_elem, "SpindleSpeed", eff_spindle_speed, 'spindle_speed')
+        add_param(mop_root_elem, "TargetDepth", eff_target_depth, 'target_depth', "Value")
+        add_param(mop_root_elem, "DepthIncrement", eff_depth_inc, 'depth_increment', "Value")
+        add_param(mop_root_elem, "StockSurface", self.stock_surface, 'stock_surface', "Value")
+        add_param(mop_root_elem, "RoughingClearance", self.roughing_clearance, 'roughing_clearance', "Value")
+        add_param(mop_root_elem, "ClearancePlane", self.clearance_plane, 'clearance_plane', "Value")
+        add_param(mop_root_elem, "SpindleDirection", self.spindle_direction, 'spindle_direction', "Value")
+        add_param(mop_root_elem, "SpindleSpeed", eff_spindle_speed, 'spindle_speed', "Value")
         ET.SubElement(mop_root_elem, "SpindleRange", {"state": "Value"}).text = "0" # Default value
-        add_param(mop_root_elem, "VelocityMode", self.velocity_mode, 'velocity_mode')
-        add_param(mop_root_elem, "WorkPlane", self.work_plane, 'work_plane')
-        add_param(mop_root_elem, "OptimisationMode", self.optimisation_mode, 'optimisation_mode')
-        add_param(mop_root_elem, "ToolDiameter", eff_tool_dia, 'tool_diameter')
-        add_param(mop_root_elem, "ToolNumber", self.tool_number, 'tool_number')
-        add_param(mop_root_elem, "ToolProfile", self.tool_profile, 'tool_profile')
+        add_param(mop_root_elem, "VelocityMode", self.velocity_mode, 'velocity_mode', "Value")
+        add_param(mop_root_elem, "WorkPlane", self.work_plane, 'work_plane', "Value")
+        add_param(mop_root_elem, "OptimisationMode", self.optimisation_mode, 'optimisation_mode', "Value")
+        add_param(mop_root_elem, "ToolDiameter", eff_tool_dia, 'tool_diameter', "Value")
+        add_param(mop_root_elem, "ToolNumber", self.tool_number, 'tool_number', "Value")
+        add_param(mop_root_elem, "ToolProfile", self.tool_profile, 'tool_profile', "Value")
         add_param(mop_root_elem, "PlungeFeedrate", self.plunge_feedrate, 'plunge_feedrate')
-        add_param(mop_root_elem, "CutFeedrate", eff_cut_feedrate, 'cut_feedrate')
-        add_param(mop_root_elem, "MaxCrossoverDistance", self.max_crossover_distance, 'max_crossover_distance')
-        add_param(mop_root_elem, "CustomMOPHeader", self.custom_mop_header, 'custom_mop_header')
-        add_param(mop_root_elem, "CustomMOPFooter", self.custom_mop_footer, 'custom_mop_footer')
+        add_param(mop_root_elem, "CutFeedrate", eff_cut_feedrate, 'cut_feedrate', "Value")
+        add_param(mop_root_elem, "MaxCrossoverDistance", self.max_crossover_distance, 'max_crossover_distance', "Value")
+        add_param(mop_root_elem, "CustomMOPHeader", self.custom_mop_header, 'custom_mop_header', "Value")
+        add_param(mop_root_elem, "CustomMOPFooter", self.custom_mop_footer, 'custom_mop_footer', "Value")
 
         # Add primitive references (using the resolved XML IDs passed by the writer)
         primitive_container = ET.SubElement(mop_root_elem, "primitive")
@@ -1223,17 +1224,17 @@ class Mop(CamBamEntity, ABC):
         state = "Value"
 
         lead_in = ET.SubElement(parent_elem, "LeadInMove", {"state": state})
-        ET.SubElement(lead_in, "LeadInType").text = lead_type
-        ET.SubElement(lead_in, "SpiralAngle").text = str(spiral_angle)
-        ET.SubElement(lead_in, "TangentRadius").text = str(tangent_radius)
-        ET.SubElement(lead_in, "LeadInFeedrate").text = str(feedrate) # 0 usually means use CutFeedrate
+        ET.SubElement(lead_in, "LeadInType", {"state": state}).text = lead_type
+        ET.SubElement(lead_in, "SpiralAngle", {"state": state}).text = str(spiral_angle)
+        ET.SubElement(lead_in, "TangentRadius", {"state": state}).text = str(tangent_radius)
+        ET.SubElement(lead_in, "LeadInFeedrate", {"state": state}).text = str(feedrate) # 0 usually means use CutFeedrate
 
         # Lead out often mirrors lead in settings in CamBam defaults
         lead_out = ET.SubElement(parent_elem, "LeadOutMove", {"state": state})
-        ET.SubElement(lead_out, "LeadInType").text = lead_type # Yes, uses "LeadInType" tag name
-        ET.SubElement(lead_out, "SpiralAngle").text = str(spiral_angle)
-        ET.SubElement(lead_out, "TangentRadius").text = str(tangent_radius)
-        ET.SubElement(lead_out, "LeadInFeedrate").text = str(feedrate)
+        ET.SubElement(lead_out, "LeadInType", {"state": state}).text = lead_type # Yes, uses "LeadInType" tag name
+        ET.SubElement(lead_out, "SpiralAngle", {"state": state}).text = str(spiral_angle)
+        ET.SubElement(lead_out, "TangentRadius", {"state": state}).text = str(tangent_radius)
+        ET.SubElement(lead_out, "LeadInFeedrate", {"state": state}).text = str(feedrate)
 
 # --- Concrete MOP Classes ---
 # (Minimal changes: Update to_xml_element signature and call _add_common_mop_elements)
