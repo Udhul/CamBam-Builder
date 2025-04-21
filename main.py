@@ -243,6 +243,10 @@ def run_demo_2():
 
 
 def run_demo_3():
+    nest_spacing = 30
+    x_start = 20
+    y_start = 20
+
     logger.info("--- Demo 3: Loading from CamBam file ---")
     project = CamBamProject("demo_project_3", default_tool_diameter=5.0)
 
@@ -254,9 +258,7 @@ def run_demo_3():
     part_a = project.add_part("12.4 | EM6.0", stock_thickness=12.4, machining_origin=(0,0), default_spindle_speed=20000, default_tool_diameter=3.175)
     part_b = project.add_part("9.3 | EM3.175", stock_thickness=9.3, machining_origin=(1220,0), default_spindle_speed=24000, default_tool_diameter=3.175)
 
-    # Top and Bottom Frame Boards primitives
-    # project.set_cursor(20,20) # Set machine origin offset
-
+    # Frame Top
     rect_frame_top = project.add_rect(layer=layer_frame_top, identifier="frame_top", width=800, height=300, groups=["frame_cutout", "frame"])
     rect_frame_top_edge_left = project.add_rect(layer=layer_frame_top, identifier="frame_top_edge_left", corner=(0,-3.175), width=12.4, height=300+2*3.175, groups=["frame_edge_groove", "frame"], parent=rect_frame_top)
     rect_frame_top_edge_right = project.add_rect(layer=layer_frame_top, identifier="frame_top_edge_right", corner=(800-12.4,-3.175), width=12.4, height=300+2*3.175, groups=["frame_edge_groove", "frame"], parent=rect_frame_top)
@@ -264,7 +266,10 @@ def run_demo_3():
     rect_frame_top_groove_1 = project.add_rect(layer=layer_frame_top, identifier="frame_top_groove_1", corner=(200-12.4/2,10), width=12.4, height=300-10+3.175, groups=["frame_groove", "frame"], parent=rect_frame_top)
     rect_frame_top_groove_2 = project.add_rect(layer=layer_frame_top, identifier="frame_top_groove_2", corner=(400-12.4/2,10), width=12.4, height=300-10+3.175, groups=["frame_groove", "frame"], parent=rect_frame_top)
     text_frame_top = project.add_text(layer=layer_frame_top, identifier="frame_top_id", text="Frame Top Board", position=(800/2,300/2), height=20, groups=["frame_id"], parent=rect_frame_top)
+    project.align_primitive(rect_frame_top, (x_start, y_start), align_x="left", align_y="bottom")
+    rect_frame_top_abs_extent = rect_frame_top.get_absolute_coordinates()[1]
 
+    # Frame Bottom
     rect_frame_bottom = project.add_rect(layer=layer_frame_bottom, identifier="frame_bottom", width=800, height=300, groups=["frame_cutout", "frame"])
     rect_frame_bottom_edge_left = project.add_rect(layer=layer_frame_bottom, identifier="frame_bottom_edge_left", corner=(0,-3.175), width=12.4, height=300+2*3.175, groups=["frame_edge_groove", "frame"], parent=rect_frame_bottom)
     rect_frame_bottom_edge_right = project.add_rect(layer=layer_frame_bottom, identifier="frame_bottom_edge_right", corner=(800-12.4,-3.175), width=12.4, height=300+2*3.175, groups=["frame_edge_groove", "frame"], parent=rect_frame_bottom)
@@ -272,17 +277,27 @@ def run_demo_3():
     rect_frame_bottom_groove_1 = project.add_rect(layer=layer_frame_bottom, identifier="frame_bottom_groove_1", corner=(200-12.4/2,10), width=12.4, height=300-10+3.175, groups=["frame_groove", "frame"], parent=rect_frame_bottom)
     rect_frame_bottom_groove_2 = project.add_rect(layer=layer_frame_bottom, identifier="frame_bottom_groove_2", corner=(400-12.4/2,10), width=12.4, height=300-10+3.175, groups=["frame_groove", "frame"], parent=rect_frame_bottom)
     text_frame_bottom_id = project.add_text(layer=layer_frame_bottom, identifier="frame_bottom_id", text="Frame Bottom Board", position=rect_frame_bottom.get_geometric_center(), height=20, groups=["frame_id"], parent=rect_frame_bottom)
-
-    # Transformations
-    project.translate_primitive(rect_frame_top, 20, 20)
-    project.translate_primitive(rect_frame_bottom, 20, 20)
-    project.translate_primitive(rect_frame_bottom, 300, 0)
-    # project.translate_primitive(rect_frame_bottom, 20+800+30, 20)
     project.mirror_primitive_y(rect_frame_bottom, bake=True)
+    project.rotate_primitive_deg(rect_frame_bottom, 90, 0,0)
+    project.align_primitive(rect_frame_bottom, 
+                            (rect_frame_top_abs_extent[0] + nest_spacing, 
+                             y_start), 
+                            align_x="left", align_y="bottom",
+                            bake=False)
+    project.bake_primitive_transform(rect_frame_bottom)
+
+    # project.translate_primitive(rect_frame_bottom, 20, 20)
+    # project.translate_primitive(rect_frame_bottom, 300, 0)
+    # project.translate_primitive(rect_frame_bottom, 800+30, 0)
+    # lower_left = rect_frame_bottom.get_absolute_coordinates()[0]
+    # print("---------------------------", lower_left)
+    # project.rotate_primitive_deg(rect_frame_bottom, 90, 0,0)
+
     # rect_frame_bottom.bake_geometry()
-    # c = rect_frame_bottom.get_absolute_coordinates()[0]
+    c = rect_frame_bottom.get_absolute_coordinates()[0]
     # project.rotate_primitive_deg(rect_frame_bottom, 90, cx=c[0], cy=c[1])
-    # project.align_primitive(rect_frame_bottom, "lower_left", (0,0))
+    # project.rotate_primitive_deg(rect_frame_bottom, 90)
+
 
 
     # MOP
@@ -326,10 +341,54 @@ def run_demo_3():
                 child_names.append(current_child.user_identifier)
         print(f"{parent_name} <- {child_names}")
 
+
+def run_demo_4():
+    """Demonstrates the align_primitive method with different transformations."""
+    logger.info("--- Starting Demo 4: Primitive Alignment ---")
+    project = CamBamProject("Alignment Demo", default_tool_diameter=6.0)
+
+    # Add a layer and part
+    layer = project.add_layer("Main Layer", color="White")
+    
+    # Add rectangle
+    rect = project.add_rect(
+        layer=layer, 
+        identifier="rect_rotated", 
+        corner=(25, 25), 
+        width=40, 
+        height=20,
+        groups=["test_rects"]
+    )
+
+    # Rotate rectangle without baking
+    project.rotate_primitive_deg(rect, 90, bake=True)
+    logger.info("Rotated rect_rotated 90 degrees")
+    
+    # Align rotated rectangle's bottom-left to origin (0,0)
+    project.align_primitive(rect, (0,0), align_x="left", align_y="bottom", bake=True)
+    logger.info("Aligned rect_rotated's bottom-left to origin (0,0)")
+    
+    # Output the project to see the results
+    output_dir = "./output"
+    os.makedirs(output_dir, exist_ok=True)
+    
+    cb_file_path = os.path.join(output_dir, "alignment_demo.cb")
+    logger.info(f"Saving alignment test to: {cb_file_path}")
+    save_cambam_file(project, cb_file_path, pretty_print=True)
+    
+    # Report final bounding boxes to verify alignment
+    logger.info("\nFinal alignment results:")
+    bbox = rect.get_bounding_box()
+    logger.info(f"{rect.user_identifier}: min=({bbox.min_x:.1f},{bbox.min_y:.1f}), max=({bbox.max_x:.1f},{bbox.max_y:.1f})")
+    
+    logger.info("--- Demo 4 Finished ---")
+
+
 if __name__ == '__main__':
     # run_demo_1()
     # print("\n" + "="*60 + "\n") # Separator
     run_demo_3()
+    # run_demo_4()
 
 # TODO FIX BAKING COMBINE MATRIX
 # Bake children when baking parent. Bake method should be added to project, so it can iterate over links correctly.
