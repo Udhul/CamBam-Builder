@@ -10,9 +10,9 @@ import logging
 import sys # For basic logging setup
 
 # Assuming modules are in the same directory orPYTHONPATH is set
-from cambam_project import CamBamProject
-from cambam_writer import save_cambam_file
-from cambam_reader import read_cambam_file # Import reader for testing
+from cambam_builder.cambam_project import CamBamProject
+from cambam_builder.cambam_writer import save_cambam_file
+from cambam_builder.cambam_reader import read_cambam_file # Import reader for testing
 
 # --- Basic Logging Setup ---
 logging.basicConfig(

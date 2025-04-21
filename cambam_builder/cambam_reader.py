@@ -15,13 +15,13 @@ from typing import Optional, Dict, List, Tuple, Union, Any
 
 import numpy as np # For matrix conversion
 
-from cambam_project import CamBamProject
-from cambam_entities import ( # Import concrete entity types
+from .cambam_project import CamBamProject
+from .cambam_entities import ( # Import concrete entity types
     Layer, Part, Mop, Primitive,
     Pline, Circle, Rect, Arc, Points, Text,
     ProfileMop, PocketMop, EngraveMop, DrillMop
 )
-from cad_transformations import identity_matrix, from_cambam_matrix_str # For parsing matrix
+from .cad_transformations import identity_matrix, from_cambam_matrix_str # For parsing matrix
 
 logger = logging.getLogger(__name__)
 

@@ -20,7 +20,7 @@ from typing import List, Dict, Tuple, Union, Optional, Set, Any, Sequence, Type,
 import numpy as np
 
 # Assuming cad_transformations provides these:
-from cad_transformations import (
+from .cad_transformations import (
     identity_matrix, apply_transform, get_transformed_point, to_cambam_matrix_str, from_cambam_matrix_str
 )
 

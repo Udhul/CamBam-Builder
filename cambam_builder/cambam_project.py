@@ -20,13 +20,13 @@ from typing import Dict, List, Set, Tuple, Optional, Union, Type, TypeVar, Any, 
 
 import numpy as np
 
-from cad_transformations import (
+from .cad_transformations import (
     identity_matrix, translation_matrix, rotation_matrix_deg, scale_matrix,
     mirror_x_matrix, mirror_y_matrix, skew_matrix, rotation_matrix_rad,
     apply_transform, get_transformed_point, extract_transform_component, remove_transform_component
 )
 # Import entity types
-from cambam_entities import (
+from .cambam_entities import (
     CamBamEntity, Layer, Part, Primitive, Mop, MopType, BoundingBox,
     Pline, Circle, Rect, Arc, Points, Text,
     ProfileMop, PocketMop, EngraveMop, DrillMop
@@ -1455,7 +1455,7 @@ class CamBamProject:
     def save(self, file_path: str, pretty_print: bool = True):
         """Save the CamBam project file to a .cb file.
         Same as export()"""
-        from cambam_writer import save_cambam_file
+        from .cambam_writer import save_cambam_file
         save_cambam_file(self, file_path, pretty_print)
 
     def export(self, file_path: str, pretty_print: bool = True):

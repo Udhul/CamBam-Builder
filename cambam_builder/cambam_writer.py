@@ -12,8 +12,8 @@ import logging
 import uuid
 from typing import Dict, List
 
-from cambam_project import CamBamProject # Use Type Hinting
-from cambam_entities import Primitive, Layer, Part, Mop # For type checking if needed
+from .cambam_project import CamBamProject # Use Type Hinting
+from .cambam_entities import Primitive, Layer, Part, Mop # For type checking if needed
 
 logger = logging.getLogger(__name__)
 
