@@ -986,7 +986,11 @@ class CamBamProject:
                             - A single float value when aligning only one axis
             align_x: Horizontal alignment - 'left', 'right', 'center', or None for no horizontal alignment
             align_y: Vertical alignment - 'top', 'bottom', 'center', or None for no vertical alignment
-            bake: If True, bakes the translation into geometry; if False, updates effective_transform
+            bake: If True, bakes the translation into geometry; if False, updates effective_transform. 
+            
+            warning: baking will align the original geometry, so if there are unbaked transformations, 
+            for example rotations, they will not apply as expected anymore, since the geometry has changed 
+            relative to the transformation point.
             
         Returns:
             True if successful, False otherwise
@@ -1067,13 +1071,35 @@ class CamBamProject:
         translation = translation_matrix(dx, dy)
         
         if bake:
+            # Check for rotation in the effective transform, and skip baking if there is a rotation
+            transform = primitive.effective_transform
+            if abs(transform[0,0] - 1.0) > 1e-10 or abs(transform[1,1] - 1.0) > 1e-10 or \
+                abs(transform[0,1]) > 1e-10 or abs(transform[1,0]) > 1e-10:
+                bake = False # Set bake to False so we apply alignment as transformation instead
+                logger.warning(f"Primitive '{primitive.user_identifier}' has rotation in its transform. " +
+                               "Baking the geometry when there's rotation in the matrix will cause rotation around an different origin, and therefore give an unintended result. " +
+                               "Skipping baking alignment into geometry, and applies it to the transformation matrix instead.")
+            
+        if bake:
             # Bake the translation directly into the geometry
             try:
+                # Bake children first
+                child_ids = self.get_children_of_primitive(primitive)
+                for child_id in child_ids:
+                    child = self.get_primitive(child_id)
+                    if isinstance(child, Primitive):
+                        child.bake_geometry(child.effective_transform)
+                
+                # Bake this primitive
+                # primitive.bake_geometry(primitive.effective_transform)
+
+
                 # Store the original transform
                 orig_transform = primitive.effective_transform.copy()
                 # For baking, temporarily set the effective transform to just the translation
                 primitive.effective_transform = translation
                 primitive.bake_geometry()
+
                 # Restore the original transform
                 primitive.effective_transform = orig_transform
                 logger.debug(f"Baked alignment translation ({dx}, {dy}) into primitive '{primitive.user_identifier}'")
@@ -1088,34 +1114,59 @@ class CamBamProject:
         
         return True
 
+
     # --- Recursive Bake ---
-    def bake_primitive_transform(self, primitive_identifier: Identifiable, recursive: bool = True) -> bool:
+    def bake_primitive_transform(self, primitive_identifier: Identifiable, 
+                                 transform_to_bake: Optional[np.ndarray] = None,
+                                 recursive: bool = True) -> bool:
         """
         Applies the effective transform of a primitive (and optionally its children)
         directly to its geometry, resetting the effective transform to identity.
         
-        This is an improved version that correctly handles parent-child transform propagation.
+        Args:
+            transform_to_bake: The transformation matrix to bake into the geometry.
+                            If None, the primitive's current effective_transform is used
+                            and then reset to identity. If a matrix is provided, 
+                            that will be baked, leaving the effective_transform intact.
         """
         primitive = self.get_primitive(primitive_identifier)
         if not primitive:
             logger.error(f"Primitive '{primitive_identifier}' not found for baking.")
             return False
 
-        # Get the transform to bake (the primitive's own effective transform)
-        transform_to_bake = primitive.effective_transform.copy()
+        # Helper functions to use for baking effective or single transformation
+        def bake_effective(prim:Primitive):
+            if np.allclose(prim.effective_transform, identity_matrix()):
+                return
+            # Apply baking to the primitive's geometry
+            prim.bake_geometry()
+            logger.debug(f"Baked effective transform for primitive {prim.user_identifier}")
+            # Reset the primitive's transform to identity after baking
+            prim.effective_transform = identity_matrix()
 
-        # Bake the primitive's geometry using its own transform
-        if not np.allclose(transform_to_bake, identity_matrix()):
-            try:
-                # Apply baking to the primitive's geometry
-                primitive.bake_geometry()
-                logger.debug(f"Baked transform for primitive {primitive.user_identifier}")
-                
-                # Reset the primitive's transform to identity after baking
-                primitive.effective_transform = identity_matrix()
-            except Exception as e:
-                logger.error(f"Error baking geometry for {primitive.user_identifier}: {e}")
-                return False
+        def bake_single(prim:Primitive, transform:np.ndarray):
+            if np.allclose(transform, identity_matrix()):
+                return
+            # Store the original transform
+            orig_transform = prim.effective_transform.copy()
+            # For baking, temporarily set the effective transform to just the given transform
+            prim.effective_transform = transform
+            prim.bake_geometry()
+            logger.debug(f"Baked given transform for primitive {prim.user_identifier}")
+            # Restore the original transform
+            prim.effective_transform = orig_transform
+
+        # Bake the primitive's geometry using its own transform or the given transform
+        try:
+            if transform_to_bake is None: # Bake full effective transform into geometry
+                child_transform_to_bake = primitive.effective_transform.copy()
+                bake_effective(primitive)
+            else: # Bake only given matrix # TODO: Ensure correct array is given
+                child_transform_to_bake = transform_to_bake.copy()
+                bake_single(primitive, transform_to_bake)
+        except Exception as e:
+            logger.error(f"Error baking geometry for {primitive.user_identifier}: {e}")
+            return False
 
         # Handle children recursively
         if recursive:
@@ -1126,9 +1177,12 @@ class CamBamProject:
                     # Apply the parent's baked transform to the child's transform
                     # This maintains the child's position relative to the parent
                     # ChildNew = ParentBaked * ChildOldEffective * ChildRelativeGeom
-                    child.effective_transform = transform_to_bake @ child.effective_transform
-                    # Then recursively bake the child with its updated transform
-                    self.bake_primitive_transform(child_id, recursive=True)
+                    if transform_to_bake is None: # Effective
+                        child.effective_transform = child_transform_to_bake @ child.effective_transform
+                        # Then recursively bake the child with its updated transform
+                        self.bake_primitive_transform(child_id, recursive=True)
+                    else: # Single
+                        self.bake_primitive_transform(child_id, transform_to_bake, recursive=True)
 
         return True
 
