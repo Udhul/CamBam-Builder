@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cambam-builder" # Distribution name for 'pip install'
+description = "A framework for building CamBam CAD/CAM files"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+dynamic = ["dependencies", "version"]
+
+[tool.setuptools]
+packages = ["cambam_builder"]
+install-requires-file = "requirements.txt"
+
+[tool.setuptools.dynamic]
+version = {attr = "cambam_builder.__version__"} # Read the 'version' from the '__version__' attribute of the 'cambam_builder' module
+
+# [project.scripts]
+# cambam-cli = "cambam_builder.main:main" # Add cambam_builder/main.py to CLI
+
+# Package Data
+# [tool.setuptools.package-data]
+# "cambam_builder" = ["*.json", "data/*.json", "*.yaml", "config/*"]
