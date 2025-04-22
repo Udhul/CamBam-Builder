@@ -10,5 +10,6 @@ import logging
 # Configure logging for the CAD framework
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Define common constants if needed
-EPSILON = 1e-6
+# TYPES
+
+# CONSTANTS
