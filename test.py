@@ -1,5 +1,5 @@
 """
-main.py
+test.py
 
 Demonstrates usage of the refactored CamBam framework based on centralized
 relationship management in the CamBamProject.
@@ -384,11 +384,117 @@ def run_demo_4():
     logger.info("--- Demo 4 Finished ---")
 
 
+def run_demo_load_modify_save(input_file_path=None):
+    """
+    Demonstrates loading a CamBam file, modifying it, and saving with a new name.
+    
+    Args:
+        input_file_path: Path to the input CamBam file. If None, uses a default path.
+    """
+    logger.info("--- Starting Demo: Load, Modify, Save ---")
+    
+    # Define input and output paths
+    output_dir = "./output"
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Use provided input file or default
+    if not input_file_path:
+        input_file_path = "./output/demo_project_2.cb"
+        logger.info(f"No input file specified, using default: {input_file_path}")
+    
+    if not os.path.exists(input_file_path):
+        logger.error(f"Input file {input_file_path} not found.")
+        return
+    
+    # Determine output filename by appending "_modified" to the basename
+    input_basename = os.path.basename(input_file_path)
+    input_name, input_ext = os.path.splitext(input_basename)
+    output_basename = f"{input_name}_modified{input_ext}"
+    output_file_path = os.path.join(output_dir, output_basename)
+    
+    # Load the CamBam file
+    logger.info(f"Loading CamBam file: {input_file_path}")
+    project = read_cambam_file(input_file_path)
+    if not project:
+        logger.error("Failed to load CamBam file. Aborting demo.")
+        return
+    
+    logger.info(f"Successfully loaded project: {project.project_name}")
+    logger.info(f"Loaded Layers: {len(project.list_layers())}")
+    logger.info(f"Loaded Parts: {len(project.list_parts())}")
+    logger.info(f"Loaded Primitives: {len(project.list_primitives())}")
+    
+    # Step 1: Rotate all existing primitives by 90 degrees with baking
+    primitives = project.list_primitives()
+    logger.info(f"Rotating {len(primitives)} existing primitives by 90 degrees with baking...")
+    for prim_id in primitives:
+        primitive = project.get_primitive(prim_id)
+        if primitive:
+            # Only rotate top-level primitives (those without parents)
+            if not project.get_parent_of_primitive(primitive):
+                # Rotate around primitive's center
+                success = project.rotate_primitive_deg(primitive, 90, bake=True)
+                if not success:
+                    logger.warning(f"Failed to rotate primitive: {primitive.user_identifier}")
+    
+    # Step 2: Align all primitives to a common lower-left position with baking
+    logger.info("Aligning all primitives to position (0, 0) with baking...")
+    for prim_id in primitives:
+        primitive = project.get_primitive(prim_id)
+        if primitive:
+            # Only align top-level primitives
+            if not project.get_parent_of_primitive(primitive):
+                # Align to position (0, 0)
+                success = project.align_primitive(primitive, (0, 0), 
+                                                 align_x="left", align_y="bottom", 
+                                                 bake=True)
+                if not success:
+                    logger.warning(f"Failed to align primitive: {primitive.user_identifier}")
+    
+    # Step 3: Add a new layer
+    new_layer = project.add_layer("Added Layer", color="Magenta")
+    if not new_layer:
+        logger.error("Failed to add new layer. Aborting demo.")
+        return
+    logger.info(f"Added new layer: {new_layer.user_identifier}")
+    
+    # Step 4: Add a new primitive to the new layer
+    new_circle = project.add_circle(
+        layer=new_layer,
+        identifier="added_circle",
+        center=(50, 50),
+        diameter=30,
+        groups=["added_items"],
+        description="Circle added after loading"
+    )
+    if not new_circle:
+        logger.error("Failed to add new circle. Aborting demo.")
+        return
+    logger.info(f"Added new circle: {new_circle.user_identifier}")
+    
+    # Apply a transformation to the new primitive
+    project.translate_primitive(new_circle, dx=100, dy=100)
+    logger.info("Translated new circle by (100, 100)")
+    
+    # Save the modified project
+    logger.info(f"Saving modified project to: {output_file_path}")
+    project.export(output_file_path)
+    
+    # Also save the project state
+    state_file_path = os.path.join(output_dir, f"{input_name}_modified.pkl")
+    logger.info(f"Saving project state to: {state_file_path}")
+    project.save_state(state_file_path)
+    
+    logger.info("--- Demo: Load, Modify, Save Finished ---")
+
+
 if __name__ == '__main__':
     # run_demo_1()
     # print("\n" + "="*60 + "\n") # Separator
-    run_demo_3()
+    # run_demo_3()
     # run_demo_4()
+
+    run_demo_load_modify_save("./input/loadtest.cb")
 
 # TODO FIX BAKING COMBINE MATRIX
 # Bake children when baking parent. Bake method should be added to project, so it can iterate over links correctly.
