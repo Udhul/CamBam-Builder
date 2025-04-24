@@ -1,5 +1,5 @@
 """
-test.py
+demos/test.py
 
 Demonstrates usage of the refactored CamBam framework based on centralized
 relationship management in the CamBamProject.
@@ -7,12 +7,15 @@ relationship management in the CamBamProject.
 
 import os
 import logging
-import sys # For basic logging setup
+import sys
 
-# Assuming modules are in the same directory orPYTHONPATH is set
+if __name__ == "__main__":
+    # If running directly, add parent directory to Python path to allow importing from cambam_builder
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from cambam_builder.cambam_project import CamBamProject
 from cambam_builder.cambam_writer import save_cambam_file
-from cambam_builder.cambam_reader import read_cambam_file # Import reader for testing
+from cambam_builder.cambam_reader import read_cambam_file
 
 # --- Basic Logging Setup ---
 logging.basicConfig(
