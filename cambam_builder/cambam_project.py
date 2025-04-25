@@ -1462,3 +1462,15 @@ class CamBamProject:
         """Save the CamBam project file to a .cb file.
         Same as save()"""
         self.save(file_path, pretty_print)
+
+
+# TODO: Streamline API.
+# Default bake behavior for move/translate, rotate, scale, etc. 
+# Test behavior for baking vs keeping transforms, with all operations, such as align with and without baking
+# Make outline for approach: Geometry modifier stack: Base geometry -> modifiers. 
+# Modifiers will be applied one at a time, baking progressively, evolving the resulting geometry.
+# Modifiers are stored with the original command, and not a matrix. The command will be executed on the geometry when the modifier is applied.
+# This way, we can schedule a rotation modifier around local point (at the time of modifier application) or global points
+# Allows us to align the geometry with reference points on the entity, to a global point, and the alignment will be true at the time of modifier application
+# Introduce relational modifiers, allowing to tether to another entity
+# Introduce other convenience modifiers such as arraying
