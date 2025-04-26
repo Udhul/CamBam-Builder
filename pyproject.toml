@@ -11,7 +11,7 @@ license = { file = "LICENSE" }
 dynamic = ["dependencies", "version"]
 
 [tool.setuptools]
-packages = ["cambam_builder"]
+packages = ["cambam_builder", "legacy_cambam_builder"]
 
 [tool.setuptools.dynamic]
 version = {attr = "cambam_builder.__version__"} # Read the 'version' from the '__version__' attribute of the 'cambam_builder' module

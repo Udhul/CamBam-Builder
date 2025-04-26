@@ -14,7 +14,7 @@ sys.path.append(parent_dir_name)
 # sys.path.append(os.path.join(parent_dir_name, 'Resources'))
 
 # Import project modules
-from .legacy_cambam_builder import CamBam
+from .cambam_builder_legacy import CamBam
 
 # Define the path for the serialized state file
 TMPDIR = gettempdir()
