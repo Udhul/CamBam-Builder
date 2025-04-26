@@ -13,7 +13,8 @@ TEXT_IDENTIFIER_PREFIX = "THIS_IS_A_CUSTOM_PREFIX_THAT_WONT_BE_FOUND_IN_TEXT_ELE
 PROBLEMATIC_WHITESPACE = "\n          " # The whitespace that needs to be removed.
 
 class CamBam:
-    """Create a CamBam file with CAD and CAM elements.
+    """Legacy implementation of CamBam Builder: 
+    Create a CamBam file with CAD and CAM elements.
     
     Attributes:
         name (str): Name of the file.
