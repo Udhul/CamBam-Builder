@@ -5,7 +5,7 @@ Legacy cambam_builder package
 
 # Initialize the legacy cambam_builder package
 # Import the legacy implementation with a descriptive name
-from .legacy_cambam_builder import CamBam
+from .legacy_cambam_project import CamBam
 
 # Create shorter aliases for the legacy project class
 LegacyCamBamProject = CamBam
