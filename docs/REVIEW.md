@@ -644,3 +644,60 @@ refactoring is deferred: reopen component ordering, alignment, curved geometry
 or degenerate/nonfinite edge cases only for a failing workflow fixture or an
 explicit dependency. No manual CamBam check is needed to establish this numerical
 defect; no runtime behavior or previously accepted display fixture changed.
+
+
+## Rect baking repair verification
+
+2026-09-08. The repair replaces bounding-box baking with a closed-outline
+comparison and in-place conversion to a four-vertex, zero-bulge Pline when needed.
+Axis-aligned results remain Rects. The owning contract is
+[Rect baking representation](../structure_spec.md#rect-baking-representation-contract).
+The same Python object survives conversion, including UUID, project link and
+metadata, so registries, MOP source resolution and external references continue
+to designate it. Callers must accept the runtime type change; Rect-specific
+corner/width/height attributes are removed. Creating a separate replacement
+would leave external references stale and require registry coordination, while
+retaining an AABB or rejecting all rotation would violate the repair criteria.
+
+The explicit project helper now calls the entity's explicit-matrix API directly,
+so validation failure does not leave a temporary effective matrix installed.
+Full-bake identity detection uses exact equality to avoid dropping small but
+observable transforms. Rect input/corner validation occurs before mutation and
+raises on failure. This does not establish transactional subtree baking or
+repair general component ordering, curved geometry or alignment.
+
+Verification on system Python 3.10.9 / NumPy 1.23.5 (no project venv):
+
+- `python -m unittest tests.test_rect_bake_defect -q`: nine tests pass, checking
+  closed edges/area, axis-preserving controls, recursive/nonrecursive full bake
+  under a transformed ancestor, explicit/global matrices and descendants,
+  repeated baking, pickle and two XML round trips, identity/metadata/MOP targets,
+  small shear and invalid explicit input without mutation.
+- The worker substituted the original HEAD Rect method in memory: eight
+  regression failures confirmed detection of the former loss (before the two
+  additional small-shear/error tests were added).
+- `python -m unittest discover -s tests -q`: all 51 tests pass. Expected error
+  logs come from negative-path tests; no test failures.
+- `python -m compileall -q cambam_builder legacy_cambam_builder`, the runbook
+  import/construct smoke command and `git diff --check` pass.
+- `python output/rect-bake-validation-20260908-a/generate.py`: generated and
+  inspected reference/result XML, three closed four-point zero-bulge Plines,
+  identity matrices, metadata/parent linkage and vertices within `1e-8` after
+  two round trips. [Manual criteria and files](DEVELOPMENT.md#manual-rect-bake-acceptance)
+  use display tolerance `0.01`. These ignored artifacts remain available.
+- Native review found no additional runtime defect; its in-progress test shape
+  finding was resolved by normalizing Pline triples to XY in the final tests.
+
+Implementation and automated verification are complete. Manual validation adds
+CamBam renderer/load evidence beyond library XML reconstruction; report version,
+A/B pass/fail and any differing outline or matrix against the prepared criteria.
+CamBam user display acceptance remains pending; previous accepted fixtures are
+unchanged and need no repetition. Reopen this scope for a failing supported
+outline/relationship fixture, object-layout compatibility need, or reported
+CamBam display discrepancy.
+
+Suggested commit: `fix: preserve Rect outlines when baking rotation and shear`.
+After display acceptance, the next priority is defining MOP group-source
+compatibility before registry migration, as recorded in PROGRESS.md. This is a
+coherent technical breakpoint; keep this session for the acceptance result and
+use a fresh session for that distinct design scope. Nothing was staged or committed.

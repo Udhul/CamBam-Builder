@@ -1163,7 +1163,7 @@ class CamBamProject:
 
         # Helper functions to use for baking effective or single transformation
         def bake_effective(prim:Primitive):
-            if np.allclose(prim.effective_transform, identity_matrix()):
+            if np.array_equal(prim.effective_transform, identity_matrix()):
                 return
             # Apply baking to the primitive's geometry
             prim.bake_geometry()
@@ -1172,16 +1172,8 @@ class CamBamProject:
             prim.effective_transform = identity_matrix()
 
         def bake_single(prim:Primitive, transform:np.ndarray):
-            if np.allclose(transform, identity_matrix()):
-                return
-            # Store the original transform
-            orig_transform = prim.effective_transform.copy()
-            # For baking, temporarily set the effective transform to just the given transform
-            prim.effective_transform = transform
-            prim.bake_geometry()
+            prim.bake_geometry(transform)
             logger.debug(f"Baked given transform for primitive {prim.user_identifier}")
-            # Restore the original transform
-            prim.effective_transform = orig_transform
 
         # Bake the primitive's geometry using its own transform or the given transform
         try:

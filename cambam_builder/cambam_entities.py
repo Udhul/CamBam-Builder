@@ -621,49 +621,46 @@ class Rect(Primitive):
         return pline
 
     def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
-        """Applies transformation to relative_corner, width, and height."""
-        # Determine which transformation to apply
-        if transform_to_bake is None:
-            # Use current effective transform
-            transform_to_apply = self.effective_transform
-            reset_transform = True
-        else:
-            # Use provided transform
-            transform_to_apply = transform_to_bake
-            reset_transform = False
-            
-        # Skip if identity matrix (nothing to bake)
-        if np.allclose(transform_to_apply, identity_matrix()):
-            return
+        """Bake the outline, converting this object to a closed Pline if needed.
 
-        try:
-            # Get the rectangle corners
-            corners = self._get_relative_corners()
-            
-            # Transform the corners
-            transformed_corners = apply_transform(corners, transform_to_apply)
-            
-            # Find new axis-aligned bounding box
-            min_x = min(p[0] for p in transformed_corners)
-            min_y = min(p[1] for p in transformed_corners)
-            max_x = max(p[0] for p in transformed_corners)
-            max_y = max(p[1] for p in transformed_corners)
-            
-            # Update rectangle properties
-            self.relative_corner = (min_x, min_y)
-            self.width = max_x - min_x
-            self.height = max_y - min_y
-            
-            # Check if geometry is not rectangular
-            if not self.is_rectangular_after_transform() and transform_to_apply is self.effective_transform:
-                logger.warning(f"Baking Rect {self.user_identifier}: Applied transform approximately. Rotation/shear will be lost.")
-            
-            # Reset effective transform if using it
-            if reset_transform:
-                self.effective_transform = identity_matrix()
-                
-        except Exception as e:
-            logger.error(f"Failed to bake Rect {self.user_identifier}: {e}")
+        Existing references and all common metadata survive conversion. Rect-only
+        geometry attributes cease to exist. An explicit matrix leaves the local
+        effective transform intact; an implicit bake resets it to identity.
+        """
+        matrix = self.effective_transform if transform_to_bake is None else transform_to_bake
+        if np.iscomplexobj(matrix):
+            raise ValueError("Expected a finite affine 3x3 matrix")
+        matrix = np.asarray(matrix, dtype=float)
+        if (matrix.shape != (3, 3) or not np.isfinite(matrix).all()
+                or not np.array_equal(matrix[2], [0., 0., 1.])):
+            raise ValueError("Expected a finite affine 3x3 matrix")
+
+        corners = np.asarray(apply_transform(self._get_relative_corners(), matrix))
+        if corners.shape != (4, 2) or not np.isfinite(corners).all():
+            raise ValueError("Rect baking produced invalid corners")
+        lower = corners.min(axis=0)
+        upper = corners.max(axis=0)
+        bounds = np.array([lower, (upper[0], lower[1]), upper, (lower[0], upper[1])])
+        # Compare the complete closed outline, not perpendicularity or bounds.
+        # Absolute tolerance only: large coordinates must not hide a shear.
+        axis_aligned = any(
+            np.allclose(corners, np.roll(order, shift, axis=0), rtol=0, atol=1e-12)
+            for order in (bounds, bounds[::-1]) for shift in range(4)
+        )
+        if axis_aligned:
+            self.relative_corner = tuple(lower)
+            self.width, self.height = upper - lower
+        else:
+            points = [(x, y, 0.0) for x, y in corners]
+            # Both dataclasses have the same ordinary Python object layout.
+            # Assign the class before geometry edits so an unsupported subclass
+            # layout fails without discarding the original Rect geometry.
+            self.__class__ = Pline
+            self.relative_points = points
+            self.closed = True
+            del self.relative_corner, self.width, self.height
+        if transform_to_bake is None:
+            self.effective_transform = identity_matrix()
 
     def to_xml_element(self, xml_primitive_id: int, parent_uuid: Optional[uuid.UUID]) -> ET.Element:
         """

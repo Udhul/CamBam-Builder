@@ -59,17 +59,16 @@ The suite uses standard-library `unittest` and the runtime NumPy dependency.
 Test observable contracts, including invalid inputs relevant to the fix, rather
 than mirroring internals.
 
-The Rect investigation has a focused characterization command:
+Rect baking has a focused regression command:
 
 ```powershell
 & $ProjectPython -m unittest discover -s tests -p test_rect_bake_defect.py -v
 ```
 
-These tests deliberately assert the reproduced loss alongside preservation
-controls. Passing them confirms the defect remains reproducible, not that Rect
-baking is fixed. During repair, replace the known-loss assertions with exact
-outline preservation checks; see the
-[investigation and repair criteria](REVIEW.md#rect-baking-loss-investigation).
+The tests assert exact outline preservation for rotated and sheared 4x2 Rects,
+closed-Pline conversion, identity matrices, metadata and two XML round trips.
+The repair scope and representation policy are recorded in the
+[Rect investigation and repair criteria](REVIEW.md#rect-baking-loss-investigation).
 
 Keep reusable synthetic fixtures and expected results with authored tests.
 Use a unique task directory under ignored `output/` for disposable diagnostics,
@@ -90,6 +89,35 @@ For XML changes, compare entity counts, IDs, relationships, geometry and machini
 parameters after writing/reading synthetic fixtures. Opening the result in CamBam
 and checking geometry/toolpaths requires user/domain validation before production
 use. Keep private CAD inputs and generated reports local.
+
+## Manual Rect-bake acceptance
+
+The prepared local fixtures are [A_reference.cb](../output/rect-bake-validation-20260908-a/A_reference.cb)
+and [B_baked.cb](../output/rect-bake-validation-20260908-a/B_baked.cb). The generator
+at [generate.py](../output/rect-bake-validation-20260908-a/generate.py) creates A as
+explicit closed Plines and creates B from two 4x2 Rects, then performs a full bake
+and two XML round trips. It also includes a transformed Rect parent and a closed
+child outline. Its command is:
+
+```powershell
+& $ProjectPython output\rect-bake-validation-20260908-a\generate.py
+```
+
+In CamBam, open A and B separately in the top/XY view and zoom to the whole drawing.
+Both files must show three closed outlines on the two named layers. Compare each
+outline by its object name; every listed vertex must match within 0.01 drawing units
+(Z=0):
+
+| Object | Expected vertices in order (X, Y) |
+| --- | --- |
+| rotated-rect-parent | (10, 0), (12.828427, 2.828427), (11.414214, 4.242641), (8.585786, 1.414214) |
+| rotated-child | (13.535534, 3.535534), (14.242641, 4.242641), (13.535534, 4.949747), (12.828427, 4.242641) |
+| sheared-rect | (20, 12), (24, 12), (26, 14), (22, 14) |
+
+Pass requires matching outlines without an axis-aligned bounding-box expansion
+and identity transforms after baking. The generator checks zero bulges, metadata
+and the `rotated-child` parent link automatically. Report CamBam version, A/B
+pass or fail, and any displayed outline, vertex or matrix difference.
 
 ## Manual parent-transform acceptance
 

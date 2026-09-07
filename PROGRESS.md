@@ -7,18 +7,19 @@ not a guarantee of complete round-trip fidelity. MOP sources remain on instances
 
 ## Active work and next priority
 
-Rect baking loss investigation is complete; automated checks complete
-(2026-09-08). Scope: reproduce rotated
-and sheared Rect outline loss, identify affected bake entry points and safe
-controls, and establish a bounded repair with numerical/XML evidence. Owners:
-`tests/test_rect_bake_defect.py`, the implemented specification and review record.
-No runtime repair is included in this investigation. Eight characterization
-tests reproduce area changes of 8 to 18 under rotation and 8 to 12 under shear;
-all 50 suite tests pass. The stopping condition is met: durable reproduction,
-verified controls, repair criteria and priority are recorded in
-[the investigation](docs/REVIEW.md#rect-baking-loss-investigation).
-No blocker or manual acceptance remains for reproduction. Prior export/state,
-MOP and hierarchy acceptance remains unchanged. Next priority: exact Rect baking.
+Rect rotation/shear baking repair: **implemented; automated checks complete**
+(2026-09-08). Owners:
+`cambam_entities.py`, the explicit bake helper in `cambam_project.py`,
+`tests/test_rect_bake_defect.py`, and the implemented specification.
+Acceptance: preserve exact closed outlines, identities and relationships through
+full/explicit/global baking and two XML round trips; retain axis-aligned Rects
+and preserve descendant world geometry. Non-axis-aligned results become Plines
+in place so existing Python references remain valid. No implementation blocker.
+All 51 suite tests pass, including nine Rect regressions. Synthetic A/B files
+are generated and XML-inspected; **user display acceptance is pending**. Follow
+[the prepared criteria](docs/DEVELOPMENT.md#manual-rect-bake-acceptance) and record
+the result in [repair evidence](docs/REVIEW.md#rect-baking-repair-verification). General component ordering,
+curved geometry and alignment remain outside this increment.
 Phases 1 and 2 (project discovery and working
 agreement) and [phase 3 (initial engineering review)](docs/REVIEW.md#phase-3-completion-audit)
 are complete; [workflow completion evidence](docs/REVIEW.md#phase-1-and-2-completion-audit)
@@ -109,20 +110,13 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 
 ## Remaining backlog, in order
 
-1. Repair reproduced Rect baking loss: preserve exact outlines through full
-   local baking and representation changes, then cover the same Rect geometry
-   policy through explicit/global bake entry points. Preserve identities,
-   relationships, descendants and XML geometry. See
-   [bounded acceptance criteria](docs/REVIEW.md#bounded-repair-recommendation).
-   General component ordering, curved geometry and alignment remain deferred
-   pending a failing fixture or workflow dependency.
-2. Align MOP registry ownership with the specification after defining group-source
+1. Align MOP registry ownership with the specification after defining group-source
    compatibility; test defaults and malformed XML metadata reconstruction.
-3. Improve curved-geometry bounds; implement copy/transfer utilities against the
+2. Improve curved-geometry bounds; implement copy/transfer utilities against the
    specification, with collision and relationship tests.
-4. Validate packaging and supported Python versions; expand examples and tests as
+3. Validate packaging and supported Python versions; expand examples and tests as
    each capability is verified. Add CLI/distribution work only for an actual need.
-5. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
+4. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
    and load/modify/save workflows on another PC. User-requested future work;
    not active and does not displace correctness fixes.
    [Requirements, acceptance and maintenance plan](docs/MCP_PLAN.md).
@@ -150,16 +144,20 @@ MOP ownership must be reconciled before implementing that migration.
 [Verification commands](docs/DEVELOPMENT.md) and [work lifecycle](docs/WORKFLOW.md)
 are authoritative. Promote one bounded item with acceptance criteria, implement
 and verify it, then separately record user acceptance before claiming that level
-of completion. Next increment: repair the reproduced Rect outline loss against
-the bounded criteria above. This matters because successful bake/export calls
-can persist an enlarged outline; MOP registry migration still has unresolved
-source semantics. Do not expand into general transform refactoring.
+of completion. The active Rect repair matters because successful bake/export
+calls previously persisted enlarged outlines. Once its display acceptance is
+recorded, define MOP live-group versus snapshot compatibility before migrating
+ownership (backlog item 1). That resolves the next architectural dependency;
+general component ordering, curved baking and alignment remain deferred until a
+failing fixture or workflow dependency justifies them.
 
 ## Session breakpoint
 
-The investigation is a good fresh-session breakpoint: its automated checks,
-defect and repair criteria are persisted, and implementation is a
-distinct next scope. The repair must decide how representation changes affect
-existing Python object references; this is recorded in the review, not a pending
-decision needed to complete reproduction. Prior acceptance artifacts remain
-retained. No staging or commit was performed.
+The Rect implementation, automated evidence and acceptance preparation are
+complete. This is a good fresh-session breakpoint because the contract, files
+and remaining acceptance are persisted; no worker results or decisions remain
+unsaved. Continue this session for the short display acceptance result, then
+start a fresh session for the distinct MOP compatibility scope. CamBam display acceptance is pending;
+retain its generated artifacts and record the user's result before closing that
+acceptance. MOP source compatibility is a distinct next scope with its priority
+and unresolved contract captured above. No staging or commit was performed.

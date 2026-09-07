@@ -173,25 +173,31 @@ nonuniform scale, reflection and shear, including repeated baking and XML round
 trips. Entity-specific curved geometry/Rect conversion, explicit-matrix baking,
 component baking and global transform application are not covered by this result.
 
-### Known Rect baking limitation
+### Rect baking representation contract
 
-`Rect` stores an axis-aligned local corner, width and height. Its current
-`bake_geometry` transforms four corners, then replaces the outline with their
-axis-aligned bounding rectangle. General rotation and shear therefore lose
-geometry even when the caller reports success. Matching bounding boxes does not
-establish outline fidelity. Translation, diagonal scale/reflection and quarter
-turns preserve the rectangular outline (corner order may change).
+`Rect.bake_geometry` transforms all four local vertices. If the closed outline
+matches an axis-aligned rectangle (cyclic/reversed comparison, absolute tolerance
+`1e-12`, no relative tolerance), it retains Rect corner/width/height storage.
+Otherwise the same Python object becomes a closed `Pline` with four ordered
+vertices and zero bulges. Existing references still designate the registered
+entity; its UUID, identifier, description, precision, project link and relationship
+registries remain intact. Its runtime type changes and Rect-only geometry fields
+are removed; callers must use the common Primitive API or check its current type.
+No registry replacement or fresh identity is involved. The dataclasses share an
+ordinary Python object layout; an incompatible subclass layout raises before
+geometry edits. `to_pline_representation` remains a separate XML helper, not this
+identity-preserving conversion operation.
 
-The warning is not a reliable guard: perpendicularity accepts pure rotations,
-and the warning additionally requires the applied matrix to be the same object
-as `effective_transform`. Explicit matrices can therefore lose geometry silently.
-Export cannot recover corners already discarded by baking. The existing
-`to_pline_representation` is an XML helper that creates a separate object; it is
-not a project-level identity/relationship-preserving conversion API.
-
-This is a documented defect, not a supported approximation contract. Evidence
-and the bounded repair criteria live in
-[the Rect investigation](docs/REVIEW.md#rect-baking-loss-investigation).
+Implicit baking resets the effective matrix; explicit baking preserves it.
+Project full baking retains the descendant compensation policy above, while
+global baking applies the existing world-to-local conjugated matrix to each
+outline. These entry points share the entity conversion policy. Pure rotation
+component baking also benefits; general component ordering remains unverified.
+Finite affine inputs and resulting corners are checked before entity mutation;
+errors propagate rather than logging an approximation as success. Multi-entity
+operations remain nontransactional. Numerical and repeated XML checks cover
+rotation, shear, axis-preserving controls and hierarchy relationships. Synthetic
+CamBam display acceptance is recorded separately in the runbook/review.
 
 The legacy package exposes `CamBam` and aliases through its own `__init__.py`;
 it is a separate implementation, not the modern reader's fallback. Its CLI file
