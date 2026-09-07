@@ -497,3 +497,54 @@ by automated tests. No runtime changes were made for this acceptance update;
 document consistency and `git diff --check` were checked. The local A/B artifacts
 are retained. Export failure behavior remains the next implementation priority;
 this accepted slice is a good fresh-session breakpoint.
+
+## Export failure and state path verification
+
+2026-09-08: completed the export error boundary and separate bare-filename
+persistence slice. `build_xml_tree` re-raises encoder/resolution errors, retaining
+their original types and logged entity context. Ordered missing layers/parts and
+resolved targets without XML IDs now fail instead of being skipped. XML saves
+serialize into a unique sibling temporary file, close it, then use `os.replace`.
+Failure cleanup preserves the original exception. Formatting failures propagate,
+except unavailable Python 3.8 indentation retains the existing unindented fallback.
+`save_state` creates the absolute parent directory, so bare names work, and raises
+directory errors. The lasting contract and limits live in specification section 0.
+
+Evidence:
+
+- The initial four `test_export_failures.py` tests against the old writer produced
+  14 failing subtests: swallowed entity errors, partial destination writes and
+  missing replacement behavior. The fixed writer passed those tests. Expanded
+  coverage checks preparation/resolution failures, missing ordered entities,
+  bare filenames and unavailable indentation (eight tests total).
+- Loading only HEAD's `save_state` method into the current class in a separate
+  Python process produced two failures across the three state tests: no bare-name
+  file and no raised directory error. No working files were reverted.
+- `python -m unittest discover -s tests -v`: 42 tests passed on the available
+  Python 3.10.9 / NumPy 1.23.5; no repository virtual environment was present.
+  Tests assert unchanged bytes or absent destinations after failures, no leftover
+  temporary files under normal cleanup, successful XML counts/UUIDs/MOP targets
+  and depth, plus restored pickle primitive project links. Existing geometry and
+  repeated round-trip regressions remain green.
+- `python -m compileall -q cambam_builder legacy_cambam_builder`, the runbook
+  import/construct smoke command and `git diff --check` passed.
+- Supplementary local logs are in
+  `output/export-persistence-89fec11716684f3db4282876edf95cb8/`;
+  reusable failure fixtures are in the two new test modules.
+
+Direct destination writes were rejected because late serialization/I/O failure can
+truncate a previous good document. Best-effort encoder continuation was rejected
+because it falsely signals successful export. No custom exception hierarchy or
+dependency was needed. Atomic pickle writing, crash durability, comprehensive
+corrupt-registry validation, PID filtering/group semantics and full schema
+validation remain outside this bounded contract. Reopen those areas for a
+reproduced failure or an explicit workflow requirement.
+
+Implementation and automated verification are complete. No manual CamBam check
+adds evidence for this filesystem/exception change; successful XML structure is
+unchanged and existing synthetic product acceptance remains scoped as recorded.
+This does not establish broader production machining acceptance. Overall priority
+now returns to remaining transform fidelity; bound it with a reproduced case
+before choosing the repair. This is a good fresh-session breakpoint: required
+evidence and limits are saved, with no pending acceptance or decision.
+Suggested commit: `fix: propagate export failures and support bare state filenames`.

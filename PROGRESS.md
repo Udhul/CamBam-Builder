@@ -7,10 +7,11 @@ not a guarantee of complete round-trip fidelity. MOP sources remain on instances
 
 ## Active work and next priority
 
-MOP identity preservation is implemented and automated checks are complete;
-synthetic CamBam load/property acceptance was confirmed by the user on 2026-09-07. The parent/hierarchy and
-straight-polyline transform line remains accepted. Next implementation priority:
-export failure behavior and bare-filename state saving.
+Export failure behavior and bare-filename state saving are implemented and
+automated checks are complete (2026-09-08). No manual acceptance is required for
+this error/filesystem slice. MOP synthetic CamBam acceptance and the accepted
+hierarchy/straight-polyline line remain unchanged. Next priority: bound the
+remaining transform-fidelity work around a reproduced geometry-loss case.
 Phases 1 and 2 (project discovery and working
 agreement) and [phase 3 (initial engineering review)](docs/REVIEW.md#phase-3-completion-audit)
 are complete; [workflow completion evidence](docs/REVIEW.md#phase-1-and-2-completion-audit)
@@ -86,21 +87,32 @@ new suite. See [evidence](docs/REVIEW.md#mop-identity-round-trip-verification) a
 The stopping condition for implementation is met; complete parameter coverage,
 Default/Value fidelity and production toolpaths remain unverified.
 
+## Completed implementation: export failures and state paths
+
+**Implemented; automated checks complete.** Owners: `cambam_writer.py`,
+`CamBamProject.save_state`, `tests/test_export_failures.py`, and
+`tests/test_state_persistence.py`. Encoder failures propagate; export replaces
+the destination only after complete serialization and close. Bare state filenames
+work, and directory errors propagate. Eight export and three persistence tests
+plus all prior regressions pass (42 total). Acceptance covers existing/new
+destinations, failure propagation/cleanup, XML round trips and restored pickle
+project links. No blocker or manual validation remains for this scope.
+See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
+[verification](docs/REVIEW.md#export-failure-and-state-path-verification).
+
 ## Remaining backlog, in order
 
-1. Define export failure behavior and prevent silent incomplete output; fix bare
-   filename state saving as a separate small persistence slice.
-2. Complete remaining transform fidelity: component/explicit-matrix baking,
+1. Complete remaining transform fidelity: component/explicit-matrix baking,
    curved geometry, Rect conversion and alignment ordering. Deferred beyond the
    accepted core hierarchy line; reopen for an actual workflow dependency or
    a higher-impact reproduced defect, not solely adjacency to completed work.
-3. Align MOP registry ownership with the specification after defining group-source
+2. Align MOP registry ownership with the specification after defining group-source
    compatibility; test defaults and malformed XML metadata reconstruction.
-4. Improve curved-geometry bounds; implement copy/transfer utilities against the
+3. Improve curved-geometry bounds; implement copy/transfer utilities against the
    specification, with collision and relationship tests.
-5. Validate packaging and supported Python versions; expand examples and tests as
+4. Validate packaging and supported Python versions; expand examples and tests as
    each capability is verified. Add CLI/distribution work only for an actual need.
-6. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
+5. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
    and load/modify/save workflows on another PC. User-requested future work;
    not active and does not displace correctness fixes.
    [Requirements, acceptance and maintenance plan](docs/MCP_PLAN.md).
@@ -128,14 +140,16 @@ MOP ownership must be reconciled before implementing that migration.
 [Verification commands](docs/DEVELOPMENT.md) and [work lifecycle](docs/WORKFLOW.md)
 are authoritative. Promote one bounded item with acceptance criteria, implement
 and verify it, then separately record user acceptance before claiming that level
-of completion. Next implementation: export failure behavior and bare-filename state saving (backlog item 1).
+of completion. Next increment: reproduce and bound the highest-impact remaining
+transform defect (backlog item 1), with Rect rotation/shear baking loss as a
+concrete candidate (`Rect.bake_geometry` already warns of that loss). This matters
+because successful export can still serialize geometry damaged before export;
+do not expand into general transform refactoring without a failing fixture.
 
 ## Session breakpoint
 
-A fresh session is appropriate for the next implementation: MOP identity is
-implemented, verified and accepted for the synthetic CamBam A/B case, with its
-contract, evidence and acceptance criteria persisted in the owning documents.
-No pending user validation or unresolved decision remains for this slice.
-The local acceptance artifacts are retained. Export failure handling is a distinct next scope and matters
-because writer errors can still silently omit content. No conversation-only
-decision is needed. No staging or commit was performed.
+A fresh session is appropriate: export failure handling and state paths form a
+complete, verified outcome, and their contract, limits and evidence are persisted.
+No pending user validation or conversation-only decision remains. The next
+transform slice has a distinct scope. Prior acceptance artifacts remain retained.
+No staging or commit was performed.

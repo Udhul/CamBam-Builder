@@ -49,6 +49,34 @@ The reader's `PRIMITIVE_TAG_TO_CLASS` and `MOP_TAG_TO_CLASS` are the executable
 supported-tag inventory, not a claim of complete CamBam coverage. Consult those
 maps and corresponding entity encoders before adding a type.
 
+### Export failure and state-saving contract
+
+`build_xml_tree()` propagates entity encoding and MOP resolution exceptions;
+it does not return a tree after catching an encoder failure. Missing ordered
+layers/parts and resolved MOP targets without XML IDs also raise. Original
+encoder exception types are preserved; primitive/MOP logs identify the entity.
+This is not a comprehensive validator for manually corrupted private registries.
+Existing PID-source filtering, empty-source warnings and encoder parameter
+defaults remain unchanged; group-source semantics are a separate backlog item.
+
+`save()` / `export()` / `save_cambam_file()` return `None` only after a completed
+XML file replaces the destination. They retain forced `.cb` extension handling,
+bare filenames, parent-directory creation and optional pretty printing. Without
+`ET.indent` (Python 3.8), export continues unindented; other formatting errors
+propagate. XML is written to a unique temporary file in the destination directory,
+closed, then published with `os.replace`. Build, write, close and replacement
+failures propagate, leaving an existing destination unchanged or a new destination
+absent. Temporary cleanup is attempted on failure; cleanup errors are logged
+without hiding the original error. Created directories may remain.
+Replacement is filesystem-dependent, does not preserve destination inode metadata
+or symlink-following behavior, and is not a power-loss durability guarantee.
+Export still assigns project output precision to primitive instances.
+
+`save_state()` accepts bare filenames in the current directory and creates nested
+parent directories. Directory creation and pickle-writing errors propagate;
+successful calls return `None`. Pickle writing remains direct/non-atomic, and
+`load_state()` behavior and trusted-input requirements are unchanged.
+
 ### XML MOP identity contract
 
 All four supported MOP encoders write JSON `Tag` fields `user_id` and

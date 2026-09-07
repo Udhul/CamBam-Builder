@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 import os
 import logging
 import uuid
+import tempfile
 from typing import Dict, List
 
 from .cambam_project import CamBamProject # Use Type Hinting
@@ -18,7 +19,7 @@ from .cambam_entities import Primitive, Layer, Part, Mop # For type checking if 
 logger = logging.getLogger(__name__)
 
 def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
-    """Constructs the XML ElementTree for the CamBam project."""
+    """Construct the XML tree, propagating encoding errors without omitting entities."""
 
     # 1. Assign XML integer IDs to primitives (consistent ordering)
     # We need a map from Primitive UUID -> XML int ID
@@ -52,8 +53,7 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
     for layer_uuid in project._layer_order:
         layer = project.get_layer(layer_uuid)
         if not layer:
-            logger.warning(f"Layer UUID {layer_uuid} found in order list but not in registry. Skipping.")
-            continue
+            raise ValueError(f"Layer UUID {layer_uuid} found in order list but not in registry.")
 
         # Create the <layer> element itself
         layer_elem = layer.to_xml_element()
@@ -69,8 +69,7 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
         for primitive in sorted(primitives_on_layer, key=lambda p: uuid_to_xml_id[p.internal_id]): # Sort by XML ID for consistency
             xml_id = uuid_to_xml_id.get(primitive.internal_id)
             if xml_id is None:
-                logger.error(f"Primitive {primitive.user_identifier} ({primitive.internal_id}) on layer {layer.user_identifier} has no assigned XML ID. Skipping.")
-                continue
+                raise ValueError(f"Primitive {primitive.user_identifier} ({primitive.internal_id}) has no assigned XML ID.")
 
             # Get parent UUID from project registry to inject into the Tag
             parent = project.get_parent_of_primitive(primitive.internal_id)
@@ -85,6 +84,7 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
 
             except Exception as e:
                 logger.error(f"Error building XML for primitive {primitive.user_identifier} ({primitive.internal_id}): {e}", exc_info=True)
+                raise
 
 
     # 5. Build <parts> container
@@ -93,8 +93,7 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
     for part_uuid in project._part_order:
         part = project.get_part(part_uuid)
         if not part:
-            logger.warning(f"Part UUID {part_uuid} found in order list but not in registry. Skipping.")
-            continue
+            raise ValueError(f"Part UUID {part_uuid} found in order list but not in registry.")
 
         # Create the <part> element itself
         part_elem = part.to_xml_element()
@@ -118,7 +117,7 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
                         resolved_primitive_xml_ids.append(xml_id)
                     else:
                         # This case should be rare if resolve_pid_source_to_uuids filters correctly
-                        logger.warning(f"MOP {mop.name} references primitive {prim_uuid} which has no XML ID assigned.")
+                        raise ValueError(f"MOP {mop.name} references primitive {prim_uuid} which has no XML ID assigned.")
 
                 if not resolved_primitive_xml_ids and mop.pid_source:
                     # Log if the source wasn't empty but resolution yielded nothing valid
@@ -131,6 +130,7 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
 
             except Exception as e:
                 logger.error(f"Error building XML for MOP {mop.name} ({mop.user_identifier}): {e}", exc_info=True)
+                raise
 
 
     # 6. Return the complete ElementTree
@@ -140,6 +140,10 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
 def save_cambam_file(project: CamBamProject, file_path: str, pretty_print: bool = True) -> None:
     """
     Builds the XML tree for the project and saves it to a .cb file.
+
+    Errors propagate to the caller. A completed temporary file replaces the
+    destination only after serialization and close succeed, preserving an
+    existing destination on failure. This does not guarantee crash durability.
 
     Args:
         project: The CamBamProject instance to save.
@@ -170,18 +174,32 @@ def save_cambam_file(project: CamBamProject, file_path: str, pretty_print: bool 
 
         # Apply pretty printing if requested and supported
         if pretty_print:
-            try:
-                # ET.indent is available in Python 3.9+
-                ET.indent(tree, space="  ", level=0)
+            indent = getattr(ET, "indent", None)  # Python 3.9+
+            if indent is not None:
+                indent(tree, space="  ", level=0)
                 logger.debug("XML pretty-printing applied.")
-            except AttributeError:
+            else:
                 logger.warning("XML pretty-printing (indentation) requires Python 3.9 or later.")
-            except Exception as e_indent:
-                logger.warning(f"XML indentation failed: {e_indent}")
 
 
-        # Write the XML file
-        tree.write(output_path, encoding='utf-8', xml_declaration=True, short_empty_elements=False)
+        # Keep the temporary file on the destination filesystem. Close it before
+        # replacement, including on Windows where open files cannot be replaced.
+        temporary_path = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode='wb', dir=output_dir or '.', prefix='.cambam-', suffix='.tmp', delete=False
+            ) as temporary_file:
+                temporary_path = temporary_file.name
+                tree.write(temporary_file, encoding='utf-8', xml_declaration=True, short_empty_elements=False)
+            os.replace(temporary_path, output_path)
+            temporary_path = None
+        finally:
+            if temporary_path is not None:
+                try:
+                    os.unlink(temporary_path)
+                except OSError:
+                    # Preserve the original failure if cleanup also fails.
+                    logger.warning("Could not remove temporary export file %s", temporary_path, exc_info=True)
         logger.info(f"CamBam file successfully saved to: {output_path}")
 
     except Exception as e:

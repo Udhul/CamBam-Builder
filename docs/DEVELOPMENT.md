@@ -203,6 +203,22 @@ UUID/identifier registry behavior is automated and needs no manual reproduction.
 
 - Import failure: verify the selected interpreter and install declared dependencies
   through that interpreter; do not change package metadata merely to suit a shell.
-- Successful export with missing content: inspect logged errors and XML structure;
-  writer exception handling can continue after individual serialization failures.
+- Export failure: exceptions now propagate and the destination is replaced only
+  after the temporary XML file closes successfully. Inspect the exception and
+  primitive/MOP error context; fix the cause before retrying. If temporary cleanup
+  fails, its path is logged. Successful export is not full schema/fidelity validation.
+- State saving accepts `project.pkl` in the current directory. Parent-directory
+  creation failures raise; pickle writes remain non-atomic.
 - Consult [review evidence](REVIEW.md) before retrying a known approach.
+
+### Export and persistence regression checks
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -p test_export_failures.py -v
+& $ProjectPython -m unittest discover -s tests -p test_state_persistence.py -v
+```
+
+These synthetic tests check exception propagation, destination preservation,
+temporary cleanup, successful XML content/identity/targets and pickle restoration.
+No new manual CamBam acceptance is required for this filesystem/error-boundary
+slice: the successful XML format is unchanged and covered by the round-trip suite.

@@ -1437,11 +1437,12 @@ class CamBamProject:
     def save_state(self, file_path: str) -> None:
         """Saves the entire project state (including registries) to a pickle file."""
         # Ensure directory exists
+        directory = os.path.dirname(os.path.abspath(file_path))
         try:
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            os.makedirs(directory, exist_ok=True)
         except OSError as e:
              logger.error(f"Could not create directory for state file {file_path}: {e}")
-             return # Or raise
+             raise
 
         # Prepare for pickling: remove weakrefs or other unpickleable things if any
         # (Primitives already handle _project_ref in __getstate__)
