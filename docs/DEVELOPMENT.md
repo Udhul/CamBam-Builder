@@ -169,6 +169,36 @@ with no extra geometry; A and B must coincide. Inspect world coordinates rather
 than B's local point properties. Report CamBam version, pass/fail and the layer
 and observed coordinates for any mismatch. No toolpath checks are needed.
 
+## Manual MOP identity acceptance
+
+Accepted by the user on 2026-09-07: all described A/B load, operation, target and
+property outcomes were confirmed. CamBam version was not supplied. The retained
+criteria need no repetition unless relevant behavior changes.
+Prepared and XML-inspected files in `output/mop-validation-kpk5hxop/`:
+[A reference](../output/mop-validation-kpk5hxop/A_reference.cb) omits MOP Tags;
+[B result](../output/mop-validation-kpk5hxop/B_roundtrip.cb) retains them after two
+library round trips. The ignored generator can be run from the repository root:
+
+```powershell
+& $ProjectPython -c "import runpy; runpy.run_path('output/mop-validation-kpk5hxop/generate.py', run_name='__main__')"
+```
+
+Open A and B separately. Pass requires no load errors and exactly two enabled
+Profile operations under Part1, both named `Duplicate`, in this order:
+
+| Operation | Target geometry | TargetDepth | CutFeedrate |
+| --- | --- | --- | --- |
+| First | Left square, X=0..10, Y=0..10 | -1 | 300 |
+| Second | Right square, X=20..30, Y=0..10 | -2 | 600 |
+
+Both use Outside, tool diameter 3, depth increment 0.5 and spindle speed 12000.
+Check properties and highlight each operation's referenced primitive. Tolerance:
+0.01 drawing units for geometry/depth/diameter; feed and spindle match exactly.
+Primitive XML IDs are assigned by UUID and need not be 1 then 2.
+Report CamBam version, A/B pass or fail and any differing operation/property.
+No machine execution is needed; this accepts load/display/properties only.
+UUID/identifier registry behavior is automated and needs no manual reproduction.
+
 ## Troubleshooting
 
 - Import failure: verify the selected interpreter and install declared dependencies

@@ -437,3 +437,63 @@ has greater immediate impact on preserving machining intent. It is now the next
 recommended outcome, without expanding into registry migration. Remaining
 transform gaps stay explicit in PROGRESS with reopening criteria. A fresh session
 can start from repository documentation without retaining this conversation.
+
+## MOP identity round-trip verification
+
+2026-09-07: fixed the I/O identity boundary in `Mop._add_common_mop_elements`
+and `_reconstruct_mop`. Previously display Name became the unique identifier,
+merging/rejecting duplicate names and replacing UUIDs. JSON Tag now carries
+`user_id`/`internal_id`; restoration precedes registration. Reconstruction follows
+geometry to detect cross-entity collisions. Native test delegation was limited to
+the synthetic test module; lead reviewed and extended it and verified locally.
+
+Complete valid colliding identity metadata fails the entire import, preserving no
+partial result. Missing/incomplete/malformed metadata gets a new UUID/identifier;
+this keeps ordinary metadata-free CamBam files usable without unique names.
+No registry migration, group semantics change or broad parameter parser expansion.
+Reopen metadata policy for an authorized real interoperability fixture showing
+CamBam strips/rejects Tags or requires different identity handling.
+
+Verification on existing Python 3.10.9 / NumPy 1.23.5 (no project venv):
+
+- `python -m unittest discover -s tests -p test_mop_roundtrip.py -q`: 5 tests pass.
+  Four MOP types, same-part/across-part duplicate names, name collisions with
+  layers/parts, UUID/identifier lookups, per-part order, target UUIDs, representative
+  supported explicit parameters and two round trips. Also legacy fallback and
+  subsequent identity stability, malformed Tags and conflicting MOP/geometry IDs.
+- Loading `git show HEAD:cambam_builder/cambam_reader.py` into an isolated Python
+  module and substituting its reader in the new suite gives 7 assertion failures
+  across 5 tests, zero errors. Working files were not reverted. The fixed writer
+  was retained, proving the old reader loses operations even with identity Tags.
+- `python -m unittest discover -s tests -q`: all 31 tests pass.
+- `python -m compileall -q cambam_builder legacy_cambam_builder`, import/construct
+  smoke and `git diff --check`: pass.
+- Generated and inspected `output/mop-validation-kpk5hxop/` A/B XML: two Profiles
+  named Duplicate, separate left/right square references, ordered depths -1/-2
+  and feeds 300/600 retained after two round trips. Reference omits new MOP Tags.
+  Initial generator incorrectly assumed UUID-assigned primitive IDs followed
+  creation order; corrected its assertion to resolve IDs through primitive Tags.
+
+Implementation and automated verification are complete. CamBam acceptance is
+pending under [the prepared criteria](DEVELOPMENT.md#manual-mop-identity-acceptance);
+no machine execution is required. Existing parameter coverage and Default/Value
+limitations remain; this is not production machining acceptance. The next useful
+increment is export failure handling, whose silent omissions remain a data-loss
+risk. Suggested commit: `fix: preserve MOP identities across XML round trips`.
+
+## MOP A/B user acceptance
+
+2026-09-07: the user confirmed that all described expected outcomes were validated
+and true. This accepts both prepared files loading successfully, two enabled
+Duplicate Profiles under Part1 in the expected order, left/right square targets,
+depths -1/-2, feeds 300/600, Outside, diameter 3, depth increment 0.5 and spindle
+12000. CamBam version was not supplied. This supersedes the pending acceptance
+in the preceding verification record; no repeated check is required without a
+relevant behavior change.
+
+Scope is the synthetic load/display/property case, not machine execution or
+complete parameter compatibility. Identity/registry preservation remains covered
+by automated tests. No runtime changes were made for this acceptance update;
+document consistency and `git diff --check` were checked. The local A/B artifacts
+are retained. Export failure behavior remains the next implementation priority;
+this accepted slice is a good fresh-session breakpoint.

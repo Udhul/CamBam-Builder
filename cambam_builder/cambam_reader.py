@@ -141,23 +141,6 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
             for part_elem in parts_node.findall("part"):
                 _reconstruct_part(project, part_elem)
 
-        # 2. MOPs (read structure, store primitive XML ID refs)
-        logger.debug("Reading MOPs...")
-        if parts_node is not None:
-            for part_elem in parts_node.findall("part"):
-                part_uuid = project._resolve_identifier(part_elem.get("Name"), Part) # Assume Name is unique ID here
-                if not part_uuid:
-                     logger.warning(f"Skipping MOPs for part '{part_elem.get('Name')}' as part was not reconstructed.")
-                     continue
-                mops_node = part_elem.find("machineops")
-                if mops_node is not None:
-                    for mop_elem in mops_node: # Iterate over actual MOP tags (<profile>, <pocket> etc)
-                         mop_type_tag = mop_elem.tag
-                         if mop_type_tag in MOP_TAG_TO_CLASS:
-                             _reconstruct_mop(project, mop_elem, part_uuid, mop_primitive_xml_id_refs)
-                         else:
-                              logger.warning(f"Unsupported MOP type tag '{mop_type_tag}' encountered in part '{part_elem.get('Name')}'. Skipping.")
-
         # 3. Layers
         logger.debug("Reading Layers...")
         layers_node = root.find("layers")
@@ -229,6 +212,23 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
                          project._primitives[child_uuid].effective_transform = local_transform
                  else:
                      logger.warning(f"Could not link child primitive {child_uuid}: Resolved parent UUID {parent_uuid} not found in project primitives registry.")
+
+        # Reconstruct MOPs after other entities so identity collisions are detectable
+        logger.debug("Reading MOPs...")
+        if parts_node is not None:
+            for part_elem in parts_node.findall("part"):
+                part_uuid = project._resolve_identifier(part_elem.get("Name"), Part) # Assume Name is unique ID here
+                if not part_uuid:
+                     logger.warning(f"Skipping MOPs for part '{part_elem.get('Name')}' as part was not reconstructed.")
+                     continue
+                mops_node = part_elem.find("machineops")
+                if mops_node is not None:
+                    for mop_elem in mops_node: # Iterate over actual MOP tags (<profile>, <pocket> etc)
+                         mop_type_tag = mop_elem.tag
+                         if mop_type_tag in MOP_TAG_TO_CLASS:
+                             _reconstruct_mop(project, mop_elem, part_uuid, mop_primitive_xml_id_refs)
+                         else:
+                              logger.warning(f"Unsupported MOP type tag '{mop_type_tag}' encountered in part '{part_elem.get('Name')}'. Skipping.")
 
         # 5b. Link MOPs to Primitives (resolve pid_source if it was XML IDs)
         for mop_uuid, xml_ids in mop_primitive_xml_id_refs.items():
@@ -353,6 +353,30 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
     mop_class = MOP_TAG_TO_CLASS.get(mop_elem.tag)
     if not mop_class: return # Should have been checked by caller
 
+    # Display names are not registry keys. Legacy or malformed metadata gets
+    # a fresh identity; complete valid metadata is preserved before registration.
+    internal_id = uuid.uuid4()
+    mop_identifier = str(internal_id)
+    tag_text = mop_elem.findtext("Tag")
+    if tag_text:
+        try:
+            metadata = json.loads(tag_text)
+            if not isinstance(metadata, dict):
+                raise ValueError("MOP Tag must be an object")
+            candidate_id = metadata.get("user_id")
+            candidate_uuid = metadata.get("internal_id")
+            if not isinstance(candidate_id, str) or not candidate_id:
+                raise ValueError("MOP user_id must be a nonempty string")
+            if not isinstance(candidate_uuid, str):
+                raise ValueError("MOP internal_id must be a UUID string")
+            internal_id = uuid.UUID(candidate_uuid)
+            mop_identifier = candidate_id
+        except (ValueError, TypeError):
+            logger.warning("Invalid MOP identity metadata; allocating a fresh identity.")
+    if (project._get_entity_by_uuid(internal_id) is not None
+            or mop_identifier in project._identifier_registry):
+        raise CamBamReaderError(f"Conflicting MOP identity: {mop_identifier} ({internal_id})")
+
     # --- Parse Common MOP Parameters ---
     mop_name = mop_elem.findtext("Name", f"Unnamed_{mop_elem.tag}")
     enabled = _parse_bool(mop_elem.get("Enabled"), True) # Enabled is attribute on root MOP tag
@@ -393,8 +417,8 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
     # CamBam seems to store EITHER a list of primitive IDs OR rely on implicit context (e.g. selected items).
     # If the <primitive> tag is present and non-empty, we use its content.
     # If it's missing or empty, the MOP targets nothing explicitly via XML refs.
-    # We cannot easily reconstruct group membership from standard CamBam XML alone,
-    # unless our writer puts group info into a Tag (which it doesn't for MOPs).
+    # We cannot reconstruct live group targeting from standard primitive references.
+    # The MOP Tag preserves identity only, not live group targeting.
     # So, pid_source reconstruction will primarily be a list of XML IDs found, or empty list.
     primitive_xml_ids: List[int] = []
     primitive_container = mop_elem.find("primitive")
@@ -403,11 +427,6 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
             xml_id = _parse_int(prim_ref.text, -1)
             if xml_id > 0:
                 primitive_xml_ids.append(xml_id)
-
-    # Store the list of XML IDs temporarily. This will be resolved to UUIDs later.
-    # We store it directly as the pid_source for now, assuming list type.
-    pid_source_value: Union[str, List[int]] = primitive_xml_ids # Treat as list of XML IDs for now
-
 
     # --- Parse MOP-Specific Parameters ---
     # This requires adding parsing logic for each MOP type based on its unique tags
@@ -432,15 +451,10 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
 
     # --- Create and Register MOP ---
     try:
-        # Use MOP name as identifier for add_mop_internal (might need adjusting if names aren't unique)
-        # Or perhaps generate a UUID based on hash of XML element? For now, use name.
-        mop_identifier = mop_name # Potential uniqueness issue here!
-        mop = project._add_mop_internal(
-            MopClass=mop_class,
-            part_identifier=part_uuid,
-            pid_source=pid_source_value, # Store XML IDs for now
+        mop = mop_class(
+            user_identifier=mop_identifier,
+            pid_source=[], # XML references are resolved in the deferred linking pass.
             name=mop_name,
-            identifier=mop_identifier, # Use name as identifier during reconstruction
             enabled=enabled,
             target_depth=target_depth,
             depth_increment=depth_increment,
@@ -462,14 +476,13 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
             custom_mop_footer=custom_footer,
             **mop_specific_kwargs
         )
-        if mop:
-            # Store the XML IDs referenced by this MOP for later resolution
-            mop_primitive_xml_id_refs[mop.internal_id] = primitive_xml_ids
-        else:
-             logger.error(f"Failed to reconstruct MOP '{mop_name}' of type {mop_class.__name__}.")
-
+        mop.internal_id = internal_id
+        if not project._register_entity(mop, project._mops):
+            raise CamBamReaderError(f"Failed to register MOP '{mop_name}'")
+        project.assign_mop_to_part(mop.internal_id, part_uuid)
+        mop_primitive_xml_id_refs[mop.internal_id] = primitive_xml_ids
     except Exception as e:
-        logger.error(f"Error reconstructing MOP '{mop_name}': {e}", exc_info=True)
+        raise CamBamReaderError(f"Error reconstructing MOP '{mop_name}': {e}") from e
 
 
 def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_uuid: uuid.UUID,

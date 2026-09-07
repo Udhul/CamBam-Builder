@@ -49,6 +49,25 @@ The reader's `PRIMITIVE_TAG_TO_CLASS` and `MOP_TAG_TO_CLASS` are the executable
 supported-tag inventory, not a claim of complete CamBam coverage. Consult those
 maps and corresponding entity encoders before adding a type.
 
+### XML MOP identity contract
+
+All four supported MOP encoders write JSON `Tag` fields `user_id` and
+`internal_id` (UUID string), independently of display `Name`. The reader restores
+identity before registration and preserves XML operation order within each part.
+MOPs load after other entities: complete valid metadata colliding with an existing
+UUID or identifier fails import (`None` with an error), never overwrites it.
+Missing, incomplete or malformed identity metadata allocates a fresh UUID with
+its string as identifier. Names remain unchanged; subsequent library round trips
+preserve the new identity. Unrelated custom Tag content is not retained.
+
+Primitive XML IDs resolve to UUIDs in the linking pass. Group sources export a
+snapshot and import as UUID lists; live group semantics and registry ownership
+are unchanged. This slice covers identity and existing supported explicit
+machining parameters, not complete parameter coverage or Default/Value fidelity.
+Part UUID persistence remains outside scope. CamBam loading and properties for the synthetic MOP Tag case were accepted by
+the user; criteria remain in `docs/DEVELOPMENT.md`. This does not establish
+production toolpath correctness.
+
 ### XML parent identity and world-pose contract
 
 Primitive `Tag.parent` stores the parent's internal UUID string. XML `mat` stores

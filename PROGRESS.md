@@ -7,9 +7,11 @@ not a guarantee of complete round-trip fidelity. MOP sources remain on instances
 
 ## Active work and next priority
 
-No implementation increment is active. The parent/hierarchy and straight-polyline
-transform line has completed its scoped verification and user display acceptance.
-Next priority: preserve MOP identities across XML round trips with duplicate names. Phases 1 and 2 (project discovery and working
+MOP identity preservation is implemented and automated checks are complete;
+synthetic CamBam load/property acceptance was confirmed by the user on 2026-09-07. The parent/hierarchy and
+straight-polyline transform line remains accepted. Next implementation priority:
+export failure behavior and bare-filename state saving.
+Phases 1 and 2 (project discovery and working
 agreement) and [phase 3 (initial engineering review)](docs/REVIEW.md#phase-3-completion-audit)
 are complete; [workflow completion evidence](docs/REVIEW.md#phase-1-and-2-completion-audit)
 records the foundations. Product acceptance remains separate.
@@ -71,26 +73,34 @@ A/B user acceptance complete**. The user confirmed matching final coordinates,
 identity matrices in both files and the intended layer difference. See
 [repair and acceptance evidence](docs/REVIEW.md#full-bake-hierarchy-verification).
 
+## Completed implementation: MOP round-trip identity
+
+**Implemented; automated checks complete; synthetic CamBam acceptance complete.** Entity
+encoders store UUID/identifier metadata separately from display names. The reader
+restores identity before registration, retains XML operation order and targets,
+allocates fresh identities for legacy/malformed Tags, and fails import on explicit
+identity collisions. No MOP registry migration or live group semantic change.
+Five new regressions and all 31 suite tests pass. The original reader fails the
+new suite. See [evidence](docs/REVIEW.md#mop-identity-round-trip-verification) and
+[prepared A/B acceptance](docs/DEVELOPMENT.md#manual-mop-identity-acceptance).
+The stopping condition for implementation is met; complete parameter coverage,
+Default/Value fidelity and production toolpaths remain unverified.
+
 ## Remaining backlog, in order
 
-1. Preserve MOP identities across XML round trips with duplicate display names.
-   Outcome: no lost/merged operations; retain identifiers/UUIDs, names, part order,
-   primitive targets and relevant machining parameters across repeated round trips.
-   Fix the I/O identity boundary without requiring unique display names or a MOP
-   registry migration. The recorded two-to-one operation loss justifies priority.
-2. Define export failure behavior and prevent silent incomplete output; fix bare
+1. Define export failure behavior and prevent silent incomplete output; fix bare
    filename state saving as a separate small persistence slice.
-3. Complete remaining transform fidelity: component/explicit-matrix baking,
+2. Complete remaining transform fidelity: component/explicit-matrix baking,
    curved geometry, Rect conversion and alignment ordering. Deferred beyond the
    accepted core hierarchy line; reopen for an actual workflow dependency or
    a higher-impact reproduced defect, not solely adjacency to completed work.
-4. Align MOP registry ownership with the specification after defining group-source
+3. Align MOP registry ownership with the specification after defining group-source
    compatibility; test defaults and malformed XML metadata reconstruction.
-5. Improve curved-geometry bounds; implement copy/transfer utilities against the
+4. Improve curved-geometry bounds; implement copy/transfer utilities against the
    specification, with collision and relationship tests.
-6. Validate packaging and supported Python versions; expand examples and tests as
+5. Validate packaging and supported Python versions; expand examples and tests as
    each capability is verified. Add CLI/distribution work only for an actual need.
-7. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
+6. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
    and load/modify/save workflows on another PC. User-requested future work;
    not active and does not displace correctness fixes.
    [Requirements, acceptance and maintenance plan](docs/MCP_PLAN.md).
@@ -101,7 +111,7 @@ above. Detailed contracts remain in `structure_spec.md`, and review evidence in
 
 ## Blockers and decisions
 
-No blocker for the recommended synthetic regression/fix. Full source-system
+No implementation blocker or pending validation for the completed MOP synthetic case. Full source-system
 compatibility requires CamBam validation and representative authorized fixtures.
 MOP live group versus snapshot semantics need resolution before registry migration.
 The architecture specification is a target; its PID-source wording and centralized
@@ -113,20 +123,19 @@ MOP ownership must be reconciled before implementing that migration.
 - Parent XML slice: implemented and automated checks complete; nine regression tests.
 - Parent-cycle rejection: implemented and automated checks complete.
 - Broader product baseline: limited local checks only.
-- User/CamBam acceptance: parent, full-bake and global-transform synthetic display accepted; broader production acceptance not performed.
+- User/CamBam acceptance: parent, full-bake and global-transform synthetic display and MOP load/properties accepted; broader production acceptance not performed.
 
 [Verification commands](docs/DEVELOPMENT.md) and [work lifecycle](docs/WORKFLOW.md)
 are authoritative. Promote one bounded item with acceptance criteria, implement
 and verify it, then separately record user acceptance before claiming that level
-of completion. Next implementation: MOP round-trip identity preservation (backlog item 1).
+of completion. Next implementation: export failure behavior and bare-filename state saving (backlog item 1).
 
 ## Session breakpoint
 
-A fresh session is appropriate now: the scoped hierarchy/transform line is
-implemented, checked and accepted, and MOP interchange is a distinct next outcome.
-Current contracts and limitations are in `structure_spec.md`, evidence in
-`docs/REVIEW.md`, and priority/acceptance above. No pending user validation for the
-completed synthetic cases or conversation-only decision is needed to start MOP
-work. This does not claim general curved/component transform fidelity or production
-machining acceptance. Documentation updates from this round still need the user's
-normal commit workflow; no staging or commit was performed by the agent.
+A fresh session is appropriate for the next implementation: MOP identity is
+implemented, verified and accepted for the synthetic CamBam A/B case, with its
+contract, evidence and acceptance criteria persisted in the owning documents.
+No pending user validation or unresolved decision remains for this slice.
+The local acceptance artifacts are retained. Export failure handling is a distinct next scope and matters
+because writer errors can still silently omit content. No conversation-only
+decision is needed. No staging or commit was performed.

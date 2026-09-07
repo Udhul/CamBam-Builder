@@ -1167,6 +1167,9 @@ class Mop(CamBamEntity, ABC):
     def _add_common_mop_elements(self, mop_root_elem: ET.Element, project: "CamBamProject", resolved_primitive_xml_ids: List[int]):
         """Adds common XML sub-elements shared by all MOP types."""
         ET.SubElement(mop_root_elem, "Name").text = self.name # Use MOP's intrinsic name
+        ET.SubElement(mop_root_elem, "Tag").text = json.dumps({
+            "user_id": self.user_identifier, "internal_id": str(self.internal_id),
+        })
 
         # Resolve parameters using defaults if needed
         eff_target_depth = self._get_effective_param('target_depth', project)
