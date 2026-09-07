@@ -691,13 +691,29 @@ Verification on system Python 3.10.9 / NumPy 1.23.5 (no project venv):
 Implementation and automated verification are complete. Manual validation adds
 CamBam renderer/load evidence beyond library XML reconstruction; report version,
 A/B pass/fail and any differing outline or matrix against the prepared criteria.
-CamBam user display acceptance remains pending; previous accepted fixtures are
+CamBam user display acceptance is now complete (see below); previous accepted fixtures are
 unchanged and need no repetition. Reopen this scope for a failing supported
 outline/relationship fixture, object-layout compatibility need, or reported
 CamBam display discrepancy.
 
 Suggested commit: `fix: preserve Rect outlines when baking rotation and shear`.
-After display acceptance, the next priority is defining MOP group-source
+The next priority is defining MOP group-source
 compatibility before registry migration, as recorded in PROGRESS.md. This is a
-coherent technical breakpoint; keep this session for the acceptance result and
-use a fresh session for that distinct design scope. Nothing was staged or committed.
+coherent accepted breakpoint; use a fresh session for that distinct design scope. Nothing was staged or committed.
+
+
+## Rect baking display acceptance
+
+2026-09-08. The user confirmed all validation conditions were met, a full match
+and identity transforms for the prepared Rect A/B case. This accepts loading and
+displaying the three closed outlines with the documented vertices within `0.01`
+drawing units and identity matrices in A/B. CamBam version was not supplied.
+[Files and retained criteria](DEVELOPMENT.md#manual-rect-bake-acceptance) remain
+available; no regeneration or repeat acceptance is required for unchanged code.
+
+Implementation, automated verification and synthetic display acceptance are
+complete. This acceptance does not extend to production toolpaths, other curved
+entities or general component ordering. No runtime code changed in this round;
+`git diff --check` passed and the documentation links/status were reviewed.
+No automated tests were rerun because only acceptance documentation changed.
+Suggested commit: `docs: record Rect baking display acceptance`.

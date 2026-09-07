@@ -92,6 +92,11 @@ use. Keep private CAD inputs and generated reports local.
 
 ## Manual Rect-bake acceptance
 
+**Accepted by the user on 2026-09-08:** all conditions met, full outline match
+and identity transforms. CamBam version was not supplied. The retained criteria
+below document the accepted synthetic case; do not repeat without a relevant
+change. See [acceptance evidence](REVIEW.md#rect-baking-display-acceptance).
+
 The prepared local fixtures are [A_reference.cb](../output/rect-bake-validation-20260908-a/A_reference.cb)
 and [B_baked.cb](../output/rect-bake-validation-20260908-a/B_baked.cb). The generator
 at [generate.py](../output/rect-bake-validation-20260908-a/generate.py) creates A as

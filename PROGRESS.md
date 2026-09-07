@@ -7,7 +7,7 @@ not a guarantee of complete round-trip fidelity. MOP sources remain on instances
 
 ## Active work and next priority
 
-Rect rotation/shear baking repair: **implemented; automated checks complete**
+Rect rotation/shear baking repair: **implemented; automated checks complete; synthetic display accepted**
 (2026-09-08). Owners:
 `cambam_entities.py`, the explicit bake helper in `cambam_project.py`,
 `tests/test_rect_bake_defect.py`, and the implemented specification.
@@ -16,9 +16,11 @@ full/explicit/global baking and two XML round trips; retain axis-aligned Rects
 and preserve descendant world geometry. Non-axis-aligned results become Plines
 in place so existing Python references remain valid. No implementation blocker.
 All 51 suite tests pass, including nine Rect regressions. Synthetic A/B files
-are generated and XML-inspected; **user display acceptance is pending**. Follow
-[the prepared criteria](docs/DEVELOPMENT.md#manual-rect-bake-acceptance) and record
-the result in [repair evidence](docs/REVIEW.md#rect-baking-repair-verification). General component ordering,
+were accepted by the user on 2026-09-08: all conditions met, full outline match
+and identity transforms. CamBam version was not supplied. See
+[acceptance evidence](docs/REVIEW.md#rect-baking-display-acceptance).
+Next priority: define MOP group-source compatibility before registry migration
+(backlog item 1). General component ordering,
 curved geometry and alignment remain outside this increment.
 Phases 1 and 2 (project discovery and working
 agreement) and [phase 3 (initial engineering review)](docs/REVIEW.md#phase-3-completion-audit)
@@ -139,25 +141,23 @@ MOP ownership must be reconciled before implementing that migration.
 - Parent XML slice: implemented and automated checks complete; nine regression tests.
 - Parent-cycle rejection: implemented and automated checks complete.
 - Broader product baseline: limited local checks only.
-- User/CamBam acceptance: parent, full-bake and global-transform synthetic display and MOP load/properties accepted; broader production acceptance not performed.
+- User/CamBam acceptance: parent, full-bake, global-transform and Rect-bake synthetic display and MOP load/properties accepted; broader production acceptance not performed.
 
 [Verification commands](docs/DEVELOPMENT.md) and [work lifecycle](docs/WORKFLOW.md)
 are authoritative. Promote one bounded item with acceptance criteria, implement
 and verify it, then separately record user acceptance before claiming that level
-of completion. The active Rect repair matters because successful bake/export
-calls previously persisted enlarged outlines. Once its display acceptance is
-recorded, define MOP live-group versus snapshot compatibility before migrating
+of completion. The completed Rect repair prevents bake/export
+calls from persisting enlarged outlines. Next, define MOP live-group versus
+snapshot compatibility before migrating
 ownership (backlog item 1). That resolves the next architectural dependency;
 general component ordering, curved baking and alignment remain deferred until a
 failing fixture or workflow dependency justifies them.
 
 ## Session breakpoint
 
-The Rect implementation, automated evidence and acceptance preparation are
-complete. This is a good fresh-session breakpoint because the contract, files
-and remaining acceptance are persisted; no worker results or decisions remain
-unsaved. Continue this session for the short display acceptance result, then
-start a fresh session for the distinct MOP compatibility scope. CamBam display acceptance is pending;
-retain its generated artifacts and record the user's result before closing that
-acceptance. MOP source compatibility is a distinct next scope with its priority
-and unresolved contract captured above. No staging or commit was performed.
+The Rect implementation, automated verification and synthetic display acceptance
+are complete and persisted. This is a good fresh-session breakpoint: no pending
+Rect decisions or validation remain, and MOP source compatibility is a distinct
+next scope captured in backlog item 1. Start a fresh session for that design
+increment. Acceptance artifacts are retained. No staging or commit was performed
+in this acceptance-recording round.
