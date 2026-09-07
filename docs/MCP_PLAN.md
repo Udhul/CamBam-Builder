@@ -2,7 +2,7 @@
 
 User-requested direction, captured 2026-09-07. This is a lightweight pending plan,
 not an implemented API or installation guide. Priority/state belong exclusively
-to [PROGRESS.md](../PROGRESS.md); existing correctness repairs remain ahead of it.
+to [PROGRESS.md](PROGRESS.md); existing correctness repairs remain ahead of it.
 
 ## Outcome and requirements
 

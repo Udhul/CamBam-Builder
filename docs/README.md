@@ -6,7 +6,7 @@ Read this map after the root README; follow only the relevant owner.
 | --- | --- | --- |
 | Agent operational rules | [AGENTS.md](../AGENTS.md) | Compact mandatory context |
 | Current architecture, code ownership and intended domain relationships | [structure_spec.md](../structure_spec.md) | Section 0: implemented structure; remaining sections: target design |
-| Current baseline, priority, backlog, blockers | [PROGRESS.md](../PROGRESS.md) | Single status surface; pending items live here |
+| Current baseline, priority, backlog, blockers | [PROGRESS.md](PROGRESS.md) | Single status surface; pending items live here |
 | Development commands and troubleshooting | [DEVELOPMENT.md](DEVELOPMENT.md) | Setup, checks and artifact handling |
 | Delegation, lifecycle and handoff | [WORKFLOW.md](WORKFLOW.md) | Reusable working procedures |
 | Review evidence and rejected approaches | [REVIEW.md](REVIEW.md) | Dated findings, acceptance evidence and reopening conditions; not a second backlog |
@@ -30,7 +30,7 @@ No issue tracker, CI configuration, pre-existing decision log or dedicated test 
 was found during initial discovery. This documentation now provides a review record.
 An external tracker may exist; if one is
 designated, move task ownership there and retain only baseline/active links in
-`PROGRESS.md`. Do not mirror issue descriptions.
+[PROGRESS.md](PROGRESS.md). Do not mirror issue descriptions.
 
 Completed plans must move lasting contracts to the specification or runbook and
 retain only useful evidence in the review record. Search direct repository content

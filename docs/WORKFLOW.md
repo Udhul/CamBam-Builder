@@ -2,7 +2,7 @@
 
 ## Work lifecycle
 
-`PROGRESS.md` owns the ordered backlog and one active bounded slice. Promote an
+[PROGRESS.md](PROGRESS.md) owns the ordered backlog and one active bounded slice. Promote an
 item by recording objective, affected owners and executable acceptance criteria.
 Record blockers there; implementation detail belongs in the domain owner.
 Close a slice by separately recording implementation, automated verification and
@@ -116,6 +116,6 @@ Recommended next increment:
 Suggested commit message:
 ```
 
-Keep the live state in `PROGRESS.md` (or its designated issue). The review record
+Keep the live state in [PROGRESS.md](PROGRESS.md) (or its designated issue). The review record
 owns detailed completed evidence; handoffs link to it and do not create another
 status file. A failed/unperformed required check keeps technical closure pending.

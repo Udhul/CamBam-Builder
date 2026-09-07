@@ -8,7 +8,7 @@ established for all supported entities.
 Start with the [documentation map](docs/README.md), then the relevant topic:
 
 - [Development and verification](docs/DEVELOPMENT.md)
-- [Current status and priority](PROGRESS.md)
+- [Current status and priority](docs/PROGRESS.md)
 - [Implemented architecture and target design](structure_spec.md)
 - [Agent operating agreement](AGENTS.md)
 

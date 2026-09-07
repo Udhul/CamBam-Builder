@@ -30,7 +30,7 @@ The MIT license does not relax private-input or external-processing boundaries.
 ## Ranked engineering findings
 
 Order balances impact, risk, leverage, confidence and cost; the active priority
-and remaining backlog live only in [PROGRESS.md](../PROGRESS.md).
+and remaining backlog live only in [PROGRESS.md](PROGRESS.md).
 
 | Rank | Finding and classification | Impact / confidence / approximate cost | Leverage |
 | --- | --- | --- | --- |
@@ -137,7 +137,7 @@ fix. Baked/non-baked equivalence needs independent tests.
 
 The parent round-trip finding warrants the smallest coherent repair across writer
 and reader. Current scope, acceptance criteria and priority are owned exclusively
-by [PROGRESS.md](../PROGRESS.md). This dated review owns the defect evidence and
+by [PROGRESS.md](PROGRESS.md). This dated review owns the defect evidence and
 the reasons a writer-only repair is insufficient.
 
 ## Validation performed
@@ -698,7 +698,7 @@ CamBam display discrepancy.
 
 Suggested commit: `fix: preserve Rect outlines when baking rotation and shear`.
 The next priority is defining MOP group-source
-compatibility before registry migration, as recorded in PROGRESS.md. This is a
+compatibility before registry migration, as recorded in [PROGRESS.md](PROGRESS.md). This is a
 coherent accepted breakpoint; use a fresh session for that distinct design scope. Nothing was staged or committed.
 
 

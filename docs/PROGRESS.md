@@ -18,19 +18,19 @@ in place so existing Python references remain valid. No implementation blocker.
 All 51 suite tests pass, including nine Rect regressions. Synthetic A/B files
 were accepted by the user on 2026-09-08: all conditions met, full outline match
 and identity transforms. CamBam version was not supplied. See
-[acceptance evidence](docs/REVIEW.md#rect-baking-display-acceptance).
+[acceptance evidence](REVIEW.md#rect-baking-display-acceptance).
 Next priority: define MOP group-source compatibility before registry migration
 (backlog item 1). General component ordering,
 curved geometry and alignment remain outside this increment.
 Phases 1 and 2 (project discovery and working
-agreement) and [phase 3 (initial engineering review)](docs/REVIEW.md#phase-3-completion-audit)
-are complete; [workflow completion evidence](docs/REVIEW.md#phase-1-and-2-completion-audit)
+agreement) and [phase 3 (initial engineering review)](REVIEW.md#phase-3-completion-audit)
+are complete; [workflow completion evidence](REVIEW.md#phase-1-and-2-completion-audit)
 records the foundations. Product acceptance remains separate.
 
 **Parent round-trip fidelity: implemented; automated checks complete.** Preserve parent
 identity and world geometry through XML export/import. Owners: `cambam_writer.py`,
 `cambam_reader.py`, new focused `tests/`, and the specification for any clarified
-local/world transform contract. [Defect evidence](docs/REVIEW.md#parent-identity-and-transform-reconstruction).
+local/world transform contract. [Defect evidence](REVIEW.md#parent-identity-and-transform-reconstruction).
 
 Acceptance:
 
@@ -45,11 +45,11 @@ Acceptance:
 - Record CamBam geometry validation separately; do not claim it from local tests.
 
 Verification: nine authored unittest tests pass on Python 3.10.9 / NumPy 1.23.5,
-with syntax/import checks complete. See [repair evidence](docs/REVIEW.md#parent-round-trip-repair-verification).
+with syntax/import checks complete. See [repair evidence](REVIEW.md#parent-round-trip-repair-verification).
 Synthetic parent A/B geometry/placement **accepted by the user on 2026-09-07**:
 both files match the expected world coordinates; resetting B's matrices restores
 local placement. CamBam version was not supplied. See
-[acceptance evidence](docs/REVIEW.md#parent-ab-user-acceptance).
+[acceptance evidence](REVIEW.md#parent-ab-user-acceptance).
 Packaging and broader CamBam compatibility remain unverified.
 
 **Parent-cycle rejection: implemented; automated checks complete.**
@@ -57,7 +57,7 @@ Owner: `cambam_project.py`; focused API and synthetic XML regression tests.
 Acceptance: reject self/descendant cycles before mutation; preserve both parent
 indexes, memberships and transforms; valid reparent/detach remain usable; cyclic
 XML produces an acyclic hierarchy with preserved world geometry.
-[Verification evidence](docs/REVIEW.md#parent-cycle-rejection-verification) records
+[Verification evidence](REVIEW.md#parent-cycle-rejection-verification) records
 the regression and checks. Related parent A/B display validation is accepted.
 General transform refactoring and MOP migration remain outside this slice. Rollback: revert only the slice's
 patch; do not rewrite existing CAD files or saved pickle state.
@@ -73,16 +73,16 @@ matrix. Reject invalid affine inputs and unsolvable coordinate frames before
 mutation. Verify wrappers and repeated XML round trips on straight polylines.
 Curved/component baking and alignment's separate implementation remain outside
 this slice. Eight new regressions and all 26 suite tests pass.
-[Before/reference/result files and criteria](docs/DEVELOPMENT.md#manual-global-transform-acceptance)
+[Before/reference/result files and criteria](DEVELOPMENT.md#manual-global-transform-acceptance)
 were accepted by the user: A/B coordinates match, B retains matrices, and child/leaf
 move (+5,-3) from Before while root stays fixed. CamBam version was not supplied.
-[Verification evidence](docs/REVIEW.md#global-transform-ordering-verification)
+[Verification evidence](REVIEW.md#global-transform-ordering-verification)
 records the failure and coordinate-frame policy.
 
 Full-bake hierarchy fidelity: **implemented; automated checks complete; synthetic
 A/B user acceptance complete**. The user confirmed matching final coordinates,
 identity matrices in both files and the intended layer difference. See
-[repair and acceptance evidence](docs/REVIEW.md#full-bake-hierarchy-verification).
+[repair and acceptance evidence](REVIEW.md#full-bake-hierarchy-verification).
 
 ## Completed implementation: MOP round-trip identity
 
@@ -92,8 +92,8 @@ restores identity before registration, retains XML operation order and targets,
 allocates fresh identities for legacy/malformed Tags, and fails import on explicit
 identity collisions. No MOP registry migration or live group semantic change.
 Five new regressions and all 31 suite tests pass. The original reader fails the
-new suite. See [evidence](docs/REVIEW.md#mop-identity-round-trip-verification) and
-[prepared A/B acceptance](docs/DEVELOPMENT.md#manual-mop-identity-acceptance).
+new suite. See [evidence](REVIEW.md#mop-identity-round-trip-verification) and
+[prepared A/B acceptance](DEVELOPMENT.md#manual-mop-identity-acceptance).
 The stopping condition for implementation is met; complete parameter coverage,
 Default/Value fidelity and production toolpaths remain unverified.
 
@@ -107,8 +107,8 @@ work, and directory errors propagate. Eight export and three persistence tests
 plus all prior regressions pass (42 total). Acceptance covers existing/new
 destinations, failure propagation/cleanup, XML round trips and restored pickle
 project links. No blocker or manual validation remains for this scope.
-See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
-[verification](docs/REVIEW.md#export-failure-and-state-path-verification).
+See [contract](../structure_spec.md#export-failure-and-state-saving-contract) and
+[verification](REVIEW.md#export-failure-and-state-path-verification).
 
 ## Remaining backlog, in order
 
@@ -121,7 +121,7 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 4. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
    and load/modify/save workflows on another PC. User-requested future work;
    not active and does not displace correctness fixes.
-   [Requirements, acceptance and maintenance plan](docs/MCP_PLAN.md).
+   [Requirements, acceptance and maintenance plan](MCP_PLAN.md).
 
 This supersedes the former five broad increments; their pending scope is retained
 above. Detailed contracts remain in `structure_spec.md`, and review evidence in
@@ -143,7 +143,7 @@ MOP ownership must be reconciled before implementing that migration.
 - Broader product baseline: limited local checks only.
 - User/CamBam acceptance: parent, full-bake, global-transform and Rect-bake synthetic display and MOP load/properties accepted; broader production acceptance not performed.
 
-[Verification commands](docs/DEVELOPMENT.md) and [work lifecycle](docs/WORKFLOW.md)
+[Verification commands](DEVELOPMENT.md) and [work lifecycle](WORKFLOW.md)
 are authoritative. Promote one bounded item with acceptance criteria, implement
 and verify it, then separately record user acceptance before claiming that level
 of completion. The completed Rect repair prevents bake/export

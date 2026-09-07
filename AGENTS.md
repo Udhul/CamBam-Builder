@@ -18,7 +18,7 @@
   only when a missing decision changes architecture, product behavior, acceptance,
   destructive actions or expensive work; continue independent authorized work.
 - Keep project facts in their documentation owner, identified by the topic map.
-  Update `PROGRESS.md` when priority or completion changes; preserve useful failure
+  Update `docs/PROGRESS.md` when priority or completion changes; preserve useful failure
   evidence and reopening criteria. Do not create a competing wiki or backlog.
 - Use deterministic tools for discovery, transformation and validation. Use models
   for bounded semantic judgment supported by evidence. Add infrastructure or

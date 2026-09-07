@@ -1,7 +1,7 @@
 # CamBam CAD/CAM Framework – Core Project Structure and Relationship Management Specification
 
 Section 0 describes the implemented architecture; sections 1–7 describe the intended
-design, not a verified inventory of implemented behavior. See [current status](PROGRESS.md) for implementation gaps and
+design, not a verified inventory of implemented behavior. See [current status](docs/PROGRESS.md) for implementation gaps and
 the [topic map](docs/README.md) for documentation ownership. MOP PID-source semantics
 and central registry ownership require clarification before migration.
 
