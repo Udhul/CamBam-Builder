@@ -32,13 +32,16 @@ The MIT license does not relax private-input or external-processing boundaries.
 Order balances impact, risk, leverage, confidence and cost; the active priority
 and remaining backlog live only in [PROGRESS.md](../PROGRESS.md).
 
-| Rank | Finding and classification | Impact / confidence / approximate cost |
-| --- | --- | --- |
-| 1 | **Verified:** parent links are lost on XML round trip; a UUID-only repair also changes world geometry | High: hierarchy and geometry fidelity; high confidence; small-to-medium coherent I/O slice |
-| 2 | **Verified:** two-node parent cycles are accepted | High: transform traversal can fail to terminate; high confidence; small validation slice |
-| 3 | **Verified:** non-baked global transform order contradicts the method contract | High: rotation after translation yields wrong world position; high confidence for root case; medium cost across nested/baked cases |
-| 4 | **Source-confirmed risk:** export catches entity/MOP serialization exceptions and continues | High: incomplete output may appear successful; high confidence in control flow, no injected failure run; medium cost to define failure/atomic-write behavior |
-| 5 | **Known gaps / enhancements:** MOP registry migration, project-default import, curved bounds, transfer APIs, packaging/test coverage | Variable impact; code/TODO/spec evidence, not a complete compatibility audit; separate bounded increments required |
+| Rank | Finding and classification | Impact / confidence / approximate cost | Leverage |
+| --- | --- | --- | --- |
+| 1 | **Verified:** parent links are lost on XML round trip; a UUID-only repair also changes world geometry | High impact/confidence; small-to-medium coherent I/O slice | Establishes hierarchy/geometry regression foundation |
+| 2 | **Verified:** two-node parent cycles are accepted | High: traversal can fail to terminate; high confidence; small validation slice | Protects every hierarchy consumer |
+| 3 | **Verified:** non-baked global transform order contradicts the method contract | High impact; high confidence for root case; medium cost across nested/baked cases | Restores predictable editing operations |
+| 4 | **Verified:** duplicate MOP display names lose operations during XML import | High: machining operation omitted; high confidence; small-to-medium cost | Preserves machining intent through interchange |
+| 5 | **Verified:** export tree construction catches entity serialization exceptions and returns incomplete output | High: incomplete output appears successful; high confidence; medium cost for failure/atomic-write contract | Reliable success/error boundary for Python and future MCP |
+| 6 | **Verified:** bare-filename state save returns without creating a file | Medium impact; high confidence; low cost | Small persistence regression and clearer I/O behavior |
+| 7 | **Source-confirmed maintenance risk:** converted Rect duplicates primitive Tag construction | Low-to-medium impact; high confidence in duplication, future drift risk; low cost | One metadata owner when serialization next changes |
+| 8 | **Known gaps / enhancements:** MOP registry migration, project-default import, curved bounds, transfer APIs, packaging/test coverage | Variable impact; source/TODO/spec evidence; separate bounded increments | Extend capability after fidelity and tests |
 
 ### Parent identity and transform reconstruction
 
@@ -178,3 +181,78 @@ Follow-up checks (available Python 3.10.9, without installing dependencies):
 
 Next increment: the selected parent round-trip slice in PROGRESS. Suggested commit:
 `docs: complete project overview and agent working agreement`
+
+## Phase 3 completion audit
+
+Completed 2026-09-07 after the working agreement was established. The original
+review supplied the main correctness findings and next-slice recommendation. This
+follow-up adds bounded I/O and modularity coverage, local verification of three
+additional failure cases, and explicit leverage in the ranking above. A native
+read-only worker supplied focused findings; the lead checked their source evidence
+and reproduced the two additional I/O defects. No product fixes were made.
+
+### Additional evidence
+
+- **Duplicate MOP names:** `cambam_reader._reconstruct_mop` assigns `mop_name` as
+  the identifier, while `_register_entity` rejects duplicate identifiers. Creating
+  two profiles with identifiers `first`/`second` but display name `Same`, targeting
+  the same rectangle, is accepted by the public API. Write/read of that synthetic
+  project returns one MOP from an original two. Fix identity reconstruction at the
+  I/O boundary; do not silently require globally unique display names in callers.
+- **Bare state path:** `save_state('state.pkl')` calls `os.makedirs('')`, catches
+  the error and returns before writing. The lead reproduced this in a fresh
+  temporary working directory and asserted no file exists. Other write errors in
+  that method raise, while `read_cambam_file` generally returns `None` on failure.
+  A future adapter needs a deliberate error mapping; wrapping these return values
+  without checking outcomes is insufficient.
+- **Incomplete XML:** with one rectangle, patch its class's `to_xml_element` to
+  raise `ValueError('synthetic serialization failure')`; `build_xml_tree` returns
+  normally, with zero `./layers/layer/objects/*` nodes. This upgrades the earlier
+  source-level risk to an injected-failure reproduction. It does not establish
+  filesystem atomicity or exhaustively test MOP failures.
+- **Metadata duplication:** `Rect.to_xml_element` replaces the Tag after conversion
+  to Pline, separately from `Primitive._add_common_xml_attributes`. The duplicated
+  fields and filtering/formatting differ. This is a maintenance risk, not proof
+  that every converted rectangle is currently wrong. Consolidate at the owning
+  serialization abstraction when a covered change requires it.
+
+### Architecture and coverage judgment
+
+The project/entity/matrix/reader/writer split is adequate for the next increments.
+The reader/writer directly depend on private registries and entities encode XML;
+these are coupling points worth testing, not sufficient grounds for a broad layer
+rewrite. Bidirectional indexes and duplicate entity/group metadata need invariant
+tests before expanding mutation or transfer APIs. Do not start by migrating MOP
+ownership: its live-group semantics are unresolved and would broaden the repair.
+
+Source-system coverage is bounded by the reader tag maps and corresponding entity
+encoders. Unsupported tags are skipped; project defaults and approximate curved
+bounds remain documented gaps. Full fidelity needs authorized CamBam fixtures and
+domain validation. This initial review is complete without pretending to be an
+exhaustive feature, security or machining certification.
+
+| Original phase 3 requirement | Result |
+| --- | --- |
+| Review correctness, architecture, duplication, I/O, validation, tests, modularity and source behavior | Ranked findings, additional evidence and architecture judgment above; earlier transform/hierarchy probes retained |
+| Rank by impact, risk, leverage, confidence and cost | Updated ranking; PROGRESS owns execution order |
+| Separate verified defects, hypotheses and enhancements | Classification explicit; source compatibility and future metadata drift not claimed proven defects |
+| Check decisions/failures before recommending | Reviewed existing record; UUID-only and double-transform approaches remain rejected without new evidence |
+| Recommend smallest high-impact slice with acceptance, owners, tests, user validation and rollback | Parent round-trip slice in PROGRESS remains the recommendation; newly found I/O defects do not force a wider first patch |
+| Avoid broad speculative refactoring | No runtime edits; retain current module boundaries and repair demonstrated contracts |
+
+Checks performed this follow-up: two synthetic programs run with PowerShell
+here-strings piped to `python -`, both exit 0. The first used
+`unittest.mock.patch.object(type(rect), 'to_xml_element', side_effect=ValueError(...))`
+and asserted the original count was 1 and output count 0. The second used
+`tempfile.TemporaryDirectory`, `save_state('state.pkl')`, and `build_xml_tree` /
+`read_cambam_file`; assertions confirmed missing state output and MOP count 2 -> 1.
+Inputs and assertion scenarios are specified above; no user fixtures were loaded.
+`python -m output.review_doc_links` and `git diff --check` passed after documentation
+updates. No packaging, server/client interoperability or CamBam acceptance was run.
+
+All three initial phases are complete at their requested discovery/agreement/review
+scope. Runtime implementation and user/domain acceptance remain pending. The new
+MCP plan records user-authorized future direction, not a reason to defer the
+selected correctness fix or claim an implemented integration.
+
+Suggested commit: `docs: backlog stateless MCP integration and complete initial review`

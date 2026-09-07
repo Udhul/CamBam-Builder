@@ -8,8 +8,9 @@ not a guarantee of complete round-trip fidelity. MOP sources remain on instances
 ## Active work and next priority
 
 No implementation slice is active. Phases 1 and 2 (project discovery and working
-agreement) are complete; [completion evidence](docs/REVIEW.md#phase-1-and-2-completion-audit)
-records their scope and verification. Product acceptance remains separate.
+agreement) and [phase 3 (initial engineering review)](docs/REVIEW.md#phase-3-completion-audit)
+are complete; [workflow completion evidence](docs/REVIEW.md#phase-1-and-2-completion-audit)
+records the foundations. Product acceptance remains separate.
 
 **Next: parent round-trip fidelity — backlog, not started.** Preserve parent
 identity and world geometry through XML export/import. Owners: `cambam_writer.py`,
@@ -36,13 +37,19 @@ patch; do not rewrite existing CAD files or saved pickle state.
 
 1. Reject parent cycles atomically; test traversal and registry integrity.
 2. Establish transform matrix and baking fidelity with synthetic end-to-end tests.
-3. Define export failure behavior and prevent silent incomplete output.
-4. Align MOP registry ownership with the specification after defining group-source
+3. Preserve MOP identities across XML round trips with duplicate display names.
+4. Define export failure behavior and prevent silent incomplete output; fix bare
+   filename state saving as a separate small persistence slice.
+5. Align MOP registry ownership with the specification after defining group-source
    compatibility; test defaults and malformed XML metadata reconstruction.
-5. Improve curved-geometry bounds; implement copy/transfer utilities against the
+6. Improve curved-geometry bounds; implement copy/transfer utilities against the
    specification, with collision and relationship tests.
-6. Validate packaging and supported Python versions; expand examples and tests as
+7. Validate packaging and supported Python versions; expand examples and tests as
    each capability is verified. Add CLI/distribution work only for an actual need.
+8. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
+   and load/modify/save workflows on another PC. User-requested future work;
+   not active and does not displace correctness fixes.
+   [Requirements, acceptance and maintenance plan](docs/MCP_PLAN.md).
 
 This supersedes the former five broad increments; their pending scope is retained
 above. Detailed contracts remain in `structure_spec.md`, and review evidence in

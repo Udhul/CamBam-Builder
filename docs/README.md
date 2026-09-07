@@ -10,6 +10,7 @@ Read this map after the root README; follow only the relevant owner.
 | Development commands and troubleshooting | [DEVELOPMENT.md](DEVELOPMENT.md) | Setup, checks and artifact handling |
 | Delegation, lifecycle and handoff | [WORKFLOW.md](WORKFLOW.md) | Reusable working procedures |
 | Review evidence and rejected approaches | [REVIEW.md](REVIEW.md) | Dated findings, acceptance evidence and reopening conditions; not a second backlog |
+| Future local MCP requirements and implementation outline | [MCP_PLAN.md](MCP_PLAN.md) | Pending design/acceptance; priority stays in PROGRESS |
 | Package metadata and dependency declarations | `pyproject.toml`, `setup.py`, `requirements.txt` | Metadata, dependency loading adapter, dependency list respectively |
 | Executable API behavior | `cambam_builder/` and future regression tests | Actual implementation; document divergences from target explicitly |
 | License | [LICENSE](../LICENSE) | MIT terms; does not authorize external processing of user data |
@@ -40,8 +41,8 @@ first; indexing/RAG requires measured discovery failures and a maintenance owner
 The author of a change updates its owning guide in the same increment; the lead
 reviews consistency with code and status. Link to facts elsewhere rather than
 copying them. Keep current contracts in the specification, dated evidence in the
-review, and live priority in status. There are no standalone pending plans today;
-add a linked plan only if acceptance/dependencies outgrow a bounded status item.
+review, and live priority in status. The MCP plan captures the requested future
+integration; add further linked plans only if acceptance/dependencies outgrow a bounded status item.
 The plan owns execution detail, while status retains the single priority order.
 
 One root agent file covers this small, coupled library. Add nested instructions
