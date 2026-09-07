@@ -548,3 +548,99 @@ now returns to remaining transform fidelity; bound it with a reproduced case
 before choosing the repair. This is a good fresh-session breakpoint: required
 evidence and limits are saved, with no pending acceptance or decision.
 Suggested commit: `fix: propagate export failures and support bare state filenames`.
+
+## Rect baking loss investigation
+
+2026-09-08. Scope: reproduce and bound the next transform defect, without changing
+runtime behavior. The candidate is confirmed in `Rect.bake_geometry`: after
+transforming its four corners, it saves only their minima/maxima as a new local
+axis-aligned Rect. The original outline is irrecoverable after this assignment.
+The current representation cannot encode a general rotated rectangle or sheared
+parallelogram with an identity matrix. Bounds-only comparisons hide the loss.
+
+The warning is insufficient: `is_rectangular_after_transform` checks
+perpendicularity, not axis alignment, so pure rotation is accepted. The additional
+matrix object-identity condition suppresses warnings for separate explicit bake
+matrices. Project bake methods may return `True` despite the changed outline;
+the writer's error propagation cannot detect successful but lossy geometry edits.
+
+### Reproduction and verification
+
+Reusable fixture: `tests/test_rect_bake_defect.py`, a root Rect at `(0,0)` with
+width 4 and height 2. Commands run from the repository root:
+
+- `python -m unittest tests.test_rect_bake_defect -v`: eight characterization
+  tests passed. Known-defect tests assert the current wrong result explicitly;
+  they are not claims of repaired fidelity.
+- `python -m unittest discover -s tests -v`: all 50 tests passed after adding
+  translation/scale controls and XML count/UUID/type checks. Python 3.10.9,
+  NumPy 1.23.5; no repository virtual environment was present.
+- `python -m compileall -q cambam_builder legacy_cambam_builder` and the runbook
+  import/construct smoke command passed. `git diff --check` passed.
+
+| Operation on the fixture | Required outline area | Actual baked area | Observed boundary |
+| --- | --- | --- | --- |
+| Full bake of 45-degree rotation about origin | 8 | 18 (+125%) | Success, identity matrix, no entity warning |
+| Full bake of unit X shear (`x += y`) | 8 | 12 (+50%) | Success with loss warning |
+| Global bake of the same shear from identity | 8 | 12 | Success without entity warning |
+| Explicit-matrix 45-degree rotation bake | 8 | 18 | Success, original identity matrix retained |
+| Rotation-component bake of pure 45-degree rotation | 8 | 18 | Success, identity matrix |
+
+The shear matrix is `[[1,1,0],[0,1,0],[0,0,1]]`; the existing helper spells this
+`skew_matrix(angle_y_deg=45)`. Correct shear corners are `(0,0), (4,0), (6,2),
+(2,2)`; baking produces `(0,0), (6,0), (6,2), (0,2)`. At 45 degrees the rotated
+outline fits in a square of side `3*sqrt(2)`, but is not that square.
+
+Translation, diagonal scaling, reflection and 90-degree rotation preserve the
+tested corner sets and areas. Two XML round trips preserve the already-damaged
+rotated Rect, its UUID, count and identity matrix. Unbaked root rotation and shear
+instead preserve their expected corners/area and UUID/count through two trips:
+rotation stays a Rect with a matrix, shear is serialized as a closed Pline.
+These root controls do not establish conversion fidelity under a parent.
+
+Investigation and automated checks are complete; runtime repair remains backlog.
+No manual acceptance is needed for this numerical reproduction. Hierarchies,
+nonidentity frames in explicit/global bake mode, mixed component decomposition,
+degenerate shapes and general curved geometry were not validated by this slice.
+The fixture deliberately isolates representation loss from those other contracts.
+This is a good fresh-session breakpoint: evidence, limits and next priority are
+persisted. Suggested commit: `test: reproduce and bound Rect baking geometry loss`.
+
+### Bounded repair recommendation
+
+Prioritize exact Rect baking over MOP registry migration: this is reproduced
+geometry corruption through existing public operations, whereas registry migration
+still needs group-source semantics. Start with full local-transform baking of a
+Rect and its hierarchy, using a closed straight polyline when the transformed
+outline cannot be represented by an axis-aligned Rect. Preserve the outline for
+axis-preserving cases without unnecessary conversion. Extend the same geometry
+policy to explicit/global bake entry points; do not couple the repair to general
+component decomposition, curved entities or alignment ordering.
+
+Acceptance for that repair:
+
+- Compare all four transformed vertices/closed edges and area, allowing cyclic
+  reordering or reversed winding, at absolute tolerance `1e-10` in memory and
+  `1e-8` after two XML round trips with adequate output precision. Equal bounds
+  alone do not pass. Include rotation, shear and axis-preserving controls.
+- Preserve UUID, identifier, description, layer/group membership, parent/child
+  links and MOP target resolution through any representation change. Specify
+  behavior of existing Python object references before implementing conversion;
+  `to_pline_representation` currently creates a new identity and is not a safe
+  registry replacement operation by itself.
+- Preserve descendant world geometry for recursive and nonrecursive full baking,
+  reset only the matrices required by that API, and retain effective matrices for
+  explicit/global geometry baking. Test a transformed parent and unaffected sibling.
+- Never report success after approximating the outline. If a supported conversion
+  cannot be completed, surface failure before destructive geometry/registry edits;
+  do not substitute a warning for the geometry contract.
+- Replace known-loss characterization assertions with preservation regressions
+  during repair. Prepare and inspect synthetic CamBam A/B files for any changed
+  representation, then record user display acceptance separately.
+
+An export-only workaround cannot recover discarded corners. A blanket rejection
+of all rotation would unnecessarily reject quarter turns. General transform
+refactoring is deferred: reopen component ordering, alignment, curved geometry
+or degenerate/nonfinite edge cases only for a failing workflow fixture or an
+explicit dependency. No manual CamBam check is needed to establish this numerical
+defect; no runtime behavior or previously accepted display fixture changed.

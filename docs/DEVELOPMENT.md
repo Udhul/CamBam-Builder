@@ -59,6 +59,18 @@ The suite uses standard-library `unittest` and the runtime NumPy dependency.
 Test observable contracts, including invalid inputs relevant to the fix, rather
 than mirroring internals.
 
+The Rect investigation has a focused characterization command:
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -p test_rect_bake_defect.py -v
+```
+
+These tests deliberately assert the reproduced loss alongside preservation
+controls. Passing them confirms the defect remains reproducible, not that Rect
+baking is fixed. During repair, replace the known-loss assertions with exact
+outline preservation checks; see the
+[investigation and repair criteria](REVIEW.md#rect-baking-loss-investigation).
+
 Keep reusable synthetic fixtures and expected results with authored tests.
 Use a unique task directory under ignored `output/` for disposable diagnostics,
 generated XML and verbose logs; do not overwrite previous runs. Durable evidence

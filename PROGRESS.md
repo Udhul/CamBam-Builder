@@ -7,11 +7,18 @@ not a guarantee of complete round-trip fidelity. MOP sources remain on instances
 
 ## Active work and next priority
 
-Export failure behavior and bare-filename state saving are implemented and
-automated checks are complete (2026-09-08). No manual acceptance is required for
-this error/filesystem slice. MOP synthetic CamBam acceptance and the accepted
-hierarchy/straight-polyline line remain unchanged. Next priority: bound the
-remaining transform-fidelity work around a reproduced geometry-loss case.
+Rect baking loss investigation is complete; automated checks complete
+(2026-09-08). Scope: reproduce rotated
+and sheared Rect outline loss, identify affected bake entry points and safe
+controls, and establish a bounded repair with numerical/XML evidence. Owners:
+`tests/test_rect_bake_defect.py`, the implemented specification and review record.
+No runtime repair is included in this investigation. Eight characterization
+tests reproduce area changes of 8 to 18 under rotation and 8 to 12 under shear;
+all 50 suite tests pass. The stopping condition is met: durable reproduction,
+verified controls, repair criteria and priority are recorded in
+[the investigation](docs/REVIEW.md#rect-baking-loss-investigation).
+No blocker or manual acceptance remains for reproduction. Prior export/state,
+MOP and hierarchy acceptance remains unchanged. Next priority: exact Rect baking.
 Phases 1 and 2 (project discovery and working
 agreement) and [phase 3 (initial engineering review)](docs/REVIEW.md#phase-3-completion-audit)
 are complete; [workflow completion evidence](docs/REVIEW.md#phase-1-and-2-completion-audit)
@@ -102,10 +109,13 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 
 ## Remaining backlog, in order
 
-1. Complete remaining transform fidelity: component/explicit-matrix baking,
-   curved geometry, Rect conversion and alignment ordering. Deferred beyond the
-   accepted core hierarchy line; reopen for an actual workflow dependency or
-   a higher-impact reproduced defect, not solely adjacency to completed work.
+1. Repair reproduced Rect baking loss: preserve exact outlines through full
+   local baking and representation changes, then cover the same Rect geometry
+   policy through explicit/global bake entry points. Preserve identities,
+   relationships, descendants and XML geometry. See
+   [bounded acceptance criteria](docs/REVIEW.md#bounded-repair-recommendation).
+   General component ordering, curved geometry and alignment remain deferred
+   pending a failing fixture or workflow dependency.
 2. Align MOP registry ownership with the specification after defining group-source
    compatibility; test defaults and malformed XML metadata reconstruction.
 3. Improve curved-geometry bounds; implement copy/transfer utilities against the
@@ -140,16 +150,16 @@ MOP ownership must be reconciled before implementing that migration.
 [Verification commands](docs/DEVELOPMENT.md) and [work lifecycle](docs/WORKFLOW.md)
 are authoritative. Promote one bounded item with acceptance criteria, implement
 and verify it, then separately record user acceptance before claiming that level
-of completion. Next increment: reproduce and bound the highest-impact remaining
-transform defect (backlog item 1), with Rect rotation/shear baking loss as a
-concrete candidate (`Rect.bake_geometry` already warns of that loss). This matters
-because successful export can still serialize geometry damaged before export;
-do not expand into general transform refactoring without a failing fixture.
+of completion. Next increment: repair the reproduced Rect outline loss against
+the bounded criteria above. This matters because successful bake/export calls
+can persist an enlarged outline; MOP registry migration still has unresolved
+source semantics. Do not expand into general transform refactoring.
 
 ## Session breakpoint
 
-A fresh session is appropriate: export failure handling and state paths form a
-complete, verified outcome, and their contract, limits and evidence are persisted.
-No pending user validation or conversation-only decision remains. The next
-transform slice has a distinct scope. Prior acceptance artifacts remain retained.
-No staging or commit was performed.
+The investigation is a good fresh-session breakpoint: its automated checks,
+defect and repair criteria are persisted, and implementation is a
+distinct next scope. The repair must decide how representation changes affect
+existing Python object references; this is recorded in the review, not a pending
+decision needed to complete reproduction. Prior acceptance artifacts remain
+retained. No staging or commit was performed.

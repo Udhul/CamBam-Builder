@@ -173,6 +173,26 @@ nonuniform scale, reflection and shear, including repeated baking and XML round
 trips. Entity-specific curved geometry/Rect conversion, explicit-matrix baking,
 component baking and global transform application are not covered by this result.
 
+### Known Rect baking limitation
+
+`Rect` stores an axis-aligned local corner, width and height. Its current
+`bake_geometry` transforms four corners, then replaces the outline with their
+axis-aligned bounding rectangle. General rotation and shear therefore lose
+geometry even when the caller reports success. Matching bounding boxes does not
+establish outline fidelity. Translation, diagonal scale/reflection and quarter
+turns preserve the rectangular outline (corner order may change).
+
+The warning is not a reliable guard: perpendicularity accepts pure rotations,
+and the warning additionally requires the applied matrix to be the same object
+as `effective_transform`. Explicit matrices can therefore lose geometry silently.
+Export cannot recover corners already discarded by baking. The existing
+`to_pline_representation` is an XML helper that creates a separate object; it is
+not a project-level identity/relationship-preserving conversion API.
+
+This is a documented defect, not a supported approximation contract. Evidence
+and the bounded repair criteria live in
+[the Rect investigation](docs/REVIEW.md#rect-baking-loss-investigation).
+
 The legacy package exposes `CamBam` and aliases through its own `__init__.py`;
 it is a separate implementation, not the modern reader's fallback. Its CLI file
 is not a declared installed entry point. Legacy compatibility requires its own
