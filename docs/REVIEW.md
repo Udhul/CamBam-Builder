@@ -419,3 +419,21 @@ and a nested-list matrix containing `10**1000` raised `OverflowError` instead of
 returning `False`. Pline geometry baking now skips only exact identity; matrix
 conversion catches overflow. The final `python -m unittest discover -s tests -q`
 run passes all 26 tests. No curved-bulge fidelity claim follows from this change.
+
+
+### Global-transform acceptance and workstream checkpoint
+
+The user confirmed A/B endpoints and placement, transform properties in B versus
+explicit coordinates in A, and the correct (+5,-3) child/leaf movement from Before.
+They reported committing the implementation. This supersedes pending manual
+acceptance in the earlier verification record; CamBam version was not supplied.
+
+The parent/hierarchy, full-bake and global-transform straight-polyline line has
+reached its scoped stopping condition. Component baking is distinct (fold one
+existing component into geometry while retaining the rest), but adjacency alone
+is insufficient to prioritize it. The documented duplicate-name MOP import loss
+(two operations become one; `_reconstruct_mop` uses the display name as identifier)
+has greater immediate impact on preserving machining intent. It is now the next
+recommended outcome, without expanding into registry migration. Remaining
+transform gaps stay explicit in PROGRESS with reopening criteria. A fresh session
+can start from repository documentation without retaining this conversation.

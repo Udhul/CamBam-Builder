@@ -7,7 +7,9 @@ not a guarantee of complete round-trip fidelity. MOP sources remain on instances
 
 ## Active work and next priority
 
-Global transform ordering is implemented; manual acceptance is pending; full-bake synthetic display is accepted. Phases 1 and 2 (project discovery and working
+No implementation increment is active. The parent/hierarchy and straight-polyline
+transform line has completed its scoped verification and user display acceptance.
+Next priority: preserve MOP identities across XML round trips with duplicate names. Phases 1 and 2 (project discovery and working
 agreement) and [phase 3 (initial engineering review)](docs/REVIEW.md#phase-3-completion-audit)
 are complete; [workflow completion evidence](docs/REVIEW.md#phase-1-and-2-completion-audit)
 records the foundations. Product acceptance remains separate.
@@ -47,9 +49,9 @@ the regression and checks. Related parent A/B display validation is accepted.
 General transform refactoring and MOP migration remain outside this slice. Rollback: revert only the slice's
 patch; do not rewrite existing CAD files or saved pickle state.
 
-## Active increment: global transform ordering
+## Completed line: hierarchy and global transform fidelity
 
-State: **implemented; automated checks complete; user acceptance pending**. Owner: `transform_primitive` in `cambam_project.py`,
+State: **implemented; automated checks complete; synthetic display accepted**. Owner: `transform_primitive` in `cambam_project.py`,
 `tests/test_global_transforms.py`, and the implemented specification. Acceptance:
 world points in the selected subtree receive `M @ world_point` exactly once in
 both matrix and baked modes; ancestors/siblings/registries remain unchanged.
@@ -59,7 +61,9 @@ mutation. Verify wrappers and repeated XML round trips on straight polylines.
 Curved/component baking and alignment's separate implementation remain outside
 this slice. Eight new regressions and all 26 suite tests pass.
 [Before/reference/result files and criteria](docs/DEVELOPMENT.md#manual-global-transform-acceptance)
-are prepared; [verification evidence](docs/REVIEW.md#global-transform-ordering-verification)
+were accepted by the user: A/B coordinates match, B retains matrices, and child/leaf
+move (+5,-3) from Before while root stays fixed. CamBam version was not supplied.
+[Verification evidence](docs/REVIEW.md#global-transform-ordering-verification)
 records the failure and coordinate-frame policy.
 
 Full-bake hierarchy fidelity: **implemented; automated checks complete; synthetic
@@ -69,11 +73,17 @@ identity matrices in both files and the intended layer difference. See
 
 ## Remaining backlog, in order
 
-1. Complete remaining transform fidelity: component/explicit-matrix baking,
-   curved geometry, Rect conversion and alignment ordering.
-2. Preserve MOP identities across XML round trips with duplicate display names.
-3. Define export failure behavior and prevent silent incomplete output; fix bare
+1. Preserve MOP identities across XML round trips with duplicate display names.
+   Outcome: no lost/merged operations; retain identifiers/UUIDs, names, part order,
+   primitive targets and relevant machining parameters across repeated round trips.
+   Fix the I/O identity boundary without requiring unique display names or a MOP
+   registry migration. The recorded two-to-one operation loss justifies priority.
+2. Define export failure behavior and prevent silent incomplete output; fix bare
    filename state saving as a separate small persistence slice.
+3. Complete remaining transform fidelity: component/explicit-matrix baking,
+   curved geometry, Rect conversion and alignment ordering. Deferred beyond the
+   accepted core hierarchy line; reopen for an actual workflow dependency or
+   a higher-impact reproduced defect, not solely adjacency to completed work.
 4. Align MOP registry ownership with the specification after defining group-source
    compatibility; test defaults and malformed XML metadata reconstruction.
 5. Improve curved-geometry bounds; implement copy/transfer utilities against the
@@ -103,9 +113,20 @@ MOP ownership must be reconciled before implementing that migration.
 - Parent XML slice: implemented and automated checks complete; nine regression tests.
 - Parent-cycle rejection: implemented and automated checks complete.
 - Broader product baseline: limited local checks only.
-- User/CamBam acceptance: parent and full-bake A/B synthetic display accepted; broader production acceptance not performed.
+- User/CamBam acceptance: parent, full-bake and global-transform synthetic display accepted; broader production acceptance not performed.
 
 [Verification commands](docs/DEVELOPMENT.md) and [work lifecycle](docs/WORKFLOW.md)
 are authoritative. Promote one bounded item with acceptance criteria, implement
 and verify it, then separately record user acceptance before claiming that level
-of completion. Next action: global transform display acceptance; next implementation is component-baking fidelity on straight polylines.
+of completion. Next implementation: MOP round-trip identity preservation (backlog item 1).
+
+## Session breakpoint
+
+A fresh session is appropriate now: the scoped hierarchy/transform line is
+implemented, checked and accepted, and MOP interchange is a distinct next outcome.
+Current contracts and limitations are in `structure_spec.md`, evidence in
+`docs/REVIEW.md`, and priority/acceptance above. No pending user validation for the
+completed synthetic cases or conversation-only decision is needed to start MOP
+work. This does not claim general curved/component transform fidelity or production
+machining acceptance. Documentation updates from this round still need the user's
+normal commit workflow; no staging or commit was performed by the agent.

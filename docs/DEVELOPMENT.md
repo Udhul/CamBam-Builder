@@ -143,6 +143,10 @@ any differing endpoint or matrix. No toolpath validation is needed for this case
 
 ## Manual global-transform acceptance
 
+Accepted by the user: A/B placement and endpoints match; B retains transforms;
+child and leaf move (+5,-3) from Before as specified. CamBam version was not
+supplied. These retained criteria need no repetition for unchanged behavior.
+
 Prepared directory: `output/global-transform-validation-6_s8bvg_/`. Its one-off
 `generate.py` is ignored; regression tests live in `tests/test_global_transforms.py`.
 
