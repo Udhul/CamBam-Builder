@@ -37,10 +37,14 @@ Run from the repository root, using the interpreter selected above:
 git diff --check
 ```
 
-These are syntax/import checks, not a regression suite. There is currently no
-canonical test-suite command. Add assertion-based regression tests with the next
-runtime fix and document their command here. Packaging installation and supported
-Python versions require separate validation; a local import does not prove them.
+These are syntax/import checks. Run the authored synthetic XML regressions with:
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -v
+```
+
+Packaging installation and supported Python versions require separate validation;
+a local import does not prove them.
 
 ### Required checks by change
 
@@ -51,12 +55,9 @@ Python versions require separate validation; a local import does not prove them.
 | Shared relationship/transform/XML contract | Relevant regression suite plus an end-to-end synthetic round trip checking counts, references, world geometry and affected parameters |
 | Packaging/dependencies | Isolated install/build and import from outside the source tree; declared Python compatibility checks appropriate to the change |
 
-The first runtime slice must introduce an authored `tests/` entry point and record
-its exact command here. Prefer standard-library `unittest` for a small initial
-suite unless a demonstrated need justifies a test dependency. The intended command
-would be `& $ProjectPython -m unittest discover -s tests -v`; it is **not a current
-passing baseline** while that suite does not exist. Test observable contracts,
-including invalid inputs relevant to the fix, rather than mirroring internals.
+The suite uses standard-library `unittest` and the runtime NumPy dependency.
+Test observable contracts, including invalid inputs relevant to the fix, rather
+than mirroring internals.
 
 Keep reusable synthetic fixtures and expected results with authored tests.
 Use a unique task directory under ignored `output/` for disposable diagnostics,

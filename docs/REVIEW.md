@@ -62,6 +62,43 @@ that approach only alongside a tested world-to-local reconstruction rule. Likewi
 do not recursively apply a non-baked parent transform to descendants already
 inheriting it; `transform_primitive` comments identify this double-application risk.
 
+### Parent round-trip repair verification
+
+2026-09-07: implemented the bounded parent XML repair. The writer now supplies
+the parent's UUID. The reader snapshots XML world matrices and solves for each
+child's local matrix before assigning it with the resolved parent link. Numeric
+XML ID references accept strings and JSON integers; malformed/unresolved parents
+retain the imported world pose without a parent. The current contract lives in
+`structure_spec.md`, section 0, “XML parent identity and world-pose contract.”
+
+Decision: a singular resolved parent fails the whole import through the existing
+logged-error/`None` boundary, including when the child world matrix is compatible.
+World-only XML cannot uniquely recover the local transform. Pseudoinverse recovery
+and silent detachment were rejected because they introduce arbitrary local state
+or lose hierarchy. Reopen if an explicit local-matrix metadata format or product
+requirement supplies a reconstruction rule. Singular roots without children load.
+
+Authored reproduction: `python -m unittest discover -s tests -v`. The initial
+eight tests ran before runtime edits. A subsequent isolated temporary copy of the
+original HEAD reader/writer with the expanded nine-test suite returned exit 1:
+four failures (UUID emission, world reconstruction, reversed order, singular
+parent rejection) and one error (numeric parent reference remained unlinked).
+No working-tree runtime files were reverted for that comparison.
+
+After the repair, all nine tests pass on the available Python 3.10.9 / NumPy
+1.23.5 interpreter without installing dependencies. Tests inspect synthetic XML
+IDs, parent tags and world matrices, and assert hierarchy in both directions,
+primitive identities, layer membership and world geometry through two round
+trips, including reordered XML. Numeric comparisons use `rtol=0, atol=2e-8`.
+Missing/malformed/self references, singular parents and singular roots are covered.
+`python -m compileall -q cambam_builder legacy_cambam_builder tests`, the runbook's
+import/construct smoke command, and `git diff --check` pass.
+
+This is automated acceptance of the bounded contract, not CamBam or packaging
+acceptance. CamBam placement/geometry checks remain required. General transform
+order, baking/Rect conversion, cycles, MOP migration and legacy behavior were not
+repaired or established by these tests.
+
 ### Parent cycles
 
 `CamBamProject.link_primitive_parent` rejects self-links but not ancestor cycles.

@@ -49,6 +49,26 @@ The reader's `PRIMITIVE_TAG_TO_CLASS` and `MOP_TAG_TO_CLASS` are the executable
 supported-tag inventory, not a claim of complete CamBam coverage. Consult those
 maps and corresponding entity encoders before adding a type.
 
+### XML parent identity and world-pose contract
+
+Primitive `Tag.parent` stores the parent's internal UUID string. XML `mat` stores
+the world matrix, while an in-memory `effective_transform` is local to its parent.
+The reader snapshots all imported world matrices before linking. For each resolved
+parent edge it solves `parent_world @ child_local = child_world`, using those
+snapshots rather than partially reconstructed ancestor chains. This preserves
+world pose independently of object/layer order and across repeated round trips,
+subject to XML numeric precision. Primitive UUIDs, identifiers and layer membership
+are retained; layer UUID persistence is not part of the XML format.
+
+Absent, malformed or unresolved parent references leave the primitive parentless
+with its imported world matrix. Existing self-parent rejection likewise leaves
+the world pose unchanged. A resolved parent with a singular world matrix makes
+the entire import fail: the reader logs the child/parent UUIDs and returns `None`
+through its existing error boundary. Even a compatible child world matrix cannot
+uniquely recover local coordinates; no pseudoinverse or silent detachment is used.
+A singular primitive without children is valid. This contract covers acyclic
+hierarchies; cycle hardening and general transform/baking fidelity remain separate.
+
 The legacy package exposes `CamBam` and aliases through its own `__init__.py`;
 it is a separate implementation, not the modern reader's fallback. Its CLI file
 is not a declared installed entry point. Legacy compatibility requires its own

@@ -73,7 +73,8 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
                 continue
 
             # Get parent UUID from project registry to inject into the Tag
-            parent_uuid = project.get_parent_of_primitive(primitive.internal_id)
+            parent = project.get_parent_of_primitive(primitive.internal_id)
+            parent_uuid = parent.internal_id if parent is not None else None
 
             try:
                 # Generate the primitive's specific XML element (<pline>, <circle>, etc.)

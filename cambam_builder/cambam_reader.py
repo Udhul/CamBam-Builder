@@ -188,6 +188,12 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
         # 5. Link Relationships using stored temporary data
         logger.debug("Linking relationships...")
         # 5a. Link Primitive Parents
+        # XML matrices are world poses. Snapshot before changing any local matrix
+        # so reconstruction is independent of XML and parent-link iteration order.
+        world_transforms = {
+            prim_uuid: primitive.effective_transform.copy()
+            for prim_uuid, primitive in project._primitives.items()
+        }
         for child_uuid, parent_ref in primitive_parent_ref.items():
             parent_uuid: Optional[uuid.UUID] = None
             if isinstance(parent_ref, uuid.UUID): # Resolved directly from Tag's internal_id
@@ -206,7 +212,21 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
             if parent_uuid:
                  # Check parent actually exists in project before linking
                  if parent_uuid in project._primitives:
-                     project.link_primitive_parent(child_uuid, parent_uuid)
+                     if parent_uuid == child_uuid:
+                         # Preserve the existing rejected-link behavior and world pose.
+                         project.link_primitive_parent(child_uuid, parent_uuid)
+                         continue
+                     try:
+                         local_transform = np.linalg.solve(
+                             world_transforms[parent_uuid], world_transforms[child_uuid]
+                         )
+                     except np.linalg.LinAlgError as e:
+                         raise CamBamReaderError(
+                             f"Cannot reconstruct child {child_uuid}: parent {parent_uuid} "
+                             "has a singular world transform."
+                         ) from e
+                     if project.link_primitive_parent(child_uuid, parent_uuid):
+                         project._primitives[child_uuid].effective_transform = local_transform
                  else:
                      logger.warning(f"Could not link child primitive {child_uuid}: Resolved parent UUID {parent_uuid} not found in project primitives registry.")
 
@@ -490,9 +510,9 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
                  parent_ref_str = tag_data.get("parent")
                  if parent_ref_str:
                      # Try parsing as UUID first, then as int (XML ID)
-                     try: parent_ref = uuid.UUID(parent_ref_str)
+                     try: parent_ref = uuid.UUID(str(parent_ref_str))
                      except ValueError:
-                          try: parent_ref = int(parent_ref_str)
+                          try: parent_ref = int(str(parent_ref_str))
                           except ValueError: logger.warning(f"Invalid parent reference '{parent_ref_str}' in Tag for XML ID {xml_id}")
         except json.JSONDecodeError:
             logger.warning(f"Could not parse JSON from Tag for primitive XML ID {xml_id}.")
@@ -509,12 +529,8 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
     effective_transform = identity_matrix() # Default if no matrix found
     if matrix_str is not None and "m" in matrix_str.attrib:
         try:
-            # Note: CamBam matrix is the TOTAL transform. We store it as effective_transform for now.
-            # If parent links exist, this might need adjustment post-linking, or assume baked state.
-            # Let's assume the matrix represents the final state relative to world origin.
-            # If we reconstruct parent links, the child's effective transform should become Identity?
-            # Or T_total = T_parent_total * T_child_effective. => T_child_effective = inv(T_parent_total) * T_total
-            # This is complex to reconstruct perfectly. Let's load T_total into effective_transform first.
+            # Keep the XML world pose until the deferred parent-linking pass
+            # reconstructs local matrices from snapshots of all imported poses.
             total_transform = from_cambam_matrix_str(matrix_str.attrib["m"])
             effective_transform = total_transform # Store total as effective initially
         except ValueError as e:

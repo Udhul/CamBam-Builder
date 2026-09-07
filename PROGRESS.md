@@ -12,7 +12,7 @@ agreement) and [phase 3 (initial engineering review)](docs/REVIEW.md#phase-3-com
 are complete; [workflow completion evidence](docs/REVIEW.md#phase-1-and-2-completion-audit)
 records the foundations. Product acceptance remains separate.
 
-**Next: parent round-trip fidelity — backlog, not started.** Preserve parent
+**Parent round-trip fidelity: implemented; automated checks complete.** Preserve parent
 identity and world geometry through XML export/import. Owners: `cambam_writer.py`,
 `cambam_reader.py`, new focused `tests/`, and the specification for any clarified
 local/world transform contract. [Defect evidence](docs/REVIEW.md#parent-identity-and-transform-reconstruction).
@@ -29,8 +29,13 @@ Acceptance:
   runbook and pass relevant syntax/import checks; inspect synthetic XML.
 - Record CamBam geometry validation separately; do not claim it from local tests.
 
-Next action: promote this slice to active and write reproducing tests. Exclude
-general transform refactoring and MOP migration. Rollback: revert only the slice's
+Verification: nine authored unittest tests pass on Python 3.10.9 / NumPy 1.23.5,
+with syntax/import checks complete. See [repair evidence](docs/REVIEW.md#parent-round-trip-repair-verification).
+CamBam acceptance remains pending: open synthetic hierarchy exports and confirm
+geometry/placement. Packaging compatibility remains unverified.
+
+Next increment: parent-cycle rejection (backlog item 1). General transform
+refactoring and MOP migration remain outside the completed slice. Rollback: revert only the slice's
 patch; do not rewrite existing CAD files or saved pickle state.
 
 ## Remaining backlog, in order
@@ -66,10 +71,11 @@ MOP ownership must be reconciled before implementing that migration.
 ## Completion and verification
 
 - Working agreement: implemented; documentation checks recorded in the review.
-- Product baseline: limited local checks only; no dedicated automated test suite.
+- Parent XML slice: implemented and automated checks complete; nine regression tests.
+- Broader product baseline: limited local checks only.
 - User/CamBam/production acceptance: not performed.
 
 [Verification commands](docs/DEVELOPMENT.md) and [work lifecycle](docs/WORKFLOW.md)
 are authoritative. Promote one bounded item with acceptance criteria, implement
 and verify it, then separately record user acceptance before claiming that level
-of completion. Recommended next step: execute the parent metadata slice.
+of completion. Recommended next step: activate the parent-cycle rejection slice.
