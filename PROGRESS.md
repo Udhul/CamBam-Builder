@@ -32,26 +32,34 @@ Acceptance:
 Verification: nine authored unittest tests pass on Python 3.10.9 / NumPy 1.23.5,
 with syntax/import checks complete. See [repair evidence](docs/REVIEW.md#parent-round-trip-repair-verification).
 CamBam acceptance remains pending: open synthetic hierarchy exports and confirm
-geometry/placement. Packaging compatibility remains unverified.
+geometry/placement using the [A/B procedure](docs/DEVELOPMENT.md#manual-parent-transform-acceptance).
+Prepared files: `output/parent-validation-kjytha6k/A_reference.cb` and
+`output/parent-validation-kjytha6k/B_parent_roundtrip.cb`; regenerate via the procedure
+if these ignored local artifacts are unavailable. Packaging compatibility remains unverified.
 
-Next increment: parent-cycle rejection (backlog item 1). General transform
-refactoring and MOP migration remain outside the completed slice. Rollback: revert only the slice's
+**Parent-cycle rejection: implemented; automated checks complete.**
+Owner: `cambam_project.py`; focused API and synthetic XML regression tests.
+Acceptance: reject self/descendant cycles before mutation; preserve both parent
+indexes, memberships and transforms; valid reparent/detach remain usable; cyclic
+XML produces an acyclic hierarchy with preserved world geometry.
+[Verification evidence](docs/REVIEW.md#parent-cycle-rejection-verification) records
+the regression and checks. CamBam validation remains pending.
+General transform refactoring and MOP migration remain outside this slice. Rollback: revert only the slice's
 patch; do not rewrite existing CAD files or saved pickle state.
 
 ## Remaining backlog, in order
 
-1. Reject parent cycles atomically; test traversal and registry integrity.
-2. Establish transform matrix and baking fidelity with synthetic end-to-end tests.
-3. Preserve MOP identities across XML round trips with duplicate display names.
-4. Define export failure behavior and prevent silent incomplete output; fix bare
+1. Establish transform matrix and baking fidelity with synthetic end-to-end tests.
+2. Preserve MOP identities across XML round trips with duplicate display names.
+3. Define export failure behavior and prevent silent incomplete output; fix bare
    filename state saving as a separate small persistence slice.
-5. Align MOP registry ownership with the specification after defining group-source
+4. Align MOP registry ownership with the specification after defining group-source
    compatibility; test defaults and malformed XML metadata reconstruction.
-6. Improve curved-geometry bounds; implement copy/transfer utilities against the
+5. Improve curved-geometry bounds; implement copy/transfer utilities against the
    specification, with collision and relationship tests.
-7. Validate packaging and supported Python versions; expand examples and tests as
+6. Validate packaging and supported Python versions; expand examples and tests as
    each capability is verified. Add CLI/distribution work only for an actual need.
-8. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
+7. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
    and load/modify/save workflows on another PC. User-requested future work;
    not active and does not displace correctness fixes.
    [Requirements, acceptance and maintenance plan](docs/MCP_PLAN.md).
@@ -72,10 +80,11 @@ MOP ownership must be reconciled before implementing that migration.
 
 - Working agreement: implemented; documentation checks recorded in the review.
 - Parent XML slice: implemented and automated checks complete; nine regression tests.
+- Parent-cycle rejection: implemented and automated checks complete.
 - Broader product baseline: limited local checks only.
 - User/CamBam/production acceptance: not performed.
 
 [Verification commands](docs/DEVELOPMENT.md) and [work lifecycle](docs/WORKFLOW.md)
 are authoritative. Promote one bounded item with acceptance criteria, implement
 and verify it, then separately record user acceptance before claiming that level
-of completion. Recommended next step: activate the parent-cycle rejection slice.
+of completion. Recommended next step: establish transform matrix and baking fidelity (backlog item 1).

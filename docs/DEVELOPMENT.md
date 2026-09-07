@@ -79,6 +79,42 @@ parameters after writing/reading synthetic fixtures. Opening the result in CamBa
 and checking geometry/toolpaths requires user/domain validation before production
 use. Keep private CAD inputs and generated reports local.
 
+## Manual parent-transform acceptance
+
+Generate independent world-coordinate reference A and hierarchy export B with:
+
+```powershell
+& $ProjectPython -m demos.generate_parent_validation
+```
+
+The command prints a fresh `output/parent-validation-*` directory. Open only
+`A_reference.cb` and `B_parent_roundtrip.cb` for comparison; `internal_roundtrip_*`
+files are intermediate evidence. B includes a translated/90-degree-rotated root,
+child and grandchild offsets, two rejected cycle attempts, and two XML round trips.
+A uses explicit world coordinates with identity matrices and no parent links.
+The generator checks serialized counts and reconstructed world endpoints for both.
+
+In CamBam:
+
+1. Open A and B separately. Both must load without errors.
+2. Use top/XY view and zoom to the whole drawing in each. Each must contain exactly
+   three open, straight polylines, one per `RootLayer`, `ChildLayer`, `GrandchildLayer`.
+3. Compare placement/orientation and check world endpoints below using the drawing
+   coordinates or measurement tools (not untransformed local point properties).
+   Pass tolerance: 0.01 drawing units; all geometry is at Z=0.
+
+| Layer | World endpoints (X, Y) | Length |
+| --- | --- | --- |
+| RootLayer | (20, 10) to (20, 20) | 10 |
+| ChildLayer | (20, 25) to (15, 25) | 5 |
+| GrandchildLayer | (10, 25) to (10, 30) | 5 |
+
+Pass only if A and B both match all counts/endpoints, with no additional geometry,
+displacement, scaling or rotation. Report CamBam version, A/B pass or fail, and
+any differing layer/observed endpoint. This accepts the synthetic display/XML
+slice only; no MOPs or toolpaths are included. Parent-cycle rejection and registry
+integrity are automated API checks and need no manual reproduction.
+
 ## Troubleshooting
 
 - Import failure: verify the selected interpreter and install declared dependencies

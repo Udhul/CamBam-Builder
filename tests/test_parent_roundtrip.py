@@ -141,6 +141,40 @@ class ParentRoundTripTests(unittest.TestCase):
             self.assert_hierarchy(source, loaded_twice)
             self.assert_world_pose(expected, loaded_twice)
 
+    def test_cyclic_parent_metadata_rejects_closing_edge_and_preserves_world_pose(self):
+        for reverse in (False, True):
+            with self.subTest(reverse=reverse), tempfile.TemporaryDirectory() as directory:
+                source, expected = self.make_project()
+                path = self.save(source, directory)
+                self.rewrite_parent_tags(path, {"root": str(expected["grandchild"].internal_id)})
+                if reverse:
+                    self.reverse_xml_order(path)
+                loaded = read_cambam_file(str(path))
+                self.assertIsNotNone(loaded)
+                self.assertEqual(len(loaded._primitive_parent_link), 2)
+                for primitive in loaded.list_primitives():
+                    original = expected[primitive.user_identifier]
+                    self.assertEqual(primitive.internal_id, original.internal_id)
+                    self.assertEqual(loaded.get_layer_of_primitive(primitive).user_identifier,
+                                     source.get_layer_of_primitive(original).user_identifier)
+                    visited = set()
+                    current = primitive
+                    while current is not None:
+                        self.assertNotIn(current.internal_id, visited)
+                        visited.add(current.internal_id)
+                        current = loaded.get_parent_of_primitive(current)
+                    parent = loaded.get_parent_of_primitive(primitive)
+                    if parent is not None:
+                        self.assertIn(primitive.internal_id, {
+                            child.internal_id for child in loaded.get_children_of_primitive(parent)
+                        })
+                self.assert_world_pose(expected, loaded)
+                second = self.save(loaded, directory, "second")
+                reloaded = read_cambam_file(str(second))
+                self.assertIsNotNone(reloaded)
+                self.assertEqual(loaded._primitive_parent_link, reloaded._primitive_parent_link)
+                self.assert_world_pose(expected, reloaded)
+
     def test_reversed_layer_and_object_xml_order_preserves_hierarchy(self):
         source, expected = self.make_project()
         with tempfile.TemporaryDirectory() as directory:
@@ -207,7 +241,12 @@ class ParentRoundTripTests(unittest.TestCase):
             with self.assertLogs("cambam_builder.cambam_reader", level=logging.ERROR) as logs:
                 self.assertIsNone(read_cambam_file(str(path)))
             self.assertIn("singular world transform", " ".join(logs.output))
-            self.assertIn(str(expected["root"].internal_id), " ".join(logs.output))
+            # UUID-sorted export may encounter either singular ancestor first.
+            message = " ".join(logs.output)
+            self.assertTrue(any(
+                f"child {expected[child].internal_id}: parent {expected[parent].internal_id}" in message
+                for child, parent in (("child", "root"), ("grandchild", "child"))
+            ))
 
     def test_singular_root_without_children_loads(self):
         source, expected = self.make_project(with_child=False)

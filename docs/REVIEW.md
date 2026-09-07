@@ -293,3 +293,34 @@ MCP plan records user-authorized future direction, not a reason to defer the
 selected correctness fix or claim an implemented integration.
 
 Suggested commit: `docs: backlog stateless MCP integration and complete initial review`
+
+
+### Parent-cycle rejection verification
+
+2026-09-07: `link_primitive_parent` now walks the proposed parent's ancestor
+chain before removing the child's old edge. Self/descendant links and already
+cyclic candidate chains return `False` without mutation. Iteration with a visited
+set avoids introducing a recursion limit or hanging on malformed prior state.
+The mutation API owns this invariant; no transform or MOP refactor was needed.
+
+The new cyclic-XML regression failed before the fix in both forward/reversed
+XML order: three parent edges were retained instead of two. With the guard,
+import rejects the closing edge and preserves all three world matrices and
+geometries across another export/import. Which edge is rejected depends on XML
+order; malformed cycles have no uniquely intended root. Existing singular-parent
+import failure behavior is retained. Direct dictionary mutation/old pickle repair
+and general traversal hardening remain outside this API guarantee.
+
+The run also exposed an existing UUID-order-dependent singular-parent test:
+either root or child can be the first singular parent encountered. Its assertion
+now checks the reported child/parent pair against either valid failing edge.
+
+Verification: `python -m unittest discover -s tests -v`,
+`python -m compileall -q cambam_builder legacy_cambam_builder`, import/construction
+smoke check, and `git diff --check` pass with the available Python 3.10.9 / NumPy
+1.23.5 (no project environment or dependency changes). API tests check atomic
+registry and transform preservation plus valid hierarchy mutations; XML tests
+inspect parent edge counts, traversal, world poses and repeated round trips.
+CamBam geometry/placement acceptance and packaging compatibility remain unverified.
+Reopen if another supported relationship mutation bypasses the guard, or cyclic
+XML requires an order-independent rejection policy.

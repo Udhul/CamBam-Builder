@@ -415,7 +415,7 @@ class CamBamProject:
         return True
 
     def link_primitive_parent(self, child_identifier: Identifiable, parent_identifier: Optional[Identifiable]) -> bool:
-        """Links a child primitive to a parent primitive, updating registries."""
+        """Link or detach a primitive; reject cycles without changing registries."""
         child_uuid = self._resolve_identifier(child_identifier, Primitive)
         parent_uuid = self._resolve_identifier(parent_identifier, Primitive) if parent_identifier else None
 
@@ -428,7 +428,16 @@ class CamBamProject:
         if child_uuid == parent_uuid:
             logger.error(f"Cannot link primitive {child_uuid} to itself.")
             return False
-        # TODO: Add check for circular dependencies?
+        # Validate before removing the existing edge. Walking parent links also
+        # avoids recursion limits, and a visited set bounds malformed old state.
+        ancestor_uuid = parent_uuid
+        visited = set()
+        while ancestor_uuid is not None:
+            if ancestor_uuid == child_uuid or ancestor_uuid in visited:
+                logger.error(f"Cannot link primitive {child_uuid} to {parent_uuid}: Parent cycle detected.")
+                return False
+            visited.add(ancestor_uuid)
+            ancestor_uuid = self._primitive_parent_link.get(ancestor_uuid)
 
         # Remove old parent link if exists
         old_parent_uuid = self._primitive_parent_link.pop(child_uuid, None)

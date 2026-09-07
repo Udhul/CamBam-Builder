@@ -61,13 +61,27 @@ subject to XML numeric precision. Primitive UUIDs, identifiers and layer members
 are retained; layer UUID persistence is not part of the XML format.
 
 Absent, malformed or unresolved parent references leave the primitive parentless
-with its imported world matrix. Existing self-parent rejection likewise leaves
+with its imported world matrix. Rejected self-parent and cycle-closing links likewise leave
 the world pose unchanged. A resolved parent with a singular world matrix makes
 the entire import fail: the reader logs the child/parent UUIDs and returns `None`
 through its existing error boundary. Even a compatible child world matrix cannot
 uniquely recover local coordinates; no pseudoinverse or silent detachment is used.
-A singular primitive without children is valid. This contract covers acyclic
-hierarchies; cycle hardening and general transform/baking fidelity remain separate.
+A singular primitive without children is valid. For cyclic XML metadata, the
+reader retains edges accepted in input order and rejects the edge closing a cycle;
+the resulting root can depend on XML order, while world poses remain unchanged
+for invertible parent matrices. Singular-parent failure still takes precedence
+when the reader cannot solve the candidate local matrix.
+
+### Parent-link mutation contract
+
+`link_primitive_parent` returns `False` for self-parenting, a proposed descendant
+parent, or an already-cyclic proposed ancestor chain. Validation walks parent
+UUIDs iteratively before mutation, leaving both relationship indexes, entity
+registries, memberships and local matrices unchanged on rejection. Valid
+reparenting, repeated links and detachment with `None` return `True` and retain
+local matrices (so reparenting can change world pose). The guard prevents new
+cycles through this API; it does not repair directly mutated registries or old
+pickle state. General transform/baking fidelity remains separate.
 
 The legacy package exposes `CamBam` and aliases through its own `__init__.py`;
 it is a separate implementation, not the modern reader's fallback. Its CLI file
