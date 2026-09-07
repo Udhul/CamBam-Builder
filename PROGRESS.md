@@ -1,51 +1,49 @@
-# CamBam Builder Progress Tracker
+# Current status
 
-This document outlines the development plan required to complete the framework according to `structure_spec.md`.  The scope only covers the modern package in `./cambam_builder`.
+Baseline reviewed 2026-09-07: package version 0.1.0. The modern package provides
+entity registries, layer/group/parent and part-MOP relationships, transforms,
+XML reader/writer and pickle persistence. These are implemented capabilities,
+not a guarantee of complete round-trip fidelity. MOP sources remain on instances.
 
-## Current state (v0.1.0)
-* Dataclass based entity model (`Layer`, `Part`, `Primitive` subclasses and several `Mop` types).
-* `CamBamProject` keeps registries for entities and records layer membership, parent/child links, group membership and part→MOP ordering.
-* XML writer/reader exist and support round‑tripping projects.
-* Basic transformation utilities and project level methods (translate, rotate, scale, baking etc.).
-* Pickle based `save_state` / `load_state` for project persistence.
-* No central mapping of MOPs to their primitives – MOP objects store `pid_source` internally.
-* Missing cross‑project copy/transfer utilities and only limited tests/demonstrations.
-* Several TODOs remain (bounding box accuracy, matrix helpers, API streamlining, validation etc.).
+## Active priority
 
-## Target
-The final release must fully implement the architecture described in `structure_spec.md`: all relationships managed in the project object, robust XML import/export, transformation propagation, and utilities for transferring entities between projects.
+Recommended next slice: preserve parent identity and world geometry through XML export/import.
+Scope: writer/reader parent metadata and local/world transform boundary and focused regression tests.
+Acceptance and evidence: [initial review](docs/REVIEW.md). Runtime work has not
+started; this review establishes the working agreement and selects the next slice.
 
-Below is a series of product increments to reach that state.
+## Ordered backlog
 
-### Increment 1 – Registry alignment and cleanup
-- Refactor `Mop` handling so primitive assignments are stored in project registries rather than `pid_source` on the MOP instance.  Provide APIs to set/get a MOP’s primitive list and keep backward compatibility with group names.
-- Add internal checks when linking primitives to parents to prevent circular references and invalid identifiers.
-- Resolve outstanding TODOs in transformation helpers (matrix conversions) and in `bake_primitive_transform` logic.
-- Improve error handling and logging in identifier resolution functions.
+1. Parent metadata round-trip regression and fix (active recommendation).
+2. Reject parent cycles atomically; test traversal and registry integrity.
+3. Establish transform matrix and baking fidelity with synthetic end-to-end tests.
+4. Define export failure behavior and prevent silent incomplete output.
+5. Align MOP registry ownership with the specification after defining group-source
+   compatibility; test defaults and malformed XML metadata reconstruction.
+6. Improve curved-geometry bounds; implement copy/transfer utilities against the
+   specification, with collision and relationship tests.
+7. Validate packaging and supported Python versions; expand examples and tests as
+   each capability is verified. Add CLI/distribution work only for an actual need.
 
-### Increment 2 – Serialization consistency
-- Update the XML writer to pull MOP→primitive associations from the new registry and ensure every primitive `<Tag>` contains `user_id`, `internal_id`, `groups`, `parent`, and `description` fields.
-- Enhance the reader to rebuild the new MOP registry and to load project level defaults when available.
-- Guarantee that missing or malformed `<Tag>` data still results in valid entities with generated UUIDs and unique user identifiers.
-- Implement pretty‑printing and deterministic ordering for all exported XML to aid version control comparisons.
+This supersedes the former five broad increments; their pending scope is retained
+above. Detailed contracts remain in `structure_spec.md`, and review evidence in
+`docs/REVIEW.md`. No repository-linked issue tracker was found.
 
-### Increment 3 – Copy and transfer utilities
-- Introduce APIs to copy primitives (optionally including their child trees) within a project.
-- Add functions to transfer primitives and their relationships between two `CamBamProject` instances while preserving UUIDs and updating layer/MOP membership in the target project.
-- Expose convenience methods for duplicating layers or parts while keeping their internal ordering and links.
+## Blockers and decisions
 
-### Increment 4 – Transformation propagation and geometry helpers
-- Ensure all transformation methods recursively affect child primitives according to the parent/child registry.  Provide unit tests for translate, rotate, scale, mirror and align operations with and without baking.
-- Improve bounding box calculations for primitives that use bulges or arcs so that collision and alignment logic are reliable.
-- Add optional utilities for calculating overall project bounding boxes and centering / aligning groups of primitives.
+No blocker for the recommended synthetic regression/fix. Full source-system
+compatibility requires CamBam validation and representative authorized fixtures.
+MOP live group versus snapshot semantics need resolution before registry migration.
+The architecture specification is a target; its PID-source wording and centralized
+MOP ownership must be reconciled before implementing that migration.
 
-### Increment 5 – Testing, documentation and packaging
-- Create a pytest based test suite covering entity creation, relationship management, transformation propagation and XML import/export.
-- Expand the README with usage examples and document the architectural design summarised from `structure_spec.md`.
-- Package metadata in `pyproject.toml`/`setup.py` should be updated for distribution on PyPI and to expose command line helpers if desired.
-- Provide example demo scripts in `demos/` using the new APIs.
+## Completion and verification
 
-### Final Release (v1.0)
-- All features from the specification implemented and tested.
-- Full project documentation and API reference generated.
-- Stable backwards compatible loader kept in `legacy_cambam_builder` for reading older project files.
+- Working agreement: implemented; documentation checks recorded in the review.
+- Product baseline: limited local checks only; no dedicated automated test suite.
+- User/CamBam/production acceptance: not performed.
+
+[Verification commands](docs/DEVELOPMENT.md) and [work lifecycle](docs/WORKFLOW.md)
+are authoritative. Promote one bounded item with acceptance criteria, implement
+and verify it, then separately record user acceptance before claiming that level
+of completion. Recommended next step: execute the parent metadata slice.

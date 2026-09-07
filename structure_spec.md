@@ -1,5 +1,10 @@
 # CamBam CAD/CAM Framework – Core Project Structure and Relationship Management Specification
 
+This specification describes the intended architecture, not a verified inventory of
+implemented behavior. See [current status](PROGRESS.md) for implementation gaps and
+the [topic map](docs/README.md) for documentation ownership. MOP PID-source semantics
+and central registry ownership require clarification before migration.
+
 This specification describes the core architecture for the CamBam CAD/CAM framework. In this design, all relationships between entities (primitives, layers, parts, and machine operations (MOPs)) are maintained in a central registry managed by the project object. This approach minimizes duplication of relationship data in the individual entities and provides a single source of truth for linking. It also simplifies propagation of transformations, transferring of entities between projects, and robust XML serialization.
 
 ---
