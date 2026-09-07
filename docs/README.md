@@ -5,7 +5,7 @@ Read this map after the root README; follow only the relevant owner.
 | Topic | Authoritative home | Boundary |
 | --- | --- | --- |
 | Agent operational rules | [AGENTS.md](../AGENTS.md) | Compact mandatory context |
-| Architecture and intended domain relationships | [structure_spec.md](../structure_spec.md) | Target design, not proof of implemented behavior |
+| Current architecture, code ownership and intended domain relationships | [structure_spec.md](../structure_spec.md) | Section 0: implemented structure; remaining sections: target design |
 | Current baseline, priority, backlog, blockers | [PROGRESS.md](../PROGRESS.md) | Single status surface; pending items live here |
 | Development commands and troubleshooting | [DEVELOPMENT.md](DEVELOPMENT.md) | Setup, checks and artifact handling |
 | Delegation, lifecycle and handoff | [WORKFLOW.md](WORKFLOW.md) | Reusable working procedures |
@@ -16,23 +16,34 @@ Read this map after the root README; follow only the relevant owner.
 
 ## Code and artifact boundaries
 
-- `cambam_project.py`: entity registries, relationship updates, project transforms,
-  persistence and public orchestration.
-- `cambam_entities.py`: dataclasses, primitive geometry and entity XML encoding.
-- `cad_transformations.py` and `cad_common.py`: matrix helpers and shared values.
-- `cambam_writer.py` / `cambam_reader.py`: XML orchestration and reconstruction.
-- `__init__.py`: public project alias and version.
+Runtime module ownership and data flow live in
+[the implemented architecture](../structure_spec.md#0-implemented-architecture-and-change-ownership).
+
 - `legacy_cambam_builder/`: separately packaged legacy code; changes require an
   explicit legacy scope. `inactive/`: historical implementation, not runtime owner.
 - `demos/`: authored examples, not a regression suite. `output/`, `__pycache__/`
   and `*.egg-info` are generated/disposable; do not treat them as source or erase
   existing contents without authorization. User input files are private data.
 
-No issue tracker, CI configuration, decision log or dedicated test suite was found
-in the tracked repository at this review. An external tracker may exist; if one is
+No issue tracker, CI configuration, pre-existing decision log or dedicated test suite
+was found during initial discovery. This documentation now provides a review record.
+An external tracker may exist; if one is
 designated, move task ownership there and retain only baseline/active links in
 `PROGRESS.md`. Do not mirror issue descriptions.
 
 Completed plans must move lasting contracts to the specification or runbook and
 retain only useful evidence in the review record. Search direct repository content
 first; indexing/RAG requires measured discovery failures and a maintenance owner.
+
+## Maintenance rules
+
+The author of a change updates its owning guide in the same increment; the lead
+reviews consistency with code and status. Link to facts elsewhere rather than
+copying them. Keep current contracts in the specification, dated evidence in the
+review, and live priority in status. There are no standalone pending plans today;
+add a linked plan only if acceptance/dependencies outgrow a bounded status item.
+The plan owns execution detail, while status retains the single priority order.
+
+One root agent file covers this small, coupled library. Add nested instructions
+only when a subtree gains distinct operational requirements that meaningfully
+reduce irrelevant context; ordinary module knowledge stays in the specification.

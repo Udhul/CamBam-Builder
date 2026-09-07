@@ -1,13 +1,58 @@
 # CamBam CAD/CAM Framework – Core Project Structure and Relationship Management Specification
 
-This specification describes the intended architecture, not a verified inventory of
-implemented behavior. See [current status](PROGRESS.md) for implementation gaps and
+Section 0 describes the implemented architecture; sections 1–7 describe the intended
+design, not a verified inventory of implemented behavior. See [current status](PROGRESS.md) for implementation gaps and
 the [topic map](docs/README.md) for documentation ownership. MOP PID-source semantics
 and central registry ownership require clarification before migration.
 
 This specification describes the core architecture for the CamBam CAD/CAM framework. In this design, all relationships between entities (primitives, layers, parts, and machine operations (MOPs)) are maintained in a central registry managed by the project object. This approach minimizes duplication of relationship data in the individual entities and provides a single source of truth for linking. It also simplifies propagation of transformations, transferring of entities between projects, and robust XML serialization.
 
 ---
+
+## 0. Implemented architecture and change ownership
+
+This is a local Python library, with no declared service, database, frontend or
+modern command-line entry point. The public entry point is `CamBamProject`, also
+exported as `CBProject`. Package declarations include the modern and legacy
+packages; `inactive/` and demos are outside that runtime package list.
+
+| Owner | Implemented responsibility | Start here when changing |
+| --- | --- | --- |
+| `cambam_builder/cambam_project.py` | UUID entity registries, identifier lookup, ordered layers/parts/MOPs, relationship updates, transform orchestration and persistence | Public creation/query/mutation APIs and relationship invariants |
+| `cambam_builder/cambam_entities.py` | Entity dataclasses, primitive geometry/bounds, local effective matrices, parent-composed world transforms and entity XML encoding | Geometry or entity fields; inspect reader/writer callers for I/O changes |
+| `cambam_builder/cad_transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
+| `cambam_builder/cambam_writer.py` | XML ID assignment and layer/part traversal; delegates individual encoding to entities | Output structure and reference resolution |
+| `cambam_builder/cambam_reader.py` | XML parsing, entity reconstruction, ID mapping and deferred parent/MOP linking | Import defaults, malformed data and round-trip reconstruction |
+| `cambam_builder/__init__.py` | Public alias and version | Import surface and version metadata |
+| `cambam_builder/cad_common.py` | Logging configuration with placeholder type/constant sections | Check callers before treating it as an established shared utility layer |
+
+### Data flow and relationship boundaries
+
+1. Callers create and mutate entities through `CamBamProject`. UUIDs key the
+   registries; the identifier registry provides human-readable lookup. The project
+   maintains both directions of layer membership and parent/child links, group
+   indexes, and part/MOP association and order. Update these together through the
+   owning APIs rather than editing individual dictionaries in application code.
+2. Primitives hold geometry and an effective matrix, plus a weak project reference
+   used to compose ancestor transforms. Groups are also represented on entities;
+   MOP targeting currently lives in `Mop.pid_source` and resolves through the
+   project. The fully centralized target in later sections is not yet implemented.
+3. `save()` / `export()` delegate to `save_cambam_file()` and `build_xml_tree()`.
+   Entities encode geometry and metadata; primitives export world matrices. The
+   reader constructs entities, then resolves references. See the review for known
+   fidelity defects; serialization success alone does not establish equivalence.
+4. `save_state()` / `load_state()` use Python pickle, restoring primitive project
+   links after loading. This is distinct from XML interchange and is not a promised
+   version-stable migration format. Trust requirements live in the runbook.
+
+The reader's `PRIMITIVE_TAG_TO_CLASS` and `MOP_TAG_TO_CLASS` are the executable
+supported-tag inventory, not a claim of complete CamBam coverage. Consult those
+maps and corresponding entity encoders before adding a type.
+
+The legacy package exposes `CamBam` and aliases through its own `__init__.py`;
+it is a separate implementation, not the modern reader's fallback. Its CLI file
+is not a declared installed entry point. Legacy compatibility requires its own
+scope and checks. File/artifact handling belongs in the [topic map](docs/README.md).
 
 ## 1. Overview
 

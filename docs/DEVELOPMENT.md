@@ -13,16 +13,27 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e .
 ```
 
-The setup command may require dependency downloads. The initial review used the
-available Python interpreter without installing or changing dependencies.
+The setup command may require dependency downloads. Do not recreate an existing
+environment. After setup, explicitly select its interpreter for every command;
+activation is optional. If the IDE uses another project environment, set
+`$ProjectPython` to that interpreter instead. Confirm it before running checks:
+
+```powershell
+$ProjectPython = '.\.venv\Scripts\python.exe'
+& $ProjectPython -c "import sys; print(sys.executable); print(sys.version)"
+```
+
+Without a project environment, the available interpreter can perform baseline
+checks if dependencies are already present; record that limitation. The initial
+review did this without installing or changing dependencies.
 
 ## Verification entry points
 
-Run from the repository root, using the selected environment's Python:
+Run from the repository root, using the interpreter selected above:
 
 ```powershell
-python -m compileall -q cambam_builder legacy_cambam_builder
-python -c "from cambam_builder import CBProject; p = CBProject('smoke'); assert p.project_name == 'smoke'; print('import/construct OK')"
+& $ProjectPython -m compileall -q cambam_builder legacy_cambam_builder
+& $ProjectPython -c "from cambam_builder import CBProject; p = CBProject('smoke'); assert p.project_name == 'smoke'; print('import/construct OK')"
 git diff --check
 ```
 
@@ -30,6 +41,31 @@ These are syntax/import checks, not a regression suite. There is currently no
 canonical test-suite command. Add assertion-based regression tests with the next
 runtime fix and document their command here. Packaging installation and supported
 Python versions require separate validation; a local import does not prove them.
+
+### Required checks by change
+
+| Change | Minimum evidence before technical closure |
+| --- | --- |
+| Documentation only | Review changed local links/headings, factual claims against their owner and `git diff --check`; run example code if changed |
+| Runtime defect | Assertion-based regression that fails before the fix and passes afterward, focused test command, syntax/import checks |
+| Shared relationship/transform/XML contract | Relevant regression suite plus an end-to-end synthetic round trip checking counts, references, world geometry and affected parameters |
+| Packaging/dependencies | Isolated install/build and import from outside the source tree; declared Python compatibility checks appropriate to the change |
+
+The first runtime slice must introduce an authored `tests/` entry point and record
+its exact command here. Prefer standard-library `unittest` for a small initial
+suite unless a demonstrated need justifies a test dependency. The intended command
+would be `& $ProjectPython -m unittest discover -s tests -v`; it is **not a current
+passing baseline** while that suite does not exist. Test observable contracts,
+including invalid inputs relevant to the fix, rather than mirroring internals.
+
+Keep reusable synthetic fixtures and expected results with authored tests.
+Use a unique task directory under ignored `output/` for disposable diagnostics,
+generated XML and verbose logs; do not overwrite previous runs. Durable evidence
+must include reproduction inputs/steps and commands in the review or tests so a
+fresh checkout can reproduce it without ignored files. Local logs are supplementary.
+Remove only temporary artifacts created by that task when authorized; never infer
+that an ignored directory is safe to clear. Inspect each exit status separately:
+PowerShell can continue after a native command fails.
 
 `demos/test.py` is an interactive example: its main block expects an input file
 that is not supplied by the repository, and logs/returns on some failures. It is

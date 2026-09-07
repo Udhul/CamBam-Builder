@@ -6,6 +6,9 @@
 - Inspect `git status --short` before edits. Preserve unrelated changes. Define a
   bounded increment and acceptance criteria; fix the owning contract, avoiding
   opportunistic refactors. Prove abstractions on one end-to-end slice first.
+- Use judgment for safe, reversible details and state material assumptions. Ask
+  only when a missing decision changes architecture, product behavior, acceptance,
+  destructive actions or expensive work; continue independent authorized work.
 - Keep project facts in their documentation owner, identified by the topic map.
   Update `PROGRESS.md` when priority or completion changes; preserve useful failure
   evidence and reopening criteria. Do not create a competing wiki or backlog.

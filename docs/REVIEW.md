@@ -93,31 +93,12 @@ fix. Baked/non-baked equivalence needs independent tests.
 - No exhaustive source-system support matrix, supported-Python build validation,
   legacy compatibility audit or real machining acceptance was performed.
 
-## Recommended next increment: parent round-trip fidelity
+## Recommendation from this review
 
-Owners: `cambam_writer.py`, `cambam_reader.py`, focused new regression tests;
-`structure_spec.md` owns any clarified transform reconstruction contract.
-Avoid registry migration or general transformation refactoring in this slice.
-
-Acceptance criteria:
-
-1. Serialized parent metadata is the parent's UUID, and import preserves UUIDs,
-   identifiers, layer membership and parent/child edges regardless of XML order.
-2. A root, child and grandchild retain world matrices/geometry through write/read
-   and a second write/read, with non-identity parent transforms and child offsets.
-3. Parentless and missing/invalid-parent fixtures retain a documented world pose;
-   singular parent transforms have explicit tested failure/fallback behavior.
-4. Counts and relationships are asserted, not inferred from logs. Tests fail on
-   the old implementation and pass on the bounded repair. Use numeric tolerance.
-5. Syntax/import checks and the new test command pass and are recorded in the
-   runbook. Inspect the resulting synthetic XML; user opens it in CamBam and
-   compares geometry before claiming source-system acceptance.
-
-Implement in one reviewable increment. Roll back by reverting only its own patch;
-do not rewrite existing CAD files or migrate saved pickle state. No user decision
-blocks the regression work. Before accepting singular-transform behavior or wider
-MOP semantics, record the chosen contract and seek a user decision if it changes
-product expectations. User/CamBam validation remains a separate acceptance gate.
+The parent round-trip finding warrants the smallest coherent repair across writer
+and reader. Current scope, acceptance criteria and priority are owned exclusively
+by [PROGRESS.md](../PROGRESS.md). This dated review owns the defect evidence and
+the reasons a writer-only repair is insufficient.
 
 ## Validation performed
 
@@ -148,3 +129,52 @@ Runtime repairs, package installation/build, automated regression coverage and u
 acceptance remain unperformed. No staging or commits were made.
 
 Suggested commit message: `docs: establish agent workflow and evidence-based project status`
+
+## Phase 1 and 2 completion audit
+
+Follow-up on 2026-09-07: the working tree was clean at the start. A native read-only
+documentation worker independently checked gaps; the lead validated ownership and
+data flow against targeted implementation symbols. No runtime changes, private
+assets, dependency installation or external-provider processing were needed.
+
+The initial pass covered the foundations. This follow-up closes gaps in current
+architecture, interpreter selection, lifecycle/evidence recording and single-owner
+acceptance criteria. The user requested completion of these phases; product repair
+remains a subsequent increment.
+
+| Requirement | Authoritative result / completion evidence |
+| --- | --- |
+| Inspect working tree; preserve changes | Clean initial status; documentation-only final diff |
+| Locate entry points, architecture, status, plans and checks | README -> topic map -> named owners; existing tracker/test/CI limitations recorded |
+| Current architecture and ownership | Specification section 0, grounded in project/entity/reader/writer symbols; target design remains explicitly separate |
+| Authored/generated/runtime/legacy boundaries | Topic map artifact rules and specification module ownership |
+| Toolchain, commands and troubleshooting | Development runbook with explicit interpreter selection and checks by change type |
+| Status, backlog, decisions and rejected approaches | One PROGRESS surface; workflow lifecycle; dated review evidence with reopening conditions |
+| Competing documents | Live acceptance moved from this review into PROGRESS; module overview moved from the map to the specification |
+| Capabilities, privacy, security and licensing | Session observations above; capability discovery/delegation rules; private-data boundaries, trusted-pickle rule and MIT owner |
+| Compact agent contract and judgment | Root AGENTS; minor reversible choices autonomous, material missing decisions escalated |
+| Progressive context and no competing wiki | Workflow search examples, evidence-triggered expansion/stopping rules and documentation maintenance ownership |
+| Agile lifecycle and acceptance separation | Explicit backlog/active/blocked/completion states and reusable completion record |
+| Cost-aware delegation | Capability matrix, bounded packet, total coordination cost, exclusive ownership, evidence escalation and local lead validation |
+| Verification and handoff | Per-change minimum evidence and exact-results template; future test entry point required before runtime closure |
+| Avoid unnecessary infrastructure | Existing documents reused; no nested agent files, new dependencies, services or indexing systems |
+
+Implementation: complete for phases 1 and 2. Documentation validation: complete.
+User/production acceptance is not required for these repository workflow documents;
+no source-system behavior changed. This does not claim user approval of runtime
+behavior or CamBam acceptance. No unresolved user decision blocks use of the
+working agreement. External tracker existence and full product compatibility remain
+explicit uncertainties rather than assumptions presented as facts.
+
+Follow-up checks (available Python 3.10.9, without installing dependencies):
+
+- `git diff --check`: passed.
+- `python -m output.review_doc_links`: passed; checked current local file targets.
+  This pre-existing local helper is supplementary, not required infrastructure.
+- README Python code block executed with `python -`: passed, including an assertion
+  that the returned project contains the `outline` primitive.
+- Inspected the final changed-file diff, ownership links and referenced heading
+  targets. No runtime file changed; no staging, commits or publication performed.
+
+Next increment: the selected parent round-trip slice in PROGRESS. Suggested commit:
+`docs: complete project overview and agent working agreement`
