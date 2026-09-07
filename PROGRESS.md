@@ -7,7 +7,7 @@ not a guarantee of complete round-trip fidelity. MOP sources remain on instances
 
 ## Active work and next priority
 
-No implementation slice is active. Phases 1 and 2 (project discovery and working
+Full-bake hierarchy fidelity is implemented; manual acceptance is pending below. Phases 1 and 2 (project discovery and working
 agreement) and [phase 3 (initial engineering review)](docs/REVIEW.md#phase-3-completion-audit)
 are complete; [workflow completion evidence](docs/REVIEW.md#phase-1-and-2-completion-audit)
 records the foundations. Product acceptance remains separate.
@@ -31,11 +31,11 @@ Acceptance:
 
 Verification: nine authored unittest tests pass on Python 3.10.9 / NumPy 1.23.5,
 with syntax/import checks complete. See [repair evidence](docs/REVIEW.md#parent-round-trip-repair-verification).
-CamBam acceptance remains pending: open synthetic hierarchy exports and confirm
-geometry/placement using the [A/B procedure](docs/DEVELOPMENT.md#manual-parent-transform-acceptance).
-Prepared files: `output/parent-validation-kjytha6k/A_reference.cb` and
-`output/parent-validation-kjytha6k/B_parent_roundtrip.cb`; regenerate via the procedure
-if these ignored local artifacts are unavailable. Packaging compatibility remains unverified.
+Synthetic parent A/B geometry/placement **accepted by the user on 2026-09-07**:
+both files match the expected world coordinates; resetting B's matrices restores
+local placement. CamBam version was not supplied. See
+[acceptance evidence](docs/REVIEW.md#parent-ab-user-acceptance).
+Packaging and broader CamBam compatibility remain unverified.
 
 **Parent-cycle rejection: implemented; automated checks complete.**
 Owner: `cambam_project.py`; focused API and synthetic XML regression tests.
@@ -43,13 +43,28 @@ Acceptance: reject self/descendant cycles before mutation; preserve both parent
 indexes, memberships and transforms; valid reparent/detach remain usable; cyclic
 XML produces an acyclic hierarchy with preserved world geometry.
 [Verification evidence](docs/REVIEW.md#parent-cycle-rejection-verification) records
-the regression and checks. CamBam validation remains pending.
+the regression and checks. Related parent A/B display validation is accepted.
 General transform refactoring and MOP migration remain outside this slice. Rollback: revert only the slice's
 patch; do not rewrite existing CAD files or saved pickle state.
 
+## Active increment: full-bake hierarchy fidelity
+
+State: **implemented; automated checks complete; user acceptance pending**. Owner: `bake_primitive_transform` in `cambam_project.py`,
+focused synthetic tests and the implemented specification. First prove full
+local-transform baking on straight polylines: recursive and nonrecursive baking
+must preserve every descendant's world geometry, preserve relationship/identity
+registries, reset selected matrices, and survive XML round trips. Include
+noncommuting affine transforms and singular scales. Explicit-matrix/component
+baking, global transform application and shape conversion remain subsequent
+bounded work. Five full-bake regressions and all 18 suite tests pass. The two nonrecursive
+cases failed before the fix. [Manual A/B files and criteria](docs/DEVELOPMENT.md#manual-full-bake-acceptance)
+are prepared; [repair evidence](docs/REVIEW.md#full-bake-hierarchy-verification)
+records scope and limitations.
+
 ## Remaining backlog, in order
 
-1. Establish transform matrix and baking fidelity with synthetic end-to-end tests.
+1. Complete remaining transform fidelity after the active full-bake slice:
+   global transform application, component baking, curved geometry and Rect conversion.
 2. Preserve MOP identities across XML round trips with duplicate display names.
 3. Define export failure behavior and prevent silent incomplete output; fix bare
    filename state saving as a separate small persistence slice.
@@ -82,9 +97,9 @@ MOP ownership must be reconciled before implementing that migration.
 - Parent XML slice: implemented and automated checks complete; nine regression tests.
 - Parent-cycle rejection: implemented and automated checks complete.
 - Broader product baseline: limited local checks only.
-- User/CamBam/production acceptance: not performed.
+- User/CamBam acceptance: parent A/B synthetic display accepted; broader production acceptance not performed.
 
 [Verification commands](docs/DEVELOPMENT.md) and [work lifecycle](docs/WORKFLOW.md)
 are authoritative. Promote one bounded item with acceptance criteria, implement
 and verify it, then separately record user acceptance before claiming that level
-of completion. Recommended next step: establish transform matrix and baking fidelity (backlog item 1).
+of completion. Next action: user full-bake A/B acceptance; next implementation slice is global transform application ordering.

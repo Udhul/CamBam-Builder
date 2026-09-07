@@ -81,7 +81,23 @@ registries, memberships and local matrices unchanged on rejection. Valid
 reparenting, repeated links and detachment with `None` return `True` and retain
 local matrices (so reparenting can change world pose). The guard prevents new
 cycles through this API; it does not repair directly mutated registries or old
-pickle state. General transform/baking fidelity remains separate.
+pickle state.
+
+### Full local-transform baking
+
+`bake_primitive_transform(..., transform_to_bake=None)` folds the selected local
+matrix into its geometry and resets that matrix to identity. Every direct child
+absorbs the removed matrix by left multiplication (`old_parent_local @ child_local`)
+to preserve the descendant transform chain. With `recursive=False`, child geometry
+is untouched; with `recursive=True`, that process continues down the subtree.
+Ancestor matrices and parent/child identities remain unchanged. No inverse is
+needed, including for singular scales. Recursive failures reported by the API
+propagate as `False`; this operation is not transactional.
+
+Synthetic verification covers straight polylines under translation, rotation,
+nonuniform scale, reflection and shear, including repeated baking and XML round
+trips. Entity-specific curved geometry/Rect conversion, explicit-matrix baking,
+component baking and global transform application are not covered by this result.
 
 The legacy package exposes `CamBam` and aliases through its own `__init__.py`;
 it is a separate implementation, not the modern reader's fallback. Its CLI file

@@ -28,5 +28,23 @@
 - Separate implementation, automated verification and user/production acceptance.
   End each unit with changed areas, decisions/assumptions, exact checks/results,
   risks, required user validation, next increment and suggested commit message.
+- Prepare user validation before requesting it: decide whether manual validation
+  adds evidence beyond automated checks; if not, state that and continue. When
+  needed, create and inspect synthetic A/B reference/result files (or one file
+  when sufficient), provide clickable paths, concise steps, exact expected
+  values/tolerances and pass/fail criteria, and say what result to report. For
+  other required input, first complete independent work and present the concrete
+  decision, relevant evidence and recommended option. Do not leave preparation
+  for the user to request. Record their reported acceptance and its scope; do not
+  repeat accepted checks unless a relevant change invalidates the evidence.
+- Keep one-off validation files, generators and verbose logs in a unique ignored
+  `output/<task>-<unique>/` directory; run scripts from the repository root with
+  the declared interpreter. Retain fixtures/generators in the git tree only when
+  reusable regressions or repeatable acceptance justify maintenance. Keep durable
+  criteria/results in their documentation owner, not a second status file. Preserve
+  pending validation artifacts until the user finishes. After acceptance, remove
+  or archive only task-owned temporary files within existing cleanup authorization;
+  never sweep `output/` or remove user-modified inputs. Verify absolute paths before
+  moving/deleting, and update links/commands when retiring a tracked helper.
 - Do not stage, unstage, commit, publish or destructively clean up without explicit
   authorization. Keep verbose logs and disposable results local.

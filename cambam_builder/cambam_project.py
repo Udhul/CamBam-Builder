@@ -1131,6 +1131,8 @@ class CamBamProject:
         """
         Applies the effective transform of a primitive (and optionally its children)
         directly to its geometry, resetting the effective transform to identity.
+        Full baking preserves descendant world poses even when recursive=False:
+        direct children absorb the removed local matrix without baking geometry.
         
         Args:
             transform_to_bake: The transformation matrix to bake into the geometry.
@@ -1177,8 +1179,9 @@ class CamBamProject:
             logger.error(f"Error baking geometry for {primitive.user_identifier}: {e}")
             return False
 
-        # Handle children recursively
-        if recursive:
+        # Full baking removes this node's local matrix from every descendant's
+        # transform chain, regardless of whether their geometry is also baked.
+        if recursive or transform_to_bake is None:
             child_ids = self.get_children_of_primitive(primitive.internal_id)
             for child_id in child_ids:
                 child = self.get_primitive(child_id)
@@ -1188,10 +1191,12 @@ class CamBamProject:
                     # ChildNew = ParentBaked * ChildOldEffective * ChildRelativeGeom
                     if transform_to_bake is None: # Effective
                         child.effective_transform = child_transform_to_bake @ child.effective_transform
-                        # Then recursively bake the child with its updated transform
-                        self.bake_primitive_transform(child_id, recursive=True)
+                        # Recursion controls geometry baking, not compensation.
+                        if recursive and not self.bake_primitive_transform(child_id, recursive=True):
+                            return False
                     else: # Single
-                        self.bake_primitive_transform(child_id, transform_to_bake, recursive=True)
+                        if not self.bake_primitive_transform(child_id, transform_to_bake, recursive=True):
+                            return False
 
         return True
 

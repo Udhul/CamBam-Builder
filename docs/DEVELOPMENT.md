@@ -81,18 +81,16 @@ use. Keep private CAD inputs and generated reports local.
 
 ## Manual parent-transform acceptance
 
-Generate independent world-coordinate reference A and hierarchy export B with:
+The parent A/B case was accepted by the user on 2026-09-07 (CamBam version
+not supplied). The one-off generator was retired from `demos/` to the local
+`output/parent-validation-kjytha6k/` directory alongside the accepted files.
+No regeneration command depends on an ignored script. Reusable automated parent
+regressions remain under `tests/`; the original helper is also in git history.
 
-```powershell
-& $ProjectPython -m demos.generate_parent_validation
-```
-
-The command prints a fresh `output/parent-validation-*` directory. Open only
-`A_reference.cb` and `B_parent_roundtrip.cb` for comparison; `internal_roundtrip_*`
-files are intermediate evidence. B includes a translated/90-degree-rotated root,
-child and grandchild offsets, two rejected cycle attempts, and two XML round trips.
-A uses explicit world coordinates with identity matrices and no parent links.
-The generator checks serialized counts and reconstructed world endpoints for both.
+The accepted files are `A_reference.cb` (explicit world coordinates, identity
+matrices) and `B_parent_roundtrip.cb` (parent transforms, rejected cycles and two
+XML round trips). The criteria below document that acceptance; do not ask the
+user to repeat it without a relevant behavior change.
 
 In CamBam:
 
@@ -114,6 +112,31 @@ displacement, scaling or rotation. Report CamBam version, A/B pass or fail, and
 any differing layer/observed endpoint. This accepts the synthetic display/XML
 slice only; no MOPs or toolpaths are included. Parent-cycle rejection and registry
 integrity are automated API checks and need no manual reproduction.
+
+## Manual full-bake acceptance
+
+Prepared local files: `output/full-bake-validation-n132g8ro/A_reference.cb` and
+`B_baked.cb` in that same directory. The one-off `generate.py` lives alongside
+them, outside the git tree; reusable synthetic fixtures/tests live in
+`tests/test_full_bake.py`. A uses explicit world coordinates; B first bakes the
+root and child nonrecursively, then bakes the whole hierarchy. All B matrices
+must be identity. This case tests baked geometry, beyond the accepted parent
+matrix display case above.
+
+Open A and B in CamBam, use top/XY view and zoom to the whole drawing. Both must
+load without errors and contain exactly three open straight polylines at Z=0.
+A uses separate named layers; B uses one `Geometry` layer. Check endpoints:
+
+| Reference name | World endpoints (X, Y) in both files |
+| --- | --- |
+| root | (16, 13) to (22, 22) |
+| child | (16, 37) to (10, 41.5) |
+| leaf | (32, 46) to (26, 59.5) |
+
+Pass tolerance is 0.01 drawing units. Pass requires matching placement and counts
+with no extra geometry, and identity Transform properties on every B polyline
+(resetting to identity must not move them). Report CamBam version, pass/fail and
+any differing endpoint or matrix. No toolpath validation is needed for this case.
 
 ## Troubleshooting
 

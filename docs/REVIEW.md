@@ -324,3 +324,44 @@ inspect parent edge counts, traversal, world poses and repeated round trips.
 CamBam geometry/placement acceptance and packaging compatibility remain unverified.
 Reopen if another supported relationship mutation bypasses the guard, or cyclic
 XML requires an order-independent rejection policy.
+
+
+### Parent A/B user acceptance
+
+2026-09-07: the user confirmed all listed coordinates in both
+`A_reference.cb` and `B_parent_roundtrip.cb` from the prepared parent validation
+case. B achieves placement through transform properties; resetting them to
+identity restores original local placement, as expected. This accepts the
+synthetic parent XML/display criteria in the development runbook. CamBam version
+was not supplied; no machining, curved geometry or general baking acceptance is
+inferred. The one-off generator was archived under the same ignored local output
+directory and removed from the tracked demos; original source remains in git
+history, with reusable regression coverage retained in `tests/`.
+
+
+### Full-bake hierarchy verification
+
+2026-09-07: `bake_primitive_transform(..., recursive=False)` removed the target
+matrix without compensating children, moving their world coordinates. Two new
+straight-polyline regressions failed before repair (root bake and child bake under
+a transformed parent). The fix always transfers the removed local matrix to direct
+children; recursion controls whether their geometry is baked. Reported recursive
+failure results now propagate. This is not rollback/transaction support.
+
+Five new tests cover both nonrecursive cases, recursive root/child baking, and
+recursive singular scaling. They assert world geometry, selected identity matrices,
+untouched descendant local geometry when nonrecursive, UUID/object/relationship,
+layer and group preservation, idempotence, and two XML round trips. All 18 tests
+pass with `python -m unittest discover -s tests -v` on Python 3.10.9 / NumPy 1.23.5.
+Syntax compilation, import/construction and `git diff --check` also pass.
+
+A one-off ignored generator produced an independent explicit-coordinate A and
+fully baked B under `output/full-bake-validation-n132g8ro/`, checking the loaded
+coordinates/counts. Manual criteria live in the development runbook; user
+acceptance is pending. Prior parent display acceptance does not establish baked
+coordinate fidelity. General transform, component and curved-shape baking remain
+unverified. In particular, `transform_primitive` currently postmultiplies despite
+claiming global application; that is the next bounded slice. Pline bulges are
+preserved under reflections/nonuniform scales and need a separate curved-geometry
+contract. Reopen full-bake hierarchy repair if descendant pose changes under the
+tested straight-polyline affine conditions.
