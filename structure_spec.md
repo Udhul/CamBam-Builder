@@ -83,6 +83,33 @@ local matrices (so reparenting can change world pose). The guard prevents new
 cycles through this API; it does not repair directly mutated registries or old
 pickle state.
 
+### Global transform application
+
+`transform_primitive(node, M, bake=False)` applies the finite affine 3x3 matrix
+`M` in world coordinates to the selected subtree once. Points are column vectors:
+`world = P @ E @ local`, where `P` is the parent's world matrix (identity for a
+root). Matrix mode solves `P @ E_new = M @ P @ E` and changes only the selected
+local effective matrix. Descendant local matrices and all geometry remain intact;
+ancestors, siblings, identities and memberships are unchanged.
+
+With `bake=True`, effective matrices remain intact. For each subtree primitive,
+the API solves `W @ B = M @ W` using its original world matrix `W`, then passes
+`B` to its geometry baker. This is an explicit world operation, distinct from
+full baking below, which removes existing matrices. All solves finish before
+geometry changes. Invalid/nonfinite/non-affine inputs or a singular required
+frame return `False` without mutation. Matrix mode requires an invertible parent
+frame; baked mode requires every affected world frame to be invertible. A
+singular target matrix is allowed in matrix mode with an invertible parent.
+No pseudoinverse or silent reparenting is used.
+
+Tests establish ordering for straight polylines and the translate/rotate wrappers,
+including rotation about a world-space center. Curved geometry bakers retain
+their existing limitations; exceptions during geometry mutation can leave partial
+changes, and some entity bakers log failures internally. This API does not promise
+transactional geometry baking. `align_primitive` has a separate implementation
+and remains unverified. `combine_transformations(A, B)` returns `A @ B`, so `B`
+acts first; it does not reorder arguments into chronological application order.
+
 ### Full local-transform baking
 
 `bake_primitive_transform(..., transform_to_bake=None)` folds the selected local

@@ -365,3 +365,57 @@ claiming global application; that is the next bounded slice. Pline bulges are
 preserved under reflections/nonuniform scales and need a separate curved-geometry
 contract. Reopen full-bake hierarchy repair if descendant pose changes under the
 tested straight-polyline affine conditions.
+
+
+### Full-bake A/B user acceptance
+
+The user confirmed all full-bake A/B endpoints, identity matrices and final stored
+coordinates in both files, and the intentional separate-versus-shared layers.
+They subsequently confirmed understanding that A was constructed directly and B
+was baked before export, and authorized the next increment after committing.
+This completes the synthetic full-bake display acceptance; CamBam version was not
+supplied. The original verification entry's pending acceptance is superseded by
+this report. Broader curved/component baking and production machining remain
+unverified. Future before/after cases should include the pre-operation file when
+it helps the user inspect what changed.
+
+
+### Global transform ordering verification
+
+2026-09-07: the pre-fix root probe used local endpoints (1,0)/(2,0), an existing
+translation (10,0), and a requested global 90-degree rotation. It produced
+(10,1)/(10,2), failing the expected (0,11)/(0,12). `transform_primitive` previously
+postmultiplied the effective matrix and baked the same world matrix into every
+node's local geometry. Both violate the public global-coordinate contract.
+
+Matrix mode now solves in the parent frame; baked mode precomputes a conjugated
+operation in every affected original world frame, preserving effective matrices.
+Invalid affine input and singular required frames fail before mutation. Even a
+compatible singular-frame operation is rejected because the local reconstruction
+is not unique. No pseudoinverse or reparenting fallback is used. Geometry-baker
+failures are not transactional; entity-specific approximation/error handling is
+unchanged. `combine_transformations` documentation now describes its existing
+rightmost-first point application; its implementation is unchanged.
+
+`python -m unittest discover -s tests -v`: all 26 tests pass (eight new ordering,
+wrapper, singular/invalid-input and repeated round-trip regressions).
+`python -m compileall -q cambam_builder legacy_cambam_builder tests`, import/construct
+smoke check and `git diff --check` pass on Python 3.10.9 / NumPy 1.23.5.
+The tests verify affected world geometry, unchanged frames/geometry where required,
+relationship integrity and XML counts/UUIDs/layers across two round trips.
+
+Prepared ignored Before/A/B files were parsed and reloaded numerically. A has
+identity matrices; B retains the root world matrix and changes both descendant
+world translations by (+5,-3). The development runbook owns precise manual
+criteria; user acceptance remains pending. Existing full-bake acceptance is
+recorded above and need not be repeated. Curved/component baking and alignment
+remain outside this increment. Reopen if supported callers relied on the former
+local-coordinate ordering, or a singular-frame policy needs expansion.
+
+
+Final bounded review reproduced two additional failures, now covered by tests:
+a baked 1e-9 translation was discarded by Pline's approximate identity check,
+and a nested-list matrix containing `10**1000` raised `OverflowError` instead of
+returning `False`. Pline geometry baking now skips only exact identity; matrix
+conversion catches overflow. The final `python -m unittest discover -s tests -q`
+run passes all 26 tests. No curved-bulge fidelity claim follows from this change.

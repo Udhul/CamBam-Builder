@@ -100,7 +100,8 @@ def skew_matrix(angle_x_deg: float = 0.0, angle_y_deg: float = 0.0) -> np.ndarra
 def combine_transformations(*matrices: np.ndarray) -> np.ndarray:
     """
     Combine multiple 3x3 transformation matrices.
-    Transformations are applied in the order given (left to right multiplication).
+    Returns matrices[0] @ matrices[1] @ ... . With column-vector points,
+    the rightmost transformation acts first.
     """
     result = identity_matrix()
     for m in matrices:

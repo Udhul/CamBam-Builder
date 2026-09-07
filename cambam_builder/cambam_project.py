@@ -865,7 +865,8 @@ class CamBamProject:
         Args:
             primitive_identifier: The primitive to transform
             matrix: The transformation matrix to apply (3x3)
-            bake: If True, bakes the matrix directly into geometry; if False, updates effective_transform
+            bake: If True, changes subtree geometry in local coordinates while retaining
+                  effective matrices; if False, updates only the target effective_transform.
             
         Returns:
             True if successful, False otherwise
@@ -874,38 +875,53 @@ class CamBamProject:
         if not primitive:
             logger.error(f"Primitive '{primitive_identifier}' not found for transformation.")
             return False
-        if matrix.shape != (3, 3):
-            logger.error("Transformation matrix must be 3x3.")
+        try:
+            if np.iscomplexobj(matrix):
+                raise ValueError("Complex matrices are not supported")
+            matrix = np.asarray(matrix, dtype=float)
+            if (matrix.shape != (3, 3) or not np.isfinite(matrix).all()
+                    or not np.array_equal(matrix[2], [0., 0., 1.])):
+                raise ValueError("Expected a finite affine 3x3 matrix")
+        except (TypeError, ValueError, OverflowError) as e:
+            logger.error(f"Invalid global transformation: {e}")
             return False
 
-        # Apply transform to the target primitive
-        if bake:
-            # Directly bake the provided matrix into the geometry
-            try:
-                primitive.bake_geometry(matrix)
-                logger.debug(f"Baked transformation matrix directly into primitive {primitive.user_identifier}")
-            except Exception as e:
-                logger.error(f"Error baking matrix into primitive {primitive.user_identifier}: {e}")
-                return False
-        else:
-            # Non-baking just multiplies the effective transform
-            # Apply the new matrix AFTER the existing one
-            primitive.effective_transform = primitive.effective_transform @ matrix
+        try:
+            if not bake:
+                parent = self.get_parent_of_primitive(primitive)
+                parent_world = parent.get_total_transform() if parent else identity_matrix()
+                # P @ E_new = M @ P @ E. Descendants inherit this change once.
+                local_transform = np.linalg.solve(
+                    parent_world, matrix @ parent_world @ primitive.effective_transform
+                )
+                if not np.isfinite(local_transform).all():
+                    raise ValueError("Non-finite local transform")
+                primitive.effective_transform = local_transform
+                return True
 
-        # # Recursively apply the SAME matrix to children for consistency
-        # child_ids = self.get_children_of_primitive(primitive.internal_id)
-        # for child_id in child_ids:
-        #     # Recursive call - pass the exact same matrix and bake setting
-        #     self.transform_primitive(child_id, matrix, bake=bake)
+            # Preserve effective matrices in explicit global-bake mode. Convert
+            # the global operation into each primitive's geometry coordinates:
+            # W @ B = M @ W. Preflight all solves before mutating any geometry.
+            pending = [primitive]
+            operations = []
+            while pending:
+                current = pending.pop()
+                world = current.get_total_transform()
+                local_operation = np.linalg.solve(world, matrix @ world)
+                if not np.isfinite(local_operation).all():
+                    raise ValueError("Non-finite local bake transform")
+                operations.append((current, local_operation))
+                pending.extend(self.get_children_of_primitive(current))
+        except (np.linalg.LinAlgError, ValueError) as e:
+            logger.error(f"Cannot apply global transform to {primitive.user_identifier}: {e}")
+            return False
 
-        # return True
-        
-        # Only for baking mode, we need to apply the transform to each child's geometry, else they gets applied twice: Now, and during output when they receive the parent's effective transform
-        if bake:
-            child_ids = self.get_children_of_primitive(primitive.internal_id)
-            for child_id in child_ids:
-                self.transform_primitive(child_id, matrix, bake=bake)
-
+        try:
+            for current, local_operation in operations:
+                current.bake_geometry(local_operation)
+        except Exception as e:
+            logger.error(f"Error baking global transform for {primitive.user_identifier}: {e}")
+            return False
         return True
 
     # Convenience transformation methods

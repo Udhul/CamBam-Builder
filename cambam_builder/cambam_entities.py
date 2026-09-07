@@ -386,7 +386,7 @@ class Pline(Primitive):
             reset_transform = False
             
         # Skip if identity matrix (nothing to bake)
-        if np.allclose(transform_to_apply, identity_matrix()):
+        if np.array_equal(transform_to_apply, identity_matrix()):
             return
             
         try:

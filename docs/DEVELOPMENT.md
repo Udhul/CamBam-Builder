@@ -115,6 +115,9 @@ integrity are automated API checks and need no manual reproduction.
 
 ## Manual full-bake acceptance
 
+Accepted by the user: endpoints, identity matrices and layer differences confirmed.
+The retained criteria below do not require repetition for unchanged behavior.
+
 Prepared local files: `output/full-bake-validation-n132g8ro/A_reference.cb` and
 `B_baked.cb` in that same directory. The one-off `generate.py` lives alongside
 them, outside the git tree; reusable synthetic fixtures/tests live in
@@ -137,6 +140,30 @@ Pass tolerance is 0.01 drawing units. Pass requires matching placement and count
 with no extra geometry, and identity Transform properties on every B polyline
 (resetting to identity must not move them). Report CamBam version, pass/fail and
 any differing endpoint or matrix. No toolpath validation is needed for this case.
+
+## Manual global-transform acceptance
+
+Prepared directory: `output/global-transform-validation-6_s8bvg_/`. Its one-off
+`generate.py` is ignored; regression tests live in `tests/test_global_transforms.py`.
+
+Open `Before.cb`, `A_reference.cb`, and `B_global_result.cb` in top/XY view.
+Before is a transformed hierarchy. B is that hierarchy after calling
+`translate_primitive("child", 5, -3)`; A independently stores expected final points
+with identity matrices. B retains transforms, unlike full-bake validation.
+
+All files must load without errors and contain three open straight polylines at
+Z=0, one on each named layer. Check these world endpoints (tolerance 0.01 units):
+
+| Layer | Before | Both A and B |
+| --- | --- | --- |
+| rootLayer | (16, 13) to (22, 22) | (16, 13) to (22, 22) |
+| childLayer | (16, 37) to (10, 41.5) | (21, 34) to (15, 38.5) |
+| leafLayer | (32, 46) to (26, 59.5) | (37, 43) to (31, 56.5) |
+
+Pass requires a stationary root and both descendants moved exactly +5 X / -3 Y,
+with no extra geometry; A and B must coincide. Inspect world coordinates rather
+than B's local point properties. Report CamBam version, pass/fail and the layer
+and observed coordinates for any mismatch. No toolpath checks are needed.
 
 ## Troubleshooting
 
