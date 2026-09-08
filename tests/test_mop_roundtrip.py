@@ -25,24 +25,24 @@ class MopRoundTripTests(unittest.TestCase):
 
         operations = [
             (part_a, project.add_profile_mop(
-                part_a, [target_a], name="Layer Name", identifier="profile-a",
+                part_a, targets=[target_a], name="Layer Name", identifier="profile-a",
                 target_depth=-1.25, depth_increment=0.25, spindle_speed=1200,
                 tool_diameter=3.175, stepover=0.2, profile_side="Outside",
                 milling_direction="Climb", cut_feedrate=321.0,
             )),
             (part_a, project.add_pocket_mop(
-                part_a, [target_a], name="Layer Name", identifier="pocket-a",
+                part_a, targets=[target_a], name="Layer Name", identifier="pocket-a",
                 target_depth=-2.0, depth_increment=0.5, spindle_speed=1300,
                 tool_diameter=4.0, stepover=0.3,
                 region_fill_style="HorizontalScanline", cut_feedrate=654.0,
             )),
             (part_b, project.add_engrave_mop(
-                part_b, [target_b], name="Layer Name", identifier="engrave-b",
+                part_b, targets=[target_b], name="Layer Name", identifier="engrave-b",
                 target_depth=-0.4, depth_increment=0.1, spindle_speed=1400,
                 tool_diameter=1.5, stock_surface=0.2, cut_feedrate=777.0,
             )),
             (part_b, project.add_drill_mop(
-                part_b, [target_b], name="Part Name", identifier="drill-b",
+                part_b, targets=[target_b], name="Part Name", identifier="drill-b",
                 target_depth=-3.0, depth_increment=1.0, spindle_speed=1500,
                 tool_diameter=2.5, drilling_method="CannedCycle",
                 peck_distance=0.75, dwell=25.0, cut_feedrate=888.0,
@@ -76,8 +76,11 @@ class MopRoundTripTests(unittest.TestCase):
             self.assertEqual(type(expected), type(actual))
             self.assertIs(actual, loaded.get_mop(expected.internal_id))
             self.assertEqual(expected.name, actual.name)
-            self.assertEqual(type(expected.pid_source), type(actual.pid_source))
-            self.assertEqual(set(expected.pid_source), set(actual.pid_source))
+            self.assertFalse(hasattr(expected, "pid_source"))
+            self.assertFalse(hasattr(actual, "pid_source"))
+            self.assertEqual(source.get_mop_targets(expected), loaded.get_mop_targets(actual))
+            self.assertIsNone(source.get_mop_target_group(expected))
+            self.assertIsNone(loaded.get_mop_target_group(actual))
             for field in ("target_depth", "depth_increment", "spindle_speed", "tool_diameter", "cut_feedrate"):
                 self.assertEqual(getattr(expected, field), getattr(actual, field))
 

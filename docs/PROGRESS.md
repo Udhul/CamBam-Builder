@@ -3,20 +3,22 @@
 Baseline reviewed 2026-09-07: package version 0.1.0. The modern package provides
 entity registries, layer/group/parent and part-MOP relationships, transforms,
 XML reader/writer and pickle persistence. These are implemented capabilities,
-not a guarantee of complete round-trip fidelity. MOP sources remain on instances.
+not a guarantee of complete round-trip fidelity. MOP target selections are project-owned.
 
 ## Active work and next priority
 
-**Next priority: correct MOP core-model ownership and CamBam interchange**
-(backlog item 1). User clarification, 2026-09-08: breaking framework API/storage
-changes are allowed; no legacy adapters or old-pickle migration are required.
-[Development compatibility policy](structure_spec.md#development-compatibility-policy).
+**Active: MOP core-model ownership and CamBam interchange** (2026-09-08).
+Owners: project target registry/API, entity MOP parameter encoding, reader/writer,
+focused MOP tests and updated callers. Breaking API/storage changes are authorized;
+no legacy adapters or old-pickle migration.
 
-MOP group-source characterization is complete: six tests, all 57 suite tests
-passed in that increment. It records existing behavior, not a requirement to
-preserve the old `pid_source` API or live-group implementation. Update those tests
-with the chosen model. Runtime is unchanged by this clarification. See
-[decision update](REVIEW.md#development-compatibility-priority).
+Acceptance: one project-owned target selection per MOP; explicit targets and live
+named groups with validated atomic mutation and deletion cleanup; native XML target
+edits/order remain authoritative; supported parameter and Default/Value reconstruction;
+synthetic round trips plus prepared CamBam-edited input acceptance.
+Implementation and automated verification are complete. CamBam acceptance is
+pending; local tests alone do not establish native interoperability.
+[Target contract](structure_spec.md#mop-target-ownership-contract).
 
 Rect rotation/shear baking repair: **implemented; automated checks complete; synthetic display accepted**
 (2026-09-08). Owners:
@@ -31,7 +33,7 @@ were accepted by the user on 2026-09-08: all conditions met, full outline match
 and identity transforms. CamBam version was not supplied. See
 [acceptance evidence](REVIEW.md#rect-baking-display-acceptance).
 The following MOP group-source compatibility increment is recorded above;
-registry migration remains backlog item 1. General component ordering,
+core ownership/interchange is active above. General component ordering,
 curved geometry and alignment remain outside this increment.
 Phases 1 and 2 (project discovery and working
 agreement) and [phase 3 (initial engineering review)](REVIEW.md#phase-3-completion-audit)
@@ -123,15 +125,10 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 
 ## Remaining backlog, in order
 
-1. Redesign MOP target ownership around a coherent project-owned core model.
-   Choose explicit-target and group-selection semantics for domain needs, with
-   one authoritative relationship owner. Change the Python API and update callers
-   and tests as needed; no old-version adapters or pickle migration. Validate the
-   `.cb` boundary: output for CamBam and input created/edited in CamBam, including
-   absent/malformed framework metadata, native target edits, operation order and
-   parameter/default reconstruction. Establish focused synthetic checks and
-   prepare CamBam validation where local tests cannot establish interoperability.
-   [Governing policy](structure_spec.md#development-compatibility-policy).
+1. Complete CamBam acceptance of the active MOP core/interchange change above,
+   including opening exported files and returning a CamBam-created/edited file
+   for import/export verification. Keep this priority open until native evidence
+   is recorded; do not substitute synthetic edits for source-system acceptance.
 2. Improve curved-geometry bounds; implement copy/transfer utilities against the
    specification, with collision and relationship tests.
 3. Implement core CamBam shape parity: Region shapes and Z coordinates across
@@ -165,21 +162,34 @@ above. Detailed contracts remain in `docs/structure_spec.md`, and review evidenc
 
 ## Blockers and decisions
 
-No implementation blocker or pending validation for the completed MOP synthetic case. Full source-system
-compatibility requires CamBam validation and representative authorized fixtures.
-The old framework API and pickle format do not constrain redesign. Group semantics
-and the new API remain design work in backlog item 1; CamBam `.cb` interoperability
-is the required compatibility boundary. Centralized ownership is not yet implemented.
+No implementation blocker. Native CamBam validation remains required for the
+new interchange scope. Previous MOP identity acceptance covers its original
+synthetic case only. The old framework API and pickle format do not constrain
+this redesign; the project-owned target contract is now chosen.
 
 ## Completion and verification
 
-- MOP group-source compatibility: defined and characterized; six new tests and
-  all 57 suite tests pass; runtime/XML behavior unchanged.
+- MOP group-source compatibility: historically characterized with six tests;
+  the redesign supersedes its old runtime ownership contract.
 - Working agreement: implemented; documentation checks recorded in the review.
 - Parent XML slice: implemented and automated checks complete; nine regression tests.
 - Parent-cycle rejection: implemented and automated checks complete.
 - Broader product baseline: limited local checks only.
-- User/CamBam acceptance: parent, full-bake, global-transform and Rect-bake synthetic display and MOP load/properties accepted; broader production acceptance not performed.
+- User/CamBam acceptance: parent, full-bake, global-transform and Rect-bake
+  synthetic display and the prior MOP load/properties case were accepted. The
+  active MOP redesign still needs native CamBam acceptance; broader production
+  acceptance was not performed.
+
+The active MOP implementation and automated verification are complete. The final
+suite reports 65 passed tests in
+`output/mop-core-checks-ncsbkpgz/suite.log`; compileall for
+`cambam_builder`, `legacy_cambam_builder`, `tests` and `demos` exits 0. The A/B
+MOP generator exits 0 and verifies counts, operation targets, depths and feeds.
+Lead XML inspection also confirmed rectangle coordinates, triangle vertices
+and drill points. The
+context regression also reproduces and guards the former lost global
+`Style`/`StyleLibrary` state. See
+[MOP review evidence](REVIEW.md#mop-core-ownership-and-interchange-redesign).
 
 [Verification commands](DEVELOPMENT.md) and [work lifecycle](WORKFLOW.md)
 are authoritative. Existing MOP characterization informs the redesign without
@@ -189,8 +199,8 @@ in the backlog above.
 
 ## Session breakpoint
 
-This clarification is persisted in the specification and review. A fresh session
-is appropriate for the distinct core-model implementation scope. Design the MOP
-relationships and public API without old-version compatibility overhead, then
-validate the `.cb` boundary. No implementation or CamBam acceptance is claimed
-by this documentation update. No staging or commit was performed.
+Implementation, automated verification and native acceptance instructions are
+persisted. Native input/output acceptance remains the open backlog item; continue
+this session for the user's C file and the C-to-D comparison. A fresh session is
+possible because the evidence, fixtures and limits are documented. No staging or
+commit is authorized.

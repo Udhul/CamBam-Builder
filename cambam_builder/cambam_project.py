@@ -16,7 +16,7 @@ import uuid
 import weakref
 import logging
 from copy import deepcopy
-from typing import Dict, List, Set, Tuple, Optional, Union, Type, TypeVar, Any, Sequence
+from typing import Dict, List, Set, FrozenSet, Tuple, Optional, Union, Type, TypeVar, Any, Sequence
 
 import numpy as np
 
@@ -74,6 +74,7 @@ class CamBamProject:
 
         # MOP <-> Part
         self._mop_part_assignment: Dict[uuid.UUID, uuid.UUID] = {} # MOP UUID -> Part UUID
+        self._mop_targets: Dict[uuid.UUID, Union[str, FrozenSet[uuid.UUID]]] = {}
         # Note: MOP order within a part is handled by _mop_order_in_part
 
         # Primitive <-> Group (Classification / MOP Targeting)
@@ -221,8 +222,9 @@ class CamBamProject:
                 if not self._primitive_groups[group_name]: # Remove empty group
                      del self._primitive_groups[group_name]
 
-        # MOP References (MOPs store pid_source, no direct registry here, handled by resolution)
-        # If MOPs had a resolved list, we'd clean it here.
+        for mop_id, selection in self._mop_targets.items():
+            if not isinstance(selection, str):
+                self._mop_targets[mop_id] = selection - {primitive_uuid}
 
     def _cleanup_layer_relationships(self, layer_uuid: uuid.UUID):
         """Handles layer removal: unassigns its primitives."""
@@ -244,6 +246,7 @@ class CamBamProject:
 
     def _cleanup_mop_relationships(self, mop_uuid: uuid.UUID):
         """Handles MOP removal: remove from part assignment and order."""
+        self._mop_targets.pop(mop_uuid, None)
         part_id = self._mop_part_assignment.pop(mop_uuid, None)
         if part_id and part_id in self._mop_order_in_part:
             if mop_uuid in self._mop_order_in_part[part_id]:
@@ -716,10 +719,10 @@ class CamBamProject:
                                             align_horizontal=align_horizontal, align_vertical=align_vertical) # type: ignore
 
     def _add_mop_internal(self, MopClass: Type[MopType], part_identifier: Identifiable,
-                          pid_source: Union[str, List[Identifiable]], name: str,
+                          targets: Sequence[Identifiable], name: str,
                           identifier: Optional[str] = None,
                           target_mop_identifier: Optional[Identifiable] = None, place_last: bool = True,
-                          **kwargs) -> Optional[MopType]:
+                          target_group: Optional[str] = None, **kwargs) -> Optional[MopType]:
         """Internal helper to create, register, and link a MOP."""
         # 1. Resolve Part
         part = self.get_part(part_identifier)
@@ -727,41 +730,13 @@ class CamBamProject:
             logger.error(f"Part identifier '{part_identifier}' not found.")
             return None
 
-        # 2. Process pid_source (resolve primitive identifiers to UUIDs if needed)
-        resolved_pid_source: Union[str, List[uuid.UUID]]
-        if isinstance(pid_source, str):
-            # Keep group name as string
-            resolved_pid_source = pid_source
-            # Optionally check if group exists?
-            # if pid_source not in self._primitive_groups:
-            #     logger.warning(f"MOP '{name}' references potentially non-existent group '{pid_source}'.")
-        elif isinstance(pid_source, list):
-            resolved_uuids: List[uuid.UUID] = []
-            all_resolved = True
-            for item in pid_source:
-                prim_uuid = self._resolve_identifier(item, Primitive)
-                if prim_uuid:
-                    resolved_uuids.append(prim_uuid)
-                else:
-                    logger.warning(f"Could not resolve primitive identifier '{item}' for MOP '{name}'. Skipping.")
-                    all_resolved = False
-            resolved_pid_source = resolved_uuids
-            if not resolved_uuids and pid_source: # Original list was not empty but resolved list is
-                 logger.error(f"MOP '{name}' pid_source list {pid_source} resolved to no valid primitives.")
-                 # return None # Optionally fail if no primitives found
-            elif not all_resolved:
-                 logger.warning(f"MOP '{name}' pid_source list resolved partially: {resolved_uuids}")
-
-        else:
-            logger.error(f"Invalid pid_source type for MOP '{name}': {type(pid_source)}. Must be group name (str) or list of primitive identifiers.")
-            return None
+        selection = self._validate_mop_selection(targets, target_group)
 
         # 3. Create MOP instance
         mop_id_str = identifier if identifier else f"{name.replace(' ','_')}_{uuid.uuid4().hex[:6]}"
         try:
             mop = MopClass(user_identifier=mop_id_str,
                            name=name,
-                           pid_source=resolved_pid_source, # Store resolved UUID list or group name
                            **kwargs)
         except Exception as e:
             logger.error(f"Failed to instantiate {MopClass.__name__} with identifier '{mop_id_str}': {e}")
@@ -770,6 +745,8 @@ class CamBamProject:
         # 4. Register Entity
         if not self._register_entity(mop, self._mops):
             return None
+
+        self._mop_targets[mop.internal_id] = selection
 
         # 5. Establish Relationship using project method
         self.assign_mop_to_part(mop.internal_id, part.internal_id, target_mop_identifier, place_last)
@@ -780,21 +757,21 @@ class CamBamProject:
 
     # --- Public API: Concrete MOP Adders ---
 
-    def add_profile_mop(self, part: Identifiable, pid_source: Union[str, List[Identifiable]], name: str = 'Profile',
-                        identifier: Optional[str] = None, target_mop: Optional[Identifiable] = None, place_last: bool = True, **kwargs) -> Optional[ProfileMop]:
-        return self._add_mop_internal(ProfileMop, part, pid_source, name, identifier, target_mop, place_last, **kwargs) # type: ignore
+    def add_profile_mop(self, part: Identifiable, targets: Sequence[Identifiable] = (), name: str = 'Profile',
+                        identifier: Optional[str] = None, target_mop: Optional[Identifiable] = None, place_last: bool = True, *, target_group: Optional[str] = None, **kwargs) -> Optional[ProfileMop]:
+        return self._add_mop_internal(ProfileMop, part, targets, name, identifier, target_mop, place_last, target_group=target_group, **kwargs) # type: ignore
 
-    def add_pocket_mop(self, part: Identifiable, pid_source: Union[str, List[Identifiable]], name: str = 'Pocket',
-                       identifier: Optional[str] = None, target_mop: Optional[Identifiable] = None, place_last: bool = True, **kwargs) -> Optional[PocketMop]:
-        return self._add_mop_internal(PocketMop, part, pid_source, name, identifier, target_mop, place_last, **kwargs) # type: ignore
+    def add_pocket_mop(self, part: Identifiable, targets: Sequence[Identifiable] = (), name: str = 'Pocket',
+                       identifier: Optional[str] = None, target_mop: Optional[Identifiable] = None, place_last: bool = True, *, target_group: Optional[str] = None, **kwargs) -> Optional[PocketMop]:
+        return self._add_mop_internal(PocketMop, part, targets, name, identifier, target_mop, place_last, target_group=target_group, **kwargs) # type: ignore
 
-    def add_engrave_mop(self, part: Identifiable, pid_source: Union[str, List[Identifiable]], name: str = 'Engrave',
-                        identifier: Optional[str] = None, target_mop: Optional[Identifiable] = None, place_last: bool = True, **kwargs) -> Optional[EngraveMop]:
-        return self._add_mop_internal(EngraveMop, part, pid_source, name, identifier, target_mop, place_last, **kwargs) # type: ignore
+    def add_engrave_mop(self, part: Identifiable, targets: Sequence[Identifiable] = (), name: str = 'Engrave',
+                        identifier: Optional[str] = None, target_mop: Optional[Identifiable] = None, place_last: bool = True, *, target_group: Optional[str] = None, **kwargs) -> Optional[EngraveMop]:
+        return self._add_mop_internal(EngraveMop, part, targets, name, identifier, target_mop, place_last, target_group=target_group, **kwargs) # type: ignore
 
-    def add_drill_mop(self, part: Identifiable, pid_source: Union[str, List[Identifiable]], name: str = 'Drill',
-                      identifier: Optional[str] = None, target_mop: Optional[Identifiable] = None, place_last: bool = True, **kwargs) -> Optional[DrillMop]:
-        return self._add_mop_internal(DrillMop, part, pid_source, name, identifier, target_mop, place_last, **kwargs) # type: ignore
+    def add_drill_mop(self, part: Identifiable, targets: Sequence[Identifiable] = (), name: str = 'Drill',
+                      identifier: Optional[str] = None, target_mop: Optional[Identifiable] = None, place_last: bool = True, *, target_group: Optional[str] = None, **kwargs) -> Optional[DrillMop]:
+        return self._add_mop_internal(DrillMop, part, targets, name, identifier, target_mop, place_last, target_group=target_group, **kwargs) # type: ignore
 
 
     # --- Public API: Entity Removal ---
@@ -1305,29 +1282,53 @@ class CamBamProject:
 
     # --- Public API: MOP Primitive Resolution ---
 
-    def resolve_pid_source_to_uuids(self, pid_source: Union[str, List[uuid.UUID]]) -> List[uuid.UUID]:
-        """Resolves a MOP's pid_source (group name or list of UUIDs) to a list of actual primitive UUIDs."""
-        resolved_uuids: Set[uuid.UUID] = set()
-        if isinstance(pid_source, str):
-            # Resolve group name
-            group_uuids = self._primitive_groups.get(pid_source, set())
-            resolved_uuids.update(p_uuid for p_uuid in group_uuids if p_uuid in self._primitives)
-            if not resolved_uuids and pid_source in self._primitive_groups:
-                 logger.warning(f"Group '{pid_source}' exists but contains no primitives currently in the project.")
-            elif pid_source not in self._primitive_groups:
-                 logger.warning(f"Group '{pid_source}' referenced by MOP not found in project.")
-        elif isinstance(pid_source, list):
-            # Assume list of UUIDs (already resolved during MOP creation ideally)
-            resolved_uuids.update(p_uuid for p_uuid in pid_source if p_uuid in self._primitives)
-            if len(resolved_uuids) != len(pid_source):
-                 missing = set(pid_source) - resolved_uuids
-                 logger.warning(f"MOP references primitive UUIDs that are not in the project: {missing}")
-        else:
-            logger.error(f"Invalid pid_source type for resolution: {type(pid_source)}")
+    def _validate_mop_selection(self, targets, target_group=None):
+        if isinstance(targets, (str, bytes)) or not isinstance(targets, (list, tuple)):
+            raise TypeError("targets must be a list or tuple of primitive identifiers")
+        if target_group is not None:
+            if not isinstance(target_group, str) or not target_group:
+                raise ValueError("target_group must be a nonempty group name")
+            if targets:
+                raise ValueError("Choose explicit targets or a target_group")
+            return target_group
+        resolved = set()
+        for target in targets:
+            primitive_id = self._resolve_identifier(target, Primitive)
+            if primitive_id is None:
+                raise ValueError(f"Unknown primitive target: {target!r}")
+            resolved.add(primitive_id)
+        return frozenset(resolved)
 
-        # Return consistently sorted list
-        return sorted(list(resolved_uuids))
+    def _require_mop_id(self, mop):
+        mop_id = self._resolve_identifier(mop, Mop)
+        if mop_id is None:
+            raise ValueError(f"Unknown MOP: {mop!r}")
+        return mop_id
 
+    def set_mop_targets(self, mop: Identifiable, targets: Sequence[Identifiable]):
+        """Atomically replace a MOP selection with explicit primitive targets."""
+        mop_id = self._require_mop_id(mop)
+        selection = self._validate_mop_selection(targets)
+        self._mop_targets[mop_id] = selection
+
+    def set_mop_target_group(self, mop: Identifiable, group: str):
+        """Select a live named group, including future members of that name."""
+        mop_id = self._require_mop_id(mop)
+        if not isinstance(group, str) or not group:
+            raise ValueError("group must be a nonempty group name")
+        selection = self._validate_mop_selection((), group)
+        self._mop_targets[mop_id] = selection
+
+    def get_mop_target_group(self, mop: Identifiable) -> Optional[str]:
+        selection = self._mop_targets[self._require_mop_id(mop)]
+        return selection if isinstance(selection, str) else None
+
+    def get_mop_targets(self, mop: Identifiable) -> List[uuid.UUID]:
+        """Return a detached, UUID-sorted snapshot of the current selection."""
+        selection = self._mop_targets[self._require_mop_id(mop)]
+        if isinstance(selection, str):
+            selection = self._primitive_groups.get(selection, set())
+        return sorted(selection)
 
     # --- Public API: Bounding Box ---
 

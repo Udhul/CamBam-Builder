@@ -91,13 +91,13 @@ def run_demo_1():
     if not text_bottom: logger.error("Failed to add text_bottom"); return
 
     # --- Machine Operations (MOPs) ---
-    # Add MOPs, specifying the part and the primitive source (group name or list of identifiers).
+    # Add MOPs, specifying the part and either explicit targets or a live group.
     # Target depth negative means cut into stock from Z=0 (StockSurface)
 
     # Profile MOP targeting the "frame" group on Part A
     profile_mop = project.add_profile_mop(
         part=part_a, # Identify part by object
-        pid_source="frame", # Target the group named "frame"
+        target_group="frame", # Target the live group named "frame"
         name="Frame Profile Cut",
         identifier="mop_profile_frame",
         target_depth=-12.9, # Cut slightly through 12.4mm stock
@@ -109,7 +109,7 @@ def run_demo_1():
     # Pocket MOP targeting specific primitives (the two text labels) on Part B
     pocket_mop = project.add_pocket_mop(
         part="Part_B", # Identify part by string
-        pid_source=["text_top", text_bottom], # Target specific primitives by identifier/object
+        targets=["text_top", text_bottom], # Target specific primitives by identifier/object
         name="Label Pocket Engrave",
         identifier="mop_pocket_labels",
         target_depth=-0.5,
@@ -191,10 +191,10 @@ def run_demo_2():
 
 
     # --- MOPs ---
-    proj.add_profile_mop(part=part_main, pid_source="holes", name="Drill Holes (Profile)", profile_side="Inside", target_depth=-18.5)
-    proj.add_profile_mop(part=part_main, pid_source="cutouts", name="Cutouts", profile_side="Inside", target_depth=-18.5)
-    proj.add_profile_mop(part=part_main, pid_source=["frame_base"], name="Outer Frame Cut", profile_side="Outside", target_depth=-18.5)
-    proj.add_engrave_mop(part=part_main, pid_source=[text_child], name="Engrave ID", target_depth=-0.3)
+    proj.add_profile_mop(part=part_main, target_group="holes", name="Drill Holes (Profile)", profile_side="Inside", target_depth=-18.5)
+    proj.add_profile_mop(part=part_main, target_group="cutouts", name="Cutouts", profile_side="Inside", target_depth=-18.5)
+    proj.add_profile_mop(part=part_main, targets=["frame_base"], name="Outer Frame Cut", profile_side="Outside", target_depth=-18.5)
+    proj.add_engrave_mop(part=part_main, targets=[text_child], name="Engrave ID", target_depth=-0.3)
 
     # --- Output ---
     output_dir = "./output"
@@ -304,9 +304,9 @@ def run_demo_3():
 
 
     # MOP
-    project.add_pocket_mop(part=part_a, pid_source="frame_edge_groove", name="frame_edge_groove", target_depth=-12.4*(1-0.75), roughing_clearance=-0.1)
-    project.add_pocket_mop(part=part_a, pid_source="frame_groove", name="frame_groove", target_depth=-12.4*(1-0.75), roughing_clearance=-0.2)
-    project.add_profile_mop(part=part_a, pid_source="frame_cutout", name="frame_cutout", profile_side="Outside", target_depth=-12.9, roughing_clearance=-0.1)
+    project.add_pocket_mop(part=part_a, target_group="frame_edge_groove", name="frame_edge_groove", target_depth=-12.4*(1-0.75), roughing_clearance=-0.1)
+    project.add_pocket_mop(part=part_a, target_group="frame_groove", name="frame_groove", target_depth=-12.4*(1-0.75), roughing_clearance=-0.2)
+    project.add_profile_mop(part=part_a, target_group="frame_cutout", name="frame_cutout", profile_side="Outside", target_depth=-12.9, roughing_clearance=-0.1)
     
     # --- Output ---
     output_dir = "./output"

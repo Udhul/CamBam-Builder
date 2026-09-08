@@ -789,8 +789,9 @@ Tags. `_reconstruct_mop` and the reader's deferred linking pass reconstruct UUID
 lists, regardless of primitive group metadata.
 
 Decision: preserve live groups in memory and snapshots after XML import. The
-[implemented contract](structure_spec.md#mop-group-source-compatibility-contract)
-constrains migration to retain source intent and the public `pid_source` surface.
+then-current contract constrained migration to retain source intent and the public
+`pid_source` surface; this is superseded by the development compatibility priority
+and [current target contract](structure_spec.md#mop-target-ownership-contract).
 Freezing all sources at MOP creation would change existing live behavior. Inferring
 groups from matching targets is ambiguous (multiple groups may match), and adding
 live-group Tag metadata would change how reimported jobs respond to membership
@@ -842,3 +843,65 @@ Updated the specification policy, backlog and test runbook. Documentation-only
 change: references reviewed and `git diff --check` passed; no runtime tests or
 manual CamBam validation needed. Next: implement the MOP core-model increment
 against this policy. Suggested commit: `docs: prioritize core model and CamBam interchange`.
+
+
+## MOP core ownership and interchange redesign
+
+2026-09-08 (continued after a usage-limit interruption). Target ownership moved
+from MOP instances to one project registry. Explicit UUID sets support stable
+selection; a separate live group-name mode supports incremental construction.
+Bare-string ambiguity and silently skipped invalid API targets were removed.
+Setters validate before mutation, deletion cleans references, and XML snapshots
+remain authoritative on import. No old API adapter or pickle migration was added.
+
+Rejected restoring live-group mode from framework Tags: CamBam can edit native
+primitive IDs independently, so group restoration could silently undo a native
+edit. The native list is now the import authority even when metadata survives.
+CamBam's [Machining Basics](https://www.cambam.info/doc/plus/cam/Basics.htm)
+documents target editing, operation reordering and Default inheritance.
+Its [CAM Styles guide](https://www.cambam.info/doc/fr/cam/CAMStyles.htm)
+describes Style/StyleLibrary resolution through the hierarchy and external style
+libraries. This supports retaining native state/context, not evaluating CAM styles
+inside this library.
+
+The interrupted parameter work had parsing without state-aware encoding. A focused
+native-context regression reproduced dropped global Style/StyleLibrary and
+ClearancePlane values before capture/serialization was integrated. The replacement
+must retain native parameter content and explicit Default/Value state while allowing
+Python edits; synthetic tests do not establish native application acceptance.
+
+Implementation and automated verification are complete for this slice. The final
+checks were:
+
+- `python -m unittest discover -s tests -v`: 65 tests passed; the retained log is
+  `output/mop-core-checks-ncsbkpgz/suite.log`.
+- `python -m compileall -q cambam_builder legacy_cambam_builder tests demos`:
+  exit 0.
+- `python output/mop-core-validation-1roowlbtpza/generate.py`: exit 0; counts,
+  Profile/Pocket/Engrave/Drill targets, depths and feeds verified. Lead XML
+  inspection confirmed rectangle coordinates, triangle vertices and drill points.
+- The tightened native comparison helper passed synthetic C-to-D checks for
+  operation names/order, targets and exact parameter/state sets. The clearly
+  named Synthetic_C/D files remain in the checks directory; these are not
+  native CamBam acceptance.
+- Import/construct smoke, `git diff --check`, and local Markdown path/anchor
+  validation passed. Independent read-only reviews found no material target or
+  parameter issue; the lead integrated subsequent assignment/state fixes.
+- `test_mop_context` reproduced the lost global `Style`/`StyleLibrary` context
+  before reader capture and now passes after the fix.
+
+Native CamBam acceptance remains pending. The user must open A/B, make the C
+edits described in [the development runbook](DEVELOPMENT.md#manual-mop-core-model-and-cambam-interchange-acceptance),
+save C and report its path; the agent then runs the C-to-D import/export
+comparison. No full `.cb` fidelity or toolpath claim is made. Default fields are
+cached but CAM styles are not evaluated; nested state setters are intentionally
+unavailable while imported nested state is preserved. Unknown MOP types remain
+skipped. Existing Python 3.10.9 and NumPy 1.23.5 were used; no virtual
+environment or dependency changes were made.
+
+The active backlog remains native validation; geometry work is not promoted.
+This is a coherent technical breakpoint with implementation, automated evidence,
+acceptance instructions and limits persisted. Continue this session for native
+acceptance; a fresh session is also possible because the required context and
+fixtures are recorded. No staging or commit was performed. Suggested commit:
+`refactor: centralize MOP targets and preserve native parameters`.

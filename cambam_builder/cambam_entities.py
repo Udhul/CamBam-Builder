@@ -15,6 +15,7 @@ import uuid
 import logging
 import json
 import math
+from copy import deepcopy
 from typing import List, Dict, Tuple, Union, Optional, Set, Any, Sequence, Type, TypeVar, TYPE_CHECKING
 
 import numpy as np
@@ -1066,16 +1067,50 @@ class Text(Primitive):
 
 MopType = TypeVar('MopType', bound='Mop')
 
+# Native XML paths for fields represented by the four supported MOP classes.
+# Keeping this table beside the entity model gives the reader and writer one
+# vocabulary for state tracking while the native XML template retains fields
+# that this model does not represent.
+MOP_XML_FIELD_PATHS: Dict[str, Tuple[str, ...]] = {
+    'target_depth': ('TargetDepth',), 'depth_increment': ('DepthIncrement',),
+    'stock_surface': ('StockSurface',), 'roughing_clearance': ('RoughingClearance',),
+    'clearance_plane': ('ClearancePlane',), 'spindle_direction': ('SpindleDirection',),
+    'spindle_speed': ('SpindleSpeed',), 'velocity_mode': ('VelocityMode',),
+    'work_plane': ('WorkPlane',), 'optimisation_mode': ('OptimisationMode',),
+    'tool_diameter': ('ToolDiameter',), 'tool_number': ('ToolNumber',),
+    'tool_profile': ('ToolProfile',), 'plunge_feedrate': ('PlungeFeedrate',),
+    'cut_feedrate': ('CutFeedrate',), 'max_crossover_distance': ('MaxCrossoverDistance',),
+    'custom_mop_header': ('CustomMOPHeader',), 'custom_mop_footer': ('CustomMOPFooter',),
+    'stepover': ('StepOver',), 'profile_side': ('InsideOutside',),
+    'milling_direction': ('MillingDirection',), 'collision_detection': ('CollisionDetection',),
+    'corner_overcut': ('CornerOvercut',), 'lead_in_type': ('LeadInMove', 'LeadInType'),
+    'lead_in_spiral_angle': ('LeadInMove', 'SpiralAngle'),
+    'final_depth_increment': ('FinalDepthIncrement',), 'cut_ordering': ('CutOrdering',),
+    'tab_method': ('HoldingTabs', 'TabMethod'), 'tab_width': ('HoldingTabs', 'Width'),
+    'tab_height': ('HoldingTabs', 'Height'), 'tab_min_tabs': ('HoldingTabs', 'MinimumTabs'),
+    'tab_max_tabs': ('HoldingTabs', 'MaximumTabs'), 'tab_distance': ('HoldingTabs', 'TabDistance'),
+    'tab_size_threshold': ('HoldingTabs', 'SizeThreshold'),
+    'tab_use_leadins': ('HoldingTabs', 'UseLeadIns'), 'tab_style': ('HoldingTabs', 'TabStyle'),
+    'stepover_feedrate': ('StepoverFeedrate',), 'region_fill_style': ('RegionFillStyle',),
+    'finish_stepover': ('FinishStepover',),
+    'finish_stepover_at_target_depth': ('FinishStepoverAtTargetDepth',),
+    'roughing_finishing': ('RoughingFinishing',), 'drilling_method': ('DrillingMethod',),
+    'peck_distance': ('PeckDistance',), 'retract_height': ('RetractHeight',),
+    'dwell': ('Dwell',), 'hole_diameter': ('HoleDiameter',),
+    'drill_lead_out': ('DrillLeadOut',), 'spiral_flat_base': ('SpiralFlatBase',),
+    'lead_out_length': ('LeadOutLength',), 'custom_script': ('CustomScript',),
+}
+MOP_XML_PATH_TO_FIELD = {path: field for field, path in MOP_XML_FIELD_PATHS.items()}
+
 @dataclass
 class Mop(CamBamEntity, ABC):
     """
     Abstract Base Class for Machine Operations (MOPs).
-    Holds intrinsic machining parameters and the definition of what primitives to target.
-    Part assignment is managed externally by the project.
+    Holds intrinsic machining parameters.
+    Targets and part assignment are owned by the project.
     """
     # Intrinsic Attributes
     name: str = "MOP" # User-visible name in CamBam UI MOP tree
-    pid_source: Union[str, List[uuid.UUID]] = field(default_factory=list) # Group name or list of Primitive UUIDs
     enabled: bool = True
     target_depth: Optional[float] = None # If None, uses Part/Project default (or fails if none set)
     depth_increment: Optional[float] = None # If None, uses TargetDepth (single pass)
@@ -1096,6 +1131,131 @@ class Mop(CamBamEntity, ABC):
     custom_mop_header: str = ""
     custom_mop_footer: str = ""
     # Note: No part_id or _resolved_xml_primitive_ids here. Managed by Project/Writer.
+
+    def __setattr__(self, name, value):
+        # Once imported or explicitly state-edited, an assignment is intentional,
+        # even if it repeats a cached Default value or restores an earlier value.
+        if name in MOP_XML_FIELD_PATHS and (
+                "_xml_template" in self.__dict__
+                or "_xml_explicit_parameter_states" in self.__dict__):
+            self.__dict__.setdefault("_xml_dirty_parameters", set()).add(name)
+            self.__dict__.get("_xml_explicit_parameter_states", set()).discard(name)
+        super().__setattr__(name, value)
+
+    def set_parameter_state(self, field_name: str, state: str) -> None:
+        """Set a top-level scalar parameter's CamBam inheritance state.
+
+        ``Default`` leaves resolution to CamBam's CAM styles.  The state is
+        metadata separate from the Python value so callers may explicitly
+        restore inheritance after assigning a value.
+        """
+        if field_name not in MOP_XML_FIELD_PATHS or not hasattr(self, field_name):
+            raise ValueError(f"Unsupported MOP parameter: {field_name}")
+        if len(MOP_XML_FIELD_PATHS[field_name]) != 1:
+            raise ValueError("Nested parameter inheritance belongs to its native container")
+        if state not in ("Default", "Value"):
+            raise ValueError("MOP parameter state must be 'Default' or 'Value'")
+        states = getattr(self, "_xml_parameter_states", None)
+        if states is None:
+            states = {}
+            self._xml_parameter_states = states
+        states[field_name] = state
+        explicit = getattr(self, "_xml_explicit_parameter_states", None)
+        if explicit is None:
+            explicit = set()
+            self._xml_explicit_parameter_states = explicit
+        explicit.add(field_name)
+
+    def _native_mop_element(self, project: "CamBamProject", resolved_primitive_xml_ids: List[int]) -> Optional[ET.Element]:
+        """Clone an imported MOP and patch only fields explicitly changed."""
+        template = getattr(self, "_xml_template", None)
+        if template is None:
+            return None
+        root = deepcopy(template)
+        root.set("Enabled", str(self.enabled).lower())
+        name = root.find("Name")
+        if name is None:
+            name = ET.Element("Name")
+            root.insert(0, name)
+        name.text = self.name
+        tag = root.find("Tag")
+        if tag is None:
+            tag = ET.Element("Tag")
+            root.insert(1, tag)
+        tag.text = json.dumps({"user_id": self.user_identifier, "internal_id": str(self.internal_id)}, separators=(",", ":"))
+
+        primitive = root.find("primitive")
+        if primitive is None:
+            primitive = ET.Element("primitive")
+            root.insert(2 + self._xml_primitive_index, primitive)
+        for child in list(primitive):
+            primitive.remove(child)
+        for pid in sorted(resolved_primitive_xml_ids):
+            ET.SubElement(primitive, "prim").text = str(pid)
+
+        baseline = getattr(self, "_xml_parameter_baseline", {})
+        states = getattr(self, "_xml_parameter_states", {})
+        explicit_states = getattr(self, "_xml_explicit_parameter_states", set())
+        for field_name, path in MOP_XML_FIELD_PATHS.items():
+            if not hasattr(self, field_name):
+                continue
+            current = getattr(self, field_name)
+            changed = (field_name in getattr(self, "_xml_dirty_parameters", set())
+                       or field_name not in baseline or current != baseline[field_name])
+            explicit_state = field_name in explicit_states
+            if not changed and not explicit_state:
+                continue
+            parent = root
+            for part in path[:-1]:
+                child = parent.find(part)
+                if child is None:
+                    child = ET.SubElement(parent, part)
+                parent = child
+            element = parent.find(path[-1])
+            if element is None:
+                element = ET.SubElement(parent, path[-1])
+            state = states.get(field_name) if field_name in explicit_states else None
+            if state is None:
+                state = "Default" if current is None else "Value"
+            if len(path) == 1 or "state" in element.attrib or path[0] == "LeadInMove":
+                element.set("state", state)
+            element.text = self._format_mop_parameter(current)
+            # A nested child edit must opt the native container into Value as
+            # well, otherwise CamBam can continue inheriting the whole group.
+            for depth in range(1, len(path)):
+                parent_node = root.find("/".join(path[:depth]))
+                if parent_node is not None:
+                    parent_node.set("state", "Value")
+        return root
+
+    @staticmethod
+    def _format_mop_parameter(value: Any) -> str:
+        if value is None:
+            return ""
+        if isinstance(value, bool):
+            return str(value).lower()
+        return str(value)
+
+    def _apply_explicit_parameter_states(self, root: ET.Element) -> None:
+        """Apply state edits to a newly-created (non-imported) MOP tree."""
+        for field_name in getattr(self, "_xml_explicit_parameter_states", set()):
+            path = MOP_XML_FIELD_PATHS[field_name]
+            parent = root
+            for part in path[:-1]:
+                child = parent.find(part)
+                if child is None:
+                    child = ET.SubElement(parent, part)
+                parent = child
+            element = parent.find(path[-1])
+            if element is None:
+                element = ET.SubElement(parent, path[-1])
+            state = self._xml_parameter_states[field_name]
+            element.set("state", state)
+            element.text = self._format_mop_parameter(getattr(self, field_name))
+            if path[:-1]:
+                ancestor = root.find(path[0])
+                if ancestor is not None:
+                    ancestor.set("state", state)
 
     @abstractmethod
     def to_xml_element(self, project: "CamBamProject", resolved_primitive_xml_ids: List[int]) -> ET.Element:
@@ -1180,7 +1340,11 @@ class Mop(CamBamEntity, ABC):
             if state is None:
                 state = "Value" if getattr(self, mop_attr, None) is not None else "Default"
             # Handle optional values that might resolve to None
-            text_value = str(value) if value is not None else ""
+            text_value = self._format_mop_parameter(value)
+            # A Default parameter must be resolved by CamBam's style system;
+            # do not bake project/part effective values into a new MOP.
+            if state == "Default" and getattr(self, mop_attr, None) is None:
+                text_value = ""
             # Special case: TargetDepth needs a value even if default? Check CamBam output.
             # Assuming empty text is okay for unresolved optional defaults.
             if value is None and tag in ["TargetDepth", "DepthIncrement", "SpindleSpeed", "ToolDiameter"]:
@@ -1263,6 +1427,9 @@ class ProfileMop(Mop):
     tab_style: str = 'Square' # 'Square', 'Triangle', 'Ramp'
 
     def to_xml_element(self, project: "CamBamProject", resolved_primitive_xml_ids: List[int]) -> ET.Element:
+        native = self._native_mop_element(project, resolved_primitive_xml_ids)
+        if native is not None:
+            return native
         mop_elem = ET.Element("profile", {"Enabled": str(self.enabled).lower()})
         self._add_common_mop_elements(mop_elem, project, resolved_primitive_xml_ids)
 
@@ -1295,6 +1462,7 @@ class ProfileMop(Mop):
             ET.SubElement(tabs, "TabStyle").text = self.tab_style
             # Manual tabs would need a <points> sub-element here if TabMethod='Manual'
 
+        self._apply_explicit_parameter_states(mop_elem)
         return mop_elem
 
 
@@ -1315,6 +1483,9 @@ class PocketMop(Mop):
     roughing_finishing: str = 'Roughing' # 'Roughing', 'Finishing', 'RoughFinish'
 
     def to_xml_element(self, project: "CamBamProject", resolved_primitive_xml_ids: List[int]) -> ET.Element:
+        native = self._native_mop_element(project, resolved_primitive_xml_ids)
+        if native is not None:
+            return native
         mop_elem = ET.Element("pocket", {"Enabled": str(self.enabled).lower()})
         self._add_common_mop_elements(mop_elem, project, resolved_primitive_xml_ids)
 
@@ -1336,6 +1507,7 @@ class PocketMop(Mop):
         ET.SubElement(mop_elem, "RoughingFinishing", {"state": state}).text = self.roughing_finishing
         ET.SubElement(mop_elem, "StartPoint", {"state": "Default"}) # Usually calculated unless specified
 
+        self._apply_explicit_parameter_states(mop_elem)
         return mop_elem
 
 @dataclass
@@ -1346,6 +1518,9 @@ class EngraveMop(Mop):
     cut_ordering: str = 'DepthFirst'
 
     def to_xml_element(self, project: "CamBamProject", resolved_primitive_xml_ids: List[int]) -> ET.Element:
+        native = self._native_mop_element(project, resolved_primitive_xml_ids)
+        if native is not None:
+            return native
         mop_elem = ET.Element("engrave", {"Enabled": str(self.enabled).lower()})
         # Engrave uses ToolDiameter differently (often for simulation only)
         # We still add common params, including ToolDiameter resolution
@@ -1360,6 +1535,7 @@ class EngraveMop(Mop):
         ET.SubElement(mop_elem, "CutOrdering", {"state": state}).text = self.cut_ordering
         ET.SubElement(mop_elem, "StartPoint", {"state": "Default"}) # Usually follows shape order
 
+        self._apply_explicit_parameter_states(mop_elem)
         return mop_elem
 
 
@@ -1380,6 +1556,9 @@ class DrillMop(Mop):
     custom_script: str = ""
 
     def to_xml_element(self, project: "CamBamProject", resolved_primitive_xml_ids: List[int]) -> ET.Element:
+        native = self._native_mop_element(project, resolved_primitive_xml_ids)
+        if native is not None:
+            return native
         mop_elem = ET.Element("drill", {"Enabled": str(self.enabled).lower()})
         self._add_common_mop_elements(mop_elem, project, resolved_primitive_xml_ids)
 
@@ -1412,4 +1591,5 @@ class DrillMop(Mop):
         ET.SubElement(mop_elem, "StartPoint", {"state": "Default"})
         ET.SubElement(mop_elem, "RoughingFinishing", {"state": "Value"}).text = "Roughing" # Drill is typically roughing
 
+        self._apply_explicit_parameter_states(mop_elem)
         return mop_elem

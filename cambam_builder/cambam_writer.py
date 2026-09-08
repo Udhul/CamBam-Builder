@@ -11,6 +11,7 @@ import os
 import logging
 import uuid
 import tempfile
+from copy import deepcopy
 from typing import Dict, List
 
 from .cambam_project import CamBamProject # Use Type Hinting
@@ -39,13 +40,18 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
         "Name": project.project_name
     })
 
-    # 3. Global Machining Options (Defaults for now, could be project attributes)
-    machining_options = ET.SubElement(root, "MachiningOptions")
-    stock = ET.SubElement(machining_options, "Stock")
-    ET.SubElement(stock, "Material") # Empty Material tag
-    ET.SubElement(stock, "PMin").text = "0,0,0" # Default values
-    ET.SubElement(stock, "PMax").text = "0,0,0"
-    ET.SubElement(stock, "Color").text = "255,165,0" # Default orange
+    # Retain imported machining context, including CAM style inheritance.
+    # The framework does not evaluate external CamBam style libraries.
+    if hasattr(project, "_xml_machining_options"):
+        if project._xml_machining_options is not None:
+            root.append(deepcopy(project._xml_machining_options))
+    else:
+        machining_options = ET.SubElement(root, "MachiningOptions")
+        stock = ET.SubElement(machining_options, "Stock")
+        ET.SubElement(stock, "Material")
+        ET.SubElement(stock, "PMin").text = "0,0,0"
+        ET.SubElement(stock, "PMax").text = "0,0,0"
+        ET.SubElement(stock, "Color").text = "255,165,0"
 
     # 4. Build <layers> container
     layers_container = ET.SubElement(root, "layers")
@@ -97,6 +103,19 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
 
         # Create the <part> element itself
         part_elem = part.to_xml_element()
+        if hasattr(part, "_xml_machining_parameters"):
+            for child in list(part_elem):
+                if child.tag not in {"Stock", "MachiningOrigin", "ToolDiameter"}:
+                    part_elem.remove(child)
+            part_elem.extend(deepcopy(part._xml_machining_parameters))
+        if (hasattr(part, "_xml_tool_diameter_value")
+                and part.default_tool_diameter == part._xml_tool_diameter_value):
+            insertion_index = 2  # After the modeled Stock and MachiningOrigin.
+            for child in list(part_elem.findall("ToolDiameter")):
+                insertion_index = list(part_elem).index(child)
+                part_elem.remove(child)
+            if part._xml_tool_diameter is not None:
+                part_elem.insert(insertion_index, deepcopy(part._xml_tool_diameter))
         parts_container.append(part_elem)
 
         # Create the <machineops> container within this part
@@ -107,21 +126,17 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
 
         # Add MOP XML elements to this part's <machineops> container
         for mop in mops_in_part:
-            # Resolve the MOP's pid_source (group or UUID list) to a list of primitive *XML IDs*
+            # Resolve project-owned targets to primitive XML IDs
             try:
-                primitive_uuids = project.resolve_pid_source_to_uuids(mop.pid_source)
+                primitive_uuids = project.get_mop_targets(mop)
                 resolved_primitive_xml_ids: List[int] = []
                 for prim_uuid in primitive_uuids:
                     xml_id = uuid_to_xml_id.get(prim_uuid)
                     if xml_id:
                         resolved_primitive_xml_ids.append(xml_id)
                     else:
-                        # This case should be rare if resolve_pid_source_to_uuids filters correctly
+                        # This case should be rare if target ownership is consistent
                         raise ValueError(f"MOP {mop.name} references primitive {prim_uuid} which has no XML ID assigned.")
-
-                if not resolved_primitive_xml_ids and mop.pid_source:
-                    # Log if the source wasn't empty but resolution yielded nothing valid
-                    logger.warning(f"MOP '{mop.name}' ({mop.user_identifier}) resolved to zero primitives for source: {mop.pid_source}")
 
                 # Generate the MOP's specific XML element (<profile>, <pocket>, etc.)
                 # Pass the project context and the resolved XML IDs

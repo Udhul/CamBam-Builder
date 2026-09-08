@@ -70,18 +70,22 @@ closed-Pline conversion, identity matrices, metadata and two XML round trips.
 The repair scope and representation policy are recorded in the
 [Rect investigation and repair criteria](REVIEW.md#rect-baking-loss-investigation).
 
-MOP source compatibility has a characterization command:
+The MOP ownership and interchange slice has focused automated and manual checks:
 
 ```powershell
 & $ProjectPython -m unittest discover -s tests -p test_mop_group_sources.py -v
+& $ProjectPython output\mop-core-validation-1roowlbtpza\generate.py
 ```
 
-It characterizes current live in-memory groups and XML UUID snapshots, including
-membership changes and repeated round trips for all four supported MOP types.
-It does not freeze the old API: revise characterization tests when redesigning
-the model under the [development compatibility policy](structure_spec.md#development-compatibility-policy). These tests preserve existing behavior, so a before-fix
-failure is not expected. No new manual CamBam check is required for this unchanged
-runtime/XML contract; production toolpaths remain outside the automated evidence.
+The tests cover project-owned target selections, group membership and repeated
+round trips. The generator creates a synthetic metadata-free A input (no MOP
+identity Tags; this is not CamBam-authored evidence), verifies A/B entity counts,
+targets, order, enabled states and machining values, and prepares the native-edit
+leg. After a user saves C from CamBam and reports its path, run the generator
+with `--native-edited <reported C path>`. It writes D and its inspection JSON
+only under `output/mop-core-validation-1roowlbtpza/`, refuses a source/output
+collision, and checks C versus D semantically. Production toolpaths remain
+outside the automated evidence.
 
 Keep reusable synthetic fixtures and expected results with authored tests.
 Use a unique task directory under ignored `output/` for disposable diagnostics,
@@ -256,6 +260,70 @@ Primitive XML IDs are assigned by UUID and need not be 1 then 2.
 Report CamBam version, A/B pass or fail and any differing operation/property.
 No machine execution is needed; this accepts load/display/properties only.
 UUID/identifier registry behavior is automated and needs no manual reproduction.
+
+## Manual MOP core-model and CamBam interchange acceptance
+
+This is a pending manual check for the MOP ownership redesign. It is not accepted
+until a user reports the CamBam version and the result. The disposable fixture
+directory is [mop-core-validation-1roowlbtpza](../output/mop-core-validation-1roowlbtpza/).
+Regenerate its files from the repository root with:
+
+```powershell
+& $ProjectPython output\mop-core-validation-1roowlbtpza\generate.py
+```
+
+The generator writes [A_reference.cb](../output/mop-core-validation-1roowlbtpza/A_reference.cb),
+[B_roundtrip.cb](../output/mop-core-validation-1roowlbtpza/B_roundtrip.cb) after two
+library XML round trips, the intermediate `B_roundtrip_1.cb`, and
+[manifest.json](../output/mop-core-validation-1roowlbtpza/manifest.json). The A file
+has native primitive references but no framework MOP identity Tags. It is a
+synthetic metadata-free input, not CamBam-authored evidence. The XML inspection
+must show one layer, one part, four
+primitives and four enabled operations in this order: Profile, Pocket, Engrave,
+Drill. Their targets and geometry are:
+
+| Operation | Target | Geometry | TargetDepth / CutFeedrate / ToolDiameter |
+| --- | --- | --- | --- |
+| Profile | `profile-square` | square X=0..10, Y=0..10 | -1 / 300 / 3 |
+| Pocket | `pocket-square` | square X=20..30, Y=0..10 | -1.5 / 350 / 3 |
+| Engrave | `engrave-outline` | triangle (40,0), (50,0), (45,8) | -0.4 / 250 / 1 |
+| Drill | `drill-points` | points (65,2), (72,8) | -2 / 200 / 2 |
+
+Open A and B separately in CamBam's top/XY view, zoom to drawing extents, and
+confirm the four shapes and operation properties load without errors. Highlight
+each operation and confirm its primitive reference matches the table; geometry,
+depth and diameter tolerance is 0.01 drawing units, while feedrates must match
+exactly. `Drill/CustomScript` is the Default-state example; the listed common
+machining values are Value-state examples. This checks display and interchange,
+not generated toolpaths or machine output.
+
+For the native-edit leg, open B and make the following exact edits. Change the
+existing Profile operation's primitive reference to `pocket-square` using
+CamBam's Primitive IDs/target editor, set its CutFeedrate to 450, and set its
+ClearancePlane property to Default. Reorder the existing operations to Drill,
+Engrave, Pocket, Profile. Create one new native Profile operation targeting
+`profile-square` and leave it last. All five operations must be enabled. Save
+the result as `C_native_edited.cb` wherever convenient and report that saved
+path; the agent runs the comparison after receiving it. The new operation may
+use CamBam's generated display name.
+
+The comparison command is:
+
+```powershell
+& $ProjectPython output\mop-core-validation-1roowlbtpza\generate.py `
+  --native-edited <reported-C-path>
+```
+
+It writes D as
+`output/mop-core-validation-1roowlbtpza/C_framework_roundtrip.cb` and the
+inspection JSON beside D; it never writes beside or over C. After the agent
+returns D, open C and D separately in CamBam's top/XY view, confirm both load
+without warnings, and verify five enabled operations in the order Drill,
+Engrave, Pocket, Profile, Profile. The fourth operation must target
+`pocket-square`, have CutFeedrate 450 and ClearancePlane Default; the last must
+target `profile-square`. Report the CamBam version, C/D load result, displayed
+order and targets, and any differing parameter or warning. No CamBam acceptance
+is claimed by the generator or local XML checks.
 
 ## Troubleshooting
 

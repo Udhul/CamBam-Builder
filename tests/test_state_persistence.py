@@ -48,6 +48,23 @@ class StatePersistenceTests(unittest.TestCase):
             self.assertIsNone(project.save_state(str(state_path)))
             self.assertTrue(state_path.is_file())
 
+    def test_mop_selection_modes_survive_state_and_remain_independent(self):
+        project, primitive = self.make_project()
+        part = project.add_part("Machining")
+        project.add_primitive_to_group(primitive, "live")
+        project.add_profile_mop(part, targets=[primitive], identifier="explicit")
+        project.add_pocket_mop(part, target_group="live", identifier="group")
+        with tempfile.TemporaryDirectory(prefix="state-tests-", dir=self.output) as directory:
+            state_path = str(Path(directory) / "project.pkl")
+            project.save_state(state_path)
+            loaded = CBProject.load_state(state_path)
+        self.assertEqual(loaded.get_mop_targets("explicit"), [primitive.internal_id])
+        self.assertEqual(loaded.get_mop_target_group("group"), "live")
+        loaded.remove_primitive_from_group("outline", "live")
+        self.assertEqual(loaded.get_mop_targets("group"), [])
+        self.assertEqual(loaded.get_mop_targets("explicit"), [primitive.internal_id])
+        self.assertEqual(project.get_mop_targets("group"), [primitive.internal_id])
+
     def test_save_state_raises_when_parent_cannot_be_created(self):
         project, _ = self.make_project()
         with tempfile.TemporaryDirectory(prefix="state-tests-", dir=self.output) as directory:

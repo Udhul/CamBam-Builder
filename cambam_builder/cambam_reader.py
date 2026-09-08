@@ -11,6 +11,7 @@ import logging
 import uuid
 import json
 import os
+from copy import deepcopy
 from typing import Optional, Dict, List, Tuple, Union, Any
 
 import numpy as np # For matrix conversion
@@ -19,7 +20,8 @@ from .cambam_project import CamBamProject
 from .cambam_entities import ( # Import concrete entity types
     Layer, Part, Mop, Primitive,
     Pline, Circle, Rect, Arc, Points, Text,
-    ProfileMop, PocketMop, EngraveMop, DrillMop
+    ProfileMop, PocketMop, EngraveMop, DrillMop,
+    MOP_XML_PATH_TO_FIELD,
 )
 from .cad_transformations import identity_matrix, from_cambam_matrix_str # For parsing matrix
 
@@ -70,6 +72,59 @@ def _parse_int(value: Optional[str], default: int = 0) -> int:
         return int(float(value.strip()))
     except (ValueError, TypeError):
         return default
+
+
+def _read_mop_parameter(
+    mop_elem: ET.Element,
+    tag: str,
+    parser,
+    default: Any,
+) -> Tuple[Any, Optional[str], Optional[str]]:
+    """Read one CamBam MOP parameter without allowing bad metadata to abort import.
+
+    The value is parsed for the in-memory model.  The state and original text are
+    returned separately so entity encoders can retain CamBam's Default/Value
+    distinction while still allowing later field edits to win.
+    """
+    element = mop_elem.find(tag)
+    if element is None:
+        return default, None, None
+    raw = element.text
+    state = element.get("state")
+    if state not in ("Default", "Value"):
+        state = None
+    if raw is None or not raw.strip():
+        return default, state, raw
+    try:
+        value = parser(raw, default)
+    except (TypeError, ValueError, AttributeError):
+        value = default
+    return value, state, raw
+
+
+def _read_nested_mop_parameter(
+    parent: Optional[ET.Element],
+    tag: str,
+    parser,
+    default: Any,
+) -> Tuple[Any, Optional[str], Optional[str]]:
+    """Variant of :func:`_read_mop_parameter` for nested MOP settings."""
+    if parent is None:
+        return default, None, None
+    element = parent.find(tag)
+    if element is None:
+        return default, None, None
+    raw = element.text
+    state = element.get("state")
+    if state not in ("Default", "Value"):
+        state = None
+    if raw is None or not raw.strip():
+        return default, state, raw
+    try:
+        value = parser(raw, default)
+    except (TypeError, ValueError, AttributeError):
+        value = default
+    return value, state, raw
 
 def _parse_point_2d(value: Optional[str]) -> Optional[Tuple[float, float]]:
     """Safely parse 'x,y' or 'x,y,z' strings into (x, y)."""
@@ -122,6 +177,9 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
     project_name = root.get("Name", os.path.basename(file_path))
     # TODO: Read project-level defaults if they exist in XML?
     project = CamBamProject(project_name)
+    # Preserve native project context (styles and other unknown children) for
+    # the writer; modeled settings remain owned by the project entity fields.
+    project._xml_machining_options = deepcopy(root.find("MachiningOptions"))
     logger.info(f"Reconstructing project: {project.project_name}")
 
     # --- Temporary storage during reconstruction ---
@@ -230,7 +288,7 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
                          else:
                               logger.warning(f"Unsupported MOP type tag '{mop_type_tag}' encountered in part '{part_elem.get('Name')}'. Skipping.")
 
-        # 5b. Link MOPs to Primitives (resolve pid_source if it was XML IDs)
+        # 5b. Link MOPs to Primitives through the project's target registry.
         for mop_uuid, xml_ids in mop_primitive_xml_id_refs.items():
             mop = project.get_mop(mop_uuid)
             if not mop: continue # Should not happen
@@ -250,15 +308,18 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
                     logger.warning(f"MOP '{mop.name}' references primitive XML ID {xml_id}, which could not be mapped back to a UUID.")
                     all_resolved = False
 
-            # Update the MOP's pid_source if it was originally defined by XML IDs
-            # Assumes _reconstruct_mop stored the XML IDs in pid_source if that's how it was defined
-            if isinstance(mop.pid_source, list): # Check if it needs updating
-                 mop.pid_source = resolved_primitive_uuids # Replace list of XML IDs/placeholders with UUIDs
-                 if not all_resolved:
-                     logger.warning(f"MOP '{mop.name}' pid_source list only partially resolved.")
-                 elif not resolved_primitive_uuids and xml_ids:
-                      logger.warning(f"MOP '{mop.name}' pid_source list {xml_ids} resolved to empty UUID list.")
-            # If pid_source was a string (group name), it remains unchanged.
+            # Native CamBam primitive references are authoritative.  Framework
+            # identity metadata never supplies or overrides this relationship.
+            try:
+                project.set_mop_targets(mop.internal_id, resolved_primitive_uuids)
+            except (TypeError, ValueError) as exc:
+                raise CamBamReaderError(
+                    f"Could not assign targets for MOP '{mop.name}': {exc}"
+                ) from exc
+            if not all_resolved:
+                logger.warning(f"MOP '{mop.name}' primitive target list was partially resolved.")
+            elif not resolved_primitive_uuids and xml_ids:
+                logger.warning(f"MOP '{mop.name}' primitive target list {xml_ids} resolved to empty UUID list.")
 
         logger.info(f"Project '{project.project_name}' reconstruction complete. "
                     f"Layers: {len(project.list_layers())}, "
@@ -332,7 +393,7 @@ def _reconstruct_part(project: CamBamProject, part_elem: ET.Element):
     default_spindle_speed = None # Assume None
 
     # Use project's add_part
-    project.add_part(
+    part = project.add_part(
         identifier=name,
         enabled=enabled,
         stock_thickness=stock_thickness,
@@ -345,6 +406,13 @@ def _reconstruct_part(project: CamBamProject, part_elem: ET.Element):
         default_spindle_speed=default_spindle_speed
         # Order handled by XML sequence
     )
+    if part is not None:
+        part._xml_tool_diameter = deepcopy(part_elem.find("ToolDiameter"))
+        part._xml_tool_diameter_value = part.default_tool_diameter
+        part._xml_machining_parameters = tuple(
+            deepcopy(child) for child in part_elem
+            if child.tag not in {"Stock", "MachiningOrigin", "ToolDiameter", "machineops"}
+        )
 
 
 def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uuid.UUID,
@@ -377,49 +445,52 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
             or mop_identifier in project._identifier_registry):
         raise CamBamReaderError(f"Conflicting MOP identity: {mop_identifier} ({internal_id})")
 
-    # --- Parse Common MOP Parameters ---
+    # Native Default text is a cached value, not an evaluated CAM style value.
+    parameter_states: Dict[str, str] = {}
+    parameter_baseline: Dict[str, Any] = {}
+
+    def parameter(tag, parser, default, optional_default=False):
+        value, state, raw = _read_mop_parameter(mop_elem, tag, parser, default)
+        field = MOP_XML_PATH_TO_FIELD.get((tag,), tag)
+        if state:
+            parameter_states[field] = state
+        if mop_elem.find(tag) is not None:
+            parameter_baseline[field] = value
+        return value
+
+    def nested_parameter(parent, tag, parser, default, optional_default=False):
+        value, state, raw = _read_nested_mop_parameter(parent, tag, parser, default)
+        key = f"{parent.tag}/{tag}" if parent is not None else tag
+        field = MOP_XML_PATH_TO_FIELD.get(tuple(key.split("/")), key)
+        if state:
+            parameter_states[field] = state
+        if parent is not None and parent.find(tag) is not None:
+            parameter_baseline[field] = value
+        return value
+
+    parse_string = lambda value, default: value
     mop_name = mop_elem.findtext("Name", f"Unnamed_{mop_elem.tag}")
-    enabled = _parse_bool(mop_elem.get("Enabled"), True) # Enabled is attribute on root MOP tag
+    enabled = _parse_bool(mop_elem.get("Enabled"), True)
+    target_depth = parameter("TargetDepth", _parse_float, None, True)
+    depth_increment = parameter("DepthIncrement", _parse_float, None, True)
+    stock_surface = parameter("StockSurface", _parse_float, 0.0)
+    roughing_clearance = parameter("RoughingClearance", _parse_float, 0.0)
+    clearance_plane = parameter("ClearancePlane", _parse_float, 15.0)
+    spindle_dir = parameter("SpindleDirection", parse_string, "CW")
+    spindle_speed = parameter("SpindleSpeed", _parse_int, None, True)
+    velocity_mode = parameter("VelocityMode", parse_string, "ExactStop")
+    work_plane = parameter("WorkPlane", parse_string, "XY")
+    optimisation_mode = parameter("OptimisationMode", parse_string, "Standard")
+    tool_diameter = parameter("ToolDiameter", _parse_float, None, True)
+    tool_number = parameter("ToolNumber", _parse_int, 0)
+    tool_profile = parameter("ToolProfile", parse_string, "EndMill")
+    plunge_feed = parameter("PlungeFeedrate", _parse_float, 1000.0)
+    cut_feedrate = parameter("CutFeedrate", _parse_float, None, True)
+    max_crossover = parameter("MaxCrossoverDistance", _parse_float, 0.7)
+    custom_header = parameter("CustomMOPHeader", parse_string, "")
+    custom_footer = parameter("CustomMOPFooter", parse_string, "")
 
-    target_depth_str = mop_elem.findtext("TargetDepth")
-    target_depth = _parse_float(target_depth_str, None) if target_depth_str is not None else None
-
-    depth_inc_str = mop_elem.findtext("DepthIncrement")
-    depth_increment = _parse_float(depth_inc_str, None) if depth_inc_str is not None else None
-
-    stock_surface = _parse_float(mop_elem.findtext("StockSurface"), 0.0)
-    roughing_clearance = _parse_float(mop_elem.findtext("RoughingClearance"), 0.0)
-    clearance_plane = _parse_float(mop_elem.findtext("ClearancePlane"), 15.0)
-    spindle_dir = mop_elem.findtext("SpindleDirection", "CW")
-
-    spindle_speed_str = mop_elem.findtext("SpindleSpeed")
-    spindle_speed = _parse_int(spindle_speed_str, None) if spindle_speed_str is not None else None
-
-    velocity_mode = mop_elem.findtext("VelocityMode", "ExactStop")
-    work_plane = mop_elem.findtext("WorkPlane", "XY")
-    optimisation_mode = mop_elem.findtext("OptimisationMode", "Standard")
-
-    tool_dia_str = mop_elem.findtext("ToolDiameter")
-    tool_diameter = _parse_float(tool_dia_str, None) if tool_dia_str is not None else None
-
-    tool_number = _parse_int(mop_elem.findtext("ToolNumber"), 0)
-    tool_profile = mop_elem.findtext("ToolProfile", "EndMill")
-    plunge_feed = _parse_float(mop_elem.findtext("PlungeFeedrate"), 1000.0)
-
-    cut_feed_str = mop_elem.findtext("CutFeedrate")
-    cut_feedrate = _parse_float(cut_feed_str, None) if cut_feed_str is not None else None
-
-    max_crossover = _parse_float(mop_elem.findtext("MaxCrossoverDistance"), 0.7)
-    custom_header = mop_elem.findtext("CustomMOPHeader", "")
-    custom_footer = mop_elem.findtext("CustomMOPFooter", "")
-
-    # Determine pid_source: Check for <primitive> tag content
-    # CamBam seems to store EITHER a list of primitive IDs OR rely on implicit context (e.g. selected items).
-    # If the <primitive> tag is present and non-empty, we use its content.
-    # If it's missing or empty, the MOP targets nothing explicitly via XML refs.
-    # We cannot reconstruct live group targeting from standard primitive references.
-    # The MOP Tag preserves identity only, not live group targeting.
-    # So, pid_source reconstruction will primarily be a list of XML IDs found, or empty list.
+    # Native primitive references are the only import target authority.
     primitive_xml_ids: List[int] = []
     primitive_container = mop_elem.find("primitive")
     if primitive_container is not None:
@@ -428,32 +499,63 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
             if xml_id > 0:
                 primitive_xml_ids.append(xml_id)
 
-    # --- Parse MOP-Specific Parameters ---
-    # This requires adding parsing logic for each MOP type based on its unique tags
-    mop_specific_kwargs = {}
+    # Parse all fields emitted by each supported MOP encoder. Missing fields use
+    # dataclass defaults; malformed values are handled by the safe parsers.
+    mop_specific_kwargs: Dict[str, Any] = {}
     if mop_class is ProfileMop:
-        mop_specific_kwargs["stepover"] = _parse_float(mop_elem.findtext("StepOver"), 0.4)
-        mop_specific_kwargs["profile_side"] = mop_elem.findtext("InsideOutside", "Inside")
-        mop_specific_kwargs["milling_direction"] = mop_elem.findtext("MillingDirection", "Conventional")
-        # ... parse LeadIn, Tabs etc.
+        mop_specific_kwargs["stepover"] = parameter("StepOver", _parse_float, 0.4)
+        mop_specific_kwargs["profile_side"] = parameter("InsideOutside", parse_string, "Inside")
+        mop_specific_kwargs["milling_direction"] = parameter("MillingDirection", parse_string, "Conventional")
+        mop_specific_kwargs["collision_detection"] = parameter("CollisionDetection", _parse_bool, True)
+        mop_specific_kwargs["corner_overcut"] = parameter("CornerOvercut", _parse_bool, False)
+        lead_in = mop_elem.find("LeadInMove")
+        mop_specific_kwargs["lead_in_type"] = nested_parameter(lead_in, "LeadInType", parse_string, "Spiral")
+        mop_specific_kwargs["lead_in_spiral_angle"] = nested_parameter(lead_in, "SpiralAngle", _parse_float, 30.0)
+        mop_specific_kwargs["final_depth_increment"] = parameter("FinalDepthIncrement", _parse_float, 0.0, True)
+        mop_specific_kwargs["cut_ordering"] = parameter("CutOrdering", parse_string, "DepthFirst")
+        tabs = mop_elem.find("HoldingTabs")
+        mop_specific_kwargs["tab_method"] = nested_parameter(tabs, "TabMethod", parse_string, "None")
+        mop_specific_kwargs["tab_width"] = nested_parameter(tabs, "Width", _parse_float, 6.0)
+        mop_specific_kwargs["tab_height"] = nested_parameter(tabs, "Height", _parse_float, 1.5)
+        mop_specific_kwargs["tab_min_tabs"] = nested_parameter(tabs, "MinimumTabs", _parse_int, 3)
+        mop_specific_kwargs["tab_max_tabs"] = nested_parameter(tabs, "MaximumTabs", _parse_int, 3)
+        mop_specific_kwargs["tab_distance"] = nested_parameter(tabs, "TabDistance", _parse_float, 40.0)
+        mop_specific_kwargs["tab_size_threshold"] = nested_parameter(tabs, "SizeThreshold", _parse_float, 4.0)
+        mop_specific_kwargs["tab_use_leadins"] = nested_parameter(tabs, "UseLeadIns", _parse_bool, False)
+        mop_specific_kwargs["tab_style"] = nested_parameter(tabs, "TabStyle", parse_string, "Square")
     elif mop_class is PocketMop:
-         mop_specific_kwargs["stepover"] = _parse_float(mop_elem.findtext("StepOver"), 0.4)
-         mop_specific_kwargs["region_fill_style"] = mop_elem.findtext("RegionFillStyle", "InsideOutsideOffsets")
-         # ... parse FinishStepover etc.
+        mop_specific_kwargs["stepover"] = parameter("StepOver", _parse_float, 0.4)
+        mop_specific_kwargs["stepover_feedrate"] = parameter("StepoverFeedrate", parse_string, "Plunge Feedrate")
+        mop_specific_kwargs["milling_direction"] = parameter("MillingDirection", parse_string, "Conventional")
+        mop_specific_kwargs["collision_detection"] = parameter("CollisionDetection", _parse_bool, True)
+        lead_in = mop_elem.find("LeadInMove")
+        mop_specific_kwargs["lead_in_type"] = nested_parameter(lead_in, "LeadInType", parse_string, "Spiral")
+        mop_specific_kwargs["lead_in_spiral_angle"] = nested_parameter(lead_in, "SpiralAngle", _parse_float, 30.0)
+        mop_specific_kwargs["final_depth_increment"] = parameter("FinalDepthIncrement", _parse_float, 0.0, True)
+        mop_specific_kwargs["cut_ordering"] = parameter("CutOrdering", parse_string, "DepthFirst")
+        mop_specific_kwargs["region_fill_style"] = parameter("RegionFillStyle", parse_string, "InsideOutsideOffsets")
+        mop_specific_kwargs["finish_stepover"] = parameter("FinishStepover", _parse_float, 0.0)
+        mop_specific_kwargs["finish_stepover_at_target_depth"] = parameter("FinishStepoverAtTargetDepth", _parse_bool, False)
+        mop_specific_kwargs["roughing_finishing"] = parameter("RoughingFinishing", parse_string, "Roughing")
     elif mop_class is EngraveMop:
-         # ... parse Engrave specific if any
-         pass
+        mop_specific_kwargs["roughing_finishing"] = parameter("RoughingFinishing", parse_string, "Roughing")
+        mop_specific_kwargs["final_depth_increment"] = parameter("FinalDepthIncrement", _parse_float, 0.0, True)
+        mop_specific_kwargs["cut_ordering"] = parameter("CutOrdering", parse_string, "DepthFirst")
     elif mop_class is DrillMop:
-         mop_specific_kwargs["drilling_method"] = mop_elem.findtext("DrillingMethod", "CannedCycle")
-         mop_specific_kwargs["peck_distance"] = _parse_float(mop_elem.findtext("PeckDistance"), 0.0)
-         mop_specific_kwargs["dwell"] = _parse_float(mop_elem.findtext("Dwell"), 0.0)
-         # ... parse HoleDiameter etc.
+        mop_specific_kwargs["drilling_method"] = parameter("DrillingMethod", parse_string, "CannedCycle")
+        mop_specific_kwargs["peck_distance"] = parameter("PeckDistance", _parse_float, 0.0)
+        mop_specific_kwargs["retract_height"] = parameter("RetractHeight", _parse_float, 5.0)
+        mop_specific_kwargs["dwell"] = parameter("Dwell", _parse_float, 0.0)
+        mop_specific_kwargs["hole_diameter"] = parameter("HoleDiameter", _parse_float, None, True)
+        mop_specific_kwargs["drill_lead_out"] = parameter("DrillLeadOut", _parse_bool, False)
+        mop_specific_kwargs["spiral_flat_base"] = parameter("SpiralFlatBase", _parse_bool, True)
+        mop_specific_kwargs["lead_out_length"] = parameter("LeadOutLength", _parse_float, 0.0)
+        mop_specific_kwargs["custom_script"] = parameter("CustomScript", parse_string, "")
 
     # --- Create and Register MOP ---
     try:
         mop = mop_class(
             user_identifier=mop_identifier,
-            pid_source=[], # XML references are resolved in the deferred linking pass.
             name=mop_name,
             enabled=enabled,
             target_depth=target_depth,
@@ -477,6 +579,21 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
             **mop_specific_kwargs
         )
         mop.internal_id = internal_id
+        for field_name in MOP_XML_PATH_TO_FIELD.values():
+            if hasattr(mop, field_name):
+                parameter_baseline.setdefault(field_name, getattr(mop, field_name))
+        mop._xml_parameter_states = parameter_states
+        mop._xml_parameter_baseline = parameter_baseline
+        mop._xml_template = deepcopy(mop_elem)
+        mop._xml_primitive_index = 0
+        for child in mop_elem:
+            if child.tag == "primitive":
+                break
+            if child.tag not in {"Name", "Tag"}:
+                mop._xml_primitive_index += 1
+        for child in list(mop._xml_template):
+            if child.tag in {"Name", "Tag", "primitive"}:
+                mop._xml_template.remove(child)
         if not project._register_entity(mop, project._mops):
             raise CamBamReaderError(f"Failed to register MOP '{mop_name}'")
         project.assign_mop_to_part(mop.internal_id, part_uuid)

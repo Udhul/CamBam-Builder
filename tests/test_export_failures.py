@@ -94,7 +94,7 @@ class ExportFailureTests(unittest.TestCase):
                 self.assert_destination(True)
 
     def test_mop_resolution_error_aborts_export(self):
-        with patch.object(self.project, "resolve_pid_source_to_uuids", side_effect=ValueError("bad source")):
+        with patch.object(self.project, "get_mop_targets", side_effect=ValueError("bad source")):
             with self.assertRaises(ValueError):
                 self.project.export(str(self.path))
         self.assert_destination(False)
@@ -135,7 +135,7 @@ class ExportFailureTests(unittest.TestCase):
                 self.assertIsNotNone(loaded)
                 self.assertEqual(set(loaded._primitives), set(self.project._primitives))
                 self.assertEqual(set(loaded._mops), set(self.project._mops))
-                self.assertEqual(loaded.get_mop("profile").pid_source, [self.primitive.internal_id])
+                self.assertEqual(loaded.get_mop_targets("profile"), [self.primitive.internal_id])
                 self.assertEqual(loaded.get_mop("profile").target_depth, -1)
                 self.assertEqual(list(self.path.parent.iterdir()), [self.path])
 

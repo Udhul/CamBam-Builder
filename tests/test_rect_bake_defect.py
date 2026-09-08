@@ -256,7 +256,7 @@ class RectBakeDefectTests(unittest.TestCase):
         project, ancestor, root, child, sibling = self.make_hierarchy()
         root.description = "keep this description"
         part = project.add_part("Part")
-        mop = project.add_profile_mop(part, [root], name="Profile", identifier="profile", target_depth=-1.0)
+        mop = project.add_profile_mop(part, targets=[root], name="Profile", identifier="profile", target_depth=-1.0)
         expected = {node.user_identifier: self.xy(node.get_absolute_coordinates()) for node in (ancestor, root, child, sibling)}
         ancestor_id = ancestor.internal_id
         root_id = root.internal_id
@@ -272,8 +272,8 @@ class RectBakeDefectTests(unittest.TestCase):
         self.assertEqual(project.get_layer_of_primitive(root).internal_id, layer_id)
         self.assertEqual(project.get_parent_of_primitive(child), root)
         self.assertEqual(project.get_children_of_primitive(root)[0].internal_id, child_id)
-        self.assertEqual(mop.pid_source, [root_id])
-        self.assertEqual(project.resolve_pid_source_to_uuids(mop.pid_source), [root_id])
+        self.assertEqual(project.get_mop_targets(mop), [root_id])
+        self.assertIsNone(project.get_mop_target_group(mop))
 
         with tempfile.TemporaryDirectory() as directory:
             state_path = Path(directory) / "baked-state.pkl"
@@ -283,7 +283,7 @@ class RectBakeDefectTests(unittest.TestCase):
             self.assertEqual(restored.get_primitive(root_id).internal_id, root_id)
             self.assertEqual(restored.get_parent_of_primitive(root_id).internal_id, ancestor_id)
             self.assertEqual(restored.get_parent_of_primitive(child_id).internal_id, root_id)
-            self.assertEqual(restored.get_mop("profile").pid_source, [root_id])
+            self.assertEqual(restored.get_mop_targets(restored.get_mop("profile")), [root_id])
             self.assert_outline(self, expected["root"], restored.get_primitive(root_id).get_absolute_coordinates(), 1e-10)
 
             first = self.save(project, directory, "first")
@@ -308,8 +308,8 @@ class RectBakeDefectTests(unittest.TestCase):
                 for name in ("child", "sibling"):
                     np.testing.assert_allclose(self.xy(loaded.get_primitive(name).get_absolute_coordinates()), expected[name], rtol=0, atol=1e-8)
                 loaded_mop = loaded.get_mop("profile")
-                self.assertEqual(loaded_mop.pid_source, [root_id])
-                self.assertEqual(loaded.resolve_pid_source_to_uuids(loaded_mop.pid_source), [root_id])
+                self.assertEqual(loaded.get_mop_targets(loaded_mop), [root_id])
+                self.assertIsNone(loaded.get_mop_target_group(loaded_mop))
                 self.assertEqual(loaded.get_part_of_mop(loaded_mop).user_identifier, "Part")
 
 

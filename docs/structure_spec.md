@@ -2,9 +2,7 @@
 
 Section 0 describes the implemented architecture; sections 1–7 describe the intended
 design, not a verified inventory of implemented behavior. See [current status](PROGRESS.md) for implementation gaps and
-the [topic map](README.md) for documentation ownership. MOP source
-behavior is characterized below; the development compatibility policy governs
-the pending core-model redesign.
+the [topic map](README.md) for documentation ownership. MOP target ownership is defined below; the development compatibility policy governs API changes.
 
 This specification describes the core architecture for the CamBam CAD/CAM framework. In this design, all relationships between entities (primitives, layers, parts, and machine operations (MOPs)) are maintained in a central registry managed by the project object. This approach minimizes duplication of relationship data in the individual entities and provides a single source of truth for linking. It also simplifies propagation of transformations, transferring of entities between projects, and robust XML serialization.
 
@@ -36,8 +34,8 @@ packages; `inactive/` and demos are outside that runtime package list.
    owning APIs rather than editing individual dictionaries in application code.
 2. Primitives hold geometry and an effective matrix, plus a weak project reference
    used to compose ancestor transforms. Groups are also represented on entities;
-   MOP targeting currently lives in `Mop.pid_source` and resolves through the
-   project. The fully centralized target in later sections is not yet implemented.
+   MOP targeting lives solely in the project `_mop_targets` registry. MOP entities
+   hold machining parameters without target or part references.
 3. `save()` / `export()` delegate to `save_cambam_file()` and `build_xml_tree()`.
    Entities encode geometry and metadata; primitives export world matrices. The
    reader constructs entities, then resolves references. See the review for known
@@ -57,8 +55,7 @@ it does not return a tree after catching an encoder failure. Missing ordered
 layers/parts and resolved MOP targets without XML IDs also raise. Original
 encoder exception types are preserved; primitive/MOP logs identify the entity.
 This is not a comprehensive validator for manually corrupted private registries.
-Existing PID-source filtering, empty-source warnings and encoder parameter
-defaults remain unchanged; source compatibility is defined below.
+Target mutation and XML import policies are defined below.
 
 `save()` / `export()` / `save_cambam_file()` return `None` only after a completed
 XML file replaces the destination. They retain forced `.cb` extension handling,
@@ -90,9 +87,8 @@ its string as identifier. Names remain unchanged; subsequent library round trips
 preserve the new identity. Unrelated custom Tag content is not retained.
 
 Primitive XML IDs resolve to UUIDs in the linking pass. Group sources export a
-snapshot and import as UUID lists under the source compatibility contract below;
-registry ownership remains unchanged. This slice covers identity and existing supported explicit
-machining parameters, not complete parameter coverage or Default/Value fidelity.
+snapshot and import as project-owned explicit targets under the contract below.
+Parameter interchange is described separately below.
 Part UUID persistence remains outside scope. CamBam loading and properties for the synthetic MOP Tag case were accepted by
 the user; criteria remain in `DEVELOPMENT.md`. This does not establish
 production toolpath correctness.
@@ -115,50 +111,80 @@ native edits to geometry or operation targets. Missing/malformed metadata and
 unsupported content need explicit handling; full format coverage is not yet
 established. Local self-round trips alone do not prove CamBam interoperability.
 
-### MOP group-source compatibility contract
+### MOP target ownership contract
 
-This section records current behavior, not a backward-compatibility obligation.
-The development compatibility policy above supersedes the earlier requirement to
-retain the old API and source representation during migration. Current behavior:
+The project `_mop_targets` registry is the sole target relationship owner. Each
+MOP UUID maps to either an immutable set of primitive UUIDs or a live group name.
+MOP entities contain no `pid_source`; old API and pickle migration are unsupported.
 
-| Source supplied to a MOP adder | In-memory behavior | XML export/import |
-| --- | --- | --- |
-| String group name | Live lookup of current group membership on each resolution/export | Export current members; import a UUID-list snapshot |
-| List of primitive identifiers, UUIDs or objects | Resolve once at creation to primitive UUIDs | Export surviving targets; import a UUID-list snapshot |
+- `add_*_mop(part, targets=[primitive, identifier, uuid], ...)` creates an explicit
+  selection. Targets default to empty; list/tuple inputs are copied and deduplicated.
+- `add_*_mop(part, target_group="name", ...)` selects a live named group.
+  Combining a group with nonempty explicit targets raises `ValueError`.
+- `set_mop_targets(mop, targets)` and `set_mop_target_group(mop, group)` replace the
+  selection atomically. Invalid/missing explicit primitives or MOPs raise
+  `ValueError`; bare-string targets raise `TypeError`. Empty group names are rejected.
+- `get_mop_targets(mop)` returns a detached UUID-sorted list of current targets;
+  `get_mop_target_group(mop)` returns the group name or `None` for explicit mode.
 
-A bare string always denotes a group, even if it matches a primitive identifier.
-Use `[identifier]` to select that primitive. Missing groups (including the empty
-string) are allowed and resolve empty. Adding members later activates the live
-source; removing all members and recreating the same group name also works.
-Group membership changes use project APIs. Direct edits to `Primitive.groups`
-are not a substitute for updating the project indexes.
+Live groups support repeated programmatic construction: members added later are
+selected, and recreating the same group name selects its new members. Missing
+nonempty group names resolve empty. Explicit selection is stable across group
+changes. Primitive deletion removes explicit references; reusing its identifier
+does not retarget the MOP. MOP deletion removes its selection. Group changes must
+use project APIs, not direct mutation of primitive metadata. Part assignment/order
+remain separate project-owned relationships; target order is not machining order.
 
-List inputs are copied and normalized at creation. Unresolved entries are skipped,
-including an entirely unresolved list, which produces an empty-source MOP.
-Resolution filters deleted primitives, deduplicates targets and sorts by UUID;
-XML references are sorted by XML ID. Target order is not machining order.
-Reusing a deleted primitive's human identifier does not rebind an old UUID source.
-`Mop.pid_source` remains the current readable/writable source surface; callers
-assign normalized UUID lists or group strings when changing it directly.
+XML `<primitive><prim>` IDs are authoritative. Export materializes current targets
+without changing their in-memory selection mode; import always installs explicit
+UUID targets, even if a target set matches a metadata group. Missing/unresolved
+native references are warned and skipped by the reader. Framework Tags never
+restore live selections or override native target edits. Operation order follows
+the native part/machineops sequence. Identity metadata remains supplementary under
+the identity contract above.
 
-XML `<primitive><prim>` references are authoritative for imported targeting.
-The MOP Tag stores identity only. Primitive group Tags do not imply that an
-imported MOP is live, even when its target set exactly matches a group. Missing,
-empty or unresolved primitive references produce empty/partial snapshots under
-the existing reader filtering policy. Editing group membership after import must
-not add or remove snapshot targets; deleting a target still filters it out.
-Export must leave the original live source intact. No new metadata is introduced.
+This preserves live-group construction while keeping the CamBam boundary
+unambiguous. No group-selection metadata or compatibility facade is introduced.
+The old characterization is retained as historical review evidence.
 
-The next core-model increment must choose source ownership and group semantics
-for their domain value, with one authoritative relationship owner. It may replace
-`pid_source` and change the group/list API. Keep useful live-group behavior only
-where it serves the chosen model; do not preserve it solely because it exists.
-The current characterization tests are discovery evidence and should be revised
-when the intended model changes. Preserve tests of the chosen `.cb` contract.
-No old-pickle migration or compatibility facade is required.
+### MOP parameter interchange contract
 
-See [original characterization evidence](REVIEW.md#mop-group-source-compatibility)
-and [the superseding user clarification](REVIEW.md#development-compatibility-priority).
+The four supported MOP classes reconstruct their modeled common and subtype fields
+from native XML. `MOP_XML_FIELD_PATHS` owns the field/path vocabulary. Imported
+MOPs retain a parameter-only XML template: Name, Tag and primitive target references
+are excluded and regenerated from intrinsic identity and project relationships.
+Unchanged fields retain native text, attributes, Default/Value states, omitted
+elements and unknown/nested parameter content (including independent lead-out
+settings, tabs and Style references). Custom framework Tag content remains subject
+to the identity contract above.
+
+Native Default text is a cached value available on the Python field, **not** an
+evaluated CAM-style value. The library does not load or evaluate CamBam style
+libraries. Assigning a modeled field after import makes it explicit on export,
+even when the assignment repeats a cached value. Assigning `None` to an imported
+optional scalar restores Default. `mop.set_parameter_state("clearance_plane",
+"Default")` explicitly selects inheritance; `"Value"` selects the current value.
+A later field assignment supersedes that explicit state choice. The state setter
+supports top-level scalar fields only; nested inheritance belongs to native
+containers and is preserved on import. Editing a nested field activates its
+container as Value, retaining plain scalar formatting where CamBam uses it.
+
+New MOPs retain the existing constructor/encoder authoring defaults and convenience
+fallbacks, including derived depth increment/feedrate when unspecified. These are
+not CAM-style evaluation. The scalar state setter also works for new MOPs and
+allows explicit Default output. An imported untouched MOP never recomputes those
+authoring fallbacks or fills in absent properties.
+
+Imported global MachiningOptions and unmodeled part machining settings are
+retained, including Style/StyleLibrary. Part ToolDiameter retains native state/text
+while its modeled value is unchanged; changing the value exports the edit.
+This preserves inheritance context within the file, not the referenced external
+style libraries. Stock/origin still follow the existing part model.
+
+This is supported-MOP interchange, not full CamBam format or toolpath coverage.
+Unsupported MOP types are warned and skipped; arbitrary references inside unknown
+extensions are not interpreted or remapped. Native application acceptance is
+tracked separately in the [runbook](DEVELOPMENT.md#manual-mop-core-model-and-cambam-interchange-acceptance).
 
 ### XML parent identity and world-pose contract
 
@@ -322,7 +348,7 @@ The framework is centered on a **Project Manager** (the `CamBamProject` class) t
 - **MOP (Machine Operation, Abstract Base Class):**  
   - **Purpose:** Represents a machining operation.
   - **Intrinsic Attributes:**  
-    - Machining parameters; source ownership moves to the project in the pending redesign. The Python API and group semantics follow the chosen core model, without a legacy compatibility obligation.
+    - Machining parameters; target selections are project-owned under section 0.
   - **Relationship:**  
     - The project registry records MOP assignments by mapping a MOP to the primitives that should be processed.
     - If a referenced MOP is not found, the project may create a disabled dummy MOP (and dummy part) to ensure consistency.
