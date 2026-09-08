@@ -3,8 +3,8 @@
 Section 0 describes the implemented architecture; sections 1–7 describe the intended
 design, not a verified inventory of implemented behavior. See [current status](PROGRESS.md) for implementation gaps and
 the [topic map](README.md) for documentation ownership. MOP source
-compatibility is defined below; central registry ownership remains a pending
-migration constrained by that contract.
+behavior is characterized below; the development compatibility policy governs
+the pending core-model redesign.
 
 This specification describes the core architecture for the CamBam CAD/CAM framework. In this design, all relationships between entities (primitives, layers, parts, and machine operations (MOPs)) are maintained in a central registry managed by the project object. This approach minimizes duplication of relationship data in the individual entities and provides a single source of truth for linking. It also simplifies propagation of transformations, transferring of entities between projects, and robust XML serialization.
 
@@ -97,9 +97,29 @@ Part UUID persistence remains outside scope. CamBam loading and properties for t
 the user; criteria remain in `DEVELOPMENT.md`. This does not establish
 production toolpath correctness.
 
+### Development compatibility policy
+
+User clarification, 2026-09-08: the framework is in development and no important
+files depend on older framework versions. Prioritize a correct, coherent core
+model. Breaking Python API, internal storage and pickle changes are permitted;
+do not add legacy adapters, duplicate storage or old-pickle migration solely to
+preserve unused framework versions. Update repository callers, examples and tests
+together when changing the model. Old pickle files are not a compatibility target.
+
+The external compatibility boundary is CamBam `.cb` interchange: files produced
+by the framework and files created or modified directly in CamBam. Validate
+supported geometry, transforms, operation targets/order and machining parameters
+against that boundary, including CamBam-authored input without framework Tags.
+Framework metadata may supplement native data but must not silently override
+native edits to geometry or operation targets. Missing/malformed metadata and
+unsupported content need explicit handling; full format coverage is not yet
+established. Local self-round trips alone do not prove CamBam interoperability.
+
 ### MOP group-source compatibility contract
 
-The compatibility baseline preserves the existing public distinction:
+This section records current behavior, not a backward-compatibility obligation.
+The development compatibility policy above supersedes the earlier requirement to
+retain the old API and source representation during migration. Current behavior:
 
 | Source supplied to a MOP adder | In-memory behavior | XML export/import |
 | --- | --- | --- |
@@ -129,17 +149,16 @@ the existing reader filtering policy. Editing group membership after import must
 not add or remove snapshot targets; deleting a target still filters it out.
 Export must leave the original live source intact. No new metadata is introduced.
 
-The registry migration must store source intent (group string versus UUID list),
-not only a cached resolved set. It must preserve the public creation, resolution,
-source read/write and XML behavior above without a second authoritative source.
-Keep the existing UUID entity and part-order registries distinct from target-source
-ownership. XML does not infer primitive-to-MOP assignments or create dummy MOPs.
-Pickle version migration and full parameter Default/Value fidelity require their
-own acceptance; they are not established by this compatibility baseline.
+The next core-model increment must choose source ownership and group semantics
+for their domain value, with one authoritative relationship owner. It may replace
+`pid_source` and change the group/list API. Keep useful live-group behavior only
+where it serves the chosen model; do not preserve it solely because it exists.
+The current characterization tests are discovery evidence and should be revised
+when the intended model changes. Preserve tests of the chosen `.cb` contract.
+No old-pickle migration or compatibility facade is required.
 
-The stopping condition for this increment is executable coverage of these source
-modes and repeated XML snapshots for all four supported MOP types. Registry
-implementation follows separately. See [decision evidence](REVIEW.md#mop-group-source-compatibility).
+See [original characterization evidence](REVIEW.md#mop-group-source-compatibility)
+and [the superseding user clarification](REVIEW.md#development-compatibility-priority).
 
 ### XML parent identity and world-pose contract
 
@@ -303,7 +322,7 @@ The framework is centered on a **Project Manager** (the `CamBamProject` class) t
 - **MOP (Machine Operation, Abstract Base Class):**  
   - **Purpose:** Represents a machining operation.
   - **Intrinsic Attributes:**  
-    - Machining parameters; the public PID-source surface retains group-name or UUID-list semantics under the section 0 compatibility contract. Source ownership moves to the project in the pending migration.
+    - Machining parameters; source ownership moves to the project in the pending redesign. The Python API and group semantics follow the chosen core model, without a legacy compatibility obligation.
   - **Relationship:**  
     - The project registry records MOP assignments by mapping a MOP to the primitives that should be processed.
     - If a referenced MOP is not found, the project may create a disabled dummy MOP (and dummy part) to ensure consistency.
@@ -320,7 +339,7 @@ The `CamBamProject` object manages not only the entity registries but also dedic
   - When a primitive is added or its layer assignment is changed, the project updates this registry.
   - During XML output, the project uses this registry to place primitives in the correct `<objects>` container.
 - **MOP Registry:**  
-  - Maps MOP IDs to source intent (live group name or explicit primitive UUID list), resolving current targets as needed under the section 0 compatibility contract.
+  - Owns MOP targeting relationships in one authoritative location; the redesign defines group selection semantics under the section 0 development compatibility policy.
   - The project is solely responsible for maintaining MOP associations; primitives do not store any MOP assignment data.
   - If a primitive refers to a MOP that does not exist, the project creates a dummy (disabled) MOP.
 - **Parent/Child Registry:**  

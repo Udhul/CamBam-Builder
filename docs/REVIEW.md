@@ -775,6 +775,9 @@ Suggested commit: `docs: separate and prioritize Region and Z shape parity`.
 
 ## MOP group-source compatibility
 
+**Policy superseded by [user clarification](#development-compatibility-priority);
+observed behavior and test results below remain historical evidence.**
+
 2026-09-08: compatibility definition and characterization before backlog item 1's
 registry migration. Runtime behavior and XML schema are unchanged.
 
@@ -817,3 +820,25 @@ These are characterization tests against unchanged runtime, not a runtime defect
 repair, so no before-fix failure is claimed. Manual validation is
 not required for this slice because no emitted schema or runtime behavior changes.
 Existing synthetic CamBam acceptance is not expanded to production machining.
+
+
+## Development compatibility priority
+
+2026-09-08 user clarification: no important files depend on older framework
+versions; the framework has not been used in production. Correct architecture
+and the core model take priority over backward compatibility with those versions.
+The required compatibility boundary is CamBam `.cb` files, including framework
+output and files created or modified directly in CamBam.
+
+This supersedes the prior obligation to retain `pid_source`, its source modes
+and old-pickle handling during registry migration. Breaking APIs/storage are
+allowed; update repository callers/tests together and avoid legacy adapters or
+duplicate ownership. The six characterization tests remain evidence of current
+behavior, not a veto on redesign. Native CamBam edits must not be silently undone
+by stale framework metadata. Domain semantics and external-format fidelity still
+need design and verification; this clarification does not claim new format support.
+
+Updated the specification policy, backlog and test runbook. Documentation-only
+change: references reviewed and `git diff --check` passed; no runtime tests or
+manual CamBam validation needed. Next: implement the MOP core-model increment
+against this policy. Suggested commit: `docs: prioritize core model and CamBam interchange`.

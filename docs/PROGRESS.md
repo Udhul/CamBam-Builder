@@ -7,17 +7,16 @@ not a guarantee of complete round-trip fidelity. MOP sources remain on instances
 
 ## Active work and next priority
 
-MOP group-source compatibility: **implemented; automated checks complete**
-(2026-09-08). Owners:
-`docs/structure_spec.md` and `tests/test_mop_group_sources.py`. Preserve live group
-lookup in memory and concrete UUID snapshots across XML. Acceptance: membership
-changes, missing/recreated groups, explicit-list isolation and two XML round trips
-for all four MOP types. No runtime behavior or schema change; no blocker.
-Six characterization tests and all 57 suite tests pass. No new manual validation
-is required because runtime/XML behavior is unchanged. See
-[decision and verification evidence](REVIEW.md#mop-group-source-compatibility).
-Next priority: migrate source ownership under this contract (backlog item 1);
-parameter/default parser coverage remains in that item.
+**Next priority: correct MOP core-model ownership and CamBam interchange**
+(backlog item 1). User clarification, 2026-09-08: breaking framework API/storage
+changes are allowed; no legacy adapters or old-pickle migration are required.
+[Development compatibility policy](structure_spec.md#development-compatibility-policy).
+
+MOP group-source characterization is complete: six tests, all 57 suite tests
+passed in that increment. It records existing behavior, not a requirement to
+preserve the old `pid_source` API or live-group implementation. Update those tests
+with the chosen model. Runtime is unchanged by this clarification. See
+[decision update](REVIEW.md#development-compatibility-priority).
 
 Rect rotation/shear baking repair: **implemented; automated checks complete; synthetic display accepted**
 (2026-09-08). Owners:
@@ -124,12 +123,15 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 
 ## Remaining backlog, in order
 
-1. Migrate MOP target-source ownership to the project under the
-   [source compatibility contract](structure_spec.md#mop-group-source-compatibility-contract).
-   Preserve group intent, the public `pid_source` surface, XML snapshots, identity
-   and part order; define old-pickle handling before changing storage. Then test
-   defaults and malformed XML metadata reconstruction. Compatibility definition
-   and six characterization tests are complete; registry implementation is pending.
+1. Redesign MOP target ownership around a coherent project-owned core model.
+   Choose explicit-target and group-selection semantics for domain needs, with
+   one authoritative relationship owner. Change the Python API and update callers
+   and tests as needed; no old-version adapters or pickle migration. Validate the
+   `.cb` boundary: output for CamBam and input created/edited in CamBam, including
+   absent/malformed framework metadata, native target edits, operation order and
+   parameter/default reconstruction. Establish focused synthetic checks and
+   prepare CamBam validation where local tests cannot establish interoperability.
+   [Governing policy](structure_spec.md#development-compatibility-policy).
 2. Improve curved-geometry bounds; implement copy/transfer utilities against the
    specification, with collision and relationship tests.
 3. Implement core CamBam shape parity: Region shapes and Z coordinates across
@@ -165,9 +167,9 @@ above. Detailed contracts remain in `docs/structure_spec.md`, and review evidenc
 
 No implementation blocker or pending validation for the completed MOP synthetic case. Full source-system
 compatibility requires CamBam validation and representative authorized fixtures.
-MOP source compatibility preserves live groups in memory and UUID snapshots on XML
-import. The migration must preserve this distinction and the public source surface;
-centralized ownership is still a target, not implemented behavior.
+The old framework API and pickle format do not constrain redesign. Group semantics
+and the new API remain design work in backlog item 1; CamBam `.cb` interoperability
+is the required compatibility boundary. Centralized ownership is not yet implemented.
 
 ## Completion and verification
 
@@ -180,20 +182,15 @@ centralized ownership is still a target, not implemented behavior.
 - User/CamBam acceptance: parent, full-bake, global-transform and Rect-bake synthetic display and MOP load/properties accepted; broader production acceptance not performed.
 
 [Verification commands](DEVELOPMENT.md) and [work lifecycle](WORKFLOW.md)
-are authoritative. The MOP compatibility increment establishes the behavior that
-registry migration must preserve. Migrating ownership now addresses the next
-architectural gap without silently freezing live groups or reactivating imported
-snapshots. Default/Value and malformed metadata coverage remain part of backlog
-item 1. General component ordering, curved baking and alignment remain deferred
-until a failing fixture or workflow dependency justifies them.
+are authoritative. Existing MOP characterization informs the redesign without
+freezing historical API choices. Correct ownership and CamBam interoperability
+remain the next priority; broader geometry and integration work stays ordered
+in the backlog above.
 
 ## Session breakpoint
 
-The MOP source compatibility contract and automated characterization are complete
-and persisted. This is a good fresh-session breakpoint: no source-semantic
-decisions or manual validation remain for this increment. Start a fresh session
-for registry migration, preserving the documented source modes and deciding
-old-pickle handling before changing storage. The overall project still needs
-registry ownership, defaults/metadata coverage and the remaining ordered backlog;
-this increment removes the semantic dependency for item 1. No staging or commit
-was performed. Suggested commit: `test: define MOP group-source compatibility`.
+This clarification is persisted in the specification and review. A fresh session
+is appropriate for the distinct core-model implementation scope. Design the MOP
+relationships and public API without old-version compatibility overhead, then
+validate the `.cb` boundary. No implementation or CamBam acceptance is claimed
+by this documentation update. No staging or commit was performed.

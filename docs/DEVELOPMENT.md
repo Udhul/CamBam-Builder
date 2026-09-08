@@ -76,9 +76,10 @@ MOP source compatibility has a characterization command:
 & $ProjectPython -m unittest discover -s tests -p test_mop_group_sources.py -v
 ```
 
-It locks down live in-memory groups and XML UUID snapshots before registry
-migration, including membership changes and repeated round trips for all four
-supported MOP types. These tests preserve existing behavior, so a before-fix
+It characterizes current live in-memory groups and XML UUID snapshots, including
+membership changes and repeated round trips for all four supported MOP types.
+It does not freeze the old API: revise characterization tests when redesigning
+the model under the [development compatibility policy](structure_spec.md#development-compatibility-policy). These tests preserve existing behavior, so a before-fix
 failure is not expected. No new manual CamBam check is required for this unchanged
 runtime/XML contract; production toolpaths remain outside the automated evidence.
 
