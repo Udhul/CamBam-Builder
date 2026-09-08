@@ -59,6 +59,9 @@ volume warrants it and update the topic map rather than creating a parallel wiki
 Choose the least costly capable route that satisfies tool, privacy and integration
 requirements. Inspect actual available tools and routing/telemetry when cost
 distinctions matter; availability and model names are session facts, not contracts.
+Apply the reusable risk and model-selection guidance in
+[MODEL_ROUTING.md](MODEL_ROUTING.md), while keeping architecture and final
+integration with the lead.
 Include worker setup/context, returned output, review, integration, retries and
 duplicate work in cost decisions. If telemetry is unavailable, say so instead of
 claiming a cheaper route. Discover capabilities at runtime; do not assume a listed

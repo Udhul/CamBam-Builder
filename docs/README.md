@@ -9,6 +9,7 @@ Read this map after the root README; follow only the relevant owner.
 | Current baseline, priority, backlog, blockers | [PROGRESS.md](PROGRESS.md) | Single status surface; pending items live here |
 | Development commands and troubleshooting | [DEVELOPMENT.md](DEVELOPMENT.md) | Setup, checks and artifact handling |
 | Delegation, lifecycle and handoff | [WORKFLOW.md](WORKFLOW.md) | Reusable working procedures |
+| Model selection and cost-aware routing | [MODEL_ROUTING.md](MODEL_ROUTING.md) | Reusable risk model for main-thread and worker selection |
 | Review evidence and rejected approaches | [REVIEW.md](REVIEW.md) | Dated findings, acceptance evidence and reopening conditions; not a second backlog |
 | Future local MCP requirements and implementation outline | [MCP_PLAN.md](MCP_PLAN.md) | Pending design/acceptance; priority stays in PROGRESS |
 | Region and all-shape Z-coordinate parity | [SHAPE_PARITY_PLAN.md](SHAPE_PARITY_PLAN.md) | Independent upstream feature support; priority stays in PROGRESS |

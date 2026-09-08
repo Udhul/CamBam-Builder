@@ -927,8 +927,29 @@ using `1.0` would depart from the native producer without evidence that the fiel
 is an application label or that the alternate value improves compatibility.
 Reopen this decision for a documented format revision or controlled native test.
 
-The next backlog item is curved-geometry bounds and copy/transfer utilities. This
-is a coherent fresh-session breakpoint with implementation, automated evidence,
-and accepted A/B and native C/D results persisted. No staging or commit was
-performed. Suggested commit:
+The next backlog work is split into curved-geometry bounds (1a) followed by
+copy/transfer utilities (1b). Starting with 1a is a coherent fresh-session
+breakpoint with implementation, automated evidence, and accepted A/B and native
+C/D results persisted. No staging or commit was performed. Suggested commit:
 `refactor: centralize MOP targets and preserve native parameters`.
+
+## Model routing and curved-workstream split
+
+2026-09-08: the next backlog work was split after assessing its reasoning and
+coordination risk. The combined bounds plus copy/transfer item scores about 11/13
+because transfer semantics are registry-coupled and its UUID/collision contract
+is not yet settled. Treating it as one undivided implementation would justify
+Astra. Splitting it makes curved bounds (1a) a bounded Sol task and leaves
+copy/transfer (1b) as a contract-first follow-up.
+
+Decision: start the next session with GPT-5.6 Sol at high or xhigh reasoning. Use
+native Luna `project_explorer`, `focused_implementer` and `deep_reviewer` roles
+for bounded retrieval, implementation/tests and review. Escalate the main thread
+to GPT-6 Astra if 1b must be designed and implemented as one change or if the
+UUID/collision contract remains unresolved. The reusable factors, thresholds,
+role mapping and privacy constraints are in [MODEL_ROUTING.md](MODEL_ROUTING.md).
+
+Acceptance for the documentation decision: the topic map links the routing
+guide; `PROGRESS.md` owns the 1a/1b ordering and next-session handoff; and
+`WORKFLOW.md` points to the reusable model-selection rules. No runtime behavior
+changed, so runtime tests and CamBam validation are not required for this slice.

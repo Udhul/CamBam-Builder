@@ -7,9 +7,11 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**Next priority: curved-geometry bounds and copy/transfer utilities** (backlog
-item 1). No implementation is active yet. Start with the bounding and transfer
-contracts in `structure_spec.md`, then define one bounded end-to-end increment.
+**Next priority: curved-geometry bounds** (backlog item 1a). No implementation is
+active yet. Start with exact Arc and bulged-Pline bounds, their transform policy
+and focused regression tests. The following item 1b covers copy/transfer
+utilities after its UUID, collision and relationship contract is settled. The
+reusable model-routing decision is recorded in [MODEL_ROUTING.md](MODEL_ROUTING.md).
 
 **MOP core-model ownership and CamBam interchange: implemented; automated checks
 complete; CamBam 1.0 display/property interchange accepted** (2026-09-08).
@@ -137,8 +139,16 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 
 ## Remaining backlog, in order
 
-1. Improve curved-geometry bounds; implement copy/transfer utilities against the
-   specification, with collision and relationship tests.
+1a. Improve curved-geometry bounds against the specification. Implement exact
+    Arc sweep extrema and bulged-Pline extrema, define the transform policy and
+    add focused regression tests for wrap-around, full/negative
+    sweeps, zero-bulge segments, tolerances and identity/rigid transforms.
+    Copy/transfer APIs are excluded from this first increment.
+1b. Define and implement copy/transfer utilities against the specification.
+    Settle UUID preservation/remapping, collision behavior, subtree closure,
+    parent/layer/group/part/MOP relationship updates and atomic failure behavior;
+    then add relationship, collision and serialization tests. This follows 1a
+    and is not active until its contract is recorded.
 2. Implement core CamBam shape parity: Region shapes and Z coordinates across
    Pline, Circle, Rect, Arc, Points, Text and Region. Extend existing entity/API/XML
    patterns with backward-compatible coordinate semantics, identity preservation
@@ -200,12 +210,15 @@ context regression also reproduces and guards the former lost global
 
 [Verification commands](DEVELOPMENT.md) and [work lifecycle](WORKFLOW.md)
 are authoritative. MOP ownership and supported interchange are closed. Curved
-bounds and copy/transfer utilities are now the next priority; broader geometry
-and integration work stays ordered in the backlog above.
+geometry bounds (1a) are now the next priority; copy/transfer utilities
+(1b) follow as a separate contract-heavy increment. Broader geometry and
+integration work stays ordered in the backlog above.
 
 ## Session breakpoint
 
 Implementation, automated verification, A/B acceptance and native C/D acceptance
 are persisted. This is a good fresh-session breakpoint: the next curved-bounds and
-copy/transfer task has distinct scope and needs no unresolved MOP context. No
-staging or commit is authorized.
+copy/transfer task has distinct scope and needs no unresolved MOP context. Start
+with item 1a using GPT-5.6 Sol at high or xhigh reasoning and native Luna workers,
+as recorded in [MODEL_ROUTING.md](MODEL_ROUTING.md). No staging or commit is
+authorized.
