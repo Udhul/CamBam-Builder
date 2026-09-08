@@ -7,6 +7,18 @@ not a guarantee of complete round-trip fidelity. MOP sources remain on instances
 
 ## Active work and next priority
 
+MOP group-source compatibility: **implemented; automated checks complete**
+(2026-09-08). Owners:
+`structure_spec.md` and `tests/test_mop_group_sources.py`. Preserve live group
+lookup in memory and concrete UUID snapshots across XML. Acceptance: membership
+changes, missing/recreated groups, explicit-list isolation and two XML round trips
+for all four MOP types. No runtime behavior or schema change; no blocker.
+Six characterization tests and all 57 suite tests pass. No new manual validation
+is required because runtime/XML behavior is unchanged. See
+[decision and verification evidence](REVIEW.md#mop-group-source-compatibility).
+Next priority: migrate source ownership under this contract (backlog item 1);
+parameter/default parser coverage remains in that item.
+
 Rect rotation/shear baking repair: **implemented; automated checks complete; synthetic display accepted**
 (2026-09-08). Owners:
 `cambam_entities.py`, the explicit bake helper in `cambam_project.py`,
@@ -19,8 +31,8 @@ All 51 suite tests pass, including nine Rect regressions. Synthetic A/B files
 were accepted by the user on 2026-09-08: all conditions met, full outline match
 and identity transforms. CamBam version was not supplied. See
 [acceptance evidence](REVIEW.md#rect-baking-display-acceptance).
-Next priority: define MOP group-source compatibility before registry migration
-(backlog item 1). General component ordering,
+The following MOP group-source compatibility increment is recorded above;
+registry migration remains backlog item 1. General component ordering,
 curved geometry and alignment remain outside this increment.
 Phases 1 and 2 (project discovery and working
 agreement) and [phase 3 (initial engineering review)](REVIEW.md#phase-3-completion-audit)
@@ -112,8 +124,12 @@ See [contract](../structure_spec.md#export-failure-and-state-saving-contract) an
 
 ## Remaining backlog, in order
 
-1. Align MOP registry ownership with the specification after defining group-source
-   compatibility; test defaults and malformed XML metadata reconstruction.
+1. Migrate MOP target-source ownership to the project under the
+   [source compatibility contract](../structure_spec.md#mop-group-source-compatibility-contract).
+   Preserve group intent, the public `pid_source` surface, XML snapshots, identity
+   and part order; define old-pickle handling before changing storage. Then test
+   defaults and malformed XML metadata reconstruction. Compatibility definition
+   and six characterization tests are complete; registry implementation is pending.
 2. Improve curved-geometry bounds; implement copy/transfer utilities against the
    specification, with collision and relationship tests.
 3. Implement core CamBam shape parity: Region shapes and Z coordinates across
@@ -149,12 +165,14 @@ above. Detailed contracts remain in `structure_spec.md`, and review evidence in
 
 No implementation blocker or pending validation for the completed MOP synthetic case. Full source-system
 compatibility requires CamBam validation and representative authorized fixtures.
-MOP live group versus snapshot semantics need resolution before registry migration.
-The architecture specification is a target; its PID-source wording and centralized
-MOP ownership must be reconciled before implementing that migration.
+MOP source compatibility preserves live groups in memory and UUID snapshots on XML
+import. The migration must preserve this distinction and the public source surface;
+centralized ownership is still a target, not implemented behavior.
 
 ## Completion and verification
 
+- MOP group-source compatibility: defined and characterized; six new tests and
+  all 57 suite tests pass; runtime/XML behavior unchanged.
 - Working agreement: implemented; documentation checks recorded in the review.
 - Parent XML slice: implemented and automated checks complete; nine regression tests.
 - Parent-cycle rejection: implemented and automated checks complete.
@@ -162,20 +180,20 @@ MOP ownership must be reconciled before implementing that migration.
 - User/CamBam acceptance: parent, full-bake, global-transform and Rect-bake synthetic display and MOP load/properties accepted; broader production acceptance not performed.
 
 [Verification commands](DEVELOPMENT.md) and [work lifecycle](WORKFLOW.md)
-are authoritative. Promote one bounded item with acceptance criteria, implement
-and verify it, then separately record user acceptance before claiming that level
-of completion. The completed Rect repair prevents bake/export
-calls from persisting enlarged outlines. Next, define MOP live-group versus
-snapshot compatibility before migrating
-ownership (backlog item 1). That resolves the next architectural dependency;
-general component ordering, curved baking and alignment remain deferred until a
-failing fixture or workflow dependency justifies them.
+are authoritative. The MOP compatibility increment establishes the behavior that
+registry migration must preserve. Migrating ownership now addresses the next
+architectural gap without silently freezing live groups or reactivating imported
+snapshots. Default/Value and malformed metadata coverage remain part of backlog
+item 1. General component ordering, curved baking and alignment remain deferred
+until a failing fixture or workflow dependency justifies them.
 
 ## Session breakpoint
 
-The Rect implementation, automated verification and synthetic display acceptance
-are complete and persisted. This is a good fresh-session breakpoint: no pending
-Rect decisions or validation remain, and MOP source compatibility is a distinct
-next scope captured in backlog item 1. Start a fresh session for that design
-increment. Acceptance artifacts are retained. No staging or commit was performed
-in this acceptance-recording round.
+The MOP source compatibility contract and automated characterization are complete
+and persisted. This is a good fresh-session breakpoint: no source-semantic
+decisions or manual validation remain for this increment. Start a fresh session
+for registry migration, preserving the documented source modes and deciding
+old-pickle handling before changing storage. The overall project still needs
+registry ownership, defaults/metadata coverage and the remaining ordered backlog;
+this increment removes the semantic dependency for item 1. No staging or commit
+was performed. Suggested commit: `test: define MOP group-source compatibility`.

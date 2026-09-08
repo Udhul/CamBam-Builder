@@ -70,6 +70,18 @@ closed-Pline conversion, identity matrices, metadata and two XML round trips.
 The repair scope and representation policy are recorded in the
 [Rect investigation and repair criteria](REVIEW.md#rect-baking-loss-investigation).
 
+MOP source compatibility has a characterization command:
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -p test_mop_group_sources.py -v
+```
+
+It locks down live in-memory groups and XML UUID snapshots before registry
+migration, including membership changes and repeated round trips for all four
+supported MOP types. These tests preserve existing behavior, so a before-fix
+failure is not expected. No new manual CamBam check is required for this unchanged
+runtime/XML contract; production toolpaths remain outside the automated evidence.
+
 Keep reusable synthetic fixtures and expected results with authored tests.
 Use a unique task directory under ignored `output/` for disposable diagnostics,
 generated XML and verbose logs; do not overwrite previous runs. Durable evidence

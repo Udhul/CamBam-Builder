@@ -771,3 +771,49 @@ validation are not needed for this documentation change. The next immediate task
 remains MOP group-source compatibility; the distinct parity scope is ready for a
 fresh session when its priority is reached.
 Suggested commit: `docs: separate and prioritize Region and Z shape parity`.
+
+
+## MOP group-source compatibility
+
+2026-09-08: compatibility definition and characterization before backlog item 1's
+registry migration. Runtime behavior and XML schema are unchanged.
+
+Evidence: `CamBamProject._add_mop_internal` retains string sources and resolves
+list entries once to primitive UUIDs; `resolve_pid_source_to_uuids` performs live
+group lookup, filters missing primitives and returns sorted unique UUIDs.
+`Mop._add_common_mop_elements` writes concrete XML references and identity-only
+Tags. `_reconstruct_mop` and the reader's deferred linking pass reconstruct UUID
+lists, regardless of primitive group metadata.
+
+Decision: preserve live groups in memory and snapshots after XML import. The
+[implemented contract](../structure_spec.md#mop-group-source-compatibility-contract)
+constrains migration to retain source intent and the public `pid_source` surface.
+Freezing all sources at MOP creation would change existing live behavior. Inferring
+groups from matching targets is ambiguous (multiple groups may match), and adding
+live-group Tag metadata would change how reimported jobs respond to membership
+edits. Neither is necessary for ownership migration. Reopen persistent live XML
+sources only for an explicit workflow with a defined opt-in/schema and external
+edit conflict policy; do not silently retarget existing files.
+
+Scope excludes registry implementation, old-pickle compatibility changes,
+Default/Value parameter fidelity and broader malformed metadata handling. Existing
+MOP identity tests already cover malformed JSON/nonobject/invalid UUID Tags and
+identity collisions; they do not establish exhaustive metadata/default coverage.
+
+Verification (available system Python 3.10.9 / NumPy 1.23.5; no project venv):
+
+- `python -m unittest discover -s tests -p test_mop_group_sources.py -v`: six pass.
+- `python -m unittest discover -s tests -v`: all 57 pass.
+- `python -m compileall -q cambam_builder legacy_cambam_builder`: pass.
+- `python -c "from cambam_builder import CBProject; p = CBProject('smoke'); assert p.project_name == 'smoke'; print('import/construct OK')"`: pass.
+- `git diff --check`: pass; changed documentation links/headings reviewed.
+
+The new tests cover membership/deletion/recreation, group-versus-list selection,
+normalization and caller-list isolation, empty/missing sources, source mode
+switching, UUID non-rebinding, and all four MOP types through two XML round trips.
+Synthetic XML assertions inspect concrete refs; reimports check target snapshots,
+part order, group metadata and sample geometry before testing membership edits.
+These are characterization tests against unchanged runtime, not a runtime defect
+repair, so no before-fix failure is claimed. Manual validation is
+not required for this slice because no emitted schema or runtime behavior changes.
+Existing synthetic CamBam acceptance is not expanded to production machining.
