@@ -953,3 +953,41 @@ Acceptance for the documentation decision: the topic map links the routing
 guide; `PROGRESS.md` owns the 1a/1b ordering and next-session handoff; and
 `WORKFLOW.md` points to the reusable model-selection rules. No runtime behavior
 changed, so runtime tests and CamBam validation are not required for this slice.
+
+## Curved geometry bounds verification
+
+2026-09-08: endpoint-only Pline bounds and full-circle Arc bounds reproduced the
+documented curved-geometry gap. The bounded repair adds analytic directed-sweep
+extrema for Arcs and for every active Pline bulge segment. It evaluates extrema
+after the complete local-plus-ancestor affine map, so rigid transforms,
+reflections, nonuniform scales, shears and singular affine projections share one
+exact parametric contract. Open Plines ignore the final vertex's bulge; closed
+Plines use it for the closing segment. The implemented tolerance and invalid-box
+boundaries are owned by the
+[specification](structure_spec.md#curved-geometry-bounds-contract).
+
+The implementation avoids sampling and the former average-radius approximation.
+It also rejects complex, perspective and nonfinite transforms consistently with
+the project transform boundary. Deep review found no ordinary-range underbound
+in the sweep or bulge derivation. Its findings led to strict homogeneous-row
+validation, overflow-safe full-sweep norms and half-chord bulge construction,
+and exact partial-affine and singular-transform assertions. A second review found
+no remaining blocker; 1,000 randomly sampled transformed bulge arcs produced no
+underbounds.
+
+Verification on Python 3.10.9:
+
+- Pre-change baseline: `python -m unittest discover -s tests -v` passed 65 tests.
+- `python -m unittest discover -s tests -p test_curved_bounds.py -v` passed all
+  seven focused tests.
+- `python -m unittest discover -s tests -v` passed all 72 tests.
+- `python -m compileall -q cambam_builder legacy_cambam_builder tests demos`, the
+  import/construct smoke check and `git diff --check` passed.
+
+No XML fields or stored geometry changed, so a CamBam display round trip would
+not test this runtime calculation and is not required. Curved geometry baking,
+the approximate curved shape returned by `get_absolute_coordinates()`, Region
+support and copy/transfer APIs remain outside this result. Item 1b is ready as a
+fresh contract-first increment; reopen 1a for a demonstrated numerical underbound
+or a new non-affine geometry policy. Suggested commit:
+`fix: calculate exact curved geometry bounds`.

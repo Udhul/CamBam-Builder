@@ -7,11 +7,20 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**Next priority: curved-geometry bounds** (backlog item 1a). No implementation is
-active yet. Start with exact Arc and bulged-Pline bounds, their transform policy
-and focused regression tests. The following item 1b covers copy/transfer
-utilities after its UUID, collision and relationship contract is settled. The
-reusable model-routing decision is recorded in [MODEL_ROUTING.md](MODEL_ROUTING.md).
+**Next priority: copy/transfer utilities** (backlog item 1b). Begin by settling
+UUID preservation/remapping, collision behavior, subtree closure and atomic
+relationship updates before mutation. The reusable model-routing decision is
+recorded in [MODEL_ROUTING.md](MODEL_ROUTING.md).
+
+**Curved-geometry bounds: implemented; automated checks complete** (2026-09-08).
+Arc and bulged-Pline bounds now use directed analytic sweep extrema under the
+complete finite affine transform, including reflection, nonuniform scale, shear
+and singular projection. Seven focused regressions cover wrap-around, full and
+negative sweeps, open/closed and zero-bulge segments, tolerances, malformed
+inputs and overflow-resistant large finite cases. All 72 tests pass. Bounds are
+not serialized, so no manual CamBam validation adds evidence for this numerical
+slice. See the [contract](structure_spec.md#curved-geometry-bounds-contract) and
+[verification](REVIEW.md#curved-geometry-bounds-verification).
 
 **MOP core-model ownership and CamBam interchange: implemented; automated checks
 complete; CamBam 1.0 display/property interchange accepted** (2026-09-08).
@@ -139,11 +148,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 
 ## Remaining backlog, in order
 
-1a. Improve curved-geometry bounds against the specification. Implement exact
-    Arc sweep extrema and bulged-Pline extrema, define the transform policy and
-    add focused regression tests for wrap-around, full/negative
-    sweeps, zero-bulge segments, tolerances and identity/rigid transforms.
-    Copy/transfer APIs are excluded from this first increment.
+1a. **Completed 2026-09-08.** Exact Arc sweep and bulged-Pline extrema, the
+    finite-affine transform/tolerance policy and focused regressions are recorded
+    in the implemented specification and review. Copy/transfer APIs were excluded.
 1b. Define and implement copy/transfer utilities against the specification.
     Settle UUID preservation/remapping, collision behavior, subtree closure,
     parent/layer/group/part/MOP relationship updates and atomic failure behavior;
@@ -209,16 +216,16 @@ context regression also reproduces and guards the former lost global
 [MOP review evidence](REVIEW.md#mop-core-ownership-and-interchange-redesign).
 
 [Verification commands](DEVELOPMENT.md) and [work lifecycle](WORKFLOW.md)
-are authoritative. MOP ownership and supported interchange are closed. Curved
-geometry bounds (1a) are now the next priority; copy/transfer utilities
-(1b) follow as a separate contract-heavy increment. Broader geometry and
-integration work stays ordered in the backlog above.
+are authoritative. MOP ownership, supported interchange and curved geometry
+bounds (1a) are closed. Copy/transfer utilities (1b) are now the next separate
+contract-heavy increment. Broader geometry and integration work stays ordered
+in the backlog above.
 
 ## Session breakpoint
 
-Implementation, automated verification, A/B acceptance and native C/D acceptance
-are persisted. This is a good fresh-session breakpoint: the next curved-bounds and
-copy/transfer task has distinct scope and needs no unresolved MOP context. Start
-with item 1a using GPT-5.6 Sol at high or xhigh reasoning and native Luna workers,
-as recorded in [MODEL_ROUTING.md](MODEL_ROUTING.md). No staging or commit is
-authorized.
+Curved-bounds implementation, contract and automated evidence are persisted in
+addition to the earlier MOP acceptance. This is a good fresh-session breakpoint:
+item 1b has distinct registry/identity semantics and needs no unresolved 1a
+context. Start 1b by defining its UUID, collision, closure and atomicity contract;
+use the escalation criteria in [MODEL_ROUTING.md](MODEL_ROUTING.md). No staging
+or commit is authorized.

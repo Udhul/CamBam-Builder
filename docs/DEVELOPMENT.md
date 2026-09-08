@@ -79,6 +79,19 @@ closed-Pline conversion, identity matrices, metadata and two XML round trips.
 The repair scope and representation policy are recorded in the
 [Rect investigation and repair criteria](REVIEW.md#rect-baking-loss-investigation).
 
+Curved Arc and bulged-Pline bounds have a focused regression command:
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -p test_curved_bounds.py -v
+```
+
+The tests cover directed wrap-around and full sweeps, positive/negative and
+closing bulges, exact affine extrema under rigid, reflected, nonuniform, sheared
+and singular transforms, numeric tolerances, large finite values and invalid
+input boundaries. Bounds are runtime calculations and are not serialized, so
+these analytic checks provide the relevant acceptance evidence; no separate
+CamBam display check is required for this slice.
+
 The MOP ownership and interchange slice has focused automated and manual checks:
 
 ```powershell

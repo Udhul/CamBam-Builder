@@ -300,6 +300,36 @@ operations remain nontransactional. Numerical and repeated XML checks cover
 rotation, shear, axis-preserving controls and hierarchy relationships. Synthetic
 CamBam display acceptance is recorded separately in the runbook/review.
 
+### Curved geometry bounds contract
+
+`Arc.get_bounding_box()` and `Pline.get_bounding_box()` return analytic
+world-space bounds for their local circular sweeps. Bounds use the complete
+local-plus-ancestor affine matrix. For each world coordinate, candidate extrema
+are the sweep endpoints and the in-sweep stationary angles of
+`u*cos(angle) + v*sin(angle)`. This makes identity, translation, rotation,
+reflection, uniform and nonuniform scale, shear, and singular affine projections
+exact within floating-point arithmetic. It does not change the stored Arc or
+bulge representation: a non-rigid transform may display a circular source as an
+ellipse, and the bounds describe that affine image directly.
+
+Arc sweeps retain their sign and may wrap through zero. Magnitudes at least
+`360 - 1e-9` degrees are treated as full circles, including negative and
+multi-turn sweeps; a zero sweep is the start point. Stationary-angle membership
+uses `1e-12` radians of absolute tolerance. Pline bulge belongs to the segment
+from its vertex to the next vertex. The last bulge closes to the first vertex
+only when `closed=True`; an open Pline ignores it. Bulges with magnitude at most
+`1e-12` are straight, and chord lengths at most `1e-12` are coincident-point
+segments. Stable half-chord formulas avoid avoidable overflow for large finite
+endpoints.
+
+The total matrix must be a finite real affine 3x3 matrix with homogeneous row
+exactly `[0, 0, 1]`. Complex, perspective, nonfinite or unrepresentable geometry
+returns the existing invalid `BoundingBox` rather than silently using an
+endpoint-only or average-radius approximation. Empty Plines remain invalid;
+single-point Plines have point bounds. Bounds are calculated only at runtime and
+do not alter XML serialization. Curved geometry baking and the approximate
+shape returned by `get_absolute_coordinates()` remain separate limitations.
+
 The legacy package exposes `CamBam` and aliases through its own `__init__.py`;
 it is a separate implementation, not the modern reader's fallback. Its CLI file
 is not a declared installed entry point. Legacy compatibility requires its own

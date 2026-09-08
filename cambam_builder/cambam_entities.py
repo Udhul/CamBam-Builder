@@ -31,6 +31,15 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# Curved bounds are evaluated from their local parametric geometry and the
+# complete affine matrix.  These tolerances are deliberately small: they only
+# classify values which are numerically indistinguishable from the associated
+# exact case, rather than changing ordinary CAD geometry.
+ARC_SWEEP_TOLERANCE_DEGREES = 1e-9
+ARC_ANGLE_TOLERANCE_RADIANS = 1e-12
+PLINE_BULGE_TOLERANCE = 1e-12
+CURVE_POINT_TOLERANCE = 1e-12
+
 # --- Helper Classes ---
 
 @dataclass(frozen=True)
@@ -65,6 +74,89 @@ class BoundingBox:
         max_x = max(p[0] for p in points)
         max_y = max(p[1] for p in points)
         return BoundingBox(min_x, min_y, max_x, max_y)
+
+
+def _affine_matrix_or_none(matrix: Any) -> Optional[np.ndarray]:
+    """Return a finite affine 3x3 matrix, or ``None`` for invalid input."""
+    try:
+        if np.iscomplexobj(matrix):
+            return None
+        result = np.asarray(matrix, dtype=float)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if result.shape != (3, 3) or not np.isfinite(result).all():
+        return None
+    # Perspective matrices are not part of the primitive transform contract.
+    if not np.array_equal(result[2], (0.0, 0.0, 1.0)):
+        return None
+    return result
+
+
+def _angle_is_on_sweep(angle: float, start: float, sweep: float) -> bool:
+    """Test directed, potentially wrapping angular interval membership."""
+    if sweep >= 0.0:
+        distance = (angle - start) % (2.0 * math.pi)
+        return distance <= sweep + ARC_ANGLE_TOLERANCE_RADIANS
+    distance = (start - angle) % (2.0 * math.pi)
+    return distance <= -sweep + ARC_ANGLE_TOLERANCE_RADIANS
+
+
+def _local_arc_bounding_box(
+    center: Tuple[float, float],
+    radius: float,
+    start: float,
+    sweep: float,
+    matrix: np.ndarray,
+) -> BoundingBox:
+    """Exact XY bounds of an affine image of a circular directed sweep."""
+    if not (np.isfinite(center).all() and math.isfinite(radius)
+            and math.isfinite(start) and math.isfinite(sweep)):
+        return BoundingBox()
+    affine = _affine_matrix_or_none(matrix)
+    if affine is None:
+        return BoundingBox()
+
+    two_pi = 2.0 * math.pi
+    full = abs(sweep) >= two_pi - math.radians(ARC_SWEEP_TOLERANCE_DEGREES)
+    linear = affine[:2, :2]
+    world_center = linear @ np.asarray(center, dtype=float) + affine[:2, 2]
+    if not np.isfinite(world_center).all():
+        return BoundingBox()
+
+    if full:
+        # Each world coordinate is u*cos(t) + v*sin(t), whose range is the
+        # Euclidean norm of (u,v).  This remains exact under shear/reflection.
+        amplitudes = abs(radius) * np.asarray([
+            math.hypot(float(row[0]), float(row[1])) for row in linear
+        ])
+        values = (
+            float(world_center[0] - amplitudes[0]),
+            float(world_center[1] - amplitudes[1]),
+            float(world_center[0] + amplitudes[0]),
+            float(world_center[1] + amplitudes[1]),
+        )
+        return BoundingBox(*values) if all(math.isfinite(value) for value in values) else BoundingBox()
+
+    angles = [start, start + sweep]
+    # Derivative extrema for each transformed coordinate.  A zero row has no
+    # angular extrema, and endpoint inclusion above still gives its range.
+    for row in linear:
+        u, v = radius * row[0], radius * row[1]
+        if math.hypot(u, v) <= np.finfo(float).eps:
+            continue
+        critical = math.atan2(v, u)
+        for candidate in (critical, critical + math.pi):
+            if _angle_is_on_sweep(candidate, start, sweep):
+                angles.append(candidate)
+
+    points = []
+    for angle in angles:
+        local = np.asarray((radius * math.cos(angle), radius * math.sin(angle)))
+        point = world_center + linear @ local
+        if not np.isfinite(point).all():
+            return BoundingBox()
+        points.append((float(point[0]), float(point[1])))
+    return BoundingBox.from_points(points)
 
 # --- Base Entity Class ---
 
@@ -357,6 +449,89 @@ class Pline(Primitive):
         if any(abs(p[2]) > 1e-6 for p in absolute_geometry):
             logger.debug(f"Bounding box for Pline {self.user_identifier} with bulges is approximate.")
         return BoundingBox.from_points(points_xy)
+
+    def get_bounding_box(self) -> BoundingBox:
+        """Return exact bounds for line and bulge segments in world space.
+
+        Bulge arcs are kept in local coordinates and transformed as affine
+        parametric curves.  This is necessary because a general affine map
+        turns a circular bulge into an ellipse; transforming a sampled or
+        endpoint-only absolute representation cannot recover its extrema.
+        """
+        try:
+            matrix = _affine_matrix_or_none(self.get_total_transform())
+        except (TypeError, ValueError):
+            matrix = None
+        if matrix is None or not self.relative_points:
+            return BoundingBox()
+
+        local_points = []
+        for point in self.relative_points:
+            if len(point) < 2:
+                return BoundingBox()
+            try:
+                x, y = float(point[0]), float(point[1])
+            except (TypeError, ValueError, OverflowError):
+                return BoundingBox()
+            if not (math.isfinite(x) and math.isfinite(y)):
+                return BoundingBox()
+            local_points.append((x, y))
+
+        # A point-only/open one-point Pline still has a useful point bound.
+        if len(local_points) == 1:
+            transformed = matrix[:2, :2] @ np.asarray(local_points[0]) + matrix[:2, 2]
+            if not np.isfinite(transformed).all():
+                return BoundingBox()
+            return BoundingBox.from_points([(float(transformed[0]), float(transformed[1]))])
+
+        segment_count = len(local_points) - 1 + (1 if self.closed else 0)
+        bounds = BoundingBox()
+        for index in range(segment_count):
+            next_index = (index + 1) % len(local_points)
+            p0 = local_points[index]
+            p1 = local_points[next_index]
+            raw_bulge = self.relative_points[index][2] if len(self.relative_points[index]) > 2 else 0.0
+            try:
+                bulge = float(raw_bulge)
+            except (TypeError, ValueError, OverflowError):
+                return BoundingBox()
+            if not math.isfinite(bulge):
+                return BoundingBox()
+
+            point0 = np.asarray(p0, dtype=float)
+            point1 = np.asarray(p1, dtype=float)
+            # Half-deltas and half-sums avoid overflowing when opposite finite
+            # endpoints span more than the largest representable float.
+            half_chord = point1 * 0.5 - point0 * 0.5
+            half_chord_length = math.hypot(float(half_chord[0]), float(half_chord[1]))
+            if (half_chord_length <= CURVE_POINT_TOLERANCE * 0.5
+                    or abs(bulge) <= PLINE_BULGE_TOLERANCE):
+                segment_points = apply_transform((p0, p1), matrix)
+                if len(segment_points) != 2:
+                    return BoundingBox()
+                segment_box = BoundingBox.from_points(segment_points)
+            else:
+                # CamBam's bulge is tan(included_angle / 4), with positive
+                # values sweeping counter-clockwise from p0 to p1.
+                sweep = 4.0 * math.atan(bulge)
+                midpoint = point0 * 0.5 + point1 * 0.5
+                left_normal = np.asarray(
+                    (-half_chord[1], half_chord[0])
+                ) / half_chord_length
+                inverse_bulge = 1.0 / bulge
+                offset = half_chord_length * ((inverse_bulge - bulge) / 2.0)
+                center = midpoint + left_normal * offset
+                radius = half_chord_length * (
+                    (abs(bulge) + abs(inverse_bulge)) / 2.0
+                )
+                start = math.atan2(p0[1] - center[1], p0[0] - center[0])
+                segment_box = _local_arc_bounding_box(
+                    (float(center[0]), float(center[1])), radius, start, sweep, matrix
+                )
+            if not segment_box.is_valid():
+                return BoundingBox()
+            bounds = bounds.union(segment_box)
+        return bounds
 
     def get_geometric_center(self) -> Tuple[float, float]:
         # Use bounding box center as geometric center
@@ -764,6 +939,23 @@ class Arc(Primitive):
         radius = absolute_geometry["radius"]
         logger.debug(f"Bounding box for Arc {self.user_identifier} is approximate (using full circle).")
         return BoundingBox(cx - radius, cy - radius, cx + radius, cy + radius)
+
+    def get_bounding_box(self) -> BoundingBox:
+        """Return exact world bounds of the directed circular sweep."""
+        try:
+            matrix = _affine_matrix_or_none(self.get_total_transform())
+        except (TypeError, ValueError):
+            matrix = None
+        if matrix is None:
+            return BoundingBox()
+        try:
+            center = (float(self.relative_center[0]), float(self.relative_center[1]))
+            radius = float(self.radius)
+            start = math.radians(float(self.start_angle))
+            sweep = math.radians(float(self.extent_angle))
+        except (TypeError, ValueError, OverflowError, IndexError):
+            return BoundingBox()
+        return _local_arc_bounding_box(center, radius, start, sweep, matrix)
 
     def get_geometric_center(self) -> Tuple[float, float]:
         # For simplicity, use the transformed center of the arc's circle
