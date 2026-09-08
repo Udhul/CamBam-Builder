@@ -9,7 +9,7 @@ not a guarantee of complete round-trip fidelity. MOP sources remain on instances
 
 MOP group-source compatibility: **implemented; automated checks complete**
 (2026-09-08). Owners:
-`structure_spec.md` and `tests/test_mop_group_sources.py`. Preserve live group
+`docs/structure_spec.md` and `tests/test_mop_group_sources.py`. Preserve live group
 lookup in memory and concrete UUID snapshots across XML. Acceptance: membership
 changes, missing/recreated groups, explicit-list isolation and two XML round trips
 for all four MOP types. No runtime behavior or schema change; no blocker.
@@ -119,13 +119,13 @@ work, and directory errors propagate. Eight export and three persistence tests
 plus all prior regressions pass (42 total). Acceptance covers existing/new
 destinations, failure propagation/cleanup, XML round trips and restored pickle
 project links. No blocker or manual validation remains for this scope.
-See [contract](../structure_spec.md#export-failure-and-state-saving-contract) and
+See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 [verification](REVIEW.md#export-failure-and-state-path-verification).
 
 ## Remaining backlog, in order
 
 1. Migrate MOP target-source ownership to the project under the
-   [source compatibility contract](../structure_spec.md#mop-group-source-compatibility-contract).
+   [source compatibility contract](structure_spec.md#mop-group-source-compatibility-contract).
    Preserve group intent, the public `pid_source` surface, XML snapshots, identity
    and part order; define old-pickle handling before changing storage. Then test
    defaults and malformed XML metadata reconstruction. Compatibility definition
@@ -158,7 +158,7 @@ See [contract](../structure_spec.md#export-failure-and-state-saving-contract) an
    or machining acceptance is claimed by this planning entry.
 
 This supersedes the former five broad increments; their pending scope is retained
-above. Detailed contracts remain in `structure_spec.md`, and review evidence in
+above. Detailed contracts remain in `docs/structure_spec.md`, and review evidence in
 `docs/REVIEW.md`. No repository-linked issue tracker was found.
 
 ## Blockers and decisions

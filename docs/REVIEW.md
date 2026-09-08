@@ -69,7 +69,7 @@ the parent's UUID. The reader snapshots XML world matrices and solves for each
 child's local matrix before assigning it with the resolved parent link. Numeric
 XML ID references accept strings and JSON integers; malformed/unresolved parents
 retain the imported world pose without a parent. The current contract lives in
-`structure_spec.md`, section 0, “XML parent identity and world-pose contract.”
+`docs/structure_spec.md`, section 0, “XML parent identity and world-pose contract.”
 
 Decision: a singular resolved parent fails the whole import through the existing
 logged-error/`None` boundary, including when the child world matrix is compatible.
@@ -651,7 +651,7 @@ defect; no runtime behavior or previously accepted display fixture changed.
 2026-09-08. The repair replaces bounding-box baking with a closed-outline
 comparison and in-place conversion to a four-vertex, zero-bulge Pline when needed.
 Axis-aligned results remain Rects. The owning contract is
-[Rect baking representation](../structure_spec.md#rect-baking-representation-contract).
+[Rect baking representation](structure_spec.md#rect-baking-representation-contract).
 The same Python object survives conversion, including UUID, project link and
 metadata, so registries, MOP source resolution and external references continue
 to designate it. Callers must accept the runtime type change; Rect-specific
@@ -786,7 +786,7 @@ Tags. `_reconstruct_mop` and the reader's deferred linking pass reconstruct UUID
 lists, regardless of primitive group metadata.
 
 Decision: preserve live groups in memory and snapshots after XML import. The
-[implemented contract](../structure_spec.md#mop-group-source-compatibility-contract)
+[implemented contract](structure_spec.md#mop-group-source-compatibility-contract)
 constrains migration to retain source intent and the public `pid_source` surface.
 Freezing all sources at MOP creation would change existing live behavior. Inferring
 groups from matching targets is ambiguous (multiple groups may match), and adding

@@ -1,8 +1,8 @@
 # CamBam CAD/CAM Framework – Core Project Structure and Relationship Management Specification
 
 Section 0 describes the implemented architecture; sections 1–7 describe the intended
-design, not a verified inventory of implemented behavior. See [current status](docs/PROGRESS.md) for implementation gaps and
-the [topic map](docs/README.md) for documentation ownership. MOP source
+design, not a verified inventory of implemented behavior. See [current status](PROGRESS.md) for implementation gaps and
+the [topic map](README.md) for documentation ownership. MOP source
 compatibility is defined below; central registry ownership remains a pending
 migration constrained by that contract.
 
@@ -94,7 +94,7 @@ snapshot and import as UUID lists under the source compatibility contract below;
 registry ownership remains unchanged. This slice covers identity and existing supported explicit
 machining parameters, not complete parameter coverage or Default/Value fidelity.
 Part UUID persistence remains outside scope. CamBam loading and properties for the synthetic MOP Tag case were accepted by
-the user; criteria remain in `docs/DEVELOPMENT.md`. This does not establish
+the user; criteria remain in `DEVELOPMENT.md`. This does not establish
 production toolpath correctness.
 
 ### MOP group-source compatibility contract
@@ -139,7 +139,7 @@ own acceptance; they are not established by this compatibility baseline.
 
 The stopping condition for this increment is executable coverage of these source
 modes and repeated XML snapshots for all four supported MOP types. Registry
-implementation follows separately. See [decision evidence](docs/REVIEW.md#mop-group-source-compatibility).
+implementation follows separately. See [decision evidence](REVIEW.md#mop-group-source-compatibility).
 
 ### XML parent identity and world-pose contract
 
@@ -247,7 +247,7 @@ CamBam display acceptance is recorded separately in the runbook/review.
 The legacy package exposes `CamBam` and aliases through its own `__init__.py`;
 it is a separate implementation, not the modern reader's fallback. Its CLI file
 is not a declared installed entry point. Legacy compatibility requires its own
-scope and checks. File/artifact handling belongs in the [topic map](docs/README.md).
+scope and checks. File/artifact handling belongs in the [topic map](README.md).
 
 ## 1. Overview
 

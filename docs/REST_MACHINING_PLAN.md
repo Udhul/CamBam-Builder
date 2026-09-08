@@ -242,7 +242,7 @@ only after correctness.
 
 ## Framework support and proposed helpers
 
-Runtime architecture remains owned by [structure_spec.md](../structure_spec.md).
+Runtime architecture remains owned by [structure_spec.md](structure_spec.md).
 Future modules should separate deterministic geometry, removal analysis, cutter
 models and routing from project registration and XML adaptation. The project
 owns identity, layers/groups, hierarchy and MOP attachment. These are proposed

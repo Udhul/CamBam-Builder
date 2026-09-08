@@ -25,7 +25,7 @@ the repository continues to own contracts and verification instructions.
 ## Progressive retrieval and decisions
 
 Start at the README/topic map, then inspect status and the one relevant owner.
-Use searches such as `rg -n '^##' structure_spec.md` and
+Use searches such as `rg -n '^##' docs/structure_spec.md` and
 `rg -n 'get_total_transform' cambam_builder demos -g '*.py'`; read bounded sections,
 then callers/tests where a contract crosses modules. Do not load every guide,
 historical record, asset or generated report by default. Return a short conclusion
