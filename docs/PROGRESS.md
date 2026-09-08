@@ -7,10 +7,16 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**Next priority: copy/transfer utilities** (backlog item 1b). Begin by settling
-UUID preservation/remapping, collision behavior, subtree closure and atomic
-relationship updates before mutation. The reusable model-routing decision is
-recorded in [MODEL_ROUTING.md](MODEL_ROUTING.md).
+**Copy/transfer utilities implemented; automated checks complete** (2026-09-08; backlog item 1b).
+Contract recorded in
+[copy and transfer contract](structure_spec.md#copy-and-transfer-contract).
+Provides complete subtree copy/move with preserved world pose, explicit identity
+remapping, collision rejection, closed MOP targets and staged registry updates.
+Owners: project API/transfer helper, focused copy-transfer tests and specification.
+Acceptance: atomic failure and relationship/collision regressions plus two XML
+round trips checking identity, references, geometry and parameters. Sixteen focused
+tests and the full 88-test suite pass; compile/import checks also pass. No blocker
+is recorded and no manual CamBam validation is required for this registry/XML scope.
 
 **Curved-geometry bounds: implemented; automated checks complete** (2026-09-08).
 Arc and bulged-Pline bounds now use directed analytic sweep extrema under the
@@ -150,13 +156,10 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 
 1a. **Completed 2026-09-08.** Exact Arc sweep and bulged-Pline extrema, the
     finite-affine transform/tolerance policy and focused regressions are recorded
-    in the implemented specification and review. Copy/transfer APIs were excluded.
-1b. Define and implement copy/transfer utilities against the specification.
-    Settle UUID preservation/remapping, collision behavior, subtree closure,
-    parent/layer/group/part/MOP relationship updates and atomic failure behavior;
-    then add relationship, collision and serialization tests. This follows 1a
-    and is not active until its contract is recorded.
-2. Implement core CamBam shape parity: Region shapes and Z coordinates across
+    in the implemented specification and review.
+1b. **Completed 2026-09-08:** copy/transfer utilities; scope and
+    acceptance are recorded above.
+2. **Next priority:** Implement core CamBam shape parity: Region shapes and Z coordinates across
    Pline, Circle, Rect, Arc, Points, Text and Region. Extend existing entity/API/XML
    patterns with backward-compatible coordinate semantics, identity preservation
    and synthetic round-trip/display checks. This is independent upstream feature
@@ -216,16 +219,10 @@ context regression also reproduces and guards the former lost global
 [MOP review evidence](REVIEW.md#mop-core-ownership-and-interchange-redesign).
 
 [Verification commands](DEVELOPMENT.md) and [work lifecycle](WORKFLOW.md)
-are authoritative. MOP ownership, supported interchange and curved geometry
-bounds (1a) are closed. Copy/transfer utilities (1b) are now the next separate
-contract-heavy increment. Broader geometry and integration work stays ordered
-in the backlog above.
+are authoritative. MOP ownership, supported interchange, curved geometry bounds
+(1a) and the copy/transfer implementation (1b) are recorded above; automated
+verification is complete. Shape parity is the next separate priority.
 
-## Session breakpoint
-
-Curved-bounds implementation, contract and automated evidence are persisted in
-addition to the earlier MOP acceptance. This is a good fresh-session breakpoint:
-item 1b has distinct registry/identity semantics and needs no unresolved 1a
-context. Start 1b by defining its UUID, collision, closure and atomicity contract;
-use the escalation criteria in [MODEL_ROUTING.md](MODEL_ROUTING.md). No staging
-or commit is authorized.
+This is a good fresh-session breakpoint: coherent 1b implementation and evidence
+are persisted, with no pending decisions. Suggested commit:
+`feat: add atomic primitive tree copy and transfer`.

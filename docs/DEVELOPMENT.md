@@ -52,6 +52,38 @@ These are syntax/import checks. Run the authored synthetic XML regressions with:
 & $ProjectPython -m unittest discover -s tests -v
 ```
 
+Copy/transfer relationship checks use the focused regression command:
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -p test_copy_transfer.py -v
+```
+
+The minimal in-memory example below copies a primitive subtree, then transfers
+the same source subtree to a separate destination. Both operations return a
+source-to-destination UUID mapping; the copy leaves `source` available for the
+subsequent transfer.
+
+```python
+from cambam_builder import CBProject
+
+source = CBProject("source")
+root = source.add_rect("Geometry", identifier="root", width=20, height=10)
+source.add_circle("Geometry", (5, 5), 2, identifier="child", parent=root)
+
+copied_target = CBProject("copied")
+copy_map = source.copy_primitive_tree(root, copied_target)
+
+transferred_target = CBProject("transferred")
+transfer_map = source.transfer_primitive_tree(root, transferred_target)
+assert copy_map[root.internal_id] == root.internal_id
+assert transfer_map[root.internal_id] == root.internal_id
+```
+
+See the [copy and transfer contract](structure_spec.md#copy-and-transfer-contract)
+for collision, relationship, world-pose and atomicity rules. Destination global
+style context remains authoritative; XML round trips represent group targets
+as the currently resolved primitive snapshot.
+
 Packaging installation and supported Python versions require separate validation;
 a local import does not prove them.
 

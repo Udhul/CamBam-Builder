@@ -845,8 +845,20 @@ class Rect(Primitive):
         """
         # Check if we need to convert to Pline for XML output
         if not self.is_rectangular_after_transform():
-            # Create a Pline representation
-            pline_repr = self.to_pline_representation()
+            # Serialize the complete world outline with an identity matrix.
+            # ``to_pline_representation`` intentionally bakes only this Rect's
+            # local matrix; using it here loses ancestor transforms because the
+            # temporary Pline is not linked to a project.
+            pline_repr = Pline(
+                user_identifier=self.user_identifier,
+                groups=self.groups.copy() if self.groups else [],
+                description=self.description,
+                output_decimals=self.output_decimals,
+                effective_transform=identity_matrix(),
+                relative_points=[(x, y, 0.0) for x, y in apply_transform(
+                    self._get_relative_corners(), self.get_total_transform())],
+                closed=True,
+            )
             
             # Get the Pline's XML element, but with our metadata
             pline_elem = pline_repr.to_xml_element(xml_primitive_id, parent_uuid)

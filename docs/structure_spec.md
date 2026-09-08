@@ -1,6 +1,7 @@
 # CamBam CAD/CAM Framework – Core Project Structure and Relationship Management Specification
 
-Section 0 describes the implemented architecture; sections 1–7 describe the intended
+Section 0 describes the implemented architecture; section 5's copy/transfer contract
+is implemented in the current runtime, while the other sections describe intended
 design, not a verified inventory of implemented behavior. See [current status](PROGRESS.md) for implementation gaps and
 the [topic map](README.md) for documentation ownership. MOP target ownership is defined below; the development compatibility policy governs API changes.
 
@@ -18,6 +19,7 @@ packages; `inactive/` and demos are outside that runtime package list.
 | Owner | Implemented responsibility | Start here when changing |
 | --- | --- | --- |
 | `cambam_builder/cambam_project.py` | UUID entity registries, identifier lookup, ordered layers/parts/MOPs, relationship updates, transform orchestration and persistence | Public creation/query/mutation APIs and relationship invariants |
+| `cambam_builder/cambam_transfer.py` | Transactional primitive-tree copy/transfer staging, identity mapping, collision validation and relationship publication | Copy/transfer semantics and atomic registry updates; inspect project wrappers and tests |
 | `cambam_builder/cambam_entities.py` | Entity dataclasses, primitive geometry/bounds, local effective matrices, parent-composed world transforms and entity XML encoding | Geometry or entity fields; inspect reader/writer callers for I/O changes |
 | `cambam_builder/cad_transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
 | `cambam_builder/cambam_writer.py` | XML ID assignment and layer/part traversal; delegates individual encoding to entities | Output structure and reference resolution |
@@ -493,16 +495,60 @@ This process reverses the file-writing procedure so that a CamBamProject object 
 
 ## 5. Transferring Entities Between Projects
 
-- **Copying Linked Trees:**  
-  - The project provides methods to copy (or transfer) an entire primitive tree.
-  - The process uses the project’s parent/child registry to identify the linked tree.
-  - **UUID Preservation:**  
-    - When transferring or copying primitives between projects, the original UUIDs are preserved in order to maintain the existing relationship links.  
-    - If a transferred primitive’s UUID already exists in the target project, it is assumed that the primitive is the same and its data is updated accordingly.
-  - The layer and MOP associations are updated in the project’s registries accordingly.
-- **Registry-Based Linking:**  
-  - Since relationship data is maintained solely in the project’s registries, transferring entities involves updating these registries without duplicating relationship data.
-  - The final XML output will reflect the preserved relationships via the `<Tag>` JSON and correct container placements.
+### Copy and transfer contract
+
+`source.copy_primitive_tree(root, target_project, *, preserve_ids=True,
+identifier_map=None, group_map=None, include_mops=True)` copies a complete
+descendant subtree. `transfer_primitive_tree` has the same arguments and removes
+the originals after staging succeeds. Both return a source-to-destination UUID
+dictionary for every included primitive, layer, part and MOP.
+
+- The selected root becomes parentless with its original world matrix as its
+  local matrix; descendants retain their local matrices and internal parent
+  edges. Finite affine matrices are required. No geometry baking occurs.
+- Assigned layers are cloned. With `include_mops=True`, every MOP whose resolved
+  selection intersects the subtree is included, together with its owning part.
+  A selection that also targets outside primitives rejects the entire operation.
+  Empty and unrelated operations are excluded. `include_mops=False` copies only
+  geometry, layers and group memberships. Missing required containers reject.
+- Container properties, intrinsic geometry and MOP parameters are deep copies.
+  Layer/part order and relative MOP order follow the source and append to the
+  destination. Existing destination entities retain their Python identities.
+- UUIDs are preserved by default; `preserve_ids=False` generates fresh UUIDs for
+  **all** included entities. `identifier_map` maps source user identifiers to new
+  nonempty names; `group_map` similarly renames copied groups. Unspecified names
+  are preserved. Unknown mapping keys and duplicate destination names reject.
+- Any destination UUID or user-identifier collision rejects, across entity
+  types. Containers are always cloned, never implicitly reused or overwritten.
+  This supersedes the earlier conceptual overwrite-on-UUID-collision proposal:
+  UUID equality alone cannot justify replacing destination relationships.
+- Group memberships are restricted to the subtree. Explicit MOP targets remap
+  through the UUID dictionary; live group selections remain live under their
+  mapped names in memory. Closure validation uses current group membership.
+  Existing XML interchange writes resolved targets and reconstructs explicit
+  snapshots, not live selectors. Destination group names must be unused, including names reserved
+  by live selectors with no current members. Groups are never implicitly merged.
+- Same-project copying requires fresh UUIDs and distinct entity/group names;
+  same-project transfer rejects. Copy leaves the source unchanged. Transfer
+  removes included primitives and MOPs, cleans source relationship indexes and
+  retained selections, clears removed primitives' project links, and retains
+  source layers, parts and unrelated entities.
+- Validation and deep copying complete before either project's registries are
+  published. Anticipated validation/cloning errors leave both projects and
+  existing entity references unchanged. This is an in-memory operation, without
+  thread synchronization or filesystem transaction guarantees.
+
+The stopping condition is relationship/identity/collision coverage plus two
+synthetic XML round trips preserving counts, references, world geometry and MOP
+parameters. Automatic overwrite/merge, arbitrary selection closure, destination
+parent placement and whole-project/settings transfer are outside this API.
+Destination project machining/style context remains authoritative; copied
+Default-state parameters may therefore inherit different effective values.
+Primitive/MOP UUIDs survive XML round trips; existing layer/part XML encoding
+reconstructs container identities, so their UUID mapping is an in-memory contract.
+Rect XML conversion to Pline bakes the complete world outline with an identity
+XML matrix, including ancestors. Its representation may change on interchange;
+world geometry and descendant poses are preserved rather than the Rect matrix.
 
 ---
 

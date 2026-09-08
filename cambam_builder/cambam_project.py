@@ -831,6 +831,26 @@ class CamBamProject:
         """Removes a MOP and cleans up its relationships."""
         return self.remove_entity(identifier)
 
+    def copy_primitive_tree(self, root: Identifiable, target_project: "CamBamProject", *,
+                            preserve_ids: bool = True, identifier_map: Optional[Dict[str, str]] = None,
+                            group_map: Optional[Dict[str, str]] = None,
+                            include_mops: bool = True) -> Dict[uuid.UUID, uuid.UUID]:
+        """Copy a complete primitive descendant tree into another project."""
+        from .cambam_transfer import copy_primitive_tree
+        return copy_primitive_tree(self, root, target_project, preserve_ids=preserve_ids,
+                                   identifier_map=identifier_map, group_map=group_map,
+                                   include_mops=include_mops)
+
+    def transfer_primitive_tree(self, root: Identifiable, target_project: "CamBamProject", *,
+                                preserve_ids: bool = True, identifier_map: Optional[Dict[str, str]] = None,
+                                group_map: Optional[Dict[str, str]] = None,
+                                include_mops: bool = True) -> Dict[uuid.UUID, uuid.UUID]:
+        """Transfer a complete primitive descendant tree transactionally."""
+        from .cambam_transfer import transfer_primitive_tree
+        return transfer_primitive_tree(self, root, target_project, preserve_ids=preserve_ids,
+                                       identifier_map=identifier_map, group_map=group_map,
+                                       include_mops=include_mops)
+
 
     # --- Public API: Transformations ---
     # Transformations are applied globally and propagated down the hierarchy

@@ -991,3 +991,77 @@ support and copy/transfer APIs remain outside this result. Item 1b is ready as a
 fresh contract-first increment; reopen 1a for a demonstrated numerical underbound
 or a new non-affine geometry policy. Suggested commit:
 `fix: calculate exact curved geometry bounds`.
+
+## Copy and transfer contract decision
+
+2026-09-08: backlog 1b began with no modern copy/transfer API. Section 5's
+conceptual UUID-overwrite proposal did not define ownership of existing target
+children, group selections or operation order. The project registration helper
+also permits UUID overwrite while separately rejecting identifier collisions;
+using it incrementally would not establish atomic transfer.
+
+Chosen contract: complete descendant subtree, detached root preserving world
+pose, cloned containers, UUID preservation or explicit full remapping, and
+rejection of destination collisions. Associated MOPs must have targets wholly
+inside the subtree; callers may explicitly omit MOPs. Group names cannot merge
+implicitly because that would expand existing live MOP targets. Stage container
+and relationship changes before publication, preserving unrelated object
+identities. The [current contract](structure_spec.md#copy-and-transfer-contract)
+owns API details and limitations.
+
+Overwrite/merge and automatic expansion to unrelated MOP targets were rejected
+for this increment: both need additional destination-ownership decisions and
+could change unrelated geometry or machining selections. Reopen for a concrete
+synchronization or assembly workflow with explicit merge acceptance criteria.
+Destination global machining/style context stays authoritative; parameter
+preservation does not establish identical inherited settings or toolpaths.
+
+Lead owns the shared contract and integration; native bounded workers handle
+retrieval, implementation and independent tests. External authorization and cost
+telemetry were unavailable. No budget saving is asserted from measured usage.
+Automated evidence is recorded below. Manual
+CamBam checking adds no distinct evidence for registry cloning once numerical
+and serialized relationship regressions pass. Existing display acceptance is
+not extended to production machining by this work.
+
+Integration exposed a pre-existing Rect XML defect: the conversion branch used
+`to_pline_representation()`, which bakes only the local matrix into an unlinked
+Pline. A transformed parent was therefore lost on export. The new two-round-trip
+test first failed its matrix assertion, then its world-outline assertion;
+checking geometry confirmed this was a real defect, not merely an alternate
+representation. The bounded repair applies the complete world matrix to Rect
+corners and emits a temporary Pline with an identity XML matrix, retaining the
+existing world-baked representation. Keeping corners local with a world matrix
+was also geometrically valid but broke the existing root-Rect identity-matrix
+control; retaining that representation avoids an unnecessary compatibility change.
+It does not change the public conversion helper or bake behavior. Required
+evidence includes the complete outline, parent links and descendant world poses
+through both round trips. The existing Pline XML representation needs no new
+schema/display acceptance; no production machining acceptance is inferred.
+
+### Copy and transfer verification
+
+2026-09-08: the implemented `copy_primitive_tree` and
+`transfer_primitive_tree` APIs pass the focused copy/transfer suite (16 tests)
+and the full suite (88 tests) on global Python 3.10.9 with NumPy 1.23.5; no
+project virtual environment is present. Coverage includes atomic collision and
+late-clone failures, subtree relationships, UUID/name/group remapping, source
+preservation, transfer cleanup, MOP closure, world pose, and two XML round trips
+covering outlines, root/leaf poses, primitive/MOP UUIDs, parent/layer assignments,
+MOP parameters and targets.
+The retained logs are [focused.log](../output/copy-transfer-checks-final-7c34ab/focused.log)
+and [full.log](../output/copy-transfer-checks-final-7c34ab/full.log).
+
+The bounded `Rect.to_xml_element` repair applies the complete ancestor world
+transform when emitting the world-baked Pline representation, preserving its
+identity XML matrix and outline through the transfer round trips. Compileall and
+the import/construct smoke check also pass; [compile.log](../output/copy-transfer-checks-final-7c34ab/compile.log)
+and [import.log](../output/copy-transfer-checks-final-7c34ab/import.log) are retained.
+`git diff --check` exits 0 with only line-ending normalization warnings. No manual
+CamBam validation adds evidence for these registry and known XML-encoding checks;
+production toolpaths remain outside scope. Packaging is unverified.
+
+This is a good fresh-session breakpoint with implementation, evidence and limits
+persisted. The next priority is Region/all-shape Z parity under
+[`SHAPE_PARITY_PLAN.md`](SHAPE_PARITY_PLAN.md). Suggested commit:
+`feat: add atomic primitive tree copy and transfer`.
