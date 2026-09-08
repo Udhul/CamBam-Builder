@@ -277,44 +277,31 @@ stable; coordinate with the higher-priority MOP source-compatibility work.
 
 ## Support prerequisites and implementation sequence
 
-### Repository evidence
+### Upstream dependencies
 
-Local inspection of the user-provided [Region example](../output/region_example.cb)
-found a `region_example` root with version `0.9.8.0`, a named layer element under
-`layers`, and an object marked `xsi:type=Region`. The Region holds `OuterCurve`
-and `HoleCurves` with nested `Polyline` contours, rather than the modern writer's
-simple primitive-tag dialect. It has one closed outer curve and two closed holes;
-the outer curve uses bulges extensively. All sampled point Z values are zero.
-There are no source MOPs. This proves a relevant Region example, not varying-Z
-support, a complete schema, or rest-machining behavior. The private fixture was
-read locally only and remains unchanged; retain reusable synthetic equivalents
-in future tests rather than making the ignored user file a suite dependency.
+Region topology and Z-coordinate parity across shape types are owned by the
+separate [shape parity plan](SHAPE_PARITY_PLAN.md), with higher priority in the
+backlog. This plan consumes its public geometry and XML contracts; it does not
+implement Region storage, adders, Z migration or schema handling. Pure planar
+rest prototypes can use existing supported contours, but Region inputs and XYZ
+path export must wait for the applicable parity acceptance.
 
-| Runtime owner | Observed gap and consequence |
-| --- | --- |
-| `cambam_reader.PRIMITIVE_TAG_TO_CLASS` and `_reconstruct_primitive` | No Region mapping; unsupported primitive tags are skipped. Add typed-object/layer schema handling for this fixture as well as contour parsing, or explicitly scope a tested adapter. Do not silently import an empty project as success. |
-| `Pline.relative_points`, `_calculate_absolute_geometry`, `to_xml_element`; reader Pline branch | Third tuple element is bulge; import drops Z and export sets Z to zero. Explicit XYZ storage must preserve the existing XY/bulge API. Current bounds also ignore bulge arc extrema. |
-| `CamBamProject.add_pline` and other primitive adders | No Region adder. Establish first-class Region identity with owned contours and MOP targeting; derived preview Plines must not silently replace holes with filled independent pockets. |
-| `Mop`, `ProfileMop`, `PocketMop`, `EngraveMop`; `_reconstruct_mop` | Depth/tool fields and MOP XML exist, but specific-property import is partial. Audit round trips of every parameter used by the planner, including overcut and path ordering. |
-| `cambam_writer.build_xml_tree` | Resolves references and serializes operations; it does not generate cutting trajectories. A framework-owned operation planner is a distinct prerequisite for normal toolpath-derived rest results. |
-| `tests/test_mop_roundtrip.py` | Selected MOP identity/parameter coverage exists; it does not establish Region, XYZ or rest/toolpath correctness. |
+The existing curved-bounds correctness item also supplies arc-aware bounds (or
+rest analysis must use independently bounded arc normalization). Never derive
+stock or clearance from vertex-only bounds of bulged contours. Rest-specific
+Boolean/offset/sweep logic remains here; fixing the shared bounds contract does
+not become a new rest-planner responsibility.
+
+MOP-specific import remains partial and the writer serializes instructions rather
+than generating trajectories. Audit every parameter used by the planner; local
+operation/path calculation remains a rest-machining responsibility. Existing
+MOP identity tests do not establish toolpath correctness.
 
 ### Proposed sequence
 
-1. Establish Region topology and lossless Z interchange on one end-to-end slice.
-   Preserve region outer boundaries/holes, identity and MOP targets. Keep contour
-   children distinct from independent project primitives unless the format
-   requires references. Define a vertex representation with separate X, Y, Z and
-   bulge; existing third-tuple bulge values must not be reinterpreted as Z.
-   Preserve Z through XML, copies/state and supported transforms. Initially apply
-   existing XY affine transforms with unchanged Z; do not imply arbitrary 3D
-   transforms from the current 3x3 matrices. Define unsupported nonplanar-region
-   and varying-Z arc behavior explicitly.
-   Before bulged contours enter rest analysis, provide arc-aware bounds or
-   normalize arcs with a proven error envelope and conservative bounds. Do not
-   derive stock, clipping, profile bands or clearance from the current
-   vertex-only Pline bounds. Require a bulged-contour fixture whose arc extrema
-   lie outside the vertex bounds, with preserved holes and bounded sweep error.
+1. Consume the accepted Region/Z and shared geometry contracts from upstream.
+   Keep XYZ/Engrave attachment gated on verified XYZ interchange and target-version
+   motion. Do not broaden this workstream into shape parity implementation.
 2. Prove pure rest geometry on synthetic planar pockets with known cutting
    trajectories before reproducing a full CAM engine. Reusable Boolean/offset
 support must handle holes, disconnected pieces and bounded approximation.
@@ -380,8 +367,8 @@ documentation itself needs no manual machining validation.
 
 This remains below the existing correctness, compatibility, packaging and MCP
 backlog items. Promote only for a concrete rest-machining workflow with approved
-input semantics and a bounded first outcome. Region/Z support are dependencies of
-this optional workstream, not a reason to preempt current foundations. A separately
+input semantics and a bounded first outcome. Region/Z parity has its own higher
+backlog priority and plan; it is an upstream dependency, not optional rest scope. A separately
 reported data-loss bug can be prioritized independently on its own evidence.
 
 Planning is complete when all five outcomes, repository gaps, source distinctions,

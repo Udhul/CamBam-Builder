@@ -1,0 +1,161 @@
+# Region and Z-coordinate shape parity
+
+Status: **backlog; core CamBam feature parity, not rest-machining implementation**.
+Priority belongs to [PROGRESS.md](PROGRESS.md#remaining-backlog-in-order): after
+core stability/design and the existing geometry/relationship correctness work,
+before packaging/examples, MCP integration and optional rest machining.
+
+## Objective and scope
+
+Add Region shapes and Z-coordinate support across every currently supported
+modern shape type, plus Region. These are useful CAD/file interchange capabilities
+in their own right. Rest machining depends on them, but does not own their design
+or implementation. The [rest-machining plan](REST_MACHINING_PLAN.md) remains a
+separate downstream consumer.
+
+Build on the existing entity, project-adder, XML encoder/reader and relationship
+patterns. This should be a bounded extension rather than a new geometry framework
+or CAM engine. The main compatibility points are the existing XY/bulge tuple
+contract, shape-specific elevation semantics, typed Region XML and transforms;
+settle those with focused fixtures rather than assuming a mechanical extra tuple
+field is sufficient. No new dependency is selected for storage/interchange work.
+
+Coverage means Pline, Circle, Rect, Arc, Points, Text and Region. It does not
+implicitly add unrelated CamBam entities such as surfaces or solids. Legacy-package
+changes require their own explicit scope. Runtime computation and load/save must
+work without CamBam installed; CamBam is used separately for manual compatibility
+acceptance.
+
+### Repository evidence
+
+Local inspection of the user-provided [Region example](../output/region_example.cb)
+found a `region_example` root with version `0.9.8.0`, a named layer element under
+`layers`, and an object marked `xsi:type=Region`. The Region holds `OuterCurve`
+and `HoleCurves` with nested `Polyline` contours, rather than the modern writer's
+simple primitive-tag dialect. It has one closed outer curve and two closed holes;
+the outer curve uses bulges extensively. All sampled point Z values are zero.
+There are no source MOPs. This proves a relevant Region example, not varying-Z
+support, a complete schema, or rest-machining behavior. The private fixture was
+read locally only and remains unchanged; retain reusable synthetic equivalents
+in future tests rather than making the ignored user file a suite dependency.
+
+| Runtime owner | Observed gap and consequence |
+| --- | --- |
+| `cambam_reader.PRIMITIVE_TAG_TO_CLASS` and `_reconstruct_primitive` | No Region mapping; unsupported primitive tags are skipped. Add typed-object/layer schema handling for this fixture as well as contour parsing, or explicitly scope a tested adapter. Do not silently import an empty project as success. |
+| `Pline.relative_points`, `_calculate_absolute_geometry`, `to_xml_element`; reader Pline branch | Third tuple element is bulge; import drops Z and export sets Z to zero. Explicit XYZ storage must preserve the existing XY/bulge API. Current bounds also ignore bulge arc extrema. |
+| `CamBamProject.add_pline` and other primitive adders | No Region adder. Establish first-class Region identity with owned contours and MOP targeting; derived preview Plines must not silently replace holes with filled independent pockets. |
+
+## Shape coverage and compatibility contract
+
+| Shape | Required Z behavior |
+| --- | --- |
+| Pline | Independent per-vertex Z and bulge; retain closure, order and curved-segment data |
+| Points | Independent per-point Z, including mixed elevations |
+| Circle | Center elevation with diameter preserved; initially an XY-plane circle at that elevation |
+| Arc | Center/plane elevation with radius, start angle and extent preserved |
+| Rect | Corner/plane elevation with dimensions preserved; Rect-to-Pline baking and export preserve elevation on every resulting vertex |
+| Text | Preserve supported anchor/baseline elevations, including relevant XML position fields; verify their semantics with synthetic round trips |
+| Region | Outer boundary and owned hole contours with their Z values and bulges; preserve contour topology and establish supported planarity constraints |
+
+Current Circle/Arc/Rect/Points/Text geometry stores XY, their encoders synthesize
+zero Z, and corresponding reader branches discard elevation. Pline also discards
+Z while its third tuple value already means bulge. The relevant owners are the
+shape classes in `cambam_entities.py` and `_reconstruct_primitive` in
+`cambam_reader.py`. Coverage must include all rows, not just the XYZ Pline needed
+by engraving.
+
+Keep existing 2D call sites valid, with omitted Z defaulting to zero. Never
+reinterpret an existing `(x, y, bulge)` Pline tuple as `(x, y, z)`. Prefer explicit
+named vertex data or an unambiguous additive XYZ entry point; select the exact
+public representation after inspecting callers. Document the chosen conversion
+and serialization contract in the implemented specification when delivered.
+Preserve existing geometry-query behavior or provide an explicit compatibility
+adapter alongside XYZ access, so downstream code does not silently swap bulge/Z.
+
+Geometry elevation and transform elevation are distinct. Current
+`cad_transformations.apply_transform` uses 3x3 XY affine matrices; CamBam matrix
+serialization currently hardcodes zero Z translation. Extend or adapt the
+transform boundary so imported supported Z offsets, world/local hierarchy and
+baking agree. Existing XY transforms should leave Z unchanged unless a Z operation
+is requested. Include parent Z offsets in tests: supporting point Z while dropping
+matrix Z does not meet the supported round-trip contract.
+
+Arbitrary 3D rotation, tilted analytic entities and a general solid-modeling engine
+are not implied by adding elevation. During implementation classify incoming
+matrix forms and shape planarity explicitly. Preserve supported geometry and Z
+translation exactly; detect unsupported mixing of Z with XY or nonplanar analytic
+forms and report the limitation before silently flattening or partially importing
+them. The first XYZ slice is not complete parity until this boundary is documented
+and all declared supported cases pass. Varying-Z arcs need a format/geometry
+fixture; do not treat a bulged spatial segment as a planar arc without evidence.
+
+## Region ownership and XML support
+
+Represent a Region as one registered Primitive with an outer contour and owned
+hole contours. Its UUID, identifier, description, layer/group memberships and
+MOP source identity belong to the Region. Contour points/segments are geometry,
+not new project primitives with independent MOP targets. Define winding,
+closure, hole containment and degenerate/touching-contour behavior explicitly.
+Do not turn holes into filled independent pockets during conversion or export.
+
+Extend the existing project creation and XML dispatch patterns. Support the
+user's typed-object Region fixture, including its layer/container form, and
+verify the output schema with CamBam rather than inventing a `<region>` spelling.
+Normalize supported XML forms into one internal representation. Distinguish an
+unsupported schema from a successful empty import. Keep the example private and
+unchanged; create authored synthetic outer/hole/bulge examples for regressions.
+
+Build geometry queries and transformations on the existing Primitive contract.
+Use the shared curved-bounds correctness work for arc extrema; include bulged
+Region contours in its integration tests. Region support does not require the
+rest planner's Boolean kernel, offsets, stock model or cutter calculations.
+
+## Bounded delivery sequence
+
+1. Confirm shape and matrix XML semantics with minimal synthetic elevation
+   fixtures. Set the additive Z API and old-input/query compatibility contract.
+   Prove Pline/Points XYZ creation, export/import and transformation end to end.
+2. Extend elevation through Circle, Arc, Rect and Text using the same established
+   patterns. Cover Rect representation changes and parent/world poses. Keep
+   conversion, state persistence and copy/transfer behavior consistent with the
+   existing APIs; do not create competing relationship registries.
+3. Add the Region entity, project adder, contour representation and XML adapters.
+   Reuse the Z/vertex contract and shared bounds implementation. Exercise Region
+   identity as a MOP source with holes and bulges through repeated round trips.
+4. Complete cross-shape regression and prepared CamBam display/interchange
+   acceptance, then publish the supported API/schema boundaries in the existing
+   architecture owner and record completion in PROGRESS.md. Downstream rest work
+   consumes those contracts without reopening storage design.
+
+These are related increments in one parity outcome, not a requirement for a
+large architectural rewrite. Reassess only if schema evidence or compatibility
+failures show the existing patterns cannot support the intended behavior.
+
+## Acceptance and stopping condition
+
+- All seven shape types can be constructed with their supported Z coordinates,
+  queried, saved and loaded without losing elevation, identity or geometry.
+- Test positive, negative, zero and mixed per-point Z where supported; nonzero
+  parent/local Z offsets; XY translation/rotation; baking; and Rect conversion.
+  Verify bulge and Z independently with deliberately different values.
+- Region tests cover one outer curve, multiple holes, curved segments, elevated
+  planar contours, topology and MOP targeting. Invalid/unsupported topology and
+  matrix forms produce explicit failures instead of silently losing geometry.
+- Two XML round trips retain declared geometry, UUIDs, relationships and MOP
+  references. Check the actual XML Z fields, not only the reconstructed object.
+  Use a declared precision and absolute tolerance (initial synthetic targets:
+  `1e-10` in memory, `1e-8` XML); include extrema beyond arc endpoints in bounds.
+- Existing 2D API/regression results remain valid. Pickle and available copy/transfer
+  operations retain new fields and project links; define defaults for supported
+  older state data rather than claiming unrestricted pickle compatibility.
+- Prepare synthetic CamBam A/B files with exact XYZ expectations. Inspect display
+  and coordinate properties separately from automated XML checks; the planar
+  user Region example alone cannot establish varying-Z acceptance.
+- Construction, transforms and load/save run without CamBam installed. No CAM
+  engine, toolpath generation or rest-machining algorithm is required for closure.
+
+Stop when every shape's declared Z contract and Region interchange are implemented,
+verified and the required synthetic acceptance is recorded. Do not close this
+item merely because XYZ Plines work. New entity families or unrestricted 3D
+modeling need their own scope. Until implementation begins this remains a plan;
+no current Region/Z parity or manual acceptance is claimed.

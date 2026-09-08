@@ -751,3 +751,23 @@ are needed for this documentation-only increment. Implementation, CamBam path
 acceptance and production machining remain future work. Planning is a coherent
 fresh-session breakpoint; the next task remains MOP group-source compatibility.
 Suggested commit: `docs: plan optional rest machining and V-cutter workflows`.
+
+
+## Shape parity separated from rest machining
+
+The user clarified that Region and all-shape Z support are missing core CamBam
+feature parity, independently useful and upstream of rest machining. Moved their
+repository evidence and implementation contract to [SHAPE_PARITY_PLAN.md](SHAPE_PARITY_PLAN.md).
+The [rest plan](REST_MACHINING_PLAN.md#upstream-dependencies) now consumes those
+contracts instead of owning their implementation. This supersedes the earlier
+planning decision that treated them as support inside the optional rest workstream.
+
+Backlog placement is after MOP design/ownership and geometry/relationship
+correctness, before packaging, MCP and rest machining. Existing patterns remain
+the implementation approach; tuple/bulge compatibility, shape elevation and matrix
+Z semantics require focused evidence. No runtime behavior changed. Local links,
+plan ownership and `git diff --check` were checked; runtime tests and manual
+validation are not needed for this documentation change. The next immediate task
+remains MOP group-source compatibility; the distinct parity scope is ready for a
+fresh session when its priority is reached.
+Suggested commit: `docs: separate and prioritize Region and Z shape parity`.

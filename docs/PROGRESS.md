@@ -116,18 +116,25 @@ See [contract](../structure_spec.md#export-failure-and-state-saving-contract) an
    compatibility; test defaults and malformed XML metadata reconstruction.
 2. Improve curved-geometry bounds; implement copy/transfer utilities against the
    specification, with collision and relationship tests.
-3. Validate packaging and supported Python versions; expand examples and tests as
+3. Implement core CamBam shape parity: Region shapes and Z coordinates across
+   Pline, Circle, Rect, Arc, Points, Text and Region. Extend existing entity/API/XML
+   patterns with backward-compatible coordinate semantics, identity preservation
+   and synthetic round-trip/display checks. This is independent upstream feature
+   support, after core design/correctness and before downstream integrations.
+   [Scope, evidence, delivery and acceptance plan](SHAPE_PARITY_PLAN.md).
+4. Validate packaging and supported Python versions; expand examples and tests as
    each capability is verified. Add CLI/distribution work only for an actual need.
-4. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
+5. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
    and load/modify/save workflows on another PC. User-requested future work;
    not active and does not displace correctness fixes.
    [Requirements, acceptance and maintenance plan](MCP_PLAN.md).
-5. **Planned future feature:** rest-area calculation and rest
+6. **Planned future feature:** rest-area calculation and rest
    machining helpers for pocket and inside/outside profile MOPs. Five outcomes:
    pure rest regions; safe expansion for a smaller endmill; pointed/flat-tip
    V-cutter preparation; a general bounded XYZ V-carving path calculator; and
    V-cutter edge tracing with corner cleanup. Region topology and shape Z fidelity
-   are supporting dependencies of this feature, not new foundation priorities.
+   are independently prioritized upstream dependencies owned by the
+   [shape parity plan](SHAPE_PARITY_PLAN.md), not part of rest implementation.
    Calculations must run programmatically in this framework without CamBam;
    `.cb` files provide interchange, not access to a headless CAM engine.
    [Problem, reasoning, support gaps and acceptance plan](REST_MACHINING_PLAN.md).
