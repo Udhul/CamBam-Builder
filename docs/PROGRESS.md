@@ -7,17 +7,26 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**Active: MOP core-model ownership and CamBam interchange** (2026-09-08).
+**Next priority: curved-geometry bounds and copy/transfer utilities** (backlog
+item 1). No implementation is active yet. Start with the bounding and transfer
+contracts in `structure_spec.md`, then define one bounded end-to-end increment.
+
+**MOP core-model ownership and CamBam interchange: implemented; automated checks
+complete; CamBam 1.0 display/property interchange accepted** (2026-09-08).
 Owners: project target registry/API, entity MOP parameter encoding, reader/writer,
-focused MOP tests and updated callers. Breaking API/storage changes are authorized;
-no legacy adapters or old-pickle migration.
+focused MOP tests and updated callers. Breaking API/storage changes were authorized;
+no legacy adapters or old-pickle migration were added.
 
 Acceptance: one project-owned target selection per MOP; explicit targets and live
 named groups with validated atomic mutation and deletion cleanup; native XML target
 edits/order remain authoritative; supported parameter and Default/Value reconstruction;
 synthetic round trips plus prepared CamBam-edited input acceptance.
-Implementation and automated verification are complete. CamBam acceptance is
-pending; local tests alone do not establish native interoperability.
+Implementation and automated verification are complete. The user accepted the
+prepared A/B and native-edited C/framework-roundtripped D display/property cases
+on CamBam Plus 1.0. The C-to-D automated comparison preserved operation order,
+targets, exact parameter/state sets and geometry; C and D loaded without error
+and all stated visual/property checks matched. This establishes the supported
+interchange case, not production toolpaths or complete `.cb` coverage.
 [Target contract](structure_spec.md#mop-target-ownership-contract).
 
 Rect rotation/shear baking repair: **implemented; automated checks complete; synthetic display accepted**
@@ -30,7 +39,8 @@ and preserve descendant world geometry. Non-axis-aligned results become Plines
 in place so existing Python references remain valid. No implementation blocker.
 All 51 suite tests pass, including nine Rect regressions. Synthetic A/B files
 were accepted by the user on 2026-09-08: all conditions met, full outline match
-and identity transforms. CamBam version was not supplied. See
+and identity transforms. Later clarification establishes CamBam Plus 1.0 as the
+validation environment. See
 [acceptance evidence](REVIEW.md#rect-baking-display-acceptance).
 The following MOP group-source compatibility increment is recorded above;
 core ownership/interchange is active above. General component ordering,
@@ -61,7 +71,8 @@ Verification: nine authored unittest tests pass on Python 3.10.9 / NumPy 1.23.5,
 with syntax/import checks complete. See [repair evidence](REVIEW.md#parent-round-trip-repair-verification).
 Synthetic parent A/B geometry/placement **accepted by the user on 2026-09-07**:
 both files match the expected world coordinates; resetting B's matrices restores
-local placement. CamBam version was not supplied. See
+local placement. Later clarification establishes CamBam Plus 1.0 as the validation
+environment. See
 [acceptance evidence](REVIEW.md#parent-ab-user-acceptance).
 Packaging and broader CamBam compatibility remain unverified.
 
@@ -88,7 +99,8 @@ Curved/component baking and alignment's separate implementation remain outside
 this slice. Eight new regressions and all 26 suite tests pass.
 [Before/reference/result files and criteria](DEVELOPMENT.md#manual-global-transform-acceptance)
 were accepted by the user: A/B coordinates match, B retains matrices, and child/leaf
-move (+5,-3) from Before while root stays fixed. CamBam version was not supplied.
+move (+5,-3) from Before while root stays fixed. Later clarification establishes
+CamBam Plus 1.0 as the validation environment.
 [Verification evidence](REVIEW.md#global-transform-ordering-verification)
 records the failure and coordinate-frame policy.
 
@@ -125,25 +137,21 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 
 ## Remaining backlog, in order
 
-1. Complete CamBam acceptance of the active MOP core/interchange change above,
-   including opening exported files and returning a CamBam-created/edited file
-   for import/export verification. Keep this priority open until native evidence
-   is recorded; do not substitute synthetic edits for source-system acceptance.
-2. Improve curved-geometry bounds; implement copy/transfer utilities against the
+1. Improve curved-geometry bounds; implement copy/transfer utilities against the
    specification, with collision and relationship tests.
-3. Implement core CamBam shape parity: Region shapes and Z coordinates across
+2. Implement core CamBam shape parity: Region shapes and Z coordinates across
    Pline, Circle, Rect, Arc, Points, Text and Region. Extend existing entity/API/XML
    patterns with backward-compatible coordinate semantics, identity preservation
    and synthetic round-trip/display checks. This is independent upstream feature
    support, after core design/correctness and before downstream integrations.
    [Scope, evidence, delivery and acceptance plan](SHAPE_PARITY_PLAN.md).
-4. Validate packaging and supported Python versions; expand examples and tests as
+3. Validate packaging and supported Python versions; expand examples and tests as
    each capability is verified. Add CLI/distribution work only for an actual need.
-5. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
+4. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
    and load/modify/save workflows on another PC. User-requested future work;
    not active and does not displace correctness fixes.
    [Requirements, acceptance and maintenance plan](MCP_PLAN.md).
-6. **Planned future feature:** rest-area calculation and rest
+5. **Planned future feature:** rest-area calculation and rest
    machining helpers for pocket and inside/outside profile MOPs. Five outcomes:
    pure rest regions; safe expansion for a smaller endmill; pointed/flat-tip
    V-cutter preparation; a general bounded XYZ V-carving path calculator; and
@@ -162,10 +170,9 @@ above. Detailed contracts remain in `docs/structure_spec.md`, and review evidenc
 
 ## Blockers and decisions
 
-No implementation blocker. Native CamBam validation remains required for the
-new interchange scope. Previous MOP identity acceptance covers its original
-synthetic case only. The old framework API and pickle format do not constrain
-this redesign; the project-owned target contract is now chosen.
+No blocker for the completed MOP ownership/interchange scope. Production
+toolpaths and complete `.cb` format coverage remain outside that acceptance.
+The old framework API and pickle format did not constrain the redesign.
 
 ## Completion and verification
 
@@ -176,11 +183,11 @@ this redesign; the project-owned target contract is now chosen.
 - Parent-cycle rejection: implemented and automated checks complete.
 - Broader product baseline: limited local checks only.
 - User/CamBam acceptance: parent, full-bake, global-transform and Rect-bake
-  synthetic display and the prior MOP load/properties case were accepted. The
-  active MOP redesign still needs native CamBam acceptance; broader production
-  acceptance was not performed.
+  synthetic display cases were accepted. MOP A/B and native C/D display/property
+  interchange were accepted in CamBam Plus 1.0. Production toolpaths and broader
+  `.cb` coverage were not validated.
 
-The active MOP implementation and automated verification are complete. The final
+The completed MOP implementation and automated verification include a final
 suite reports 65 passed tests in
 `output/mop-core-checks-ncsbkpgz/suite.log`; compileall for
 `cambam_builder`, `legacy_cambam_builder`, `tests` and `demos` exits 0. The A/B
@@ -192,15 +199,13 @@ context regression also reproduces and guards the former lost global
 [MOP review evidence](REVIEW.md#mop-core-ownership-and-interchange-redesign).
 
 [Verification commands](DEVELOPMENT.md) and [work lifecycle](WORKFLOW.md)
-are authoritative. Existing MOP characterization informs the redesign without
-freezing historical API choices. Correct ownership and CamBam interoperability
-remain the next priority; broader geometry and integration work stays ordered
-in the backlog above.
+are authoritative. MOP ownership and supported interchange are closed. Curved
+bounds and copy/transfer utilities are now the next priority; broader geometry
+and integration work stays ordered in the backlog above.
 
 ## Session breakpoint
 
-Implementation, automated verification and native acceptance instructions are
-persisted. Native input/output acceptance remains the open backlog item; continue
-this session for the user's C file and the C-to-D comparison. A fresh session is
-possible because the evidence, fixtures and limits are documented. No staging or
-commit is authorized.
+Implementation, automated verification, A/B acceptance and native C/D acceptance
+are persisted. This is a good fresh-session breakpoint: the next curved-bounds and
+copy/transfer task has distinct scope and needs no unresolved MOP context. No
+staging or commit is authorized.

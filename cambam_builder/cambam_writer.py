@@ -36,7 +36,9 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
     root = ET.Element("CADFile", {
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
         "xmlns:xsd": "http://www.w3.org/2001/XMLSchema",
-        "Version": "0.9.8.0", # Or make this configurable?
+        # CamBam Plus 1.0 itself continues to emit this legacy file marker.
+        # It does not identify the installed application version.
+        "Version": "0.9.8.0",
         "Name": project.project_name
     })
 

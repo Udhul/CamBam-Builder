@@ -1,5 +1,14 @@
 # Development runbook
 
+## CamBam validation baseline
+
+User-performed CamBam checks use CamBam Plus 1.0 unless explicitly stated
+otherwise: `CamBam.CAD` 1.0.7364.41819, `CamBam` 1.0.7364.41821, build
+2020-02-29 23:13:58. CamBam 1.0 writes `Version="0.9.8.0"` into `.cb` files;
+that legacy XML marker does not mean the file was created by CamBam 0.9.8.
+Do not ask for the version again for this environment. Record a different version
+only if the user explicitly reports one.
+
 ## Environment and setup
 
 The declared toolchain is Python >=3.8 and setuptools/wheel (`pyproject.toml`).
@@ -110,7 +119,7 @@ use. Keep private CAD inputs and generated reports local.
 ## Manual Rect-bake acceptance
 
 **Accepted by the user on 2026-09-08:** all conditions met, full outline match
-and identity transforms. CamBam version was not supplied. The retained criteria
+and identity transforms. The CamBam Plus 1.0 baseline above applies. The retained criteria
 below document the accepted synthetic case; do not repeat without a relevant
 change. See [acceptance evidence](REVIEW.md#rect-baking-display-acceptance).
 
@@ -206,8 +215,8 @@ any differing endpoint or matrix. No toolpath validation is needed for this case
 ## Manual global-transform acceptance
 
 Accepted by the user: A/B placement and endpoints match; B retains transforms;
-child and leaf move (+5,-3) from Before as specified. CamBam version was not
-supplied. These retained criteria need no repetition for unchanged behavior.
+child and leaf move (+5,-3) from Before as specified. The CamBam Plus 1.0 baseline
+above applies. These retained criteria need no repetition for unchanged behavior.
 
 Prepared directory: `output/global-transform-validation-6_s8bvg_/`. Its one-off
 `generate.py` is ignored; regression tests live in `tests/test_global_transforms.py`.
@@ -234,7 +243,7 @@ and observed coordinates for any mismatch. No toolpath checks are needed.
 ## Manual MOP identity acceptance
 
 Accepted by the user on 2026-09-07: all described A/B load, operation, target and
-property outcomes were confirmed. CamBam version was not supplied. The retained
+property outcomes were confirmed. The CamBam Plus 1.0 baseline above applies. The retained
 criteria need no repetition unless relevant behavior changes.
 Prepared and XML-inspected files in `output/mop-validation-kpk5hxop/`:
 [A reference](../output/mop-validation-kpk5hxop/A_reference.cb) omits MOP Tags;
@@ -263,8 +272,10 @@ UUID/identifier registry behavior is automated and needs no manual reproduction.
 
 ## Manual MOP core-model and CamBam interchange acceptance
 
-This is a pending manual check for the MOP ownership redesign. It is not accepted
-until a user reports the CamBam version and the result. The disposable fixture
+The user accepted the prepared A/B CamBam display/property case on 2026-09-08
+and the final native C/D case on 2026-09-08 in the CamBam 1.0 baseline above.
+This accepts supported display/property interchange, not production toolpaths or
+complete native interoperability. The disposable fixture
 directory is [mop-core-validation-1roowlbtpza](../output/mop-core-validation-1roowlbtpza/).
 Regenerate its files from the repository root with:
 
@@ -307,23 +318,28 @@ the result as `C_native_edited.cb` wherever convenient and report that saved
 path; the agent runs the comparison after receiving it. The new operation may
 use CamBam's generated display name.
 
-The comparison command is:
+The native edit was completed in
+[C_native_edited.cb](../output/mop-core-validation-1roowlbtpza/C_native_edited.cb).
+The comparison command was run successfully (exit 0):
 
 ```powershell
 & $ProjectPython output\mop-core-validation-1roowlbtpza\generate.py `
   --native-edited <reported-C-path>
 ```
 
-It writes D as
-`output/mop-core-validation-1roowlbtpza/C_framework_roundtrip.cb` and the
-inspection JSON beside D; it never writes beside or over C. After the agent
-returns D, open C and D separately in CamBam's top/XY view, confirm both load
-without warnings, and verify five enabled operations in the order Drill,
-Engrave, Pocket, Profile, Profile. The fourth operation must target
-`pocket-square`, have CutFeedrate 450 and ClearancePlane Default; the last must
-target `profile-square`. Report the CamBam version, C/D load result, displayed
-order and targets, and any differing parameter or warning. No CamBam acceptance
-is claimed by the generator or local XML checks.
+It wrote [C_framework_roundtrip.cb](../output/mop-core-validation-1roowlbtpza/C_framework_roundtrip.cb)
+and its inspection JSON beside D; it never writes beside or over C. The automated
+comparison passed: both sides retain five enabled operations in the order Drill,
+Engrave, Pocket, Profile, Profile; the fourth targets `pocket-square` with
+CutFeedrate 450 and ClearancePlane Default; and the last targets `profile-square`.
+Exact operation parameter/state sets and the four-shape geometry/identity-transform
+comparison also passed, with no warning/error output in
+`native-check.log` or `native-geometry-check.log`.
+
+Final acceptance was reported on 2026-09-08: C and D both load without error and
+all stated checks match. The displayed order, targets, CutFeedrate 450,
+ClearancePlane Default and final `profile-square` target were preserved. Do not
+repeat the accepted A/B or C/D checks unless relevant behavior changes.
 
 ## Troubleshooting
 

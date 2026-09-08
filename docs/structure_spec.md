@@ -111,6 +111,17 @@ native edits to geometry or operation targets. Missing/malformed metadata and
 unsupported content need explicit handling; full format coverage is not yet
 established. Local self-round trips alone do not prove CamBam interoperability.
 
+The validated application baseline is CamBam Plus 1.0, `CamBam.CAD`
+1.0.7364.41819 and `CamBam` 1.0.7364.41821, build 2020-02-29 23:13:58. CamBam
+1.0 continues to write `Version="0.9.8.0"` in `.cb` XML. Treat that value as a
+legacy file-format marker, not the creating application's version. The framework
+emits the same marker for CamBam 1.0 interoperability. User validation in this
+project uses CamBam Plus 1.0 unless the user explicitly reports a different version.
+Do not change the emitted marker to `1.0` merely to label the target application:
+the field is an internal file version, and `1.0` is not the value produced by the
+target application. Reconsider only if a documented schema change or a controlled
+CamBam compatibility comparison shows a benefit.
+
 ### MOP target ownership contract
 
 The project `_mop_targets` registry is the sole target relationship owner. Each

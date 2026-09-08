@@ -426,7 +426,8 @@ run passes all 26 tests. No curved-bulge fidelity claim follows from this change
 The user confirmed A/B endpoints and placement, transform properties in B versus
 explicit coordinates in A, and the correct (+5,-3) child/leaf movement from Before.
 They reported committing the implementation. This supersedes pending manual
-acceptance in the earlier verification record; CamBam version was not supplied.
+acceptance in the earlier verification record. Later user clarification establishes
+CamBam Plus 1.0 as the validation environment.
 
 The parent/hierarchy, full-bake and global-transform straight-polyline line has
 reached its scoped stopping condition. Component baking is distinct (fold one
@@ -487,7 +488,8 @@ risk. Suggested commit: `fix: preserve MOP identities across XML round trips`.
 and true. This accepts both prepared files loading successfully, two enabled
 Duplicate Profiles under Part1 in the expected order, left/right square targets,
 depths -1/-2, feeds 300/600, Outside, diameter 3, depth increment 0.5 and spindle
-12000. CamBam version was not supplied. This supersedes the pending acceptance
+12000. Later user clarification establishes CamBam Plus 1.0 as the validation
+environment. This supersedes the pending acceptance
 in the preceding verification record; no repeated check is required without a
 relevant behavior change.
 
@@ -707,7 +709,8 @@ coherent accepted breakpoint; use a fresh session for that distinct design scope
 2026-09-08. The user confirmed all validation conditions were met, a full match
 and identity transforms for the prepared Rect A/B case. This accepts loading and
 displaying the three closed outlines with the documented vertices within `0.01`
-drawing units and identity matrices in A/B. CamBam version was not supplied.
+drawing units and identity matrices in A/B. Later user clarification establishes
+CamBam Plus 1.0 as the validation environment.
 [Files and retained criteria](DEVELOPMENT.md#manual-rect-bake-acceptance) remain
 available; no regeneration or repeat acceptance is required for unchanged code.
 
@@ -870,7 +873,9 @@ ClearancePlane values before capture/serialization was integrated. The replaceme
 must retain native parameter content and explicit Default/Value state while allowing
 Python edits; synthetic tests do not establish native application acceptance.
 
-Implementation and automated verification are complete for this slice. The final
+Implementation and automated verification are complete for this slice. The user
+accepted the prepared A/B CamBam display/property case on 2026-09-08; CamBam
+version was not supplied. The final
 checks were:
 
 - `python -m unittest discover -s tests -v`: 65 tests passed; the retained log is
@@ -890,18 +895,40 @@ checks were:
 - `test_mop_context` reproduced the lost global `Style`/`StyleLibrary` context
   before reader capture and now passes after the fix.
 
-Native CamBam acceptance remains pending. The user must open A/B, make the C
-edits described in [the development runbook](DEVELOPMENT.md#manual-mop-core-model-and-cambam-interchange-acceptance),
-save C and report its path; the agent then runs the C-to-D import/export
-comparison. No full `.cb` fidelity or toolpath claim is made. Default fields are
-cached but CAM styles are not evaluated; nested state setters are intentionally
-unavailable while imported nested state is preserved. Unknown MOP types remain
-skipped. Existing Python 3.10.9 and NumPy 1.23.5 were used; no virtual
-environment or dependency changes were made.
+The native edit is retained as
+[`C_native_edited.cb`](../output/mop-core-validation-1roowlbtpza/C_native_edited.cb).
+The C-to-D import/export comparison exited 0 and preserved five enabled
+operations in the order Drill, Engrave, Pocket, Profile, Profile. It preserved
+the operation names/order/targets and exact parameter/state sets: the fourth
+Profile targets `pocket-square`, has CutFeedrate 450 and ClearancePlane Default,
+and the last Profile targets `profile-square`. Independent XML comparison also
+matched all four shapes' coordinates, closure flags and identity transforms; the
+native check logs report no warnings or errors. See
+[`C_framework_roundtrip.cb`](../output/mop-core-validation-1roowlbtpza/C_framework_roundtrip.cb)
+and the adjacent inspection JSON, `native-check.log` and
+`native-geometry-check.log`.
 
-The active backlog remains native validation; geometry work is not promoted.
-This is a coherent technical breakpoint with implementation, automated evidence,
-acceptance instructions and limits persisted. Continue this session for native
-acceptance; a fresh session is also possible because the required context and
-fixtures are recorded. No staging or commit was performed. Suggested commit:
+Final native acceptance was reported on 2026-09-08 using CamBam Plus 1.0:
+`CamBam.CAD` 1.0.7364.41819, `CamBam` 1.0.7364.41821, build 2020-02-29
+23:13:58. C and D loaded without error and every stated display/property check
+matched. This closes the supported MOP interchange slice. No full `.cb` fidelity,
+production toolpath or broader production acceptance claim is made. Default
+fields are cached but CAM styles are not evaluated; nested state setters are
+intentionally unavailable while imported nested state is preserved. Unknown MOP
+types remain skipped. Existing Python 3.10.9 and NumPy 1.23.5 were used; no
+virtual environment or dependency changes were made.
+
+The user clarified that CamBam Plus 1.0 itself saves `.cb` files with XML
+`Version="0.9.8.0"`. That marker is therefore a legacy file-format value and is
+not evidence that CamBam 0.9.8 created the file. Use the CamBam Plus 1.0 baseline
+above for the user's past and future validation reports unless they explicitly
+state a different application version. Keep the framework marker at `0.9.8.0`:
+using `1.0` would depart from the native producer without evidence that the field
+is an application label or that the alternate value improves compatibility.
+Reopen this decision for a documented format revision or controlled native test.
+
+The next backlog item is curved-geometry bounds and copy/transfer utilities. This
+is a coherent fresh-session breakpoint with implementation, automated evidence,
+and accepted A/B and native C/D results persisted. No staging or commit was
+performed. Suggested commit:
 `refactor: centralize MOP targets and preserve native parameters`.
