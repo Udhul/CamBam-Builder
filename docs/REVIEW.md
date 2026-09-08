@@ -717,3 +717,37 @@ entities or general component ordering. No runtime code changed in this round;
 `git diff --check` passed and the documentation links/status were reviewed.
 No automated tests were rerun because only acceptance documentation changed.
 Suggested commit: `docs: record Rect baking display acceptance`.
+
+## Rest machining future-feature planning
+
+2026-09-08. Recorded the user's five requested outcomes as a low-priority optional
+feature in [PROGRESS.md](PROGRESS.md#remaining-backlog-in-order), with one
+[plan owner](REST_MACHINING_PLAN.md) for problem, methods, dependencies and future
+acceptance. Existing priorities and runtime behavior are unchanged.
+
+Reasoning separates ideal tool reachability from trajectory-derived remaining
+stock, pure rest from access expansion, and surface V-corner sharpening from
+complete volumetric removal. Corner overcut is modeled from its sweep rather
+than presumed to eliminate all rest. Native CamBam V-corner support and the
+XYZ-polyline/Engrave proxy are attributed to official documentation in the plan.
+Region and Z are feature prerequisites, not newly promoted foundation work.
+
+The user-authorized Region example was inspected locally only and left unchanged.
+Its typed XML outer/hole curves and the current reader's Region/Z gaps are
+recorded in the plan. No private fixture content was sent to external providers.
+The proposal includes numerical references, workflow helpers, provenance and
+invalidation, five separate acceptance outcomes and promotion/stopping criteria.
+Native technical review prompted explicit gates on lossless XYZ proxy export
+and arc-extrema-aware contour bounds before using bulged Regions in analysis.
+The user clarified that standalone programmatic calculation is essential: CamBam
+cannot supply a headless engine/API to this workflow. Removed the proposed
+toolpath-acquisition/scripting dependency in favor of local supported MOP and
+geometry algorithms. Optional CamBam exports are validation fixtures only. The
+retained XYZ/Engrave proxy is a file encoding for paths calculated by the framework.
+
+Documentation verification: local links/anchors and analytic example values
+checked; `git diff --check` passed. No runtime tests or manual machining validation
+are needed for this documentation-only increment. Implementation, CamBam path
+acceptance and production machining remain future work. Planning is a coherent
+fresh-session breakpoint; the next task remains MOP group-source compatibility.
+Suggested commit: `docs: plan optional rest machining and V-cutter workflows`.

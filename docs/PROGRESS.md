@@ -122,6 +122,17 @@ See [contract](../structure_spec.md#export-failure-and-state-saving-contract) an
    and load/modify/save workflows on another PC. User-requested future work;
    not active and does not displace correctness fixes.
    [Requirements, acceptance and maintenance plan](MCP_PLAN.md).
+5. **Planned future feature:** rest-area calculation and rest
+   machining helpers for pocket and inside/outside profile MOPs. Five outcomes:
+   pure rest regions; safe expansion for a smaller endmill; pointed/flat-tip
+   V-cutter preparation; a general bounded XYZ V-carving path calculator; and
+   V-cutter edge tracing with corner cleanup. Region topology and shape Z fidelity
+   are supporting dependencies of this feature, not new foundation priorities.
+   Calculations must run programmatically in this framework without CamBam;
+   `.cb` files provide interchange, not access to a headless CAM engine.
+   [Problem, reasoning, support gaps and acceptance plan](REST_MACHINING_PLAN.md).
+   Promote for a concrete workflow after higher-priority work; no implementation
+   or machining acceptance is claimed by this planning entry.
 
 This supersedes the former five broad increments; their pending scope is retained
 above. Detailed contracts remain in `structure_spec.md`, and review evidence in
