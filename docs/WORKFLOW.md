@@ -48,36 +48,15 @@ current contract in its normal owner and link to this evidence. Do not manufactu
 rejected alternatives for trivial edits. Add a domain-specific record only when
 volume warrants it and update the topic map rather than creating a parallel wiki.
 
-## Capability-based delegation
+## Delegation execution
 
-| Capability | Suitable work | Keep with lead |
-| --- | --- | --- |
-| Fast retrieval/classification | Narrow searches, authorized extraction, consistency checks, synthetic test ideas | Cross-layer interpretation |
-| Focused implementation | Exclusive small code/test/docs slice with stable contract and executable checks | Overlapping edits or undefined behavior |
-| Deep review | Bounded difficult logic, regression/security concern or defined design | Final integration and acceptance decisions |
-
-Choose the least costly capable route that satisfies tool, privacy and integration
-requirements. Inspect actual available tools and routing/telemetry when cost
-distinctions matter; availability and model names are session facts, not contracts.
-Apply the reusable risk and model-selection guidance in
-[MODEL_ROUTING.md](MODEL_ROUTING.md), while keeping architecture and final
-integration with the lead.
-Include worker setup/context, returned output, review, integration, retries and
-duplicate work in cost decisions. If telemetry is unavailable, say so instead of
-claiming a cheaper route. Discover capabilities at runtime; do not assume a listed
-plugin or external-provider credential is installed or authorized.
-If external processing is not authorized, use a native worker. Coordinate temporary
-resources. Give one focused correction for a misunderstood task, then return
-unresolved semantics to the lead. Duplicate reviews only when independence is
-worth the added cost. Workers are not alone: preserve other workers' edits.
-Wait for required worker results before integration and validate claims locally.
-If scope crosses an ownership boundary or semantics are unclear, the worker returns
-the affected symbols, evidence, unresolved question and smallest alternatives to
-the lead before editing beyond its packet.
-Send only the minimum authorized code/excerpts. Never include credentials, private
-or user assets, generated asset reports or sensitive paths/metadata in external
-task packets without explicit authorization. A provider fallback must satisfy the
-same privacy and tool constraints; lower price does not lower the standard.
+[MODEL_ROUTING.md](MODEL_ROUTING.md) is the sole role-selection guide. Keep the
+immediate blocking step with the lead and continue useful non-overlapping work while
+agents run. Give editing workers disjoint ownership, preserve concurrent changes and
+wait for required results before integration. Give one focused correction for a
+misunderstood task; return unresolved semantics to the lead. Validate worker claims
+in proportion to their impact and use the same correctness and privacy standard for
+every route.
 
 ### Worker packet
 
@@ -89,7 +68,7 @@ Necessary contract context: owner links and relevant requirements only
 Acceptance: executable checks or evidence criteria
 Constraints: privacy, compatibility, dependencies, shared temporary resources
 Edit permission/exclusive ownership: read-only or named files
-Output budget: short limit
+Output shape/limit: concise result appropriate to the task
 Result form: findings with file/symbol evidence, patch, or tests; no transcript
 ```
 

@@ -1,5 +1,30 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Delegation routing correction - 2026-09-09
+
+The initial revision mixed project policy, role selection, provider setup and worker
+execution behavior. It also omitted the Sol role registration, duplicated stale role
+descriptions, used a false-precision score and recorded availability before an
+invocation passed. The corrected ownership is: `AGENTS.md` states the short project
+rule, [MODEL_ROUTING.md](MODEL_ROUTING.md) is the sole role selector,
+[WORKFLOW.md](WORKFLOW.md#delegation-execution) owns packet/integration mechanics, and
+user-level role TOMLs govern only the selected worker's execution.
+
+Provider evidence: a direct read-only `codex exec` using `model_provider=openrouter`
+and `z-ai/glm-5.3-flash` returned the exact requested marker. A native-parent custom
+GLM spawn failed with HTTP 400 because Codex 0.150.1 reapplied the ChatGPT account
+transport to the OpenRouter child. This is a mixed-provider limitation, not an API-key
+or model-name failure. The corrected user-level `openrouter-glm` profile selects
+OpenRouter/GLM and overrides the inherited subagent model/effort defaults. A fresh
+profile-backed process spawned `glm_retriever`; the consolidated-profile retest returned
+`GLM_SUBAGENT_ROUTE_OK Model routing`. A separate fresh native process spawned the newly
+registered `sol_scoped_worker` and returned `SOL_SUBAGENT_OK`. All tests were read-only.
+
+Reopen routing if reviewed worker output shows regressions or coordination cost
+erases the expected benefit. Reopen provider setup if a profile-backed GLM subagent
+fails or a later Codex release claims cross-provider children are supported; retain
+exact errors rather than inferring model quality or access.
+
 ## Scope and workflow assessment
 
 The initial working tree was clean. This pass changed documentation and ignored
