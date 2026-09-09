@@ -256,9 +256,8 @@ def remove_transform_component(matrix: np.ndarray, component_type: str) -> np.nd
 
 # --- CamBam Matrix Format Conversion ---
 
-# TODO: Revise to both functions follow cb mat forrmat, putting tx, ty, tz in bottom row
-# TEST them!
-def to_cambam_matrix_str(matrix_3x3: np.ndarray, output_decimals: Optional[int] = None) -> str:
+# CamBam's flat column-major pose stores translation at offsets 12, 13 and 14.
+def to_cambam_matrix_str(matrix_3x3: np.ndarray, output_decimals: Optional[int] = None, *, z_offset: float = 0.0) -> str:
     """
     Convert a 3x3 transformation matrix to a CamBam XML 4x4 matrix string.
     The CamBam format expects a 4x4 matrix in a particular column-major order,
@@ -267,9 +266,16 @@ def to_cambam_matrix_str(matrix_3x3: np.ndarray, output_decimals: Optional[int] 
     from the top down, separating the numbers with a space. 
     Example: 'sx 0 0 0 0 sy 0 0 0 0 sz 0 tx ty tz 1'
     """
+    if np.iscomplexobj(matrix_3x3):
+        raise ValueError("Expected a real XY affine matrix")
+    matrix_3x3 = np.asarray(matrix_3x3, dtype=float)
+    if (matrix_3x3.shape != (3, 3) or not np.isfinite(matrix_3x3).all()
+            or not np.array_equal(matrix_3x3[2], [0., 0., 1.])
+            or not math.isfinite(z_offset)):
+        raise ValueError("Expected a finite XY affine matrix and Z translation")
     tx = matrix_3x3[0, 2]
     ty = matrix_3x3[1, 2]
-    tz = 0.0  # Z translation is zero for 2D
+    tz = z_offset
     cambam_matrix = np.identity(4, dtype=float)
     cambam_matrix[0:2, 0:2] = matrix_3x3[0:2, 0:2]
     cambam_matrix[0, 3] = tx
@@ -287,102 +293,52 @@ def to_cambam_matrix_str(matrix_3x3: np.ndarray, output_decimals: Optional[int] 
     return " ".join(flat)
 
 
-def from_cambam_matrix_str(cambam_matrix_str: str) -> np.ndarray:
+def from_cambam_matrix_str(cambam_matrix_str: str, *, return_z: bool = False):
     """
-    Convert a CamBam XML 4x4 matrix string back to a 3x3 transformation matrix,
-    from CamBams unique matrix format.
+    Decode the supported XY affine pose and optional independent Z translation.
+
+    With return_z=True return (xy_matrix, z_offset). The XY-only form rejects
+    nonzero Z translation. Spatial mixing, Z scaling and perspective raise.
     """
     matrix_3x3 = np.identity(3, dtype=float)
 
     # If registered as "Identity", just return an identity matrix
-    if cambam_matrix_str.lower() == "identity":
-        return matrix_3x3
+    if cambam_matrix_str.strip().lower() == "identity":
+        return (matrix_3x3, 0.0) if return_z else matrix_3x3
     
     # Else, convert the string to a 4x4 matrix and encode it in a 3x3 matrix to be returned
     values = [float(v) for v in cambam_matrix_str.split()]
+    if len(values) != 16 or not np.isfinite(values).all():
+        raise ValueError("CamBam matrix must contain 16 finite values")
     matrix_4x4 = np.zeros((4,4), dtype=float)
     for col in range(4):
         for row in range(4):
             matrix_4x4[row, col] = values[col*4 + row]
 
+    if (not np.array_equal(matrix_4x4[3], [0., 0., 0., 1.])
+            or not np.array_equal(matrix_4x4[:3, 2], [0., 0., 1.])
+            or not np.array_equal(matrix_4x4[2, :2], [0., 0.])):
+        raise ValueError("Unsupported matrix: only XY affine transforms and Z translation are supported")
+    z_offset = float(matrix_4x4[2, 3])
+    if z_offset and not return_z:
+        raise ValueError("Z translation requires return_z=True; refusing to discard elevation")
+
     matrix_3x3[0:2, 0:2] = matrix_4x4[0:2, 0:2]
     matrix_3x3[0, 2] = matrix_4x4[0, 3]
     matrix_3x3[1, 2] = matrix_4x4[1, 3]
-    return matrix_3x3
+    return (matrix_3x3, z_offset) if return_z else matrix_3x3
 
 
 
 
-def to_cambam_matrix_str_v2(matrix_3x3: np.ndarray) -> str:
-    """
-    Convert a 3x3 transformation matrix to CamBam's expected 4x4 XML string format.
-    CamBam uses a 4x4 matrix, column-major order, space-separated.
-    The 3x3 matrix represents the 2D transformation in the XY plane.
-    """
-    # Ensure input is 3x3
-    if matrix_3x3.shape != (3, 3):
-        raise ValueError("Input must be a 3x3 NumPy array.")
+def to_cambam_matrix_str_v2(matrix_3x3: np.ndarray, *, z_offset: float = 0.0) -> str:
+    """Compatibility alias for the canonical CamBam matrix encoder."""
+    return to_cambam_matrix_str(matrix_3x3, z_offset=z_offset)
 
-    # Create the 4x4 matrix, initializing with identity
-    matrix_4x4 = np.identity(4, dtype=float)
 
-    # Embed the 2x2 rotation/scale/shear part
-    matrix_4x4[0:2, 0:2] = matrix_3x3[0:2, 0:2]
-
-    # Embed the 2D translation part (dx, dy) into the last column
-    matrix_4x4[0, 3] = matrix_3x3[0, 2] # tx
-    matrix_4x4[1, 3] = matrix_3x3[1, 2] # ty
-    # matrix_4x4[2, 3] = 0.0 # tz is assumed 0 for 2D transforms
-    # matrix_4x4[3, 3] = 1.0 # W component
-
-    # Flatten in column-major order (Fortran 'F' order)
-    # CamBam format: m11 m21 m31 m41 m12 m22 m32 m42 ...
-    flat_column_major = matrix_4x4.flatten(order='F')
-
-    # Convert to space-separated string
-    return " ".join(map(str, flat_column_major))
-
-def from_cambam_matrix_str_v2(cambam_matrix_str: str) -> np.ndarray:
-    """
-    Convert a CamBam XML 4x4 matrix string back to a 3x3 transformation matrix.
-    Assumes the 4x4 matrix represents a 2D transformation in the XY plane.
-    """
-    # Create the 3x3 matrix, initializing with identity
-    matrix_3x3 = np.identity(3, dtype=float)
-
-    # If registered as "Identity", just return an identity matrix
-    if cambam_matrix_str.lower() == "identity":
-        return matrix_3x3
-
-    # Else, continue with the conversion, checking str length
-    values = [float(v) for v in cambam_matrix_str.split()]
-    if len(values) != 16:
-        raise ValueError("CamBam matrix string must contain 16 float values.")
-
-    # Reconstruct the 4x4 matrix from column-major string
-    matrix_4x4 = np.array(values).reshape((4, 4), order='F')
-
-    # Extract the 2x2 rotation/scale/shear part
-    matrix_3x3[0:2, 0:2] = matrix_4x4[0:2, 0:2]
-
-    # Extract the 2D translation part
-    matrix_3x3[0, 2] = matrix_4x4[0, 3] # tx
-    matrix_3x3[1, 2] = matrix_4x4[1, 3] # ty
-    # matrix_3x3[2, 2] = 1.0 # W component
-
-    # Optional: Check if it was indeed a 2D transform (Z-related parts are identity/zero)
-    expected_z_col = [0., 0., 1., 0.]
-    actual_z_col = matrix_4x4[:, 2]
-    expected_w_row_part = [0., 0., 0.]
-    actual_w_row_part = matrix_4x4[3, 0:3]
-
-    if not np.allclose(actual_z_col, expected_z_col):
-        logger.warning("CamBam matrix indicates potential 3D transformation (Z column modified). Only XY part extracted.")
-    if not np.allclose(actual_w_row_part, expected_w_row_part) or not math.isclose(matrix_4x4[3, 3], 1.0):
-         logger.warning("CamBam matrix indicates potential perspective transformation (W row/element modified). Only affine XY part extracted.")
-
-    return matrix_3x3
-
+def from_cambam_matrix_str_v2(cambam_matrix_str: str, *, return_z: bool = False):
+    """Compatibility alias; unsupported spatial/perspective forms fail explicitly."""
+    return from_cambam_matrix_str(cambam_matrix_str, return_z=return_z)
 
 
 if __name__ == "__main__":

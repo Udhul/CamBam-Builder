@@ -40,6 +40,55 @@ ARC_ANGLE_TOLERANCE_RADIANS = 1e-12
 PLINE_BULGE_TOLERANCE = 1e-12
 CURVE_POINT_TOLERANCE = 1e-12
 
+
+def _finite_float(value: Any, field_name: str) -> float:
+    """Return ``value`` as a finite float, with a field-specific error."""
+    try:
+        result = float(value)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError(f"{field_name} must be a finite number") from exc
+    if not math.isfinite(result):
+        raise ValueError(f"{field_name} must be a finite number")
+    return result
+
+
+def _vertex_elevations(values: Optional[Sequence[float]], count: int,
+                       field_name: str = "vertex_z") -> List[float]:
+    """Validate an optional per-vertex elevation sequence and expand its default."""
+    if values is None:
+        return [0.0] * count
+    try:
+        result = [_finite_float(value, field_name) for value in values]
+    except TypeError as exc:
+        raise ValueError(f"{field_name} must be a sequence of finite numbers") from exc
+    if len(result) != count:
+        raise ValueError(
+            f"{field_name} must contain exactly {count} values; got {len(result)}"
+        )
+    return result
+
+
+def _xy_similarity_scale(matrix: Any) -> Optional[float]:
+    """Return a non-degenerate XY similarity scale, or ``None`` otherwise."""
+    affine = _affine_matrix_or_none(matrix)
+    if affine is None:
+        return None
+    linear = affine[0:2, 0:2]
+    magnitude = float(np.max(np.abs(linear)))
+    if magnitude == 0.0:
+        return None
+    normalized = linear / magnitude
+    gram = normalized.T @ normalized
+    scale_squared = float(np.trace(gram) / 2.0)
+    if (not math.isfinite(scale_squared) or scale_squared <= 0.0
+            or not np.allclose(
+                gram, np.identity(2) * scale_squared,
+                rtol=1e-12, atol=1e-12,
+            )):
+        return None
+    scale = magnitude * math.sqrt(scale_squared)
+    return scale if math.isfinite(scale) else None
+
 # --- Helper Classes ---
 
 @dataclass(frozen=True)
@@ -264,15 +313,20 @@ class Primitive(CamBamEntity, ABC):
     groups: List[str] = field(default_factory=list) # Classification
     description: str = ""                           # Classification
     output_decimals: Optional[int] = 9              # For XML serialization
+    local_z_offset: float = 0.0                     # Local Z-only transform
 
     # Reference back to the project (transient, for context)
     _project_ref: Optional[weakref.ReferenceType] = field(default=None, init=False, repr=False)
 
     def __post_init__(self):
         super().__post_init__()
-        # Ensure transform is always a valid matrix
-        if not isinstance(self.effective_transform, np.ndarray) or self.effective_transform.shape != (3, 3):
-            self.effective_transform = identity_matrix()
+        self.local_z_offset = _finite_float(self.local_z_offset, "local_z_offset")
+        # Normalize accepted array-like input, but never replace malformed
+        # geometry with an identity transform silently.
+        valid_transform = _affine_matrix_or_none(self.effective_transform)
+        if valid_transform is None:
+            raise ValueError("effective_transform must be a finite affine 3x3 matrix")
+        self.effective_transform = valid_transform.copy()
         # Ensure groups is a list
         if self.groups is None:
             self.groups = []
@@ -292,6 +346,18 @@ class Primitive(CamBamEntity, ABC):
         # Restore numpy array if it was converted to list
         # if isinstance(state.get('effective_transform'), list):
         #     state['effective_transform'] = np.array(state['effective_transform'])
+        # Additive elevation fields were introduced after the original pickle
+        # format. Defaults intentionally reproduce the old all-Z-zero model.
+        fields = getattr(type(self), "__dataclass_fields__", {})
+        state.setdefault('local_z_offset', 0.0)
+        if 'vertex_z' in fields:
+            state.setdefault('vertex_z', None)
+        if 'elevation' in fields:
+            state.setdefault('elevation', 0.0)
+        if 'baseline_elevation' in fields:
+            state.setdefault('baseline_elevation', None)
+        if 'baseline_position' in fields:
+            state.setdefault('baseline_position', None)
         self.__dict__.update(state)
         # Re-initialize transient fields
         self._project_ref = None
@@ -327,11 +393,60 @@ class Primitive(CamBamEntity, ABC):
                     break # Stop climbing if parent is missing
         return total_tf
 
+    def get_total_z_offset(self) -> float:
+        """Return this primitive's Z-only transform including all ancestors."""
+        total_z = _finite_float(getattr(self, 'local_z_offset', 0.0), "local_z_offset")
+        project = self.get_project()
+        if not project:
+            return total_z
+
+        parent = project.get_parent_of_primitive(self.internal_id)
+        visited: Set[uuid.UUID] = set()
+        while parent is not None:
+            if parent.internal_id in visited:
+                raise ValueError("Primitive parent cycle detected while calculating Z offset")
+            visited.add(parent.internal_id)
+            total_z += _finite_float(
+                getattr(parent, 'local_z_offset', 0.0), "parent local_z_offset"
+            )
+            parent = project.get_parent_of_primitive(parent.internal_id)
+        if not math.isfinite(total_z):
+            raise ValueError("Total Z offset must be finite")
+        return total_z
+
+    def get_total_transform_xyz(self) -> np.ndarray:
+        """Return the supported world transform as a 4x4 XYZ affine matrix."""
+        xy = _affine_matrix_or_none(self.get_total_transform())
+        if xy is None:
+            raise ValueError("Expected a finite affine 3x3 XY transform")
+        result = np.identity(4, dtype=float)
+        result[0:2, 0:2] = xy[0:2, 0:2]
+        result[0, 3] = xy[0, 2]
+        result[1, 3] = xy[1, 2]
+        result[2, 3] = self.get_total_z_offset()
+        return result
+
     # --- Geometry Calculations ---
     def get_absolute_coordinates(self) -> Any:
         """Calculates the primitive's geometry in absolute world coordinates."""
         total_tf = self.get_total_transform()
         return self._calculate_absolute_geometry(total_tf)
+
+    def get_absolute_coordinates_xyz(self) -> Any:
+        """Return the shape's world geometry with explicit Z coordinates."""
+        transform = _affine_matrix_or_none(self.get_total_transform())
+        if transform is None:
+            raise ValueError("Expected a finite affine world transform")
+        return self._calculate_absolute_geometry_xyz(
+            transform, self.get_total_z_offset()
+        )
+
+    def _calculate_absolute_geometry_xyz(
+        self, total_transform: np.ndarray, total_z_offset: float
+    ) -> Any:
+        raise NotImplementedError(
+            f"{type(self).__name__} does not implement XYZ geometry queries"
+        )
 
     def get_bounding_box(self) -> BoundingBox:
         """Calculates the 2D bounding box in absolute world coordinates."""
@@ -393,8 +508,18 @@ class Primitive(CamBamEntity, ABC):
         # Add Transformation Matrix
         # The matrix stored in XML is the *total* transformation relative to world origin
         total_tf = self.get_total_transform()
-        mat_str = to_cambam_matrix_str(total_tf, output_decimals=self.output_decimals)
+        mat_str = to_cambam_matrix_str(
+            total_tf,
+            output_decimals=self.output_decimals,
+            z_offset=self.get_total_z_offset(),
+        )
         ET.SubElement(element, "mat", {"m": mat_str})
+
+    def shift_geometry_z(self, dz: float) -> None:
+        """Shift intrinsic geometry in Z without changing its transform offset."""
+        raise NotImplementedError(
+            f"{type(self).__name__} does not implement intrinsic Z shifts"
+        )
 
     @abstractmethod
     def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
@@ -421,6 +546,38 @@ class Pline(Primitive):
     # Intrinsic geometry
     relative_points: List[Union[Tuple[float, float], Tuple[float, float, float]]] = field(default_factory=list)
     closed: bool = False
+    vertex_z: Optional[Sequence[float]] = None
+
+    def __post_init__(self):
+        super().__post_init__()
+        validated = self._validated_vertex_z()
+        if self.vertex_z is not None:
+            self.vertex_z = validated
+
+    def _validated_vertex_z(self) -> List[float]:
+        elevations = _vertex_elevations(
+            self.vertex_z, len(self.relative_points), "vertex_z"
+        )
+        segment_count = max(0, len(self.relative_points) - 1)
+        if self.closed and self.relative_points:
+            segment_count += 1
+        for index in range(segment_count):
+            point = self.relative_points[index]
+            bulge = _finite_float(
+                point[2] if len(point) > 2 else 0.0,
+                f"relative_points[{index}] bulge",
+            )
+            next_index = (index + 1) % len(self.relative_points)
+            if (abs(bulge) > PLINE_BULGE_TOLERANCE
+                    and not math.isclose(
+                        elevations[index], elevations[next_index],
+                        rel_tol=0.0, abs_tol=CURVE_POINT_TOLERANCE,
+                    )):
+                raise ValueError(
+                    "Bulged Pline segments require equal endpoint Z values "
+                    f"(segment {index} to {next_index})"
+                )
+        return elevations
 
     def _calculate_absolute_geometry(self, total_transform: np.ndarray) -> List[Tuple[float, float, float]]:
         # Extract XY for transformation
@@ -438,6 +595,28 @@ class Pline(Primitive):
                 logger.warning(f"Point mismatch after transformation for Pline {self.user_identifier}. Skipping bulge.")
 
         return abs_pts_with_bulge
+
+    def _calculate_absolute_geometry_xyz(
+        self, total_transform: np.ndarray, total_z_offset: float
+    ) -> List[Tuple[float, float, float, float]]:
+        elevations = self._validated_vertex_z()
+        absolute_xy_bulge = self._calculate_absolute_geometry(total_transform)
+        if (any(abs(p[2]) > PLINE_BULGE_TOLERANCE for p in absolute_xy_bulge)
+                and _xy_similarity_scale(total_transform) is None):
+            raise ValueError("Bulged Pline XYZ queries require an XY similarity transform")
+        orientation = -1.0 if np.linalg.det(total_transform[:2, :2]) < 0.0 else 1.0
+        return [
+            (x, y, _finite_float(elevations[index] + total_z_offset, "world Z"),
+             bulge * orientation)
+            for index, (x, y, bulge) in enumerate(absolute_xy_bulge)
+        ]
+
+    def shift_geometry_z(self, dz: float) -> None:
+        delta = _finite_float(dz, "dz")
+        current = self._validated_vertex_z()
+        shifted = [_finite_float(z + delta, "shifted vertex_z") for z in current]
+        if delta != 0.0 or self.vertex_z is not None:
+            self.vertex_z = shifted
 
     def _calculate_bounding_box(self, absolute_geometry: List[Tuple[float, float, float]]) -> BoundingBox:
         # Bounding box ignores bulge, uses only XY coordinates
@@ -560,6 +739,28 @@ class Pline(Primitive):
             # Use provided transform
             transform_to_apply = transform_to_bake
             reset_transform = False
+
+        affine = _affine_matrix_or_none(transform_to_apply)
+        if affine is None:
+            raise ValueError("Expected a finite affine 3x3 matrix")
+        transform_to_apply = affine
+        self._validated_vertex_z()
+        segment_count = max(0, len(self.relative_points) - 1)
+        if self.closed and self.relative_points:
+            segment_count += 1
+        has_bulged_segment = any(
+            abs(_finite_float(
+                self.relative_points[index][2]
+                if len(self.relative_points[index]) > 2 else 0.0,
+                f"relative_points[{index}] bulge",
+            )) > PLINE_BULGE_TOLERANCE
+            for index in range(segment_count)
+        )
+        if has_bulged_segment and _xy_similarity_scale(transform_to_apply) is None:
+            raise ValueError(
+                "Bulged Pline geometry can only bake XY similarity transforms"
+            )
+        reflected = np.linalg.det(transform_to_apply[0:2, 0:2]) < 0.0
             
         # Skip if identity matrix (nothing to bake)
         if np.array_equal(transform_to_apply, identity_matrix()):
@@ -575,6 +776,8 @@ class Pline(Primitive):
             for i, (x, y) in enumerate(baked_pts_xy):
                 if i < len(self.relative_points):
                     bulge = self.relative_points[i][2] if len(self.relative_points[i]) > 2 else 0.0
+                    if reflected:
+                        bulge = -bulge
                     new_relative_points.append((x, y, bulge))
                 else:
                     logger.warning(f"Point mismatch during baking for Pline {self.user_identifier}. Skipping point.")
@@ -596,11 +799,13 @@ class Pline(Primitive):
         # Add points WITHOUT applying the effective_transform here
         # The matrix added later by _add_common_xml_attributes handles the total transform
         pts_elem = ET.SubElement(pline_elem, "pts")
-        for pt in self.relative_points:
+        elevations = self._validated_vertex_z()
+        for index, pt in enumerate(self.relative_points):
             # CamBam point format: x,y,z (z is usually 0 for 2D)
             x = round(pt[0], self.output_decimals) if self.output_decimals is not None else pt[0]
             y = round(pt[1], self.output_decimals) if self.output_decimals is not None else pt[1]
-            z = 0.0
+            z = elevations[index]
+            z = round(z, self.output_decimals) if self.output_decimals is not None else z
             bulge = pt[2] if len(pt) > 2 else 0.0
             bulge = round(bulge, self.output_decimals) if self.output_decimals is not None else bulge
             
@@ -616,6 +821,11 @@ class Circle(Primitive):
     # Intrinsic geometry
     relative_center: Tuple[float, float] = (0.0, 0.0)
     diameter: float = 1.0
+    elevation: float = 0.0
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.elevation = _finite_float(self.elevation, "elevation")
 
     def _calculate_absolute_geometry(self, total_transform: np.ndarray) -> Dict[str, Any]:
         """Returns absolute center and scaled diameter."""
@@ -631,6 +841,27 @@ class Circle(Primitive):
             logger.warning(f"Circle {self.user_identifier} transformed with non-uniform scale ({sx:.3f}, {sy:.3f}). Using average scale for diameter calculation.")
 
         return {"center": abs_center, "diameter": abs_diameter}
+
+    def _calculate_absolute_geometry_xyz(
+        self, total_transform: np.ndarray, total_z_offset: float
+    ) -> Dict[str, Any]:
+        if _xy_similarity_scale(total_transform) is None:
+            raise ValueError("Circle XYZ queries require an XY similarity transform")
+        geometry = self._calculate_absolute_geometry(total_transform)
+        center_x, center_y = geometry["center"]
+        geometry["center"] = (
+            center_x, center_y,
+            _finite_float(_finite_float(self.elevation, "elevation") + total_z_offset, "world Z"),
+        )
+        return geometry
+
+    def shift_geometry_z(self, dz: float) -> None:
+        delta = _finite_float(dz, "dz")
+        shifted = _finite_float(
+            _finite_float(self.elevation, "elevation") + delta,
+            "shifted elevation",
+        )
+        self.elevation = shifted
 
     def _calculate_bounding_box(self, absolute_geometry: Dict[str, Any]) -> BoundingBox:
         cx, cy = absolute_geometry["center"]
@@ -656,9 +887,13 @@ class Circle(Primitive):
             # Use provided transform
             transform_to_apply = transform_to_bake
             reset_transform = False
+
+        similarity_scale = _xy_similarity_scale(transform_to_apply)
+        if similarity_scale is None:
+            raise ValueError("Circle geometry can only bake XY similarity transforms")
             
         # Skip if identity matrix (nothing to bake)
-        if np.allclose(transform_to_apply, identity_matrix()):
+        if np.array_equal(transform_to_apply, identity_matrix()):
             return
             
         try:
@@ -666,10 +901,7 @@ class Circle(Primitive):
             self.relative_center = get_transformed_point(self.relative_center, transform_to_apply)
 
             # Bake diameter (using average scale factor)
-            sx = np.linalg.norm(transform_to_apply[:, 0])
-            sy = np.linalg.norm(transform_to_apply[:, 1])
-            avg_scale = (sx + sy) / 2.0
-            self.diameter *= avg_scale
+            self.diameter *= similarity_scale
             
             # Reset effective transform if using it
             if reset_transform:
@@ -682,7 +914,8 @@ class Circle(Primitive):
         """Creates the <circle> XML element."""
         cx = round(self.relative_center[0], self.output_decimals) if self.output_decimals is not None else self.relative_center[0]
         cy = round(self.relative_center[1], self.output_decimals) if self.output_decimals is not None else self.relative_center[1]
-        cz = 0.0
+        cz = _finite_float(self.elevation, "elevation")
+        cz = round(cz, self.output_decimals) if self.output_decimals is not None else cz
         c_diam = round(self.diameter, self.output_decimals) if self.output_decimals is not None else self.diameter
         
         circle_elem = ET.Element("circle", {
@@ -702,6 +935,11 @@ class Rect(Primitive):
     relative_corner: Tuple[float, float] = (0.0, 0.0) # Bottom-left
     width: float = 1.0
     height: float = 1.0
+    elevation: float = 0.0
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.elevation = _finite_float(self.elevation, "elevation")
 
     def _get_relative_corners(self) -> List[Tuple[float, float]]:
         """Returns the four corners in relative coordinates."""
@@ -711,6 +949,23 @@ class Rect(Primitive):
     def _calculate_absolute_geometry(self, total_transform: np.ndarray) -> List[Tuple[float, float]]:
         """Returns the four corners in absolute coordinates."""
         return apply_transform(self._get_relative_corners(), total_transform)
+
+    def _calculate_absolute_geometry_xyz(
+        self, total_transform: np.ndarray, total_z_offset: float
+    ) -> List[Tuple[float, float, float]]:
+        z = _finite_float(_finite_float(self.elevation, "elevation") + total_z_offset, "world Z")
+        return [
+            (x, y, z)
+            for x, y in self._calculate_absolute_geometry(total_transform)
+        ]
+
+    def shift_geometry_z(self, dz: float) -> None:
+        delta = _finite_float(dz, "dz")
+        shifted = _finite_float(
+            _finite_float(self.elevation, "elevation") + delta,
+            "shifted elevation",
+        )
+        self.elevation = shifted
 
     def _calculate_bounding_box(self, absolute_geometry: List[Tuple[float, float]]) -> BoundingBox:
         if not absolute_geometry:
@@ -791,7 +1046,9 @@ class Rect(Primitive):
             description=f"Converted from Rect: {self.description}",
             effective_transform=identity_matrix(),  # Use identity since we've already applied the transform
             relative_points=pline_points,
-            closed=True
+            closed=True,
+            vertex_z=[_finite_float(self.elevation, "elevation")] * 4,
+            local_z_offset=self.local_z_offset,
         )
         
         return pline
@@ -828,13 +1085,15 @@ class Rect(Primitive):
             self.width, self.height = upper - lower
         else:
             points = [(x, y, 0.0) for x, y in corners]
+            elevation = _finite_float(self.elevation, "elevation")
             # Both dataclasses have the same ordinary Python object layout.
             # Assign the class before geometry edits so an unsupported subclass
             # layout fails without discarding the original Rect geometry.
             self.__class__ = Pline
             self.relative_points = points
             self.closed = True
-            del self.relative_corner, self.width, self.height
+            self.vertex_z = [elevation] * 4
+            del self.relative_corner, self.width, self.height, self.elevation
         if transform_to_bake is None:
             self.effective_transform = identity_matrix()
 
@@ -855,9 +1114,11 @@ class Rect(Primitive):
                 description=self.description,
                 output_decimals=self.output_decimals,
                 effective_transform=identity_matrix(),
+                local_z_offset=self.get_total_z_offset(),
                 relative_points=[(x, y, 0.0) for x, y in apply_transform(
                     self._get_relative_corners(), self.get_total_transform())],
                 closed=True,
+                vertex_z=[_finite_float(self.elevation, "elevation")] * 4,
             )
             
             # Get the Pline's XML element, but with our metadata
@@ -889,7 +1150,8 @@ class Rect(Primitive):
         # Otherwise, create a normal Rect XML element
         x = round(self.relative_corner[0], self.output_decimals) if self.output_decimals is not None else self.relative_corner[0]
         y = round(self.relative_corner[1], self.output_decimals) if self.output_decimals is not None else self.relative_corner[1]
-        z = 0.0
+        z = _finite_float(self.elevation, "elevation")
+        z = round(z, self.output_decimals) if self.output_decimals is not None else z
         w = round(self.width, self.output_decimals) if self.output_decimals is not None else self.width
         h = round(self.height, self.output_decimals) if self.output_decimals is not None else self.height
         
@@ -913,6 +1175,11 @@ class Arc(Primitive):
     radius: float = 1.0
     start_angle: float = 0.0 # Degrees
     extent_angle: float = 90.0 # Degrees (sweep angle)
+    elevation: float = 0.0
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.elevation = _finite_float(self.elevation, "elevation")
 
     def _calculate_absolute_geometry(self, total_transform: np.ndarray) -> Dict[str, Any]:
         """Returns absolute center, scaled radius, and transformed angles."""
@@ -943,6 +1210,33 @@ class Arc(Primitive):
             "start_angle": abs_start_angle,
             "extent_angle": abs_extent_angle
         }
+
+    def _calculate_absolute_geometry_xyz(
+        self, total_transform: np.ndarray, total_z_offset: float
+    ) -> Dict[str, Any]:
+        if _xy_similarity_scale(total_transform) is None:
+            raise ValueError("Arc XYZ queries require an XY similarity transform")
+        geometry = self._calculate_absolute_geometry(total_transform)
+        center_x, center_y = geometry["center"]
+        geometry["center"] = (
+            center_x, center_y,
+            _finite_float(_finite_float(self.elevation, "elevation") + total_z_offset, "world Z"),
+        )
+        start = math.radians(self.start_angle)
+        direction = total_transform[:2, :2] @ np.array([math.cos(start), math.sin(start)])
+        geometry["start_angle"] = math.degrees(math.atan2(direction[1], direction[0])) % 360
+        geometry["extent_angle"] = self.extent_angle * (
+            -1.0 if np.linalg.det(total_transform[:2, :2]) < 0.0 else 1.0
+        )
+        return geometry
+
+    def shift_geometry_z(self, dz: float) -> None:
+        delta = _finite_float(dz, "dz")
+        shifted = _finite_float(
+            _finite_float(self.elevation, "elevation") + delta,
+            "shifted elevation",
+        )
+        self.elevation = shifted
 
     def _calculate_bounding_box(self, absolute_geometry: Dict[str, Any]) -> BoundingBox:
         # Approximate bounding box using center and radius
@@ -989,31 +1283,34 @@ class Arc(Primitive):
             # Use provided transform
             transform_to_apply = transform_to_bake
             reset_transform = False
+
+        similarity_scale = _xy_similarity_scale(transform_to_apply)
+        if similarity_scale is None:
+            raise ValueError("Arc geometry can only bake XY similarity transforms")
+        transform_to_apply = _affine_matrix_or_none(transform_to_apply)
+        assert transform_to_apply is not None
             
         # Skip if identity matrix (nothing to bake)
-        if np.allclose(transform_to_apply, identity_matrix()):
+        if np.array_equal(transform_to_apply, identity_matrix()):
             return
             
         try:
             # Bake center position
             self.relative_center = get_transformed_point(self.relative_center, transform_to_apply)
             
-            # Bake radius (using average scale factor)
-            sx = np.linalg.norm(transform_to_apply[:, 0])
-            sy = np.linalg.norm(transform_to_apply[:, 1])
-            avg_scale = (sx + sy) / 2.0
-            self.radius *= avg_scale
-            
-            # Bake start angle
-            rotation_rad = math.atan2(transform_to_apply[1, 0], transform_to_apply[0, 0])
-            rotation_deg = math.degrees(rotation_rad)
-            self.start_angle = (self.start_angle + rotation_deg) % 360
-            
-            # Handle mirroring which can affect angle direction
-            det = np.linalg.det(transform_to_apply[0:2, 0:2])
-            if det < 0:  # Mirroring detected
-                # Flip the direction of the arc
-                self.start_angle = (self.start_angle + self.extent_angle) % 360
+            self.radius *= similarity_scale
+
+            # Transform the actual start direction. This also handles a
+            # reflected similarity without guessing its mirror axis.
+            start_radians = math.radians(self.start_angle)
+            start_vector = np.asarray(
+                (math.cos(start_radians), math.sin(start_radians)), dtype=float
+            )
+            transformed_start = transform_to_apply[0:2, 0:2] @ start_vector
+            self.start_angle = math.degrees(math.atan2(
+                transformed_start[1], transformed_start[0]
+            )) % 360
+            if np.linalg.det(transform_to_apply[0:2, 0:2]) < 0:
                 self.extent_angle = -self.extent_angle
             
             # Reset effective transform if using it
@@ -1027,7 +1324,8 @@ class Arc(Primitive):
         """Creates the <arc> XML element."""
         cx = round(self.relative_center[0], self.output_decimals) if self.output_decimals is not None else self.relative_center[0]
         cy = round(self.relative_center[1], self.output_decimals) if self.output_decimals is not None else self.relative_center[1]
-        cz = 0.0
+        cz = _finite_float(self.elevation, "elevation")
+        cz = round(cz, self.output_decimals) if self.output_decimals is not None else cz
         radius = round(self.radius, self.output_decimals) if self.output_decimals is not None else self.radius
         start_angle = round(self.start_angle % 360, self.output_decimals) if self.output_decimals is not None else self.start_angle % 360
         extent_angle = round(self.extent_angle, self.output_decimals) if self.output_decimals is not None else self.extent_angle
@@ -1048,9 +1346,37 @@ class Arc(Primitive):
 class Points(Primitive):
     # Intrinsic geometry
     relative_points: List[Tuple[float, float]] = field(default_factory=list)
+    vertex_z: Optional[Sequence[float]] = None
+
+    def __post_init__(self):
+        super().__post_init__()
+        validated = self._validated_vertex_z()
+        if self.vertex_z is not None:
+            self.vertex_z = validated
+
+    def _validated_vertex_z(self) -> List[float]:
+        return _vertex_elevations(self.vertex_z, len(self.relative_points), "vertex_z")
 
     def _calculate_absolute_geometry(self, total_transform: np.ndarray) -> List[Tuple[float, float]]:
         return apply_transform(self.relative_points, total_transform)
+
+    def _calculate_absolute_geometry_xyz(
+        self, total_transform: np.ndarray, total_z_offset: float
+    ) -> List[Tuple[float, float, float]]:
+        elevations = self._validated_vertex_z()
+        return [
+            (x, y, _finite_float(elevations[index] + total_z_offset, "world Z"))
+            for index, (x, y) in enumerate(
+                self._calculate_absolute_geometry(total_transform)
+            )
+        ]
+
+    def shift_geometry_z(self, dz: float) -> None:
+        delta = _finite_float(dz, "dz")
+        current = self._validated_vertex_z()
+        shifted = [_finite_float(z + delta, "shifted vertex_z") for z in current]
+        if delta != 0.0 or self.vertex_z is not None:
+            self.vertex_z = shifted
 
     def _calculate_bounding_box(self, absolute_geometry: List[Tuple[float, float]]) -> BoundingBox:
         if not absolute_geometry:
@@ -1083,9 +1409,14 @@ class Points(Primitive):
             # Use provided transform
             transform_to_apply = transform_to_bake
             reset_transform = False
+
+        affine = _affine_matrix_or_none(transform_to_apply)
+        if affine is None:
+            raise ValueError("Expected a finite affine 3x3 matrix")
+        transform_to_apply = affine
             
         # Skip if identity matrix (nothing to bake)
-        if np.allclose(transform_to_apply, identity_matrix()):
+        if np.array_equal(transform_to_apply, identity_matrix()):
             return
             
         try:
@@ -1103,10 +1434,12 @@ class Points(Primitive):
         """Creates the <points> XML element."""
         points_elem = ET.Element("points")
         pts_elem = ET.SubElement(points_elem, "pts")
-        for x, y in self.relative_points:
+        elevations = self._validated_vertex_z()
+        for index, (x, y) in enumerate(self.relative_points):
             px = round(x, self.output_decimals) if self.output_decimals is not None else x
             py = round(y, self.output_decimals) if self.output_decimals is not None else y
-            pz = 0.0
+            pz = elevations[index]
+            pz = round(pz, self.output_decimals) if self.output_decimals is not None else pz
             # CamBam point format: x,y,z (z is usually 0)
             ET.SubElement(pts_elem, "p").text = f"{px},{py},{pz}"
 
@@ -1120,12 +1453,43 @@ class Text(Primitive):
     # Intrinsic properties
     text_content: str = "Text"
     relative_position: Tuple[float, float] = (0.0, 0.0) # Anchor point
+    baseline_position: Optional[Tuple[float, float]] = None
+    elevation: float = 0.0
+    baseline_elevation: Optional[float] = None
     height: float = 10.0 # Font height in drawing units
     font: str = 'Arial'
     style: str = '' # e.g., 'bold', 'italic', 'bold,italic'
     line_spacing: float = 1.0 # Multiplier
     align_horizontal: str = 'center' # 'left', 'center', 'right'
     align_vertical: str = 'center' # 'top', 'center', 'bottom'
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.elevation = _finite_float(self.elevation, "elevation")
+        if self.baseline_elevation is not None:
+            self.baseline_elevation = _finite_float(
+                self.baseline_elevation, "baseline_elevation"
+            )
+        if self.baseline_position is not None:
+            try:
+                if len(self.baseline_position) != 2:
+                    raise ValueError
+                self.baseline_position = (
+                    _finite_float(self.baseline_position[0], "baseline_position x"),
+                    _finite_float(self.baseline_position[1], "baseline_position y"),
+                )
+            except (TypeError, ValueError, IndexError) as exc:
+                raise ValueError(
+                    "baseline_position must contain exactly two finite coordinates"
+                ) from exc
+
+    def _effective_baseline_position(self) -> Tuple[float, float]:
+        return self.relative_position if self.baseline_position is None else self.baseline_position
+
+    def _effective_baseline_elevation(self) -> float:
+        if self.baseline_elevation is None:
+            return _finite_float(self.elevation, "elevation")
+        return _finite_float(self.baseline_elevation, "baseline_elevation")
 
     def _calculate_absolute_geometry(self, total_transform: np.ndarray) -> Dict[str, Any]:
         """Returns absolute anchor position and scaled height."""
@@ -1144,6 +1508,40 @@ class Text(Primitive):
             "text": self.text_content,
             # Include other properties if needed for bounding box calculation
         }
+
+    def _calculate_absolute_geometry_xyz(
+        self, total_transform: np.ndarray, total_z_offset: float
+    ) -> Dict[str, Any]:
+        geometry = self._calculate_absolute_geometry(total_transform)
+        position_x, position_y = geometry["position"]
+        baseline_x, baseline_y = get_transformed_point(
+            self._effective_baseline_position(), total_transform
+        )
+        geometry["position"] = (
+            position_x, position_y,
+            _finite_float(_finite_float(self.elevation, "elevation") + total_z_offset, "world Z"),
+        )
+        geometry["baseline_position"] = (
+            baseline_x, baseline_y,
+            _finite_float(self._effective_baseline_elevation() + total_z_offset, "world baseline Z"),
+        )
+        return geometry
+
+    def shift_geometry_z(self, dz: float) -> None:
+        delta = _finite_float(dz, "dz")
+        elevation = _finite_float(
+            _finite_float(self.elevation, "elevation") + delta,
+            "shifted elevation",
+        )
+        if self.baseline_elevation is None:
+            baseline_elevation = None
+        else:
+            baseline_elevation = _finite_float(
+                self._effective_baseline_elevation() + delta,
+                "shifted baseline_elevation",
+            )
+        self.elevation = elevation
+        self.baseline_elevation = baseline_elevation
 
     def _calculate_bounding_box(self, absolute_geometry: Dict[str, Any]) -> BoundingBox:
         # Bounding box for text is complex and font-dependent.
@@ -1196,20 +1594,33 @@ class Text(Primitive):
             # Use provided transform
             transform_to_apply = transform_to_bake
             reset_transform = False
+
+        affine = _affine_matrix_or_none(transform_to_apply)
+        if affine is None:
+            raise ValueError("Expected a finite affine 3x3 matrix")
+        linear = affine[0:2, 0:2]
+        scale = float((linear[0, 0] + linear[1, 1]) / 2.0)
+        if (scale <= 0.0 or not np.allclose(
+                linear, np.identity(2) * scale, rtol=0.0, atol=1e-12)):
+            raise ValueError(
+                "Text geometry can only bake XY translation and positive uniform scale"
+            )
+        transform_to_apply = affine
             
         # Skip if identity matrix (nothing to bake)
-        if np.allclose(transform_to_apply, identity_matrix()):
+        if np.array_equal(transform_to_apply, identity_matrix()):
             return
             
         try:
             # Bake position
             self.relative_position = get_transformed_point(self.relative_position, transform_to_apply)
+            if self.baseline_position is not None:
+                self.baseline_position = get_transformed_point(
+                    self.baseline_position, transform_to_apply
+                )
             
             # Bake height (using average scale factor)
-            sx = np.linalg.norm(transform_to_apply[:, 0])
-            sy = np.linalg.norm(transform_to_apply[:, 1])
-            avg_scale = (sx + sy) / 2.0
-            self.height *= avg_scale
+            self.height *= scale
             
             # Handle text mirroring - affects alignment
             det = np.linalg.det(transform_to_apply[0:2, 0:2])
@@ -1247,8 +1658,14 @@ class Text(Primitive):
         cb_h_align = self.align_horizontal
         p1x = round(self.relative_position[0], self.output_decimals) if self.output_decimals is not None else self.relative_position[0]
         p1y = round(self.relative_position[1], self.output_decimals) if self.output_decimals is not None else self.relative_position[1]
-        p1z = 0.0
-        p2x, p2y, p2z = p1x, p1y, p1z
+        p1z = _finite_float(self.elevation, "elevation")
+        baseline_position = self._effective_baseline_position()
+        p2x = round(baseline_position[0], self.output_decimals) if self.output_decimals is not None else baseline_position[0]
+        p2y = round(baseline_position[1], self.output_decimals) if self.output_decimals is not None else baseline_position[1]
+        p2z = self._effective_baseline_elevation()
+        if self.output_decimals is not None:
+            p1z = round(p1z, self.output_decimals)
+            p2z = round(p2z, self.output_decimals)
 
         text_elem = ET.Element("text", {
             "p1": f"{p1x},{p1y},{p1z}",

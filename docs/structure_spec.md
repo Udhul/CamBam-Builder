@@ -21,6 +21,7 @@ packages; `inactive/` and demos are outside that runtime package list.
 | `cambam_builder/cambam_project.py` | UUID entity registries, identifier lookup, ordered layers/parts/MOPs, relationship updates, transform orchestration and persistence | Public creation/query/mutation APIs and relationship invariants |
 | `cambam_builder/cambam_transfer.py` | Transactional primitive-tree copy/transfer staging, identity mapping, collision validation and relationship publication | Copy/transfer semantics and atomic registry updates; inspect project wrappers and tests |
 | `cambam_builder/cambam_entities.py` | Entity dataclasses, primitive geometry/bounds, local effective matrices, parent-composed world transforms and entity XML encoding | Geometry or entity fields; inspect reader/writer callers for I/O changes |
+| `cambam_builder/region.py` | Owned Region contours, planar curved topology validation and typed Region XML | Region geometry and interchange; project and reader use this owner |
 | `cambam_builder/cad_transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
 | `cambam_builder/cambam_writer.py` | XML ID assignment and layer/part traversal; delegates individual encoding to entities | Output structure and reference resolution |
 | `cambam_builder/cambam_reader.py` | XML parsing, entity reconstruction, ID mapping and deferred parent/MOP linking | Import defaults, malformed data and round-trip reconstruction |
@@ -49,6 +50,95 @@ packages; `inactive/` and demos are outside that runtime package list.
 The reader's `PRIMITIVE_TAG_TO_CLASS` and `MOP_TAG_TO_CLASS` are the executable
 supported-tag inventory, not a claim of complete CamBam coverage. Consult those
 maps and corresponding entity encoders before adding a type.
+
+### Shape elevation and Region contract
+
+Geometry storage remains XY with separate explicit elevation. Existing Pline
+`(x, y, bulge)` tuples retain their meaning. `add_pline` and `add_points` accept
+keyword `vertex_z`, one finite elevation per vertex, defaulting to zero.
+`add_circle`, `add_arc`, `add_rect` and `add_text` accept keyword `elevation`.
+Text additionally stores `baseline_position` (XY) and `baseline_elevation` for
+XML `p2`, defaulting to the anchor's values. These fields preserve coordinate
+properties; their CamBam display semantics require the prepared acceptance.
+
+`get_absolute_coordinates()` retains the original XY query shape.
+`get_absolute_coordinates_xyz()` exposes Pline `(x, y, z, bulge)` tuples,
+Points/Rect XYZ triples, Circle/Arc dictionaries with an XYZ `center`, and Text
+dictionaries with XYZ `position` and `baseline_position`. Bounds remain XY
+projections, with the existing analytic bulged-Pline/Arc extrema contract.
+Pline straight segments and Points support mixed vertex elevations. Bulged
+segments require equal endpoint elevations (including the closing segment);
+spatial arcs and tilted analytic entities are unsupported. XYZ queries correct
+arc sweep and bulge orientation under reflection. Circle/Arc and bulged
+Pline/Region XYZ representations require similarity transforms (rotation,
+reflection and uniform nonzero scale); nonuniform scale/shear can remain in
+stored XML matrices and analytic bounds, but these XYZ queries reject them
+instead of describing an ellipse as a circle. The legacy XY query remains a
+compatibility projection and is not a complete spatial-curve representation.
+
+Every primitive and project adder accepts `local_z_offset`, independent of
+geometry Z. World Z is geometry Z plus this offset and all parent offsets.
+XY matrices remain finite affine 3x3 arrays. `get_total_transform_xyz()` exposes
+the supported composed pose as a 4x4 array; it does not enable arbitrary 3D
+operations. `translate_primitive_z(id, dz, bake=False)` moves a subtree once.
+Its baked mode changes each member's geometry and retains local offsets.
+Full `bake_primitive_transform`/`bake_all_primitives` bake local XY and Z poses;
+nonrecursive full bake compensates children in both coordinates. Explicit XY
+bakes and the existing XY component operations leave Z unchanged. Geometry
+changes for full/global subtree baking are staged before publication. Direct
+`Primitive.bake_geometry` methods bake XY only, retaining that primitive's Z
+offset; use project full-bake methods for combined XY/Z hierarchy baking.
+Region baking also normalizes owned contour poses into contour coordinates.
+Curved geometry baking requires a similarity transform; Text baking supports
+translation and positive uniform scale, rejecting glyph rotation/reflection or
+shear it cannot encode intrinsically. Matrix-mode Text rotation remains supported.
+
+CamBam matrices encode world XY plus world Z translation (field 14 in the
+zero-indexed flat column-major array). The reader snapshots world offsets and
+subtracts the parent's offset when reconstructing local state. The canonical
+matrix decoder requires `return_z=True` to return `(xy_matrix, z_offset)` when
+Z translation is present. Calling its XY-only form with nonzero Z raises.
+Both matrix helper spellings reject nonfinite values, perspective, Z scaling
+and any XY/Z mixing, even if tiny. Unsupported primitive/layer schemas and
+invalid primitive geometry fail the whole import (`None` with logged context),
+while encoder errors propagate under the export contract below.
+
+Subtree copy/transfer carries the detached root's complete world Z offset and
+retains descendant local offsets, geometry elevations and owned contours.
+Pickle round trips restore project links. Missing additive elevation fields in
+otherwise supported older primitive state default to zero (Text baseline to
+anchor); this is not general versioned pickle migration.
+
+The Region creation API is `add_region(layer, outer_curve, hole_curves=(), ...)`.
+Contours are closed Plines. A registered input Pline's complete world pose is
+captured before detachment; standalone contours retain their own local poses.
+The Region's pose subsequently acts on those owned copies. The Region is the sole
+registered primitive/MOP source. Its UUID, identifier, description, groups,
+parent and layer belong to the Region. Region XML uses the observed native
+`entity xsi:type="Region"` spelling, an `OuterCurve` containing `pts`, and
+`HoleCurves/Polyline` contours. No independent contour IDs or MOP targets are
+exported. Both contour windings are accepted and preserved. Contours must be
+simple, closed and coplanar in Z; holes must be strictly inside the outer curve,
+mutually disjoint and nonnested. Touching, crossing, overlapping, degenerate
+and unsupported elliptical contour geometry fail validation. The outer curve
+may use two complementary semicircles. Validation uses analytic line/circle
+intersections and curve containment, never a tessellated Boolean engine.
+Topology tolerance is `max(1e-10 * max(1, XY extent), 8 coordinate ULPs, 1e-12)`;
+near-zero areas below `1e-10 * max(1, XY extent)^2` are rejected, and planarity
+uses absolute Z tolerance `1e-10`. These are floating-point CAD tolerances,
+not exact predicates for arbitrarily ill-conditioned inputs. Region world
+matrices must remain numerically nonsingular (determinant after normalizing by
+the largest linear entry must exceed machine epsilon in magnitude); curved individual contour matrices must be
+similarities, while a common nonsingular Region matrix can retain affine shape.
+
+Acceptance fixtures use XML precision 10 or 12 decimal places and absolute
+comparison tolerances `1e-10` in memory / `1e-8` through XML. World error can
+amplify matrix rounding; `output_decimals` is configurable, and no scale-free
+accuracy guarantee is claimed. Region export revalidates rounded contour geometry
+and matrices before returning XML; precision that makes a hole touch an outer
+curve fails export explicitly instead of creating a file that cannot reload. Acceptance and pending CamBam evidence live in the
+[runbook](DEVELOPMENT.md#manual-shape-parity-acceptance) and
+[status](PROGRESS.md#active-work-and-next-priority).
 
 ### Export failure and state-saving contract
 
@@ -97,7 +187,7 @@ production toolpath correctness.
 
 ### Development compatibility policy
 
-User clarification, 2026-09-08: the framework is in development and no important
+User clarifications, 2026-09-08 and 2026-09-09 (unreleased, no API consumers): the framework is in development and no important
 files depend on older framework versions. Prioritize a correct, coherent core
 model. Breaking Python API, internal storage and pickle changes are permitted;
 do not add legacy adapters, duplicate storage or old-pickle migration solely to

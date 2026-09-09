@@ -31,6 +31,7 @@ from .cambam_entities import (
     Pline, Circle, Rect, Arc, Points, Text,
     ProfileMop, PocketMop, EngraveMop, DrillMop
 )
+from .region import Region
 
 logger = logging.getLogger(__name__)
 
@@ -686,37 +687,56 @@ class CamBamProject:
 
     def add_pline(self, layer: Identifiable, points: List[Union[Tuple[float, float], Tuple[float, float, float]]],
                   closed: bool = False, identifier: Optional[str] = None, groups: Optional[List[str]] = None,
-                  description: str = "", parent: Optional[Identifiable] = None) -> Optional[Pline]:
-        return self._add_primitive_internal(Pline, layer, identifier, groups, description, parent, relative_points=points, closed=closed) # type: ignore
+                  description: str = "", parent: Optional[Identifiable] = None, *,
+                  vertex_z: Optional[Sequence[float]] = None, local_z_offset: float = 0.0) -> Optional[Pline]:
+        return self._add_primitive_internal(Pline, layer, identifier, groups, description, parent, relative_points=points, closed=closed, vertex_z=vertex_z, local_z_offset=local_z_offset)
 
     def add_circle(self, layer: Identifiable, center: Tuple[float, float], diameter: float,
                    identifier: Optional[str] = None, groups: Optional[List[str]] = None, description: str = "",
-                   parent: Optional[Identifiable] = None) -> Optional[Circle]:
-        return self._add_primitive_internal(Circle, layer, identifier, groups, description, parent, relative_center=center, diameter=diameter) # type: ignore
+                   parent: Optional[Identifiable] = None, *, elevation: float = 0.0,
+                   local_z_offset: float = 0.0) -> Optional[Circle]:
+        return self._add_primitive_internal(Circle, layer, identifier, groups, description, parent, relative_center=center, diameter=diameter, elevation=elevation, local_z_offset=local_z_offset)
 
     def add_rect(self, layer: Identifiable, corner: Tuple[float, float] = (0,0), width: float = 1.0, height: float = 1.0,
                  identifier: Optional[str] = None, groups: Optional[List[str]] = None, description: str = "",
-                 parent: Optional[Identifiable] = None) -> Optional[Rect]:
-        return self._add_primitive_internal(Rect, layer, identifier, groups, description, parent, relative_corner=corner, width=width, height=height) # type: ignore
+                 parent: Optional[Identifiable] = None, *, elevation: float = 0.0,
+                 local_z_offset: float = 0.0) -> Optional[Rect]:
+        return self._add_primitive_internal(Rect, layer, identifier, groups, description, parent, relative_corner=corner, width=width, height=height, elevation=elevation, local_z_offset=local_z_offset)
 
     def add_arc(self, layer: Identifiable, center: Tuple[float, float], radius: float, start_angle: float, extent_angle: float,
                 identifier: Optional[str] = None, groups: Optional[List[str]] = None, description: str = "",
-                parent: Optional[Identifiable] = None) -> Optional[Arc]:
-        return self._add_primitive_internal(Arc, layer, identifier, groups, description, parent, relative_center=center, radius=radius, start_angle=start_angle, extent_angle=extent_angle) # type: ignore
+                parent: Optional[Identifiable] = None, *, elevation: float = 0.0,
+                local_z_offset: float = 0.0) -> Optional[Arc]:
+        return self._add_primitive_internal(Arc, layer, identifier, groups, description, parent, relative_center=center, radius=radius, start_angle=start_angle, extent_angle=extent_angle, elevation=elevation, local_z_offset=local_z_offset)
 
     def add_points(self, layer: Identifiable, points: List[Tuple[float, float]],
                    identifier: Optional[str] = None, groups: Optional[List[str]] = None, description: str = "",
-                   parent: Optional[Identifiable] = None) -> Optional[Points]:
-        return self._add_primitive_internal(Points, layer, identifier, groups, description, parent, relative_points=points) # type: ignore
+                   parent: Optional[Identifiable] = None, *, vertex_z: Optional[Sequence[float]] = None,
+                   local_z_offset: float = 0.0) -> Optional[Points]:
+        return self._add_primitive_internal(Points, layer, identifier, groups, description, parent, relative_points=points, vertex_z=vertex_z, local_z_offset=local_z_offset)
 
     def add_text(self, layer: Identifiable, text: str, position: Tuple[float, float], height: float = 10.0,
                  font: str = 'Arial', style: str = '', line_spacing: float = 1.0, align_horizontal: str = 'center',
                  align_vertical: str = 'center', identifier: Optional[str] = None, groups: Optional[List[str]] = None,
-                 description: str = "", parent: Optional[Identifiable] = None) -> Optional[Text]:
+                 description: str = "", parent: Optional[Identifiable] = None, *,
+                 elevation: float = 0.0, baseline_elevation: Optional[float] = None,
+                 baseline_position: Optional[Tuple[float, float]] = None,
+                 local_z_offset: float = 0.0) -> Optional[Text]:
         return self._add_primitive_internal(Text, layer, identifier, groups, description, parent,
                                             text_content=text, relative_position=position,
                                             height=height, font=font, style=style, line_spacing=line_spacing,
-                                            align_horizontal=align_horizontal, align_vertical=align_vertical) # type: ignore
+                                            align_horizontal=align_horizontal, align_vertical=align_vertical,
+                                            elevation=elevation, baseline_elevation=baseline_elevation,
+                                            baseline_position=baseline_position, local_z_offset=local_z_offset)
+
+    def add_region(self, layer: Identifiable, outer_curve: Pline,
+                   hole_curves: Sequence[Pline] = (), identifier: Optional[str] = None,
+                   groups: Optional[List[str]] = None, description: str = "",
+                   parent: Optional[Identifiable] = None, *, local_z_offset: float = 0.0) -> Optional[Region]:
+        """Add one Region owning copies of closed planar boundary contours."""
+        return self._add_primitive_internal(
+            Region, layer, identifier, groups, description, parent,
+            outer_curve=outer_curve, hole_curves=list(hole_curves), local_z_offset=local_z_offset)
 
     def _add_mop_internal(self, MopClass: Type[MopType], part_identifier: Identifiable,
                           targets: Sequence[Identifiable], name: str,
@@ -914,17 +934,57 @@ class CamBamProject:
             return False
 
         try:
+            staged = []
             for current, local_operation in operations:
-                current.bake_geometry(local_operation)
+                clone = deepcopy(current)
+                clone.bake_geometry(local_operation)
+                staged.append((current, clone))
         except Exception as e:
             logger.error(f"Error baking global transform for {primitive.user_identifier}: {e}")
             return False
+        for current, clone in staged:
+            current.__class__ = clone.__class__
+            current.__dict__.clear()
+            current.__dict__.update(clone.__dict__)
+            current.set_project_link(self)
         return True
 
     # Convenience transformation methods
     def translate_primitive(self, primitive_identifier: Identifiable, dx: float, dy: float, bake: bool = False) -> bool:
         """Translates a primitive and its descendants."""
         return self.transform_primitive(primitive_identifier, translation_matrix(dx, dy), bake=bake)
+
+    def translate_primitive_z(self, primitive_identifier: Identifiable, dz: float,
+                              bake: bool = False) -> bool:
+        """Translate a subtree in Z once; baked mode retains all local offsets."""
+        primitive = self.get_primitive(primitive_identifier)
+        if primitive is None:
+            return False
+        try:
+            dz = float(dz)
+            if not np.isfinite(dz):
+                raise ValueError("Z translation must be finite")
+            if not bake:
+                new_offset = primitive.local_z_offset + dz
+                if not np.isfinite(new_offset):
+                    raise ValueError("Z translation overflow")
+                primitive.local_z_offset = new_offset
+                return True
+            pending, staged = [primitive], []
+            while pending:
+                current = pending.pop()
+                clone = deepcopy(current)
+                clone.shift_geometry_z(dz)
+                staged.append((current, clone))
+                pending.extend(self.get_children_of_primitive(current))
+        except (TypeError, ValueError, OverflowError) as exc:
+            logger.error(f"Cannot translate primitive in Z: {exc}")
+            return False
+        for current, clone in staged:
+            current.__dict__.clear()
+            current.__dict__.update(clone.__dict__)
+            current.set_project_link(self)
+        return True
 
     def rotate_primitive_deg(self, primitive_identifier: Identifiable, angle_deg: float,
                                cx: Optional[float] = None, cy: Optional[float] = None, bake: bool = False) -> bool:
@@ -1158,51 +1218,48 @@ class CamBamProject:
             logger.error(f"Primitive '{primitive_identifier}' not found for baking.")
             return False
 
-        # Helper functions to use for baking effective or single transformation
-        def bake_effective(prim:Primitive):
-            if np.array_equal(prim.effective_transform, identity_matrix()):
-                return
-            # Apply baking to the primitive's geometry
-            prim.bake_geometry()
-            logger.debug(f"Baked effective transform for primitive {prim.user_identifier}")
-            # Reset the primitive's transform to identity after baking
-            prim.effective_transform = identity_matrix()
+        # Stage complete geometry changes before publishing, including Region
+        # topology checks and Rect representation changes.
+        staged = []
+        compensated = []
 
-        def bake_single(prim:Primitive, transform:np.ndarray):
-            prim.bake_geometry(transform)
-            logger.debug(f"Baked given transform for primitive {prim.user_identifier}")
+        def prepare(current, inherited_xy, inherited_z):
+            clone = deepcopy(current)
+            if transform_to_bake is None:
+                removed_xy = inherited_xy @ current.effective_transform
+                removed_z = inherited_z + current.local_z_offset
+                clone.bake_geometry(removed_xy)
+                clone.shift_geometry_z(removed_z)
+                clone.effective_transform = identity_matrix()
+                clone.local_z_offset = 0.0
+            else:
+                removed_xy = transform_to_bake
+                removed_z = 0.0
+                clone.bake_geometry(transform_to_bake)
+            staged.append((current, clone))
+            for child in self.get_children_of_primitive(current):
+                if recursive:
+                    prepare(child, removed_xy, removed_z)
+                elif transform_to_bake is None:
+                    child_xy = removed_xy @ child.effective_transform
+                    child_z = removed_z + child.local_z_offset
+                    if not np.isfinite(child_xy).all() or not np.isfinite(child_z):
+                        raise ValueError("Child pose compensation overflow")
+                    compensated.append((child, child_xy, child_z))
 
-        # Bake the primitive's geometry using its own transform or the given transform
         try:
-            if transform_to_bake is None: # Bake full effective transform into geometry
-                child_transform_to_bake = primitive.effective_transform.copy()
-                bake_effective(primitive)
-            else: # Bake only given matrix # TODO: Ensure correct array is given
-                child_transform_to_bake = transform_to_bake.copy()
-                bake_single(primitive, transform_to_bake)
-        except Exception as e:
-            logger.error(f"Error baking geometry for {primitive.user_identifier}: {e}")
+            prepare(primitive, identity_matrix(), 0.0)
+        except Exception as exc:
+            logger.error(f"Cannot bake primitive subtree: {exc}")
             return False
-
-        # Full baking removes this node's local matrix from every descendant's
-        # transform chain, regardless of whether their geometry is also baked.
-        if recursive or transform_to_bake is None:
-            child_ids = self.get_children_of_primitive(primitive.internal_id)
-            for child_id in child_ids:
-                child = self.get_primitive(child_id)
-                if child:
-                    # Apply the parent's baked transform to the child's transform
-                    # This maintains the child's position relative to the parent
-                    # ChildNew = ParentBaked * ChildOldEffective * ChildRelativeGeom
-                    if transform_to_bake is None: # Effective
-                        child.effective_transform = child_transform_to_bake @ child.effective_transform
-                        # Recursion controls geometry baking, not compensation.
-                        if recursive and not self.bake_primitive_transform(child_id, recursive=True):
-                            return False
-                    else: # Single
-                        if not self.bake_primitive_transform(child_id, transform_to_bake, recursive=True):
-                            return False
-
+        for current, clone in staged:
+            current.__class__ = clone.__class__
+            current.__dict__.clear()
+            current.__dict__.update(clone.__dict__)
+            current.set_project_link(self)
+        for child, matrix, z_offset in compensated:
+            child.effective_transform = matrix
+            child.local_z_offset = z_offset
         return True
 
     def bake_primitive_transform_component(self, primitive_identifier: Identifiable, 

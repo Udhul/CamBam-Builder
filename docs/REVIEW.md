@@ -1090,3 +1090,96 @@ This is a good fresh-session breakpoint with implementation, evidence and limits
 persisted. The next priority is Region/all-shape Z parity under
 [`SHAPE_PARITY_PLAN.md`](SHAPE_PARITY_PLAN.md). Suggested commit:
 `feat: add atomic primitive tree copy and transfer`.
+
+## Region and shape-elevation implementation
+
+2026-09-09. Backlog item 2 adds geometry elevation and Region interchange to the modern
+package. The user reaffirmed that the API is unreleased and may change. The
+[specification](structure_spec.md#shape-elevation-and-region-contract) owns the
+implemented API, topology, matrix and query/bake boundaries; the
+[runbook](DEVELOPMENT.md#manual-shape-parity-acceptance) owns prepared acceptance.
+
+The chosen representation keeps intrinsic XY/bulge data, with separate explicit
+per-vertex Z or analytic elevation and independent local Z offsets. This avoids
+reinterpreting the third Pline tuple element or replacing all affine/relationship
+machinery with a general 3D framework. XYZ queries are explicit; reflected arc
+sweeps and bulges are corrected, while representations that cannot express an
+ellipse reject a nonsimilarity query. XML can retain supported XY affine matrices.
+Spatial matrices, varying-Z bulged segments and lossy analytic/Text bakes are
+rejected instead of flattened or approximated. Existing 2D constructor/query
+usage remains valid except that invalid affine constructor matrices now raise.
+
+Region is one registered primitive with owned contours and a single MOP identity.
+It supports the observed typed `entity xsi:type="Region"` schema, `OuterCurve/pts`
+and `HoleCurves/Polyline`, including contour poses and elevation. A copied
+registered contour captures its complete world pose before detachment. The
+validator handles lines/arcs analytically, either winding, two complementary
+semicircles, holes and nondegenerate planar topology. Direct shifts/bakes and
+project full/global subtree bakes stage changes before publication. Review added
+coverage for invalid topology, coincident arcs, near-identity bakes, reflected
+queries, finite Z, contour ownership and export revalidation.
+
+### Native Region fixture finding
+
+Local import of the private `output/region_example.cb` exercises the expected
+schema but fails strict topology validation: the first hole self-intersects
+between zero-based contour segments 2/4 and 3/4. A separate local script sampled
+each circular segment into 2,048 chords and independently found an interior
+crossing in each pair. This diagnostic does not call the Region intersection
+validator. Hash comparison before/after the check confirms no source change.
+No GLM/OpenRouter processing was used; delegated edit ownership was restricted
+to source code and authored synthetic tests.
+
+The declared model rejects self-intersection rather than silently repairing the
+hole, filling it or importing an empty/partial project. Therefore the native
+sample itself is **not accepted**. Supported typed XML is covered with authored
+valid synthetic cases. Reopen this boundary only for an explicit requirement to
+retain invalid contours for interchange, or evidence that CamBam interprets the
+same supported bulge data differently. Such a requirement needs a separate
+invalid-topology representation, not bypassing validation in the current Region.
+
+### Verification and acceptance state
+
+Environment: existing Python 3.10.9 / NumPy 1.23.5; no project `.venv`, dependency
+installation, legacy-package changes or CamBam runtime dependency. Checks run from
+the repository root:
+
+- `python -m unittest discover -s tests -v`: 133 tests passed after final review. The new tests cover all seven types, two XML round trips, actual
+  XML geometry/matrix Z, parent/world poses, bulges, bounds, holes, identities,
+  groups/MOP targeting, full/nonrecursive/Z bakes, pickle and detached copy/transfer.
+- `python -m compileall -q cambam_builder legacy_cambam_builder tests demos`:
+  exit 0; `CBProject('smoke')` import/construction assertion passed.
+- `python output/shape-parity-kvr0bdc2/generate.py`: passed; A/B retain eight
+  primitives across all seven types, XYZ, identities, two Region holes and one
+  Region pocket target through repeated round trips.
+- `python output/shape-parity-kvr0bdc2/verify_acceptance_xml.py`: passed; an
+  independent hardcoded expected-value inspection checks every runbook coordinate,
+  dimension, bulge, hole, identity matrix and exact Region MOP reference in B.
+- `git diff --check`: passed after final review.
+
+The final independent topology review found three concrete issues, all repaired
+and reverified with the original synthetic reproducers and 21 focused Region
+tests. Arc ray containment now uses exact stored endpoints, preventing a wholly
+outside hole at an arc endpoint height from passing validation. XML export
+validates the rounded geometry, rejecting a hole gap erased by output precision;
+increasing precision to preserve the gap permits the round trip. Matrix
+conditioning uses normalized linear entries, accepting a well-conditioned
+`1e-8` scale that yields a useful 10-by-10 contour. These checks complete the
+review scope; unrestricted numerical geometry and arbitrary 3D remain excluded.
+
+The first integration run exposed test assumptions about Rect XYZ triples versus
+converted Pline XYZ/bulge tuples, and XML precision amplification in computed arc
+angles. Tests now compare geometry projections across representation changes and
+explicitly choose 12-decimal XML precision for repeated transformed fixtures;
+they retain `1e-10` in-memory / `1e-8` XML tolerances. XML tests compare numeric
+values, allowing equivalent lexical forms such as `1` and `1.0`. The acceptance
+A/B fixture uses 10 decimal places and exact translation matrices.
+
+Implementation and automated verification are distinct from CamBam acceptance.
+A/B display, coordinate properties (especially both Text positions) and Region
+hole/MOP interpretation remain pending. The user must report the prepared result;
+this is not production toolpath acceptance. Local artifacts and detailed logs
+remain in `output/shape-parity-kvr0bdc2/` until that check finishes. Do not promote
+packaging or rest machining ahead of the remaining item-2 acceptance.
+
+Suggested commit: `feat: add Region and all-shape elevation parity`.

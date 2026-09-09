@@ -1,6 +1,10 @@
 # Region and Z-coordinate shape parity
 
-Status: **backlog; core CamBam feature parity, not rest-machining implementation**.
+Status: **implementation delivered; automated verification/review complete; synthetic
+CamBam acceptance pending** (2026-09-09). Core feature parity is independent of
+rest-machining implementation. The implemented API and schema contract now live
+in [the specification](structure_spec.md#shape-elevation-and-region-contract);
+[prepared acceptance](DEVELOPMENT.md#manual-shape-parity-acceptance) owns user checks.
 Priority belongs to [PROGRESS.md](PROGRESS.md#remaining-backlog-in-order): after
 core stability/design and the existing geometry/relationship correctness work,
 before packaging/examples, MCP integration and optional rest machining.
@@ -29,9 +33,9 @@ acceptance.
 ### Repository evidence
 
 Local inspection of the user-provided [Region example](../output/region_example.cb)
-found a `region_example` root with version `0.9.8.0`, a named layer element under
+found a `CADFile` root named `region_example` with version `0.9.8.0`, a `layer` element under
 `layers`, and an object marked `xsi:type=Region`. The Region holds `OuterCurve`
-and `HoleCurves` with nested `Polyline` contours, rather than the modern writer's
+with direct `pts`, and `HoleCurves` with nested `Polyline` contours, rather than the modern writer's
 simple primitive-tag dialect. It has one closed outer curve and two closed holes;
 the outer curve uses bulges extensively. All sampled point Z values are zero.
 There are no source MOPs. This proves a relevant Region example, not varying-Z
@@ -39,11 +43,24 @@ support, a complete schema, or rest-machining behavior. The private fixture was
 read locally only and remains unchanged; retain reusable synthetic equivalents
 in future tests rather than making the ignored user file a suite dependency.
 
-| Runtime owner | Observed gap and consequence |
+| Runtime owner | Historical planning gap and consequence |
 | --- | --- |
 | `cambam_reader.PRIMITIVE_TAG_TO_CLASS` and `_reconstruct_primitive` | No Region mapping; unsupported primitive tags are skipped. Add typed-object/layer schema handling for this fixture as well as contour parsing, or explicitly scope a tested adapter. Do not silently import an empty project as success. |
 | `Pline.relative_points`, `_calculate_absolute_geometry`, `to_xml_element`; reader Pline branch | Third tuple element is bulge; import drops Z and export sets Z to zero. Explicit XYZ storage must preserve the existing XY/bulge API. Current bounds also ignore bulge arc extrema. |
 | `CamBamProject.add_pline` and other primitive adders | No Region adder. Establish first-class Region identity with owned contours and MOP targeting; derived preview Plines must not silently replace holes with filled independent pockets. |
+
+
+### Native example boundary discovered during implementation
+
+The typed-object schema is implemented. Strict topology validation rejects the
+private native example because its first hole contains interior crossings
+between segments 2/4 and 3/4 (zero-based). Independent 2,048-chord-per-arc checks
+confirmed both crossings, separate from the Region validator. The source was
+read locally, remains unchanged and is not a reusable suite dependency. This is
+a geometry rejection, not a skipped entity or an empty successful import.
+Authored synthetic fixtures establish the supported schema with valid topology.
+Preserving self-intersecting Regions for interchange would require an explicitly
+different topology contract; do not claim the private sample itself is accepted.
 
 ## Shape coverage and compatibility contract
 
@@ -57,8 +74,8 @@ in future tests rather than making the ignored user file a suite dependency.
 | Text | Preserve supported anchor/baseline elevations, including relevant XML position fields; verify their semantics with synthetic round trips |
 | Region | Outer boundary and owned hole contours with their Z values and bulges; preserve contour topology and establish supported planarity constraints |
 
-Current Circle/Arc/Rect/Points/Text geometry stores XY, their encoders synthesize
-zero Z, and corresponding reader branches discard elevation. Pline also discards
+At planning time Circle/Arc/Rect/Points/Text geometry stored XY, their encoders synthesized
+zero Z, and corresponding reader branches discarded elevation. Pline also discarded
 Z while its third tuple value already means bulge. The relevant owners are the
 shape classes in `cambam_entities.py` and `_reconstruct_primitive` in
 `cambam_reader.py`. Coverage must include all rows, not just the XYZ Pline needed
@@ -157,5 +174,5 @@ failures show the existing patterns cannot support the intended behavior.
 Stop when every shape's declared Z contract and Region interchange are implemented,
 verified and the required synthetic acceptance is recorded. Do not close this
 item merely because XYZ Plines work. New entity families or unrestricted 3D
-modeling need their own scope. Until implementation begins this remains a plan;
-no current Region/Z parity or manual acceptance is claimed.
+modeling need their own scope. Implementation and verification evidence now belong to the specification and
+review record. No CamBam acceptance is claimed until the prepared checks are reported.

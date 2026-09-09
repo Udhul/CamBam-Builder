@@ -7,6 +7,28 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**Region and all-shape Z parity: implemented; automated verification and review
+complete; CamBam acceptance pending** (2026-09-09; backlog item 2).
+Pline/Points vertex elevations, Circle/Arc/Rect/Text elevation fields, independent
+parent/local Z offsets and one owned-contour Region primitive now extend the
+existing project/XML/persistence/transfer model. Full/global subtree bakes stage
+geometry changes before publication. Unsupported spatial matrices and invalid
+Region topology fail explicitly. User confirmed the unreleased API may change.
+
+Owners: entities, Region module, project transform/API orchestration, matrix
+helpers, reader, transfer helper and focused regressions.
+[Implemented contract](structure_spec.md#shape-elevation-and-region-contract) and
+[implementation/review evidence](REVIEW.md#region-and-shape-elevation-implementation).
+All 133 tests pass, along with compile/import and independent XML inspection
+checks. The final topology review found and verified repairs for arc endpoint
+containment, topology-changing XML rounding and small uniform scales.
+The prepared A/B generator verifies eight primitives covering seven types,
+XYZ/identity preservation, two Region holes and one MOP source through repeated
+round trips. [CamBam validation](DEVELOPMENT.md#manual-shape-parity-acceptance)
+is pending; this item is not closed by automated checks alone. The private native
+Region sample contains independently confirmed self-intersections and is rejected
+by the declared strict topology contract; it remains unchanged.
+
 **Copy/transfer utilities implemented; automated checks complete** (2026-09-08; backlog item 1b).
 Contract recorded in
 [copy and transfer contract](structure_spec.md#copy-and-transfer-contract).
@@ -159,7 +181,7 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
     in the implemented specification and review.
 1b. **Completed 2026-09-08:** copy/transfer utilities; scope and
     acceptance are recorded above.
-2. **Next priority:** Implement core CamBam shape parity: Region shapes and Z coordinates across
+2. **Active; implementation delivered, acceptance pending:** Core CamBam shape parity: Region shapes and Z coordinates across
    Pline, Circle, Rect, Arc, Points, Text and Region. Extend existing entity/API/XML
    patterns with backward-compatible coordinate semantics, identity preservation
    and synthetic round-trip/display checks. This is independent upstream feature
@@ -221,8 +243,10 @@ context regression also reproduces and guards the former lost global
 [Verification commands](DEVELOPMENT.md) and [work lifecycle](WORKFLOW.md)
 are authoritative. MOP ownership, supported interchange, curved geometry bounds
 (1a) and the copy/transfer implementation (1b) are recorded above; automated
-verification is complete. Shape parity is the next separate priority.
+verification is complete. Shape parity is implemented above with required CamBam acceptance still pending.
 
-This is a good fresh-session breakpoint: coherent 1b implementation and evidence
-are persisted, with no pending decisions. Suggested commit:
-`feat: add atomic primitive tree copy and transfer`.
+Continue this session to complete the prepared shape-parity CamBam checks and
+record their result. Implementation and automated verification are complete; manual acceptance is pending, so this is
+not yet an acceptance-complete fresh-session breakpoint;
+do not declare item 2 complete or promote packaging ahead of that acceptance.
+Suggested commit: `feat: add Region and all-shape elevation parity`.

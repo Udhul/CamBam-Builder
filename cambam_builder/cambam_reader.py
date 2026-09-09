@@ -24,6 +24,7 @@ from .cambam_entities import ( # Import concrete entity types
     MOP_XML_PATH_TO_FIELD,
 )
 from .cad_transformations import identity_matrix, from_cambam_matrix_str # For parsing matrix
+from .region import Region, parse_region_geometry
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ PRIMITIVE_TAG_TO_CLASS = {
     "arc": Arc,
     "points": Points,
     "text": Text,
+    "Region": Region,
     # Add mappings for other primitive types ("surface", "region", etc.)
 }
 
@@ -202,8 +204,12 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
         # 3. Layers
         logger.debug("Reading Layers...")
         layers_node = root.find("layers")
+        if layers_node is None:
+            raise CamBamReaderError("Unsupported drawing schema: missing layers container")
         if layers_node is not None:
-            for layer_elem in layers_node.findall("layer"):
+            for layer_elem in layers_node:
+                if layer_elem.tag != "layer" or not layer_elem.get("name"):
+                    raise CamBamReaderError("Unsupported layer schema: expected layer with a name")
                 _reconstruct_layer(project, layer_elem)
 
         # 4. Primitives (read structure, link to layers, store parent XML ID refs, populate xml_id_to_primitive_uuid)
@@ -219,12 +225,12 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
                 objects_node = layer_elem.find("objects")
                 if objects_node is not None:
                      for prim_elem in objects_node: # Iterate over actual primitive tags (<pline>, <circle> etc)
-                         prim_type_tag = prim_elem.tag
+                         prim_type_tag = _primitive_type(prim_elem)
                          if prim_type_tag in PRIMITIVE_TAG_TO_CLASS:
                             _reconstruct_primitive(project, prim_elem, layer_uuid,
                                                    xml_id_to_primitive_uuid, primitive_parent_ref)
                          else:
-                            logger.warning(f"Unsupported primitive type tag '{prim_type_tag}' encountered in layer '{layer_elem.get('name')}'. Skipping.")
+                            raise CamBamReaderError(f"Unsupported primitive type '{prim_type_tag}' in layer '{layer_elem.get('name')}'")
 
         # 5. Link Relationships using stored temporary data
         logger.debug("Linking relationships...")
@@ -235,6 +241,7 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
             prim_uuid: primitive.effective_transform.copy()
             for prim_uuid, primitive in project._primitives.items()
         }
+        world_z_offsets = {uid: p.local_z_offset for uid, p in project._primitives.items()}
         for child_uuid, parent_ref in primitive_parent_ref.items():
             parent_uuid: Optional[uuid.UUID] = None
             if isinstance(parent_ref, uuid.UUID): # Resolved directly from Tag's internal_id
@@ -267,7 +274,11 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
                              "has a singular world transform."
                          ) from e
                      if project.link_primitive_parent(child_uuid, parent_uuid):
+                         local_z = world_z_offsets[child_uuid] - world_z_offsets[parent_uuid]
+                         if not np.isfinite(local_z):
+                             raise CamBamReaderError(f"Parent-relative Z offset overflows for primitive {child_uuid}")
                          project._primitives[child_uuid].effective_transform = local_transform
+                         project._primitives[child_uuid].local_z_offset = local_z
                  else:
                      logger.warning(f"Could not link child primitive {child_uuid}: Resolved parent UUID {parent_uuid} not found in project primitives registry.")
 
@@ -602,18 +613,35 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
         raise CamBamReaderError(f"Error reconstructing MOP '{mop_name}': {e}") from e
 
 
+def _primitive_type(element):
+    typed = element.get("{http://www.w3.org/2001/XMLSchema-instance}type")
+    if typed:
+        return {"Polyline": "pline", "Circle": "circle", "Rectangle": "rect",
+                "Arc": "arc", "PointList": "points", "Text": "text"}.get(typed, typed)
+    return element.tag
+
+
+def _geometry_point(value):
+    """Read supported XY/XYZ coordinates without silently substituting geometry."""
+    parts = tuple(float(p.strip()) for p in value.split(',')) if value is not None else ()
+    if len(parts) not in (2, 3) or not np.isfinite(parts).all():
+        raise ValueError(f"Expected a finite XY or XYZ coordinate, got {value!r}")
+    return parts if len(parts) == 3 else (*parts, 0.0)
+
+
 def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_uuid: uuid.UUID,
                            xml_id_to_primitive_uuid: Dict[int, uuid.UUID],
                            primitive_parent_ref: Dict[uuid.UUID, Union[int, uuid.UUID, str]]):
     """Parses a primitive element (<pline>, <circle>...) and adds it to the project."""
-    prim_class = PRIMITIVE_TAG_TO_CLASS.get(prim_elem.tag)
+    prim_class = PRIMITIVE_TAG_TO_CLASS.get(_primitive_type(prim_elem))
     if not prim_class: return
 
     xml_id_str = prim_elem.get("id")
     xml_id = _parse_int(xml_id_str, -1)
     if xml_id <= 0:
-        logger.warning(f"Skipping primitive element <{prim_elem.tag}> with missing or invalid 'id' attribute.")
-        return
+        raise CamBamReaderError(f"Primitive <{prim_elem.tag}> has missing or invalid id")
+    if xml_id in xml_id_to_primitive_uuid:
+        raise CamBamReaderError(f"Duplicate primitive XML id {xml_id}")
 
     # --- Parse Tag Data (User ID, Internal UUID, Groups, Parent, Description) ---
     tag_node = prim_elem.find("Tag")
@@ -657,16 +685,17 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
     # --- Parse Transformation Matrix ---
     matrix_str = prim_elem.find("mat")
     effective_transform = identity_matrix() # Default if no matrix found
+    world_z_offset = 0.0
     if matrix_str is not None and "m" in matrix_str.attrib:
         try:
             # Keep the XML world pose until the deferred parent-linking pass
             # reconstructs local matrices from snapshots of all imported poses.
-            total_transform = from_cambam_matrix_str(matrix_str.attrib["m"])
+            total_transform, world_z_offset = from_cambam_matrix_str(matrix_str.attrib["m"], return_z=True)
             effective_transform = total_transform # Store total as effective initially
         except ValueError as e:
-            logger.warning(f"Could not parse transformation matrix for primitive XML ID {xml_id}: {e}")
+            raise CamBamReaderError(f"Unsupported matrix for primitive XML ID {xml_id}: {e}") from e
         except Exception as e:
-             logger.error(f"Unexpected error parsing matrix for primitive XML ID {xml_id}: {e}")
+             raise CamBamReaderError(f"Invalid matrix for primitive XML ID {xml_id}: {e}") from e
 
 
     # --- Parse Primitive-Specific Geometry ---
@@ -674,46 +703,53 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
     try:
         if prim_class is Pline:
             points = []
+            elevations = []
             pts_node = prim_elem.find("pts")
             if pts_node is not None:
                 for p_elem in pts_node.findall("p"):
-                    pt = _parse_point_3d(p_elem.text)
+                    pt = _geometry_point(p_elem.text)
                     if pt:
-                        bulge = _parse_float(p_elem.get("b"), 0.0)
+                        bulge = float(p_elem.get("b", "0"))
                         points.append((pt[0], pt[1], bulge)) # Store x, y, bulge
+                        elevations.append(pt[2])
             prim_specific_kwargs["relative_points"] = points
+            prim_specific_kwargs["vertex_z"] = elevations
             prim_specific_kwargs["closed"] = _parse_bool(prim_elem.get("Closed"), False)
         elif prim_class is Circle:
-             center = _parse_point_2d(prim_elem.get("c"))
+             center = _geometry_point(prim_elem.get("c"))
              diameter = _parse_float(prim_elem.get("d"), 1.0)
-             if center: prim_specific_kwargs["relative_center"] = center
+             prim_specific_kwargs.update(relative_center=center[:2], elevation=center[2])
              prim_specific_kwargs["diameter"] = diameter
         elif prim_class is Rect:
-             corner = _parse_point_2d(prim_elem.get("p"))
+             corner = _geometry_point(prim_elem.get("p"))
              width = _parse_float(prim_elem.get("w"), 1.0)
              height = _parse_float(prim_elem.get("h"), 1.0)
-             if corner: prim_specific_kwargs["relative_corner"] = corner
+             prim_specific_kwargs.update(relative_corner=corner[:2], elevation=corner[2])
              prim_specific_kwargs["width"] = width
              prim_specific_kwargs["height"] = height
         elif prim_class is Arc:
-             center = _parse_point_2d(prim_elem.get("p"))
+             center = _geometry_point(prim_elem.get("p"))
              radius = _parse_float(prim_elem.get("r"), 1.0)
              start = _parse_float(prim_elem.get("s"), 0.0)
              sweep = _parse_float(prim_elem.get("w"), 90.0)
-             if center: prim_specific_kwargs["relative_center"] = center
+             prim_specific_kwargs.update(relative_center=center[:2], elevation=center[2])
              prim_specific_kwargs["radius"] = radius
              prim_specific_kwargs["start_angle"] = start
              prim_specific_kwargs["extent_angle"] = sweep
         elif prim_class is Points:
              points = []
+             elevations = []
              pts_node = prim_elem.find("pts")
              if pts_node is not None:
                  for p_elem in pts_node.findall("p"):
-                     pt = _parse_point_2d(p_elem.text) # Points are usually 2D
-                     if pt: points.append(pt)
+                     pt = _geometry_point(p_elem.text)
+                     points.append(pt[:2])
+                     elevations.append(pt[2])
              prim_specific_kwargs["relative_points"] = points
+             prim_specific_kwargs["vertex_z"] = elevations
         elif prim_class is Text:
-             pos1 = _parse_point_2d(prim_elem.get("p1"))
+             pos1 = _geometry_point(prim_elem.get("p1"))
+             pos2 = _geometry_point(prim_elem.get("p2", prim_elem.get("p1")))
              height = _parse_float(prim_elem.get("Height"), 10.0)
              font = prim_elem.get("Font", "Arial")
              style = prim_elem.get("style", "")
@@ -724,7 +760,8 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
              h_align = align_parts[1].strip() if len(align_parts) > 1 else "center"
              text_content = prim_elem.text or ""
 
-             if pos1: prim_specific_kwargs["relative_position"] = pos1
+             prim_specific_kwargs.update(relative_position=pos1[:2], elevation=pos1[2],
+                                         baseline_position=pos2[:2], baseline_elevation=pos2[2])
              prim_specific_kwargs["height"] = height
              prim_specific_kwargs["font"] = font
              prim_specific_kwargs["style"] = style
@@ -732,10 +769,11 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
              prim_specific_kwargs["align_vertical"] = v_align
              prim_specific_kwargs["align_horizontal"] = h_align
              prim_specific_kwargs["text_content"] = text_content
+        elif prim_class is Region:
+             prim_specific_kwargs = parse_region_geometry(prim_elem)
 
     except Exception as e:
-        logger.error(f"Error parsing geometry for primitive <{prim_elem.tag}> XML ID {xml_id}: {e}", exc_info=True)
-        return # Skip this primitive if geometry parsing fails
+        raise CamBamReaderError(f"Invalid geometry for primitive XML ID {xml_id}: {e}") from e
 
 
     # --- Create and Register Primitive ---
@@ -746,6 +784,7 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
             groups=groups, # Store groups read from Tag
             description=description,
             effective_transform=effective_transform, # Store total transform initially
+            local_z_offset=world_z_offset,
             **prim_specific_kwargs
         )
         # Manually set the internal UUID we recovered or generated
@@ -765,7 +804,7 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
              if parent_ref is not None:
                  primitive_parent_ref[primitive.internal_id] = parent_ref
         else:
-            logger.error(f"Failed to register reconstructed primitive XML ID {xml_id} (User ID '{user_identifier}')")
+            raise CamBamReaderError(f"Failed to register primitive XML ID {xml_id} (User ID '{user_identifier}')")
 
     except Exception as e:
-        logger.error(f"Error instantiating or registering primitive XML ID {xml_id}: {e}", exc_info=True)
+        raise CamBamReaderError(f"Error reconstructing primitive XML ID {xml_id}: {e}") from e

@@ -167,10 +167,12 @@ def _copy_tree(source: "CamBamProject", root: "Identifiable", target: "CamBamPro
     primitive_ids = _descendants(source, root_id)
     # Validate the root's external ancestors and every included local matrix.
     root_world = _world_matrix(source, root_id)
+    root_world_z = source._primitives[root_id].get_total_z_offset()
     for primitive_id in primitive_ids:
         # Validate every composed frame, including descendants whose finite
         # local matrices could still overflow during parent composition.
         _world_matrix(source, primitive_id)
+        source._primitives[primitive_id].get_total_z_offset()
 
     layer_ids: Set[uuid.UUID] = set()
     primitive_groups: Dict[uuid.UUID, Set[str]] = {}
@@ -302,6 +304,7 @@ def _copy_tree(source: "CamBamProject", root: "Identifiable", target: "CamBamPro
             clone.groups = sorted(group_names_map.get(name, name) for name in primitive_groups[entity.internal_id])
             if entity.internal_id == root_id:
                 clone.effective_transform = root_world.copy()
+                clone.local_z_offset = root_world_z
             else:
                 clone.effective_transform = np.asarray(entity.effective_transform, dtype=float).copy()
             # Do this while still staging so an overridden hook cannot leave a

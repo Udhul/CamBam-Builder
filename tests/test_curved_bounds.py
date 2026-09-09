@@ -89,17 +89,20 @@ class CurvedBoundsTests(unittest.TestCase):
         self.assert_box(box, (3.5 - math.sqrt(2.5), -3.25 - math.sqrt(4.0625), 5, -3))
         invalid = matrix.copy()
         invalid[2, 0] = .01
-        self.assertFalse(Pline(relative_points=[(0, 0, 1), (2, 0)],
-                               effective_transform=invalid).get_bounding_box().is_valid())
+        corrupted = Pline(relative_points=[(0, 0, 1), (2, 0)])
+        corrupted.effective_transform = invalid
+        self.assertFalse(corrupted.get_bounding_box().is_valid())
 
         for invalid in (
             np.eye(3, dtype=complex),
             np.array(((1, 0, 0), (0, 1, 0), (1e-13, 0, 1)), dtype=float),
             np.array(((1, 0, 0), (0, math.nan, 0), (0, 0, 1)), dtype=float),
         ):
-            self.assertFalse(Arc(effective_transform=invalid).get_bounding_box().is_valid())
-            self.assertFalse(Pline(relative_points=[(0, 0), (1, 0)],
-                                   effective_transform=invalid).get_bounding_box().is_valid())
+            for corrupted in (Arc(), Pline(relative_points=[(0, 0), (1, 0)])):
+                # Constructors now reject invalid transforms. Bounds must also
+                # remain defensive against a subsequently corrupted attribute.
+                corrupted.effective_transform = invalid
+                self.assertFalse(corrupted.get_bounding_box().is_valid())
         enormous = 10 ** 10000
         self.assertFalse(Arc(radius=enormous).get_bounding_box().is_valid())
         self.assertFalse(Pline(relative_points=[(enormous, 0), (1, 0)]).get_bounding_box().is_valid())

@@ -409,3 +409,68 @@ These synthetic tests check exception propagation, destination preservation,
 temporary cleanup, successful XML content/identity/targets and pickle restoration.
 No new manual CamBam acceptance is required for this filesystem/error-boundary
 slice: the successful XML format is unchanged and covered by the round-trip suite.
+
+### Shape-parity regression checks
+
+```powershell
+python -m unittest discover -s tests -p 'test_shape*.py' -v
+python -m unittest discover -s tests -p test_region.py -v
+python -m unittest discover -s tests -p test_z_matrices.py -v
+python -m unittest discover -s tests -p test_parity_bake_failures.py -v
+python -m unittest discover -s tests -v
+```
+
+The selected interpreter for this increment is the existing Python 3.10.9
+installation with NumPy 1.23.5; no `.venv` or new dependency was installed.
+All suites run from the repository root without CamBam. Synthetic cases check
+all seven shapes, actual XML Z/matrix fields, repeated round trips, Region
+geometry/identity/MOP targets, hierarchy baking, copy/transfer and pickle links.
+The legacy curved-bounds corruption test now mutates an already-constructed
+entity because constructors explicitly reject invalid affine matrices.
+
+## Manual shape-parity acceptance
+
+Status: A/B files generated and inspected; CamBam acceptance pending. Use the recorded
+CamBam Plus 1.0 baseline. The synthetic files cover all seven supported shape
+types, an extra Points parent, independent geometry/parent/local Z, two Region
+holes, a semicircular bulged edge and one Region pocket target.
+
+Generate and automatically inspect the local A/B files from the repository root:
+
+```powershell
+python output/shape-parity-kvr0bdc2/generate.py
+python output/shape-parity-kvr0bdc2/verify_acceptance_xml.py
+```
+
+- [A: geometry elevations plus hierarchy matrices](../output/shape-parity-kvr0bdc2/A_matrix_elevations.cb)
+- [B: baked world coordinates and identity matrices](../output/shape-parity-kvr0bdc2/B_baked_elevations.cb)
+- [Exact world geometry](../output/shape-parity-kvr0bdc2/expected-world-geometry.json)
+
+Open A and B in CamBam. Both must load without error and show matching geometry
+in top and oblique views, with eight primitives and one Region containing two
+empty holes. B has identity transforms, so its coordinate properties are the
+world values below. In A, the geometry coordinates and matrix offsets together
+produce the same world values. Compare to absolute tolerance `1e-8` drawing
+units, or the finest displayed precision if the property grid rounds values.
+
+| Identifier | Expected world geometry in B |
+| --- | --- |
+| parent | Point `(0,10,0)` |
+| mixed-pline | `(10,20,3)`, `(15,20,1)`, `(20,25,7)`; open, zero bulges |
+| mixed-points | `(10,30,0)`, `(15,30,3)`, `(20,30,5)` |
+| circle | Center `(30,25,-3)`, diameter 6 |
+| arc | Center `(45,25,5)`, radius 4, start 0 degrees, sweep 180 degrees; upper extent Y=29 |
+| rect | Corner `(55,20,3)`, width 8, height 6; every corner Z=3 |
+| text | `Z parity`, height 3; anchor `(30,35,2)`, second position `(35,35,7)` |
+| region | Outer vertices `(70,20,6)`, `(90,20,6)`, `(90,40,6)`, `(70,40,6)`; bulge 1 on second vertex, rightmost X=100; all other bulges zero |
+| region holes | Squares X=74..78 / Y=24..28 and X=82..86 / Y=32..36; all Z=6 |
+
+Select the `Region pocket` machining operation: it must reference only the Region, with both holes still
+part of that Region. No generated toolpath or machining result is required.
+Check Text's two position fields separately; if CamBam does not expose a field,
+save a separate native copy C in the same task directory and report its path so
+the stored coordinates can be inspected. Never overwrite A or B. Report load
+errors, A/B mismatches, coordinate mismatches, lost holes or altered MOP targets;
+otherwise report that all stated checks pass. Native changes to Text's second
+position or any other stored elevation keep that shape's interchange acceptance
+open until investigated. Automated XML comparison alone cannot close this check.
