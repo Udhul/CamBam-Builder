@@ -719,15 +719,15 @@ class CamBamProject:
                  font: str = 'Arial', style: str = '', line_spacing: float = 1.0, align_horizontal: str = 'center',
                  align_vertical: str = 'center', identifier: Optional[str] = None, groups: Optional[List[str]] = None,
                  description: str = "", parent: Optional[Identifiable] = None, *,
-                 elevation: float = 0.0, baseline_elevation: Optional[float] = None,
-                 baseline_position: Optional[Tuple[float, float]] = None,
+                 elevation: float = 0.0, xml_p2_elevation: Optional[float] = None,
+                 xml_p2_position: Optional[Tuple[float, float]] = None,
                  local_z_offset: float = 0.0) -> Optional[Text]:
         return self._add_primitive_internal(Text, layer, identifier, groups, description, parent,
                                             text_content=text, relative_position=position,
                                             height=height, font=font, style=style, line_spacing=line_spacing,
                                             align_horizontal=align_horizontal, align_vertical=align_vertical,
-                                            elevation=elevation, baseline_elevation=baseline_elevation,
-                                            baseline_position=baseline_position, local_z_offset=local_z_offset)
+                                            elevation=elevation, xml_p2_elevation=xml_p2_elevation,
+                                            xml_p2_position=xml_p2_position, local_z_offset=local_z_offset)
 
     def add_region(self, layer: Identifiable, outer_curve: Pline,
                    hole_curves: Sequence[Pline] = (), identifier: Optional[str] = None,

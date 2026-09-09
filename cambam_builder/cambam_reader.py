@@ -629,6 +629,20 @@ def _geometry_point(value):
     return parts if len(parts) == 3 else (*parts, 0.0)
 
 
+def _text_element_content(element: ET.Element) -> str:
+    """Read Text mixed content from framework or CamBam child ordering.
+
+    Framework XML places content before ``Tag``; CamBam 1.0 places it after
+    ``mat``. Formatting-only indentation is ignored. Multiple non-whitespace
+    direct chunks are ambiguous and rejected instead of being reordered.
+    """
+    chunks = [element.text, *(child.tail for child in element)]
+    content = [chunk for chunk in chunks if chunk is not None and chunk.strip()]
+    if len(content) > 1:
+        raise ValueError("Text element contains multiple direct content chunks")
+    return content[0] if content else ""
+
+
 def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_uuid: uuid.UUID,
                            xml_id_to_primitive_uuid: Dict[int, uuid.UUID],
                            primitive_parent_ref: Dict[uuid.UUID, Union[int, uuid.UUID, str]]):
@@ -748,8 +762,10 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
              prim_specific_kwargs["relative_points"] = points
              prim_specific_kwargs["vertex_z"] = elevations
         elif prim_class is Text:
-             pos1 = _geometry_point(prim_elem.get("p1"))
-             pos2 = _geometry_point(prim_elem.get("p2", prim_elem.get("p1")))
+             # Native CamBam suppresses p1 for the default origin.
+             pos1 = _geometry_point(prim_elem.get("p1", "0,0,0"))
+             pos2_text = prim_elem.get("p2")
+             pos2 = _geometry_point(pos2_text) if pos2_text is not None else None
              height = _parse_float(prim_elem.get("Height"), 10.0)
              font = prim_elem.get("Font", "Arial")
              style = prim_elem.get("style", "")
@@ -758,10 +774,13 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
              align_parts = align_str.split(',')
              v_align = align_parts[0].strip() if len(align_parts) > 0 else "center"
              h_align = align_parts[1].strip() if len(align_parts) > 1 else "center"
-             text_content = prim_elem.text or ""
+             text_content = _text_element_content(prim_elem)
 
-             prim_specific_kwargs.update(relative_position=pos1[:2], elevation=pos1[2],
-                                         baseline_position=pos2[:2], baseline_elevation=pos2[2])
+             prim_specific_kwargs.update(relative_position=pos1[:2], elevation=pos1[2])
+             if pos2 is not None:
+                 prim_specific_kwargs.update(
+                     xml_p2_position=pos2[:2], xml_p2_elevation=pos2[2]
+                 )
              prim_specific_kwargs["height"] = height
              prim_specific_kwargs["font"] = font
              prim_specific_kwargs["style"] = style

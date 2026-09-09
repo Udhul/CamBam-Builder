@@ -430,7 +430,7 @@ entity because constructors explicitly reject invalid affine matrices.
 
 ## Manual shape-parity acceptance
 
-Status: A/B files generated and inspected; CamBam acceptance pending. Use the recorded
+Status: **accepted by the user on 2026-09-09**. Use the recorded
 CamBam Plus 1.0 baseline. The synthetic files cover all seven supported shape
 types, an extra Points parent, independent geometry/parent/local Z, two Region
 holes, a semicircular bulged edge and one Region pocket target.
@@ -440,6 +440,7 @@ Generate and automatically inspect the local A/B files from the repository root:
 ```powershell
 python output/shape-parity-kvr0bdc2/generate.py
 python output/shape-parity-kvr0bdc2/verify_acceptance_xml.py
+python output/shape-parity-kvr0bdc2/verify_native_roundtrip.py
 ```
 
 - [A: geometry elevations plus hierarchy matrices](../output/shape-parity-kvr0bdc2/A_matrix_elevations.cb)
@@ -461,16 +462,25 @@ units, or the finest displayed precision if the property grid rounds values.
 | circle | Center `(30,25,-3)`, diameter 6 |
 | arc | Center `(45,25,5)`, radius 4, start 0 degrees, sweep 180 degrees; upper extent Y=29 |
 | rect | Corner `(55,20,3)`, width 8, height 6; every corner Z=3 |
-| text | `Z parity`, height 3; anchor `(30,35,2)`, second position `(35,35,7)` |
+| text | `Z parity`, height 3; visible anchor `(30,35,2)`. Optional XML `p2="35,35,7"` is retained but is not a visible/current alignment property. |
 | region | Outer vertices `(70,20,6)`, `(90,20,6)`, `(90,40,6)`, `(70,40,6)`; bulge 1 on second vertex, rightmost X=100; all other bulges zero |
 | region holes | Squares X=74..78 / Y=24..28 and X=82..86 / Y=32..36; all Z=6 |
 
 Select the `Region pocket` machining operation: it must reference only the Region, with both holes still
 part of that Region. No generated toolpath or machining result is required.
-Check Text's two position fields separately; if CamBam does not expose a field,
-save a separate native copy C in the same task directory and report its path so
-the stored coordinates can be inspected. Never overwrite A or B. Report load
-errors, A/B mismatches, coordinate mismatches, lost holes or altered MOP targets;
-otherwise report that all stated checks pass. Native changes to Text's second
-position or any other stored elevation keep that shape's interchange acceptance
-open until investigated. Automated XML comparison alone cannot close this check.
+The user reported every visible A/B check passed. Text displayed at anchor
+`(30,35,2)` with center/center alignment, line spacing 1 and the expected font
+and style. CamBam does not expose `p2` as a property. The user saved B as
+[C](../output/shape-parity-kvr0bdc2/C.cb); native XML retained
+`p2="35,35,7"`. A separate fresh-session
+[Text fixture](../output/shape-parity-kvr0bdc2/text_test.cb) created in CamBam
+contains only `p1` despite `align="bottom,left"`, proving alignment is encoded
+separately and normal Text does not require `p2`. This matches the
+[official CamBam MText API](https://www.cambam.info/doc/api/MText.htm), which
+states that P2 is currently unused. A second native observation showed that
+CamBam omits both points at the default origin, then materializes equal `p1` and
+`p2` values after moving the Text. The reader treats omitted `p1` as `(0,0,0)`;
+the writer suppresses that default and preserves optional `p2`. The C-to-D framework check
+also retains mixed-content Text, all geometry, identities, hierarchy, Region
+holes and the Region-only pocket target. This acceptance covers display and
+coordinate/property interchange, not generated production toolpaths.

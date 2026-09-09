@@ -57,14 +57,21 @@ Geometry storage remains XY with separate explicit elevation. Existing Pline
 `(x, y, bulge)` tuples retain their meaning. `add_pline` and `add_points` accept
 keyword `vertex_z`, one finite elevation per vertex, defaulting to zero.
 `add_circle`, `add_arc`, `add_rect` and `add_text` accept keyword `elevation`.
-Text additionally stores `baseline_position` (XY) and `baseline_elevation` for
-XML `p2`, defaulting to the anchor's values. These fields preserve coordinate
-properties; their CamBam display semantics require the prepared acceptance.
+Text additionally stores optional `xml_p2_position` (XY) and
+`xml_p2_elevation` for serialized `p2`. A missing `p1` means the default origin.
+CamBam may omit `p2` or materialize it equal to `p1` according to edit history;
+imported or explicitly supplied values are retained. The
+[official CamBam MText API](https://www.cambam.info/doc/api/MText.htm)
+documents `P1` as the current alignment point and `P2` as currently unused,
+with possible future two-point alignment or rotation behavior. The framework
+therefore assigns no drawing semantics to `p2`. Text content may occur before or
+after native child elements such as `mat`; the reader retains the single
+non-whitespace direct text chunk and rejects ambiguous multiple chunks.
 
 `get_absolute_coordinates()` retains the original XY query shape.
 `get_absolute_coordinates_xyz()` exposes Pline `(x, y, z, bulge)` tuples,
 Points/Rect XYZ triples, Circle/Arc dictionaries with an XYZ `center`, and Text
-dictionaries with XYZ `position` and `baseline_position`. Bounds remain XY
+dictionaries with XYZ `position` and optional `xml_p2`. Bounds remain XY
 projections, with the existing analytic bulged-Pline/Arc extrema contract.
 Pline straight segments and Points support mixed vertex elevations. Bulged
 segments require equal endpoint elevations (including the closing segment);
@@ -106,8 +113,8 @@ while encoder errors propagate under the export contract below.
 Subtree copy/transfer carries the detached root's complete world Z offset and
 retains descendant local offsets, geometry elevations and owned contours.
 Pickle round trips restore project links. Missing additive elevation fields in
-otherwise supported older primitive state default to zero (Text baseline to
-anchor); this is not general versioned pickle migration.
+otherwise supported older primitive state default to zero; Text `xml_p2`
+defaults to absent. This is not general versioned pickle migration.
 
 The Region creation API is `add_region(layer, outer_curve, hole_curves=(), ...)`.
 Contours are closed Plines. A registered input Pline's complete world pose is

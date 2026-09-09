@@ -109,21 +109,22 @@ class ExistingShapeElevationTests(unittest.TestCase):
             rtol=0, atol=1e-12,
         )
 
-    def test_text_preserves_anchor_and_baseline_positions_and_elevations(self):
+    def test_text_preserves_anchor_and_uninterpreted_xml_p2_coordinates(self):
         text = Text(
             text_content="Z", relative_position=(1, 2), elevation=-4,
-            baseline_position=(5, 6), baseline_elevation=9,
+            xml_p2_position=(5, 6), xml_p2_elevation=9,
             effective_transform=translation_matrix(10, 20), local_z_offset=0.25,
         )
         old_geometry = text.get_absolute_coordinates()
         self.assertEqual(old_geometry["position"], (11.0, 22.0))
         geometry = text.get_absolute_coordinates_xyz()
         self.assertEqual(geometry["position"], (11.0, 22.0, -3.75))
-        self.assertEqual(geometry["baseline_position"], (15.0, 26.0, 9.25))
+        self.assertEqual(geometry["xml_p2"], (15.0, 26.0, 9.25))
 
-        default_baseline = Text(relative_position=(3, 4), elevation=2)
-        default_geometry = default_baseline.get_absolute_coordinates_xyz()
-        self.assertEqual(default_geometry["baseline_position"], (3.0, 4.0, 2.0))
+        no_p2 = Text(relative_position=(3, 4), elevation=2)
+        default_geometry = no_p2.get_absolute_coordinates_xyz()
+        self.assertIsNone(default_geometry["xml_p2"])
+        self.assertIsNone(no_p2.to_xml_element(1, None).get("p2"))
 
     def test_hierarchy_sums_local_z_offsets_and_exposes_4x4_world_transform(self):
         project = CBProject("z-hierarchy")
@@ -154,7 +155,7 @@ class ExistingShapeElevationTests(unittest.TestCase):
             (Rect(relative_corner=(1, 2), elevation=-9.875,
                   local_z_offset=7.5, output_decimals=12), None, (-9.875,)),
             (Text(relative_position=(1, 2), elevation=3.25,
-                  baseline_position=(4, 5), baseline_elevation=-2.5,
+                  xml_p2_position=(4, 5), xml_p2_elevation=-2.5,
                   local_z_offset=7.5, output_decimals=12), None, (3.25, -2.5)),
         ]
 
@@ -200,7 +201,7 @@ class ExistingShapeElevationTests(unittest.TestCase):
             Pline(relative_points=[(0, 0), (1, 1)], vertex_z=[-2, 4]),
             Points(relative_points=[(0, 0), (1, 1)], vertex_z=[-2, 4]),
             Circle(elevation=-2), Rect(elevation=-2), Arc(elevation=-2),
-            Text(elevation=-2, baseline_elevation=4),
+            Text(elevation=-2, xml_p2_elevation=4),
         ]
         for shape in shapes:
             with self.subTest(shape=type(shape).__name__):
@@ -209,22 +210,22 @@ class ExistingShapeElevationTests(unittest.TestCase):
                 if hasattr(shape, "vertex_z"):
                     before_z = list(shape.vertex_z)
                 else:
-                    before_z = (shape.elevation, getattr(shape, "baseline_elevation", None))
+                    before_z = (shape.elevation, getattr(shape, "xml_p2_elevation", None))
                 shape.shift_geometry_z(2.5)
                 if hasattr(shape, "vertex_z"):
                     self.assertEqual(shape.vertex_z, [z + 2.5 for z in before_z])
                 else:
                     self.assertEqual(shape.elevation, before_z[0] + 2.5)
                     if isinstance(shape, Text):
-                        self.assertEqual(shape.baseline_elevation, before_z[1] + 2.5)
+                        self.assertEqual(shape.xml_p2_elevation, before_z[1] + 2.5)
                 with self.assertRaises(ValueError):
                     shape.shift_geometry_z(math.inf)
                 self.assertNotEqual(shape.get_absolute_coordinates(), before_xy)
 
-        overflow = Text(elevation=0, baseline_elevation=1e308)
+        overflow = Text(elevation=0, xml_p2_elevation=1e308)
         with self.assertRaises(ValueError):
             overflow.shift_geometry_z(1e308)
-        self.assertEqual((overflow.elevation, overflow.baseline_elevation), (0, 1e308))
+        self.assertEqual((overflow.elevation, overflow.xml_p2_elevation), (0, 1e308))
 
     def test_invalid_z_and_unsupported_bakes_fail_cleanly(self):
         for constructor in (
@@ -232,7 +233,7 @@ class ExistingShapeElevationTests(unittest.TestCase):
             lambda: Points(relative_points=[(0, 0)], vertex_z=[math.nan]),
             lambda: Circle(elevation=math.inf),
             lambda: Arc(local_z_offset=math.nan),
-            lambda: Text(baseline_elevation=-math.inf),
+            lambda: Text(xml_p2_elevation=-math.inf),
             lambda: Rect(effective_transform=np.full((3, 3), math.nan)),
         ):
             with self.subTest(constructor=constructor), self.assertRaises(ValueError):
@@ -267,7 +268,7 @@ class ExistingShapeElevationTests(unittest.TestCase):
             (Rect(), ("elevation", "local_z_offset")),
             (Arc(), ("elevation", "local_z_offset")),
             (Text(relative_position=(1, 2)),
-             ("elevation", "baseline_elevation", "baseline_position", "local_z_offset")),
+             ("elevation", "xml_p2_elevation", "xml_p2_position", "local_z_offset")),
         ):
             with self.subTest(shape=type(original).__name__):
                 state = original.__getstate__()
@@ -286,7 +287,7 @@ class ExistingShapeElevationTests(unittest.TestCase):
                     self.assertTrue(all(point[2] == 0 for point in geometry))
                 else:
                     self.assertEqual(geometry["position"][2], 0)
-                    self.assertEqual(geometry["baseline_position"][2], 0)
+                    self.assertIsNone(geometry["xml_p2"])
 
 
 if __name__ == "__main__":

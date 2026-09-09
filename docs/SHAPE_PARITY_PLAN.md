@@ -1,7 +1,7 @@
 # Region and Z-coordinate shape parity
 
-Status: **implementation delivered; automated verification/review complete; synthetic
-CamBam acceptance pending** (2026-09-09). Core feature parity is independent of
+Status: **completed; automated verification/review and synthetic CamBam
+display/property acceptance complete** (2026-09-09). Core feature parity is independent of
 rest-machining implementation. The implemented API and schema contract now live
 in [the specification](structure_spec.md#shape-elevation-and-region-contract);
 [prepared acceptance](DEVELOPMENT.md#manual-shape-parity-acceptance) owns user checks.
@@ -71,7 +71,7 @@ different topology contract; do not claim the private sample itself is accepted.
 | Circle | Center elevation with diameter preserved; initially an XY-plane circle at that elevation |
 | Arc | Center/plane elevation with radius, start angle and extent preserved |
 | Rect | Corner/plane elevation with dimensions preserved; Rect-to-Pline baking and export preserve elevation on every resulting vertex |
-| Text | Preserve supported anchor/baseline elevations, including relevant XML position fields; verify their semantics with synthetic round trips |
+| Text | Preserve the supported `p1` anchor elevation and optional serialized `p2`. Missing `p1` means the origin; CamBam documents `P2` as currently unused and may omit or materialize it according to edit history. Retain it without assigning display semantics. |
 | Region | Outer boundary and owned hole contours with their Z values and bulges; preserve contour topology and establish supported planarity constraints |
 
 At planning time Circle/Arc/Rect/Points/Text geometry stored XY, their encoders synthesized
@@ -174,5 +174,7 @@ failures show the existing patterns cannot support the intended behavior.
 Stop when every shape's declared Z contract and Region interchange are implemented,
 verified and the required synthetic acceptance is recorded. Do not close this
 item merely because XYZ Plines work. New entity families or unrestricted 3D
-modeling need their own scope. Implementation and verification evidence now belong to the specification and
-review record. No CamBam acceptance is claimed until the prepared checks are reported.
+modeling need their own scope. Implementation, verification and the reported
+CamBam Plus 1.0 acceptance now belong to the specification, review record and
+runbook. The acceptance covers display/property interchange, not production
+toolpaths.

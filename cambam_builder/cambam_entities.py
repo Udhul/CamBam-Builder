@@ -354,10 +354,10 @@ class Primitive(CamBamEntity, ABC):
             state.setdefault('vertex_z', None)
         if 'elevation' in fields:
             state.setdefault('elevation', 0.0)
-        if 'baseline_elevation' in fields:
-            state.setdefault('baseline_elevation', None)
-        if 'baseline_position' in fields:
-            state.setdefault('baseline_position', None)
+        if 'xml_p2_elevation' in fields:
+            state.setdefault('xml_p2_elevation', None)
+        if 'xml_p2_position' in fields:
+            state.setdefault('xml_p2_position', None)
         self.__dict__.update(state)
         # Re-initialize transient fields
         self._project_ref = None
@@ -1453,9 +1453,11 @@ class Text(Primitive):
     # Intrinsic properties
     text_content: str = "Text"
     relative_position: Tuple[float, float] = (0.0, 0.0) # Anchor point
-    baseline_position: Optional[Tuple[float, float]] = None
+    # CamBam's MText API documents p2 as currently unused. Preserve the optional
+    # serialized value without assigning unverified drawing semantics.
+    xml_p2_position: Optional[Tuple[float, float]] = None
     elevation: float = 0.0
-    baseline_elevation: Optional[float] = None
+    xml_p2_elevation: Optional[float] = None
     height: float = 10.0 # Font height in drawing units
     font: str = 'Arial'
     style: str = '' # e.g., 'bold', 'italic', 'bold,italic'
@@ -1466,30 +1468,30 @@ class Text(Primitive):
     def __post_init__(self):
         super().__post_init__()
         self.elevation = _finite_float(self.elevation, "elevation")
-        if self.baseline_elevation is not None:
-            self.baseline_elevation = _finite_float(
-                self.baseline_elevation, "baseline_elevation"
+        if self.xml_p2_elevation is not None:
+            self.xml_p2_elevation = _finite_float(
+                self.xml_p2_elevation, "xml_p2_elevation"
             )
-        if self.baseline_position is not None:
+        if self.xml_p2_position is not None:
             try:
-                if len(self.baseline_position) != 2:
+                if len(self.xml_p2_position) != 2:
                     raise ValueError
-                self.baseline_position = (
-                    _finite_float(self.baseline_position[0], "baseline_position x"),
-                    _finite_float(self.baseline_position[1], "baseline_position y"),
+                self.xml_p2_position = (
+                    _finite_float(self.xml_p2_position[0], "xml_p2_position x"),
+                    _finite_float(self.xml_p2_position[1], "xml_p2_position y"),
                 )
             except (TypeError, ValueError, IndexError) as exc:
                 raise ValueError(
-                    "baseline_position must contain exactly two finite coordinates"
+                    "xml_p2_position must contain exactly two finite coordinates"
                 ) from exc
 
-    def _effective_baseline_position(self) -> Tuple[float, float]:
-        return self.relative_position if self.baseline_position is None else self.baseline_position
+    def _effective_xml_p2_position(self) -> Tuple[float, float]:
+        return self.relative_position if self.xml_p2_position is None else self.xml_p2_position
 
-    def _effective_baseline_elevation(self) -> float:
-        if self.baseline_elevation is None:
+    def _effective_xml_p2_elevation(self) -> float:
+        if self.xml_p2_elevation is None:
             return _finite_float(self.elevation, "elevation")
-        return _finite_float(self.baseline_elevation, "baseline_elevation")
+        return _finite_float(self.xml_p2_elevation, "xml_p2_elevation")
 
     def _calculate_absolute_geometry(self, total_transform: np.ndarray) -> Dict[str, Any]:
         """Returns absolute anchor position and scaled height."""
@@ -1514,17 +1516,21 @@ class Text(Primitive):
     ) -> Dict[str, Any]:
         geometry = self._calculate_absolute_geometry(total_transform)
         position_x, position_y = geometry["position"]
-        baseline_x, baseline_y = get_transformed_point(
-            self._effective_baseline_position(), total_transform
-        )
         geometry["position"] = (
             position_x, position_y,
             _finite_float(_finite_float(self.elevation, "elevation") + total_z_offset, "world Z"),
         )
-        geometry["baseline_position"] = (
-            baseline_x, baseline_y,
-            _finite_float(self._effective_baseline_elevation() + total_z_offset, "world baseline Z"),
-        )
+        if self.xml_p2_position is None and self.xml_p2_elevation is None:
+            geometry["xml_p2"] = None
+        else:
+            p2_x, p2_y = get_transformed_point(
+                self._effective_xml_p2_position(), total_transform
+            )
+            geometry["xml_p2"] = (
+                p2_x, p2_y,
+                _finite_float(self._effective_xml_p2_elevation() + total_z_offset,
+                              "world XML p2 Z"),
+            )
         return geometry
 
     def shift_geometry_z(self, dz: float) -> None:
@@ -1533,15 +1539,15 @@ class Text(Primitive):
             _finite_float(self.elevation, "elevation") + delta,
             "shifted elevation",
         )
-        if self.baseline_elevation is None:
-            baseline_elevation = None
+        if self.xml_p2_elevation is None:
+            p2_elevation = None
         else:
-            baseline_elevation = _finite_float(
-                self._effective_baseline_elevation() + delta,
-                "shifted baseline_elevation",
+            p2_elevation = _finite_float(
+                self._effective_xml_p2_elevation() + delta,
+                "shifted xml_p2_elevation",
             )
         self.elevation = elevation
-        self.baseline_elevation = baseline_elevation
+        self.xml_p2_elevation = p2_elevation
 
     def _calculate_bounding_box(self, absolute_geometry: Dict[str, Any]) -> BoundingBox:
         # Bounding box for text is complex and font-dependent.
@@ -1614,9 +1620,9 @@ class Text(Primitive):
         try:
             # Bake position
             self.relative_position = get_transformed_point(self.relative_position, transform_to_apply)
-            if self.baseline_position is not None:
-                self.baseline_position = get_transformed_point(
-                    self.baseline_position, transform_to_apply
+            if self.xml_p2_position is not None:
+                self.xml_p2_position = get_transformed_point(
+                    self.xml_p2_position, transform_to_apply
                 )
             
             # Bake height (using average scale factor)
@@ -1652,30 +1658,33 @@ class Text(Primitive):
 
     def to_xml_element(self, xml_primitive_id: int, parent_uuid: Optional[uuid.UUID]) -> ET.Element:
         """Creates the <text> XML element."""
-        # CamBam text uses p1, p2 (often same), Height, Font, align etc.
-        # Align format seems to be "Vertical,Horizontal" e.g., "center,center"
+        # CamBam omits p1 at the default origin and may preserve an optional,
+        # currently-unused p2. Align is serialized independently.
         cb_v_align = self.align_vertical
         cb_h_align = self.align_horizontal
         p1x = round(self.relative_position[0], self.output_decimals) if self.output_decimals is not None else self.relative_position[0]
         p1y = round(self.relative_position[1], self.output_decimals) if self.output_decimals is not None else self.relative_position[1]
         p1z = _finite_float(self.elevation, "elevation")
-        baseline_position = self._effective_baseline_position()
-        p2x = round(baseline_position[0], self.output_decimals) if self.output_decimals is not None else baseline_position[0]
-        p2y = round(baseline_position[1], self.output_decimals) if self.output_decimals is not None else baseline_position[1]
-        p2z = self._effective_baseline_elevation()
+        p2_position = self._effective_xml_p2_position()
+        p2x = round(p2_position[0], self.output_decimals) if self.output_decimals is not None else p2_position[0]
+        p2y = round(p2_position[1], self.output_decimals) if self.output_decimals is not None else p2_position[1]
+        p2z = self._effective_xml_p2_elevation()
         if self.output_decimals is not None:
             p1z = round(p1z, self.output_decimals)
             p2z = round(p2z, self.output_decimals)
 
-        text_elem = ET.Element("text", {
-            "p1": f"{p1x},{p1y},{p1z}",
-            "p2": f"{p2x},{p2y},{p2z}", # p2 seems unused?
+        attributes = {
             "Height": str(self.height),
             "Font": self.font,
             "linespace": str(self.line_spacing),
             "align": f"{cb_v_align},{cb_h_align}",
             "style": self.style
-        })
+        }
+        if (p1x, p1y, p1z) != (0, 0, 0):
+            attributes["p1"] = f"{p1x},{p1y},{p1z}"
+        if self.xml_p2_position is not None or self.xml_p2_elevation is not None:
+            attributes["p2"] = f"{p2x},{p2y},{p2z}"
+        text_elem = ET.Element("text", attributes)
         # Text content goes inside the element
         text_elem.text = self.text_content
 

@@ -143,8 +143,8 @@ class ShapeParityIntegrationTests(unittest.TestCase):
         )
         text = project.add_text(
             layer, "Z text", position=(4.0, -2.0), height=3.0,
-            elevation=-4.5, baseline_elevation=-3.25,
-            baseline_position=(6.0, -2.0), identifier="text", parent=root,
+            elevation=-4.5, xml_p2_elevation=-3.25,
+            xml_p2_position=(6.0, -2.0), identifier="text", parent=root,
             local_z_offset=0.875,
         )
 
@@ -232,6 +232,62 @@ class ShapeParityIntegrationTests(unittest.TestCase):
                 [loaded_twice.get_primitive("region").internal_id],
                 loaded_twice.get_mop_targets("region-profile"),
             )
+
+    def test_native_text_child_order_retains_content_and_p2(self):
+        source, shapes = self.make_all_shape_project()
+        expected_xyz = shapes["text"].get_absolute_coordinates_xyz()
+        with tempfile.TemporaryDirectory(prefix="shape-native-text-") as directory:
+            path = Path(directory) / "native.cb"
+            save_cambam_file(source, str(path))
+            tree = ET.parse(path)
+            text_element = self._elements_by_identifier(tree)["text"]
+            expected_content = text_element.text
+            expected_p2 = text_element.get("p2")
+            text_element.text = "\n          "
+            matrix = text_element.find("mat")
+            matrix.tail = expected_content
+            tree.write(path, encoding="utf-8", xml_declaration=True)
+
+            restored = read_cambam_file(str(path))
+            self.assertIsNotNone(restored)
+            text = restored.get_primitive("text")
+            self.assertEqual(text.text_content, expected_content)
+            self._assert_nested_close(self, expected_xyz, text.get_absolute_coordinates_xyz())
+            self.assertEqual(text.to_xml_element(2, None).get("p2"), expected_p2)
+
+    def test_fresh_native_text_without_p2_stays_without_p2(self):
+        xml = """<CADFile Name="fresh" Version="0.9.8.0">
+          <layers><layer name="Default"><objects>
+            <text id="1" p1="38,45,0" Height="10" align="bottom,left">
+              <ModificationCount>0</ModificationCount><mat m="Identity" />test</text>
+          </objects></layer></layers><parts /></CADFile>"""
+        with tempfile.TemporaryDirectory(prefix="shape-fresh-text-") as directory:
+            source = Path(directory) / "fresh.cb"
+            result = Path(directory) / "roundtrip.cb"
+            source.write_text(xml, encoding="utf-8")
+            project = read_cambam_file(str(source))
+            self.assertIsNotNone(project)
+            text = project.list_primitives()[0]
+            self.assertEqual(text.text_content, "test")
+            self.assertIsNone(text.get_absolute_coordinates_xyz()["xml_p2"])
+            save_cambam_file(project, str(result))
+            element = ET.parse(result).getroot().find("./layers/layer/objects/text")
+            self.assertIsNone(element.get("p2"))
+
+            origin_source = Path(directory) / "origin.cb"
+            origin_result = Path(directory) / "origin-roundtrip.cb"
+            origin_source.write_text(
+                xml.replace(' p1="38,45,0"', '').replace('>test</text>', '>origin</text>'),
+                encoding="utf-8",
+            )
+            origin_project = read_cambam_file(str(origin_source))
+            self.assertIsNotNone(origin_project)
+            origin_text = origin_project.list_primitives()[0]
+            self.assertEqual(origin_text.get_absolute_coordinates_xyz()["position"], (0.0, 0.0, 0.0))
+            save_cambam_file(origin_project, str(origin_result))
+            origin_element = ET.parse(origin_result).getroot().find("./layers/layer/objects/text")
+            self.assertIsNone(origin_element.get("p1"))
+            self.assertIsNone(origin_element.get("p2"))
 
     def test_typed_region_xml_object_is_imported_as_one_mop_target(self):
         project, shapes = self.make_all_shape_project()

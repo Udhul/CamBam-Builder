@@ -1144,7 +1144,7 @@ Environment: existing Python 3.10.9 / NumPy 1.23.5; no project `.venv`, dependen
 installation, legacy-package changes or CamBam runtime dependency. Checks run from
 the repository root:
 
-- `python -m unittest discover -s tests -v`: 133 tests passed after final review. The new tests cover all seven types, two XML round trips, actual
+- `python -m unittest discover -s tests -v`: 135 tests passed after final review. The new tests cover all seven types, two XML round trips, actual
   XML geometry/matrix Z, parent/world poses, bulges, bounds, holes, identities,
   groups/MOP targeting, full/nonrecursive/Z bakes, pickle and detached copy/transfer.
 - `python -m compileall -q cambam_builder legacy_cambam_builder tests demos`:
@@ -1155,6 +1155,9 @@ the repository root:
 - `python output/shape-parity-kvr0bdc2/verify_acceptance_xml.py`: passed; an
   independent hardcoded expected-value inspection checks every runbook coordinate,
   dimension, bulge, hole, identity matrix and exact Region MOP reference in B.
+- `python output/shape-parity-kvr0bdc2/verify_native_roundtrip.py`: passed; native
+  C and framework D retain all eight identities, XYZ geometry, hierarchy, two
+  Region holes, the Region-only pocket target and Text content/optional `p2`.
 - `git diff --check`: passed after final review.
 
 The final independent topology review found three concrete issues, all repaired
@@ -1175,11 +1178,29 @@ they retain `1e-10` in-memory / `1e-8` XML tolerances. XML tests compare numeric
 values, allowing equivalent lexical forms such as `1` and `1.0`. The acceptance
 A/B fixture uses 10 decimal places and exact translation matrices.
 
-Implementation and automated verification are distinct from CamBam acceptance.
-A/B display, coordinate properties (especially both Text positions) and Region
-hole/MOP interpretation remain pending. The user must report the prepared result;
-this is not production toolpath acceptance. Local artifacts and detailed logs
-remain in `output/shape-parity-kvr0bdc2/` until that check finishes. Do not promote
-packaging or rest machining ahead of the remaining item-2 acceptance.
+The user accepted every specified A/B display and property check in CamBam Plus
+1.0, including matching geometry, all declared coordinates, Text at its `p1`
+anchor, Region holes and the Region-only MOP target. CamBam saved B as native C
+while retaining the framework's optional `p2="35,35,7"`. A Text created in a
+fresh CamBam session uses `align="bottom,left"` and only `p1`; alignment therefore
+does not require `p2`. This agrees with the
+[official CamBam MText API](https://www.cambam.info/doc/api/MText.htm), which
+documents `P1` as the current alignment point and `P2` as currently unused.
+
+Further native inspection showed that CamBam suppresses both points for Text at
+the default origin and may materialize equal `p1`/`p2` after it is moved. The
+reader now defaults absent `p1` to `(0,0,0)`, and the writer suppresses the same
+default. Together with the earlier non-origin `p1`-only file, this establishes
+that optional `p2` reflects native serialization history rather than alignment.
+
+Native C placed Text content after its `mat` child. That exposed a reader defect
+that only read leading element text; the reader now retains one non-whitespace
+direct mixed-content chunk and rejects ambiguous multiple chunks. Focused native
+child-order and absent-`p2` regressions pass. The C-to-D check verifies the repair
+without modifying C. This acceptance establishes the declared display/property
+interchange case, not generated production toolpaths. Item 2 is complete and the
+next priority is packaging and supported Python-version validation. This is a
+good fresh-session breakpoint because the next scope does not depend on unresolved
+item-2 decisions.
 
 Suggested commit: `feat: add Region and all-shape elevation parity`.
