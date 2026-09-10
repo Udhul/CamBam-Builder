@@ -40,6 +40,12 @@ review did this without installing or changing dependencies.
 
 ## Verification entry points
 
+MCP adapter implementation has not started. The planned launch/dependency boundary
+is in [MCP_CONTRACT.md](MCP_CONTRACT.md#packaging-and-process-ownership); do not treat
+it as an installed command. 4a's disposable SDK/client probes and schema validation
+are recorded in [REVIEW.md](REVIEW.md#mcp-protocol-and-adapter-contract---2026-09-10).
+4b must add actual launcher/protocol/contract-test commands here when implemented.
+
 Run from the repository root, using the interpreter selected above:
 
 ```powershell

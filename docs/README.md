@@ -12,6 +12,7 @@ Read this map after the root README; follow only the relevant owner.
 | Model selection and cost-aware routing | [MODEL_ROUTING.md](MODEL_ROUTING.md) | Reusable risk model for main-thread and worker selection |
 | Review evidence and rejected approaches | [REVIEW.md](REVIEW.md) | Dated findings, acceptance evidence and reopening conditions; not a second backlog |
 | Future local MCP requirements and implementation outline | [MCP_PLAN.md](MCP_PLAN.md) | Pending design/acceptance; priority stays in PROGRESS |
+| Local MCP protocol, state, tools and compatibility contract | [MCP_CONTRACT.md](MCP_CONTRACT.md) and [tool schemas](mcp_contract_v1.schema.json) | Decided 4a contract; adapter implementation and desktop acceptance pending |
 | Region and all-shape Z-coordinate parity | [SHAPE_PARITY_PLAN.md](SHAPE_PARITY_PLAN.md) | Independent upstream feature support; priority stays in PROGRESS |
 | Future rest machining and V-cutter planning | [REST_MACHINING_PLAN.md](REST_MACHINING_PLAN.md) | Optional feature proposal and acceptance; low priority stays in PROGRESS |
 | Package metadata and dependency declarations | `pyproject.toml` | Sole source for published metadata and direct dependencies |

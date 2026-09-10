@@ -7,6 +7,20 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**MCP protocol/client/adapter contract: complete** (2026-09-10; backlog 4a).
+The [contract guide](MCP_CONTRACT.md) and [eight tool schemas](mcp_contract_v1.schema.json)
+settle stdio MCP 2026-07-28, optional SDK 2.2.0/Python >=3.10, volatile explicit
+handles, revision/retry rules, workspace containment and new-file-only saves.
+SDK stdio direct-call/discovery probes passed. OpenCode 1.18.29's installed backend
+uses the 2025-11-25 handshake and fails the modern-only probe; no compatible Desktop
+GUI or second-PC acceptance is claimed. This gates 4e, not foundation development.
+The next increment is **4b: secure server and document foundation**, including
+public project clone and strict byte-based XML import prerequisites. Scope,
+schema checks, compatibility evidence and reopening criteria are persisted in the
+[contract](MCP_CONTRACT.md#acceptance-and-handoff-to-implementation) and
+[review](REVIEW.md#mcp-protocol-and-adapter-contract---2026-09-10).
+No adapter runtime or project dependency was added in 4a.
+
 **Packaging and supported Python validation: complete** (2026-09-10; backlog
 item 3). Published metadata now declares Python >=3.9 and NumPy >=1.23.5 directly
 in `pyproject.toml`, the sole dependency source;
@@ -245,10 +259,11 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 4. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
    and load/modify/save workflows on another PC. User-requested future work, split
    into fresh-session increments with independent stopping conditions:
-   - **4a — next:** verify protocol/client support and settle the adapter, state,
-     revision, security, tool-schema and packaging contracts. Recommended main
-     driver: GPT-6 Astra/high (xhigh only for unresolved protocol ambiguity).
-   - **4b:** implement the secure server/document foundation. GPT-5.6 Sol/xhigh.
+   - **4a — completed 2026-09-10:** [protocol/client and adapter contract](MCP_CONTRACT.md),
+     eight tool schemas and compatibility probes. OpenCode 1.18.29 is incompatible
+     with the requested modern protocol; desktop acceptance remains pending in 4e.
+   - **4b — next:** implement the secure server/document foundation and its
+     required public clone/strict-import contracts. GPT-5.6 Sol/xhigh.
    - **4c:** prove one authoring/MOP/inspect/save/reload parity slice. Sol/xhigh.
    - **4d:** expand the explicitly supported API and resilience coverage.
      Sol/high, with Terra/xhigh suitable for settled coverage batches.
@@ -280,6 +295,9 @@ above. Detailed contracts remain in `docs/structure_spec.md`, and review evidenc
 No blocker for the completed MOP ownership/interchange scope. Production
 toolpaths and complete `.cb` format coverage remain outside that acceptance.
 The old framework API and pickle format did not constrain the redesign.
+MCP 4e requires a desktop client that actually speaks 2026-07-28. Installed
+OpenCode 1.18.29 fails that requirement; retain the modern protocol and reprobe
+when client support changes. SDK-backed 4b/4c implementation can proceed.
 
 ## Completion and verification
 
@@ -310,7 +328,7 @@ are authoritative. MOP ownership, supported interchange, curved geometry bounds
 (1a), copy/transfer (1b) and shape parity (2) are recorded above with their
 verification and acceptance state.
 
-This is a good fresh-session breakpoint: the packaging outcome is implemented,
-verified and recorded, while next increment 4a is a bounded MCP protocol and
-architecture contract session that does not need this session's build context.
-Suggested commit: `build: validate packaging across supported Python versions`.
+This is a good fresh-session breakpoint: 4a's architecture, schema and compatibility
+evidence are persisted, and 4b has a distinct implementation scope. No pending
+decision depends on chat; desktop interoperability is an explicit later gate.
+Suggested commit: `docs: define stateless MCP adapter contract and tool schemas`.

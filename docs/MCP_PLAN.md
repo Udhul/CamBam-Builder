@@ -1,8 +1,9 @@
 # Future local MCP integration
 
-User-requested direction, captured 2026-09-07. This is a lightweight pending plan,
+User-requested direction, captured 2026-09-07. This is a delivery plan,
 not an implemented API or installation guide. Priority/state belong exclusively
-to [PROGRESS.md](PROGRESS.md); existing correctness repairs remain ahead of it.
+to [PROGRESS.md](PROGRESS.md). The decided 4a design lives in the
+[MCP contract](MCP_CONTRACT.md), with [machine-readable schemas](mcp_contract_v1.schema.json).
 
 ## Outcome and requirements
 
@@ -22,7 +23,7 @@ needed. Stateless transport does not require discarding document state. Verify
 the normative specification and SDK/client conformance again when work starts;
 do not silently substitute an older session-based protocol for client convenience.
 
-## Proposed boundary (subject to implementation design)
+## Boundary (resolved by the MCP contract)
 
 - Keep a thin adapter in this repository, calling public framework operations.
   Geometry, relationships and XML rules stay in the framework. Do not duplicate
@@ -53,6 +54,11 @@ earlier increment. Model recommendations identify the appropriate main-session
 driver, not a requirement to delegate or consume the entire model tier.
 
 ### 4a. Protocol, client and adapter contract
+
+The resulting [authoritative contract](MCP_CONTRACT.md) and
+[probe evidence](REVIEW.md#mcp-protocol-and-adapter-contract---2026-09-10)
+resolve this scope. OpenCode 1.18.29 fails modern-only interoperability; 4b/4c
+can proceed against SDK 2.2.0, while desktop distribution acceptance remains gated.
 
 **Recommended main session:** GPT-6 Astra, high reasoning; use xhigh only if the
 normative stateless protocol or target-client behavior remains ambiguous after
@@ -86,6 +92,9 @@ medium-high for one bounded implementation session.
   revision checks, structured diagnostics and the configured workspace boundary.
   Enforce canonical path containment, save/overwrite policy and restart behavior;
   expose no arbitrary Python, private registries, pickle loading or machine control.
+- Add the narrowly required public project clone and strict byte-snapshot XML
+  reader contracts identified in [4a](MCP_CONTRACT.md#documents-revisions-and-atomicity),
+  with focused framework regressions. Keep those rules out of tool handlers.
 - Add focused contract tests for startup/discovery, invalid inputs/references,
   traversal/escape attempts, stale revisions, repeated requests and atomic errors.
 
@@ -182,7 +191,7 @@ In the implementation increment:
 4. Move lasting contracts and launch instructions into their owners, update the
    topic map, and reduce this plan to evidence/links when complete.
 
-Increment 4a owns the previously deferred initial coverage, SDK/transport/client,
+The [MCP contract](MCP_CONTRACT.md) owns initial coverage, SDK/transport/client,
 document persistence/revision and packaging-boundary decisions. Increment 4e owns
 the final supported OS installation matrix. No server, dependency or advertised
 tool exists yet.

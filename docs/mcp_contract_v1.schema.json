@@ -1,0 +1,1331 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cambam-builder:mcp-contract:1",
+  "title": "Planned MCP adapter v1 tool contracts",
+  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. Not an implemented tool catalog.",
+  "$defs": {
+    "UUID": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "Workspace": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "Handle": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "Revision": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "Name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[^\\x00-\\x1f\\x7f]+$"
+    },
+    "Path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^[^\\\\:\\x00]+\\.[cC][bB]$",
+      "description": "Additional canonical workspace containment and component rules in MCP_CONTRACT.md are mandatory."
+    },
+    "Number": {
+      "type": "number",
+      "minimum": -1000000000.0,
+      "maximum": 1000000000.0
+    },
+    "Positive": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1000000000.0
+    },
+    "Units": {
+      "type": "string",
+      "enum": [
+        "mm",
+        "in"
+      ]
+    },
+    "WorkspaceBootstrap": {
+      "type": "object",
+      "properties": {
+        "schema_version": { "const": 1 },
+        "workspace_id": { "$ref": "#/$defs/Workspace" },
+        "boot_id": { "$ref": "#/$defs/UUID" }
+      },
+      "required": ["schema_version", "workspace_id", "boot_id"],
+      "additionalProperties": false
+    },
+    "DocumentSummary": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "units": {
+          "$ref": "#/$defs/Units"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "$ref": "#/$defs/Path"
+                },
+                "sha256": {
+                  "$ref": "#/$defs/Workspace"
+                }
+              },
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "counts": {
+          "type": "object",
+          "properties": {
+            "layers": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "parts": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "primitives": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "mops": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "layers",
+            "parts",
+            "primitives",
+            "mops"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name",
+        "units",
+        "source",
+        "counts"
+      ],
+      "additionalProperties": false
+    },
+    "SavedArtifact": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/Path"
+        },
+        "absolute_path": {
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10485760
+        }
+      },
+      "required": [
+        "path",
+        "absolute_path",
+        "sha256",
+        "bytes"
+      ],
+      "additionalProperties": false
+    },
+    "ProfileParameters": {
+      "type": "object",
+      "properties": {
+        "target_depth": {
+          "$ref": "#/$defs/Number"
+        },
+        "depth_increment": {
+          "$ref": "#/$defs/Positive"
+        },
+        "tool_diameter": {
+          "$ref": "#/$defs/Positive"
+        },
+        "cut_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "plunge_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "spindle_speed": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "stock_surface": {
+          "$ref": "#/$defs/Number",
+          "default": 0
+        },
+        "clearance_plane": {
+          "$ref": "#/$defs/Number"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "profile_side": {
+          "type": "string",
+          "enum": [
+            "Inside",
+            "Outside"
+          ]
+        },
+        "work_plane": {
+          "const": "XY"
+        },
+        "tool_profile": {
+          "const": "EndMill"
+        },
+        "spindle_direction": {
+          "const": "CW"
+        },
+        "velocity_mode": {
+          "const": "ExactStop"
+        },
+        "milling_direction": {
+          "const": "Conventional"
+        },
+        "roughing_clearance": {
+          "const": 0
+        },
+        "stepover": {
+          "const": 0.4
+        },
+        "tool_number": {
+          "const": 0
+        },
+        "collision_detection": {
+          "const": true
+        },
+        "corner_overcut": {
+          "const": false
+        },
+        "final_depth_increment": {
+          "const": 0
+        },
+        "cut_ordering": {
+          "const": "DepthFirst"
+        },
+        "lead_in_type": {
+          "const": "None"
+        },
+        "tab_method": {
+          "const": "None"
+        },
+        "custom_mop_header": {
+          "const": ""
+        },
+        "custom_mop_footer": {
+          "const": ""
+        }
+      },
+      "required": [
+        "target_depth",
+        "depth_increment",
+        "tool_diameter",
+        "cut_feedrate",
+        "plunge_feedrate",
+        "spindle_speed",
+        "stock_surface",
+        "clearance_plane",
+        "enabled",
+        "profile_side",
+        "work_plane",
+        "tool_profile",
+        "spindle_direction",
+        "velocity_mode",
+        "milling_direction",
+        "roughing_clearance",
+        "stepover",
+        "tool_number",
+        "collision_detection",
+        "corner_overcut",
+        "final_depth_increment",
+        "cut_ordering",
+        "lead_in_type",
+        "tab_method",
+        "custom_mop_header",
+        "custom_mop_footer"
+      ],
+      "additionalProperties": false
+    },
+    "EntityRecord": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "layer"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "part"
+            },
+            "name": {
+              "type": "string"
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "stock_width": {
+              "$ref": "#/$defs/Number"
+            },
+            "stock_height": {
+              "$ref": "#/$defs/Number"
+            },
+            "stock_thickness": {
+              "$ref": "#/$defs/Number"
+            },
+            "stock_material": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "enabled",
+            "stock_width",
+            "stock_height",
+            "stock_thickness",
+            "stock_material"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "primitive"
+            },
+            "id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "identifier": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": {
+              "type": "string"
+            },
+            "layer": {
+              "type": "string"
+            },
+            "parent": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/UUID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/UUID"
+              }
+            },
+            "world_xyz": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/Number"
+                    },
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "minItems": 4,
+                  "maxItems": 4
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "bounds": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Number"
+                  },
+                  "minItems": 4,
+                  "maxItems": 4
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "identifier",
+            "type",
+            "layer",
+            "parent",
+            "children",
+            "world_xyz",
+            "bounds"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "mop"
+            },
+            "id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "identifier": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": {
+              "type": "string"
+            },
+            "part": {
+              "type": "string"
+            },
+            "targets": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/UUID"
+              }
+            },
+            "parameters": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ProfileParameters"
+                },
+                {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "identifier",
+            "type",
+            "part",
+            "targets",
+            "parameters"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "InspectionPage": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "$ref": "#/$defs/DocumentSummary"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "next_offset": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EntityRecord"
+          },
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "summary",
+        "offset",
+        "next_offset",
+        "entities"
+      ],
+      "additionalProperties": false
+    },
+    "Error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "INVALID_ARGUMENT",
+            "WORKSPACE_MISMATCH",
+            "DOCUMENT_NOT_FOUND",
+            "DOCUMENT_EXPIRED",
+            "STALE_REVISION",
+            "REQUEST_ID_CONFLICT",
+            "ENTITY_NOT_FOUND",
+            "IDENTIFIER_CONFLICT",
+            "UNSUPPORTED_OPERATION",
+            "PATH_INVALID",
+            "PATH_EXISTS",
+            "IMPORT_FAILED",
+            "EXPORT_FAILED",
+            "LIMIT_EXCEEDED",
+            "IO_ERROR",
+            "INTERNAL_ERROR",
+            "REQUEST_CANCELLED"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "current_revision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Revision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "field",
+        "current_revision"
+      ],
+      "additionalProperties": false
+    },
+    "Envelope": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Handle"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Revision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "request_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "replayed": {
+          "type": "boolean"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string",
+                "maxLength": 1024
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "data": {},
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Error"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "workspace_id",
+        "document",
+        "revision",
+        "request_id",
+        "replayed",
+        "diagnostics",
+        "ok",
+        "data",
+        "error"
+      ],
+      "additionalProperties": false
+    },
+    "document_create_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "units": {
+          "$ref": "#/$defs/Units"
+        },
+        "name": {
+          "$ref": "#/$defs/Name"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "request_id",
+        "units",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "document_create_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "$ref": "#/$defs/DocumentSummary"
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "document_open_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "units": {
+          "$ref": "#/$defs/Units"
+        },
+        "path": {
+          "$ref": "#/$defs/Path"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "request_id",
+        "units",
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "document_open_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "$ref": "#/$defs/DocumentSummary"
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "document_inspect_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "default": 0
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 100
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document"
+      ],
+      "additionalProperties": false
+    },
+    "document_inspect_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "$ref": "#/$defs/InspectionPage"
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "geometry_add_rectangle_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "identifier": {
+          "$ref": "#/$defs/Name"
+        },
+        "layer": {
+          "$ref": "#/$defs/Name"
+        },
+        "x": {
+          "$ref": "#/$defs/Number"
+        },
+        "y": {
+          "$ref": "#/$defs/Number"
+        },
+        "width": {
+          "$ref": "#/$defs/Positive"
+        },
+        "height": {
+          "$ref": "#/$defs/Positive"
+        },
+        "z": {
+          "$ref": "#/$defs/Number",
+          "default": 0
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "identifier",
+        "layer",
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "additionalProperties": false
+    },
+    "geometry_add_rectangle_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "layer": {
+                      "$ref": "#/$defs/Name"
+                    }
+                  },
+                  "required": [
+                    "entity_id",
+                    "layer"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "machining_add_profile_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "identifier": {
+          "$ref": "#/$defs/Name"
+        },
+        "part": {
+          "$ref": "#/$defs/Name"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UUID"
+          },
+          "minItems": 1,
+          "maxItems": 100,
+          "uniqueItems": true
+        },
+        "side": {
+          "type": "string",
+          "enum": [
+            "Inside",
+            "Outside"
+          ]
+        },
+        "target_depth": {
+          "$ref": "#/$defs/Number"
+        },
+        "depth_increment": {
+          "$ref": "#/$defs/Positive"
+        },
+        "tool_diameter": {
+          "$ref": "#/$defs/Positive"
+        },
+        "cut_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "plunge_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "spindle_speed": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "stock_surface": {
+          "$ref": "#/$defs/Number",
+          "default": 0
+        },
+        "clearance_plane": {
+          "$ref": "#/$defs/Number"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "identifier",
+        "part",
+        "targets",
+        "side",
+        "target_depth",
+        "depth_increment",
+        "tool_diameter",
+        "cut_feedrate",
+        "plunge_feedrate",
+        "spindle_speed",
+        "clearance_plane"
+      ],
+      "additionalProperties": false
+    },
+    "machining_add_profile_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "mop_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "part": {
+                      "$ref": "#/$defs/Name"
+                    },
+                    "targets": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/UUID"
+                      },
+                      "minItems": 1,
+                      "maxItems": 100,
+                      "uniqueItems": true
+                    }
+                  },
+                  "required": [
+                    "mop_id",
+                    "part",
+                    "targets"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "geometry_translate_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "entity_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "dx": {
+          "$ref": "#/$defs/Number"
+        },
+        "dy": {
+          "$ref": "#/$defs/Number"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "entity_id",
+        "dx",
+        "dy"
+      ],
+      "additionalProperties": false
+    },
+    "geometry_translate_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    }
+                  },
+                  "required": [
+                    "entity_id"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "document_save_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "path": {
+          "$ref": "#/$defs/Path"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "document_save_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "$ref": "#/$defs/SavedArtifact"
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "document_close_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id"
+      ],
+      "additionalProperties": false
+    },
+    "document_close_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "closed": {
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "closed"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

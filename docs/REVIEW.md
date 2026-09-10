@@ -1333,3 +1333,160 @@ module is not imported by the legacy package root and remains outside the
 supported surface. Reopen Python 3.8 only if a concrete consumer requires it and
 the entire distribution plus dependency resolution can be tested there; reopen
 CLI/distribution work only for an actual user workflow.
+
+# MCP protocol and adapter contract - 2026-09-10
+
+Backlog 4a is a contract/probe outcome, not an implemented adapter. The lasting
+decisions and first-slice acceptance are in [MCP_CONTRACT.md](MCP_CONTRACT.md),
+with [machine-readable input/output schemas](mcp_contract_v1.schema.json).
+No runtime source, base dependency, installed client configuration or launcher
+was changed. Disposable scripts, environments, public-source snapshots and
+synthetic artifacts are under `output/mcp-contract-haugv1gu/`.
+
+Primary evidence checked on 2026-09-10:
+
+- The [normative core](https://modelcontextprotocol.io/specification/2026-07-28/basic/index)
+  requires per-request protocol version and client capabilities; client identity
+  is optional. The [stdio binding](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio)
+  retains local subprocess transport without an initialization requirement.
+- The [SDK v2 migration guide](https://py.sdk.modelcontextprotocol.io/migration/)
+  describes `MCPServer`, split `mcp_types` and modern support. Actual PyPI metadata
+  selected `mcp==2.2.0`, `mcp-types==2.2.0`, Python >=3.10. An isolated environment
+  used Python 3.13.9, Pydantic 2.13.5 and jsonschema 4.26.0. No SDK was installed
+  into the project `.venv`.
+- [OpenCode MCP source at 1.18.29](https://github.com/anomalyco/opencode/blob/v1.18.29/packages/opencode/src/mcp/index.ts)
+  has stdio, Streamable HTTP and legacy SSE transports. Its
+  [package declaration](https://github.com/anomalyco/opencode/blob/v1.18.29/packages/opencode/package.json)
+  pins TS SDK 1.29.0. The installed backend binary reports 1.18.29.
+
+The Python SDK subprocess successfully answered `tools/call` as the first request,
+then `tools/list`, then `server/discover`, with `2026-07-28` metadata on each.
+The synthetic typed `echo(value: int) -> EchoResult` returned structured
+`{"value":7}` and `resultType="complete"`; closing stdin exited 0. A bare `dict`
+return annotation did not produce `structuredContent`, so adapter handlers must use
+explicit typed result models/output schemas. The contract requires a middleware
+version gate because SDK v2 also supports legacy clients; the probe did not claim
+that the SDK's default server rejects legacy initialization.
+
+The installed OpenCode backend was run through `mcp list --pure` with separate
+XDG config/data/state/cache directories, project config/default plugins/model fetch
+and auto-update disabled, and only one synthetic local server. It sent:
+
+```json
+{"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{"roots":{}},"clientInfo":{"name":"opencode","version":"1.18.29"}},"jsonrpc":"2.0","id":0}
+```
+
+A mock returning method-not-found to initialization made OpenCode report `failed`.
+A control mock answering initialization at `2025-11-25`, advertising tools and
+returning an empty catalog made it report `connected`, followed by
+`notifications/initialized` and `tools/list`. Both CLI commands exited **0**;
+the wire transcript and displayed status, not exit status, establish the result.
+The modern mock is a negative compatibility detector, not a complete conforming
+MCP server. This proves the installed backend's handshake behavior; it does not
+prove the version or behavior of an installed Desktop GUI. Modern Desktop
+compatibility remains unaccepted and gates 4e. No model was invoked or user CAD
+data sent to a service. Reopen with a client release that claims modern support,
+then require modern wire evidence rather than mere successful connection.
+
+Commands actually run from the repository root:
+
+```powershell
+uv venv --python .venv/Scripts/python.exe output/mcp-contract-haugv1gu/sdk-env
+uv pip install --python output/mcp-contract-haugv1gu/sdk-env/Scripts/python.exe mcp==2.2.0
+.venv/Scripts/python.exe output/mcp-contract-haugv1gu/client_probe.py
+output/mcp-contract-haugv1gu/sdk-env/Scripts/python.exe output/mcp-contract-haugv1gu/sdk_probe.py
+output/mcp-contract-haugv1gu/sdk-env/Scripts/python.exe output/mcp-contract-haugv1gu/validate_schemas.py
+.venv/Scripts/python.exe output/mcp-contract-haugv1gu/framework_probe.py
+git diff --check
+```
+
+The initial default-sandbox external fetch and uv cache access failed; authorized
+escalated commands completed the disposable environment/probes. PowerShell's
+`opencode.ps1` shim was blocked by execution policy, so the installed `.exe` was
+used without changing policy. One probe print initially hit cp1252 console encoding;
+UTF-8 output corrected it. These were harness/environment failures, not protocol
+support. Final schema synchronization was interrupted when automatic approval
+review hit the session usage limit. After the user resumed the task, the approved
+verification completed; no approval rejection remains unresolved.
+
+Reproduction in a fresh checkout does not require the ignored scripts:
+
+1. Create a unique `output/mcp-contract-<suffix>/` environment with the two uv
+   commands above, substituting that directory. Run a Python subprocess server
+   using `from mcp.server import MCPServer`, a Pydantic model `EchoResult` with
+   `value: int`, and an `echo` tool returning `EchoResult(value=value)`. Call
+   `server.run()` for stdio. A parent process writes each of the following JSON-RPC
+   requests as one line, reads and checks the matching response before continuing,
+   then closes stdin and waits for exit:
+
+   ```text
+   params._meta = {"io.modelcontextprotocol/protocolVersion":"2026-07-28",
+                   "io.modelcontextprotocol/clientCapabilities":{},
+                   "io.modelcontextprotocol/clientInfo":{"name":"cambam-probe","version":"0"}}
+   id 1: tools/call, params.name="echo", params.arguments={"value":7}
+   id 2: tools/list
+   id 3: server/discover
+   ```
+
+2. For OpenCode, configure `mcp.probe` as `type="local"`, a command array for
+   environment Python plus a synthetic mock script, and `timeout=3000`. Use a
+   copied subprocess environment with `XDG_CONFIG_HOME`, `XDG_DATA_HOME`,
+   `XDG_STATE_HOME`, `XDG_CACHE_HOME` pointing inside the task directory;
+   `OPENCODE_CONFIG_DIR` points to its config directory and
+   `OPENCODE_CONFIG_CONTENT` contains only that MCP configuration. Set
+   `OPENCODE_DISABLE_PROJECT_CONFIG`, `OPENCODE_DISABLE_DEFAULT_PLUGINS`,
+   `OPENCODE_DISABLE_MODELS_FETCH`, `OPENCODE_DISABLE_AUTOUPDATE` to `true`.
+   Run the installed executable's `mcp list --pure` with that directory as cwd
+   and a 40-second process timeout. The mock records each inbound JSON line;
+   for any request with `id`, echo the ID and return JSON-RPC error `-32601`.
+   Repeat with a control that returns initialization result
+   `{"protocolVersion":"2025-11-25","capabilities":{"tools":{}},"serverInfo":{"name":"synthetic-probe","version":"0"}}`
+   and `{"tools":[]}` to `tools/list`; ignore notifications. Expected transcripts
+   and interpretation are above. Do not read real client credentials/config.
+3. Validate the tracked schema with `jsonschema.Draft202012Validator.check_schema`.
+   To validate a tool, construct `{"$ref":"#/$defs/<tool>_input","$defs":...}`
+   (or `_output`) using its definitions. Exercise every tool's example inputs,
+   missing required fields, unknown properties, zero width, boolean width, string
+   translation, oversized page, absolute/wrong-extension paths, duplicate targets,
+   and every success/error envelope. Schema validation alone does not prove
+   canonical filesystem containment or state/retry behavior.
+4. Author the exact direct-framework A/B slice in the contract's acceptance section
+   using `CBProject`, `add_rect`, `add_part`, `add_profile_mop`, `save`,
+   `read_cambam_file`, `translate_primitive`, then `save`/reload. This independently
+   confirms that 4c's target values are supported by the current framework.
+
+Results: schema meta-validation plus **98 assertions** across eight tool inputs
+and success/error outputs passed. After contract review, **7 additional assertions**
+passed for the workspace bootstrap schema and terminal cancellation error, for
+**105 assertions total**. The direct A/B workflow retained primitive/MOP
+UUIDs, targets, six explicit machining values and the original A bytes. B corners
+matched (5,2,0), (25,2,0), (25,12,0), (5,12,0), absolute tolerance `1e-9`.
+This is a direct API reference probe, not MCP parity implementation.
+
+The API review also reproduced that `copy.deepcopy(project)` leaves primitive
+project links detached: a cloned child loses its translated parent's world pose.
+`Primitive.__getstate__/__setstate__` deliberately remove the link; only pickle
+loading currently repairs it. 4b needs public `CamBamProject.clone()` that rebinds
+cloned primitives, plus independent-mutation/parent-transform/MOP-template tests.
+The reader currently skips unknown MOP types; 4b needs the strict byte-snapshot
+reader contract rather than duplicate XML policy inside tool handlers. These
+prerequisites are intentionally small owning-framework changes, not adapter access
+to private registries or a broader geometry refactor.
+
+Independent contract review identified bootstrap/error-envelope ambiguity,
+concurrent document-capacity reservation, canceled ledger entries, exhaustion
+recovery and saved-artifact revision ambiguity. The final contract specifies the
+discovery metadata key and stderr grammar, canonical root hash, configured workspace
+ID in error envelopes, a registry reservation lock, terminal `REQUEST_CANCELLED`,
+save/close access after regular ledger exhaustion, and a document lock held through
+save publication and ledger completion. The schemas include the bootstrap record
+and cancellation error. These are reviewed design rules; concurrency/security
+behavior remains to be implemented and tested in 4b. Final local documentation
+link/anchor and schema-reference checks passed, as did `git diff --check`.
+
+No manual validation is needed for 4a. Runtime/security implementation, full
+framework regression checks after implementation, actual desktop/second-PC use,
+and CamBam production acceptance remain separate future evidence. Volatile handles
+deliberately lose unsaved work at restart; `.cb` interchange still has limited
+unknown-field preservation and no verified persisted unit setting. These limits,
+new-file-only save policy and reopening criteria are in the contract.
