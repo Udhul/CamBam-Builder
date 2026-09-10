@@ -45,6 +45,110 @@ do not silently substitute an older session-based protocol for client convenienc
   checking target-client support; avoid dependencies for library-only users where
   practical. Remote hosting and machine control are outside this initial aim.
 
+## Delivery increments and session boundaries
+
+Execute the work in order. Each increment is a complete project outcome with its
+own verification and documentation handoff; do not pull later API breadth into an
+earlier increment. Model recommendations identify the appropriate main-session
+driver, not a requirement to delegate or consume the entire model tier.
+
+### 4a. Protocol, client and adapter contract
+
+**Recommended main session:** GPT-6 Astra, high reasoning; use xhigh only if the
+normative stateless protocol or target-client behavior remains ambiguous after
+direct evidence. **Relative usage:** high for one architecture-focused session.
+
+- Verify the normative MCP 2026-07-28 specification, current Python SDK support
+  and at least one named desktop client's actual transport/protocol capabilities.
+- Decide transport, file-backed references versus explicit handles, restart and
+  persistence behavior, revision/concurrent-edit rules, retries/idempotency,
+  workspace/path policy, overwrite/save-as behavior and error/result envelopes.
+- Select the smallest initial tool set and map each tool to public framework APIs,
+  units, identifiers, defaults and explicit exclusions. Decide optional dependency
+  and launcher packaging without adding them yet unless a disposable protocol
+  probe is required to settle compatibility.
+- Create the authoritative MCP contract guide and update the topic map/status.
+  Record primary-source and client-probe evidence plus reopening criteria.
+
+**Stopping condition:** every material implementation decision above is persisted,
+the first vertical slice has testable schemas and acceptance criteria, and no
+implementation depends on conversational context. This is the intended Astra-to-
+Sol fresh-session handoff.
+
+### 4b. Secure server and document foundation
+
+**Recommended main session:** GPT-5.6 Sol, xhigh reasoning. **Relative usage:**
+medium-high for one bounded implementation session.
+
+- Add the minimal adapter package, optional dependency boundary and documented
+  local start/stop command selected in 4a.
+- Implement protocol/server wiring, explicit document references or handles,
+  revision checks, structured diagnostics and the configured workspace boundary.
+  Enforce canonical path containment, save/overwrite policy and restart behavior;
+  expose no arbitrary Python, private registries, pickle loading or machine control.
+- Add focused contract tests for startup/discovery, invalid inputs/references,
+  traversal/escape attempts, stale revisions, repeated requests and atomic errors.
+
+**Stopping condition:** the server foundation is installable and deterministic,
+security/state contracts pass without CAD feature breadth, and exact checks plus
+known limits are recorded. Start 4c in a fresh session.
+
+### 4c. First authoring and round-trip vertical slice
+
+**Recommended main session:** GPT-5.6 Sol, xhigh reasoning. **Relative usage:**
+high for one feature-and-parity session.
+
+- Implement only the tools needed to create a document, add representative
+  geometry and one supported MOP, inspect it, save it, reload and modify it, then
+  save under a new name.
+- Compare MCP results with direct public-framework calls for IDs, relationships,
+  world geometry, machining parameters and serialized XML. Cover malformed
+  arguments, invalid references, repeated calls and revision behavior.
+- Provide a runnable synthetic demonstration, but defer broader entity/operation
+  coverage and desktop-client acceptance.
+
+**Stopping condition:** the complete slice passes adapter contract tests and
+direct-framework parity checks, with artifacts inspected and durable evidence
+recorded. This proves the abstraction before API expansion and is a fresh-session
+breakpoint.
+
+### 4d. Supported API breadth and resilience
+
+**Recommended main session:** GPT-5.6 Sol, high reasoning; Terra xhigh is suitable
+for clearly mapped, lower-risk coverage batches. **Relative usage:** high overall,
+prefer multiple outcome-sized sessions if coverage does not fit one coherent unit.
+
+- Expand only to explicitly supported geometry, relationships, transforms and
+  machining operations, following the 4a mapping and proven 4c patterns.
+- Add schema/API parity fixtures and negative tests for every added family. Test
+  concurrent/stale edits, restart recovery, retry/idempotency and failure atomicity
+  across the supported surface. Keep unsupported operations explicit.
+- Update the adapter impact check in the workflow and the contract/runbook as
+  each public family becomes supported; do not claim complete CamBam coverage.
+
+**Stopping condition:** the declared supported surface and exclusions match code,
+schemas and parity tests, all relevant framework regressions pass, and no unresolved
+contract decision is carried only in chat. Begin distribution acceptance fresh.
+
+### 4e. Installation, client and user acceptance
+
+**Recommended main session:** GPT-5.6 Terra, high reasoning for packaging/runbook
+execution; move to Sol high only for substantive interoperability defects.
+**Relative usage:** medium model usage plus external user time.
+
+- Validate clean installation and uninstall/rollback without affecting direct
+  library users; verify the supported Python/OS and adapter dependency matrix.
+- Publish exact local start/stop and named-client configuration instructions.
+  Connect the selected desktop client on a clean second-PC environment and repeat
+  the 4c workflow through the negotiated stateless protocol.
+- Record agent usability and required CamBam geometry/property/toolpath inspection
+  as user/domain acceptance, keeping automated, protocol and production evidence
+  separate.
+
+**Stopping condition:** clean-machine install, connection, protocol conformance,
+end-to-end client behavior and required user acceptance are recorded; rollback is
+demonstrated and the live backlog advances. This completes the initial adapter.
+
 ## First implementation proof and acceptance
 
 After the relevant framework defects are fixed, prove one end-to-end slice:
@@ -78,6 +182,7 @@ In the implementation increment:
 4. Move lasting contracts and launch instructions into their owners, update the
    topic map, and reduce this plan to evidence/links when complete.
 
-Decisions deferred until activation: initial coverage, SDK/transport and client
-versions, document persistence/revision model, packaging and supported OS matrix.
-None blocks backlog capture. No server, dependency or advertised tool exists yet.
+Increment 4a owns the previously deferred initial coverage, SDK/transport/client,
+document persistence/revision and packaging-boundary decisions. Increment 4e owns
+the final supported OS installation matrix. No server, dependency or advertised
+tool exists yet.

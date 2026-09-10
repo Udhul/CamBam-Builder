@@ -243,9 +243,21 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 3. **Completed 2026-09-10:** packaging and supported Python 3.9-3.13 validation.
    Add CLI/publishing work only for an actual need.
 4. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
-   and load/modify/save workflows on another PC. User-requested future work;
-   not active and does not displace correctness fixes.
-   [Requirements, acceptance and maintenance plan](MCP_PLAN.md).
+   and load/modify/save workflows on another PC. User-requested future work, split
+   into fresh-session increments with independent stopping conditions:
+   - **4a — next:** verify protocol/client support and settle the adapter, state,
+     revision, security, tool-schema and packaging contracts. Recommended main
+     driver: GPT-6 Astra/high (xhigh only for unresolved protocol ambiguity).
+   - **4b:** implement the secure server/document foundation. GPT-5.6 Sol/xhigh.
+   - **4c:** prove one authoring/MOP/inspect/save/reload parity slice. Sol/xhigh.
+   - **4d:** expand the explicitly supported API and resilience coverage.
+     Sol/high, with Terra/xhigh suitable for settled coverage batches.
+   - **4e:** validate installation, named desktop-client interoperability and
+     second-PC/user acceptance. Terra/high; escalate interoperability defects to
+     Sol/high.
+   Each increment must persist its decisions, evidence and remaining limits before
+   handoff; later breadth must not leak into earlier scopes. Full acceptance and
+   maintenance details: [MCP delivery plan](MCP_PLAN.md#delivery-increments-and-session-boundaries).
 5. **Planned future feature:** rest-area calculation and rest
    machining helpers for pocket and inside/outside profile MOPs. Five outcomes:
    pure rest regions; safe expansion for a smaller endmill; pointed/flat-tip
@@ -299,6 +311,6 @@ are authoritative. MOP ownership, supported interchange, curved geometry bounds
 verification and acceptance state.
 
 This is a good fresh-session breakpoint: the packaging outcome is implemented,
-verified and recorded, while the next priority (the local stateless MCP adapter)
-has a distinct integration scope and does not need this session's build context.
+verified and recorded, while next increment 4a is a bounded MCP protocol and
+architecture contract session that does not need this session's build context.
 Suggested commit: `build: validate packaging across supported Python versions`.
