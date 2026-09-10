@@ -25,7 +25,6 @@ from .cambam_entities import BoundingBox, PLINE_BULGE_TOLERANCE, Pline, Primitiv
 
 
 _TOPOLOGY_REL_TOLERANCE = 1e-10
-_Z_TOLERANCE = 1e-10
 _TWO_PI = 2.0 * math.pi
 
 
@@ -526,18 +525,12 @@ def _validate_region_topology(outer_curve: Pline, hole_curves: Sequence[Pline]) 
         for index, contour in enumerate(hole_curves)
     ]
     built = [_contour_segments(contour, name) for name, contour in named]
-    all_z = []
     for name, contour in named:
         local_offset = _finite_float(
             getattr(contour, "local_z_offset", 0.0), f"{name} local_z_offset"
         )
-        all_z.extend(
-            _finite_float(local_offset + value, f"{name} effective vertex Z")
-            for value in (vertex.z for vertex in contour._validated_vertices())
-        )
-    reference_z = all_z[0]
-    if any(not math.isclose(value, reference_z, rel_tol=0.0, abs_tol=_Z_TOLERANCE) for value in all_z[1:]):
-        raise ValueError("Region contours must be coplanar in Z")
+        for vertex in contour._validated_vertices():
+            _finite_float(local_offset + vertex.z, f"{name} effective vertex Z")
 
     outer_segments, outer_tolerance = built[0]
     holes = built[1:]

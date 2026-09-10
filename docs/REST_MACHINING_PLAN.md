@@ -206,9 +206,9 @@ explicit `TargetDepth=0` to follow the shape. CamBam's
 `OptimisationMode=None` to retain path ordering. Verify stock-surface conventions,
 pass generation, start points, direction, linking and generated G-code in the
 target version; a zero target-depth setting alone does not establish equivalence.
-Keep this export/attachment helper unavailable until lossless XYZ interchange
-and target-version varying-Z motion have been verified. Never pass XYZ triples
-through the current XY/bulge Pline interface as a temporary implementation.
+Keep this export/attachment helper unavailable until target-version varying-Z
+toolpath motion has been verified. Lossless XYZ/bulge Pline and Region interchange
+is supported, but does not establish Engrave interpolation or generated motion.
 Native V-carving systems combine boundary width, tool angle, variable depth and
 optional flat-depth clearing, supporting this separation of tasks; see
 [Vectric's V-Carve documentation](https://docs.vectric.com/docs/V12.0/VCarveDesktop/ENU/Help/page/single-page/index.html).
@@ -217,8 +217,9 @@ Acceptance: canonical shapes and holes pass independent XYZ sweep checks; path
 depth/pass limits hold between vertices as well as at them. Two XML round trips
 preserve XYZ, closure, identities, source order and MOP parameters. CamBam-generated
 motion must match intended cutting paths and acceptable links before machining
-acceptance is claimed. Use straight XYZ segments first; varying-Z arc semantics
-need their own evidence.
+acceptance is claimed. Use straight XYZ segments first; the native interchange
+evidence for varying-Z bulges does not yet establish their exact intermediate Z
+parameterization or generated toolpath semantics.
 
 ### 5. V-cutter edge tracing and corner cleanup
 

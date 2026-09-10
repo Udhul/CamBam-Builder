@@ -81,10 +81,11 @@ non-whitespace direct text chunk and rejects ambiguous multiple chunks.
 Points/Rect XYZ triples, Circle/Arc dictionaries with an XYZ `center`, and Text
 dictionaries with XYZ `position` and optional `xml_p2`. Bounds remain XY
 projections, with the existing analytic bulged-Pline/Arc extrema contract.
-Pline straight segments and Points support mixed vertex elevations. Bulged
-segments require equal endpoint elevations (including the closing segment);
-spatial arcs and tilted analytic entities are unsupported. XYZ queries correct
-arc sweep and bulge orientation under reflection. Circle/Arc and bulged
+Pline segments support mixed vertex elevations with or without bulge. Bulge
+describes the segment's XY circular projection and is retained with both endpoint
+elevations; the framework does not calculate intermediate spatial positions or
+spatial arc length. Tilted analytic entities remain unsupported. XYZ queries
+correct arc sweep and bulge orientation under reflection. Circle/Arc and bulged
 Pline/Region XYZ representations require similarity transforms (rotation,
 reflection and uniform nonzero scale); nonuniform scale/shear can remain in
 stored XML matrices and analytic bounds, but these XYZ queries reject them
@@ -133,15 +134,17 @@ registered primitive/MOP source. Its UUID, identifier, description, groups,
 parent and layer belong to the Region. Region XML uses the observed native
 `entity xsi:type="Region"` spelling, an `OuterCurve` containing `pts`, and
 `HoleCurves/Polyline` contours. No independent contour IDs or MOP targets are
-exported. Both contour windings are accepted and preserved. Contours must be
-simple, closed and coplanar in Z; holes must be strictly inside the outer curve,
+exported. Both contour windings are accepted and preserved. Contours may contain
+arbitrary finite per-vertex Z values, including bulged segments with unequal
+endpoint Z; Region validation and bounds interpret topology in the XY projection.
+Contours must be simple and closed; holes must be strictly inside the outer curve,
 mutually disjoint and nonnested. Touching, crossing, overlapping, degenerate
 and unsupported elliptical contour geometry fail validation. The outer curve
 may use two complementary semicircles. Validation uses analytic line/circle
 intersections and curve containment, never a tessellated Boolean engine.
 Topology tolerance is `max(1e-10 * max(1, XY extent), 8 coordinate ULPs, 1e-12)`;
-near-zero areas below `1e-10 * max(1, XY extent)^2` are rejected, and planarity
-uses absolute Z tolerance `1e-10`. These are floating-point CAD tolerances,
+near-zero projected areas below `1e-10 * max(1, XY extent)^2` are rejected. These
+are floating-point CAD tolerances,
 not exact predicates for arbitrarily ill-conditioned inputs. Region world
 matrices must remain numerically nonsingular (determinant after normalizing by
 the largest linear entry must exceed machine epsilon in magnitude); curved individual contour matrices must be

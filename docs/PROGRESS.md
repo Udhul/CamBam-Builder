@@ -7,6 +7,20 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**Varying-Z bulged Pline and Region interchange: implemented and verified**
+(2026-09-10). User-supplied CamBam-generated XML establishes that Pline and
+Region contours may combine bulge with unequal endpoint Z and that Region
+topology is consumed as an XY projection. The framework now retains and emits
+those vertex records; Region no longer imposes contour coplanarity, while its
+existing XY simplicity, containment, disjointness and curve-transform rules
+remain intact. Geometry queries still report stored endpoints, and bounds remain
+XY projections; no intermediate spatial-curve or MOP toolpath calculation was
+added. The native-derived Region regression covers an outer curve and hole with
+mixed Z/bulge through two XML cycles at `1e-9` tolerance. Four focused suites pass
+49 tests and the full suite passes all 142 tests. Owners: entities, Region,
+focused elevation/vertex/Region tests, specification and
+[review evidence](REVIEW.md#varying-z-bulged-pline-and-region-interchange).
+
 **Canonical Pline/Points vertex records: implemented; automated verification
 complete** (2026-09-09). `Vertex(x, y, z=0, *, bulge=0)` now keeps coordinates,
 elevation and segment bulge together. Pline, Points and Region-owned contours use

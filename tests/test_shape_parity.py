@@ -114,7 +114,7 @@ class ShapeParityIntegrationTests(unittest.TestCase):
         pline = project.add_pline(
             layer,
             [Vertex(0.0, 0.0, 4.25, bulge=0.75),
-             Vertex(2.0, 0.0, 4.25, bulge=-0.25), (2.0, 1.0, 4.25)],
+             Vertex(2.0, 0.0, -2.0, bulge=-0.25), (2.0, 1.0, 7.5)],
             identifier="bulged-pline",
             parent=root,
             local_z_offset=-1.25,
@@ -147,12 +147,12 @@ class ShapeParityIntegrationTests(unittest.TestCase):
         )
 
         outer = self._contour(
-            "outer", [Vertex(0.0, 0.0, 2.25, bulge=0.5), (10.0, 0.0, 2.25),
-                      Vertex(10.0, 8.0, 2.25, bulge=-0.5), (0.0, 8.0, 2.25)],
+            "outer", [Vertex(0.0, 0.0, 2.25, bulge=0.5), (10.0, 0.0, -1.5),
+                      Vertex(10.0, 8.0, 5.0, bulge=-0.5), (0.0, 8.0, -4.0)],
         )
         hole = self._contour(
-            "hole", [Vertex(2.0, 2.0, 2.25, bulge=0.25), (4.0, 2.0, 2.25),
-                     (4.0, 4.0, 2.25), (2.0, 4.0, 2.25)],
+            "hole", [Vertex(2.0, 2.0, 2.25, bulge=0.25), (4.0, 2.0, 6.0),
+                     (4.0, 4.0, -3.0), (2.0, 4.0, 1.0)],
         )
         region = project.add_region(
             layer, outer, hole_curves=[hole], identifier="region", parent=root,
@@ -192,7 +192,7 @@ class ShapeParityIntegrationTests(unittest.TestCase):
             self.assertAlmostEqual(float(pline_points[0].get("b")), 0.75)
             self.assertAlmostEqual(float(pline_points[0].text.split(",")[2]), 4.25)
             self.assertAlmostEqual(float(pline_points[1].get("b")), -0.25)
-            self.assertAlmostEqual(float(pline_points[1].text.split(",")[2]), 4.25)
+            self.assertAlmostEqual(float(pline_points[1].text.split(",")[2]), -2.0)
             self.assertAlmostEqual(float(by_name["circle"].get("c").split(",")[2]), -2.75)
             self.assertAlmostEqual(float(by_name["arc"].get("p").split(",")[2]), 6.125)
             self.assertAlmostEqual(float(by_name["rect"].get("p").split(",")[2]), 1.875)
@@ -480,13 +480,7 @@ class ShapeParityIntegrationTests(unittest.TestCase):
             tree.write(path, encoding="utf-8", xml_declaration=True)
             self.assertIsNone(read_cambam_file(str(path)))
 
-    def test_invalid_bulged_varying_z_and_failed_import_never_publish_partial_project(self):
-        with self.assertRaises(ValueError):
-            Pline(
-                user_identifier="invalid-bulge-z",
-                vertices=[Vertex(0.0, 0.0, 1.0, bulge=0.75), (2.0, 0.0, 2.0)],
-            )
-
+    def test_failed_import_never_publishes_partial_project(self):
         project = CBProject("duplicate-xml-id")
         layer = project.add_layer("Geometry")
         project.add_pline(layer, [(0, 0), (1, 0)], identifier="one")

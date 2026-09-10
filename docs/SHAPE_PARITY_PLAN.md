@@ -48,6 +48,14 @@ support, a complete schema, or rest-machining behavior. The private fixture was
 read locally only and remains unchanged; retain reusable synthetic equivalents
 in future tests rather than making the ignored user file a suite dependency.
 
+On 2026-09-10 the user supplied separate CamBam-generated Pline and Region XML
+with bulged segments whose endpoints have unequal Z, plus native viewport and MOP
+behavior: CamBam displays the sloping curves, while Pocket and Profile derive cut
+depth from their machining parameters rather than contour Z. This establishes
+the storage/interchange behavior; it does not establish intermediate spatial-curve
+parameterization or implement MOP toolpath calculations in this framework. A
+synthetic equivalent of the Region XML is retained in the automated suite.
+
 | Runtime owner | Historical planning gap and consequence |
 | --- | --- |
 | `cambam_reader.PRIMITIVE_TAG_TO_CLASS` and `_reconstruct_primitive` | No Region mapping; unsupported primitive tags are skipped. Add typed-object/layer schema handling for this fixture as well as contour parsing, or explicitly scope a tested adapter. Do not silently import an empty project as success. |
@@ -106,8 +114,10 @@ matrix forms and shape planarity explicitly. Preserve supported geometry and Z
 translation exactly; detect unsupported mixing of Z with XY or nonplanar analytic
 forms and report the limitation before silently flattening or partially importing
 them. The first XYZ slice is not complete parity until this boundary is documented
-and all declared supported cases pass. Varying-Z arcs need a format/geometry
-fixture; do not treat a bulged spatial segment as a planar arc without evidence.
+and all declared supported cases pass. The later native examples establish that
+Pline and Region XML may retain varying-Z bulged segments. Current geometry
+consumers interpret bulge in the XY projection and do not claim an intermediate
+spatial-curve parameterization.
 
 ## Region ownership and XML support
 
@@ -169,8 +179,9 @@ failures show the existing patterns cannot support the intended behavior.
   operations retain new fields and project links; define defaults for supported
   older state data rather than claiming unrestricted pickle compatibility.
 - Prepare synthetic CamBam A/B files with exact XYZ expectations. Inspect display
-  and coordinate properties separately from automated XML checks; the planar
-  user Region example alone cannot establish varying-Z acceptance.
+  and coordinate properties separately from automated XML checks. The initial
+  planar Region example did not establish varying-Z acceptance; the user's later
+  CamBam-generated Pline and Region examples establish that interchange case.
 - Construction, transforms and load/save run without CamBam installed. No CAM
   engine, toolpath generation or rest-machining algorithm is required for closure.
 

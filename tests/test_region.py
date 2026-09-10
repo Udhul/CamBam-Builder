@@ -176,10 +176,6 @@ class RegionConstructionTests(unittest.TestCase):
                 outer_curve=square(0, 0, 20, 20),
                 hole_curves=[square(2, 2, 6, 6), square(6, 2, 10, 6)],
             ),
-            "noncoplanar": lambda: Region(
-                outer_curve=square(0, 0, 20, 20, z=1),
-                hole_curves=[square(2, 2, 6, 6, z=2)],
-            ),
         }
         for name, build in cases.items():
             with self.subTest(name=name), self.assertRaises((TypeError, ValueError)):
@@ -312,6 +308,30 @@ class RegionXmlTests(unittest.TestCase):
 </entity>
 """
 
+    VARYING_Z_XML = """\
+<entity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="4" xsi:type="Region">
+  <ModificationCount>0</ModificationCount><mat m="Identity" />
+  <OuterCurve Closed="true">
+    <ModificationCount>0</ModificationCount><mat m="Identity" />
+    <pts>
+      <p b="0.1">27,7,0</p><p>27,13,5</p>
+      <p>38,13,0</p><p b="0.3">38,7,-15</p>
+    </pts>
+  </OuterCurve>
+  <HoleCurves>
+    <Polyline Closed="true">
+      <ModificationCount>0</ModificationCount><mat m="Identity" />
+      <pts>
+        <p>31.9523074414045,9.8675100268445,0</p>
+        <p b="0.2">31.9523074414045,11.8675100268445,0</p>
+        <p>35.9523074414045,11.8675100268445,10</p>
+        <p>35.9523074414045,9.8675100268445,0</p>
+      </pts>
+    </Polyline>
+  </HoleCurves>
+</entity>
+"""
+
     def test_parse_typed_schema_retains_xyz_bulge_and_contour_matrix(self):
         kwargs = parse_region_geometry(ET.fromstring(self.XML))
         region = Region(**kwargs)
@@ -322,6 +342,41 @@ class RegionXmlTests(unittest.TestCase):
         self.assertEqual(
             [point[2] for point in region.get_absolute_coordinates_xyz()["outer_curve"]],
             [5.0] * 4,
+        )
+
+    def test_native_varying_z_bulged_region_survives_two_xml_round_trips(self):
+        expected_outer = [
+            Vertex(27, 7, 0, bulge=0.1), Vertex(27, 13, 5),
+            Vertex(38, 13, 0), Vertex(38, 7, -15, bulge=0.3),
+        ]
+        expected_hole = [
+            Vertex(31.9523074414045, 9.8675100268445, 0),
+            Vertex(31.9523074414045, 11.8675100268445, 0, bulge=0.2),
+            Vertex(35.9523074414045, 11.8675100268445, 10),
+            Vertex(35.9523074414045, 9.8675100268445, 0),
+        ]
+        region = Region(**parse_region_geometry(ET.fromstring(self.VARYING_Z_XML)))
+
+        for _ in range(2):
+            region = Region(**parse_region_geometry(region.to_xml_element(4, None)))
+
+        self.assertEqual(region.outer_curve.vertices, expected_outer)
+        np.testing.assert_allclose(
+            [(vertex.x, vertex.y, vertex.z, vertex.bulge)
+             for vertex in region.hole_curves[0].vertices],
+            [(vertex.x, vertex.y, vertex.z, vertex.bulge) for vertex in expected_hole],
+            rtol=0,
+            atol=1e-9,
+        )
+        self.assertEqual(
+            region.get_absolute_coordinates_xyz()["outer_curve"],
+            [(vertex.x, vertex.y, vertex.z, vertex.bulge) for vertex in expected_outer],
+        )
+        np.testing.assert_allclose(
+            region.get_absolute_coordinates_xyz()["hole_curves"][0],
+            [(vertex.x, vertex.y, vertex.z, vertex.bulge) for vertex in expected_hole],
+            rtol=0,
+            atol=1e-9,
         )
 
     def test_xml_is_typed_entity_with_identity_only_on_region(self):

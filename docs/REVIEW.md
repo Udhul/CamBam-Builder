@@ -1105,8 +1105,9 @@ reinterpreting the third Pline tuple element or replacing all affine/relationshi
 machinery with a general 3D framework. XYZ queries are explicit; reflected arc
 sweeps and bulges are corrected, while representations that cannot express an
 ellipse reject a nonsimilarity query. XML can retain supported XY affine matrices.
-Spatial matrices, varying-Z bulged segments and lossy analytic/Text bakes are
-rejected instead of flattened or approximated. Existing 2D constructor/query
+Spatial matrices, varying-Z bulged segments and lossy analytic/Text bakes were
+rejected pending native evidence instead of flattened or approximated. The later
+varying-Z interchange evidence is recorded below. Existing 2D constructor/query
 usage remains valid except that invalid affine constructor matrices now raise.
 
 Region is one registered primitive with owned contours and a single MOP identity.
@@ -1244,10 +1245,51 @@ Verification on Python 3.10.9 / NumPy 1.23.5:
   confirmed accepted A/B/C inputs were unchanged.
 
 No CamBam acceptance was repeated because serialized geometry and query/output
-semantics are unchanged. Remaining limits are the previously declared rejection
-of varying-Z bulged segments, general spatial matrices and invalid Region
-topology, plus the explicit absence of old-pickle compatibility. This is a good
+semantics are unchanged. At completion, remaining limits included the then-declared
+rejection of varying-Z bulged segments, general spatial matrices and invalid Region
+topology, plus the explicit absence of old-pickle compatibility. The varying-Z
+restriction was subsequently superseded by native evidence and the increment
+below. This is a good
 fresh-session breakpoint once final compile/import/diff checks pass; packaging
 and supported-Python validation remain the separate next priority.
 
 Suggested commit: `refactor: consolidate pline and points vertices`.
+
+## Varying-Z bulged Pline and Region interchange
+
+2026-09-10. The user supplied CamBam-generated XML demonstrating both a Pline and
+a Region whose bulged segments have unequal endpoint Z values. The Region includes
+mixed-Z outer and hole contours. The user additionally verified that CamBam renders
+the sloping curves, while Pocket and Profile operations use their machining depth
+parameters and ignore the Region contour elevations. This is direct evidence for
+native storage/interchange and projected Region topology, but not for an exact
+intermediate Z parameterization or this framework's future MOP calculations.
+
+The owning Pline validation now accepts every finite Z/bulge combination. Region
+validation no longer requires coplanar contours and continues to perform simplicity,
+intersection, containment, nesting, degeneracy and bounds work entirely in XY.
+Reader/writer, copy, Z shift, endpoint queries and similarity/reflection bakes
+already operated on canonical Vertex records, so no schema or output-contract
+change was needed. Non-similarity transforms of bulged geometry remain rejected
+because the XY circular projection becomes elliptical. Points still reject bulge,
+and tilted matrices and intermediate spatial-curve evaluation remain unsupported.
+
+Verification on Python 3.10.9 / NumPy 1.23.5:
+
+- `python -m unittest discover -s tests -p test_shape_elevation.py -v`: 11 passed.
+- `python -m unittest discover -s tests -p test_vertex_records.py -v`: 6 passed;
+  its two project XML cycles now include unequal-Z endpoints on a bulged segment.
+- `python -m unittest discover -s tests -p test_region.py -v`: 22 passed; the
+  native-derived mixed-Z/bulge outer and hole survive two XML cycles within the
+  default ten-decimal serialization tolerance (`1e-9` asserted).
+- `python -m unittest discover -s tests -p test_shape_parity.py -v`: 10 passed;
+  a mixed-Z/bulge Pline and Region retain world geometry, identity and the Region's
+  Profile MOP reference across two complete project XML round trips.
+- `python -m unittest discover -s tests -q`: all 142 tests passed, including
+  relationships, Region holes, MOP references, transforms, bounds and persistence.
+
+No additional CamBam acceptance is required: the new supported forms are derived
+from XML the user created and exercised in CamBam. Production toolpath generation
+and exact interpolation between varying-Z arc endpoints remain separate work.
+
+Suggested commit: `feat: support varying-z bulges in plines and regions`.

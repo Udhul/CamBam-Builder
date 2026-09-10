@@ -244,19 +244,18 @@ class ExistingShapeElevationTests(unittest.TestCase):
             with self.subTest(constructor=constructor), self.assertRaises(ValueError):
                 constructor()
 
-        with self.assertRaisesRegex(ValueError, "equal endpoint Z"):
-            Pline(vertices=[Vertex(0, 0, 0, bulge=0.5), (1, 0, 1)])
-        with self.assertRaisesRegex(ValueError, "segment 1 to 0"):
-            Pline(vertices=[(0, 0, 0), Vertex(1, 0, 1, bulge=0.5)], closed=True)
-
-        bulged = Pline(vertices=[Vertex(0, 0, 2, bulge=0.5), (1, 0, 2)])
+        bulged = Pline(vertices=[Vertex(0, 0, 2, bulge=0.5), (1, 0, -3)])
+        self.assertEqual(
+            bulged.get_absolute_coordinates_xyz(),
+            [(0.0, 0.0, 2.0, 0.5), (1.0, 0.0, -3.0, 0.0)],
+        )
         with self.assertRaisesRegex(ValueError, "similarity"):
             bulged.bake_geometry(skew_matrix(angle_x_deg=10))
         self.assertEqual(bulged.vertices,
-                         [Vertex(0, 0, 2, bulge=0.5), Vertex(1, 0, 2)])
+                         [Vertex(0, 0, 2, bulge=0.5), Vertex(1, 0, -3)])
         bulged.bake_geometry(mirror_y_matrix())
         self.assertEqual(bulged.vertices[0].bulge, -0.5)
-        self.assertEqual([vertex.z for vertex in bulged.vertices], [2.0, 2.0])
+        self.assertEqual([vertex.z for vertex in bulged.vertices], [2.0, -3.0])
 
         for analytic in (Circle(), Arc()):
             with self.subTest(shape=type(analytic).__name__), self.assertRaisesRegex(

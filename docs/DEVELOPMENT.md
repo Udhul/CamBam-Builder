@@ -132,9 +132,12 @@ Canonical Pline/Points vertex records have a focused regression command:
 
 It checks `Vertex` defaults and keyword-only bulge, XY/XYZ tuple shorthand,
 four-tuple and malformed-input rejection, Points bulge rejection, collection
-insertion/reordering, current pickle storage and two XML round trips. Existing
-shape-parity and Region tests retain transform, hole, MOP-reference and XML
-coverage. The accepted CamBam A/B/C files must remain unchanged; compare a new
+insertion/reordering, current pickle storage and two XML round trips. The shape
+elevation and Region suites additionally cover varying-Z bulged Pline segments
+and a native-derived varying-Z Region with a hole through two XML round trips.
+The shape-parity fixture uses mixed-Z/bulge geometry while retaining transforms,
+holes and the Region's Profile MOP reference across full project round trips. The
+accepted CamBam A/B/C files must remain unchanged; compare a new
 framework round trip against them only in a unique ignored output directory.
 
 The MOP ownership and interchange slice has focused automated and manual checks:

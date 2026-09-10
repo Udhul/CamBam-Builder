@@ -76,7 +76,7 @@ class VertexRecordTests(unittest.TestCase):
         project.output_decimals = 12
         layer = project.add_layer("Geometry")
         expected_pline = [
-            Vertex(0, 0, 4, bulge=.5), Vertex(2, 0, 4), Vertex(2, 2, 7)
+            Vertex(0, 0, 4, bulge=.5), Vertex(2, 0, -5), Vertex(2, 2, 7)
         ]
         expected_points = [Vertex(3, 4, -2), Vertex(5, 6, 8)]
         project.add_pline(layer, expected_pline, identifier="curve")

@@ -733,7 +733,7 @@ class CamBamProject:
                    hole_curves: Sequence[Pline] = (), identifier: Optional[str] = None,
                    groups: Optional[List[str]] = None, description: str = "",
                    parent: Optional[Identifiable] = None, *, local_z_offset: float = 0.0) -> Optional[Region]:
-        """Add one Region owning copies of closed planar boundary contours."""
+        """Add one Region owning copies of closed contours with XY topology."""
         return self._add_primitive_internal(
             Region, layer, identifier, groups, description, parent,
             outer_curve=outer_curve, hole_curves=list(hole_curves), local_z_offset=local_z_offset)

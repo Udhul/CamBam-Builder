@@ -598,24 +598,7 @@ class Pline(Primitive):
         self._validated_vertices()
 
     def _validated_vertices(self) -> List[Vertex]:
-        vertices = _validate_stored_vertices(self.vertices, allow_bulge=True)
-        segment_count = max(0, len(vertices) - 1)
-        if self.closed and vertices:
-            segment_count += 1
-        for index in range(segment_count):
-            vertex = vertices[index]
-            bulge = _finite_float(vertex.bulge, f"vertices[{index}].bulge")
-            next_index = (index + 1) % len(vertices)
-            if (abs(bulge) > PLINE_BULGE_TOLERANCE
-                    and not math.isclose(
-                        vertex.z, vertices[next_index].z,
-                        rel_tol=0.0, abs_tol=CURVE_POINT_TOLERANCE,
-                    )):
-                raise ValueError(
-                    "Bulged Pline segments require equal endpoint Z values "
-                    f"(segment {index} to {next_index})"
-                )
-        return vertices
+        return _validate_stored_vertices(self.vertices, allow_bulge=True)
 
     def _calculate_absolute_geometry(self, total_transform: np.ndarray) -> List[Tuple[float, float, float]]:
         # Extract XY for transformation
