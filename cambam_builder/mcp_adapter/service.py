@@ -3,12 +3,14 @@ import copy
 from dataclasses import dataclass, field
 import hashlib
 import json
-from uuid import uuid4
+import math
+from uuid import UUID, uuid4
 
 import anyio
 from jsonschema import ValidationError
 
 from cambam_builder import CBProject
+from cambam_builder.cambam_entities import ProfileMop, Rect
 from cambam_builder.cambam_reader import CamBamImportLimitError, read_cambam_bytes
 from .paths import DomainError, Workspace
 from .schema import CONTRACT, OUTPUTS, StrictValidator, TOOLS, validated_arguments
@@ -37,6 +39,9 @@ def _typed(value, name):
 class DocumentService:
     MAX_DOCUMENTS = 16
     MAX_REGULAR_REQUESTS = 10000
+    EDIT_TOOLS = frozenset((
+        "geometry_add_rectangle", "geometry_translate", "machining_add_profile"
+    ))
 
     def __init__(self, root):
         self.workspace = Workspace(root)
@@ -138,6 +143,8 @@ class DocumentService:
                         async with self.registry_lock:
                             del self.documents[handle]
                         return self._complete(name, entry, self._envelope(args, data={"closed": True}, revision=document.revision))
+                if name in self.EDIT_TOOLS:
+                    return await self._edit(name, args, document, entry)
                 return await self._save(name, args, document, entry)
         except anyio.get_cancelled_exc_class():
             # Do not overwrite a completed commit (or another request's entry).
@@ -239,6 +246,230 @@ class DocumentService:
             if temporary is not None:
                 self.workspace.cleanup(temporary)
 
+    @staticmethod
+    def _identifier_available(project, identifier, field):
+        if project.get_entity(identifier) is not None:
+            raise DomainError("IDENTIFIER_CONFLICT", "Identifier is already in use", field)
+
+    @staticmethod
+    def _slice_rect(project, entity):
+        """Return whether a primitive stays inside the root Rect vertical slice."""
+        if not isinstance(entity, Rect):
+            return False
+        if project.get_parent_of_primitive(entity) is not None:
+            return False
+        if project.get_children_of_primitive(entity) or project.get_groups_of_primitive(entity):
+            return False
+        matrix = entity.effective_transform
+        try:
+            translation_only = (
+                matrix.shape == (3, 3)
+                and all(math.isfinite(float(value)) for row in matrix for value in row)
+                and float(matrix[0, 0]) == 1.0 and float(matrix[0, 1]) == 0.0
+                and float(matrix[1, 0]) == 0.0 and float(matrix[1, 1]) == 1.0
+                and float(matrix[2, 0]) == 0.0 and float(matrix[2, 1]) == 0.0
+                and float(matrix[2, 2]) == 1.0
+                and float(entity.local_z_offset) == 0.0
+                and float(entity.width) > 0.0 and float(entity.height) > 0.0
+            )
+        except (AttributeError, TypeError, ValueError, OverflowError):
+            return False
+        return translation_only
+
+    @staticmethod
+    def _rect_geometry(entity):
+        try:
+            world = [[float(value) for value in point]
+                     for point in entity.get_absolute_coordinates_xyz()]
+            bounds = entity.get_bounding_box()
+            result_bounds = [float(bounds.min_x), float(bounds.min_y),
+                             float(bounds.max_x), float(bounds.max_y)]
+        except (AttributeError, TypeError, ValueError, OverflowError):
+            raise DomainError("UNSUPPORTED_OPERATION", "Rectangle geometry is outside the supported slice") from None
+        values = [value for point in world for value in point] + result_bounds
+        if (len(world) != 4 or any(len(point) != 3 for point in world)
+                or not bounds.is_valid()
+                or any(not math.isfinite(value) or abs(value) > 1_000_000_000 for value in values)):
+            raise DomainError("INVALID_ARGUMENT", "Resulting geometry exceeds the supported coordinate range")
+        return world, result_bounds
+
+    def _require_slice_rect(self, project, entity_id, field="entity_id"):
+        entity = project.get_entity(UUID(entity_id))
+        if entity is None:
+            raise DomainError("ENTITY_NOT_FOUND", "Entity was not found", field)
+        if not self._slice_rect(project, entity):
+            raise DomainError("UNSUPPORTED_OPERATION", "Entity is not a supported root rectangle", field)
+        self._rect_geometry(entity)
+        return entity
+
+    def _stage_edit(self, name, args, project):
+        staged = project.clone()
+        if name == "geometry_add_rectangle":
+            self._identifier_available(staged, args["identifier"], "identifier")
+            layer_entity = staged.get_entity(args["layer"])
+            if layer_entity is None and args["identifier"] == args["layer"]:
+                raise DomainError("IDENTIFIER_CONFLICT", "Rectangle and new layer identifiers must differ", "identifier")
+            if layer_entity is not None and staged.get_layer(args["layer"]) is None:
+                raise DomainError("IDENTIFIER_CONFLICT", "Layer name is used by another entity", "layer")
+            rectangle = staged.add_rect(
+                layer=args["layer"], identifier=args["identifier"],
+                corner=(args["x"], args["y"]), width=args["width"],
+                height=args["height"], elevation=args["z"],
+            )
+            if rectangle is None:
+                raise DomainError("INTERNAL_ERROR", "Framework rejected rectangle creation")
+            self._rect_geometry(rectangle)
+            self._check_limits(staged)
+            data = {"entity_id": str(rectangle.internal_id), "layer": args["layer"]}
+        elif name == "geometry_translate":
+            rectangle = self._require_slice_rect(staged, args["entity_id"])
+            if not staged.translate_primitive(rectangle.internal_id, args["dx"], args["dy"], bake=False):
+                raise DomainError("UNSUPPORTED_OPERATION", "Rectangle translation was rejected", "entity_id")
+            self._rect_geometry(rectangle)
+            data = {"entity_id": str(rectangle.internal_id)}
+        else:
+            self._identifier_available(staged, args["identifier"], "identifier")
+            if args["target_depth"] >= args["stock_surface"]:
+                raise DomainError("INVALID_ARGUMENT", "Target depth must be below stock surface", "target_depth")
+            if args["clearance_plane"] <= args["stock_surface"]:
+                raise DomainError("INVALID_ARGUMENT", "Clearance plane must be above stock surface", "clearance_plane")
+            targets = [self._require_slice_rect(staged, target, "targets")
+                       for target in args["targets"]]
+            part_entity = staged.get_entity(args["part"])
+            part = staged.get_part(args["part"])
+            if part_entity is None and args["identifier"] == args["part"]:
+                raise DomainError("IDENTIFIER_CONFLICT", "Profile and new part identifiers must differ", "identifier")
+            if part_entity is not None and part is None:
+                raise DomainError("IDENTIFIER_CONFLICT", "Part name is used by another entity", "part")
+            if part is None:
+                part = staged.add_part(
+                    args["part"], enabled=True, stock_thickness=0.0,
+                    stock_width=0.0, stock_height=0.0, stock_material="",
+                    machining_origin=(0.0, 0.0), default_tool_diameter=None,
+                    default_spindle_speed=None,
+                )
+            if part is None:
+                raise DomainError("INTERNAL_ERROR", "Framework rejected part creation")
+            mop = staged.add_profile_mop(
+                part, targets=targets, identifier=args["identifier"], name=args["identifier"],
+                enabled=args["enabled"], target_depth=args["target_depth"],
+                depth_increment=args["depth_increment"], stock_surface=args["stock_surface"],
+                roughing_clearance=0.0, clearance_plane=args["clearance_plane"],
+                spindle_direction="CW", spindle_speed=args["spindle_speed"],
+                velocity_mode="ExactStop", work_plane="XY", optimisation_mode="Standard",
+                tool_diameter=args["tool_diameter"], tool_number=0, tool_profile="EndMill",
+                plunge_feedrate=args["plunge_feedrate"], cut_feedrate=args["cut_feedrate"],
+                max_crossover_distance=0.7, custom_mop_header="", custom_mop_footer="",
+                stepover=0.4, profile_side=args["side"], milling_direction="Conventional",
+                collision_detection=True, corner_overcut=False, lead_in_type="None",
+                lead_in_spiral_angle=30.0, final_depth_increment=0.0,
+                cut_ordering="DepthFirst", tab_method="None", tab_width=6.0,
+                tab_height=1.5, tab_min_tabs=3, tab_max_tabs=3, tab_distance=40.0,
+                tab_size_threshold=4.0, tab_use_leadins=False, tab_style="Square",
+            )
+            if mop is None:
+                raise DomainError("INTERNAL_ERROR", "Framework rejected Profile creation")
+            self._check_limits(staged)
+            data = {"mop_id": str(mop.internal_id), "part": args["part"],
+                    "targets": [str(value) for value in staged.get_mop_targets(mop)]}
+        return staged, data
+
+    async def _edit(self, name, args, document, entry):
+        staged, data = await anyio.to_thread.run_sync(
+            self._stage_edit, name, args, document.project
+        )
+        await anyio.lowlevel.checkpoint()
+        revision = document.revision + 1
+        if revision > 9007199254740991:
+            raise DomainError("LIMIT_EXCEEDED", "Document revision limit reached")
+        result = self._envelope(args, data=data, revision=revision)
+        OUTPUTS[name].validate(result)
+        with anyio.CancelScope(shield=True):
+            document.project = staged
+            document.revision = revision
+            return self._complete(name, entry, result)
+
+    @staticmethod
+    def _profile_parameters(mop):
+        fields = (
+            "target_depth", "depth_increment", "tool_diameter", "cut_feedrate",
+            "plunge_feedrate", "spindle_speed", "stock_surface", "clearance_plane",
+            "enabled", "profile_side", "work_plane", "tool_profile",
+            "spindle_direction", "velocity_mode", "milling_direction",
+            "roughing_clearance", "stepover", "tool_number", "collision_detection",
+            "corner_overcut", "final_depth_increment", "cut_ordering", "lead_in_type",
+            "tab_method", "custom_mop_header", "custom_mop_footer",
+        )
+        if not isinstance(mop, ProfileMop):
+            return None
+        values = {field: getattr(mop, field) for field in fields}
+        fixed = {
+            "work_plane": "XY", "tool_profile": "EndMill", "spindle_direction": "CW",
+            "velocity_mode": "ExactStop", "milling_direction": "Conventional",
+            "roughing_clearance": 0.0, "stepover": 0.4, "tool_number": 0,
+            "collision_detection": True, "corner_overcut": False,
+            "final_depth_increment": 0.0, "cut_ordering": "DepthFirst",
+            "lead_in_type": "None", "tab_method": "None",
+            "custom_mop_header": "", "custom_mop_footer": "",
+        }
+        unexposed_fixed = {
+            "optimisation_mode": "Standard", "max_crossover_distance": 0.7,
+            "lead_in_spiral_angle": 30.0, "tab_width": 6.0, "tab_height": 1.5,
+            "tab_min_tabs": 3, "tab_max_tabs": 3, "tab_distance": 40.0,
+            "tab_size_threshold": 4.0, "tab_use_leadins": False,
+            "tab_style": "Square",
+        }
+        if (any(values[key] != expected for key, expected in fixed.items())
+                or any(getattr(mop, key) != expected
+                       for key, expected in unexposed_fixed.items())):
+            return None
+        if (type(values["enabled"]) is not bool
+                or any(type(values[key]) not in (int, float) or not math.isfinite(values[key])
+                       for key in ("target_depth", "depth_increment", "tool_diameter",
+                                   "cut_feedrate", "plunge_feedrate", "stock_surface",
+                                   "clearance_plane"))
+                or type(values["spindle_speed"]) is not int
+                or values["target_depth"] >= values["stock_surface"]
+                or values["clearance_plane"] <= values["stock_surface"]
+                or any(values[key] <= 0 for key in ("depth_increment", "tool_diameter",
+                                                     "cut_feedrate", "plunge_feedrate"))
+                or not 1 <= values["spindle_speed"] <= 1_000_000):
+            return None
+        if hasattr(mop, "_xml_template"):
+            paths = {
+                "target_depth": ("TargetDepth",), "depth_increment": ("DepthIncrement",),
+                "tool_diameter": ("ToolDiameter",), "cut_feedrate": ("CutFeedrate",),
+                "plunge_feedrate": ("PlungeFeedrate",), "spindle_speed": ("SpindleSpeed",),
+                "stock_surface": ("StockSurface",), "clearance_plane": ("ClearancePlane",),
+                "profile_side": ("InsideOutside",), "work_plane": ("WorkPlane",),
+                "tool_profile": ("ToolProfile",), "spindle_direction": ("SpindleDirection",),
+                "velocity_mode": ("VelocityMode",), "milling_direction": ("MillingDirection",),
+                "roughing_clearance": ("RoughingClearance",), "stepover": ("StepOver",),
+                "tool_number": ("ToolNumber",), "collision_detection": ("CollisionDetection",),
+                "corner_overcut": ("CornerOvercut",),
+                "final_depth_increment": ("FinalDepthIncrement",),
+                "cut_ordering": ("CutOrdering",),
+                "lead_in_type": ("LeadInMove", "LeadInType"),
+                "tab_method": ("HoldingTabs", "TabMethod"),
+                "custom_mop_header": ("CustomMOPHeader",),
+                "custom_mop_footer": ("CustomMOPFooter",),
+            }
+            template = mop._xml_template
+            for path in paths.values():
+                current = template
+                saw_value_state = False
+                for tag in path:
+                    current = current.find(tag)
+                    if current is None or current.get("state") == "Default":
+                        return None
+                    saw_value_state = saw_value_state or current.get("state") == "Value"
+                if not saw_value_state:
+                    return None
+        validator = StrictValidator({
+            "$ref": "#/$defs/ProfileParameters", "$defs": CONTRACT["$defs"]
+        })
+        return values if validator.is_valid(values) else None
+
     def _inspect(self, document, args):
         project = document.project
         records = [{"kind": "layer", "name": layer.user_identifier} for layer in project.list_layers()]
@@ -249,20 +480,39 @@ class DocumentService:
         for primitive in project.list_primitives():
             parent = project.get_parent_of_primitive(primitive)
             layer = project.get_layer_of_primitive(primitive)
+            world_xyz = bounds = None
+            if self._slice_rect(project, primitive):
+                try:
+                    world_xyz, bounds = self._rect_geometry(primitive)
+                except DomainError:
+                    pass
             records.append({"kind": "primitive", "id": str(primitive.internal_id), "identifier": primitive.user_identifier,
                             "type": type(primitive).__name__, "layer": layer.user_identifier,
                             "parent": str(parent.internal_id) if parent else None,
                             "children": [str(child.internal_id) for child in project.get_children_of_primitive(primitive)],
-                            "world_xyz": None, "bounds": None})
+                            "world_xyz": world_xyz, "bounds": bounds})
         for mop in project.list_mops():
             part = project.get_part_of_mop(mop)
+            parameters = self._profile_parameters(mop)
+            if parameters is not None:
+                try:
+                    targets = project.get_mop_targets(mop)
+                    if (project.get_mop_target_group(mop) is not None or not targets
+                            or any(not self._slice_rect(project, project.get_primitive(target))
+                                   for target in targets)):
+                        parameters = None
+                except (KeyError, TypeError, ValueError):
+                    parameters = None
             records.append({"kind": "mop", "id": str(mop.internal_id), "identifier": mop.user_identifier,
                             "type": type(mop).__name__, "part": part.user_identifier,
-                            "targets": [str(uid) for uid in project.get_mop_targets(mop)], "parameters": {}})
+                            "targets": [str(uid) for uid in project.get_mop_targets(mop)],
+                            "parameters": parameters or {}})
         offset, limit = args["offset"], args["limit"]
         page = records[offset:offset + limit]
         diagnostics = []
-        if any(record["kind"] in ("primitive", "mop") for record in page):
-            diagnostics.append({"code": "INSPECTION_UNSUPPORTED", "message": "4b returns identity/relationships only; typed geometry and MOP parameters are deferred to 4c/4d."})
+        if any((record["kind"] == "primitive" and record["world_xyz"] is None)
+               or (record["kind"] == "mop" and not record["parameters"])
+               for record in page):
+            diagnostics.append({"code": "INSPECTION_UNSUPPORTED", "message": "Some entity details are outside the supported Rect/Profile inspection slice."})
         return {"summary": self._summary(document), "offset": offset,
                 "next_offset": offset + limit if offset + limit < len(records) else None, "entities": page}, diagnostics

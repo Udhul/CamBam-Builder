@@ -563,9 +563,10 @@ and stops this process. Close stdin to stop it, or use Ctrl+C for an interactive
 launch. Stdout is exclusively MCP; stderr emits the content-free workspace/boot
 bootstrap. Restart loses all open handles, unsaved edits and retry records.
 
-The five available tools create, open, inspect, save and close documents.
-Inspection currently reports identity, ordering and relationships; geometry/MOP
-detail is explicitly diagnosed as unsupported until 4c/4d. Saves only create new
+Eight tools create, open, inspect, save and close documents; add root Rects and
+explicit Profile MOPs; and translate supported root Rects. Inspection reports
+typed world geometry/bounds and machining parameters for this Rect/Profile slice,
+while diagnosing other entity detail as unsupported until 4d. Saves only create new
 `.cb` paths under the workspace and never overwrite. File parent directories must
 already exist. Units are assertions, not conversions or a verified CamBam units
 setting. Read the [state and safety contract](MCP_CONTRACT.md) before client use.
@@ -590,10 +591,11 @@ Focused and full checks, from the root with the extra installed:
 
 ```powershell
 .venv/Scripts/python.exe -m unittest discover -s tests -p 'test_mcp_*.py' -v
+.venv/Scripts/python.exe demos/mcp_authoring_slice.py
 .venv/Scripts/python.exe -m unittest discover -s tests -p test_project_clone.py -v
 .venv/Scripts/python.exe -m unittest discover -s tests -p test_strict_import.py -v
 .venv/Scripts/python.exe -m unittest discover -s tests -v
-.venv/Scripts/python.exe -m compileall -q cambam_builder legacy_cambam_builder tests
+.venv/Scripts/python.exe -m compileall -q cambam_builder legacy_cambam_builder tests demos
 git diff --check
 ```
 
@@ -601,10 +603,12 @@ Protocol checks launch real subprocesses. Adapter tests require the optional ext
 base-only environments skip them. If the managed Windows sandbox creates temporary
 directories it cannot reopen, rerun these checks with the tool's approved local
 filesystem access; this environment failure is not an adapter failure. Test-owned
-fixtures are synthetic. Disposable client probes, build environments and logs are
-under `output/mcp-foundation-20260910/`; durable evidence is in the
+fixtures are synthetic. The demonstration creates a unique ignored workspace under
+`output/`, runs the exact 4c authoring/retry/round-trip sequence and prints verified
+artifact hashes, revisions and B's world corners. Disposable client probes, build
+environments and logs are under `output/mcp-foundation-20260910/`; durable evidence is in the
 [review record](REVIEW.md#mcp-foundation-and-client-compatibility---2026-09-10).
 
-Manual CamBam validation adds no evidence for 4b's transport, locking and filesystem
-foundation. 4c prepares authored CAD artifacts; 4e retains desktop/second-PC,
+Manual CamBam validation adds no evidence for 4b's transport or 4c's framework/MCP
+parity. 4c prepares authored CAD artifacts; 4e retains desktop/second-PC,
 CamBam units/geometry/property and toolpath acceptance.

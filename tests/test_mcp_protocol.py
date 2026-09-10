@@ -155,7 +155,8 @@ class MCPProtocolTests(unittest.TestCase):
         tools = listing["result"]["tools"]
         self.assertEqual([tool["name"] for tool in tools], sorted(tool["name"] for tool in tools))
         self.assertEqual([tool["name"] for tool in tools], [
-            "document_close", "document_create", "document_inspect", "document_open", "document_save"
+            "document_close", "document_create", "document_inspect", "document_open", "document_save",
+            "geometry_add_rectangle", "geometry_translate", "machining_add_profile",
         ])
         for tool in tools:
             self.assertIn("inputSchema", tool)
@@ -226,7 +227,8 @@ class MCPProtocolTests(unittest.TestCase):
         )
         listing = self.server.request({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         self.assertEqual([tool["name"] for tool in listing["result"]["tools"]], [
-            "document_close", "document_create", "document_inspect", "document_open", "document_save"
+            "document_close", "document_create", "document_inspect", "document_open", "document_save",
+            "geometry_add_rectangle", "geometry_translate", "machining_add_profile",
         ])
         result = self.server.request(
             {"jsonrpc": "2.0", "id": 3, "method": "tools/call",

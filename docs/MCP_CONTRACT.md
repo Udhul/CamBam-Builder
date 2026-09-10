@@ -1,8 +1,8 @@
 # Local MCP adapter contract
 
 Contract version 1, decided 2026-09-10 for backlog 4a. This is the authoritative
-implementation contract; the five document foundation tools are implemented. Priority and delivery
-state live in [PROGRESS.md](PROGRESS.md), and increment boundaries in
+implementation contract; all eight document and authoring tools are implemented.
+Priority and delivery state live in [PROGRESS.md](PROGRESS.md), and increment boundaries in
 [MCP_PLAN.md](MCP_PLAN.md#delivery-increments-and-session-boundaries).
 
 ## Protocol and compatibility decision

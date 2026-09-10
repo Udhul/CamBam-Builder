@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:cambam-builder:mcp-contract:1",
   "title": "MCP adapter v1 tool contracts",
-  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. The five document tools are implemented; three authoring schemas are reserved for 4c. The runtime catalog is authoritative for availability.",
+  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All eight version 1 document and authoring tools are implemented.",
   "$defs": {
     "UUID": {
       "type": "string",

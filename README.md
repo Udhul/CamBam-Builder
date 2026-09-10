@@ -27,7 +27,8 @@ For development, install the environment with `uv sync`, then run the
 project through `.venv\Scripts\python.exe`. Python 3.9 through 3.13 are verified;
 see the [development runbook](docs/DEVELOPMENT.md#environment-and-setup).
 
-The optional local MCP server exposes document create/open/inspect/save/close
-tools for AI clients. Install with `uv sync --extra mcp` on Python 3.10+;
+The optional local MCP server exposes eight document and authoring tools for AI
+clients, including a verified Rect/Profile/save/reopen/translate slice. Install
+with `uv sync --extra mcp` on Python 3.10+;
 see [MCP setup and client configuration](docs/DEVELOPMENT.md#local-mcp-setup-and-verification).
-Authoring tools and broader CAD/CAM acceptance are planned in the next increments.
+Broader entity/operation coverage and desktop/CamBam acceptance remain planned.

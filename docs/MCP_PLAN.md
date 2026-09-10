@@ -114,6 +114,11 @@ known limits are recorded. Start 4c in a fresh session.
 
 ### 4c. First authoring and round-trip vertical slice
 
+**Completed 2026-09-10.** Durable behavior remains in the
+[adapter contract](MCP_CONTRACT.md#initial-tools-and-public-api-mapping), current
+state in [PROGRESS.md](PROGRESS.md), and verification evidence in
+[REVIEW.md](REVIEW.md#mcp-first-authoring-and-round-trip-slice---2026-09-10).
+
 **Recommended main session:** GPT-5.6 Sol, xhigh reasoning. **Relative usage:**
 high for one feature-and-parity session.
 
@@ -205,5 +210,5 @@ In the implementation increment:
 The [MCP contract](MCP_CONTRACT.md) owns initial coverage, SDK/transport/client,
 document persistence/revision and packaging-boundary decisions. Increment 4e owns
 the final supported OS installation matrix. Increment 4b now provides the optional
-server and five document tools; 4c adds the first three authoring tools only after
-its direct-framework parity slice passes.
+server and five document tools; 4c adds the first three authoring tools after its
+direct-framework parity slice passed.

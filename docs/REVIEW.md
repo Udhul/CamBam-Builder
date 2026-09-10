@@ -1562,3 +1562,67 @@ otherwise make the SDK select its legacy loop implicitly. The stdio reader now
 rejects that request with `INVALID_PARAMS` before era selection; only an explicit
 legacy `initialize` can select legacy. The subprocess regression and installed-wheel
 probe confirm rejection followed by a valid modern discovery on the same process.
+
+## MCP first authoring and round-trip slice - 2026-09-10
+
+Backlog 4c implements the three reserved authoring tools and advertises the complete
+eight-tool version 1 catalog. Rectangle, Profile and translation mutations clone
+the project under the document lock, validate all slice-specific preconditions and
+publish the staged project with one revision increment. Identifier and target
+resolution uses public framework getters; absent layers/parts are created through
+the public adders, with the contract's zero-stock Part values supplied explicitly.
+Root Rect inspection uses public world-coordinate and bounding-box queries. Profile
+inspection returns the closed explicit parameter record only when type, target,
+parameter values and imported inheritance state remain inside 4c; other details
+stay identity/relationship-only with `INSPECTION_UNSUPPORTED`.
+
+The focused regression in `tests/test_mcp_authoring.py` runs the exact contract
+workflow and an independently authored `CBProject` reference. It checks revision
+0/1/2 and reopened 0/1 transitions; primitive/MOP UUIDs, target and ordering
+preservation; all exposed Profile values and fixed settings; cyclic world corners
+within `1e-9`; semantic XML equality after normalizing UUIDs and equivalent numeric
+spellings; translation retry; concurrent same-revision serialization; and unchanged
+A bytes. Negative cases cover malformed arguments, stale revisions, missing,
+duplicate, wrong-kind and transformed targets, cross-kind identifier conflicts,
+out-of-slice inspection and complete inspection preservation after failed edits.
+The regression exposed that schema reference expansion had discarded sibling
+defaults such as rectangle `z`; expansion now merges those keywords and the tests
+exercise omitted optional defaults.
+
+Independent runtime review found two pre-closure inspection gaps: fixed public
+Profile fields omitted from the returned record were not yet part of slice
+classification, and native parent-container `Default` states could look explicit.
+The final classifier checks every fixed public field and requires the expected XML
+leaf/ancestor path to be present, never `Default`, and explicitly `Value` at some
+level. Regressions mutate `optimisation_mode` and `HoldingTabs` inheritance to keep
+both cases identity-only with `INSPECTION_UNSUPPORTED`. The same review found no
+other high/medium issue in atomicity, cancellation, revisions, ledger behavior,
+error mapping or schema paths.
+
+Verification on the repository Python 3.13 environment with MCP 2.2.0:
+
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p test_mcp_authoring.py -v`:
+  5 passed.
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p 'test_mcp_*.py' -v`:
+  27 passed and one Windows symlink-privilege test skipped; junction/reparse
+  rejection passes.
+- `.venv/Scripts/python.exe -m unittest discover -s tests -v`: 179 passed and
+  the same one skip.
+- `.venv/Scripts/python.exe -m compileall -q cambam_builder legacy_cambam_builder tests demos`,
+  contract meta-validation/tool-catalog smoke and `git diff --check`: pass.
+- `.venv/Scripts/python.exe demos/mcp_authoring_slice.py`: passed and wrote
+  inspected A/B files to
+  `output/mcp-authoring-demo-bba34075e1d0/`. A is 3,821 bytes with SHA-256
+  `3b04f2abe882de5d7105c9729e20a3025d5f531d1893042ea3470d0c71639896`; B is
+  3,826 bytes with SHA-256
+  `ca08657e667b508cb6d0043245c0581dbc1771ca2250b6794f4490bf55ee78c6`.
+  The script verified B corners `(5,2,0)`, `(25,2,0)`, `(25,12,0)`, `(5,12,0)`,
+  exact revision milestones, retry replay, returned hashes and unchanged A bytes.
+
+The standard managed sandbox cannot reopen Python-created OS temporary directories;
+the focused and full temporary-workspace tests therefore used the approved local
+filesystem path, matching the existing MCP runbook. No manual check adds evidence
+to this framework/adapter parity slice. Named desktop/second-PC connection and
+CamBam units, property and toolpath acceptance remain backlog 4e. Broader entity,
+relationship and operation coverage remains 4d and must not be inferred from this
+Rect/Profile proof.

@@ -7,6 +7,23 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**First MCP authoring and round-trip slice: complete** (2026-09-10; backlog
+4c). The adapter now advertises all eight version 1 tools and stages rectangle,
+Profile and translation edits on independent project clones before one atomic
+revision publication. Inspection returns typed world Rect corners/bounds and the
+closed explicit Profile parameter record, while unsupported imported detail stays
+diagnostic rather than inferred. The exact create/add/save/open/translate/save
+workflow preserves primitive/MOP identities, targets, order and A's bytes and
+matches an independently authored public-framework reference. A reusable
+demonstration writes verified A/B artifacts to a unique ignored workspace.
+The five authoring tests and all 28 MCP tests pass (one Windows symlink-privilege
+skip); the full suite reports 179 passes and the same skip.
+Detailed parity, negative-case and verification evidence is in the
+[review](REVIEW.md#mcp-first-authoring-and-round-trip-slice---2026-09-10).
+The next increment is **4d: supported API breadth and resilience**. Its reopening
+criterion is a concrete high-value geometry, relationship or MOP family selected
+from the mappings already bounded by the [MCP contract](MCP_CONTRACT.md).
+
 **Secure MCP server and document foundation: complete** (2026-09-10; backlog
 4b). The optional Python >=3.10 adapter provides a strict stdio boundary, an
 explicit volatile workspace/document model and the five document tools needed to
@@ -26,8 +43,7 @@ security, client and packaging evidence is in the
 The final suite completes successfully: 174 tests pass and one Windows
 symlink-privilege case skips; the equivalent junction/reparse-point rejection
 is exercised and passes.
-The next increment is **4c: one authoring/MOP/inspect/save/reload parity slice**;
-its boundary remains the existing eight-tool application contract.
+The authoring boundary subsequently advanced through the completed 4c slice.
 
 **MCP protocol/client/adapter contract: complete** (2026-09-10; backlog 4a).
 The [contract guide](MCP_CONTRACT.md) and [eight tool schemas](mcp_contract_v1.schema.json)
@@ -287,9 +303,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
      desktop acceptance remains pending in 4e.
    - **4b — completed 2026-09-10:** secure server/document foundation, required
      public clone/strict-import contracts and backward protocol negotiation.
-   - **4c — next:** prove one authoring/MOP/inspect/save/reload parity slice.
-     Sol/xhigh.
-   - **4d:** expand the explicitly supported API and resilience coverage.
+   - **4c — completed 2026-09-10:** one authoring/MOP/inspect/save/reload parity
+     slice, including the runnable synthetic demonstration.
+   - **4d — next:** expand the explicitly supported API and resilience coverage.
      Sol/high, with Terra/xhigh suitable for settled coverage batches.
    - **4e:** validate installation, named desktop-client interoperability and
      second-PC/user acceptance. Terra/high; escalate interoperability defects to
@@ -322,7 +338,8 @@ The old framework API and pickle format did not constrain the redesign.
 MCP 4e still requires named desktop-client and second-PC acceptance. The adapter
 retains 2026-07-28 as its target and also supports 2025-06-18 and 2025-11-25;
 reprobe the clients during 4e and retire an older version only after deployed
-clients no longer need it. SDK-backed 4c implementation can proceed.
+clients no longer need it. No blocker prevents 4d implementation; keep broader
+CAD/CAM coverage explicit and test each advertised family before discovery.
 
 ## Completion and verification
 
@@ -353,8 +370,8 @@ are authoritative. MOP ownership, supported interchange, curved geometry bounds
 (1a), copy/transfer (1b) and shape parity (2) are recorded above with their
 verification and acceptance state.
 
-This is a good fresh-session breakpoint: 4b's server, document lifecycle,
-backward negotiation and client evidence are persisted, while 4c has a distinct
-authoring scope. No pending decision depends on chat; desktop and second-PC
-interoperability remain the explicit 4e gate.
-Suggested commit: `feat: add secure MCP document foundation`.
+This is a good fresh-session breakpoint: 4c's authoring, typed inspection,
+round-trip parity and negative-case contracts are persisted, while 4d has distinct
+API-breadth selection and resilience scope. No pending decision depends on chat;
+desktop and second-PC interoperability remain the explicit 4e gate.
+Suggested commit: `feat: add first MCP authoring slice`.

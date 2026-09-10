@@ -275,7 +275,7 @@ def _tool_models() -> list[types.Tool]:
 
 
 def create_server(service: DocumentService) -> Server:
-    """Build an SDK server exposing the currently implemented document tools."""
+    """Build an SDK server exposing the implemented document and authoring tools."""
     known_tools = frozenset(definition["name"] for definition in tool_definitions())
 
     async def on_list_tools(_ctx: Any, _params: Any) -> types.ListToolsResult:
@@ -322,7 +322,7 @@ def create_server(service: DocumentService) -> Server:
     server = Server(
         "cambam-builder",
         version="0.1.0",
-        description="Local CamBam document tools",
+        description="Local CamBam document and authoring tools",
         instructions=(
             "Use workspace_id="
             + service.workspace.id
