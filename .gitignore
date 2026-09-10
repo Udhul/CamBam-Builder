@@ -3,3 +3,5 @@ __pycache__
 output
 *.egg-info
 /.venv/
+/.uv-cache/
+/uv.lock

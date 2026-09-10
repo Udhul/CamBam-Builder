@@ -1293,3 +1293,43 @@ from XML the user created and exercised in CamBam. Production toolpath generatio
 and exact interpolation between varying-Z arc endpoints remain separate work.
 
 Suggested commit: `feat: support varying-z bulges in plines and regions`.
+
+# Packaging and supported Python verification
+
+Date: 2026-09-10.
+
+The former Python >=3.8 declaration was not credible because the distributed
+legacy implementation evaluates built-in generic annotations such as
+`list[tuple]`; the validation host also had no Python 3.8 interpreter. The
+user authorized Python 3.9 as the minimum, so published metadata now matches the
+lowest interpreter actually exercised rather than claiming an untested repair.
+NumPy moved from setuptools' dynamic `setup.py` adapter into standard static
+project metadata, allowing pip, build frontends and `uv` to consume one contract.
+The redundant `setup.py` and `requirements.txt` files were removed. The lower
+bound is NumPy 1.23.5, the oldest version with recorded full-suite evidence in
+this repository; compatible newer releases remain independently resolvable.
+The generated `uv.lock` is intentionally local and ignored at the user's request;
+the tradeoff is that future environment resolution is current rather than exactly
+reproducible, which matches the requirement to exercise unpinned NumPy separately.
+
+`uv build` produced an sdist and a `py3-none-any` wheel in the ignored
+`output/packaging-validation-20260910-c/` directory. Archive inspection confirmed
+both package roots, all active modern modules, the MIT license and metadata for
+version 0.1.0, Python >=3.9 and NumPy. Separate clean wheel environments used
+Python/NumPy 3.9.0/2.0.2, 3.10.9/2.2.6, 3.11.0/2.4.6, 3.12.10/2.5.3 and
+3.13.9/2.5.3. Each asserted that the imported modern package lived outside the
+repository, imported both package roots, checked installed metadata, completed a
+representative construction and XML write/read, and passed all 142 tests. A
+separate sdist install on Python 3.9/NumPy 2.0.2 passed the same installed-path
+and import checks plus all 142 tests.
+
+After removing the compatibility `setup.py` and duplicate `requirements.txt`, a
+fresh sdist and wheel were rebuilt. Neither removed file appears in the sdist;
+the wheel imports both package roots on Python 3.9-3.13, and the setup-free sdist
+installs on Python 3.9 and passes all 142 tests from outside the repository.
+
+No CLI entry point or publishing flow was added. The shipped historical CLI
+module is not imported by the legacy package root and remains outside the
+supported surface. Reopen Python 3.8 only if a concrete consumer requires it and
+the entire distribution plus dependency resolution can be tested there; reopen
+CLI/distribution work only for an actual user workflow.

@@ -7,6 +7,22 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**Packaging and supported Python validation: complete** (2026-09-10; backlog
+item 3). Published metadata now declares Python >=3.9 and NumPy >=1.23.5 directly
+in `pyproject.toml`, the sole dependency source;
+`uv sync --python 3.13` created the local `.venv`. The generated lockfile is
+intentionally ignored so supported-version checks continue resolving currently
+compatible NumPy releases independently. Isolated wheel and sdist builds
+contain both package roots and all active modern modules, with version 0.1.0,
+`Requires-Python: >=3.9`, and the bounded NumPy dependency. Clean wheel installs from
+outside the repository pass imports, metadata/source-path checks, representative
+construction/XML behavior and all 142 tests on Python 3.9, 3.10, 3.11, 3.12 and
+3.13. The sdist independently installs and passes all 142 tests on the 3.9
+minimum. Exact interpreter/NumPy versions and reproduction guidance live in the
+[development runbook](DEVELOPMENT.md#packaging-and-supported-python-validation),
+with [review evidence](REVIEW.md#packaging-and-supported-python-verification).
+Python 3.8, CLI entry points and publishing remain unsupported/out of scope.
+
 **Varying-Z bulged Pline and Region interchange: implemented and verified**
 (2026-09-10). User-supplied CamBam-generated XML establishes that Pline and
 Region contours may combine bulge with unequal endpoint Z and that Region
@@ -224,8 +240,8 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    The completed canonical vertex-record refactor subsequently replaced the
    temporary parallel Pline/Points coordinate/elevation storage without changing
    the accepted XML geometry or query contracts.
-3. Validate packaging and supported Python versions; expand examples and tests as
-   each capability is verified. Add CLI/distribution work only for an actual need.
+3. **Completed 2026-09-10:** packaging and supported Python 3.9-3.13 validation.
+   Add CLI/publishing work only for an actual need.
 4. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
    and load/modify/save workflows on another PC. User-requested future work;
    not active and does not displace correctness fixes.
@@ -282,7 +298,7 @@ are authoritative. MOP ownership, supported interchange, curved geometry bounds
 (1a), copy/transfer (1b) and shape parity (2) are recorded above with their
 verification and acceptance state.
 
-After the canonical vertex-record verification is recorded, this remains a good
-fresh-session breakpoint: shape parity and its storage follow-up are coherent,
-and the next priority has a distinct packaging scope.
-Suggested commit: `refactor: consolidate pline and points vertices`.
+This is a good fresh-session breakpoint: the packaging outcome is implemented,
+verified and recorded, while the next priority (the local stateless MCP adapter)
+has a distinct integration scope and does not need this session's build context.
+Suggested commit: `build: validate packaging across supported Python versions`.

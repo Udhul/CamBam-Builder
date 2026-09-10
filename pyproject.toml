@@ -1,14 +1,16 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=77.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "cambam-builder" # Distribution name for 'pip install'
 description = "A framework for building CamBam CAD/CAM files"
 readme = "README.md"
-requires-python = ">=3.8"
-license = { file = "LICENSE" }
-dynamic = ["dependencies", "version"]
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = ["numpy>=1.23.5"]
+dynamic = ["version"]
 
 [tool.setuptools]
 packages = ["cambam_builder", "legacy_cambam_builder"]

@@ -14,7 +14,7 @@ Read this map after the root README; follow only the relevant owner.
 | Future local MCP requirements and implementation outline | [MCP_PLAN.md](MCP_PLAN.md) | Pending design/acceptance; priority stays in PROGRESS |
 | Region and all-shape Z-coordinate parity | [SHAPE_PARITY_PLAN.md](SHAPE_PARITY_PLAN.md) | Independent upstream feature support; priority stays in PROGRESS |
 | Future rest machining and V-cutter planning | [REST_MACHINING_PLAN.md](REST_MACHINING_PLAN.md) | Optional feature proposal and acceptance; low priority stays in PROGRESS |
-| Package metadata and dependency declarations | `pyproject.toml`, `setup.py`, `requirements.txt` | Metadata, dependency loading adapter, dependency list respectively |
+| Package metadata and dependency declarations | `pyproject.toml` | Sole source for published metadata and direct dependencies |
 | Executable API behavior | `cambam_builder/` and future regression tests | Actual implementation; document divergences from target explicitly |
 | License | [LICENSE](../LICENSE) | MIT terms; does not authorize external processing of user data |
 

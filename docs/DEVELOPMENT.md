@@ -11,21 +11,23 @@ only if the user explicitly reports one.
 
 ## Environment and setup
 
-The declared toolchain is Python >=3.8 and setuptools/wheel (`pyproject.toml`).
-`setup.py` loads runtime dependencies from `requirements.txt`. No lockfile,
-repository-managed environment, test dependency or CI runner is declared.
-Use an existing project environment when available; otherwise create an isolated
-environment from the repository root (PowerShell):
+The declared and verified toolchain is Python >=3.9 and setuptools/wheel
+(`pyproject.toml`). NumPy is declared directly in project metadata. `uv.lock` is
+intentionally ignored: supported-version checks resolve the currently compatible
+NumPy release independently on each interpreter. No `setup.py`, separate
+requirements file or CI runner is declared.
+
+Create or update the repository-managed environment from the root with:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e .
+uv sync --python 3.13
 ```
 
-The setup command may require dependency downloads. Do not recreate an existing
-environment. After setup, explicitly select its interpreter for every command;
-activation is optional. If the IDE uses another project environment, set
-`$ProjectPython` to that interpreter instead. Confirm it before running checks:
+This creates `.venv` and installs the project plus a currently compatible NumPy
+version. The command may require dependency downloads. After setup,
+explicitly select its interpreter for every command; activation is optional. If
+the IDE uses another project environment, set `$ProjectPython` to that interpreter
+instead. Confirm it before running checks:
 
 ```powershell
 $ProjectPython = '.\.venv\Scripts\python.exe'
@@ -86,6 +88,45 @@ as the currently resolved primitive snapshot.
 
 Packaging installation and supported Python versions require separate validation;
 a local import does not prove them.
+
+## Packaging and supported Python validation
+
+Verified 2026-09-10 using `uv 0.10.2`. The minimum is Python 3.9: Python 3.8
+was not available on the validation machine, and the separately shipped legacy
+package evaluates PEP 585 built-in generic annotations that require Python 3.9.
+The wheel metadata declares version 0.1.0, `Requires-Python: >=3.9`, and
+`Requires-Dist: numpy>=1.23.5`. The wheel and sdist contain both `cambam_builder` and
+`legacy_cambam_builder`; all current modern modules are present.
+
+The wheel was installed into a separate environment per interpreter. From a
+temporary working directory outside the repository, each environment imported
+both package roots, verified installed version/dependency metadata and source-path
+exclusion, constructed a modern and legacy project, performed a modern Rect XML
+write/read cycle, and passed the full 142-test suite:
+
+| Python | NumPy resolved by clean wheel install | Result |
+| --- | --- | --- |
+| 3.9.0 | 2.0.2 | pass |
+| 3.10.9 | 2.2.6 | pass |
+| 3.11.0 | 2.4.6 | pass |
+| 3.12.10 | 2.5.3 | pass |
+| 3.13.9 | 2.5.3 | pass |
+
+The sdist was independently installed under Python 3.9 with NumPy 2.0.2 and
+passed the same imports, installed-path assertion and all 142 tests. Build
+artifacts inspected locally are under
+`output/packaging-validation-20260910-c/`; that ignored directory is supporting
+evidence, not a release location. `legacy_cambam_builder.cambam_builder_cli` is
+a dormant historical module with no declared entry point and is outside the
+supported import surface; no CLI or publishing behavior was added.
+
+Reproduce the development environment with `uv sync`. Because the lockfile is
+local and ignored, dependency versions may advance over time. For a fresh
+artifact check, build with `uv build --out-dir <unique-output-directory>`, install
+the resulting wheel or sdist into a clean `uv venv --python <version>`, copy the
+tests to a directory outside the repository, and run discovery there with that
+environment's interpreter. This prevents the repository root from satisfying
+imports accidentally.
 
 ### Required checks by change
 
