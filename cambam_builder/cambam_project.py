@@ -93,6 +93,21 @@ class CamBamProject:
 
         logger.info(f"Initialized CamBamProject: {self.project_name}")
 
+    def clone(self) -> "CamBamProject":
+        """Return an independent copy of this project and its entity graph.
+
+        Entity UUIDs and the relationship registries are retained so a staged
+        project can be published without changing callers' identities.  The
+        entity values, XML templates and mutable relationship collections are
+        copied, and primitive project back-references are rebound to the new
+        project.  This is intentionally an in-memory object copy; it does not
+        use pickle or XML serialization as a transaction representation.
+        """
+        cloned = deepcopy(self)
+        for primitive in cloned._primitives.values():
+            primitive.set_project_link(cloned)
+        return cloned
+
     # --- Internal Helper: Identifier Resolution ---
     def _resolve_identifier(self, identifier: Optional[Identifiable],
                              expected_type: Optional[Type[EntityType]] = None) -> Optional[uuid.UUID]:

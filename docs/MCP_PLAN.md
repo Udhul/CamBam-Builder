@@ -8,7 +8,7 @@ to [PROGRESS.md](PROGRESS.md). The decided 4a design lives in the
 ## Outcome and requirements
 
 Install the project on another PC, start a local MCP server easily, and connect a
-compatible AI agent (for example OpenCode Desktop). The user can then request CAD/CAM
+compatible AI agent (Codex is the preferred client). The user can then request CAD/CAM
 work in natural language and the agent can create, inspect, load, modify and save
 CamBam documents through supported framework operations. Include geometry,
 relationships, transforms and machining operations as their contracts become
@@ -20,8 +20,14 @@ Target the stateless **MCP 2026-07-28** contract requested by the user. The
 describes self-describing requests without the initialization handshake or protocol
 session ID, optional discovery, and explicit application handles when state is
 needed. Stateless transport does not require discarding document state. Verify
-the normative specification and SDK/client conformance again when work starts;
-do not silently substitute an older session-based protocol for client convenience.
+the normative specification and SDK/client conformance again when work starts.
+The user expanded the requirements on 2026-09-10 after wire probes showed current
+clients still using older protocols: **backward compatibility is required scope**,
+beginning with stdio MCP 2025-06-18 (installed Codex) and 2025-11-25 (OpenCode).
+Use the pinned SDK's protocol negotiation and retain one application contract
+across versions. Legacy initialization must never select an active document or
+weaken workspace, revision, retry, validation or save rules. Report the actually
+negotiated protocol; a successful legacy connection is not modern conformance.
 
 ## Boundary (resolved by the MCP contract)
 
@@ -58,7 +64,8 @@ driver, not a requirement to delegate or consume the entire model tier.
 The resulting [authoritative contract](MCP_CONTRACT.md) and
 [probe evidence](REVIEW.md#mcp-protocol-and-adapter-contract---2026-09-10)
 resolve this scope. OpenCode 1.18.29 fails modern-only interoperability; 4b/4c
-can proceed against SDK 2.2.0, while desktop distribution acceptance remains gated.
+use SDK 2.2.0 with the legacy compatibility boundary implemented in 4b, while
+desktop distribution acceptance remains gated.
 
 **Recommended main session:** GPT-6 Astra, high reasoning; use xhigh only if the
 normative stateless protocol or target-client behavior remains ambiguous after
@@ -88,6 +95,9 @@ medium-high for one bounded implementation session.
 
 - Add the minimal adapter package, optional dependency boundary and documented
   local start/stop command selected in 4a.
+- Include SDK-backed compatibility with MCP 2025-06-18 and 2025-11-25 alongside
+  modern direct requests. Verify Codex's real client and both legacy versions;
+  reject mixed-version traffic and unsupported versions without state changes.
 - Implement protocol/server wiring, explicit document references or handles,
   revision checks, structured diagnostics and the configured workspace boundary.
   Enforce canonical path containment, save/overwrite policy and restart behavior;
@@ -149,7 +159,8 @@ execution; move to Sol high only for substantive interoperability defects.
   library users; verify the supported Python/OS and adapter dependency matrix.
 - Publish exact local start/stop and named-client configuration instructions.
   Connect the selected desktop client on a clean second-PC environment and repeat
-  the 4c workflow through the negotiated stateless protocol.
+  the 4c workflow through the actually negotiated supported protocol. Record
+  modern/legacy conformance separately; include backward compatibility regressions.
 - Record agent usability and required CamBam geometry/property/toolpath inspection
   as user/domain acceptance, keeping automated, protocol and production evidence
   separate.
@@ -175,7 +186,7 @@ Expand API coverage only after that representative slice passes. Rollback should
 disable/uninstall the adapter without changing existing user documents or the
 framework's direct Python API.
 
-## Maintenance obligations when implementation starts
+## Maintenance obligations during implementation
 
 The framework change author owns assessing adapter impact; the lead owns integration.
 In the implementation increment:
@@ -193,5 +204,6 @@ In the implementation increment:
 
 The [MCP contract](MCP_CONTRACT.md) owns initial coverage, SDK/transport/client,
 document persistence/revision and packaging-boundary decisions. Increment 4e owns
-the final supported OS installation matrix. No server, dependency or advertised
-tool exists yet.
+the final supported OS installation matrix. Increment 4b now provides the optional
+server and five document tools; 4c adds the first three authoring tools only after
+its direct-framework parity slice passes.

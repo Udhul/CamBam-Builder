@@ -7,19 +7,41 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**Secure MCP server and document foundation: complete** (2026-09-10; backlog
+4b). The optional Python >=3.10 adapter provides a strict stdio boundary, an
+explicit volatile workspace/document model and the five document tools needed to
+create, open, inspect, save and close `.cb` documents. It contains all workspace
+paths, rejects links and unsafe XML, bounds input/state growth, keeps revisioned
+idempotency ledgers and publishes new files atomically. Public project cloning and
+strict byte import provide the staged-document prerequisites.
+
+The server targets MCP 2026-07-28 while also negotiating the deployed 2025-06-18
+and 2025-11-25 client versions. Codex CLI 0.154.0 advertised 2025-06-18 even with
+its `mcp_2026_07_28` feature enabled, so backward protocol compatibility is now a
+required adapter boundary rather than deferred work. A deterministic Codex
+app-server session completed create/inspect/save/open/inspect/close/close against
+the installed adapter and independently verified the saved file hash. Detailed
+security, client and packaging evidence is in the
+[review](REVIEW.md#mcp-foundation-and-client-compatibility---2026-09-10).
+The final suite completes successfully: 174 tests pass and one Windows
+symlink-privilege case skips; the equivalent junction/reparse-point rejection
+is exercised and passes.
+The next increment is **4c: one authoring/MOP/inspect/save/reload parity slice**;
+its boundary remains the existing eight-tool application contract.
+
 **MCP protocol/client/adapter contract: complete** (2026-09-10; backlog 4a).
 The [contract guide](MCP_CONTRACT.md) and [eight tool schemas](mcp_contract_v1.schema.json)
 settle stdio MCP 2026-07-28, optional SDK 2.2.0/Python >=3.10, volatile explicit
 handles, revision/retry rules, workspace containment and new-file-only saves.
 SDK stdio direct-call/discovery probes passed. OpenCode 1.18.29's installed backend
-uses the 2025-11-25 handshake and fails the modern-only probe; no compatible Desktop
-GUI or second-PC acceptance is claimed. This gates 4e, not foundation development.
-The next increment is **4b: secure server and document foundation**, including
-public project clone and strict byte-based XML import prerequisites. Scope,
+uses the 2025-11-25 handshake and failed the original modern-only probe; 4b now
+supports that deployed protocol era. Desktop GUI and second-PC acceptance remain
+for 4e. Scope,
 schema checks, compatibility evidence and reopening criteria are persisted in the
 [contract](MCP_CONTRACT.md#acceptance-and-handoff-to-implementation) and
 [review](REVIEW.md#mcp-protocol-and-adapter-contract---2026-09-10).
-No adapter runtime or project dependency was added in 4a.
+No adapter runtime or project dependency was added in 4a; 4b subsequently added
+the SDK as an optional Python-version-gated extra.
 
 **Packaging and supported Python validation: complete** (2026-09-10; backlog
 item 3). Published metadata now declares Python >=3.9 and NumPy >=1.23.5 directly
@@ -261,10 +283,12 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    into fresh-session increments with independent stopping conditions:
    - **4a — completed 2026-09-10:** [protocol/client and adapter contract](MCP_CONTRACT.md),
      eight tool schemas and compatibility probes. OpenCode 1.18.29 is incompatible
-     with the requested modern protocol; desktop acceptance remains pending in 4e.
-   - **4b — next:** implement the secure server/document foundation and its
-     required public clone/strict-import contracts. GPT-5.6 Sol/xhigh.
-   - **4c:** prove one authoring/MOP/inspect/save/reload parity slice. Sol/xhigh.
+     with a modern-only server; backward negotiation is implemented in 4b and
+     desktop acceptance remains pending in 4e.
+   - **4b — completed 2026-09-10:** secure server/document foundation, required
+     public clone/strict-import contracts and backward protocol negotiation.
+   - **4c — next:** prove one authoring/MOP/inspect/save/reload parity slice.
+     Sol/xhigh.
    - **4d:** expand the explicitly supported API and resilience coverage.
      Sol/high, with Terra/xhigh suitable for settled coverage batches.
    - **4e:** validate installation, named desktop-client interoperability and
@@ -295,9 +319,10 @@ above. Detailed contracts remain in `docs/structure_spec.md`, and review evidenc
 No blocker for the completed MOP ownership/interchange scope. Production
 toolpaths and complete `.cb` format coverage remain outside that acceptance.
 The old framework API and pickle format did not constrain the redesign.
-MCP 4e requires a desktop client that actually speaks 2026-07-28. Installed
-OpenCode 1.18.29 fails that requirement; retain the modern protocol and reprobe
-when client support changes. SDK-backed 4b/4c implementation can proceed.
+MCP 4e still requires named desktop-client and second-PC acceptance. The adapter
+retains 2026-07-28 as its target and also supports 2025-06-18 and 2025-11-25;
+reprobe the clients during 4e and retire an older version only after deployed
+clients no longer need it. SDK-backed 4c implementation can proceed.
 
 ## Completion and verification
 
@@ -328,7 +353,8 @@ are authoritative. MOP ownership, supported interchange, curved geometry bounds
 (1a), copy/transfer (1b) and shape parity (2) are recorded above with their
 verification and acceptance state.
 
-This is a good fresh-session breakpoint: 4a's architecture, schema and compatibility
-evidence are persisted, and 4b has a distinct implementation scope. No pending
-decision depends on chat; desktop interoperability is an explicit later gate.
-Suggested commit: `docs: define stateless MCP adapter contract and tool schemas`.
+This is a good fresh-session breakpoint: 4b's server, document lifecycle,
+backward negotiation and client evidence are persisted, while 4c has a distinct
+authoring scope. No pending decision depends on chat; desktop and second-PC
+interoperability remain the explicit 4e gate.
+Suggested commit: `feat: add secure MCP document foundation`.

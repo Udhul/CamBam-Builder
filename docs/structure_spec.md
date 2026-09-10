@@ -11,8 +11,8 @@ This specification describes the core architecture for the CamBam CAD/CAM framew
 
 ## 0. Implemented architecture and change ownership
 
-This is a local Python library, with no declared service, database, frontend or
-modern command-line entry point. The public entry point is `CamBamProject`, also
+This is a local Python library with an optional stdio MCP adapter and no database
+or frontend. The public library entry point is `CamBamProject`, also
 exported as `CBProject`. Package declarations include the modern and legacy
 packages; `inactive/` and demos are outside that runtime package list.
 
@@ -26,6 +26,7 @@ packages; `inactive/` and demos are outside that runtime package list.
 | `cambam_builder/cambam_writer.py` | XML ID assignment and layer/part traversal; delegates individual encoding to entities | Output structure and reference resolution |
 | `cambam_builder/cambam_reader.py` | XML parsing, entity reconstruction, ID mapping and deferred parent/MOP linking | Import defaults, malformed data and round-trip reconstruction |
 | `cambam_builder/__init__.py` | Public alias and version | Import surface and version metadata |
+| `cambam_builder/mcp_adapter/` | Optional local stdio launcher, SDK protocol boundary, volatile documents, retry ledger, schema validation and workspace I/O | [MCP contract](MCP_CONTRACT.md); `server.py` owns wire behavior, `service.py` owns application state, `paths.py` owns filesystem policy |
 | `cambam_builder/cad_common.py` | Logging configuration with placeholder type/constant sections | Check callers before treating it as an established shared utility layer |
 
 ### Data flow and relationship boundaries
@@ -50,6 +51,25 @@ packages; `inactive/` and demos are outside that runtime package list.
 The reader's `PRIMITIVE_TAG_TO_CLASS` and `MOP_TAG_TO_CLASS` are the executable
 supported-tag inventory, not a claim of complete CamBam coverage. Consult those
 maps and corresponding entity encoders before adding a type.
+
+### Project clone and bounded XML import
+
+`CamBamProject.clone()` returns an independent in-memory copy of the complete
+project graph, preserving UUIDs, ordering, relationships and XML templates.
+Primitive weak project references point to the clone. Editing or saving the clone
+does not mutate the original; no pickle or XML transaction representation is used.
+
+`cambam_reader.read_cambam_bytes(data: bytes, *, source_name="", strict=True)`
+accepts a bounded UTF-8 snapshot and returns a project or raises bounded
+`ValueError`. DTD/entity declarations and non-UTF-8/NUL input are rejected before
+parsing. The source limit is 10 MiB; strict reconstruction limits are 10,000
+primitives and 1,000 MOPs. Strict mode rejects unsupported MOP kinds rather than
+silently skipping them, malformed primitive scalars, failed registration and
+unresolved MOP targets. `CamBamImportLimitError`, a `ValueError` subclass, identifies
+resource-limit failures. The existing `read_cambam_file` compatibility behavior
+remains separate. Neither entry point guarantees preservation of arbitrary XML
+metadata or computes CamBam toolpaths. Adapter opens/saves always diagnose this
+interchange limit and assert units explicitly.
 
 ### Shape elevation and Region contract
 

@@ -40,11 +40,9 @@ review did this without installing or changing dependencies.
 
 ## Verification entry points
 
-MCP adapter implementation has not started. The planned launch/dependency boundary
-is in [MCP_CONTRACT.md](MCP_CONTRACT.md#packaging-and-process-ownership); do not treat
-it as an installed command. 4a's disposable SDK/client probes and schema validation
-are recorded in [REVIEW.md](REVIEW.md#mcp-protocol-and-adapter-contract---2026-09-10).
-4b must add actual launcher/protocol/contract-test commands here when implemented.
+The optional MCP document foundation is described in the
+[MCP contract](MCP_CONTRACT.md). See [local MCP setup](#local-mcp-setup-and-verification)
+below for installation and protocol acceptance. The base library needs no MCP SDK.
 
 Run from the repository root, using the interpreter selected above:
 
@@ -547,3 +545,66 @@ the writer suppresses that default and preserves optional `p2`. The C-to-D frame
 also retains mixed-content Text, all geometry, identities, hierarchy, Region
 holes and the Region-only pocket target. This acceptance covers display and
 coordinate/property interchange, not generated production toolpaths.
+
+## Local MCP setup and verification
+
+The optional server requires Python 3.10+ and exactly `mcp==2.2.0`. Base-library
+Python 3.9 installations remain supported; launching the adapter there produces
+a clear version error. Install from the repository root:
+
+```powershell
+uv sync --python 3.13 --extra mcp
+.venv/Scripts/python.exe -m cambam_builder.mcp_adapter --workspace D:/CAD/AgentWork
+```
+
+The workspace must already exist and be absolute. The equivalent installed
+entry point is `cambam-mcp --workspace D:/CAD/AgentWork`. The client normally starts
+and stops this process. Close stdin to stop it, or use Ctrl+C for an interactive
+launch. Stdout is exclusively MCP; stderr emits the content-free workspace/boot
+bootstrap. Restart loses all open handles, unsaved edits and retry records.
+
+The five available tools create, open, inspect, save and close documents.
+Inspection currently reports identity, ordering and relationships; geometry/MOP
+detail is explicitly diagnosed as unsupported until 4c/4d. Saves only create new
+`.cb` paths under the workspace and never overwrite. File parent directories must
+already exist. Units are assertions, not conversions or a verified CamBam units
+setting. Read the [state and safety contract](MCP_CONTRACT.md) before client use.
+
+Codex client configuration (replace both absolute paths):
+
+```toml
+[mcp_servers.cambam]
+command = "D:/Projects/CamBam-Builder/.venv/Scripts/python.exe"
+args = ["-m", "cambam_builder.mcp_adapter", "--workspace", "D:/CAD/AgentWork"]
+startup_timeout_sec = 15
+```
+
+Do not enable `mcp_2026_07_28` expecting it to establish modern stdio conformance
+on Codex 0.154.0. Its observed stdio connection uses 2025-06-18, supported by the
+required compatibility path. Modern SDK clients can call directly at 2026-07-28
+or use discovery; the same document schemas and safety policy apply. Initialization
+instructions/discovery expose the actual workspace ID required in tool calls.
+No persistent client configuration is changed by the repository test suite.
+
+Focused and full checks, from the root with the extra installed:
+
+```powershell
+.venv/Scripts/python.exe -m unittest discover -s tests -p 'test_mcp_*.py' -v
+.venv/Scripts/python.exe -m unittest discover -s tests -p test_project_clone.py -v
+.venv/Scripts/python.exe -m unittest discover -s tests -p test_strict_import.py -v
+.venv/Scripts/python.exe -m unittest discover -s tests -v
+.venv/Scripts/python.exe -m compileall -q cambam_builder legacy_cambam_builder tests
+git diff --check
+```
+
+Protocol checks launch real subprocesses. Adapter tests require the optional extra;
+base-only environments skip them. If the managed Windows sandbox creates temporary
+directories it cannot reopen, rerun these checks with the tool's approved local
+filesystem access; this environment failure is not an adapter failure. Test-owned
+fixtures are synthetic. Disposable client probes, build environments and logs are
+under `output/mcp-foundation-20260910/`; durable evidence is in the
+[review record](REVIEW.md#mcp-foundation-and-client-compatibility---2026-09-10).
+
+Manual CamBam validation adds no evidence for 4b's transport, locking and filesystem
+foundation. 4c prepares authored CAD artifacts; 4e retains desktop/second-PC,
+CamBam units/geometry/property and toolpath acceptance.

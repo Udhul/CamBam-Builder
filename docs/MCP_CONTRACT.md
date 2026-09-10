@@ -1,16 +1,17 @@
 # Local MCP adapter contract
 
 Contract version 1, decided 2026-09-10 for backlog 4a. This is the authoritative
-implementation contract; the adapter is not implemented yet. Priority and delivery
+implementation contract; the five document foundation tools are implemented. Priority and delivery
 state live in [PROGRESS.md](PROGRESS.md), and increment boundaries in
 [MCP_PLAN.md](MCP_PLAN.md#delivery-increments-and-session-boundaries).
 
 ## Protocol and compatibility decision
 
-Use **MCP 2026-07-28 over stdio**, one client-launched local process per configured
-workspace. Use the official Python SDK **mcp 2.2.0**, initially pinned exactly in
-the adapter extra. SDK protocol support was exercised with a disposable subprocess;
-this is not evidence that a desktop client or the CamBam adapter works.
+Use **MCP 2026-07-28 over stdio**, with required backward compatibility for
+**2025-06-18 and 2025-11-25**, one client-launched local process per configured
+workspace. This updates 4a's modern-only decision under the user's explicit
+2026-09-10 requirement change. Use the official Python SDK **mcp 2.2.0**, pinned
+exactly in the adapter extra. Client acceptance must record the actual protocol.
 
 The normative [core metadata specification](https://modelcontextprotocol.io/specification/2026-07-28/basic/index)
 requires protocol version and client capabilities in each request's `params._meta`;
@@ -20,20 +21,23 @@ uses UTF-8 newline-delimited JSON-RPC, stdout exclusively for protocol messages,
 stderr for diagnostics, and EOF for shutdown. Discovery is optional. No application
 state may depend on initialization, connection identity or client metadata.
 
-Accept requests only at `2026-07-28`; reject `initialize` before SDK handshake
-handling. Use the SDK's public server middleware and low-level server registration
-to declare only implemented capabilities. Require per-request version/capability
-metadata before dispatch. Reject absent/invalid metadata with JSON-RPC invalid
-params; let the SDK return the normative unsupported-version error for other
-modern versions. Return method-not-found for legacy initialization. Notifications
-use their own normative rules, not the request-only metadata requirement.
-Never enable an automatic legacy bridge to make a client appear compatible.
+Use SDK-backed protocol selection and low-level registration to declare only
+implemented capabilities. Modern requests require per-request version/capability
+metadata before dispatch. Reject absent/invalid metadata before legacy
+initialization with JSON-RPC invalid params. Accept a legacy `initialize` only for
+2025-06-18 or 2025-11-25; the SDK owns handshake lifecycle and era-specific result
+serialization. Once a connection selects an era it cannot switch eras. Reject
+unsupported versions explicitly. Notifications use their normative rules.
+This is an intentional compatibility surface, with the same tool arguments,
+application result envelope and document service for every accepted version.
+No document state depends on the negotiated transport connection.
 
 Advertise only tools, with `listChanged=false`; no resources, prompts, roots,
 sampling, elicitation, tasks, subscriptions, HTTP listener or legacy SSE endpoint.
 Implement `server/discover`, `ping`, `tools/list`, `tools/call`, cancellation and
-EOF through the SDK. Tool listings are deterministic, sorted by name, with
-`ttlMs=0` and `cacheScope="private"`. Complete results use `resultType="complete"`.
+EOF through the SDK. Tool listings are deterministic, sorted by name. Modern
+results use `ttlMs=0`, `cacheScope="private"` where cacheable, and
+`resultType="complete"`. Legacy wire results follow their negotiated SDK schema.
 Publish input/output JSON Schemas and structured results with a serialized JSON
 text block, following the
 [tools specification](https://modelcontextprotocol.io/specification/2026-07-28/server/tools).
@@ -41,19 +45,28 @@ text block, following the
 | Component checked on 2026-09-10 | Evidence and decision |
 | --- | --- |
 | Python SDK 2.2.0, Python 3.13.9, Windows | Actual stdio call before discovery, listing and discovery passed. The [SDK v2 documentation](https://github.com/modelcontextprotocol/python-sdk) and [release metadata](https://pypi.org/project/mcp/2.2.0/) require Python >=3.10. |
-| OpenCode 1.18.29 client backend | Installed binary sends `initialize` at `2025-11-25`; modern-only negative probe fails, legacy control connects and lists tools. Not compatible with this contract. |
+| OpenCode 1.18.29 client backend | Installed binary sends `initialize` at `2025-11-25`; modern-only negative probe fails, legacy control connects and lists tools. This motivates required 2025-11-25 support; actual adapter/Desktop acceptance is separate. |
 | OpenCode Desktop candidate, backend source 1.18.29 | [MCP backend](https://github.com/anomalyco/opencode/blob/v1.18.29/packages/opencode/src/mcp/index.ts) implements stdio and remote Streamable HTTP with SSE fallback; [dependency declaration](https://github.com/anomalyco/opencode/blob/v1.18.29/packages/opencode/package.json) pins TS SDK 1.29.0. Desktop compatibility is inferred from that backend, not a tested GUI version; no GUI acceptance is claimed. |
 
-OpenCode is the named candidate, not an approved compatible client. No desktop
-client has passed the requested protocol. This gates 4e distribution acceptance,
-not 4b/4c work against a pinned SDK client. Reprobe a new OpenCode version or another
-named desktop client when its source/release claims modern per-request support.
-Do not spend 4b building a client, fork or protocol translation layer.
+The user's preferred replacement candidate is Codex. Installed Codex 0.154.0
+also sends `initialize` at `2025-06-18` over stdio, including with
+`features.mcp_2026_07_28=true` and with the app-server runtime explicitly accepting
+that feature's enablement. The modern server rejects it; a legacy control connects
+and lists tools. Thus generic Codex MCP support and the existence of an experimental
+flag do not establish modern stdio conformance. Codex 0.154.0 is now the selected
+client on the 2025-06-18 compatibility path: all five document tools passed through
+its CLI client, including save/reopen and both closes. No modern desktop conformance or
+second-PC acceptance is claimed. See the dated
+[client survey and wire evidence](REVIEW.md#mcp-foundation-and-client-compatibility---2026-09-10).
+Reprobe a new Codex/OpenCode version or another named client when its
+source/release claims modern per-request stdio support.
+Use the SDK's existing compatibility machinery; do not fork a client or build a
+separate application service for older protocols.
 
 ## Packaging and process ownership
 
-Add `cambam_builder.mcp_adapter` in 4b and explicitly include it in setuptools'
-package list. Keep geometry/XML behavior in the framework. Add optional extra
+`cambam_builder.mcp_adapter` is explicitly included in setuptools'
+package list. Geometry/XML behavior stays in the framework. The optional extra is
 `mcp = ["mcp==2.2.0; python_version >= '3.10'"]`; base library users retain Python
 >=3.9 and their existing dependency surface. The launcher must clearly reject
 Python 3.9 and missing extras before importing the SDK. Never silently run with
@@ -69,7 +82,7 @@ uv pip install --python .venv/Scripts/python.exe '.[mcp]'
 .venv/Scripts/python.exe -m cambam_builder.mcp_adapter --workspace D:/CAD/AgentWork
 ```
 
-These commands describe 4b's target, not a runnable adapter today. `--workspace`
+These commands launch the implemented foundation. `--workspace`
 is mandatory, absolute and already exists; no implicit current-directory access.
 Client configuration uses the absolute environment Python executable, `-m`, module
 name, `--workspace`, absolute directory as separate command-array elements. The
@@ -98,6 +111,8 @@ that tool calls require this workspace ID. Startup writes one stderr line
 `CAMBAM_MCP_WORKSPACE ` followed by compact JSON of that same object. The client
 can use either source; direct tool calls need no prior discovery if the ID is
 already known. `_meta["io.modelcontextprotocol/serverInfo"]` remains SDK-owned.
+Legacy initialization also publishes the bootstrap and includes the actual
+workspace ID in server instructions, so ordinary clients can discover it.
 
 Create/open start at integer revision 0. All document mutations, save and close
 require `expected_revision`. Serialize operations with a per-document lock; check
@@ -215,7 +230,9 @@ visibility is promised; survival of sudden power loss is not.
 ## Tool schema conventions
 
 The [machine-readable schema](mcp_contract_v1.schema.json) owns field structure,
-required fields and bounds; each tool has `<name>_input` and `<name>_output` in
+required fields and bounds. Its packaged copy `mcp_adapter/contract_v1.schema.json`
+must remain identical (verified by regression); it makes installed wheels
+self-contained. Each tool has `<name>_input` and `<name>_output` in
 `$defs`. Bundle the shared definitions into each advertised input/output schema.
 The tables below map those schemas to framework behavior. Implement strict typed
 models; do not coerce
@@ -353,7 +370,8 @@ The generic inspection inventory may defer typed geometry/MOP details to 4c.
 It must not advertise the three editing tools until their handlers exist.
 
 4b acceptance: real subprocess discovery/list/direct-call without handshake;
-legacy and missing-metadata rejection; strict input/output schema tests; wrong
+legacy negotiation at both declared versions, modern metadata enforcement and
+cross-era rejection; strict input/output schema tests; wrong
 workspace/boot/handle/revision; concurrent same-revision edits; idempotent success,
 failure, in-flight retry and closed-handle replay; limit exhaustion; cancellation
 before/after commit; two creates/opens at 15 documents; exhausted regular ledger
@@ -390,4 +408,5 @@ Remote hosting, arbitrary Python/private registries, pickle, generic field sette
 deletion/batch edits, raw XML editing, overwrite and machine/G-code execution remain
 excluded. Reopen volatile storage only for a demonstrated unsaved-recovery need;
 reopen overwrite only with expected-file-hash concurrency and fidelity acceptance;
-reopen transport/client choice only with modern protocol wire evidence.
+reopen additional protocol versions only with a concrete client need and wire
+evidence; supported legacy versions remain required acceptance coverage.

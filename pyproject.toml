@@ -12,8 +12,17 @@ license-files = ["LICENSE"]
 dependencies = ["numpy>=1.23.5"]
 dynamic = ["version"]
 
+[project.optional-dependencies]
+mcp = ["mcp==2.2.0; python_version >= '3.10'"]
+
+[project.scripts]
+cambam-mcp = "cambam_builder.mcp_adapter.__main__:main"
+
 [tool.setuptools]
-packages = ["cambam_builder", "legacy_cambam_builder"]
+packages = ["cambam_builder", "cambam_builder.mcp_adapter", "legacy_cambam_builder"]
+
+[tool.setuptools.package-data]
+"cambam_builder.mcp_adapter" = ["*.json"]
 
 [tool.setuptools.dynamic]
 version = {attr = "cambam_builder.__version__"} # Read the 'version' from the '__version__' attribute of the 'cambam_builder' module

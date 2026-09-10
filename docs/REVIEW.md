@@ -1480,13 +1480,85 @@ discovery metadata key and stderr grammar, canonical root hash, configured works
 ID in error envelopes, a registry reservation lock, terminal `REQUEST_CANCELLED`,
 save/close access after regular ledger exhaustion, and a document lock held through
 save publication and ledger completion. The schemas include the bootstrap record
-and cancellation error. These are reviewed design rules; concurrency/security
-behavior remains to be implemented and tested in 4b. Final local documentation
-link/anchor and schema-reference checks passed, as did `git diff --check`.
+and cancellation error. These were reviewed design rules at the 4a boundary;
+the 4b implementation and verification are recorded in the next section. Final
+local documentation link/anchor and schema-reference checks passed, as did
+`git diff --check`.
 
-No manual validation is needed for 4a. Runtime/security implementation, full
-framework regression checks after implementation, actual desktop/second-PC use,
-and CamBam production acceptance remain separate future evidence. Volatile handles
+No manual validation was needed for 4a. Runtime/security implementation and full
+framework regression checks are now recorded under 4b; actual desktop/second-PC
+use and CamBam production acceptance remain separate future evidence. Volatile handles
 deliberately lose unsaved work at restart; `.cb` interchange still has limited
 unknown-field preservation and no verified persisted unit setting. These limits,
 new-file-only save policy and reopening criteria are in the contract.
+
+## MCP foundation and client compatibility - 2026-09-10
+
+The client survey distinguishes transport support, advertised protocol support,
+observed wire behavior and user acceptance. The earlier modern-only 4a decision
+was explicitly expanded by the user to require backward protocol compatibility.
+2025-06-18 and 2025-11-25 are the initial compatibility targets because they match
+the observed Codex and OpenCode clients. The modern protocol remains supported;
+legacy success does not count as 2026-07-28 conformance.
+
+| Client | Evidence | Scope of conclusion |
+| --- | --- | --- |
+| Codex CLI 0.154.0, Windows | `codex features list` exposes `mcp_2026_07_28`, under development and false by default. Both `codex exec` with the flag and CLI app-server with explicit runtime enablement send `initialize` at 2025-06-18. Modern-only adapter returns -32601. Legacy control accepts handshake and receives `tools/list`. | Actual negative modern-stdio test, not an inference from generic MCP documentation. The [official MCP guide](https://learn.chatgpt.com/docs/extend/mcp?surface=cli) confirms stdio support but does not promise this modern protocol version. |
+| OpenCode 1.18.29 | 4a captured 2025-11-25 initialization and successful legacy control. | Actual backend probe; Desktop GUI not tested. |
+| Claude Code | [Official runtime documentation](https://code.claude.com/docs/en/mcp#mcp-client-runtimes) states v2.1.232+ has SDK v2 support, subject to provider/feature conditions; stdio modern negotiation needs `MCP_PROTOCOL_NEGOTIATION=auto`, and runtime can be selected with `MCP_SDK_GENERATION=v2`. | Documented conditional support, no local test. |
+| Gemini CLI | Retrieved [core dependency declaration](https://raw.githubusercontent.com/google-gemini/gemini-cli/main/packages/core/package.json) pins `@modelcontextprotocol/sdk` 1.23.0. | Evidence suggesting a legacy client path in retrieved source; no installed-version or modern wire acceptance. |
+| Cursor | [Official MCP documentation](https://cursor.com/docs/mcp) lists stdio/HTTP/SSE and features but no explicit 2026-07-28 claim. | Modern compatibility unverified; lack of a claim is not proof of incompatibility. |
+
+This is a small targeted survey, not a statistical claim about all clients.
+Compatibility friction is sufficient evidence to require legacy acceptance rather
+than block delivery on modern client adoption. Recheck exact installed versions
+and wire traffic when expanding the client matrix.
+
+Disposable evidence is retained in `output/mcp-foundation-20260910/`:
+`modern-wire.jsonl`/`modern-codex.stderr`, `runtime-wire.jsonl`/
+`runtime-host.jsonl`, and `control-wire.jsonl`. The runtime feature-enable response
+confirms the flag was accepted before the negative probe; the legacy control
+removes a launch/stdio failure as the explanation. Only synthetic task data was
+used; no global MCP configuration was edited. The CLI app-server probe calls the
+installed client directly without an LLM request. Early harness issues (buffered
+stdio read, SDK snake_case result access) were corrected before acceptance runs.
+
+The foundation introduces the optional adapter package, independent public
+project clone and strict bounded UTF-8 XML snapshot reader. Document operations
+use explicit workspace/boot handles, locks, capacity reservations, revision checks
+and a process-lifetime terminal-result ledger. Saving stages a clone, checks and
+flushes bytes, and publishes with no-replace hard-link creation. Failed staging or
+destination races preserve existing bytes; successful publication survives retry
+and post-publication cancellation. Typed CAD detail and authoring tools remain
+4c scope. Framework regressions are separate from protocol/client acceptance.
+
+After adding SDK-backed legacy support, `codex exec` completed create, inspect,
+save, open and reopened inspection. Its default noninteractive `never` approval
+policy refused close; this was a client approval configuration issue, not a server
+error. A second synthetic workflow through `codex app-server` used a process-local
+`tools.document_close.approval_mode="auto"` override and completed all seven calls,
+including both closes. The lead independently checked every application result,
+both closed results and the saved file's SHA-256 against the returned artifact.
+`compat-host-wire.jsonl` records actual 2025-06-18 negotiation;
+`compat-host-host.jsonl` records client results. `compat-codex.jsonl` retains the
+first agentic workflow and its approval limitation. The saved empty document is
+`client-compat-host/Codex.cb`, 410 bytes, SHA-256
+`36e3244907051031ec52e5acdd2d411eb9b0d5af0ace9488144b7ab02adfe688`.
+This selects **Codex 0.154.0 on the legacy compatibility path** for subsequent
+work. Desktop GUI, second-PC and authoring/CAM acceptance remain separate.
+
+The final full run completed 175 tests in 15.676 seconds: 174 passed and one
+symlink-creation case skipped because this Windows account lacks that privilege.
+The separate junction/reparse-point rejection test passed. `compileall` and
+`git diff --check` also pass. A fresh wheel and sdist in
+`output/mcp-foundation-final-20260910-3/dist/` contain the packaged contract.
+Clean wheel installs on Python 3.10.9 and 3.13.9 load MCP 2.2.0 and the five
+document schemas from site-packages. A clean Python 3.9.0 base install imports
+and clones projects without installing MCP, while `cambam-mcp` exits with the
+documented Python-version message. The installed Python 3.13 executable completed
+discovery/listing at 2026-07-28 and initialize/listing at both legacy versions.
+Independent final review found that an initial metadata-free direct request could
+otherwise make the SDK select its legacy loop implicitly. The stdio reader now
+rejects that request with `INVALID_PARAMS` before era selection; only an explicit
+legacy `initialize` can select legacy. The subprocess regression and installed-wheel
+probe confirm rejection followed by a valid modern discovery on the same process.

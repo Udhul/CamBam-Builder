@@ -11,6 +11,7 @@ import logging
 import uuid
 import json
 import os
+import re
 from copy import deepcopy
 from typing import Optional, Dict, List, Tuple, Union, Any
 
@@ -52,6 +53,104 @@ PRIMITIVE_TAG_TO_CLASS = {
 class CamBamReaderError(Exception):
     """Custom exception for errors during CamBam file reading."""
     pass
+
+
+class CamBamImportLimitError(ValueError):
+    """A strict byte import exceeds a documented resource bound."""
+
+
+# The adapter bounds source snapshots before handing them to the framework.
+# Keep the same bound here so direct callers of the byte API cannot accidentally
+# bypass that protection.  ``read_cambam_file`` remains the compatibility API
+# and retains its existing filesystem behavior.
+MAX_SOURCE_BYTES = 10 * 1024 * 1024
+MAX_PRIMITIVES = 10_000
+MAX_MOPS = 1_000
+
+
+def _reject_unsafe_xml(data: bytes) -> None:
+    """Reject XML declarations that can invoke DTD/entity processing.
+
+    ``xml.etree.ElementTree`` does not provide an application-level policy for
+    external entities.  Reject every declaration-style ``<!...>`` construct
+    except comments and CDATA before parsing; this covers DTDs, entity
+    declarations and related declaration forms without inspecting user text.
+    """
+    if b"\x00" in data:
+        raise ValueError("XML input must be UTF-8 without NUL bytes")
+    try:
+        # CamBam snapshots and the stdio contract use UTF-8.  Decoding before
+        # scanning prevents UTF-16/32 encodings from hiding ``<!...`` bytes.
+        text = data.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ValueError("XML input must be valid UTF-8") from exc
+
+    declaration = re.match(r"\ufeff?\s*<\?xml\b([^?]*)\?>", text, re.IGNORECASE)
+    if declaration is not None:
+        encoding = re.search(r"\bencoding\s*=\s*(['\"])([^'\"]+)\1", declaration.group(1), re.IGNORECASE)
+        if encoding is not None and encoding.group(2).lower().replace("-", "") != "utf8":
+            raise ValueError("XML encoding declaration must be UTF-8")
+
+    cursor = 0
+    lowered = data.lower()
+    while True:
+        start = lowered.find(b"<!", cursor)
+        if start < 0:
+            return
+        if lowered.startswith(b"<!--", start):
+            end = lowered.find(b"-->", start + 4)
+            if end < 0:
+                raise ValueError("XML contains an unterminated comment")
+            cursor = end + 3
+            continue
+        if lowered.startswith(b"<![cdata[", start):
+            end = lowered.find(b"]]>", start + 9)
+            if end < 0:
+                raise ValueError("XML contains an unterminated CDATA section")
+            cursor = end + 3
+            continue
+        raise ValueError("XML DTD/entity declarations are not supported")
+
+
+def _validate_structure_limits(root: ET.Element) -> None:
+    """Reject oversized entity collections before constructing framework state."""
+    layers = root.find("layers")
+    primitive_count = 0
+    if layers is not None:
+        for layer in layers.findall("layer"):
+            objects = layer.find("objects")
+            if objects is not None:
+                primitive_count += len(list(objects))
+
+    parts = root.find("parts")
+    mop_count = 0
+    if parts is not None:
+        for part in parts.findall("part"):
+            machineops = part.find("machineops")
+            if machineops is not None:
+                mop_count += len(list(machineops))
+
+    if primitive_count > MAX_PRIMITIVES:
+        raise CamBamImportLimitError(
+            f"CamBam XML contains more than {MAX_PRIMITIVES} primitives"
+        )
+    if mop_count > MAX_MOPS:
+        raise CamBamImportLimitError(
+            f"CamBam XML contains more than {MAX_MOPS} MOPs"
+        )
+
+
+def _bounded_reader_error(error: BaseException, source_name: str = "") -> ValueError:
+    """Convert parser/reconstruction failures into bounded public diagnostics."""
+    detail = str(error).replace("\r", " ").replace("\n", " ").strip()
+    if not detail:
+        detail = error.__class__.__name__
+    # Parser diagnostics contain no document bytes, but bound all externally
+    # supplied labels and messages at this public boundary.
+    detail = "".join(character if ord(character) >= 0x20 else " " for character in detail)[:512]
+    label = os.path.basename(str(source_name))[:128] if source_name else "input"
+    label = "".join(character if ord(character) >= 0x20 else " " for character in label)
+    return ValueError(f"Failed to read CamBam XML '{label}': {detail}")
 
 def _parse_bool(value: Optional[str], default: bool = False) -> bool:
     """Safely parse boolean strings."""
@@ -151,6 +250,52 @@ def _parse_point_3d(value: Optional[str]) -> Optional[Tuple[float, float, float]
     return None
 
 
+def read_cambam_bytes(
+    data: bytes,
+    *,
+    source_name: str = "",
+    strict: bool = True,
+) -> CamBamProject:
+    """Read a bounded CamBam XML byte snapshot.
+
+    The byte API is the safe entry point for adapters: it validates the input
+    type and size, rejects declaration-style XML before parsing and raises a
+    bounded :class:`ValueError` for every parse or reconstruction failure.
+    With ``strict=True`` unsupported MOP elements are rejected; ``False`` keeps
+    the legacy reader's warning-and-skip behavior while retaining XML safety.
+    """
+    if not isinstance(data, bytes):
+        raise ValueError("CamBam XML input must be bytes")
+    if len(data) > MAX_SOURCE_BYTES:
+        raise CamBamImportLimitError(
+            f"CamBam XML input exceeds {MAX_SOURCE_BYTES} bytes"
+        )
+    if not isinstance(source_name, str):
+        raise ValueError("source_name must be a string")
+    if not isinstance(strict, bool):
+        raise ValueError("strict must be a boolean")
+
+    try:
+        _reject_unsafe_xml(data)
+        # ElementTree's default parser is suitable once declaration-style
+        # constructs have been rejected and the bounded snapshot is in memory.
+        root = ET.fromstring(data)
+        if strict:
+            _validate_structure_limits(root)
+    except CamBamImportLimitError as exc:
+        bounded = _bounded_reader_error(exc, source_name)
+        raise CamBamImportLimitError(str(bounded)) from exc
+    except (ET.ParseError, ValueError, TypeError, UnicodeError) as exc:
+        raise _bounded_reader_error(exc, source_name) from exc
+
+    # Reuse the established file reconstruction path while ensuring failures
+    # become exceptions at this strict public boundary rather than ``None``.
+    project = _read_cambam_root(root, source_name=source_name, strict=strict)
+    if project is None:  # defensive; strict reconstruction raises on errors
+        raise ValueError("Failed to read CamBam XML 'input': reconstruction failed")
+    return project
+
+
 def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
     """
     Reads a CamBam XML file (.cb) and reconstructs a CamBamProject object.
@@ -176,7 +321,22 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
          logger.error(f"Unexpected error opening or parsing {file_path}: {e}", exc_info=True)
          return None
 
-    project_name = root.get("Name", os.path.basename(file_path))
+    return _read_cambam_root(root, source_name=file_path, strict=False)
+
+
+def _read_cambam_root(
+    root: ET.Element,
+    *,
+    source_name: str = "",
+    strict: bool = False,
+) -> Optional[CamBamProject]:
+    """Reconstruct a project from a parsed root element.
+
+    This private helper preserves ``read_cambam_file``'s ``None``-on-failure
+    contract while allowing :func:`read_cambam_bytes` to request strict error
+    propagation and unsupported-MOP rejection.
+    """
+    project_name = root.get("Name", os.path.basename(source_name) or "input")
     # TODO: Read project-level defaults if they exist in XML?
     project = CamBamProject(project_name)
     # Preserve native project context (styles and other unknown children) for
@@ -199,7 +359,7 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
         parts_node = root.find("parts")
         if parts_node is not None:
             for part_elem in parts_node.findall("part"):
-                _reconstruct_part(project, part_elem)
+                _reconstruct_part(project, part_elem, strict=strict)
 
         # 3. Layers
         logger.debug("Reading Layers...")
@@ -210,7 +370,7 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
             for layer_elem in layers_node:
                 if layer_elem.tag != "layer" or not layer_elem.get("name"):
                     raise CamBamReaderError("Unsupported layer schema: expected layer with a name")
-                _reconstruct_layer(project, layer_elem)
+                _reconstruct_layer(project, layer_elem, strict=strict)
 
         # 4. Primitives (read structure, link to layers, store parent XML ID refs, populate xml_id_to_primitive_uuid)
         logger.debug("Reading Primitives...")
@@ -228,7 +388,8 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
                          prim_type_tag = _primitive_type(prim_elem)
                          if prim_type_tag in PRIMITIVE_TAG_TO_CLASS:
                             _reconstruct_primitive(project, prim_elem, layer_uuid,
-                                                   xml_id_to_primitive_uuid, primitive_parent_ref)
+                                                   xml_id_to_primitive_uuid, primitive_parent_ref,
+                                                   strict=strict)
                          else:
                             raise CamBamReaderError(f"Unsupported primitive type '{prim_type_tag}' in layer '{layer_elem.get('name')}'")
 
@@ -288,6 +449,10 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
             for part_elem in parts_node.findall("part"):
                 part_uuid = project._resolve_identifier(part_elem.get("Name"), Part) # Assume Name is unique ID here
                 if not part_uuid:
+                     if strict:
+                         raise CamBamReaderError(
+                             f"MOP part '{part_elem.get('Name')}' was not reconstructed"
+                         )
                      logger.warning(f"Skipping MOPs for part '{part_elem.get('Name')}' as part was not reconstructed.")
                      continue
                 mops_node = part_elem.find("machineops")
@@ -295,14 +460,22 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
                     for mop_elem in mops_node: # Iterate over actual MOP tags (<profile>, <pocket> etc)
                          mop_type_tag = mop_elem.tag
                          if mop_type_tag in MOP_TAG_TO_CLASS:
-                             _reconstruct_mop(project, mop_elem, part_uuid, mop_primitive_xml_id_refs)
+                             _reconstruct_mop(project, mop_elem, part_uuid,
+                                               mop_primitive_xml_id_refs, strict=strict)
                          else:
+                              if strict:
+                                  raise CamBamReaderError(
+                                      f"Unsupported MOP type tag '{mop_type_tag}' encountered"
+                                  )
                               logger.warning(f"Unsupported MOP type tag '{mop_type_tag}' encountered in part '{part_elem.get('Name')}'. Skipping.")
 
         # 5b. Link MOPs to Primitives through the project's target registry.
         for mop_uuid, xml_ids in mop_primitive_xml_id_refs.items():
             mop = project.get_mop(mop_uuid)
-            if not mop: continue # Should not happen
+            if not mop:
+                if strict:
+                    raise CamBamReaderError(f"MOP {mop_uuid} was not reconstructed")
+                continue # Should not happen
 
             resolved_primitive_uuids: List[uuid.UUID] = []
             all_resolved = True
@@ -318,6 +491,11 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
                 else:
                     logger.warning(f"MOP '{mop.name}' references primitive XML ID {xml_id}, which could not be mapped back to a UUID.")
                     all_resolved = False
+
+            if strict and not all_resolved:
+                raise CamBamReaderError(
+                    f"MOP '{mop.name}' contains an unresolved primitive target"
+                )
 
             # Native CamBam primitive references are authoritative.  Framework
             # identity metadata never supplies or overrides this relationship.
@@ -340,22 +518,28 @@ def read_cambam_file(file_path: str) -> Optional[CamBamProject]:
         return project
 
     except CamBamReaderError as e:
-        logger.error(f"Failed to reconstruct project from {file_path}: {e}", exc_info=True)
+        logger.error(f"Failed to reconstruct project from {source_name}: {e}", exc_info=True)
+        if strict:
+            raise _bounded_reader_error(e, source_name) from e
         return None
     except Exception as e:
         logger.error(f"An unexpected error occurred during project reconstruction: {e}", exc_info=True)
+        if strict:
+            raise _bounded_reader_error(e, source_name) from e
         return None
 
 
-def _reconstruct_layer(project: CamBamProject, layer_elem: ET.Element):
+def _reconstruct_layer(project: CamBamProject, layer_elem: ET.Element, *, strict: bool = False):
     """Parses a <layer> element and adds/updates the layer in the project."""
     name = layer_elem.get("name")
     if not name:
+        if strict:
+            raise CamBamReaderError("Layer is missing a name")
         logger.warning("Skipping layer with missing 'name' attribute.")
         return
 
     # Use project's add_layer which handles creation or update and registration
-    project.add_layer(
+    layer = project.add_layer(
         identifier=name,
         color=layer_elem.get("color", "Green"),
         alpha=_parse_float(layer_elem.get("alpha"), 1.0),
@@ -364,11 +548,15 @@ def _reconstruct_layer(project: CamBamProject, layer_elem: ET.Element):
         locked=_parse_bool(layer_elem.get("locked"), False)
         # Order is determined by XML sequence, add_layer doesn't reorder existing
     )
+    if layer is None and strict:
+        raise CamBamReaderError(f"Failed to register layer '{name}'")
 
-def _reconstruct_part(project: CamBamProject, part_elem: ET.Element):
+def _reconstruct_part(project: CamBamProject, part_elem: ET.Element, *, strict: bool = False):
     """Parses a <part> element and adds/updates the part in the project."""
     name = part_elem.get("Name")
     if not name:
+        if strict:
+            raise CamBamReaderError("Part is missing a Name attribute")
         logger.warning("Skipping part with missing 'Name' attribute.")
         return
 
@@ -417,17 +605,21 @@ def _reconstruct_part(project: CamBamProject, part_elem: ET.Element):
         default_spindle_speed=default_spindle_speed
         # Order handled by XML sequence
     )
-    if part is not None:
-        part._xml_tool_diameter = deepcopy(part_elem.find("ToolDiameter"))
-        part._xml_tool_diameter_value = part.default_tool_diameter
-        part._xml_machining_parameters = tuple(
-            deepcopy(child) for child in part_elem
-            if child.tag not in {"Stock", "MachiningOrigin", "ToolDiameter", "machineops"}
-        )
+    if part is None:
+        if strict:
+            raise CamBamReaderError(f"Failed to register part '{name}'")
+        return
+    part._xml_tool_diameter = deepcopy(part_elem.find("ToolDiameter"))
+    part._xml_tool_diameter_value = part.default_tool_diameter
+    part._xml_machining_parameters = tuple(
+        deepcopy(child) for child in part_elem
+        if child.tag not in {"Stock", "MachiningOrigin", "ToolDiameter", "machineops"}
+    )
 
 
 def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uuid.UUID,
-                      mop_primitive_xml_id_refs: Dict[uuid.UUID, List[int]]):
+                      mop_primitive_xml_id_refs: Dict[uuid.UUID, List[int]], *,
+                      strict: bool = False):
     """Parses a MOP element (<profile>, <pocket>...) and adds it to the project."""
     mop_class = MOP_TAG_TO_CLASS.get(mop_elem.tag)
     if not mop_class: return # Should have been checked by caller
@@ -509,6 +701,10 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
             xml_id = _parse_int(prim_ref.text, -1)
             if xml_id > 0:
                 primitive_xml_ids.append(xml_id)
+            elif strict:
+                raise CamBamReaderError(
+                    f"MOP '{mop_elem.tag}' contains an invalid primitive target"
+                )
 
     # Parse all fields emitted by each supported MOP encoder. Missing fields use
     # dataclass defaults; malformed values are handled by the safe parsers.
@@ -607,7 +803,8 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
                 mop._xml_template.remove(child)
         if not project._register_entity(mop, project._mops):
             raise CamBamReaderError(f"Failed to register MOP '{mop_name}'")
-        project.assign_mop_to_part(mop.internal_id, part_uuid)
+        if not project.assign_mop_to_part(mop.internal_id, part_uuid) and strict:
+            raise CamBamReaderError(f"Failed to assign MOP '{mop_name}' to its part")
         mop_primitive_xml_id_refs[mop.internal_id] = primitive_xml_ids
     except Exception as e:
         raise CamBamReaderError(f"Error reconstructing MOP '{mop_name}': {e}") from e
@@ -629,6 +826,25 @@ def _geometry_point(value):
     return parts if len(parts) == 3 else (*parts, 0.0)
 
 
+def _geometry_float(value, default: float, field_name: str, strict: bool) -> float:
+    """Parse a primitive scalar, retaining legacy defaults outside strict mode."""
+    if not strict:
+        return _parse_float(value, default)
+    if value is None:
+        return default
+    try:
+        result = float(value.strip())
+    except (AttributeError, TypeError, ValueError):
+        if strict:
+            raise ValueError(f"Invalid {field_name}")
+        return default
+    if not np.isfinite(result):
+        if strict:
+            raise ValueError(f"Invalid {field_name}")
+        return default
+    return result
+
+
 def _text_element_content(element: ET.Element) -> str:
     """Read Text mixed content from framework or CamBam child ordering.
 
@@ -645,7 +861,8 @@ def _text_element_content(element: ET.Element) -> str:
 
 def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_uuid: uuid.UUID,
                            xml_id_to_primitive_uuid: Dict[int, uuid.UUID],
-                           primitive_parent_ref: Dict[uuid.UUID, Union[int, uuid.UUID, str]]):
+                           primitive_parent_ref: Dict[uuid.UUID, Union[int, uuid.UUID, str]], *,
+                           strict: bool = False):
     """Parses a primitive element (<pline>, <circle>...) and adds it to the project."""
     prim_class = PRIMITIVE_TAG_TO_CLASS.get(_primitive_type(prim_elem))
     if not prim_class: return
@@ -728,21 +945,21 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
             prim_specific_kwargs["closed"] = _parse_bool(prim_elem.get("Closed"), False)
         elif prim_class is Circle:
              center = _geometry_point(prim_elem.get("c"))
-             diameter = _parse_float(prim_elem.get("d"), 1.0)
+             diameter = _geometry_float(prim_elem.get("d"), 1.0, "circle diameter", strict)
              prim_specific_kwargs.update(relative_center=center[:2], elevation=center[2])
              prim_specific_kwargs["diameter"] = diameter
         elif prim_class is Rect:
              corner = _geometry_point(prim_elem.get("p"))
-             width = _parse_float(prim_elem.get("w"), 1.0)
-             height = _parse_float(prim_elem.get("h"), 1.0)
+             width = _geometry_float(prim_elem.get("w"), 1.0, "rectangle width", strict)
+             height = _geometry_float(prim_elem.get("h"), 1.0, "rectangle height", strict)
              prim_specific_kwargs.update(relative_corner=corner[:2], elevation=corner[2])
              prim_specific_kwargs["width"] = width
              prim_specific_kwargs["height"] = height
         elif prim_class is Arc:
              center = _geometry_point(prim_elem.get("p"))
-             radius = _parse_float(prim_elem.get("r"), 1.0)
-             start = _parse_float(prim_elem.get("s"), 0.0)
-             sweep = _parse_float(prim_elem.get("w"), 90.0)
+             radius = _geometry_float(prim_elem.get("r"), 1.0, "arc radius", strict)
+             start = _geometry_float(prim_elem.get("s"), 0.0, "arc start angle", strict)
+             sweep = _geometry_float(prim_elem.get("w"), 90.0, "arc extent", strict)
              prim_specific_kwargs.update(relative_center=center[:2], elevation=center[2])
              prim_specific_kwargs["radius"] = radius
              prim_specific_kwargs["start_angle"] = start
@@ -761,10 +978,10 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
              pos1 = _geometry_point(prim_elem.get("p1", "0,0,0"))
              pos2_text = prim_elem.get("p2")
              pos2 = _geometry_point(pos2_text) if pos2_text is not None else None
-             height = _parse_float(prim_elem.get("Height"), 10.0)
+             height = _geometry_float(prim_elem.get("Height"), 10.0, "text height", strict)
              font = prim_elem.get("Font", "Arial")
              style = prim_elem.get("style", "")
-             linespace = _parse_float(prim_elem.get("linespace"), 1.0)
+             linespace = _geometry_float(prim_elem.get("linespace"), 1.0, "text line spacing", strict)
              align_str = prim_elem.get("align", "center,center")
              align_parts = align_str.split(',')
              v_align = align_parts[0].strip() if len(align_parts) > 0 else "center"
@@ -807,9 +1024,15 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
         # Register with project
         if project._register_entity(primitive, project._primitives):
              # Assign layer relationship
-             project.assign_primitive_to_layer(primitive.internal_id, layer_uuid)
+             if not project.assign_primitive_to_layer(primitive.internal_id, layer_uuid) and strict:
+                 raise CamBamReaderError(
+                     f"Failed to assign primitive XML ID {xml_id} to its layer"
+                 )
              # Set groups via relationship manager (redundant if primitive stores it?)
-             project.set_primitive_groups(primitive.internal_id, groups)
+             if not project.set_primitive_groups(primitive.internal_id, groups) and strict:
+                 raise CamBamReaderError(
+                     f"Failed to assign primitive XML ID {xml_id} groups"
+                 )
 
              # Store mapping from XML ID to this primitive's UUID
              xml_id_to_primitive_uuid[xml_id] = primitive.internal_id
