@@ -28,7 +28,7 @@ from .cad_transformations import (
 # Import entity types
 from .cambam_entities import (
     CamBamEntity, Layer, Part, Primitive, Mop, MopType, BoundingBox,
-    Pline, Circle, Rect, Arc, Points, Text,
+    VertexInput, Pline, Circle, Rect, Arc, Points, Text,
     ProfileMop, PocketMop, EngraveMop, DrillMop
 )
 from .region import Region
@@ -685,11 +685,11 @@ class CamBamProject:
     # --- Public API: Concrete Primitive Adders ---
     # These now just call _add_primitive_internal
 
-    def add_pline(self, layer: Identifiable, points: List[Union[Tuple[float, float], Tuple[float, float, float]]],
+    def add_pline(self, layer: Identifiable, points: Sequence[VertexInput],
                   closed: bool = False, identifier: Optional[str] = None, groups: Optional[List[str]] = None,
                   description: str = "", parent: Optional[Identifiable] = None, *,
-                  vertex_z: Optional[Sequence[float]] = None, local_z_offset: float = 0.0) -> Optional[Pline]:
-        return self._add_primitive_internal(Pline, layer, identifier, groups, description, parent, relative_points=points, closed=closed, vertex_z=vertex_z, local_z_offset=local_z_offset)
+                  local_z_offset: float = 0.0) -> Optional[Pline]:
+        return self._add_primitive_internal(Pline, layer, identifier, groups, description, parent, vertices=points, closed=closed, local_z_offset=local_z_offset)
 
     def add_circle(self, layer: Identifiable, center: Tuple[float, float], diameter: float,
                    identifier: Optional[str] = None, groups: Optional[List[str]] = None, description: str = "",
@@ -709,11 +709,11 @@ class CamBamProject:
                 local_z_offset: float = 0.0) -> Optional[Arc]:
         return self._add_primitive_internal(Arc, layer, identifier, groups, description, parent, relative_center=center, radius=radius, start_angle=start_angle, extent_angle=extent_angle, elevation=elevation, local_z_offset=local_z_offset)
 
-    def add_points(self, layer: Identifiable, points: List[Tuple[float, float]],
+    def add_points(self, layer: Identifiable, points: Sequence[VertexInput],
                    identifier: Optional[str] = None, groups: Optional[List[str]] = None, description: str = "",
-                   parent: Optional[Identifiable] = None, *, vertex_z: Optional[Sequence[float]] = None,
+                   parent: Optional[Identifiable] = None, *,
                    local_z_offset: float = 0.0) -> Optional[Points]:
-        return self._add_primitive_internal(Points, layer, identifier, groups, description, parent, relative_points=points, vertex_z=vertex_z, local_z_offset=local_z_offset)
+        return self._add_primitive_internal(Points, layer, identifier, groups, description, parent, vertices=points, local_z_offset=local_z_offset)
 
     def add_text(self, layer: Identifiable, text: str, position: Tuple[float, float], height: float = 10.0,
                  font: str = 'Arial', style: str = '', line_spacing: float = 1.0, align_horizontal: str = 'center',

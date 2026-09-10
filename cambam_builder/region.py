@@ -1,8 +1,7 @@
 """CamBam Region primitive and typed-Region contour XML helpers.
 
-A Region owns its contour Plines.  The contours retain Pline's established
-``(x, y, bulge)`` representation and additive ``vertex_z`` elevations, but are
-never serialized as independently identifiable project primitives.
+A Region owns its contour Plines. Their canonical Vertex records are never
+serialized as independently identifiable project primitives.
 """
 
 from __future__ import annotations
@@ -22,7 +21,7 @@ from .cad_transformations import (
     identity_matrix,
     to_cambam_matrix_str,
 )
-from .cambam_entities import BoundingBox, PLINE_BULGE_TOLERANCE, Pline, Primitive
+from .cambam_entities import BoundingBox, PLINE_BULGE_TOLERANCE, Pline, Primitive, Vertex
 
 
 _TOPOLOGY_REL_TOLERANCE = 1e-10
@@ -114,8 +113,8 @@ def _is_similarity(matrix: np.ndarray) -> bool:
 
 def _has_curves(contour: Pline) -> bool:
     return any(
-        len(point) > 2 and abs(_finite_float(point[2], "contour bulge")) > PLINE_BULGE_TOLERANCE
-        for point in contour.relative_points
+        abs(_finite_float(vertex.bulge, "contour bulge")) > PLINE_BULGE_TOLERANCE
+        for vertex in contour._validated_vertices()
     )
 
 
@@ -130,21 +129,6 @@ def _owned_contour(contour: Pline, name: str) -> Pline:
         result.local_z_offset = contour.get_total_z_offset()
     # An owned contour is geometry within the Region, not a registry entity.
     result._project_ref = None
-    return result
-
-
-def _vertex_z(contour: Pline) -> List[float]:
-    values = getattr(contour, "vertex_z", None)
-    if values is None:
-        return [0.0] * len(contour.relative_points)
-    try:
-        result = [_finite_float(value, "contour vertex_z") for value in values]
-    except TypeError as exc:
-        raise ValueError("contour vertex_z must be a sequence of finite numbers") from exc
-    if len(result) != len(contour.relative_points):
-        raise ValueError(
-            "contour vertex_z must contain one value per relative point"
-        )
     return result
 
 
@@ -357,7 +341,8 @@ def _arc_from_bulge(p0: Point2D, p1: Point2D, bulge: float) -> _Segment:
 def _contour_segments(contour: Pline, name: str):
     if contour.closed is not True:
         raise ValueError(f"{name} must be closed")
-    if len(contour.relative_points) < 2:
+    vertices = contour._validated_vertices()
+    if len(vertices) < 2:
         raise ValueError(f"{name} must contain at least two vertices")
     matrix = _finite_affine(contour.effective_transform, f"{name} transform")
     curved = _has_curves(contour)
@@ -369,22 +354,16 @@ def _contour_segments(contour: Pline, name: str):
 
     local_points: List[Point2D] = []
     bulges: List[float] = []
-    for index, point in enumerate(contour.relative_points):
+    for index, vertex in enumerate(vertices):
         try:
-            if len(point) not in (2, 3):
-                raise ValueError
-            x = _finite_float(point[0], f"{name} point {index} X")
-            y = _finite_float(point[1], f"{name} point {index} Y")
+            x = _finite_float(vertex.x, f"{name} point {index} X")
+            y = _finite_float(vertex.y, f"{name} point {index} Y")
         except (TypeError, ValueError) as exc:
             raise ValueError(
-                f"{name} point {index} must be an (x, y) or (x, y, bulge) tuple"
+                f"{name} vertex {index} must contain finite coordinates"
             ) from exc
         local_points.append((x, y))
-        bulges.append(
-            _finite_float(point[2], f"{name} point {index} bulge")
-            if len(point) == 3
-            else 0.0
-        )
+        bulges.append(_finite_float(vertex.bulge, f"{name} point {index} bulge"))
     transformed = apply_transform(local_points, matrix)
     if len(transformed) != len(local_points):
         raise ValueError(f"{name} transform did not produce finite affine points")
@@ -554,7 +533,7 @@ def _validate_region_topology(outer_curve: Pline, hole_curves: Sequence[Pline]) 
         )
         all_z.extend(
             _finite_float(local_offset + value, f"{name} effective vertex Z")
-            for value in _vertex_z(contour)
+            for value in (vertex.z for vertex in contour._validated_vertices())
         )
     reference_z = all_z[0]
     if any(not math.isclose(value, reference_z, rel_tol=0.0, abs_tol=_Z_TOLERANCE) for value in all_z[1:]):
@@ -596,13 +575,12 @@ def _append_contour_xml(parent: ET.Element, tag: str, contour: Pline, decimals: 
     )
     ET.SubElement(element, "mat", {"m": matrix_text})
     points_element = ET.SubElement(element, "pts")
-    elevations = _vertex_z(contour)
-    for index, point in enumerate(contour.relative_points):
-        x = _rounded(_finite_float(point[0], "contour X"), decimals)
-        y = _rounded(_finite_float(point[1], "contour Y"), decimals)
-        z = _rounded(elevations[index], decimals)
+    for vertex in contour._validated_vertices():
+        x = _rounded(_finite_float(vertex.x, "contour X"), decimals)
+        y = _rounded(_finite_float(vertex.y, "contour Y"), decimals)
+        z = _rounded(_finite_float(vertex.z, "contour Z"), decimals)
         bulge = _rounded(
-            _finite_float(point[2], "contour bulge") if len(point) > 2 else 0.0,
+            _finite_float(vertex.bulge, "contour bulge"),
             decimals,
         )
         ET.SubElement(points_element, "p", {"b": str(bulge)}).text = f"{x},{y},{z}"
@@ -643,16 +621,15 @@ class Region(Primitive):
         result = []
         for contour in self.contours:
             combined = total_transform @ contour.effective_transform
+            vertices = contour._validated_vertices()
             xy = apply_transform(
-                [(point[0], point[1]) for point in contour.relative_points], combined
+                [(vertex.x, vertex.y) for vertex in vertices], combined
             )
             result.append([
                 (
                     float(point[0]),
                     float(point[1]),
-                    contour.relative_points[index][2]
-                    if len(contour.relative_points[index]) > 2
-                    else 0.0,
+                    vertices[index].bulge,
                 )
                 for index, point in enumerate(xy)
             ])
@@ -667,21 +644,19 @@ class Region(Primitive):
             if _has_curves(contour) and not _is_similarity(combined):
                 raise ValueError("Bulged Region XYZ queries require an XY similarity transform")
             orientation = -1.0 if np.linalg.det(combined[:2, :2]) < 0.0 else 1.0
+            vertices = contour._validated_vertices()
             xy = apply_transform(
-                [(point[0], point[1]) for point in contour.relative_points], combined
+                [(vertex.x, vertex.y) for vertex in vertices], combined
             )
             contour_z = total_z_offset + _finite_float(
                 getattr(contour, "local_z_offset", 0.0), "contour local_z_offset"
             )
-            elevations = _vertex_z(contour)
             result.append([
                 (
                     float(point[0]),
                     float(point[1]),
-                    _finite_float(elevations[index] + contour_z, "world Region Z"),
-                    contour.relative_points[index][2] * orientation
-                    if len(contour.relative_points[index]) > 2
-                    else 0.0,
+                    _finite_float(vertices[index].z + contour_z, "world Region Z"),
+                    vertices[index].bulge * orientation,
                 )
                 for index, point in enumerate(xy)
             ])
@@ -717,14 +692,14 @@ class Region(Primitive):
     def shift_geometry_z(self, dz: float) -> None:
         shift = _finite_float(dz, "dz")
         shifted = [
-            [
-                _finite_float(value + shift, "shifted Region vertex Z")
-                for value in _vertex_z(contour)
-            ]
+            [Vertex(vertex.x, vertex.y,
+                    _finite_float(vertex.z + shift, "shifted Region vertex Z"),
+                    bulge=vertex.bulge)
+             for vertex in contour._validated_vertices()]
             for contour in self.contours
         ]
-        for contour, values in zip(self.contours, shifted):
-            contour.vertex_z = values
+        for contour, vertices in zip(self.contours, shifted):
+            contour.vertices = vertices
 
     def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
         """Bake XY geometry and owned contour poses; retain the Region Z offset.
@@ -744,25 +719,23 @@ class Region(Primitive):
                 raise ValueError(
                     "Cannot bake a non-similarity transform into a bulged Region contour"
                 )
-            xy = apply_transform(
-                [(point[0], point[1]) for point in contour.relative_points], combined
-            )
+            vertices = contour._validated_vertices()
+            xy = apply_transform([(vertex.x, vertex.y) for vertex in vertices], combined)
             reflected = float(np.linalg.det(combined[:2, :2])) < 0.0
-            new_points = []
-            for point_index, point in enumerate(xy):
-                original = contour.relative_points[point_index]
-                bulge = original[2] if len(original) > 2 else 0.0
-                new_points.append((float(point[0]), float(point[1]), -bulge if reflected else bulge))
-            contour.relative_points = new_points
-            contour.effective_transform = identity_matrix()
             contour_shift = _finite_float(
                 getattr(contour, "local_z_offset", 0.0),
                 f"contour {index} local_z_offset",
             )
-            contour.vertex_z = [
-                _finite_float(value + contour_shift, "baked Region vertex Z")
-                for value in _vertex_z(contour)
-            ]
+            new_vertices = []
+            for point_index, point in enumerate(xy):
+                original = vertices[point_index]
+                new_vertices.append(Vertex(
+                    float(point[0]), float(point[1]),
+                    _finite_float(original.z + contour_shift, "baked Region vertex Z"),
+                    bulge=-original.bulge if reflected else original.bulge,
+                ))
+            contour.vertices = new_vertices
+            contour.effective_transform = identity_matrix()
             contour.local_z_offset = 0.0
 
         _validate_region_topology(staged[0], staged[1:])
@@ -819,8 +792,7 @@ def _parse_contour(element: ET.Element, name: str) -> Pline:
     if len(point_containers) != 1:
         raise ValueError(f"{name} must contain exactly one pts element")
     _reject_unknown_children(point_containers[0], ("p",), f"{name}/pts")
-    points = []
-    elevations = []
+    vertices = []
     for index, point_element in enumerate(_children_named(point_containers[0], "p")):
         fields = (point_element.text or "").split(",")
         if len(fields) != 3:
@@ -829,8 +801,7 @@ def _parse_contour(element: ET.Element, name: str) -> Pline:
             _finite_float(value.strip(), f"{name} point {index}") for value in fields
         ]
         bulge = _finite_float(point_element.get("b", "0"), f"{name} point {index} bulge")
-        points.append((x, y, bulge))
-        elevations.append(z)
+        vertices.append(Vertex(x, y, z, bulge=bulge))
 
     matrices = _children_named(element, "mat")
     if len(matrices) > 1:
@@ -838,8 +809,7 @@ def _parse_contour(element: ET.Element, name: str) -> Pline:
     matrix_text = matrices[0].get("m", "Identity") if matrices else "Identity"
     matrix, z_offset = from_cambam_matrix_str(matrix_text, return_z=True)
     return Pline(
-        relative_points=points,
-        vertex_z=elevations,
+        vertices=vertices,
         closed=True,
         effective_transform=matrix,
         local_z_offset=z_offset,

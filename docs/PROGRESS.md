@@ -7,6 +7,22 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**Canonical Pline/Points vertex records: implemented; automated verification
+complete** (2026-09-09). `Vertex(x, y, z=0, *, bulge=0)` now keeps coordinates,
+elevation and segment bulge together. Pline, Points and Region-owned contours use
+only `vertices`; old `vertex_z`, `relative_points` and `(x, y, bulge)` inputs are
+removed. XY/XYZ tuple shorthand is unambiguous, Points rejects nonzero bulge, and
+existing geometry-query outputs remain unchanged. Repository callers and tests
+were migrated explicitly. Current-version pickle and repeated XML interchange
+retain the new representation; old pickle migration is unsupported as authorized.
+Owners: entities, project adders, reader, Region, focused tests, specification and
+[review evidence](REVIEW.md#canonical-vertex-record-refactor).
+Six focused vertex tests and all 141 suite tests pass. Two new framework round
+trips compare Pline, Points and Region XML numerically with the accepted
+pre-refactor B fixture at `1e-8`; maximum observed difference is zero, and hashes
+confirm the accepted A/B/C files were unchanged. Output semantics did not change,
+so the existing CamBam acceptance remains applicable and was not repeated.
+
 **Region and all-shape Z parity: implemented; automated verification, review
 and CamBam display/property acceptance complete** (2026-09-09; backlog item 2).
 Pline/Points vertex elevations, Circle/Arc/Rect/Text elevation fields, independent
@@ -191,6 +207,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    and synthetic round-trip/display checks. This is independent upstream feature
    support, after core design/correctness and before downstream integrations.
    [Scope, evidence, delivery and acceptance plan](SHAPE_PARITY_PLAN.md).
+   The completed canonical vertex-record refactor subsequently replaced the
+   temporary parallel Pline/Points coordinate/elevation storage without changing
+   the accepted XML geometry or query contracts.
 3. Validate packaging and supported Python versions; expand examples and tests as
    each capability is verified. Add CLI/distribution work only for an actual need.
 4. Build and maintain a local stateless MCP adapter for AI-assisted CamBam generation
@@ -249,6 +268,7 @@ are authoritative. MOP ownership, supported interchange, curved geometry bounds
 (1a), copy/transfer (1b) and shape parity (2) are recorded above with their
 verification and acceptance state.
 
-This is a good fresh-session breakpoint: item 2 is implemented, reviewed,
-verified and accepted, and the next priority has a distinct packaging scope.
-Suggested commit: `feat: add Region and all-shape elevation parity`.
+After the canonical vertex-record verification is recorded, this remains a good
+fresh-session breakpoint: shape parity and its storage follow-up are coherent,
+and the next priority has a distinct packaging scope.
+Suggested commit: `refactor: consolidate pline and points vertices`.

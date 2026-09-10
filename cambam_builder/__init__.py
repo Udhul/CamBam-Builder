@@ -9,6 +9,7 @@ Main entry point:
 
 # Import the main project class from the cambam_project module
 from .cambam_project import CamBamProject
+from .cambam_entities import Vertex
 
 # Create a shorter alias for the main project class
 CBProject = CamBamProject

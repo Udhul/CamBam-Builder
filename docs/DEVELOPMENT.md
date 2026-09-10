@@ -124,6 +124,19 @@ input boundaries. Bounds are runtime calculations and are not serialized, so
 these analytic checks provide the relevant acceptance evidence; no separate
 CamBam display check is required for this slice.
 
+Canonical Pline/Points vertex records have a focused regression command:
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -p test_vertex_records.py -v
+```
+
+It checks `Vertex` defaults and keyword-only bulge, XY/XYZ tuple shorthand,
+four-tuple and malformed-input rejection, Points bulge rejection, collection
+insertion/reordering, current pickle storage and two XML round trips. Existing
+shape-parity and Region tests retain transform, hole, MOP-reference and XML
+coverage. The accepted CamBam A/B/C files must remain unchanged; compare a new
+framework round trip against them only in a unique ignored output directory.
+
 The MOP ownership and interchange slice has focused automated and manual checks:
 
 ```powershell

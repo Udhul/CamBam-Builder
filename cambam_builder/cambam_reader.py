@@ -19,7 +19,7 @@ import numpy as np # For matrix conversion
 from .cambam_project import CamBamProject
 from .cambam_entities import ( # Import concrete entity types
     Layer, Part, Mop, Primitive,
-    Pline, Circle, Rect, Arc, Points, Text,
+    Vertex, Pline, Circle, Rect, Arc, Points, Text,
     ProfileMop, PocketMop, EngraveMop, DrillMop,
     MOP_XML_PATH_TO_FIELD,
 )
@@ -716,18 +716,15 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
     prim_specific_kwargs = {}
     try:
         if prim_class is Pline:
-            points = []
-            elevations = []
+            vertices = []
             pts_node = prim_elem.find("pts")
             if pts_node is not None:
                 for p_elem in pts_node.findall("p"):
                     pt = _geometry_point(p_elem.text)
                     if pt:
                         bulge = float(p_elem.get("b", "0"))
-                        points.append((pt[0], pt[1], bulge)) # Store x, y, bulge
-                        elevations.append(pt[2])
-            prim_specific_kwargs["relative_points"] = points
-            prim_specific_kwargs["vertex_z"] = elevations
+                        vertices.append(Vertex(pt[0], pt[1], pt[2], bulge=bulge))
+            prim_specific_kwargs["vertices"] = vertices
             prim_specific_kwargs["closed"] = _parse_bool(prim_elem.get("Closed"), False)
         elif prim_class is Circle:
              center = _geometry_point(prim_elem.get("c"))
@@ -751,16 +748,14 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
              prim_specific_kwargs["start_angle"] = start
              prim_specific_kwargs["extent_angle"] = sweep
         elif prim_class is Points:
-             points = []
-             elevations = []
+             vertices = []
              pts_node = prim_elem.find("pts")
              if pts_node is not None:
                  for p_elem in pts_node.findall("p"):
                      pt = _geometry_point(p_elem.text)
-                     points.append(pt[:2])
-                     elevations.append(pt[2])
-             prim_specific_kwargs["relative_points"] = points
-             prim_specific_kwargs["vertex_z"] = elevations
+                     bulge = float(p_elem.get("b", "0"))
+                     vertices.append(Vertex(pt[0], pt[1], pt[2], bulge=bulge))
+             prim_specific_kwargs["vertices"] = vertices
         elif prim_class is Text:
              # Native CamBam suppresses p1 for the default origin.
              pos1 = _geometry_point(prim_elem.get("p1", "0,0,0"))

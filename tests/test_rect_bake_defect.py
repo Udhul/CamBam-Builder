@@ -105,8 +105,8 @@ class RectBakeDefectTests(unittest.TestCase):
                 np.testing.assert_allclose(rect.effective_transform, identity_matrix(), rtol=0, atol=0)
                 if isinstance(rect, Pline):
                     self.assertTrue(rect.closed)
-                    self.assertEqual(len(rect.relative_points), 4)
-                    self.assertTrue(all(len(point) == 3 and point[2] == 0.0 for point in rect.relative_points))
+                    self.assertEqual(len(rect.vertices), 4)
+                    self.assertTrue(all(vertex.bulge == 0.0 for vertex in rect.vertices))
                 self.assertTrue(project.bake_primitive_transform(rect))
                 self.assert_outline(self, expected, rect.get_absolute_coordinates(), 1e-10)
 
@@ -296,8 +296,8 @@ class RectBakeDefectTests(unittest.TestCase):
                 self.assertEqual(len(loaded.list_primitives()), 4)
                 self.assertIsInstance(loaded_root, Pline)
                 self.assertTrue(loaded_root.closed)
-                self.assertEqual(len(loaded_root.relative_points), 4)
-                self.assertTrue(all(len(point) == 3 and point[2] == 0.0 for point in loaded_root.relative_points))
+                self.assertEqual(len(loaded_root.vertices), 4)
+                self.assertTrue(all(vertex.bulge == 0.0 for vertex in loaded_root.vertices))
                 self.assertEqual(loaded_root.internal_id, root_id)
                 self.assertEqual(loaded.get_parent_of_primitive(loaded_root).internal_id, ancestor_id)
                 self.assertEqual(loaded_root.description, "keep this description")

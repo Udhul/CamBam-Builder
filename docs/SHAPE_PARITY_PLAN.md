@@ -9,6 +9,11 @@ Priority belongs to [PROGRESS.md](PROGRESS.md#remaining-backlog-in-order): after
 core stability/design and the existing geometry/relationship correctness work,
 before packaging/examples, MCP integration and optional rest machining.
 
+The later bounded vertex-record refactor supersedes this plan's historical
+parallel Pline/Points storage and tuple-compatibility assumptions. `Vertex`
+records and unambiguous XY/XYZ tuple shorthand are authoritative in the
+implemented specification; the planning evidence below remains historical.
+
 ## Objective and scope
 
 Add Region shapes and Z-coordinate support across every currently supported
@@ -46,7 +51,7 @@ in future tests rather than making the ignored user file a suite dependency.
 | Runtime owner | Historical planning gap and consequence |
 | --- | --- |
 | `cambam_reader.PRIMITIVE_TAG_TO_CLASS` and `_reconstruct_primitive` | No Region mapping; unsupported primitive tags are skipped. Add typed-object/layer schema handling for this fixture as well as contour parsing, or explicitly scope a tested adapter. Do not silently import an empty project as success. |
-| `Pline.relative_points`, `_calculate_absolute_geometry`, `to_xml_element`; reader Pline branch | Third tuple element is bulge; import drops Z and export sets Z to zero. Explicit XYZ storage must preserve the existing XY/bulge API. Current bounds also ignore bulge arc extrema. |
+| Historical Pline storage, geometry query and XML reader/writer | The third tuple element was bulge; import dropped Z and export emitted zero. The implemented follow-up uses canonical `Vertex` records while retaining query outputs. Curved bounds were also repaired separately. |
 | `CamBamProject.add_pline` and other primitive adders | No Region adder. Establish first-class Region identity with owned contours and MOP targeting; derived preview Plines must not silently replace holes with filled independent pockets. |
 
 
@@ -81,13 +86,11 @@ shape classes in `cambam_entities.py` and `_reconstruct_primitive` in
 `cambam_reader.py`. Coverage must include all rows, not just the XYZ Pline needed
 by engraving.
 
-Keep existing 2D call sites valid, with omitted Z defaulting to zero. Never
-reinterpret an existing `(x, y, bulge)` Pline tuple as `(x, y, z)`. Prefer explicit
-named vertex data or an unambiguous additive XYZ entry point; select the exact
-public representation after inspecting callers. Document the chosen conversion
-and serialization contract in the implemented specification when delivered.
-Preserve existing geometry-query behavior or provide an explicit compatibility
-adapter alongside XYZ access, so downstream code does not silently swap bulge/Z.
+Keep existing 2D call sites valid, with omitted Z defaulting to zero. The delivered
+follow-up deliberately breaks the unreleased three-tuple input: it now means XYZ,
+while nonzero bulge requires an explicit named `Vertex`. Four-tuples are rejected.
+The implemented specification owns the exact conversion and serialization contract.
+Existing geometry-query output shapes remain unchanged alongside explicit XYZ access.
 
 Geometry elevation and transform elevation are distinct. Current
 `cad_transformations.apply_transform` uses 3x3 XY affine matrices; CamBam matrix

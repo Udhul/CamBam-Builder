@@ -10,6 +10,7 @@ from cambam_builder.cambam_entities import (
     PLINE_BULGE_TOLERANCE,
     Arc,
     Pline,
+    Vertex,
 )
 from cambam_builder.cad_transformations import mirror_x_matrix, rotation_matrix_deg, skew_matrix
 
@@ -64,32 +65,32 @@ class CurvedBoundsTests(unittest.TestCase):
                               4 + math.sqrt(17), -3.75 + math.sqrt(17) / 2))
 
     def test_pline_positive_negative_and_large_bulges(self):
-        self.assert_box(Pline(relative_points=[(0, 0, 1), (2, 0)]).get_bounding_box(),
+        self.assert_box(Pline(vertices=[Vertex(0, 0, bulge=1), (2, 0)]).get_bounding_box(),
                         (0, -1, 2, 0))
-        self.assert_box(Pline(relative_points=[(0, 0, -1), (2, 0)]).get_bounding_box(),
+        self.assert_box(Pline(vertices=[Vertex(0, 0, bulge=-1), (2, 0)]).get_bounding_box(),
                         (0, 0, 2, 1))
-        self.assert_box(Pline(relative_points=[(0, 0, 2), (2, 0)]).get_bounding_box(),
+        self.assert_box(Pline(vertices=[Vertex(0, 0, bulge=2), (2, 0)]).get_bounding_box(),
                         (-.25, -2, 2.25, 0))
 
     def test_pline_open_closed_final_bulge_and_degenerate_segments(self):
-        points = [(0, 0, 0), (2, 0, 0), (2, 2, 1)]
-        self.assert_box(Pline(relative_points=points, closed=False).get_bounding_box(),
+        points = [Vertex(0, 0), Vertex(2, 0), Vertex(2, 2, bulge=1)]
+        self.assert_box(Pline(vertices=points, closed=False).get_bounding_box(),
                         (0, 0, 2, 2))
-        self.assert_box(Pline(relative_points=points, closed=True).get_bounding_box(),
+        self.assert_box(Pline(vertices=points, closed=True).get_bounding_box(),
                         (1 - math.sqrt(2), 0, 2, 1 + math.sqrt(2)))
-        self.assert_box(Pline(relative_points=[(0, 0, 1), (0, 0, 0), (2, 0, 0)]).get_bounding_box(),
+        self.assert_box(Pline(vertices=[Vertex(0, 0, bulge=1), (0, 0), (2, 0)]).get_bounding_box(),
                         (0, 0, 2, 0))
-        self.assert_box(Pline(relative_points=[(0, 0, PLINE_BULGE_TOLERANCE / 2), (2, 0)]).get_bounding_box(),
+        self.assert_box(Pline(vertices=[Vertex(0, 0, bulge=PLINE_BULGE_TOLERANCE / 2), (2, 0)]).get_bounding_box(),
                         (0, 0, 2, 0))
 
     def test_pline_affine_and_invalid_transform_boundary(self):
         matrix = np.array(((1.5, .5, 2), (-.25, 2, -3), (0, 0, 1)), dtype=float)
-        box = Pline(relative_points=[(0, 0, 1), (2, 0)], effective_transform=matrix).get_bounding_box()
+        box = Pline(vertices=[Vertex(0, 0, bulge=1), (2, 0)], effective_transform=matrix).get_bounding_box()
         # Independent endpoint/ellipse extrema check for this semicircle.
         self.assert_box(box, (3.5 - math.sqrt(2.5), -3.25 - math.sqrt(4.0625), 5, -3))
         invalid = matrix.copy()
         invalid[2, 0] = .01
-        corrupted = Pline(relative_points=[(0, 0, 1), (2, 0)])
+        corrupted = Pline(vertices=[Vertex(0, 0, bulge=1), (2, 0)])
         corrupted.effective_transform = invalid
         self.assertFalse(corrupted.get_bounding_box().is_valid())
 
@@ -98,14 +99,15 @@ class CurvedBoundsTests(unittest.TestCase):
             np.array(((1, 0, 0), (0, 1, 0), (1e-13, 0, 1)), dtype=float),
             np.array(((1, 0, 0), (0, math.nan, 0), (0, 0, 1)), dtype=float),
         ):
-            for corrupted in (Arc(), Pline(relative_points=[(0, 0), (1, 0)])):
+            for corrupted in (Arc(), Pline(vertices=[(0, 0), (1, 0)])):
                 # Constructors now reject invalid transforms. Bounds must also
                 # remain defensive against a subsequently corrupted attribute.
                 corrupted.effective_transform = invalid
                 self.assertFalse(corrupted.get_bounding_box().is_valid())
         enormous = 10 ** 10000
         self.assertFalse(Arc(radius=enormous).get_bounding_box().is_valid())
-        self.assertFalse(Pline(relative_points=[(enormous, 0), (1, 0)]).get_bounding_box().is_valid())
+        with self.assertRaisesRegex(ValueError, "finite"):
+            Pline(vertices=[(enormous, 0), (1, 0)])
 
     def test_large_finite_values_avoid_intermediate_overflow(self):
         matrix = np.array(((1e200, 0, 0), (0, 1e200, 0), (0, 0, 1)), dtype=float)
@@ -113,7 +115,7 @@ class CurvedBoundsTests(unittest.TestCase):
                             effective_transform=matrix).get_bounding_box(),
                         (-1e200, -1e200, 1e200, 1e200))
 
-        box = Pline(relative_points=[(-1e308, 0, 1), (1e308, 0)]).get_bounding_box()
+        box = Pline(vertices=[Vertex(-1e308, 0, bulge=1), (1e308, 0)]).get_bounding_box()
         self.assertTrue(box.is_valid())
         self.assertAlmostEqual(box.min_x, -1e308, delta=1e294)
         self.assertAlmostEqual(box.min_y, -1e308, delta=1e294)

@@ -64,12 +64,16 @@ class GlobalTransformTests(unittest.TestCase):
 
     @classmethod
     def transformed_xy(cls, points, matrix):
-        return cls.xy(apply_transform([tuple(point) for point in points], matrix))
+        coordinates = [
+            (point.x, point.y) if hasattr(point, "x") else tuple(point)
+            for point in points
+        ]
+        return cls.xy(apply_transform(coordinates, matrix))
 
     def snapshot(self, project, nodes):
         return {
             "points": {name: self.xy(node.get_absolute_coordinates()) for name, node in nodes.items()},
-            "relative": {name: list(node.relative_points) for name, node in nodes.items()},
+            "relative": {name: list(node.vertices) for name, node in nodes.items()},
             "matrices": {name: node.effective_transform.copy() for name, node in nodes.items()},
             "parents": dict(project._primitive_parent_link),
             "children": {key: set(value) for key, value in project._primitive_children_link.items()},
@@ -105,7 +109,7 @@ class GlobalTransformTests(unittest.TestCase):
                 self.assertTrue(project.transform_primitive(target, matrix))
                 np.testing.assert_allclose(nodes[target].effective_transform, expected_local, rtol=0, atol=1e-10)
                 for name in nodes:
-                    self.assertEqual(nodes[name].relative_points, before["relative"][name])
+                    self.assertEqual(nodes[name].vertices, before["relative"][name])
                     if name != target:
                         np.testing.assert_array_equal(nodes[name].effective_transform, before["matrices"][name])
                 self.assert_world_move(before, nodes, moved, matrix)
@@ -139,9 +143,12 @@ class GlobalTransformTests(unittest.TestCase):
         for name in ("root", "child", "grandchild"):
             q = np.linalg.solve(worlds[name], matrix @ worlds[name])
             expected_relative = self.transformed_xy(before["relative"][name], q)
-            np.testing.assert_allclose(self.xy(nodes[name].relative_points), expected_relative, rtol=0, atol=1e-10)
+            np.testing.assert_allclose(
+                [(vertex.x, vertex.y) for vertex in nodes[name].vertices],
+                expected_relative, rtol=0, atol=1e-10,
+            )
             np.testing.assert_array_equal(nodes[name].effective_transform, before["matrices"][name])
-        np.testing.assert_array_equal(nodes["sibling"].relative_points, before["relative"]["sibling"])
+        self.assertEqual(nodes["sibling"].vertices, before["relative"]["sibling"])
         np.testing.assert_array_equal(nodes["sibling"].effective_transform, before["matrices"]["sibling"])
         self.assert_world_move(before, nodes, {"root", "child", "grandchild"}, matrix)
         self.assert_registries_unchanged(project, before)

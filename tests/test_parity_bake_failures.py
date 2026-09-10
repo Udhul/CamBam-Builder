@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 
 from cambam_builder import CBProject
-from cambam_builder.cambam_entities import Pline, Rect
+from cambam_builder.cambam_entities import Pline, Rect, Vertex
 from cambam_builder.cambam_writer import build_xml_tree
 
 
@@ -14,8 +14,8 @@ class ParityBakeFailureTests(unittest.TestCase):
         project = CBProject("atomic-bake")
         root = project.add_rect("Geometry", width=4, height=2, identifier="root",
                                 elevation=2, local_z_offset=3)
-        contour = Pline(relative_points=[(0, 0), (10, 0, 1), (10, 10), (0, 10)],
-                        closed=True, vertex_z=[4] * 4)
+        contour = Pline(vertices=[(0, 0, 4), Vertex(10, 0, 4, bulge=1),
+                                  (10, 10, 4), (0, 10, 4)], closed=True)
         region = project.add_region("Geometry", contour, identifier="region", parent=root)
         self.assertIsNotNone(region)
         return project, root, region

@@ -52,20 +52,69 @@ def _finite_float(value: Any, field_name: str) -> float:
     return result
 
 
-def _vertex_elevations(values: Optional[Sequence[float]], count: int,
-                       field_name: str = "vertex_z") -> List[float]:
-    """Validate an optional per-vertex elevation sequence and expand its default."""
-    if values is None:
-        return [0.0] * count
+@dataclass(init=False)
+class Vertex:
+    """One intrinsic Pline/Points vertex.
+
+    ``bulge`` is keyword-only so a three-value tuple always means XYZ. Tuple
+    shorthand is normalized by Pline and Points; curved input therefore uses an
+    explicit ``Vertex(..., bulge=value)`` record.
+    """
+
+    x: float
+    y: float
+    z: float = 0.0
+    bulge: float = 0.0
+
+    def __init__(self, x: float, y: float, z: float = 0.0, *, bulge: float = 0.0):
+        self.x = _finite_float(x, "Vertex.x")
+        self.y = _finite_float(y, "Vertex.y")
+        self.z = _finite_float(z, "Vertex.z")
+        self.bulge = _finite_float(bulge, "Vertex.bulge")
+
+
+VertexInput = Union[Vertex, Tuple[float, float], Tuple[float, float, float]]
+
+
+def _normalize_vertices(values: Sequence[VertexInput], *, allow_bulge: bool) -> List[Vertex]:
+    """Copy and normalize public vertex input into the sole stored representation."""
     try:
-        result = [_finite_float(value, field_name) for value in values]
+        inputs = list(values)
     except TypeError as exc:
-        raise ValueError(f"{field_name} must be a sequence of finite numbers") from exc
-    if len(result) != count:
-        raise ValueError(
-            f"{field_name} must contain exactly {count} values; got {len(result)}"
-        )
+        raise ValueError("vertices must be a sequence of Vertex or coordinate tuples") from exc
+
+    result: List[Vertex] = []
+    for index, value in enumerate(inputs):
+        if isinstance(value, Vertex):
+            vertex = Vertex(value.x, value.y, value.z, bulge=value.bulge)
+        elif isinstance(value, tuple) and len(value) in (2, 3):
+            vertex = Vertex(*value)
+        else:
+            raise ValueError(
+                f"vertices[{index}] must be Vertex, (x, y), or (x, y, z)"
+            )
+        if not allow_bulge and vertex.bulge != 0.0:
+            raise ValueError(f"Points vertex {index} must have zero bulge")
+        result.append(vertex)
     return result
+
+
+def _validate_stored_vertices(values: Sequence[Vertex], *, allow_bulge: bool) -> List[Vertex]:
+    """Validate mutable stored records without accepting tuple shorthand."""
+    try:
+        vertices = list(values)
+    except TypeError as exc:
+        raise ValueError("vertices must be a sequence of Vertex records") from exc
+    for index, vertex in enumerate(vertices):
+        if not isinstance(vertex, Vertex):
+            raise ValueError(f"vertices[{index}] must be a Vertex record")
+        _finite_float(vertex.x, f"vertices[{index}].x")
+        _finite_float(vertex.y, f"vertices[{index}].y")
+        _finite_float(vertex.z, f"vertices[{index}].z")
+        bulge = _finite_float(vertex.bulge, f"vertices[{index}].bulge")
+        if not allow_bulge and bulge != 0.0:
+            raise ValueError(f"Points vertex {index} must have zero bulge")
+    return vertices
 
 
 def _xy_similarity_scale(matrix: Any) -> Optional[float]:
@@ -346,12 +395,8 @@ class Primitive(CamBamEntity, ABC):
         # Restore numpy array if it was converted to list
         # if isinstance(state.get('effective_transform'), list):
         #     state['effective_transform'] = np.array(state['effective_transform'])
-        # Additive elevation fields were introduced after the original pickle
-        # format. Defaults intentionally reproduce the old all-Z-zero model.
         fields = getattr(type(self), "__dataclass_fields__", {})
         state.setdefault('local_z_offset', 0.0)
-        if 'vertex_z' in fields:
-            state.setdefault('vertex_z', None)
         if 'elevation' in fields:
             state.setdefault('elevation', 0.0)
         if 'xml_p2_elevation' in fields:
@@ -544,53 +589,46 @@ class Primitive(CamBamEntity, ABC):
 @dataclass
 class Pline(Primitive):
     # Intrinsic geometry
-    relative_points: List[Union[Tuple[float, float], Tuple[float, float, float]]] = field(default_factory=list)
+    vertices: List[Vertex] = field(default_factory=list)
     closed: bool = False
-    vertex_z: Optional[Sequence[float]] = None
 
     def __post_init__(self):
         super().__post_init__()
-        validated = self._validated_vertex_z()
-        if self.vertex_z is not None:
-            self.vertex_z = validated
+        self.vertices = _normalize_vertices(self.vertices, allow_bulge=True)
+        self._validated_vertices()
 
-    def _validated_vertex_z(self) -> List[float]:
-        elevations = _vertex_elevations(
-            self.vertex_z, len(self.relative_points), "vertex_z"
-        )
-        segment_count = max(0, len(self.relative_points) - 1)
-        if self.closed and self.relative_points:
+    def _validated_vertices(self) -> List[Vertex]:
+        vertices = _validate_stored_vertices(self.vertices, allow_bulge=True)
+        segment_count = max(0, len(vertices) - 1)
+        if self.closed and vertices:
             segment_count += 1
         for index in range(segment_count):
-            point = self.relative_points[index]
-            bulge = _finite_float(
-                point[2] if len(point) > 2 else 0.0,
-                f"relative_points[{index}] bulge",
-            )
-            next_index = (index + 1) % len(self.relative_points)
+            vertex = vertices[index]
+            bulge = _finite_float(vertex.bulge, f"vertices[{index}].bulge")
+            next_index = (index + 1) % len(vertices)
             if (abs(bulge) > PLINE_BULGE_TOLERANCE
                     and not math.isclose(
-                        elevations[index], elevations[next_index],
+                        vertex.z, vertices[next_index].z,
                         rel_tol=0.0, abs_tol=CURVE_POINT_TOLERANCE,
                     )):
                 raise ValueError(
                     "Bulged Pline segments require equal endpoint Z values "
                     f"(segment {index} to {next_index})"
                 )
-        return elevations
+        return vertices
 
     def _calculate_absolute_geometry(self, total_transform: np.ndarray) -> List[Tuple[float, float, float]]:
         # Extract XY for transformation
-        rel_pts_xy = [(p[0], p[1]) for p in self.relative_points]
+        vertices = self._validated_vertices()
+        rel_pts_xy = [(vertex.x, vertex.y) for vertex in vertices]
         abs_pts_xy = apply_transform(rel_pts_xy, total_transform)
 
         # Re-attach bulge values (bulge is not transformed by standard matrix)
         abs_pts_with_bulge = []
         for i, (x, y) in enumerate(abs_pts_xy):
             # Handle potential index out of bounds if apply_transform skipped points
-            if i < len(self.relative_points):
-                bulge = self.relative_points[i][2] if len(self.relative_points[i]) > 2 else 0.0
-                abs_pts_with_bulge.append((x, y, bulge))
+            if i < len(vertices):
+                abs_pts_with_bulge.append((x, y, vertices[i].bulge))
             else:
                 logger.warning(f"Point mismatch after transformation for Pline {self.user_identifier}. Skipping bulge.")
 
@@ -599,24 +637,26 @@ class Pline(Primitive):
     def _calculate_absolute_geometry_xyz(
         self, total_transform: np.ndarray, total_z_offset: float
     ) -> List[Tuple[float, float, float, float]]:
-        elevations = self._validated_vertex_z()
+        vertices = self._validated_vertices()
         absolute_xy_bulge = self._calculate_absolute_geometry(total_transform)
         if (any(abs(p[2]) > PLINE_BULGE_TOLERANCE for p in absolute_xy_bulge)
                 and _xy_similarity_scale(total_transform) is None):
             raise ValueError("Bulged Pline XYZ queries require an XY similarity transform")
         orientation = -1.0 if np.linalg.det(total_transform[:2, :2]) < 0.0 else 1.0
         return [
-            (x, y, _finite_float(elevations[index] + total_z_offset, "world Z"),
+            (x, y, _finite_float(vertices[index].z + total_z_offset, "world Z"),
              bulge * orientation)
             for index, (x, y, bulge) in enumerate(absolute_xy_bulge)
         ]
 
     def shift_geometry_z(self, dz: float) -> None:
         delta = _finite_float(dz, "dz")
-        current = self._validated_vertex_z()
-        shifted = [_finite_float(z + delta, "shifted vertex_z") for z in current]
-        if delta != 0.0 or self.vertex_z is not None:
-            self.vertex_z = shifted
+        vertices = self._validated_vertices()
+        self.vertices = [
+            Vertex(vertex.x, vertex.y, _finite_float(vertex.z + delta, "shifted vertex Z"),
+                   bulge=vertex.bulge)
+            for vertex in vertices
+        ]
 
     def _calculate_bounding_box(self, absolute_geometry: List[Tuple[float, float, float]]) -> BoundingBox:
         # Bounding box ignores bulge, uses only XY coordinates
@@ -641,15 +681,17 @@ class Pline(Primitive):
             matrix = _affine_matrix_or_none(self.get_total_transform())
         except (TypeError, ValueError):
             matrix = None
-        if matrix is None or not self.relative_points:
+        if matrix is None or not self.vertices:
+            return BoundingBox()
+        try:
+            vertices = self._validated_vertices()
+        except (TypeError, ValueError):
             return BoundingBox()
 
         local_points = []
-        for point in self.relative_points:
-            if len(point) < 2:
-                return BoundingBox()
+        for vertex in vertices:
             try:
-                x, y = float(point[0]), float(point[1])
+                x, y = float(vertex.x), float(vertex.y)
             except (TypeError, ValueError, OverflowError):
                 return BoundingBox()
             if not (math.isfinite(x) and math.isfinite(y)):
@@ -669,7 +711,7 @@ class Pline(Primitive):
             next_index = (index + 1) % len(local_points)
             p0 = local_points[index]
             p1 = local_points[next_index]
-            raw_bulge = self.relative_points[index][2] if len(self.relative_points[index]) > 2 else 0.0
+            raw_bulge = vertices[index].bulge
             try:
                 bulge = float(raw_bulge)
             except (TypeError, ValueError, OverflowError):
@@ -717,7 +759,7 @@ class Pline(Primitive):
         bbox = self.get_bounding_box()
         if bbox.is_valid():
             return ((bbox.min_x + bbox.max_x) / 2, (bbox.min_y + bbox.max_y) / 2)
-        elif self.relative_points:
+        elif self.vertices:
             # Fallback to first point if bbox is invalid (e.g., single point pline)
             abs_coords = self.get_absolute_coordinates()
             if abs_coords:
@@ -726,7 +768,7 @@ class Pline(Primitive):
 
     def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
         """
-        Applies a transformation matrix to relative_points.
+        Applies a transformation matrix to vertices.
         
         If transform_to_bake is None, uses and resets the effective_transform.
         """
@@ -744,15 +786,14 @@ class Pline(Primitive):
         if affine is None:
             raise ValueError("Expected a finite affine 3x3 matrix")
         transform_to_apply = affine
-        self._validated_vertex_z()
-        segment_count = max(0, len(self.relative_points) - 1)
-        if self.closed and self.relative_points:
+        vertices = self._validated_vertices()
+        segment_count = max(0, len(vertices) - 1)
+        if self.closed and vertices:
             segment_count += 1
         has_bulged_segment = any(
             abs(_finite_float(
-                self.relative_points[index][2]
-                if len(self.relative_points[index]) > 2 else 0.0,
-                f"relative_points[{index}] bulge",
+                vertices[index].bulge,
+                f"vertices[{index}].bulge",
             )) > PLINE_BULGE_TOLERANCE
             for index in range(segment_count)
         )
@@ -768,21 +809,21 @@ class Pline(Primitive):
             
         try:
             # Transform XY coordinates
-            rel_pts_xy = [(p[0], p[1]) for p in self.relative_points]
+            rel_pts_xy = [(vertex.x, vertex.y) for vertex in vertices]
             baked_pts_xy = apply_transform(rel_pts_xy, transform_to_apply)
 
             # Rebuild relative points with original bulge values
-            new_relative_points = []
+            new_vertices = []
             for i, (x, y) in enumerate(baked_pts_xy):
-                if i < len(self.relative_points):
-                    bulge = self.relative_points[i][2] if len(self.relative_points[i]) > 2 else 0.0
+                if i < len(vertices):
+                    bulge = vertices[i].bulge
                     if reflected:
                         bulge = -bulge
-                    new_relative_points.append((x, y, bulge))
+                    new_vertices.append(Vertex(x, y, vertices[i].z, bulge=bulge))
                 else:
                     logger.warning(f"Point mismatch during baking for Pline {self.user_identifier}. Skipping point.")
 
-            self.relative_points = new_relative_points
+            self.vertices = new_vertices
             
             # Reset effective transform if using it
             if reset_transform:
@@ -799,14 +840,14 @@ class Pline(Primitive):
         # Add points WITHOUT applying the effective_transform here
         # The matrix added later by _add_common_xml_attributes handles the total transform
         pts_elem = ET.SubElement(pline_elem, "pts")
-        elevations = self._validated_vertex_z()
-        for index, pt in enumerate(self.relative_points):
+        vertices = self._validated_vertices()
+        for vertex in vertices:
             # CamBam point format: x,y,z (z is usually 0 for 2D)
-            x = round(pt[0], self.output_decimals) if self.output_decimals is not None else pt[0]
-            y = round(pt[1], self.output_decimals) if self.output_decimals is not None else pt[1]
-            z = elevations[index]
+            x = round(vertex.x, self.output_decimals) if self.output_decimals is not None else vertex.x
+            y = round(vertex.y, self.output_decimals) if self.output_decimals is not None else vertex.y
+            z = vertex.z
             z = round(z, self.output_decimals) if self.output_decimals is not None else z
-            bulge = pt[2] if len(pt) > 2 else 0.0
+            bulge = vertex.bulge
             bulge = round(bulge, self.output_decimals) if self.output_decimals is not None else bulge
             
             ET.SubElement(pts_elem, "p", {"b": str(bulge)}).text = f"{x},{y},{z}"
@@ -1037,7 +1078,7 @@ class Rect(Primitive):
         transformed_corners = apply_transform(corners, self.effective_transform)
         
         # Create points for Pline (adding the first point again to close the loop if needed)
-        pline_points = [(p[0], p[1], 0.0) for p in transformed_corners]
+        pline_points = [Vertex(p[0], p[1], self.elevation) for p in transformed_corners]
         
         # Create a new Pline
         pline = Pline(
@@ -1045,9 +1086,8 @@ class Rect(Primitive):
             groups=self.groups.copy() if self.groups else [],
             description=f"Converted from Rect: {self.description}",
             effective_transform=identity_matrix(),  # Use identity since we've already applied the transform
-            relative_points=pline_points,
+            vertices=pline_points,
             closed=True,
-            vertex_z=[_finite_float(self.elevation, "elevation")] * 4,
             local_z_offset=self.local_z_offset,
         )
         
@@ -1084,15 +1124,14 @@ class Rect(Primitive):
             self.relative_corner = tuple(lower)
             self.width, self.height = upper - lower
         else:
-            points = [(x, y, 0.0) for x, y in corners]
             elevation = _finite_float(self.elevation, "elevation")
+            vertices = [Vertex(x, y, elevation) for x, y in corners]
             # Both dataclasses have the same ordinary Python object layout.
             # Assign the class before geometry edits so an unsupported subclass
             # layout fails without discarding the original Rect geometry.
             self.__class__ = Pline
-            self.relative_points = points
+            self.vertices = vertices
             self.closed = True
-            self.vertex_z = [elevation] * 4
             del self.relative_corner, self.width, self.height, self.elevation
         if transform_to_bake is None:
             self.effective_transform = identity_matrix()
@@ -1115,10 +1154,9 @@ class Rect(Primitive):
                 output_decimals=self.output_decimals,
                 effective_transform=identity_matrix(),
                 local_z_offset=self.get_total_z_offset(),
-                relative_points=[(x, y, 0.0) for x, y in apply_transform(
+                vertices=[Vertex(x, y, self.elevation) for x, y in apply_transform(
                     self._get_relative_corners(), self.get_total_transform())],
                 closed=True,
-                vertex_z=[_finite_float(self.elevation, "elevation")] * 4,
             )
             
             # Get the Pline's XML element, but with our metadata
@@ -1345,27 +1383,27 @@ class Arc(Primitive):
 @dataclass
 class Points(Primitive):
     # Intrinsic geometry
-    relative_points: List[Tuple[float, float]] = field(default_factory=list)
-    vertex_z: Optional[Sequence[float]] = None
+    vertices: List[Vertex] = field(default_factory=list)
 
     def __post_init__(self):
         super().__post_init__()
-        validated = self._validated_vertex_z()
-        if self.vertex_z is not None:
-            self.vertex_z = validated
+        self.vertices = _normalize_vertices(self.vertices, allow_bulge=False)
 
-    def _validated_vertex_z(self) -> List[float]:
-        return _vertex_elevations(self.vertex_z, len(self.relative_points), "vertex_z")
+    def _validated_vertices(self) -> List[Vertex]:
+        return _validate_stored_vertices(self.vertices, allow_bulge=False)
 
     def _calculate_absolute_geometry(self, total_transform: np.ndarray) -> List[Tuple[float, float]]:
-        return apply_transform(self.relative_points, total_transform)
+        return apply_transform(
+            [(vertex.x, vertex.y) for vertex in self._validated_vertices()],
+            total_transform,
+        )
 
     def _calculate_absolute_geometry_xyz(
         self, total_transform: np.ndarray, total_z_offset: float
     ) -> List[Tuple[float, float, float]]:
-        elevations = self._validated_vertex_z()
+        vertices = self._validated_vertices()
         return [
-            (x, y, _finite_float(elevations[index] + total_z_offset, "world Z"))
+            (x, y, _finite_float(vertices[index].z + total_z_offset, "world Z"))
             for index, (x, y) in enumerate(
                 self._calculate_absolute_geometry(total_transform)
             )
@@ -1373,10 +1411,11 @@ class Points(Primitive):
 
     def shift_geometry_z(self, dz: float) -> None:
         delta = _finite_float(dz, "dz")
-        current = self._validated_vertex_z()
-        shifted = [_finite_float(z + delta, "shifted vertex_z") for z in current]
-        if delta != 0.0 or self.vertex_z is not None:
-            self.vertex_z = shifted
+        vertices = self._validated_vertices()
+        self.vertices = [
+            Vertex(vertex.x, vertex.y, _finite_float(vertex.z + delta, "shifted vertex Z"))
+            for vertex in vertices
+        ]
 
     def _calculate_bounding_box(self, absolute_geometry: List[Tuple[float, float]]) -> BoundingBox:
         if not absolute_geometry:
@@ -1388,7 +1427,7 @@ class Points(Primitive):
         bbox = self.get_bounding_box()
         if bbox.is_valid():
             return ((bbox.min_x + bbox.max_x) / 2, (bbox.min_y + bbox.max_y) / 2)
-        elif self.relative_points:
+        elif self.vertices:
             abs_coords = self.get_absolute_coordinates()
             if abs_coords:
                 return abs_coords[0] # Fallback to first point
@@ -1396,7 +1435,7 @@ class Points(Primitive):
 
     def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
         """
-        Applies a transformation matrix to relative_points.
+        Applies a transformation matrix to vertices.
         
         If transform_to_bake is None, uses and resets the effective_transform.
         """
@@ -1421,7 +1460,14 @@ class Points(Primitive):
             
         try:
             # Transform the points
-            self.relative_points = apply_transform(self.relative_points, transform_to_apply)
+            vertices = self._validated_vertices()
+            transformed = apply_transform(
+                [(vertex.x, vertex.y) for vertex in vertices], transform_to_apply
+            )
+            self.vertices = [
+                Vertex(x, y, vertices[index].z)
+                for index, (x, y) in enumerate(transformed)
+            ]
             
             # Reset effective transform if using it
             if reset_transform:
@@ -1434,11 +1480,10 @@ class Points(Primitive):
         """Creates the <points> XML element."""
         points_elem = ET.Element("points")
         pts_elem = ET.SubElement(points_elem, "pts")
-        elevations = self._validated_vertex_z()
-        for index, (x, y) in enumerate(self.relative_points):
+        for vertex in self._validated_vertices():
+            x, y, pz = vertex.x, vertex.y, vertex.z
             px = round(x, self.output_decimals) if self.output_decimals is not None else x
             py = round(y, self.output_decimals) if self.output_decimals is not None else y
-            pz = elevations[index]
             pz = round(pz, self.output_decimals) if self.output_decimals is not None else pz
             # CamBam point format: x,y,z (z is usually 0)
             ET.SubElement(pts_elem, "p").text = f"{px},{py},{pz}"

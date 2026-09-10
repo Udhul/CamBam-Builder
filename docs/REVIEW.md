@@ -1204,3 +1204,50 @@ good fresh-session breakpoint because the next scope does not depend on unresolv
 item-2 decisions.
 
 Suggested commit: `feat: add Region and all-shape elevation parity`.
+
+## Canonical vertex-record refactor
+
+2026-09-09. The bounded follow-up replaces Pline and Points parallel coordinate,
+bulge and elevation storage with one public `Vertex(x, y, z=0, *, bulge=0)`
+record and a sole `vertices` collection. Region-owned Pline contours use the same
+records. Constructors and project adders normalize only named records, `(x, y)`
+and `(x, y, z)` tuples. Thus three-tuples now unambiguously mean XYZ, four-tuples
+are rejected, nonzero bulge requires a named record, and Points rejects nonzero
+bulge at API and XML boundaries. The API is unreleased and the user authorized
+these breaking changes; no compatibility property or old-pickle migration was
+added.
+
+Geometry consumers, bounds, reflected/similarity bakes, intrinsic Z shifts,
+Rect-to-Pline conversion, Region topology/ownership/bakes, XML read/write and
+current persistence were migrated. Existing XY and XYZ geometry-query return
+shapes remain unchanged. Mutable collection validation requires records after
+construction, so insertion and reordering carry X/Y/Z/bulge together instead of
+depending on an index-aligned elevation list. Repository callers and authored
+tests preserve every former bulge explicitly with `Vertex(..., bulge=value)`.
+Analytic elevation fields, Text `xml_p2`, MOP ownership and Region topology rules
+are unchanged.
+
+Verification on Python 3.10.9 / NumPy 1.23.5:
+
+- `python -m unittest discover -s tests -p test_vertex_records.py -v`: six tests
+  passed, covering constructor defaults, keyword-only bulge, tuple meanings,
+  malformed/four-value rejection, Points rejection, collection edits, adders,
+  current pickle and two XML round trips.
+- `python -m unittest discover -s tests -q`: all 141 tests passed. Existing
+  Region holes/topology, curved bounds, transforms/bakes, identities,
+  relationships, MOP references, copy/transfer and persistence remain covered.
+- `python -c "import runpy; runpy.run_path('output/vertex-record-parity-20260909-a/compare.py', run_name='__main__')"`:
+  passed. It read the accepted pre-refactor `B_baked_elevations.cb`, wrote two
+  results only under the new ignored task directory, and compared all serialized
+  Pline, Points and Region point/bulge/matrix numbers at absolute tolerance
+  `1e-8`. Maximum observed difference was `0.0`. SHA-256 checks before/after
+  confirmed accepted A/B/C inputs were unchanged.
+
+No CamBam acceptance was repeated because serialized geometry and query/output
+semantics are unchanged. Remaining limits are the previously declared rejection
+of varying-Z bulged segments, general spatial matrices and invalid Region
+topology, plus the explicit absence of old-pickle compatibility. This is a good
+fresh-session breakpoint once final compile/import/diff checks pass; packaging
+and supported-Python validation remain the separate next priority.
+
+Suggested commit: `refactor: consolidate pline and points vertices`.

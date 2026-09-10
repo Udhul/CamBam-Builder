@@ -13,7 +13,7 @@ from cambam_builder.cad_transformations import (
     scale_matrix,
     translation_matrix,
 )
-from cambam_builder.cambam_entities import Pline
+from cambam_builder.cambam_entities import Pline, Vertex
 from cambam_builder import CBProject
 from cambam_builder.region import Region, parse_region_geometry
 
@@ -23,8 +23,7 @@ def square(x0, y0, x1, y1, z=0.0, *, transform=None, z_offset=0.0):
     if transform is not None:
         kwargs["effective_transform"] = transform
     return Pline(
-        relative_points=[(x0, y0), (x1, y0), (x1, y1), (x0, y1)],
-        vertex_z=[z] * 4,
+        vertices=[(x0, y0, z), (x1, y0, z), (x1, y1, z), (x0, y1, z)],
         closed=True,
         local_z_offset=z_offset,
         **kwargs,
@@ -35,8 +34,8 @@ def bulged_outer(z=3.0):
     # The bulge on the right edge is a clockwise-facing semicircle with its
     # extreme at X=90; its value is deliberately unrelated to Z.
     return Pline(
-        relative_points=[(60, 0), (80, 0, 1), (80, 20), (60, 20)],
-        vertex_z=[z] * 4,
+        vertices=[(60, 0, z), Vertex(80, 0, z, bulge=1),
+                  (80, 20, z), (60, 20, z)],
         closed=True,
     )
 
@@ -46,8 +45,9 @@ class RegionConstructionTests(unittest.TestCase):
         project = CBProject("registered-contour")
         parent = project.add_points("Geometry", [(0, 0)], local_z_offset=4)
         parent.effective_transform = translation_matrix(10, 20)
-        selected = project.add_pline("Geometry", [(0, 0), (10, 0), (10, 10), (0, 10)],
-                                     closed=True, vertex_z=[2] * 4, parent=parent,
+        selected = project.add_pline("Geometry", [(0, 0, 2), (10, 0, 2),
+                                                   (10, 10, 2), (0, 10, 2)],
+                                     closed=True, parent=parent,
                                      local_z_offset=3)
         before = selected.get_absolute_coordinates_xyz()
         region = project.add_region("Geometry", selected)
@@ -58,12 +58,11 @@ class RegionConstructionTests(unittest.TestCase):
     def test_owns_deep_copied_unregistered_contours_and_preserves_winding(self):
         outer = square(0, 0, 20, 20, z=2)
         hole = Pline(
-            relative_points=[(5, 5), (5, 10), (10, 10), (10, 5)],
-            vertex_z=[2] * 4,
+            vertices=[(5, 5, 2), (5, 10, 2), (10, 10, 2), (10, 5, 2)],
             closed=True,
             user_identifier="input-hole",
         )
-        original_outer_points = list(outer.relative_points)
+        original_outer_points = list(outer.vertices)
         region = Region(
             outer_curve=outer,
             hole_curves=[hole],
@@ -74,12 +73,12 @@ class RegionConstructionTests(unittest.TestCase):
         self.assertIsNot(region.hole_curves[0], hole)
         self.assertIsNone(region.outer_curve.get_project())
         self.assertIsNone(region.hole_curves[0].get_project())
-        self.assertEqual(region.hole_curves[0].relative_points, hole.relative_points)
+        self.assertEqual(region.hole_curves[0].vertices, hole.vertices)
 
-        outer.relative_points[0] = (-100, -100)
-        hole.vertex_z[0] = 99
-        self.assertEqual(region.outer_curve.relative_points, original_outer_points)
-        self.assertEqual(region.hole_curves[0].vertex_z, [2.0] * 4)
+        outer.vertices[0] = Vertex(-100, -100)
+        hole.vertices[0].z = 99
+        self.assertEqual(region.outer_curve.vertices, original_outer_points)
+        self.assertEqual([vertex.z for vertex in region.hole_curves[0].vertices], [2.0] * 4)
 
     def test_accepts_bulged_outer_and_analytic_bounds_include_arc_extreme(self):
         region = Region(
@@ -94,8 +93,7 @@ class RegionConstructionTests(unittest.TestCase):
 
     def test_accepts_two_semicircle_circle_without_false_self_overlap(self):
         circle = Pline(
-            relative_points=[(-10, 0, 1), (10, 0, 1)],
-            vertex_z=[-2, -2],
+            vertices=[Vertex(-10, 0, -2, bulge=1), Vertex(10, 0, -2, bulge=1)],
             closed=True,
         )
         region = Region(outer_curve=circle, hole_curves=[square(-2, -2, 2, 2, z=-2)])
@@ -104,13 +102,13 @@ class RegionConstructionTests(unittest.TestCase):
         self.assertAlmostEqual(bounds.max_y, 10.0)
 
     def test_outside_hole_at_arc_endpoint_height_is_rejected(self):
-        outer = Pline(relative_points=[(0, 0, -1), (10, 0), (10, 10), (0, 10)],
+        outer = Pline(vertices=[Vertex(0, 0, bulge=-1), (10, 0), (10, 10), (0, 10)],
                       closed=True)
         for dy in (0, 1e-7, -1e-7):
             with self.subTest(dy=dy), self.assertRaisesRegex(ValueError, "strictly inside"):
                 Region(outer_curve=outer, hole_curves=[square(-1, dy, -.5, 1 + dy)])
         # The same exact endpoint height must remain usable for valid holes.
-        circular = Pline(relative_points=[(-10, 0, 1), (10, 0, 1)], closed=True)
+        circular = Pline(vertices=[Vertex(-10, 0, bulge=1), Vertex(10, 0, bulge=1)], closed=True)
         self.assertIsInstance(Region(outer_curve=circular, hole_curves=[square(-1, 0, 1, 1)]), Region)
 
     def test_small_well_conditioned_contour_scale_preserves_useful_geometry(self):
@@ -120,11 +118,11 @@ class RegionConstructionTests(unittest.TestCase):
         np.testing.assert_allclose((bounds.min_x, bounds.min_y, bounds.max_x, bounds.max_y),
                                    (0, 0, 10, 10), rtol=0, atol=1e-10)
         region.bake_geometry()
-        self.assertEqual(region.outer_curve.relative_points[2], (10., 10., 0.))
+        self.assertEqual(region.outer_curve.vertices[2], Vertex(10., 10.))
 
     def test_rejects_coincident_overlapping_arcs(self):
         doubled_arc = Pline(
-            relative_points=[(-10, 0, 1), (10, 0, -1)],
+            vertices=[Vertex(-10, 0, bulge=1), Vertex(10, 0, bulge=-1)],
             closed=True,
         )
         with self.assertRaisesRegex(ValueError, "overlapping segments"):
@@ -141,21 +139,21 @@ class RegionConstructionTests(unittest.TestCase):
     def test_rejects_invalid_contours_and_topology(self):
         cases = {
             "open outer": lambda: Region(
-                outer_curve=Pline(relative_points=[(0, 0), (10, 0), (0, 10)], closed=False)
+                outer_curve=Pline(vertices=[(0, 0), (10, 0), (0, 10)], closed=False)
             ),
             "nonfinite": lambda: Region(
                 outer_curve=Pline(
-                    relative_points=[(0, 0), (math.nan, 0), (0, 10)], closed=True
+                    vertices=[(0, 0), (math.nan, 0), (0, 10)], closed=True
                 )
             ),
             "zero segment": lambda: Region(
                 outer_curve=Pline(
-                    relative_points=[(0, 0), (10, 0), (10, 0), (0, 10)], closed=True
+                    vertices=[(0, 0), (10, 0), (10, 0), (0, 10)], closed=True
                 )
             ),
             "self crossing": lambda: Region(
                 outer_curve=Pline(
-                    relative_points=[(0, 0), (10, 10), (0, 10), (10, 0)], closed=True
+                    vertices=[(0, 0), (10, 10), (0, 10), (10, 0)], closed=True
                 )
             ),
             "outside hole": lambda: Region(
@@ -230,20 +228,20 @@ class RegionGeometryTests(unittest.TestCase):
 
         reflected = Region(outer_curve=bulged_outer())
         reflected.bake_geometry(scale_matrix(-1, 1))
-        self.assertEqual(reflected.outer_curve.relative_points[1][2], -1)
+        self.assertEqual(reflected.outer_curve.vertices[1].bulge, -1)
         bounds = reflected.get_bounding_box()
         self.assertAlmostEqual(bounds.min_x, -90.0)
         self.assertAlmostEqual(bounds.max_x, -60.0)
 
     def test_curved_nonsimilarity_bake_fails_atomically(self):
         region = Region(outer_curve=bulged_outer())
-        before_points = copy.deepcopy(region.outer_curve.relative_points)
+        before_points = copy.deepcopy(region.outer_curve.vertices)
         before_matrix = region.outer_curve.effective_transform.copy()
         shear = np.array([[1.0, 0.25, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
 
         with self.assertRaisesRegex(ValueError, "non-similarity"):
             region.bake_geometry(shear)
-        self.assertEqual(region.outer_curve.relative_points, before_points)
+        self.assertEqual(region.outer_curve.vertices, before_points)
         np.testing.assert_array_equal(region.outer_curve.effective_transform, before_matrix)
 
     def test_straight_contours_can_bake_general_affine_transform(self):
@@ -253,7 +251,9 @@ class RegionGeometryTests(unittest.TestCase):
             hole_curves=[square(3, 3, 6, 6)],
         )
         region.bake_geometry(shear)
-        np.testing.assert_allclose(region.outer_curve.relative_points[0][:2], (3, -2))
+        np.testing.assert_allclose(
+            (region.outer_curve.vertices[0].x, region.outer_curve.vertices[0].y), (3, -2)
+        )
         np.testing.assert_array_equal(region.outer_curve.effective_transform, np.identity(3))
 
     def test_bake_normalizes_owned_xy_and_z_poses(self):
@@ -280,14 +280,14 @@ class RegionGeometryTests(unittest.TestCase):
         for contour in region.contours:
             np.testing.assert_array_equal(contour.effective_transform, np.identity(3))
             self.assertEqual(contour.local_z_offset, 0.0)
-            self.assertEqual(contour.vertex_z, [7.0] * 4)
+            self.assertEqual([vertex.z for vertex in contour.vertices], [7.0] * 4)
 
     def test_shift_geometry_z_rejects_overflow_atomically(self):
         region = Region(outer_curve=square(0, 0, 10, 10, z=1e308))
-        before = list(region.outer_curve.vertex_z)
+        before = list(region.outer_curve.vertices)
         with self.assertRaisesRegex(ValueError, "finite"):
             region.shift_geometry_z(1e308)
-        self.assertEqual(region.outer_curve.vertex_z, before)
+        self.assertEqual(region.outer_curve.vertices, before)
 
 
 class RegionXmlTests(unittest.TestCase):
@@ -316,10 +316,9 @@ class RegionXmlTests(unittest.TestCase):
         kwargs = parse_region_geometry(ET.fromstring(self.XML))
         region = Region(**kwargs)
 
-        self.assertEqual(region.outer_curve.relative_points[1], (20.0, 0.0, 1.0))
-        self.assertEqual(region.outer_curve.vertex_z, [3.0] * 4)
+        self.assertEqual(region.outer_curve.vertices[1], Vertex(20.0, 0.0, 3.0, bulge=1.0))
         self.assertEqual(region.outer_curve.local_z_offset, 2.0)
-        self.assertEqual(region.hole_curves[0].vertex_z, [5.0] * 4)
+        self.assertEqual([vertex.z for vertex in region.hole_curves[0].vertices], [5.0] * 4)
         self.assertEqual(
             [point[2] for point in region.get_absolute_coordinates_xyz()["outer_curve"]],
             [5.0] * 4,
@@ -366,7 +365,7 @@ class RegionXmlTests(unittest.TestCase):
         reconstructed = Region(**parse_region_geometry(reparsed))
         self.assertEqual(reconstructed.outer_curve.get_absolute_coordinates_xyz(),
                          region.outer_curve.get_absolute_coordinates_xyz())
-        self.assertEqual(reconstructed.outer_curve.vertex_z, region.outer_curve.vertex_z)
+        self.assertEqual(reconstructed.outer_curve.vertices, region.outer_curve.vertices)
 
     def test_parser_rejects_malformed_or_lossy_contour_data(self):
         malformed = [
@@ -389,7 +388,7 @@ class RegionXmlTests(unittest.TestCase):
             outer_curve=square(0, 0, 20, 20),
             hole_curves=[square(3, 3, 6, 6)],
         )
-        region.hole_curves[0].relative_points = square(30, 30, 32, 32).relative_points
+        region.hole_curves[0].vertices = square(30, 30, 32, 32).vertices
         with self.assertRaisesRegex(ValueError, "strictly inside"):
             region.to_xml_element(1, None)
 
@@ -406,7 +405,7 @@ class RegionXmlTests(unittest.TestCase):
         region.output_decimals = 12
         element = region.to_xml_element(1, None)
         restored = Region(**parse_region_geometry(element))
-        self.assertEqual(restored.hole_curves[0].relative_points[0][0], 1.5e-10)
+        self.assertEqual(restored.hole_curves[0].vertices[0].x, 1.5e-10)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 """Focused entity-level contracts for Z coordinates on existing shapes."""
 
 import math
+import pickle
 import unittest
 
 import numpy as np
@@ -13,7 +14,7 @@ from cambam_builder.cad_transformations import (
     skew_matrix,
     translation_matrix,
 )
-from cambam_builder.cambam_entities import Arc, Circle, Pline, Points, Rect, Text
+from cambam_builder.cambam_entities import Arc, Circle, Pline, Points, Rect, Text, Vertex
 
 
 def xyz(text):
@@ -22,7 +23,7 @@ def xyz(text):
 
 class ExistingShapeElevationTests(unittest.TestCase):
     def test_small_xy_bakes_are_not_discarded_as_identity(self):
-        for shape in (Circle(), Arc(), Points(relative_points=[(0, 0)]), Text()):
+        for shape in (Circle(), Arc(), Points(vertices=[(0, 0)]), Text()):
             with self.subTest(shape=type(shape).__name__):
                 shape.bake_geometry(translation_matrix(5e-9, -5e-9))
                 result = shape.get_absolute_coordinates_xyz()
@@ -38,8 +39,8 @@ class ExistingShapeElevationTests(unittest.TestCase):
         self.assertEqual(result["extent_angle"], -60)
         arc.bake_geometry()
         self.assertEqual(arc.get_absolute_coordinates_xyz(), result)
-        pline = Pline(relative_points=[(0, 0, .5), (1, 0)],
-                      vertex_z=[3, 3], effective_transform=mirror_y_matrix())
+        pline = Pline(vertices=[Vertex(0, 0, 3, bulge=.5), (1, 0, 3)],
+                      effective_transform=mirror_y_matrix())
         self.assertEqual(pline.get_absolute_coordinates()[0][2], .5)
         self.assertEqual(pline.get_absolute_coordinates_xyz()[0][3], -.5)
         before = pline.get_absolute_coordinates_xyz()
@@ -52,10 +53,10 @@ class ExistingShapeElevationTests(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, "similarity"):
                         shape.get_absolute_coordinates_xyz()
 
-    def test_pline_keeps_xy_bulge_query_and_adds_independent_vertex_z(self):
+    def test_pline_vertex_records_preserve_query_contracts(self):
         pline = Pline(
-            relative_points=[(0, 0, 0.25), (2, 0), (3, 4, -0.5)],
-            vertex_z=[-2, -2, 7],
+            vertices=[Vertex(0, 0, -2, bulge=0.25), (2, 0, -2),
+                      Vertex(3, 4, 7, bulge=-0.5)],
             local_z_offset=3,
         )
 
@@ -69,14 +70,14 @@ class ExistingShapeElevationTests(unittest.TestCase):
              (3.0, 4.0, 10.0, -0.5)],
         )
         self.assertEqual(
-            Pline(relative_points=[(1, 2, 8)]).get_absolute_coordinates_xyz(),
-            [(1.0, 2.0, 0.0, 8)],
+            Pline(vertices=[(1, 2, 8)]).get_absolute_coordinates_xyz(),
+            [(1.0, 2.0, 8.0, 0.0)],
         )
 
     def test_points_and_analytic_shapes_return_shape_analog_xyz(self):
         matrix = translation_matrix(10, -4) @ rotation_matrix_deg(90)
         points = Points(
-            relative_points=[(1, 0), (0, 2)], vertex_z=[-3, 8],
+            vertices=[(1, 0, -3), (0, 2, 8)],
             effective_transform=matrix, local_z_offset=0.5,
         )
         np.testing.assert_allclose(
@@ -144,9 +145,9 @@ class ExistingShapeElevationTests(unittest.TestCase):
 
     def test_xml_writes_intrinsic_z_and_total_transform_z_for_every_shape(self):
         shapes_and_fields = [
-            (Pline(relative_points=[(1, 2, 0.125)], vertex_z=[-3.25],
+            (Pline(vertices=[Vertex(1, 2, -3.25, bulge=0.125)],
                    local_z_offset=7.5, output_decimals=12), "pts/p", (-3.25,)),
-            (Points(relative_points=[(1, 2)], vertex_z=[4.5],
+            (Points(vertices=[(1, 2, 4.5)],
                     local_z_offset=7.5, output_decimals=12), "pts/p", (4.5,)),
             (Circle(relative_center=(1, 2), elevation=-6.75,
                     local_z_offset=7.5, output_decimals=12), None, (-6.75,)),
@@ -185,21 +186,21 @@ class ExistingShapeElevationTests(unittest.TestCase):
             local_z_offset=-2, effective_transform=skew_matrix(angle_x_deg=20),
         )
         representation = rect.to_pline_representation()
-        self.assertEqual(representation.vertex_z, [6.5] * 4)
+        self.assertEqual([vertex.z for vertex in representation.vertices], [6.5] * 4)
         self.assertEqual(representation.local_z_offset, -2)
         self.assertTrue(all(point[2] == 4.5 for point in
                             representation.get_absolute_coordinates_xyz()))
 
         rect.bake_geometry()
         self.assertIsInstance(rect, Pline)
-        self.assertEqual(rect.vertex_z, [6.5] * 4)
+        self.assertEqual([vertex.z for vertex in rect.vertices], [6.5] * 4)
         self.assertEqual(rect.local_z_offset, -2)
         self.assertTrue(all(point[2] == 4.5 for point in rect.get_absolute_coordinates_xyz()))
 
     def test_intrinsic_z_shift_is_atomic_and_xy_bakes_preserve_z(self):
         shapes = [
-            Pline(relative_points=[(0, 0), (1, 1)], vertex_z=[-2, 4]),
-            Points(relative_points=[(0, 0), (1, 1)], vertex_z=[-2, 4]),
+            Pline(vertices=[(0, 0, -2), (1, 1, 4)]),
+            Points(vertices=[(0, 0, -2), (1, 1, 4)]),
             Circle(elevation=-2), Rect(elevation=-2), Arc(elevation=-2),
             Text(elevation=-2, xml_p2_elevation=4),
         ]
@@ -207,13 +208,16 @@ class ExistingShapeElevationTests(unittest.TestCase):
             with self.subTest(shape=type(shape).__name__):
                 before_xy = shape.get_absolute_coordinates()
                 shape.bake_geometry(translation_matrix(3, 5))
-                if hasattr(shape, "vertex_z"):
-                    before_z = list(shape.vertex_z)
+                if isinstance(shape, (Pline, Points)):
+                    before_z = [vertex.z for vertex in shape.vertices]
                 else:
                     before_z = (shape.elevation, getattr(shape, "xml_p2_elevation", None))
                 shape.shift_geometry_z(2.5)
-                if hasattr(shape, "vertex_z"):
-                    self.assertEqual(shape.vertex_z, [z + 2.5 for z in before_z])
+                if isinstance(shape, (Pline, Points)):
+                    self.assertEqual(
+                        [vertex.z for vertex in shape.vertices],
+                        [z + 2.5 for z in before_z],
+                    )
                 else:
                     self.assertEqual(shape.elevation, before_z[0] + 2.5)
                     if isinstance(shape, Text):
@@ -229,8 +233,9 @@ class ExistingShapeElevationTests(unittest.TestCase):
 
     def test_invalid_z_and_unsupported_bakes_fail_cleanly(self):
         for constructor in (
-            lambda: Pline(relative_points=[(0, 0)], vertex_z=[]),
-            lambda: Points(relative_points=[(0, 0)], vertex_z=[math.nan]),
+            lambda: Pline(vertices=[(0, 0, 0, 0)]),
+            lambda: Points(vertices=[(0, 0, math.nan)]),
+            lambda: Points(vertices=[Vertex(0, 0, bulge=0.5)]),
             lambda: Circle(elevation=math.inf),
             lambda: Arc(local_z_offset=math.nan),
             lambda: Text(xml_p2_elevation=-math.inf),
@@ -240,18 +245,18 @@ class ExistingShapeElevationTests(unittest.TestCase):
                 constructor()
 
         with self.assertRaisesRegex(ValueError, "equal endpoint Z"):
-            Pline(relative_points=[(0, 0, 0.5), (1, 0)], vertex_z=[0, 1])
+            Pline(vertices=[Vertex(0, 0, 0, bulge=0.5), (1, 0, 1)])
         with self.assertRaisesRegex(ValueError, "segment 1 to 0"):
-            Pline(relative_points=[(0, 0), (1, 0, 0.5)],
-                  vertex_z=[0, 1], closed=True)
+            Pline(vertices=[(0, 0, 0), Vertex(1, 0, 1, bulge=0.5)], closed=True)
 
-        bulged = Pline(relative_points=[(0, 0, 0.5), (1, 0)], vertex_z=[2, 2])
+        bulged = Pline(vertices=[Vertex(0, 0, 2, bulge=0.5), (1, 0, 2)])
         with self.assertRaisesRegex(ValueError, "similarity"):
             bulged.bake_geometry(skew_matrix(angle_x_deg=10))
-        self.assertEqual(bulged.relative_points, [(0, 0, 0.5), (1, 0)])
+        self.assertEqual(bulged.vertices,
+                         [Vertex(0, 0, 2, bulge=0.5), Vertex(1, 0, 2)])
         bulged.bake_geometry(mirror_y_matrix())
-        self.assertEqual(bulged.relative_points[0][2], -0.5)
-        self.assertEqual(bulged.vertex_z, [2.0, 2.0])
+        self.assertEqual(bulged.vertices[0].bulge, -0.5)
+        self.assertEqual([vertex.z for vertex in bulged.vertices], [2.0, 2.0])
 
         for analytic in (Circle(), Arc()):
             with self.subTest(shape=type(analytic).__name__), self.assertRaisesRegex(
@@ -260,34 +265,17 @@ class ExistingShapeElevationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Text geometry"):
             Text().bake_geometry(rotation_matrix_deg(20))
 
-    def test_old_pickle_state_defaults_new_z_fields_to_zero(self):
-        for original, fields in (
-            (Pline(relative_points=[(1, 2, 0.5)]), ("vertex_z", "local_z_offset")),
-            (Points(relative_points=[(1, 2)]), ("vertex_z", "local_z_offset")),
-            (Circle(), ("elevation", "local_z_offset")),
-            (Rect(), ("elevation", "local_z_offset")),
-            (Arc(), ("elevation", "local_z_offset")),
-            (Text(relative_position=(1, 2)),
-             ("elevation", "xml_p2_elevation", "xml_p2_position", "local_z_offset")),
-        ):
+    def test_current_pickle_retains_canonical_vertex_records(self):
+        originals = (
+            Pline(vertices=[Vertex(1, 2, 3, bulge=0.5), (4, 5, 3)]),
+            Points(vertices=[(1, 2, -3), (4, 5, 6)]),
+        )
+        for original in originals:
             with self.subTest(shape=type(original).__name__):
-                state = original.__getstate__()
-                for field_name in fields:
-                    state.pop(field_name, None)
-                restored = type(original).__new__(type(original))
-                restored.__setstate__(state)
-                geometry = restored.get_absolute_coordinates_xyz()
-                if isinstance(restored, Pline):
-                    self.assertEqual(geometry[0][2], 0)
-                elif isinstance(restored, Points):
-                    self.assertEqual(geometry[0][2], 0)
-                elif isinstance(restored, (Circle, Arc)):
-                    self.assertEqual(geometry["center"][2], 0)
-                elif isinstance(restored, Rect):
-                    self.assertTrue(all(point[2] == 0 for point in geometry))
-                else:
-                    self.assertEqual(geometry["position"][2], 0)
-                    self.assertIsNone(geometry["xml_p2"])
+                restored = pickle.loads(pickle.dumps(original))
+                self.assertEqual(restored.vertices, original.vertices)
+                self.assertTrue(all(isinstance(vertex, Vertex) for vertex in restored.vertices))
+                self.assertFalse(hasattr(restored, "vertex_z"))
 
 
 if __name__ == "__main__":

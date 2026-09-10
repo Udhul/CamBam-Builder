@@ -31,7 +31,7 @@ class FullBakeTests(unittest.TestCase):
     def check_bake(self, target, recursive, singular=False):
         project, nodes = self.make_hierarchy(singular)
         coordinates = {name: node.get_absolute_coordinates() for name, node in nodes.items()}
-        local_points = {name: list(node.relative_points) for name, node in nodes.items()}
+        local_points = {name: list(node.vertices) for name, node in nodes.items()}
         matrices = {name: node.effective_transform.copy() for name, node in nodes.items()}
         edges = dict(project._primitive_parent_link)
         children = {key: set(value) for key, value in project._primitive_children_link.items()}
@@ -46,7 +46,7 @@ class FullBakeTests(unittest.TestCase):
             if name in baked:
                 np.testing.assert_array_equal(node.effective_transform, np.eye(3))
             else:
-                self.assertEqual(node.relative_points, local_points[name])
+                self.assertEqual(node.vertices, local_points[name])
         if not recursive:
             child_name = "child" if target == "root" else "leaf"
             np.testing.assert_allclose(nodes[child_name].effective_transform,
@@ -58,11 +58,11 @@ class FullBakeTests(unittest.TestCase):
             self.assertIs(project.get_primitive(name), node)
             self.assertEqual(project.get_groups_of_primitive(node), ["fixture"])
 
-        baked_points = {name: list(node.relative_points) for name, node in nodes.items()}
+        baked_points = {name: list(node.vertices) for name, node in nodes.items()}
         baked_matrices = {name: node.effective_transform.copy() for name, node in nodes.items()}
         self.assertTrue(project.bake_primitive_transform(target, recursive=recursive))
         for name, node in nodes.items():
-            self.assertEqual(node.relative_points, baked_points[name])
+            self.assertEqual(node.vertices, baked_points[name])
             np.testing.assert_array_equal(node.effective_transform, baked_matrices[name])
 
         # A singular unbaked parent cannot be reconstructed by the reader;

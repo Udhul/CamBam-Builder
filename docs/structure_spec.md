@@ -53,9 +53,17 @@ maps and corresponding entity encoders before adding a type.
 
 ### Shape elevation and Region contract
 
-Geometry storage remains XY with separate explicit elevation. Existing Pline
-`(x, y, bulge)` tuples retain their meaning. `add_pline` and `add_points` accept
-keyword `vertex_z`, one finite elevation per vertex, defaulting to zero.
+Pline and Points use one canonical `Vertex` record with finite `x`, `y`, `z`
+and `bulge` fields; their sole intrinsic collection is `vertices`. `Vertex(x, y)`
+defaults Z and bulge to zero, `Vertex(x, y, z)` sets elevation, and curved Pline
+segments use `Vertex(x, y, z, bulge=value)` (or omit Z). `bulge` is keyword-only.
+Pline/Points constructors and the project `add_pline`/`add_points` methods accept
+`Vertex` records plus `(x, y)` and `(x, y, z)` tuple shorthand, copying them into
+records. A three-tuple always means XYZ; four-tuples and the former
+`(x, y, bulge)` interpretation are unsupported. Points reject any nonzero bulge.
+Edits to a stored collection use `Vertex` records so coordinate, elevation and
+segment data move together during insertion or reordering.
+
 `add_circle`, `add_arc`, `add_rect` and `add_text` accept keyword `elevation`.
 Text additionally stores optional `xml_p2_position` (XY) and
 `xml_p2_elevation` for serialized `p2`. A missing `p1` means the default origin.
@@ -112,9 +120,10 @@ while encoder errors propagate under the export contract below.
 
 Subtree copy/transfer carries the detached root's complete world Z offset and
 retains descendant local offsets, geometry elevations and owned contours.
-Pickle round trips restore project links. Missing additive elevation fields in
-otherwise supported older primitive state default to zero; Text `xml_p2`
-defaults to absent. This is not general versioned pickle migration.
+Current-version pickle round trips retain vertex records and restore project
+links. Old Pline/Points pickle layouts with parallel coordinate/elevation storage
+are not migrated. Text `xml_p2` defaults to absent in older state; this is not a
+general versioned pickle migration.
 
 The Region creation API is `add_region(layer, outer_curve, hole_curves=(), ...)`.
 Contours are closed Plines. A registered input Pline's complete world pose is

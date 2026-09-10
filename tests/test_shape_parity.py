@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 
 from cambam_builder import CBProject
-from cambam_builder.cambam_entities import Pline
+from cambam_builder.cambam_entities import Pline, Vertex
 from cambam_builder.cambam_reader import read_cambam_file
 from cambam_builder.cambam_writer import save_cambam_file
 from cambam_builder.cad_transformations import (
@@ -87,11 +87,10 @@ class ShapeParityIntegrationTests(unittest.TestCase):
         }
 
     @staticmethod
-    def _contour(user_identifier, points, elevations, *, closed=True):
+    def _contour(user_identifier, vertices, *, closed=True):
         return Pline(
             user_identifier=user_identifier,
-            relative_points=points,
-            vertex_z=elevations,
+            vertices=vertices,
             closed=closed,
         )
 
@@ -106,8 +105,7 @@ class ShapeParityIntegrationTests(unittest.TestCase):
         # The root contributes both a world XY pose and a parent Z offset.
         root = project.add_pline(
             layer,
-            [(0.0, 0.0), (3.0, 0.0)],
-            vertex_z=[8.0, 8.0],
+            [(0.0, 0.0, 8.0), (3.0, 0.0, 8.0)],
             identifier="root",
             local_z_offset=3.5,
         )
@@ -115,8 +113,8 @@ class ShapeParityIntegrationTests(unittest.TestCase):
 
         pline = project.add_pline(
             layer,
-            [(0.0, 0.0, 0.75), (2.0, 0.0, -0.25), (2.0, 1.0, 0.0)],
-            vertex_z=[4.25, 4.25, 4.25],
+            [Vertex(0.0, 0.0, 4.25, bulge=0.75),
+             Vertex(2.0, 0.0, 4.25, bulge=-0.25), (2.0, 1.0, 4.25)],
             identifier="bulged-pline",
             parent=root,
             local_z_offset=-1.25,
@@ -137,8 +135,8 @@ class ShapeParityIntegrationTests(unittest.TestCase):
             identifier="rect", parent=root, local_z_offset=0.25,
         )
         points = project.add_points(
-            layer, [(0.0, 0.0), (1.0, 3.0), (-2.0, 1.0)],
-            vertex_z=[-1.5, 0.0, 2.75], identifier="points", parent=root,
+            layer, [(0.0, 0.0, -1.5), (1.0, 3.0, 0.0), (-2.0, 1.0, 2.75)],
+            identifier="points", parent=root,
             local_z_offset=1.125,
         )
         text = project.add_text(
@@ -149,12 +147,12 @@ class ShapeParityIntegrationTests(unittest.TestCase):
         )
 
         outer = self._contour(
-            "outer", [(0.0, 0.0, 0.5), (10.0, 0.0, 0.0), (10.0, 8.0, -0.5), (0.0, 8.0, 0.0)],
-            [2.25, 2.25, 2.25, 2.25],
+            "outer", [Vertex(0.0, 0.0, 2.25, bulge=0.5), (10.0, 0.0, 2.25),
+                      Vertex(10.0, 8.0, 2.25, bulge=-0.5), (0.0, 8.0, 2.25)],
         )
         hole = self._contour(
-            "hole", [(2.0, 2.0, 0.25), (4.0, 2.0, 0.0), (4.0, 4.0, 0.0), (2.0, 4.0, 0.0)],
-            [2.25, 2.25, 2.25, 2.25],
+            "hole", [Vertex(2.0, 2.0, 2.25, bulge=0.25), (4.0, 2.0, 2.25),
+                     (4.0, 4.0, 2.25), (2.0, 4.0, 2.25)],
         )
         region = project.add_region(
             layer, outer, hole_curves=[hole], identifier="region", parent=root,
@@ -189,7 +187,7 @@ class ShapeParityIntegrationTests(unittest.TestCase):
 
             tree = ET.parse(first)
             by_name = self._elements_by_identifier(tree)
-            # Bulge and vertex Z occupy independent XML fields.
+            # One vertex record retains values emitted to CamBam's distinct XML fields.
             pline_points = by_name["bulged-pline"].find("./pts").findall("p")
             self.assertAlmostEqual(float(pline_points[0].get("b")), 0.75)
             self.assertAlmostEqual(float(pline_points[0].text.split(",")[2]), 4.25)
@@ -352,9 +350,9 @@ class ShapeParityIntegrationTests(unittest.TestCase):
         def make_hierarchy():
             project = CBProject("z-bake")
             layer = project.add_layer("Geometry")
-            root = project.add_pline(layer, [(0, 0), (2, 0)], vertex_z=[1.0, 1.0],
+            root = project.add_pline(layer, [(0, 0, 1.0), (2, 0, 1.0)],
                                      identifier="root", local_z_offset=2.0)
-            child = project.add_points(layer, [(1, 0), (2, 1)], vertex_z=[3.0, 4.0],
+            child = project.add_points(layer, [(1, 0, 3.0), (2, 1, 4.0)],
                                        identifier="child", parent=root, local_z_offset=1.5)
             leaf = project.add_rect(layer, (0, 0), 2, 1, elevation=-2.0,
                                     identifier="leaf", parent=child, local_z_offset=-0.5)
@@ -391,8 +389,8 @@ class ShapeParityIntegrationTests(unittest.TestCase):
         rect.effective_transform = translation_matrix(5.0, 2.0) @ rotation_matrix_deg(30.0)
         converted = rect.to_pline_representation()
         self.assertIsInstance(converted, Pline)
-        self.assertEqual(4, len(converted.relative_points))
-        self.assertEqual([6.25] * 4, list(converted.vertex_z))
+        self.assertEqual(4, len(converted.vertices))
+        self.assertEqual([6.25] * 4, [vertex.z for vertex in converted.vertices])
         self._assert_xyz_projection_close(
             rect.get_absolute_coordinates_xyz(), converted.get_absolute_coordinates_xyz()
         )
@@ -401,9 +399,9 @@ class ShapeParityIntegrationTests(unittest.TestCase):
         source = CBProject("z-transfer")
         layer = source.add_layer("Geometry")
         part = source.add_part("Machining")
-        root = source.add_pline(layer, [(0, 0), (1, 0)], vertex_z=[5, 5],
+        root = source.add_pline(layer, [(0, 0, 5), (1, 0, 5)],
                                 identifier="root", local_z_offset=3.0)
-        child = source.add_points(layer, [(1, 1), (2, 2)], vertex_z=[-1, 2],
+        child = source.add_points(layer, [(1, 1, -1), (2, 2, 2)],
                                   identifier="child", parent=root, local_z_offset=1.5)
         leaf = source.add_circle(layer, (4, 4), 2.0, elevation=7.0,
                                  identifier="leaf", parent=child, local_z_offset=-2.0)
@@ -486,8 +484,7 @@ class ShapeParityIntegrationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             Pline(
                 user_identifier="invalid-bulge-z",
-                relative_points=[(0.0, 0.0, 0.75), (2.0, 0.0, 0.0)],
-                vertex_z=[1.0, 2.0],
+                vertices=[Vertex(0.0, 0.0, 1.0, bulge=0.75), (2.0, 0.0, 2.0)],
             )
 
         project = CBProject("duplicate-xml-id")
