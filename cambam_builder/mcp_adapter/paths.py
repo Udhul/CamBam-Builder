@@ -91,6 +91,17 @@ class Workspace:
             self.cleanup(temporary)
             raise
 
+    def serialize(self, project):
+        """Serialize one bounded XML snapshot without publishing a workspace file."""
+        from cambam_builder.cambam_writer import serialize_cambam_bytes
+
+        data = serialize_cambam_bytes(project)
+        if not data or len(data) > MAX_XML_BYTES:
+            raise DomainError(
+                "LIMIT_EXCEEDED", "Exported XML must be 1 byte through 10 MiB"
+            )
+        return data
+
     def publish(self, temporary, relative):
         destination = self.path(relative, destination=True)
         try:

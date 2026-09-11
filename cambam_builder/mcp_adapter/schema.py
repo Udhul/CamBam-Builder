@@ -10,6 +10,8 @@ CONTRACT = json.loads(Path(__file__).with_name("contract_v1.schema.json").read_t
 TOOLS = tuple(sorted((
     "document_close",
     "document_create",
+    "document_export",
+    "document_import",
     "document_inspect",
     "document_open",
     "document_save",
@@ -89,6 +91,8 @@ def validated_arguments(name, arguments):
 def tool_definitions():
     descriptions = {
         "document_create": "Create an empty volatile document with explicitly asserted units.",
+        "document_export": "Return the current revision as a complete UTF-8 CamBam .cb XML artifact for the client to save unchanged; no server file is created.",
+        "document_import": "Import complete UTF-8 CamBam .cb XML content supplied by the client into a new volatile document.",
         "document_open": "Open a bounded workspace .cb snapshot; unsupported interchange data may be lost on save.",
         "document_inspect": "Inspect a revision-consistent paginated inventory, including typed geometry for supported primitives and explicit Profile/Pocket/Engrave/Drill parameters.",
         "document_save": "Save the current revision to a new workspace .cb file. Never overwrites. Units are asserted, not converted.",
@@ -116,10 +120,12 @@ def tool_definitions():
         "relationship_remove_from_group": "Remove a primitive from a named group.",
         "relationship_copy_tree": "Copy a primitive subtree inside the same document with fresh identities; identifier collisions require an explicit identifier map.",
     }
-    nondestructive = {"document_create", "document_inspect", "document_open", "document_save"}
+    nondestructive = {"document_create", "document_export", "document_import",
+                      "document_inspect", "document_open", "document_save"}
     return [{"name": name, "description": descriptions[name],
              "inputSchema": schema(name, "input"), "outputSchema": schema(name, "output"),
-             "annotations": {"openWorldHint": False, "readOnlyHint": name == "document_inspect",
+             "annotations": {"openWorldHint": False,
+                             "readOnlyHint": name in {"document_export", "document_inspect"},
                              "idempotentHint": True,
                              "destructiveHint": name not in nondestructive}}
             for name in TOOLS]

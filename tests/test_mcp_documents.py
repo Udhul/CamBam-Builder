@@ -75,6 +75,221 @@ class DocumentTests(unittest.TestCase):
             self.assertEqual((self.root / "A.cb").read_bytes(), content)
         self.run_async(test)
 
+    def test_content_import_edit_export_round_trip(self):
+        async def test():
+            source = CBProject("portable")
+            layer = source.add_layer("Geometry")
+            rectangle = source.add_rect(
+                layer, identifier="outline", corner=(2, 3), width=20, height=10
+            )
+            source.save(str(self.root / "source.cb"))
+            source_bytes = (self.root / "source.cb").read_bytes()
+            (self.root / "source.cb").unlink()
+
+            import_args = self.args(
+                units="mm",
+                source_name="client-source.cb",
+                content=source_bytes.decode("utf-8"),
+            )
+            imported = await self.call("document_import", import_args)
+            self.assertTrue(imported["ok"], imported)
+            self.assertEqual(imported["revision"], 0)
+            self.assertEqual(imported["data"]["counts"]["primitives"], 1)
+            self.assertEqual(
+                imported["data"]["source"],
+                {
+                    "name": "client-source.cb",
+                    "sha256": hashlib.sha256(source_bytes).hexdigest(),
+                    "bytes": len(source_bytes),
+                },
+            )
+            self.assertEqual(
+                await self.call("document_import", import_args),
+                {**imported, "replayed": True},
+            )
+            changed = await self.call(
+                "document_import", {**import_args, "content": "<CADFile />"}
+            )
+            self.assertEqual(changed["error"]["code"], "REQUEST_ID_CONFLICT")
+
+            translated = await self.call(
+                "geometry_translate",
+                self.args(
+                    document=imported["document"],
+                    expected_revision=0,
+                    entity_id=str(rectangle.internal_id),
+                    dx=5,
+                    dy=-2,
+                ),
+            )
+            self.assertTrue(translated["ok"], translated)
+            exported = await self.call(
+                "document_export",
+                {
+                    "workspace_id": self.service.workspace.id,
+                    "document": imported["document"],
+                    "expected_revision": 1,
+                    "suggested_filename": "client-result.cb",
+                },
+            )
+            self.assertTrue(exported["ok"], exported)
+            self.assertIsNone(exported["request_id"])
+            self.assertEqual(exported["revision"], 1)
+            artifact = exported["data"]
+            exported_bytes = artifact["content"].encode("utf-8")
+            self.assertEqual(artifact["kind"], "cambam_document")
+            self.assertEqual(artifact["mime_type"], "application/xml")
+            self.assertEqual(artifact["encoding"], "utf-8")
+            self.assertEqual(artifact["suggested_filename"], "client-result.cb")
+            self.assertEqual(artifact["bytes"], len(exported_bytes))
+            self.assertEqual(artifact["sha256"], hashlib.sha256(exported_bytes).hexdigest())
+            self.assertFalse(list(self.root.glob("*.cb")))
+            self.assertFalse(list(self.root.glob(".cambam-mcp-*")))
+
+            reopened = await self.call(
+                "document_import",
+                self.args(
+                    units="mm",
+                    source_name="client-result.cb",
+                    content=artifact["content"],
+                ),
+            )
+            self.assertTrue(reopened["ok"], reopened)
+            entity = self.service.documents[reopened["document"]].project.get_entity(
+                rectangle.internal_id
+            )
+            self.assertEqual(tuple(entity.get_absolute_coordinates_xyz()[0]), (7.0, 1.0, 0.0))
+        self.run_async(test)
+
+    def test_content_import_export_limits_failures_and_stale_revision(self):
+        async def test():
+            for content in [None, [], 123]:
+                invalid = await self.call(
+                    "document_import",
+                    self.args(units="mm", source_name="bad.cb", content=content),
+                )
+                self.assertEqual(invalid["error"]["code"], "INVALID_ARGUMENT")
+            for content in [
+                "not xml",
+                '<!DOCTYPE x [<!ENTITY a "bad">]><CADFile>&a;</CADFile>',
+            ]:
+                result = await self.call(
+                    "document_import",
+                    self.args(units="mm", source_name="bad.cb", content=content),
+                )
+                self.assertEqual(result["error"]["code"], "IMPORT_FAILED")
+            self.assertFalse(self.service.documents)
+
+            prefix = '<?xml version="1.0" encoding="utf-8"?><CADFile><!--'
+            suffix = '--><layers /></CADFile>'
+            exact = prefix + ("x" * (10 * 1024 * 1024 - len(prefix) - len(suffix))) + suffix
+            accepted = await self.call(
+                "document_import",
+                self.args(units="mm", source_name="exact-limit.cb", content=exact),
+            )
+            self.assertTrue(accepted["ok"], accepted)
+            self.assertEqual(accepted["data"]["source"]["bytes"], 10 * 1024 * 1024)
+
+            oversized = exact + " "
+            result = await self.call(
+                "document_import",
+                self.args(units="mm", source_name="large.cb", content=oversized),
+            )
+            self.assertEqual(result["error"]["code"], "LIMIT_EXCEEDED")
+            self.assertEqual(len(self.service.documents), 1)
+
+            handle = await self.create()
+            stale = await self.call(
+                "document_export",
+                {
+                    "workspace_id": self.service.workspace.id,
+                    "document": handle,
+                    "expected_revision": 1,
+                    "suggested_filename": "stale.cb",
+                },
+            )
+            self.assertEqual(stale["error"]["code"], "STALE_REVISION")
+            with patch(
+                "cambam_builder.mcp_adapter.paths.Workspace.serialize",
+                side_effect=ValueError("private detail"),
+            ):
+                failed = await self.call(
+                    "document_export",
+                    {
+                        "workspace_id": self.service.workspace.id,
+                        "document": handle,
+                        "expected_revision": 0,
+                        "suggested_filename": "failed.cb",
+                    },
+                )
+            self.assertEqual(failed["error"]["code"], "EXPORT_FAILED")
+            self.assertFalse(list(self.root.glob(".cambam-mcp-*")))
+        self.run_async(test)
+
+    def test_content_export_serializes_one_locked_revision(self):
+        async def test():
+            handle = await self.create()
+            entered, release = threading.Event(), threading.Event()
+            original = self.service.workspace.serialize
+            results = []
+
+            def blocked(project):
+                data = original(project)
+                entered.set()
+                release.wait(5)
+                return data
+
+            async def exporting():
+                results.append(await self.call(
+                    "document_export",
+                    {
+                        "workspace_id": self.service.workspace.id,
+                        "document": handle,
+                        "expected_revision": 0,
+                        "suggested_filename": "revision-zero.cb",
+                    },
+                ))
+
+            async def editing():
+                results.append(await self.call(
+                    "geometry_add_rectangle",
+                    self.args(
+                        document=handle,
+                        expected_revision=0,
+                        identifier="later",
+                        layer="Geometry",
+                        x=0,
+                        y=0,
+                        width=1,
+                        height=1,
+                    ),
+                ))
+
+            with patch.object(self.service.workspace, "serialize", blocked):
+                async with anyio.create_task_group() as group:
+                    group.start_soon(exporting)
+                    await anyio.to_thread.run_sync(entered.wait, 5)
+                    group.start_soon(editing)
+                    await anyio.lowlevel.checkpoint()
+                    release.set()
+
+            exported = next(result for result in results if result["data"].get("kind") == "cambam_document")
+            edited = next(result for result in results if result["revision"] == 1)
+            self.assertEqual(exported["revision"], 0)
+            self.assertTrue(edited["ok"], edited)
+            snapshot = await self.call(
+                "document_import",
+                self.args(
+                    units="mm",
+                    source_name="revision-zero.cb",
+                    content=exported["data"]["content"],
+                ),
+            )
+            self.assertTrue(snapshot["ok"], snapshot)
+            self.assertEqual(snapshot["data"]["counts"]["primitives"], 0)
+            self.assertEqual(self.service.documents[handle].revision, 1)
+        self.run_async(test)
+
     def test_identity_schema_and_cached_failures(self):
         async def test():
             handle = await self.create()

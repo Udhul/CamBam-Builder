@@ -17,7 +17,7 @@ from cambam_builder.cambam_entities import (
 )
 from cambam_builder.cambam_reader import CamBamImportLimitError, read_cambam_bytes
 from cambam_builder.region import Region
-from .paths import DomainError, Workspace
+from .paths import DomainError, MAX_XML_BYTES, Workspace
 from .schema import CONTRACT, OUTPUTS, StrictValidator, TOOLS, validated_arguments
 
 _PARAMETER_VALIDATORS = {
@@ -132,10 +132,19 @@ class DocumentService:
             # remaining arguments does reserve and caches its terminal failure.
             request_id = _typed(args.get("request_id"), "UUID")
             workspace_id = _typed(args.get("workspace_id"), "Workspace")
-            if name != "document_inspect" and request_id is not None and workspace_id is not None:
+            if name not in ("document_export", "document_inspect") and request_id is not None and workspace_id is not None:
                 ledger_key = (workspace_id, request_id)
                 try:
-                    signature = json.dumps([name, {k: v for k, v in validated.items() if k != "request_id"}],
+                    signature_args = {k: v for k, v in validated.items() if k != "request_id"}
+                    if (
+                        name == "document_import"
+                        and isinstance(signature_args.get("content"), str)
+                    ):
+                        content = signature_args.pop("content")
+                        encoded = content.encode("utf-8")
+                        signature_args["content_sha256"] = hashlib.sha256(encoded).hexdigest()
+                        signature_args["content_bytes"] = len(encoded)
+                    signature = json.dumps([name, signature_args],
                                            sort_keys=True, separators=(",", ":"), allow_nan=False)
                 except (TypeError, ValueError):
                     raise DomainError("INVALID_ARGUMENT", "Arguments must be finite JSON values")
@@ -165,7 +174,7 @@ class DocumentService:
             args = validated
             if args["workspace_id"] != self.workspace.id:
                 raise DomainError("WORKSPACE_MISMATCH", "Workspace ID does not match this server", "workspace_id")
-            if name in ("document_create", "document_open"):
+            if name in ("document_create", "document_import", "document_open"):
                 return await self._new(name, args, entry)
             handle = args["document"]
             if handle.split(":")[0] != self.bootstrap["boot_id"]:
@@ -181,6 +190,8 @@ class DocumentService:
                 if name == "document_inspect":
                     data, diagnostics = self._inspect(document, args)
                     return self._complete(name, entry, self._envelope(args, data=data, diagnostics=diagnostics))
+                if name == "document_export":
+                    return await self._export(name, args, document)
                 if name == "document_close":
                     with anyio.CancelScope(shield=True):
                         async with self.registry_lock:
@@ -228,15 +239,34 @@ class DocumentService:
     def _stage_new(self, name, args):
         if name == "document_create":
             return Document(CBProject(args["name"]), args["units"])
-        data = self.workspace.read(args["path"])
+        if name == "document_import":
+            try:
+                data = args["content"].encode("utf-8")
+            except UnicodeEncodeError:
+                raise DomainError(
+                    "IMPORT_FAILED", "Document content must be valid UTF-8", "content"
+                ) from None
+            if len(data) > MAX_XML_BYTES:
+                raise DomainError("LIMIT_EXCEEDED", "XML exceeds 10 MiB", "content")
+            source_name = args["source_name"]
+        else:
+            data = self.workspace.read(args["path"])
+            source_name = args["path"]
         try:
-            project = read_cambam_bytes(data, source_name=args["path"], strict=True)
+            project = read_cambam_bytes(data, source_name=source_name, strict=True)
         except CamBamImportLimitError:
-            raise DomainError("LIMIT_EXCEEDED", "Document exceeds import resource limits", "path") from None
+            field = "content" if name == "document_import" else "path"
+            raise DomainError("LIMIT_EXCEEDED", "Document exceeds import resource limits", field) from None
         except ValueError:
-            raise DomainError("IMPORT_FAILED", "Strict XML import failed", "path") from None
+            field = "content" if name == "document_import" else "path"
+            raise DomainError("IMPORT_FAILED", "Strict XML import failed", field) from None
         self._check_limits(project)
-        return Document(project, args["units"], {"path": args["path"], "sha256": hashlib.sha256(data).hexdigest()})
+        source = {"sha256": hashlib.sha256(data).hexdigest()}
+        if name == "document_import":
+            source.update({"name": source_name, "bytes": len(data)})
+        else:
+            source["path"] = source_name
+        return Document(project, args["units"], source)
 
     async def _new(self, name, args, entry):
         async with self.registry_lock:
@@ -249,7 +279,9 @@ class DocumentService:
             await anyio.lowlevel.checkpoint()
             handle = self.bootstrap["boot_id"] + ":" + str(uuid4())
             result = self._envelope(args, data=self._summary(document), document=handle, revision=0,
-                                    diagnostics=self._diagnostics(document.units, name == "document_open"))
+                                    diagnostics=self._diagnostics(
+                                        document.units, name in ("document_import", "document_open")
+                                    ))
             OUTPUTS[name].validate(result)
             with anyio.CancelScope(shield=True):
                 async with self.registry_lock:
@@ -289,6 +321,39 @@ class DocumentService:
         finally:
             if temporary is not None:
                 self.workspace.cleanup(temporary)
+
+    async def _export(self, name, args, document):
+        def serialize():
+            try:
+                return self.workspace.serialize(document.project.clone())
+            except (DomainError, OSError):
+                raise
+            except Exception:
+                raise DomainError("EXPORT_FAILED", "XML export failed") from None
+
+        data = await anyio.to_thread.run_sync(serialize)
+        try:
+            content = data.decode("utf-8")
+        except UnicodeDecodeError:
+            raise DomainError("EXPORT_FAILED", "XML export was not valid UTF-8") from None
+        artifact = {
+            "kind": "cambam_document",
+            "mime_type": "application/xml",
+            "encoding": "utf-8",
+            "suggested_filename": args["suggested_filename"],
+            "sha256": hashlib.sha256(data).hexdigest(),
+            "bytes": len(data),
+            "content": content,
+        }
+        return self._complete(
+            name,
+            None,
+            self._envelope(
+                args,
+                data=artifact,
+                diagnostics=self._diagnostics(document.units, True),
+            ),
+        )
 
     @staticmethod
     def _identifier_available(project, identifier, field):

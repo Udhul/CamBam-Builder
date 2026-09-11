@@ -7,6 +7,7 @@ MOPs, and their relationships according to the CamBam schema.
 """
 
 import xml.etree.ElementTree as ET
+import io
 import os
 import logging
 import uuid
@@ -154,6 +155,31 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
     return ET.ElementTree(root)
 
 
+def serialize_cambam_bytes(project: CamBamProject, pretty_print: bool = True) -> bytes:
+    """Serialize a project as complete UTF-8 CamBam XML bytes."""
+    output_decimals = project.output_decimals
+    for primitive in project._primitives.values():
+        if isinstance(primitive, Primitive):
+            primitive.output_decimals = output_decimals
+
+    logger.info("Building XML tree for project '%s'...", project.project_name)
+    tree = build_xml_tree(project)
+    logger.info("XML tree built.")
+    if pretty_print:
+        indent = getattr(ET, "indent", None)
+        if indent is not None:
+            indent(tree, space="  ", level=0)
+            logger.debug("XML pretty-printing applied.")
+        else:
+            logger.warning("XML pretty-printing (indentation) requires Python 3.9 or later.")
+
+    stream = io.BytesIO()
+    tree.write(
+        stream, encoding="utf-8", xml_declaration=True, short_empty_elements=False
+    )
+    return stream.getvalue()
+
+
 def save_cambam_file(project: CamBamProject, file_path: str, pretty_print: bool = True) -> None:
     """
     Builds the XML tree for the project and saves it to a .cb file.
@@ -177,27 +203,7 @@ def save_cambam_file(project: CamBamProject, file_path: str, pretty_print: bool 
         if output_dir: # Handle case where path is just filename in current dir
             os.makedirs(output_dir, exist_ok=True)
 
-        # Set the output decimal precision in all primitives, based on the project setting
-        output_decimals = project.output_decimals
-        for primitive in project._primitives.values():
-            if not isinstance(primitive, Primitive):
-                continue
-            primitive.output_decimals = output_decimals
-
-        # Build the XML tree
-        logger.info(f"Building XML tree for project '{project.project_name}'...")
-        tree = build_xml_tree(project)
-        logger.info("XML tree built.")
-
-        # Apply pretty printing if requested and supported
-        if pretty_print:
-            indent = getattr(ET, "indent", None)  # Python 3.9+
-            if indent is not None:
-                indent(tree, space="  ", level=0)
-                logger.debug("XML pretty-printing applied.")
-            else:
-                logger.warning("XML pretty-printing (indentation) requires Python 3.9 or later.")
-
+        data = serialize_cambam_bytes(project, pretty_print=pretty_print)
 
         # Keep the temporary file on the destination filesystem. Close it before
         # replacement, including on Windows where open files cannot be replaced.
@@ -207,7 +213,7 @@ def save_cambam_file(project: CamBamProject, file_path: str, pretty_print: bool 
                 mode='wb', dir=output_dir or '.', prefix='.cambam-', suffix='.tmp', delete=False
             ) as temporary_file:
                 temporary_path = temporary_file.name
-                tree.write(temporary_file, encoding='utf-8', xml_declaration=True, short_empty_elements=False)
+                temporary_file.write(data)
             os.replace(temporary_path, output_path)
             temporary_path = None
         finally:

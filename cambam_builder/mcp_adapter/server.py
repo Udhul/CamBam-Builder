@@ -39,7 +39,10 @@ from .service import DocumentService
 PROTOCOL_VERSION = "2026-07-28"
 LEGACY_PROTOCOL_VERSIONS = ("2025-06-18", "2025-11-25")
 SUPPORTED_PROTOCOL_VERSIONS = (*LEGACY_PROTOCOL_VERSIONS, PROTOCOL_VERSION)
-MAX_INPUT_LINE_BYTES = 1024 * 1024
+# A 10 MiB UTF-8 XML document can expand when represented as a JSON string.
+# Keep framing bounded while leaving room for the documented XML payload plus
+# JSON escaping and the surrounding request envelope.
+MAX_INPUT_LINE_BYTES = 32 * 1024 * 1024
 WORKSPACE_META_KEY = "cambam-builder/workspace"
 
 
@@ -63,7 +66,7 @@ def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
 def _strict_decode(line: bytes) -> str:
     """Validate strict JSON while retaining the original line for the SDK."""
     if len(line) > MAX_INPUT_LINE_BYTES:
-        raise StrictJSONError("JSON-RPC input line exceeds 1 MiB")
+        raise StrictJSONError("JSON-RPC input line exceeds 32 MiB")
     try:
         text = line.decode("utf-8")
     except UnicodeDecodeError as exc:
@@ -112,13 +115,13 @@ class _StrictInput:
                 oversized = self._oversized or len(line) > MAX_INPUT_LINE_BYTES
                 self._oversized = False
                 if oversized:
-                    raise StrictJSONError("JSON-RPC input line exceeds 1 MiB")
+                    raise StrictJSONError("JSON-RPC input line exceeds 32 MiB")
                 return _strict_decode(line)
 
             if self._eof:
                 if self._oversized:
                     self._oversized = False
-                    raise StrictJSONError("JSON-RPC input line exceeds 1 MiB")
+                    raise StrictJSONError("JSON-RPC input line exceeds 32 MiB")
                 if not self._buffer:
                     raise StopAsyncIteration
                 line = bytes(self._buffer)
@@ -126,7 +129,7 @@ class _StrictInput:
                 oversized = self._oversized or len(line) > MAX_INPUT_LINE_BYTES
                 self._oversized = False
                 if oversized:
-                    raise StrictJSONError("JSON-RPC input line exceeds 1 MiB")
+                    raise StrictJSONError("JSON-RPC input line exceeds 32 MiB")
                 return _strict_decode(line)
 
             chunk = await self._source.read(8192)
@@ -326,8 +329,10 @@ def create_server(service: DocumentService) -> Server:
         instructions=(
             "Use workspace_id="
             + service.workspace.id
-            + " in every tool call. Legacy clients omit only modern per-request "
-            "protocol metadata."
+            + " in every tool call. Client-local paths are not server workspace paths: "
+            "use document_import with complete .cb XML, edit the returned handle, then "
+            "use document_export and save its content unchanged with the returned hash. "
+            "Legacy clients omit only modern per-request protocol metadata."
         ),
         on_list_tools=on_list_tools,
         on_call_tool=on_call_tool,

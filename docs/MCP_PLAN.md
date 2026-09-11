@@ -147,6 +147,8 @@ prefer multiple outcome-sized sessions if coverage does not fit one coherent uni
 - Add schema/API parity fixtures and negative tests for every added family. Test
   concurrent/stale edits, restart recovery, retry/idempotency and failure atomicity
   across the supported surface. Keep unsupported operations explicit.
+- Support portable client-content import/export before second-PC acceptance so a
+  client can edit local `.cb` content without sharing the server filesystem.
 - Update the adapter impact check in the workflow and the contract/runbook as
   each public family becomes supported; do not claim complete CamBam coverage.
 

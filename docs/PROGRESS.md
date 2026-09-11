@@ -7,6 +7,25 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**4d portable client document interchange: implemented and verified**
+(2026-09-11). The adapter now advertises twenty-nine version 1 tools.
+`document_import` accepts complete client-supplied UTF-8 `.cb` XML and publishes
+a new volatile revision-0 handle through the same strict reader, 10 MiB byte
+limit, entity limits, capacity reservation and retry rules as workspace open;
+its retained retry signature stores only the content hash and byte count.
+`document_export` returns the exact locked revision as a typed inline artifact
+with filename, media type, encoding, byte count, SHA-256 and complete content,
+without publishing a server workspace file or retaining large results in the
+request ledger. The stdio framing bound is 32 MiB so the unchanged 10 MiB XML
+limit remains usable after JSON escaping. Automated evidence covers client
+import/edit/export/reimport, hashes, revisions, malformed/declaration XML,
+exact-limit acceptance, over-limit rejection, cleanup/failure behavior, and an
+exact-10-MiB protocol round trip. Invalid content types and an export/edit lock
+race are also covered. MCP resources remain deferred until 4e named-client tests
+show they improve delivery without
+making artifacts inaccessible to agents. Evidence is in the
+[review](REVIEW.md#mcp-portable-document-interchange---2026-09-11).
+
 **First MCP authoring and round-trip slice: complete** (2026-09-10; backlog
 4c). The adapter then advertised all eight version 1 tools and staged rectangle,
 Profile and translation edits on independent project clones before one atomic
@@ -125,7 +144,7 @@ parenting/groups/copy-transfer and bake transforms are still unsupported;
 Profile targets remain root Rects only. Evidence is in the
 [review](REVIEW.md#mcp-text-and-region-breadth-batch-2---2026-09-10).
 
-**4d state after batches 1-4: complete except cross-document copy/transfer.**
+**4d state after batches 1-4 plus portable interchange: complete except cross-document copy/transfer.**
 The next increment is **4d batch 5: cross-document copy/transfer**, which first
 needs a recorded two-document staging/revision/failure contract decision in
 [MCP_CONTRACT.md](MCP_CONTRACT.md); alternatively start **4e desktop/second-PC
@@ -154,7 +173,7 @@ is exercised and passes.
 The authoring boundary subsequently advanced through the completed 4c slice.
 
 **MCP protocol/client/adapter contract: complete** (2026-09-10; backlog 4a).
-The [current contract guide](MCP_CONTRACT.md) and [twenty-seven tool schemas](mcp_contract_v1.schema.json)
+The [current contract guide](MCP_CONTRACT.md) and [twenty-nine tool schemas](mcp_contract_v1.schema.json)
 settle stdio MCP 2026-07-28, optional SDK 2.2.0/Python >=3.10, volatile explicit
 handles, revision/retry rules, workspace containment and new-file-only saves.
 SDK stdio direct-call/discovery probes passed. OpenCode 1.18.29's installed backend

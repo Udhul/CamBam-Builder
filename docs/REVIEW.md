@@ -1881,3 +1881,57 @@ Remaining limits: cross-document copy/transfer (deferred above), no generic
 field setters or deletion tools, and CamBam production acceptance stays with
 4e. Same-document copy requires explicit identifier/group maps for every
 included non-unique name by framework contract.
+
+## MCP portable document interchange - 2026-09-11
+
+Client-local `.cb` files no longer need to be copied into the server workspace.
+The adapter adds `document_import`, which accepts a complete UTF-8 XML snapshot
+and publishes a revision-0 volatile handle through the existing strict reader,
+and `document_export`, which serializes the locked revision to an in-memory byte
+snapshot and returns a typed client artifact with filename, media type, encoding,
+byte count, SHA-256 and complete XML content. Import retains only the content
+digest and byte count in its process-lifetime retry signature; export is read-only
+and is not retained in that ledger. Neither operation interprets a client name as
+a server path, and export creates no server filesystem artifact.
+
+The established 10 MiB XML limit remains unchanged and is enforced on encoded
+UTF-8 bytes in both directions. Stdio framing increased from 1 MiB to 32 MiB only
+to accommodate a valid 10 MiB payload after JSON string escaping and envelope
+overhead. Inline content is the compatibility baseline because named-client
+resource-result behavior is not yet accepted; 4e may add resource delivery if
+it demonstrably reduces context cost without hiding the artifact from agents.
+The standard tool result currently includes both structured content and the
+backward-compatible serialized text block, so a large export may cross the client
+boundary twice. This is a known context/network cost, not a correctness gap.
+
+Automated coverage verifies import/edit/export/reimport geometry and identity,
+source and artifact hashes, revisions, import retry/conflict behavior, malformed
+and declaration-bearing XML rejection, exact 10 MiB acceptance, over-limit
+rejection, invalid content types, stale export, an export/edit lock race and
+bounded export failure. A real stdio subprocess moves an exact-10-MiB XML request
+through the modern protocol path and recovers the exported artifact; a legacy
+initialized connection also exports and reimports a document. Existing save
+failure/atomic replacement regressions pass after extracting the shared in-memory
+byte serializer.
+
+Verification on the repository Python 3.13 environment with MCP 2.2.0:
+
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p test_mcp_documents.py -v`:
+  18 tests, one existing Windows symlink-privilege skip.
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p test_mcp_protocol.py -v`:
+  9 passed, including the above-1-MiB real stdio round trip.
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p test_export_failures.py -v`:
+  8 passed.
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p 'test_mcp_*.py' -v`:
+  49 tests, the same one skip.
+- `.venv/Scripts/python.exe -m unittest discover -s tests -v`: 201 tests with
+  the same one skip (200 passed).
+- `compileall`, schema-copy identity (inside the document suite),
+  `demos/mcp_authoring_slice.py` and `git diff --check`: pass.
+
+No manual CamBam validation adds evidence for this transport and serialization
+slice because it uses the same XML builder and strict reader already covered by
+the existing interchange acceptance. Named desktop-client handling of a local
+file and returned inline artifact remains 4e user acceptance. The next coherent
+increment remains 4d batch 5 cross-document copy, now testable with two documents
+imported from client content.

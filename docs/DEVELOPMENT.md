@@ -563,7 +563,7 @@ and stops this process. Close stdin to stop it, or use Ctrl+C for an interactive
 launch. Stdout is exclusively MCP; stderr emits the content-free workspace/boot
 bootstrap. Restart loses all open handles, unsaved edits and retry records.
 
-Twenty-seven tools create, open, inspect, save and close documents; add root
+Twenty-nine tools create, open/import, inspect, save/export and close documents; add root
 Rect, Circle, Arc, Pline, Points, Text and Region primitives; add explicit
 Profile, Pocket, Engrave and Drill MOPs and replace MOP targets; link/group
 and same-document copy primitives; and translate, rotate, uniformly scale,
@@ -574,6 +574,14 @@ only create new `.cb` paths under the workspace and never overwrite. File
 parent directories must already exist. Units are assertions, not conversions
 or a verified CamBam units setting. Read the
 [state and safety contract](MCP_CONTRACT.md) before client use.
+
+For a client-local `.cb` file, the client reads the complete UTF-8 XML and calls
+`document_import` with `source_name`, `units` and `content`; a client path must
+not be passed to `document_open`. After edits, call `document_export` with the
+current revision and a suggested leaf filename, write the returned `content`
+unchanged to the desired client-local path, and verify its SHA-256 when possible.
+Both directions accept up to 10 MiB of XML. Inline results are intentionally the
+compatibility baseline; large results may consume substantial model context.
 
 Codex client configuration (replace both absolute paths):
 

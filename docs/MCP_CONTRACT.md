@@ -1,7 +1,7 @@
 # Local MCP adapter contract
 
 Contract version 1, decided 2026-09-10 for backlog 4a. This is the authoritative
-implementation contract; all twenty-seven version 1 document and authoring tools
+implementation contract; all twenty-nine version 1 document and authoring tools
 are implemented. Cross-document copy/transfer remains deferred future work with
 a reopening criterion in [PROGRESS.md](PROGRESS.md).
 Priority and delivery state live in [PROGRESS.md](PROGRESS.md), and increment boundaries in
@@ -116,12 +116,13 @@ already known. `_meta["io.modelcontextprotocol/serverInfo"]` remains SDK-owned.
 Legacy initialization also publishes the bootstrap and includes the actual
 workspace ID in server instructions, so ordinary clients can discover it.
 
-Create/open start at integer revision 0. All document mutations, save and close
+Create/open/import start at integer revision 0. All document mutations, save and close
 require `expected_revision`. Serialize operations with a per-document lock; check
 revision inside the lock. A successful geometry/MOP edit increments once, even a
 zero translation. Inspect and save do not increment; close invalidates the handle.
-Two edits using the same revision cannot both succeed. Inspect takes the same
-lock and returns one complete snapshot. Save holds the document lock from revision
+Two edits using the same revision cannot both succeed. Inspect and export take the
+same lock and return one complete snapshot. Export is read-only and does not increment
+the revision. Save holds the document lock from revision
 check through clone, filesystem publication and ledger completion; its response
 revision is exactly the revision represented by the saved artifact. An edit racing
 save waits or wins the lock first, in which case the stale save fails. Never expose
@@ -141,12 +142,13 @@ because the writer updates primitive output precision. Exceptions or a framework
 `None` failure discard staging and leave the live revision, relationships and files
 unchanged. A multi-operation transaction tool is outside the initial surface.
 
-All state-changing calls, including create/open/save/close, require caller-generated
+All state-changing calls, including create/open/import/save/close, require caller-generated
 UUID `request_id`, distinct from the JSON-RPC ID. Keep a process-lifetime request
 ledger keyed by `(workspace_id, request_id)`. Under a ledger lock reserve the key
 before execution, then release the ledger lock before waiting for a document lock
 or running framework/I/O work. Compare canonical validated tool name/arguments, with defaults
-expanded and excluding `request_id`. Identical retries join an in-flight operation
+expanded and excluding `request_id`; replace imported XML content in the retained
+signature with its UTF-8 byte count and SHA-256 digest. Identical retries join an in-flight operation
 or return its original completed result **before** stale-revision/closed-handle
 checks. Different arguments with a reused key return `REQUEST_ID_CONFLICT`.
 Cache terminal application failures too; after changing a failed operation use a
@@ -168,7 +170,7 @@ cross-restart exactly-once claim for create/open; clients must start a new workf
 For interrupted saves inspect/open the intended path and compare its byte hash;
 never blindly repeat an uncertain save to a different name after restart.
 
-Initial hard limits: 16 live documents, 10 MiB source XML or saved XML, 10,000
+Initial hard limits: 16 live documents, 10 MiB imported/opened/exported/saved XML, 10,000
 primitives and 1,000 MOPs per document. At 10,000 reserved/completed **regular**
 ledger entries, reject new create/open/edit requests before reservation with
 `LIMIT_EXCEEDED`. This admission refusal is not cached and has no effects.
@@ -180,9 +182,10 @@ capacity, not ledger entries. A restart clears volatile capacity. Inspection is
 paginated as defined below. Limit changes require schema
 and behavior tests, not new dependencies.
 
-## Workspace, import and save policy
+## Workspace and document interchange policy
 
-All file arguments are workspace-relative `/`-separated paths ending exactly in
+`document_open` and `document_save` operate on the server workspace. Their file
+arguments are workspace-relative `/`-separated paths ending exactly in
 `.cb` (case-insensitive). Reject absolute, drive-relative, UNC/device, colon/ADS,
 NUL, `.`/`..`, empty components, backslashes, Windows reserved device names,
 and components ending in a dot or space. Do not expand environment variables,
@@ -199,17 +202,32 @@ claim this policy is an OS sandbox against a same-user process swapping paths.
 No extra roots from the client may expand access. Path failures must not disclose
 outside-workspace paths or file existence.
 
-Open reads a bounded byte snapshot, calculates SHA-256, and uses a public
+Open and content import read a bounded byte snapshot, calculate SHA-256, and use a public
 `read_cambam_bytes(data: bytes, *, source_name: str = "", strict: bool = True)`
 entry point added to the reader. It returns a project or raises `ValueError` with
 bounded diagnostic context; existing `read_cambam_file` behavior remains compatible.
 Reject DTD/entity declarations and unsafe XML before parsing; enforce this
 in the reader's owning contract. Strict import must reject unsupported MOP
 types instead of allowing their current warning-and-skip behavior. Reader failures
-become `IMPORT_FAILED` without publishing a document. Unknown XML fields still have
-no blanket preservation guarantee: return `INTERCHANGE_LIMITED` on every open/save.
-Preserve supported native parameter templates through public framework behavior.
-Do not offer arbitrary XML patches, raw XML results or pickle loading.
+become `IMPORT_FAILED` without publishing a document. `document_import` accepts a
+complete UTF-8 XML string supplied by the client plus a client-facing leaf filename;
+it never interprets that name as a server path. It uses the same strict reader,
+10 MiB encoded-byte limit, entity limits, capacity reservation and atomic handle
+publication as open. Unknown XML fields still have no blanket preservation guarantee:
+return `INTERCHANGE_LIMITED` on every open/import/save/export. Preserve supported
+native parameter templates through public framework behavior. Serialized XML is a
+complete interchange artifact only; do not offer arbitrary XML patches, treat XML
+as instructions, or offer pickle loading.
+
+`document_export` clones and serializes the revision under the document lock without
+publishing a user-visible server file. Return `{kind: "cambam_document", mime_type:
+"application/xml", encoding: "utf-8", suggested_filename, sha256, bytes, content}`.
+The client should write the UTF-8 `content` unchanged to its requested local `.cb`
+destination and may verify `sha256`; the server cannot write a client-local path.
+Export is a read-only call without `request_id` or ledger retention, preventing a
+process-lifetime ledger from retaining repeated 10 MiB artifacts. Inline delivery is
+the version 1 compatibility baseline. MCP resources may be reconsidered in 4e only
+after named clients prove that resource results remain accessible to their agents.
 
 **Save always creates a new file; overwrite is unsupported in version 1.** This
 protects source files whose unsupported metadata may not survive interchange.
@@ -241,7 +259,8 @@ models; do not coerce
 strings to numbers, booleans to numbers, or ignore unknown properties. Every field
 is required unless marked `?`; optional fields have the stated default. `null` is
 permitted only where explicitly stated. Reject NaN/infinity and oversized messages
-(1 MiB per JSON-RPC input line). All UUIDs use canonical lowercase hyphenated text.
+(32 MiB per JSON-RPC input line, allowing a 10 MiB UTF-8 XML payload plus JSON
+escaping/envelope overhead). All UUIDs use canonical lowercase hyphenated text.
 
 | Type | Definition |
 | --- | --- |
@@ -250,6 +269,8 @@ permitted only where explicitly stated. Reject NaN/infinity and oversized messag
 | `Revision` | Integer 0 through 2^53-1; refuse overflow |
 | `Name` | String 1..128 characters, no control characters; explicit user identifier, unique across project identifiers |
 | `Path` | String 1..1024 characters satisfying the workspace path policy |
+| `Filename` | Client-facing leaf filename ending `.cb`, 4..255 characters, with no path separators or control characters |
+| `XmlContent` | Complete UTF-8 XML text; encoded bytes, not character count, are limited to 10 MiB |
 | `Number` | Finite JSON number; geometry/translation magnitude <=1e9 |
 | `Positive` | Finite JSON number >0 and <=1e9 |
 | `Read` | `{workspace_id: Workspace, document: Handle}` |
@@ -272,6 +293,7 @@ Z coordinate, and translation is relative to the existing local transform.
 | Tool | Closed input record | Public framework mapping / result data |
 | --- | --- | --- |
 | `document_create` | `New + {name: Name}` | `CBProject(name)`; empty document. Return `DocumentSummary`. |
+| `document_import` | `New + {source_name: Filename, content: XmlContent}` | Strict `read_cambam_bytes(content.encode("utf-8"))`; publish a new revision-0 volatile handle and return `DocumentSummary` with client-source name/hash/bytes. |
 | `document_open` | `New + {path: Path}` | Strict `read_cambam_bytes` of a bounded snapshot; return `DocumentSummary` with source path/hash. |
 | `document_inspect` | `Read + {offset?: integer >=0 =0, limit?: integer 1..100 =100, expected_revision?: Revision}` | Public `list_*`, relationship getters and world-coordinate/bounds queries; return `InspectionPage`. If supplied, revision must match. |
 | `geometry_add_rectangle` | `Write + {identifier: Name, layer: Name, x: Number, y: Number, width: Positive, height: Positive, z?: Number =0}` | `add_rect(layer, corner=(x,y), width=width, height=height, identifier=identifier, elevation=z)`; absent layer created through public API. Return primitive UUID and layer name. |
@@ -296,11 +318,12 @@ Z coordinate, and translation is relative to the existing local transform.
 | `geometry_mirror` | `Write + {entity_id: UUID, axis: "x"\|"y", position?: Number}` | Public `mirror_primitive_x` (across y=position) or `mirror_primitive_y` (across x=position); absent position uses the geometric center. Bulged vertices flip sign under reflection; return the entity UUID. |
 | `geometry_bake` | `Write + {entity_id: UUID}` | Public `bake_geometry()` on the staged primitive: folds the world transform into stored geometry and resets the matrix to identity. Non-axis-aligned Rects become closed Plines (reported `type`); Text bakes only translation/positive uniform scale and otherwise fails `UNSUPPORTED_OPERATION`; return the entity UUID and resulting type. |
 | `geometry_translate` | `Write + {entity_id: UUID, dx: Number, dy: Number}` | `translate_primitive(entity_id, dx, dy, bake=False)`; return primitive UUID. Accepts root Rect/Circle/Arc/Pline/Points/Text/Region primitives inside the similarity slice: a finite non-degenerate XY similarity world matrix (translation, rotation, uniform scale, reflection), zero local Z offset, no parent/children/groups and valid positive geometry. |
+| `document_export` | `{workspace_id: Workspace, document: Handle, expected_revision: Revision, suggested_filename: Filename}` | Serialize a clone of the exact revision; return a complete `SerializedArtifact` without publishing a workspace file. |
 | `document_save` | `Write + {path: Path}` | Clone + `save` + no-replace publication above; return `SavedArtifact`. |
 | `document_close` | `Write` | Drop handle after revision check; return `{closed: true}`. Unsaved edits are discarded explicitly. |
 
 Set tool annotations `openWorldHint=false` for all tools, `readOnlyHint=true` only
-for inspect, and `idempotentHint=true` for inspect and ledger-protected writes.
+for inspect/export, and `idempotentHint=true` for read-only calls and ledger-protected writes.
 Mark close/geometry mutations destructive; new-file save and create/open are
 nondestructive. Hints describe behavior, not authorization or protocol enforcement.
 
@@ -337,10 +360,11 @@ header/footer; unexposed parameters remain fixed. Inspect returns these values
 too as closed per-kind parameter records. No unrestricted `**kwargs` input.
 
 Inspection serializes copies, never mutable entity objects. `DocumentSummary` is
-`{name, units, source: null | {path, sha256}, counts: {layers, parts, primitives,
+`{name, units, source: null | {path, sha256} | {name, sha256, bytes}, counts: {layers, parts, primitives,
 mops}}`; counts are nonnegative integers. Source is informational and never means
 save-in-place. `SavedArtifact` is `{path, absolute_path, sha256, bytes}` with positive
-bytes. `InspectionPage` is `{summary: DocumentSummary, offset, next_offset: null |
+bytes. `SerializedArtifact` is the complete typed content record defined above.
+`InspectionPage` is `{summary: DocumentSummary, offset, next_offset: null |
 integer, entities: EntityRecord[]}`. Enumerate layers in project order, parts in
 project order, primitives by UUID, MOPs in part/MOP order; concatenate in that order
 and paginate. Later pages should provide the first page's `expected_revision`.
@@ -421,7 +445,9 @@ It must not advertise the three editing tools until their handlers exist.
 
 4b acceptance: real subprocess discovery/list/direct-call without handshake;
 legacy negotiation at both declared versions, modern metadata enforcement and
-cross-era rejection; strict input/output schema tests; wrong
+cross-era rejection; strict input/output schema tests; client-content import/edit/export
+round trips (including a real stdio payload above the former 1 MiB framing limit),
+exact 10 MiB acceptance and over-limit rejection; wrong
 workspace/boot/handle/revision; concurrent same-revision edits; idempotent success,
 failure, in-flight retry and closed-handle replay; limit exhaustion; cancellation
 before/after commit; two creates/opens at 15 documents; exhausted regular ledger
@@ -464,7 +490,7 @@ relationship tools with fresh-identity same-document copies. The one deferred
 staging, revision and failure-semantics decision recorded in the contract
 before tools are advertised; its reopening criterion is in
 [PROGRESS.md](PROGRESS.md). Remote hosting, arbitrary Python/private
-registries, pickle, generic field setters, deletion/batch edits, raw XML
+registries, pickle, generic field setters, deletion/batch edits, arbitrary XML
 editing, overwrite and machine/G-code execution remain excluded. Reopen
 volatile storage only for a demonstrated unsaved-recovery need; reopen
 overwrite only with expected-file-hash concurrency and fidelity acceptance;

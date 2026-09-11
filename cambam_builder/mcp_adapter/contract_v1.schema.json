@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:cambam-builder:mcp-contract:1",
   "title": "MCP adapter v1 tool contracts",
-  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All twenty-seven version 1 document and authoring tools are implemented; typed detail covers the seven supported primitive kinds and the four supported MOP kinds within the similarity slice, while non-similarity transforms and relationships stay diagnostic. Cross-document copy/transfer remains future work.",
+  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All twenty-nine version 1 document and authoring tools are implemented; typed detail covers the seven supported primitive kinds and the four supported MOP kinds within the similarity slice, while non-similarity transforms and relationships stay diagnostic. Cross-document copy/transfer remains future work.",
   "$defs": {
     "UUID": {
       "type": "string",
@@ -33,6 +33,18 @@
       "maxLength": 1024,
       "pattern": "^[^\\\\:\\x00]+\\.[cC][bB]$",
       "description": "Additional canonical workspace containment and component rules in MCP_CONTRACT.md are mandatory."
+    },
+    "Filename": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 255,
+      "pattern": "^[^\\\\/:\\x00-\\x1f\\x7f]+\\.[cC][bB]$",
+      "description": "A client-facing suggested leaf filename, never a server filesystem path."
+    },
+    "XmlContent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Complete UTF-8 CamBam XML. The encoded byte length is also limited to 10 MiB."
     },
     "Number": {
       "type": "number",
@@ -188,6 +200,28 @@
               "additionalProperties": false
             },
             {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "$ref": "#/$defs/Filename"
+                },
+                "sha256": {
+                  "$ref": "#/$defs/Workspace"
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 10485760
+                }
+              },
+              "required": [
+                "name",
+                "sha256",
+                "bytes"
+              ],
+              "additionalProperties": false
+            },
+            {
               "type": "null"
             }
           ]
@@ -256,6 +290,44 @@
         "absolute_path",
         "sha256",
         "bytes"
+      ],
+      "additionalProperties": false
+    },
+    "SerializedArtifact": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "cambam_document"
+        },
+        "mime_type": {
+          "const": "application/xml"
+        },
+        "encoding": {
+          "const": "utf-8"
+        },
+        "suggested_filename": {
+          "$ref": "#/$defs/Filename"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10485760
+        },
+        "content": {
+          "$ref": "#/$defs/XmlContent"
+        }
+      },
+      "required": [
+        "kind",
+        "mime_type",
+        "encoding",
+        "suggested_filename",
+        "sha256",
+        "bytes",
+        "content"
       ],
       "additionalProperties": false
     },
@@ -1471,6 +1543,59 @@
                 "error": {
                   "$ref": "#/$defs/Error"
                 }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "document_import_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "units": {
+          "$ref": "#/$defs/Units"
+        },
+        "source_name": {
+          "$ref": "#/$defs/Filename"
+        },
+        "content": {
+          "$ref": "#/$defs/XmlContent"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "request_id",
+        "units",
+        "source_name",
+        "content"
+      ],
+      "additionalProperties": false
+    },
+    "document_import_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": { "const": true },
+                "data": { "$ref": "#/$defs/DocumentSummary" },
+                "error": { "type": "null" }
+              }
+            },
+            {
+              "properties": {
+                "ok": { "const": false },
+                "data": { "type": "null" },
+                "error": { "$ref": "#/$defs/Error" }
               }
             }
           ]
@@ -3908,6 +4033,55 @@
                 "error": {
                   "$ref": "#/$defs/Error"
                 }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "document_export_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "suggested_filename": {
+          "$ref": "#/$defs/Filename"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "suggested_filename"
+      ],
+      "additionalProperties": false
+    },
+    "document_export_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": { "const": true },
+                "data": { "$ref": "#/$defs/SerializedArtifact" },
+                "error": { "type": "null" }
+              }
+            },
+            {
+              "properties": {
+                "ok": { "const": false },
+                "data": { "type": "null" },
+                "error": { "$ref": "#/$defs/Error" }
               }
             }
           ]

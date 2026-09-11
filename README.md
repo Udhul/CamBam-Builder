@@ -27,11 +27,12 @@ For development, install the environment with `uv sync`, then run the
 project through `.venv\Scripts\python.exe`. Python 3.9 through 3.13 are verified;
 see the [development runbook](docs/DEVELOPMENT.md#environment-and-setup).
 
-The optional local MCP server exposes twenty-seven document and authoring
+The optional local MCP server exposes twenty-nine document and authoring
 tools for AI clients, including verified geometry authoring (Rect, Circle,
 Arc, Pline, Points, Text, Region), Profile/Pocket/Engrave/Drill MOPs with
 target replacement, similarity transforms with baking, and parent/group/copy
-relationships, plus a save/reopen/translate slice. Install
+relationships. Complete UTF-8 `.cb` XML can be imported from a client and
+exported back as a hashed artifact without using server workspace paths. Install
 with `uv sync --extra mcp` on Python 3.10+;
 see [MCP setup and client configuration](docs/DEVELOPMENT.md#local-mcp-setup-and-verification).
 Cross-document copy/transfer and desktop/CamBam acceptance remain planned.

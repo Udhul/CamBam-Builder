@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from importlib.metadata import PackageNotFoundError, version
+from importlib.util import find_spec
 import json
 import os
 from pathlib import Path
@@ -12,7 +13,19 @@ import sys
 import shutil
 import threading
 import unittest
+from unittest.mock import patch
 import uuid
+
+if find_spec("mcp") is not None:
+    from cambam_builder.mcp_adapter.server import (
+        MAX_INPUT_LINE_BYTES,
+        StrictJSONError,
+        _strict_decode,
+    )
+else:
+    MAX_INPUT_LINE_BYTES = 0
+    StrictJSONError = ValueError
+    _strict_decode = None
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -155,7 +168,8 @@ class MCPProtocolTests(unittest.TestCase):
         tools = listing["result"]["tools"]
         self.assertEqual([tool["name"] for tool in tools], sorted(tool["name"] for tool in tools))
         self.assertEqual([tool["name"] for tool in tools], [
-            "document_close", "document_create", "document_inspect", "document_open", "document_save",
+            "document_close", "document_create", "document_export", "document_import",
+            "document_inspect", "document_open", "document_save",
             "geometry_add_arc", "geometry_add_circle", "geometry_add_pline", "geometry_add_points",
             "geometry_add_rectangle", "geometry_add_region", "geometry_add_text", "geometry_bake",
             "geometry_mirror", "geometry_rotate", "geometry_scale", "geometry_translate",
@@ -168,6 +182,10 @@ class MCPProtocolTests(unittest.TestCase):
             "document_close": {"openWorldHint": False, "readOnlyHint": False,
                                "idempotentHint": True, "destructiveHint": True},
             "document_create": {"openWorldHint": False, "readOnlyHint": False,
+                                "idempotentHint": True, "destructiveHint": False},
+            "document_export": {"openWorldHint": False, "readOnlyHint": True,
+                                "idempotentHint": True, "destructiveHint": False},
+            "document_import": {"openWorldHint": False, "readOnlyHint": False,
                                 "idempotentHint": True, "destructiveHint": False},
             "document_inspect": {"openWorldHint": False, "readOnlyHint": True,
                                  "idempotentHint": True, "destructiveHint": False},
@@ -249,7 +267,8 @@ class MCPProtocolTests(unittest.TestCase):
         )
         listing = self.server.request({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         self.assertEqual([tool["name"] for tool in listing["result"]["tools"]], [
-            "document_close", "document_create", "document_inspect", "document_open", "document_save",
+            "document_close", "document_create", "document_export", "document_import",
+            "document_inspect", "document_open", "document_save",
             "geometry_add_arc", "geometry_add_circle", "geometry_add_pline", "geometry_add_points",
             "geometry_add_rectangle", "geometry_add_region", "geometry_add_text", "geometry_bake",
             "geometry_mirror", "geometry_rotate", "geometry_scale", "geometry_translate",
@@ -262,7 +281,29 @@ class MCPProtocolTests(unittest.TestCase):
             {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
              "params": {"name": "document_create", "arguments": self.new_args()}}
         )
-        self.assertTrue(result["result"]["structuredContent"]["ok"])
+        created = result["result"]["structuredContent"]
+        self.assertTrue(created["ok"])
+        exported = self.server.request(
+            {"jsonrpc": "2.0", "id": 4, "method": "tools/call",
+             "params": {"name": "document_export", "arguments": {
+                 "workspace_id": self.workspace_id,
+                 "document": created["document"],
+                 "expected_revision": 0,
+                 "suggested_filename": "legacy-export.cb",
+             }}}
+        )["result"]["structuredContent"]
+        self.assertTrue(exported["ok"], exported)
+        imported = self.server.request(
+            {"jsonrpc": "2.0", "id": 5, "method": "tools/call",
+             "params": {"name": "document_import", "arguments": {
+                 "workspace_id": self.workspace_id,
+                 "request_id": str(uuid.uuid4()),
+                 "units": "mm",
+                 "source_name": "legacy-export.cb",
+                 "content": exported["data"]["content"],
+             }}}
+        )["result"]["structuredContent"]
+        self.assertTrue(imported["ok"], imported)
 
     def test_protocol_eras_cannot_be_mixed(self):
         self.server.request(
@@ -311,12 +352,53 @@ class MCPProtocolTests(unittest.TestCase):
             b'{"jsonrpc":"2.0","id":4,"method":"ping","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{},"x":1e999}}}'
         )
         self.assertEqual(overflow["error"]["code"], -32700)
-        oversized = self.server.raw(b"{" + b" " * (1024 * 1024) + b"}")
-        self.assertEqual(oversized["error"]["code"], -32700)
+        malformed = self.server.raw(b'{"unterminated":')
+        self.assertEqual(malformed["error"]["code"], -32700)
         recovered = self.server.request(
             {"jsonrpc": "2.0", "id": 5, "method": "ping", "params": {"_meta": self.meta()}}
         )
         self.assertIn("result", recovered)
+
+    def test_content_round_trip_above_previous_one_mib_framing_limit(self):
+        self.assertGreater(MAX_INPUT_LINE_BYTES, 10 * 1024 * 1024)
+        with patch("cambam_builder.mcp_adapter.server.MAX_INPUT_LINE_BYTES", 8):
+            with self.assertRaises(StrictJSONError):
+                _strict_decode(b'{"value":1}')
+
+        prefix = '<?xml version="1.0" encoding="utf-8"?><CADFile><!--'
+        suffix = '--><layers /></CADFile>'
+        content = prefix + ("x" * (10 * 1024 * 1024 - len(prefix) - len(suffix))) + suffix
+        imported = self.call(
+            10,
+            "document_import",
+            {
+                "workspace_id": self.workspace_id,
+                "request_id": str(uuid.uuid4()),
+                "units": "mm",
+                "source_name": "large-client-input.cb",
+                "content": content,
+            },
+        )["result"]["structuredContent"]
+        self.assertTrue(imported["ok"], imported)
+        exported_wire = self.call(
+            11,
+            "document_export",
+            {
+                "workspace_id": self.workspace_id,
+                "document": imported["document"],
+                "expected_revision": 0,
+                "suggested_filename": "large-client-output.cb",
+            },
+        )
+        exported = exported_wire["result"]["structuredContent"]
+        self.assertTrue(exported["ok"], exported)
+        self.assertEqual(
+            json.loads(exported_wire["result"]["content"][0]["text"]), exported
+        )
+        artifact = exported["data"]
+        encoded = artifact["content"].encode("utf-8")
+        self.assertEqual(artifact["bytes"], len(encoded))
+        self.assertEqual(artifact["sha256"], hashlib.sha256(encoded).hexdigest())
 
     def test_unknown_method_and_tool_are_protocol_errors(self):
         method = self.server.request(
