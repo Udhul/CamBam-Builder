@@ -280,6 +280,27 @@ def _tool_models() -> list[types.Tool]:
 def create_server(service: DocumentService) -> Server:
     """Build an SDK server exposing the implemented document and authoring tools."""
     known_tools = frozenset(definition["name"] for definition in tool_definitions())
+    protocol_reported = False
+
+    def report_protocol(selected: str) -> None:
+        nonlocal protocol_reported
+        if protocol_reported:
+            return
+        print(
+            "CAMBAM_MCP_PROTOCOL "
+            + json.dumps(
+                {
+                    "protocol_version": selected,
+                    "mode": "legacy" if selected in LEGACY_PROTOCOL_VERSIONS else "modern",
+                },
+                separators=(",", ":"),
+                ensure_ascii=True,
+                allow_nan=False,
+            ),
+            file=sys.stderr,
+            flush=True,
+        )
+        protocol_reported = True
 
     async def on_list_tools(_ctx: Any, _params: Any) -> types.ListToolsResult:
         return types.ListToolsResult(
@@ -363,6 +384,7 @@ def create_server(service: DocumentService) -> Server:
         # this harmless capability probe in middleware and keep the SDK-owned
         # result metadata on modern responses.
         if ctx.method == "ping":
+            report_protocol(ctx.protocol_version)
             if ctx.protocol_version == PROTOCOL_VERSION:
                 return {
                     "resultType": "complete",
@@ -384,6 +406,8 @@ def create_server(service: DocumentService) -> Server:
             metadata = dict(result.get("_meta") or {})
             metadata[WORKSPACE_META_KEY] = dict(service.bootstrap)
             result["_meta"] = metadata
+        selected = requested if ctx.method == "initialize" else ctx.protocol_version
+        report_protocol(selected)
         return result
 
     server.middleware.append(protocol_middleware)
@@ -398,7 +422,7 @@ async def _run_server(service: DocumentService) -> None:
 
 def run_stdio(root: str) -> None:
     """Start the local server; called by the guarded launcher."""
-    # Stdio diagnostics are deliberately limited to the bootstrap line and
+    # Stdio diagnostics are deliberately limited to the bootstrap/protocol lines and
     # structured tool results; suppress SDK/framework logger output that could
     # disclose imported labels, XML details or local paths.
     logging.disable(logging.CRITICAL)

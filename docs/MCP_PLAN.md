@@ -156,7 +156,7 @@ prefer multiple outcome-sized sessions if coverage does not fit one coherent uni
 schemas and parity tests, all relevant framework regressions pass, and no unresolved
 contract decision is carried only in chat. Begin distribution acceptance fresh.
 
-### 4e. Installation, client and user acceptance
+### 4e. Installation, local client and user acceptance
 
 **Recommended main session:** GPT-5.6 Terra, high reasoning for packaging/runbook
 execution; move to Sol high only for substantive interoperability defects.
@@ -165,16 +165,19 @@ execution; move to Sol high only for substantive interoperability defects.
 - Validate clean installation and uninstall/rollback without affecting direct
   library users; verify the supported Python/OS and adapter dependency matrix.
 - Publish exact local start/stop and named-client configuration instructions.
-  Connect the selected desktop client on a clean second-PC environment and repeat
+  Connect the selected desktop client to its own local stdio subprocess and repeat
   the 4c workflow through the actually negotiated supported protocol. Record
   modern/legacy conformance separately; include backward compatibility regressions.
 - Record agent usability and required CamBam geometry/property/toolpath inspection
   as user/domain acceptance, keeping automated, protocol and production evidence
   separate.
 
-**Stopping condition:** clean-machine install, connection, protocol conformance,
-end-to-end client behavior and required user acceptance are recorded; rollback is
-demonstrated and the live backlog advances. This completes the initial adapter.
+**Stopping condition:** isolated clean install, local stdio connection, protocol
+conformance, end-to-end client behavior and required user acceptance are recorded;
+rollback is demonstrated and the live backlog advances. This completes the initial
+adapter. The user accepted same-machine stdio as the initial deployment boundary on
+2026-09-11 because second-PC hardware is unavailable; Streamable HTTP and remote-PC
+deployment are a separate non-urgent backlog item.
 
 ## First implementation proof and acceptance
 
@@ -185,8 +188,8 @@ semantics with direct framework calls, including IDs, relationships, world geome
 and machining parameters. Test malformed arguments, invalid references, file-access
 limits, repeated calls and explicit document/revision behavior.
 
-Demonstrate installation and connection on a clean second-PC environment with a
-named compatible desktop client. Test the requested stateless protocol separately
+Demonstrate installation in an isolated environment and connection from a named
+compatible client that launches the server locally over stdio. Test the requested protocol separately
 from tool behavior. Record agent usability and CamBam geometry/toolpath inspection
 as user/domain acceptance; a successful tool response alone is insufficient.
 Expand API coverage only after that representative slice passes. Rollback should
@@ -211,6 +214,6 @@ In the implementation increment:
 
 The [MCP contract](MCP_CONTRACT.md) owns initial coverage, SDK/transport/client,
 document persistence/revision and packaging-boundary decisions. Increment 4e owns
-the final supported OS installation matrix. Increment 4b now provides the optional
+the supported OS installation matrix. Increment 4b now provides the optional
 server and five document tools; 4c adds the first three authoring tools after its
 direct-framework parity slice passed.

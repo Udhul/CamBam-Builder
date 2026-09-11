@@ -561,7 +561,9 @@ The workspace must already exist and be absolute. The equivalent installed
 entry point is `cambam-mcp --workspace D:/CAD/AgentWork`. The client normally starts
 and stops this process. Close stdin to stop it, or use Ctrl+C for an interactive
 launch. Stdout is exclusively MCP; stderr emits the content-free workspace/boot
-bootstrap. Restart loses all open handles, unsaved edits and retry records.
+bootstrap and, after the first accepted request, a `CAMBAM_MCP_PROTOCOL` record
+containing the actual version and `legacy`/`modern` mode. Restart loses all open
+handles, unsaved edits and retry records.
 
 Thirty-one tools create, open/import, inspect, save/export and close documents; add root
 Rect, Circle, Arc, Pline, Points, Text and Region primitives; add explicit
@@ -601,6 +603,105 @@ or use discovery; the same document schemas and safety policy apply. Initializat
 instructions/discovery expose the actual workspace ID required in tool calls.
 No persistent client configuration is changed by the repository test suite.
 
+OpenCode local configuration (replace the Python and workspace paths) uses the same
+standard stdio model. Do not start the command separately: OpenCode launches and
+stops it. This server has no localhost port.
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "cambam": {
+      "type": "local",
+      "command": [
+        "D:/CAD/CamBamMcp/Scripts/python.exe",
+        "-m", "cambam_builder.mcp_adapter",
+        "--workspace", "D:/CAD/AgentWork"
+      ],
+      "enabled": true,
+      "timeout": 15000
+    }
+  }
+}
+```
+
+### Clean wheel installation and rollback
+
+Use a dedicated environment so client removal cannot disturb another Python
+application. Copy the built wheel to the target machine, then run:
+
+```powershell
+uv venv --python 3.13 D:/CAD/CamBamMcp
+uv pip install --python D:/CAD/CamBamMcp/Scripts/python.exe "D:/Install/cambam_builder-0.1.0-py3-none-any.whl[mcp]"
+New-Item -ItemType Directory -Path D:/CAD/AgentWork
+D:/CAD/CamBamMcp/Scripts/python.exe -c "from cambam_builder import CBProject; print(CBProject('smoke').project_name)"
+```
+
+Supported and checked on Windows are base-library Python 3.9 and MCP-enabled
+Python 3.10, 3.11, 3.12 and 3.13. Python 3.9 deliberately rejects the adapter.
+The MCP extra pins `mcp==2.2.0`; all other versions are unsupported until the
+protocol suite is rerun.
+
+To disable the adapter while retaining the direct library in that environment,
+remove the SDK packages and remove/disable the client's `cambam` configuration:
+
+```powershell
+uv pip uninstall --python D:/CAD/CamBamMcp/Scripts/python.exe mcp mcp-types
+D:/CAD/CamBamMcp/Scripts/python.exe -c "from cambam_builder import CBProject; print(CBProject('rollback').project_name)"
+D:/CAD/CamBamMcp/Scripts/python.exe -m cambam_builder.mcp_adapter --workspace D:/CAD/AgentWork
+```
+
+The final command must exit with the missing `[mcp]` extra message while the direct
+API command succeeds. Reinstall the wheel extra to re-enable the adapter. Removing
+the entire dedicated environment is also a valid rollback after its client entry is
+removed; user `.cb` files and workspace artifacts are not removed automatically.
+
+### 4e OpenCode and CamBam acceptance
+
+Start with a new empty workspace, register the local command above, and confirm
+`opencode mcp list` reports `cambam connected`. Then ask the OpenCode agent:
+
+```text
+Use only the cambam MCP tools. Report the server workspace ID and available tool
+count. Create a document named slice with asserted mm units. Add Rect outline on
+layer Geometry at (0,0,0), width 20 and height 10. Add an enabled outside Profile
+named profile in Part targeting outline: target depth -1, depth increment 0.5,
+tool diameter 3, cut/plunge feeds 300/100, spindle 12000, stock surface 0 and
+clearance plane 5. Inspect it and save A.cb. Open A.cb as a new document, translate
+outline by (5,2), inspect it, save B.cb, and close both handles. Do not retry failed
+mutations with changed arguments under the same request ID. Report every resulting
+revision, the final world corners, target ID, hashes, errors, and whether any MCP
+argument needed manual correction.
+```
+
+The expected revisions are create 0, Rect 1, Profile/A 2, reopened 0, translated/B
+1. The final corners are `(5,2,0)`, `(25,2,0)`, `(25,12,0)`, `(5,12,0)` in cyclic
+order. Before opening either file in CamBam, independently validate the artifacts:
+
+```powershell
+.venv/Scripts/python.exe demos/mcp_client_acceptance_verify.py D:/CAD/AgentWork/A.cb D:/CAD/AgentWork/B.cb
+```
+
+The verifier checks strict import, hashes, identities, relationships, A/B geometry,
+zero/unspecified stock and all explicit Profile values. It does not establish the
+client connection or native CamBam behavior.
+
+For required domain acceptance in CamBam Plus 1.0, open A and B separately and
+report the exact CamBam version. Confirm the drawing is using millimeters—the XML
+does not persist a verified unit setting—and reject the case if CamBam interprets
+the numbers in another unit. Confirm A's outline spans `(0,0)` to `(20,10)`, B's
+spans `(5,2)` to `(25,12)`, and both show `Geometry / outline` and
+`Part / profile`. In the advanced Profile properties confirm Outside, TargetDepth
+`-1`, DepthIncrement `0.5`, ToolDiameter `3`, CutFeedrate `300`, PlungeFeedrate
+`100`, SpindleSpeed `12000`, StockSurface `0` and ClearancePlane `5`.
+
+Generate the Profile toolpath (select the operation and use **Generate Toolpath**,
+or use `Ctrl+T`). Pass requires an outside toolpath around the rectangle, two depth
+levels at `-0.5` and `-1.0`, no error, and no unexpected geometry movement. Do not
+produce machine G-code for this acceptance. Report pass/fail for units, geometry,
+properties and toolpath separately, plus whether the agent workflow was usable
+without manual MCP-call repair. Keep A/B until the result is recorded.
+
 Focused and full checks, from the root with the extra installed:
 
 ```powershell
@@ -624,5 +725,5 @@ environments and logs are under `output/mcp-foundation-20260910/`; durable evide
 [review record](REVIEW.md#mcp-foundation-and-client-compatibility---2026-09-10).
 
 Manual CamBam validation adds no evidence for 4b's transport or 4c's framework/MCP
-parity. 4c prepares authored CAD artifacts; 4e retains desktop/second-PC,
+parity. 4c prepares authored CAD artifacts; 4e retains named local-client and
 CamBam units/geometry/property and toolpath acceptance.

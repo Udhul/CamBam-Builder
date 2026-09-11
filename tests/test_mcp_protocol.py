@@ -75,6 +75,10 @@ class MCPProcess:
         self.assert_running()
         return json.loads(line)
 
+    def diagnostic(self) -> str:
+        assert self.process.stderr is not None
+        return self._readline(self.process.stderr).decode("utf-8").strip()
+
     def raw(self, line: bytes) -> dict:
         assert self.process.stdin is not None
         assert self.process.stdout is not None
@@ -268,6 +272,10 @@ class MCPProtocolTests(unittest.TestCase):
             }
         )
         self.assertEqual(initialized["result"]["protocolVersion"], "2025-11-25")
+        self.assertEqual(
+            self.server.diagnostic(),
+            'CAMBAM_MCP_PROTOCOL {"protocol_version":"2025-11-25","mode":"legacy"}',
+        )
         self.assertIn(self.workspace_id, initialized["result"]["instructions"])
         self.assertEqual(
             initialized["result"]["_meta"]["cambam-builder/workspace"]["workspace_id"],
@@ -314,6 +322,16 @@ class MCPProtocolTests(unittest.TestCase):
              }}}
         )["result"]["structuredContent"]
         self.assertTrue(imported["ok"], imported)
+
+    def test_modern_first_call_reports_actual_protocol(self):
+        response = self.server.request(
+            {"jsonrpc": "2.0", "id": 1, "method": "ping", "params": {"_meta": self.meta()}}
+        )
+        self.assertEqual(response["result"]["resultType"], "complete")
+        self.assertEqual(
+            self.server.diagnostic(),
+            'CAMBAM_MCP_PROTOCOL {"protocol_version":"2026-07-28","mode":"modern"}',
+        )
 
     def test_protocol_eras_cannot_be_mixed(self):
         self.server.request(

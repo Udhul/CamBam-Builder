@@ -36,4 +36,5 @@ open documents. Complete UTF-8 `.cb` XML can be imported from a client and
 exported back as a hashed artifact without using server workspace paths. Install
 with `uv sync --extra mcp` on Python 3.10+;
 see [MCP setup and client configuration](docs/DEVELOPMENT.md#local-mcp-setup-and-verification).
-Desktop/CamBam acceptance remains planned.
+Clean Windows installation and an OpenCode stdio connection are verified;
+agentic OpenCode and CamBam domain acceptance remain pending.

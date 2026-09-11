@@ -34,6 +34,14 @@ This is an intentional compatibility surface, with the same tool arguments,
 application result envelope and document service for every accepted version.
 No document state depends on the negotiated transport connection.
 
+The initial deployment boundary is a same-machine client launching one local stdio
+server process. This is the standard MCP stdio process model, not a TCP service:
+there is no host, port or independently started server to register. Streamable HTTP,
+HTTPS and remote-PC access are unimplemented, non-urgent future scope. Adding them
+requires a separate bind/origin/authentication, lifecycle and HTTP-era conformance
+contract; never expose the write-capable adapter on a LAN by changing only a bind
+address.
+
 Advertise only tools, with `listChanged=false`; no resources, prompts, roots,
 sampling, elicitation, tasks, subscriptions, HTTP listener or legacy SSE endpoint.
 Implement `server/discover`, `ping`, `tools/list`, `tools/call`, cancellation and
@@ -89,7 +97,9 @@ is mandatory, absolute and already exists; no implicit current-directory access.
 Client configuration uses the absolute environment Python executable, `-m`, module
 name, `--workspace`, absolute directory as separate command-array elements. The
 client owns start/stop; closing stdin exits promptly. Interactive local launch may
-use Ctrl+C. Log no file contents, CAD descriptions or credentials. Imported labels
+use Ctrl+C. After the first accepted request, stderr emits one content-free
+`CAMBAM_MCP_PROTOCOL` JSON record with the selected protocol version and
+`legacy`/`modern` mode so named-client acceptance can record the actual path. Log no file contents, CAD descriptions or credentials. Imported labels
 are escaped data in results, never server instructions. No model/network calls.
 
 ## Documents, revisions and atomicity
@@ -524,7 +534,7 @@ handle starts 0, translate ->1, second save stays 1. Retrying translate with its
 original key never moves twice. Failed mutation preserves complete inspection.
 
 No manual CamBam check adds evidence to 4a's architecture/protocol probes. 4c prepares
-synthetic artifacts; 4e owns clean second-PC installation, actual named desktop
+synthetic artifacts; 4e owns isolated clean installation, actual named local-client
 connection and CamBam units/geometry/property/toolpath acceptance. Current production
 toolpath acceptance is not extended by this contract.
 
@@ -542,7 +552,7 @@ cross-document copy/transfer under the two-document contract in
 [its section](#cross-document-copy-and-transfer), with direct-framework parity
 for both operations, per-document revision semantics and failure addressing,
 limit atomicity and ledger replay tests before advertisement. 4d is complete;
-the next increment is 4e desktop/second-PC acceptance. Remote hosting, arbitrary
+4e local-stdio user acceptance follows. Remote hosting, arbitrary
 Python/private registries, pickle, generic field setters, deletion/batch edits,
 arbitrary XML editing, overwrite and machine/G-code execution remain excluded.
 Reopen volatile storage only for a demonstrated unsaved-recovery need; reopen

@@ -7,6 +7,22 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**4e local stdio acceptance: implementation and automated evidence complete;
+named-agent and CamBam acceptance pending** (2026-09-11). The user accepted a
+same-machine external client launching its own server subprocess as the initial
+deployment boundary; unavailable second-PC hardware no longer blocks this increment.
+The Windows wheel matrix passes for the base library on Python 3.9 and the MCP extra
+on 3.10-3.13. Removing `mcp`/`mcp-types` disables the adapter with its guarded error
+while the direct `CBProject` API remains usable. OpenCode 1.18.30 connected to the
+real adapter from an isolated configuration without changing user configuration.
+The server now emits one content-free negotiated-protocol record, covered for modern
+2026-07-28 and legacy 2025-11-25 subprocesses. A maintained artifact verifier and
+exact OpenCode/CamBam acceptance procedure are in the
+[development runbook](DEVELOPMENT.md#4e-opencode-and-cambam-acceptance). Completion
+still requires the user's OpenCode 4c workflow plus CamBam mm/geometry/Profile/toolpath
+report. Streamable HTTP/remote-PC hosting is non-urgent future scope and must add
+origin validation, authentication and an explicit exposure policy before any LAN bind.
+
 **4d batch 5, cross-document copy/transfer: implemented and verified**
 (2026-09-11). The adapter advertises thirty-one version 1 tools after adding
 `relationship_copy_tree_between` and `relationship_transfer_tree_between`
@@ -32,10 +48,8 @@ skip). Evidence is in the
 [review](REVIEW.md#mcp-cross-document-copytransfer---2026-09-11).
 
 **4d state: complete.** All five 4d batches plus portable interchange are
-implemented and verified, closing the documented adapter surface. The next
-increment is **4e desktop/second-PC acceptance** for the implemented surface:
-clean installation, a named desktop client connection at the actually
-negotiated protocol, and CamBam units/geometry/property/toolpath acceptance.
+implemented and verified, closing the documented adapter surface. It handed off
+to the active 4e local-stdio acceptance entry above.
 
 **4d portable client document interchange: implemented and verified**
 (2026-09-11). The adapter then advertised twenty-nine version 1 tools.
@@ -470,13 +484,19 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
       tools, and the parenting/group/copy relationship tools; batch 5 added
       cross-document copy/transfer under the recorded two-document contract.
       Sol/high, with Terra/xhigh suitable for settled coverage batches.
-   - **4e:** validate installation, named desktop-client interoperability and
-     second-PC/user acceptance. Terra/high; escalate interoperability defects to
-     Sol/high.
+   - **4e — automated/local connection evidence complete; user acceptance pending:**
+     validate installation, named local-client interoperability and CamBam user
+     acceptance. Same-machine stdio is the accepted initial boundary because
+     second-PC hardware is unavailable.
    Each increment must persist its decisions, evidence and remaining limits before
    handoff; later breadth must not leak into earlier scopes. Full acceptance and
    maintenance details: [MCP delivery plan](MCP_PLAN.md#delivery-increments-and-session-boundaries).
-5. **Planned future feature:** rest-area calculation and rest
+5. **Non-urgent future MCP transport:** add authenticated Streamable HTTP only for
+   a concrete remote-PC or multi-client need. Define modern/legacy HTTP behavior,
+   bind/origin/authentication/TLS policy, document-handle lifecycle and cancellation
+   before implementation; never expose the current write-capable service by merely
+   binding to a LAN interface.
+6. **Planned future feature:** rest-area calculation and rest
    machining helpers for pocket and inside/outside profile MOPs. Five outcomes:
    pure rest regions; safe expansion for a smaller endmill; pointed/flat-tip
    V-cutter preparation; a general bounded XYZ V-carving path calculator; and
@@ -498,7 +518,7 @@ above. Detailed contracts remain in `docs/structure_spec.md`, and review evidenc
 No blocker for the completed MOP ownership/interchange scope. Production
 toolpaths and complete `.cb` format coverage remain outside that acceptance.
 The old framework API and pickle format did not constrain the redesign.
-MCP 4e still requires named desktop-client and second-PC acceptance. The adapter
+MCP 4e still requires the named OpenCode agent workflow and CamBam acceptance. The adapter
 retains 2026-07-28 as its target and also supports 2025-06-18 and 2025-11-25;
 reprobe the clients during 4e and retire an older version only after deployed
 clients no longer need it. No blocker prevents 4d implementation; keep broader
@@ -537,6 +557,7 @@ This is a good fresh-session breakpoint: 4d's authoring, machining,
 relationship, transform and cross-document copy/transfer contracts, parity and
 negative-case evidence are persisted, and batch 5 needed only the recorded
 contract decision, which is now in [MCP_CONTRACT.md](MCP_CONTRACT.md).
-4e desktop/second-PC acceptance is the next priority and starts fresh on the
-implemented surface.
-Suggested commit: `feat: add MCP cross-document copy/transfer`.
+4e's remaining OpenCode/CamBam user acceptance is the next priority; its exact
+procedure and artifact verifier are now prepared. This is not yet a good
+fresh-session breakpoint because the user's acceptance result must still be recorded.
+Suggested commit after acceptance: `feat: complete local MCP client acceptance`.

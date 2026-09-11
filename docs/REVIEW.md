@@ -2004,3 +2004,64 @@ Results on the repository Python 3.13 environment with MCP 2.2.0:
 Remaining limits: no deletion or batch tools, no cross-restart recovery of
 volatile state, and CamBam production acceptance stays with 4e. 4d is
 complete; the next increment is 4e desktop/second-PC acceptance.
+
+## MCP local stdio installation and client acceptance preparation - 2026-09-11
+
+The user accepted same-machine stdio as the initial 4e deployment boundary because
+second-PC hardware is unavailable. This follows the normative stdio process model:
+the named client launches one local server subprocess. Streamable HTTP, HTTPS and
+remote-PC hosting remain unimplemented, non-urgent future scope; they require an
+explicit origin/authentication/exposure and lifecycle contract rather than a LAN
+bind added to this server.
+
+Clean packaging evidence on Windows used a fresh wheel built from the sdist in
+`output/mcp-4e-local-20260911/dist/`. Python 3.9.0 installed the base distribution,
+constructed `CBProject` and produced the required Python-version guard when the MCP
+launcher was attempted. Isolated Python 3.10.9, 3.11.0, 3.12.10 and 3.13.9
+environments each installed the wheel's `[mcp]` extra, resolved exactly `mcp==2.2.0`,
+constructed the direct project API and loaded all thirty-one packaged tool
+definitions. Removing `mcp` and `mcp-types` from the Python 3.13 environment made
+the launcher return its missing-extra guard while direct `CBProject` construction
+still passed. This demonstrates adapter rollback without uninstalling the library or
+touching `.cb` files. An initial probe referenced a nonexistent schema constant and
+was replaced by the public module's `tool_definitions()` function; that harness error
+occurred after a successful install and is not package evidence.
+
+OpenCode 1.18.30 ran with isolated config/data/state/cache directories, model fetch,
+project config, default plugins and auto-update disabled. No model was invoked and no
+normal user configuration was read or changed. It reported the real adapter
+`connected`, first from the source environment and then from the clean Python 3.12
+wheel environment prepared for manual acceptance. A task-owned transparent stdio
+capture showed the real client request
+`initialize` with `protocolVersion=2025-11-25`, client name `opencode` and version
+`1.18.30`; the real server emitted
+`CAMBAM_MCP_PROTOCOL {"protocol_version":"2025-11-25","mode":"legacy"}`.
+This is actual named-client/adapter negotiation, not an inference from OpenCode
+source. The capture and response records are disposable evidence under
+`output/mcp-4e-local-20260911/`.
+
+The server now emits that content-free protocol record once after its first accepted
+request. Subprocess regressions cover the legacy 2025-11-25 handshake and modern
+2026-07-28 first request; the pre-existing compatibility suite continues to cover
+2025-06-18 acceptance and cross-era rejection. A new maintained verifier accepts
+the exact external-client A/B Rect/Profile artifacts only when strict import,
+identities, relationships, explicit properties and translated world geometry match
+the 4c contract, and rejects an untranslated B. The development runbook owns the
+OpenCode configuration/prompt, rollback commands and separated CamBam acceptance.
+
+Verification on the repository Python 3.13 environment:
+
+- `python -m unittest discover -s tests -p 'test_mcp_*.py' -v`: 57 tests,
+  56 passed and one Windows symlink-privilege skip. The first sandboxed attempt could not resolve
+  test-owned Windows temporary directories; the approved filesystem run passed.
+- `python -m unittest discover -s tests -v`: 209 tests, 208 passed with the same skip.
+- `compileall`, `demos/mcp_authoring_slice.py`, the new verifier against that demo's
+  A/B output, and `git diff --check`: passed.
+
+Automated installation, rollback, protocol regression and named-client connection
+are complete. The agentic OpenCode 4c workflow is intentionally still pending: a
+connection/listing probe is not evidence that an agent can select and sequence the
+tools. CamBam Plus acceptance also remains pending for asserted millimeters, A/B
+geometry, explicit Profile properties and generated outside toolpaths at depths
+`-0.5` and `-1.0`. 4e and the initial adapter are not complete until the user reports
+those results; preserve their A/B artifacts until the report is recorded.
