@@ -563,13 +563,17 @@ and stops this process. Close stdin to stop it, or use Ctrl+C for an interactive
 launch. Stdout is exclusively MCP; stderr emits the content-free workspace/boot
 bootstrap. Restart loses all open handles, unsaved edits and retry records.
 
-Eight tools create, open, inspect, save and close documents; add root Rects and
-explicit Profile MOPs; and translate supported root Rects. Inspection reports
-typed world geometry/bounds and machining parameters for this Rect/Profile slice,
-while diagnosing other entity detail as unsupported until 4d. Saves only create new
-`.cb` paths under the workspace and never overwrite. File parent directories must
-already exist. Units are assertions, not conversions or a verified CamBam units
-setting. Read the [state and safety contract](MCP_CONTRACT.md) before client use.
+Twenty-seven tools create, open, inspect, save and close documents; add root
+Rect, Circle, Arc, Pline, Points, Text and Region primitives; add explicit
+Profile, Pocket, Engrave and Drill MOPs and replace MOP targets; link/group
+and same-document copy primitives; and translate, rotate, uniformly scale,
+mirror, Z-shift or bake those supported root primitives. Inspection reports
+typed world geometry/bounds and per-kind machining parameter records for the
+similarity slice, while diagnosing other entity detail as unsupported. Saves
+only create new `.cb` paths under the workspace and never overwrite. File
+parent directories must already exist. Units are assertions, not conversions
+or a verified CamBam units setting. Read the
+[state and safety contract](MCP_CONTRACT.md) before client use.
 
 Codex client configuration (replace both absolute paths):
 

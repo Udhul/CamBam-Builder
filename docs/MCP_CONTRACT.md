@@ -1,7 +1,9 @@
 # Local MCP adapter contract
 
 Contract version 1, decided 2026-09-10 for backlog 4a. This is the authoritative
-implementation contract; all eight document and authoring tools are implemented.
+implementation contract; all twenty-seven version 1 document and authoring tools
+are implemented. Cross-document copy/transfer remains deferred future work with
+a reopening criterion in [PROGRESS.md](PROGRESS.md).
 Priority and delivery state live in [PROGRESS.md](PROGRESS.md), and increment boundaries in
 [MCP_PLAN.md](MCP_PLAN.md#delivery-increments-and-session-boundaries).
 
@@ -265,7 +267,7 @@ Z depths use asserted units, feeds units/minute, spindle speed revolutions/minut
 Coordinates use the framework's XY plane; positive Z is up, depth is an absolute
 Z coordinate, and translation is relative to the existing local transform.
 
-## Initial tools and public API mapping
+## Tools and public API mapping
 
 | Tool | Closed input record | Public framework mapping / result data |
 | --- | --- | --- |
@@ -273,8 +275,27 @@ Z coordinate, and translation is relative to the existing local transform.
 | `document_open` | `New + {path: Path}` | Strict `read_cambam_bytes` of a bounded snapshot; return `DocumentSummary` with source path/hash. |
 | `document_inspect` | `Read + {offset?: integer >=0 =0, limit?: integer 1..100 =100, expected_revision?: Revision}` | Public `list_*`, relationship getters and world-coordinate/bounds queries; return `InspectionPage`. If supplied, revision must match. |
 | `geometry_add_rectangle` | `Write + {identifier: Name, layer: Name, x: Number, y: Number, width: Positive, height: Positive, z?: Number =0}` | `add_rect(layer, corner=(x,y), width=width, height=height, identifier=identifier, elevation=z)`; absent layer created through public API. Return primitive UUID and layer name. |
+| `geometry_add_circle` | `Write + {identifier: Name, layer: Name, x: Number, y: Number, diameter: Positive, z?: Number =0}` | `add_circle(layer, center=(x,y), diameter=diameter, identifier=identifier, elevation=z)`; absent layer created through public API. Return primitive UUID and layer name. |
+| `geometry_add_arc` | `Write + {identifier: Name, layer: Name, x: Number, y: Number, radius: Positive, start_angle: Number, extent_angle: Number, z?: Number =0}` | `add_arc(layer, center=(x,y), radius=radius, start_angle=start_angle, extent_angle=extent_angle, identifier=identifier, elevation=z)`; degrees, CCW-positive signed sweep; return primitive UUID and layer name. |
+| `geometry_add_pline` | `Write + {identifier: Name, layer: Name, points: VertexPoint[2..10000], closed?: boolean =false}` where `VertexPoint` is `{x: Number, y: Number, z?: Number =0, bulge?: Number =0}` | `add_pline(layer, points=[Vertex(...)], closed=closed, identifier=identifier)`; the bulge stored on one vertex curves the segment that starts there; return primitive UUID and layer name. |
+| `geometry_add_points` | `Write + {identifier: Name, layer: Name, points: PlainPoint[1..10000]}` where `PlainPoint` is `{x: Number, y: Number, z?: Number =0}` | `add_points(layer, points=[Vertex(...)], identifier=identifier)`; bulge input is rejected by the schema; return primitive UUID and layer name. |
+| `geometry_add_text` | `Write + {identifier: Name, layer: Name, text: TextContent 1..1024 non-whitespace-only, x: Number, y: Number, height?: Positive =10, font?: FontName ="Arial", style?: FontStyle ="", line_spacing?: Positive =1, align_horizontal?: "left"\|"center"\|"right" ="center", align_vertical?: "top"\|"center"\|"bottom" ="center", z?: Number =0}` | `add_text(layer, text, position=(x,y), height, font, style, line_spacing, align_horizontal, align_vertical, identifier, elevation=z)`; return primitive UUID and layer name. The optional unused `xml_p2_*` interchange fields are not authorable inputs. |
+| `geometry_add_region` | `Write + {identifier: Name, layer: Name, outer: {points: VertexPoint[2..10000]}, holes?: {points: VertexPoint[2..10000]}[0..100] =[]}` | Contours become closed `Pline` records; `add_region(layer, outer_curve=..., hole_curves=..., identifier=identifier)`; XY topology (closed, simple, nonzero area, contained disjoint holes) is validated by the framework and topology failures return `INVALID_ARGUMENT` with the bounded framework message; return primitive UUID and layer name. |
 | `machining_add_profile` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], side: "Inside" | "Outside", target_depth: Number, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true}` | `add_part` if absent, then `add_profile_mop(part, targets=..., identifier=identifier, name=identifier, profile_side=side, ...)`; return MOP UUID, part name and resolved target UUIDs. |
-| `geometry_translate` | `Write + {entity_id: UUID, dx: Number, dy: Number}` | `translate_primitive(entity_id, dx, dy, bake=False)`; return primitive UUID. Initially accept only root Rects created/opened within the declared slice. |
+| `machining_add_pocket` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], target_depth, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true}` | `add_pocket_mop(...)` with the pocket settings pinned in the schema record (stepover 0.4, `InsideOutsideOffsets` fill, Spiral lead-in, Roughing); return MOP UUID, part name and resolved targets. |
+| `machining_add_engrave` | Same closed record as Pocket (no side, no pocket-specific inputs) | `add_engrave_mop(...)` with Engrave settings pinned in the schema record (Roughing, final increment 0, DepthFirst, EndMill); return MOP UUID, part name and resolved targets. |
+| `machining_add_drill` | Pocket record plus `peck_distance?: NonNegative =0`, `retract_height?: Number =5`, `dwell?: NonNegative =0` | `add_drill_mop(...)` pinned to the CannedCycle method and a `Drill` tool profile; return MOP UUID, part name and resolved targets. |
+| `machining_set_mop_targets` | `Write + {mop_id: UUID, targets: UUID[1..100]}` | Public `set_mop_targets`; atomically replaces the MOP's explicit target selection after the same per-kind target rules and slice checks; return MOP UUID and the project's UUID-sorted resolved targets. |
+| `relationship_set_parent` | `Write + {entity_id: UUID, parent_id: UUID\|null}` | Public `link_primitive_parent`; null detaches. Local transforms are kept, so the world pose follows the new frame; self links and cycles return `INVALID_ARGUMENT`, missing/non-primitive entities `ENTITY_NOT_FOUND`/`UNSUPPORTED_OPERATION`. Return the child UUID and the resulting parent UUID or null. |
+| `relationship_add_to_group` | `Write + {entity_id: UUID, group: Name}` | Public `add_primitive_to_group`; return the entity UUID and its sorted group names. |
+| `relationship_remove_from_group` | `Write + {entity_id: UUID, group: Name}` | Public `remove_primitive_from_group`; return the entity UUID and its sorted remaining group names. |
+| `relationship_copy_tree` | `Write + {root: UUID, include_mops?: boolean =false, identifier_map?: {Name: Name} ={}, group_map?: {Name: Name} ={}}` | Public `copy_primitive_tree` into the same document with `preserve_ids=False`; copies get fresh UUIDs. Included layers, groups and (with `include_mops`) their parts/MOPs must have unmapped names remapped via the maps or the framework's collision rejection returns `INVALID_ARGUMENT`; MOP selections must lie inside the subtree. Return the source-to-copy UUID mapping (including copied layers/parts). |
+| `geometry_translate_z` | `Write + {entity_id: UUID, dz: Number}` | Public `translate_primitive_z(..., bake=True)`: one explicit stored-geometry Z shift that keeps world matrices; return the entity UUID. |
+| `geometry_rotate` | `Write + {entity_id: UUID, angle_deg: Number, cx?: Number, cy?: Number}` (cx/cy together or absent) | Public `rotate_primitive_deg`; absent center uses the framework's geometric center. The world pose stays a similarity, so typed inspection remains available; return the entity UUID. |
+| `geometry_scale` | `Write + {entity_id: UUID, factor: Positive, cx?: Number, cy?: Number}` (cx/cy together or absent) | Uniform `scale_primitive(factor, factor, ...)`; non-uniform scale is unsupported because it leaves the similarity slice; return the entity UUID. |
+| `geometry_mirror` | `Write + {entity_id: UUID, axis: "x"\|"y", position?: Number}` | Public `mirror_primitive_x` (across y=position) or `mirror_primitive_y` (across x=position); absent position uses the geometric center. Bulged vertices flip sign under reflection; return the entity UUID. |
+| `geometry_bake` | `Write + {entity_id: UUID}` | Public `bake_geometry()` on the staged primitive: folds the world transform into stored geometry and resets the matrix to identity. Non-axis-aligned Rects become closed Plines (reported `type`); Text bakes only translation/positive uniform scale and otherwise fails `UNSUPPORTED_OPERATION`; return the entity UUID and resulting type. |
+| `geometry_translate` | `Write + {entity_id: UUID, dx: Number, dy: Number}` | `translate_primitive(entity_id, dx, dy, bake=False)`; return primitive UUID. Accepts root Rect/Circle/Arc/Pline/Points/Text/Region primitives inside the similarity slice: a finite non-degenerate XY similarity world matrix (translation, rotation, uniform scale, reflection), zero local Z offset, no parent/children/groups and valid positive geometry. |
 | `document_save` | `Write + {path: Path}` | Clone + `save` + no-replace publication above; return `SavedArtifact`. |
 | `document_close` | `Write` | Drop handle after revision check; return `{closed: true}`. Unsaved edits are discarded explicitly. |
 
@@ -283,26 +304,37 @@ for inspect, and `idempotentHint=true` for inspect and ledger-protected writes.
 Mark close/geometry mutations destructive; new-file save and create/open are
 nondestructive. Hints describe behavior, not authorization or protocol enforcement.
 
-All creation identifiers must be supplied; no generated human names. Rectangle
-creation is axis-aligned with no parent/groups, identity XY matrix and zero local
-Z offset. New layers use the public `add_layer` defaults (green, visible, unlocked,
-alpha/pen width 1). Layers and parts are addressed by unique user names because
-their UUIDs are not persisted in XML. Primitive/MOP IDs are `internal_id` UUIDs;
-transient XML integer IDs are never tool arguments. Native files lacking framework
-identity get new UUIDs on open; independent opens need not agree in that case.
+All creation identifiers must be supplied; no generated human names. Creation
+adds root primitives with no parent/groups, identity XY matrix and zero local Z
+offset; Rect is axis-aligned, Circle/Arc use the framework center/parameter
+fields, Pline/Points/Region contours store the given vertices verbatim, and
+Text stores the given annotation fields. New layers use the public `add_layer`
+defaults (green, visible, unlocked, alpha/pen width 1). Layers
+and parts are addressed by unique user names because their UUIDs are not
+persisted in XML. Primitive/MOP IDs are `internal_id` UUIDs; transient XML
+integer IDs are never tool arguments. Native files lacking framework identity
+get new UUIDs on open; independent opens need not agree in that case.
 
-Profile targets are unique UUIDs resolving to root Rects in the same document;
-reject missing, duplicate, wrong-kind or transformed-out-of-scope targets before
-mutation. Require `target_depth < stock_surface` and `clearance_plane > stock_surface`.
-New parts use enabled=true, zero stock dimensions, empty material, origin (0,0),
-and no spindle/tool override; no fabricated MDF/stock-size defaults. This is
-unspecified stock, not a zero-thickness machining recommendation. Explicit profile
-parameters bypass framework inferred tool/feed/depth defaults. Pin other profile
-settings to the current public defaults, except `lead_in_type="None"` for this
-slice: XY, EndMill, CW, ExactStop, Conventional, roughing clearance 0, stepover 0.4,
-tool number 0, collision detection true, corner overcut false, final increment 0,
-DepthFirst, no tabs, empty custom header/footer. Inspect returns these values too.
-Unexposed parameters remain fixed; no unrestricted `**kwargs` input.
+MOP targets are unique UUIDs resolving to supported root primitives in the same
+document; reject missing, duplicate, wrong-kind or transformed-out-of-scope
+targets before mutation. Per-kind supported target sets: Profile accepts root
+Rects; Pocket accepts root Rect/Circle/closed-Pline/Region shapes; Engrave
+accepts root Rect/Circle/Arc/Pline curves (open or closed); Drill accepts root
+Points/Circle primitives (CamBam resolves drill positions from targets at
+toolpath time; 4e owns that acceptance). Require `target_depth < stock_surface`
+and `clearance_plane > stock_surface`. New parts use enabled=true, zero stock
+dimensions, empty material, origin (0,0), and no spindle/tool override; no
+fabricated MDF/stock-size defaults. This is unspecified stock, not a
+zero-thickness machining recommendation. Explicit MOP parameters bypass
+framework inferred tool/feed/depth defaults. Pin other settings to the current
+public defaults: Profile keeps `lead_in_type="None"` for this slice; Pocket
+pins Spiral lead-in, stepover 0.4, `InsideOutsideOffsets` fill, Roughing,
+finish stepover 0; Engrave pins Roughing, final increment 0, DepthFirst, EndMill;
+Drill pins the CannedCycle method with a `Drill` tool profile and peck 0,
+retract 5, dwell 0 defaults. All share XY, EndMill (except Drill), CW,
+ExactStop, Conventional, roughing clearance 0, tool number 0, empty custom
+header/footer; unexposed parameters remain fixed. Inspect returns these values
+too as closed per-kind parameter records. No unrestricted `**kwargs` input.
 
 Inspection serializes copies, never mutable entity objects. `DocumentSummary` is
 `{name, units, source: null | {path, sha256}, counts: {layers, parts, primitives,
@@ -316,16 +348,34 @@ and paginate. Later pages should provide the first page's `expected_revision`.
 `EntityRecord` is a discriminated union: layers `{kind:"layer", name}`; parts
 `{kind:"part", name, enabled, stock_width, stock_height, stock_thickness,
 stock_material}`; primitives `{kind:"primitive", id, identifier: string|null,
-type, layer, parent: UUID|null, children: UUID[], world_xyz: array|null,
-bounds: [xmin,ymin,xmax,ymax]|null}`; MOPs `{kind:"mop", id, identifier: string|null,
-type, part, targets: UUID[], parameters}`. For a Rect, `world_xyz` contains four
-XYZ corners in framework order. Profile `parameters` is a closed record containing
-the named inputs (`side` becomes `profile_side`) and fixed settings above, using
-public dataclass fields. Typed details cover the exact authoring slice only. For
-other imported shapes/MOPs, including Profiles with inherited or out-of-slice
-settings, return type/identity/relationships but null geometry or
-empty parameters and `INSPECTION_UNSUPPORTED`; no invented geometry or calculated
-effective inheritance values. Full multi-shape inspection belongs to 4d.
+type, layer, parent: UUID|null, children: UUID[], groups: string[], geometry:
+Geometry|null}`; MOPs `{kind:"mop", id, identifier: string|null, type, part,
+targets: UUID[], parameters}`. `geometry` is a closed typed record when the
+primitive is inside the similarity slice (root, no relationships, finite
+non-degenerate similarity world matrix, zero local Z offset), otherwise `null`
+with `INSPECTION_UNSUPPORTED`: Rect
+`{kind:"rect", world_xyz: four XYZ corners in framework order, bounds}`; Circle
+`{kind:"circle", center: XYZ, diameter, bounds}`; Arc `{kind:"arc", center,
+radius, start_angle, extent_angle, bounds}` with degrees, start normalized to
+`[0,360)` and a CCW-positive signed sweep; Pline `{kind:"pline", world_xyz:
+stored vertex order, bulges: parallel per-vertex values (the bulge at index i
+curves the segment starting at vertex i), closed, bounds}`; Points
+`{kind:"points", world_xyz, bounds}`. Bounds are world `[xmin,ymin,xmax,ymax]`
+projections; Arc and bulged-Pline bounds use the directed analytic sweep
+extrema. World points carry each stored Z plus the total Z offset; Text
+reports the anchor/height/font/style/line-spacing/alignment parameter record
+plus the optional unused `p2` interchange field, and deliberately no bounds
+because the framework's text extent is a font-dependent estimate, not a
+computed geometry query. Region reports `outer_curve` plus
+`hole_curves` contour payloads (`world_xyz`/`bulges`) and world bounds. MOP
+`parameters` is a closed per-kind record for Profile/Pocket/Engrave/Drill
+containing the named inputs (`side` becomes `profile_side`) and pinned settings
+above, using public dataclass fields. For other out-of-slice primitives/MOPs,
+including MOPs with inherited or out-of-slice settings or targets, return
+type/identity/relationships but null geometry or empty parameters and
+`INSPECTION_UNSUPPORTED`; no invented geometry or calculated effective
+inheritance values. Cross-document copy/transfer (two-document staging,
+revisions and failure semantics) is the remaining deferred 4d item.
 
 ## Results and failures
 
@@ -400,13 +450,23 @@ synthetic artifacts; 4e owns clean second-PC installation, actual named desktop
 connection and CamBam units/geometry/property/toolpath acceptance. Current production
 toolpath acceptance is not extended by this contract.
 
-4d broadens only documented mappings: Circle/Arc/Pline/Points/Text/Region adders
-and their public world queries; public parenting/groups and copy/transfer APIs;
-public transform/bake methods; Pocket/Engrave/Drill and public MOP target/state
-operations. Each family needs schema/parity/negative tests before advertisement.
-Remote hosting, arbitrary Python/private registries, pickle, generic field setters,
-deletion/batch edits, raw XML editing, overwrite and machine/G-code execution remain
-excluded. Reopen volatile storage only for a demonstrated unsaved-recovery need;
-reopen overwrite only with expected-file-hash concurrency and fidelity acceptance;
+4d broadens only documented mappings, one outcome-sized family per session with
+schema/parity/negative tests before advertisement. **Batches 1-4 (2026-09-10)
+are implemented:** the Circle/Arc/Pline/Points adders, the Text/Region adders
+with framework-validated XY topology, typed world-geometry inspection for all
+seven supported primitive kinds under the similarity slice (including
+bulge-aware bounds and the Text parameter record without font-dependent
+bounds), the translation/rotation/uniform-scale/mirror/Z/bake transform tools,
+the Pocket/Engrave/Drill adders plus public `set_mop_targets` with per-kind
+target rules and closed parameter records, and the parenting/group/copy
+relationship tools with fresh-identity same-document copies. The one deferred
+4d item is **cross-document copy/transfer**, which needs a two-document
+staging, revision and failure-semantics decision recorded in the contract
+before tools are advertised; its reopening criterion is in
+[PROGRESS.md](PROGRESS.md). Remote hosting, arbitrary Python/private
+registries, pickle, generic field setters, deletion/batch edits, raw XML
+editing, overwrite and machine/G-code execution remain excluded. Reopen
+volatile storage only for a demonstrated unsaved-recovery need; reopen
+overwrite only with expected-file-hash concurrency and fidelity acceptance;
 reopen additional protocol versions only with a concrete client need and wire
 evidence; supported legacy versions remain required acceptance coverage.

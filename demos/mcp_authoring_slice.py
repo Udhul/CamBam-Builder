@@ -67,8 +67,8 @@ async def _run(workspace):
     primitive = next(item for item in inspected["data"]["entities"] if item["kind"] == "primitive")
     expected = [[5.0, 2.0, 0.0], [25.0, 2.0, 0.0],
                 [25.0, 12.0, 0.0], [5.0, 12.0, 0.0]]
-    if primitive["world_xyz"] != expected:
-        raise RuntimeError(f"unexpected translated corners: {primitive['world_xyz']!r}")
+    if primitive["geometry"]["kind"] != "rect" or primitive["geometry"]["world_xyz"] != expected:
+        raise RuntimeError(f"unexpected translated corners: {primitive['geometry']!r}")
     if (workspace / "A.cb").read_bytes() != a_bytes:
         raise RuntimeError("A.cb changed after the reopened document was edited")
     if hashlib.sha256(a_bytes).hexdigest() != saved_a["data"]["sha256"]:
@@ -80,7 +80,7 @@ async def _run(workspace):
         "revisions": {"created": 0, "rectangle": 1, "profile_and_A": 2,
                       "reopened": 0, "translated_and_B": 1},
         "A": saved_a["data"], "B": saved_b["data"],
-        "world_xyz": primitive["world_xyz"],
+        "world_xyz": primitive["geometry"]["world_xyz"],
     }
 
 

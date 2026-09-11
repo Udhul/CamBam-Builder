@@ -79,9 +79,11 @@ Result form: findings with file/symbol evidence, patch, or tests; no transcript
 - Run focused checks; broaden when shared contracts change. Inspect counts,
   references, geometry and parameters in serialized output, not just exit status.
 - Treat public entity/MOP creation, relationship, transform, world-query and XML
-  changes as MCP adapter impacts: run `test_mcp_authoring.py`, compare the mapped
-  fields/defaults with `MCP_CONTRACT.md` and both schema copies, and either preserve
-  the advertised behavior or update code, schemas and contract together.
+  changes as MCP adapter impacts: run `test_mcp_authoring.py`,
+  `test_mcp_geometry.py`, `test_mcp_text_region.py`, `test_mcp_mops.py` and
+  `test_mcp_relationships_transforms.py`, compare the mapped fields/defaults
+  with `MCP_CONTRACT.md` and both schema copies, and either preserve the
+  advertised behavior or update code, schemas and contract together.
 - Review the final diff and documentation links; keep detailed logs local.
 - Report changed areas, assumptions, exact commands/results and unverified risks.
 - Identify user/domain validation, next increment and suggested commit message.

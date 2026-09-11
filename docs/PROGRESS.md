@@ -8,7 +8,7 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 ## Active work and next priority
 
 **First MCP authoring and round-trip slice: complete** (2026-09-10; backlog
-4c). The adapter now advertises all eight version 1 tools and stages rectangle,
+4c). The adapter then advertised all eight version 1 tools and staged rectangle,
 Profile and translation edits on independent project clones before one atomic
 revision publication. Inspection returns typed world Rect corners/bounds and the
 closed explicit Profile parameter record, while unsupported imported detail stays
@@ -20,9 +20,117 @@ The five authoring tests and all 28 MCP tests pass (one Windows symlink-privileg
 skip); the full suite reports 179 passes and the same skip.
 Detailed parity, negative-case and verification evidence is in the
 [review](REVIEW.md#mcp-first-authoring-and-round-trip-slice---2026-09-10).
-The next increment is **4d: supported API breadth and resilience**. Its reopening
-criterion is a concrete high-value geometry, relationship or MOP family selected
-from the mappings already bounded by the [MCP contract](MCP_CONTRACT.md).
+
+**4d batch 1, curve/point geometry breadth: implemented and verified**
+(2026-09-10). The adapter advertises twelve version 1 tools after adding
+`geometry_add_circle`, `geometry_add_arc`, `geometry_add_pline` and
+`geometry_add_points` with their closed schema records (per-vertex Z/bulge,
+2..10000/1..10000 point bounds), and `geometry_translate` now accepts root
+Rect/Circle/Arc/Pline/Points primitives inside the then translation-only
+slice.
+Inspection moved to a typed closed `geometry` payload per supported kind —
+Rect corners, Circle center/diameter, Arc center/radius/degree angles, Pline
+vertices with parallel per-vertex bulges and closed flag, Points vertices — all
+with directed analytic world bounds; Text, Region and out-of-slice transforms
+stay diagnostic (`geometry: null`, `INSPECTION_UNSUPPORTED`). Retry identity now
+canonicalizes nested defaults, so omitted `z`/`bulge` and explicit zeros replay
+as the same request. Parity fixtures compare adapter payloads, XML semantics
+(order- and id-normalized because primitive document order is the framework's
+UUID-sorted listing) and save/reopen identity against independently authored
+public-framework projects; negative cases cover schema bounds, identifier and
+layer-name conflicts, stale revisions, wrong-kind translate/profile targets and
+atomic failure. Five new geometry suites and the full 185-test suite pass
+(one Windows symlink-privilege skip). Remaining limits: Text/Region typed detail,
+Pocket/Engrave/Drill, parenting/groups/copy-transfer and bake transforms are
+still unsupported; Profile targets remain root Rects only. Evidence is in the
+[review](REVIEW.md#mcp-geometry-breadth-batch-1---2026-09-10).
+**4d batch 4, relationships and transforms: implemented and verified**
+(2026-09-10). The adapter advertises twenty-seven version 1 tools after adding
+`relationship_set_parent` (public `link_primitive_parent`; null detaches;
+cycles/self links are `INVALID_ARGUMENT`), `relationship_add_to_group`/
+`relationship_remove_from_group`, `relationship_copy_tree` (public
+`copy_primitive_tree` into the same document with `preserve_ids=False`; fresh
+copy identities; included layers/groups and optional MOPs require explicit
+identifier/group maps or the framework's collision rejection is surfaced as
+`INVALID_ARGUMENT`), and the transform tools `geometry_translate_z` (baked
+stored-geometry Z shift), `geometry_rotate`, `geometry_scale` (uniform only),
+`geometry_mirror` and `geometry_bake` (folds the world transform into stored
+geometry; non-axis-aligned Rects become closed Plines). The inspection slice is
+now similarity-based: root primitives whose world matrix is a finite
+non-degenerate similarity (translation, rotation, uniform scale, reflection)
+keep typed geometry and exact analytic bounds, so rotated/scaled/mirrored
+results stay diagnosable; shear/non-uniform-scale, nonzero local Z and any
+parent/children/groups relationship remain diagnostic. Primitive inspection
+records now also carry their sorted `groups`. Parity fixtures compare adapter
+and independently authored public-framework results for transforms (including
+bulge sign flips under reflection and bake), parent/group/copy state, and XML
+semantics; negative cases cover cycle/self links, non-primitive parents,
+copy identifier/layer/group collisions, wrong-kind roots, Text bake
+restrictions, cx-without-cy pairs, stale revisions, replay and concurrent
+same-revision serialization. Post-review resilience checks also cover atomic
+primitive/MOP limit rejection for same-document copies and diagnostic fallback
+for schema-oversized imported geometry. Five relationship/transform suites pass;
+the full suite reports 197 tests (196 passed; one Windows symlink-privilege skip).
+Tool annotations now match the destructive/nondestructive contract. Remaining
+limit: cross-document copy/transfer is deferred — it needs a two-document
+staging, revision and failure-semantics contract decision before tools are
+advertised. Evidence is in the
+[review](REVIEW.md#mcp-relationship-and-transform-breadth-batch-4---2026-09-10).
+
+**4d batch 3, Pocket/Engrave/Drill machining breadth: implemented and
+verified** (2026-09-10). The adapter advertises eighteen version 1 tools after
+adding `machining_add_pocket`, `machining_add_engrave`, `machining_add_drill`
+(closed explicit parameter records with pinned public defaults; Pocket uses
+Spiral lead-in/`InsideOutsideOffsets`/Roughing, Engrave pins Roughing and
+DepthFirst with an EndMill, Drill pins the CannedCycle method with a `Drill`
+tool profile and peck/retract/dwell inputs) and `machining_set_mop_targets`
+(public `set_mop_targets`) for explicit target replacement. MOP target rules
+are now per kind: Profile keeps root Rects; Pocket accepts root
+Rect/Circle/closed-Pline/Region shapes; Engrave accepts root
+Rect/Circle/Arc/Pline curves; Drill accepts root Points/Circle primitives.
+Inspection returns closed per-kind parameter records with the same
+explicit-Value XML-state guard as Profile, and out-of-slice/inherited MOPs stay
+diagnostic. Parity fixtures compare adapter payloads, resolved targets and XML
+semantics against independently authored public-framework projects (including
+target replacement and reopen), and negative cases cover per-kind target
+rejections, depth/clearance relations, drill scalar bounds, duplicate targets,
+wrong-kind retargeting, stale revisions, replay and concurrent same-revision
+serialization. Two new machining suites pass; the full suite reports 192 passes
+(one Windows symlink-privilege skip). Remaining limits: parenting/groups/
+copy-transfer and bake transforms are still unsupported; CamBam toolpath
+semantics (including drill positions) remain 4e acceptance. Evidence is in the
+[review](REVIEW.md#mcp-pocket-engrave-drill-breadth-batch-3---2026-09-10).
+
+**4d batch 2, Text and Region authoring: implemented and verified**
+(2026-09-10). The adapter advertises fourteen version 1 tools after adding
+`geometry_add_text` (anchor, font, style, line spacing, alignment, elevation;
+content bounded 1..1024 with newline-only control allowance) and
+`geometry_add_region` (closed outer contour plus 0..100 hole contours, 2..10000
+vertex records with per-vertex Z/bulge) whose XY topology failures
+(self-intersection, zero-length segments, holes outside/disjoint-violating or
+nested) return `INVALID_ARGUMENT` with the bounded framework message.
+Inspection adds closed `text` (anchor/height/font/style/line-spacing/
+alignments, optional unused `p2`; deliberately no bounds because text extents
+are a font-dependent estimate) and `region` (outer/hole contour
+`world_xyz`+`bulges`, directed analytic bounds) payloads, and
+`geometry_translate` now also accepts root Text/Region primitives. Parity
+fixtures compare adapter payloads and XML semantics against independently
+authored public-framework projects (bulged-outer Region with an exact `1e-9`
+`-1` sweep dip verified), save/reopen retains identities and geometry, and
+negative cases cover schema bounds, alignment enums, topology violations,
+identifier/layer conflicts, stale revisions and atomic failure. Five new
+Text/Region suites pass; the full suite reports 190 passes (one Windows
+symlink-privilege skip). Remaining limits: Pocket/Engrave/Drill,
+parenting/groups/copy-transfer and bake transforms are still unsupported;
+Profile targets remain root Rects only. Evidence is in the
+[review](REVIEW.md#mcp-text-and-region-breadth-batch-2---2026-09-10).
+
+**4d state after batches 1-4: complete except cross-document copy/transfer.**
+The next increment is **4d batch 5: cross-document copy/transfer**, which first
+needs a recorded two-document staging/revision/failure contract decision in
+[MCP_CONTRACT.md](MCP_CONTRACT.md); alternatively start **4e desktop/second-PC
+acceptance** for the implemented surface if the first deployment does not need
+cross-document moves.
 
 **Secure MCP server and document foundation: complete** (2026-09-10; backlog
 4b). The optional Python >=3.10 adapter provides a strict stdio boundary, an
@@ -46,7 +154,7 @@ is exercised and passes.
 The authoring boundary subsequently advanced through the completed 4c slice.
 
 **MCP protocol/client/adapter contract: complete** (2026-09-10; backlog 4a).
-The [contract guide](MCP_CONTRACT.md) and [eight tool schemas](mcp_contract_v1.schema.json)
+The [current contract guide](MCP_CONTRACT.md) and [twenty-seven tool schemas](mcp_contract_v1.schema.json)
 settle stdio MCP 2026-07-28, optional SDK 2.2.0/Python >=3.10, volatile explicit
 handles, revision/retry rules, workspace containment and new-file-only saves.
 SDK stdio direct-call/discovery probes passed. OpenCode 1.18.29's installed backend
@@ -305,7 +413,13 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
      public clone/strict-import contracts and backward protocol negotiation.
    - **4c — completed 2026-09-10:** one authoring/MOP/inspect/save/reload parity
      slice, including the runnable synthetic demonstration.
-   - **4d — next:** expand the explicitly supported API and resilience coverage.
+   - **4d — implemented except cross-document copy/transfer (batches 1-4
+     complete 2026-09-10):** expand the explicitly supported API and resilience
+     coverage. Batches 1-4 delivered the seven primitive authoring families
+     with typed world queries, all four basic MOPs with explicit target
+     replacement, the similarity transform/bake tools, and the
+     parenting/group/copy relationship tools. Remaining: cross-document
+     copy/transfer behind a two-document contract decision.
      Sol/high, with Terra/xhigh suitable for settled coverage batches.
    - **4e:** validate installation, named desktop-client interoperability and
      second-PC/user acceptance. Terra/high; escalate interoperability defects to
@@ -370,8 +484,9 @@ are authoritative. MOP ownership, supported interchange, curved geometry bounds
 (1a), copy/transfer (1b) and shape parity (2) are recorded above with their
 verification and acceptance state.
 
-This is a good fresh-session breakpoint: 4c's authoring, typed inspection,
-round-trip parity and negative-case contracts are persisted, while 4d has distinct
-API-breadth selection and resilience scope. No pending decision depends on chat;
-desktop and second-PC interoperability remain the explicit 4e gate.
-Suggested commit: `feat: add first MCP authoring slice`.
+This is a good fresh-session breakpoint: 4d batches 1-4's authoring, machining,
+relationship and transform contracts, parity and negative-case evidence are
+persisted, and the deferred cross-document copy/transfer needs a recorded
+contract decision rather than conversational context. 4e desktop/second-PC
+acceptance can also start on the implemented surface.
+Suggested commit: `feat: add MCP supported API breadth and resilience`.

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:cambam-builder:mcp-contract:1",
   "title": "MCP adapter v1 tool contracts",
-  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All eight version 1 document and authoring tools are implemented.",
+  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All twenty-seven version 1 document and authoring tools are implemented; typed detail covers the seven supported primitive kinds and the four supported MOP kinds within the similarity slice, while non-similarity transforms and relationships stay diagnostic. Cross-document copy/transfer remains future work.",
   "$defs": {
     "UUID": {
       "type": "string",
@@ -44,12 +44,111 @@
       "exclusiveMinimum": 0,
       "maximum": 1000000000.0
     },
+    "NonNegative": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1000000000.0
+    },
     "Units": {
       "type": "string",
       "enum": [
         "mm",
         "in"
       ]
+    },
+    "XYZ": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "Bounds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Number"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "VertexPoint": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "$ref": "#/$defs/Number"
+        },
+        "y": {
+          "$ref": "#/$defs/Number"
+        },
+        "z": {
+          "$ref": "#/$defs/Number",
+          "default": 0
+        },
+        "bulge": {
+          "$ref": "#/$defs/Number",
+          "default": 0
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "additionalProperties": false
+    },
+    "PlainPoint": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "$ref": "#/$defs/Number"
+        },
+        "y": {
+          "$ref": "#/$defs/Number"
+        },
+        "z": {
+          "$ref": "#/$defs/Number",
+          "default": 0
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "additionalProperties": false
+    },
+    "TextContent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?=.*\\S)[^\\x00-\\x09\\x0b-\\x1f\\x7f]+$"
+    },
+    "FontName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[^\\x00-\\x1f\\x7f]+$"
+    },
+    "FontStyle": {
+      "type": "string",
+      "maxLength": 128,
+      "pattern": "^[^\\x00-\\x1f\\x7f]*$"
+    },
+    "ContourInput": {
+      "type": "object",
+      "properties": {
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/VertexPoint"
+          },
+          "minItems": 2,
+          "maxItems": 10000
+        }
+      },
+      "required": [
+        "points"
+      ],
+      "additionalProperties": false
     },
     "WorkspaceBootstrap": {
       "type": "object",
@@ -280,6 +379,318 @@
       ],
       "additionalProperties": false
     },
+    "PocketParameters": {
+      "type": "object",
+      "properties": {
+        "target_depth": {
+          "$ref": "#/$defs/Number"
+        },
+        "depth_increment": {
+          "$ref": "#/$defs/Positive"
+        },
+        "tool_diameter": {
+          "$ref": "#/$defs/Positive"
+        },
+        "cut_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "plunge_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "spindle_speed": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "stock_surface": {
+          "$ref": "#/$defs/Number",
+          "default": 0
+        },
+        "clearance_plane": {
+          "$ref": "#/$defs/Number"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "work_plane": {
+          "const": "XY"
+        },
+        "tool_profile": {
+          "const": "EndMill"
+        },
+        "spindle_direction": {
+          "const": "CW"
+        },
+        "velocity_mode": {
+          "const": "ExactStop"
+        },
+        "roughing_clearance": {
+          "const": 0
+        },
+        "tool_number": {
+          "const": 0
+        },
+        "final_depth_increment": {
+          "const": 0
+        },
+        "cut_ordering": {
+          "const": "DepthFirst"
+        },
+        "custom_mop_header": {
+          "const": ""
+        },
+        "custom_mop_footer": {
+          "const": ""
+        },
+        "stepover": {
+          "const": 0.4
+        },
+        "stepover_feedrate": {
+          "const": "Plunge Feedrate"
+        },
+        "milling_direction": {
+          "const": "Conventional"
+        },
+        "collision_detection": {
+          "const": true
+        },
+        "lead_in_type": {
+          "const": "Spiral"
+        },
+        "region_fill_style": {
+          "const": "InsideOutsideOffsets"
+        },
+        "finish_stepover": {
+          "const": 0
+        },
+        "finish_stepover_at_target_depth": {
+          "const": false
+        },
+        "roughing_finishing": {
+          "const": "Roughing"
+        }
+      },
+      "required": [
+        "target_depth",
+        "depth_increment",
+        "tool_diameter",
+        "cut_feedrate",
+        "plunge_feedrate",
+        "spindle_speed",
+        "stock_surface",
+        "clearance_plane",
+        "enabled",
+        "work_plane",
+        "tool_profile",
+        "spindle_direction",
+        "velocity_mode",
+        "roughing_clearance",
+        "tool_number",
+        "final_depth_increment",
+        "cut_ordering",
+        "custom_mop_header",
+        "custom_mop_footer",
+        "stepover",
+        "stepover_feedrate",
+        "milling_direction",
+        "collision_detection",
+        "lead_in_type",
+        "region_fill_style",
+        "finish_stepover",
+        "finish_stepover_at_target_depth",
+        "roughing_finishing"
+      ],
+      "additionalProperties": false
+    },
+    "EngraveParameters": {
+      "type": "object",
+      "properties": {
+        "target_depth": {
+          "$ref": "#/$defs/Number"
+        },
+        "depth_increment": {
+          "$ref": "#/$defs/Positive"
+        },
+        "tool_diameter": {
+          "$ref": "#/$defs/Positive"
+        },
+        "cut_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "plunge_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "spindle_speed": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "stock_surface": {
+          "$ref": "#/$defs/Number",
+          "default": 0
+        },
+        "clearance_plane": {
+          "$ref": "#/$defs/Number"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "work_plane": {
+          "const": "XY"
+        },
+        "tool_profile": {
+          "const": "EndMill"
+        },
+        "spindle_direction": {
+          "const": "CW"
+        },
+        "velocity_mode": {
+          "const": "ExactStop"
+        },
+        "roughing_clearance": {
+          "const": 0
+        },
+        "tool_number": {
+          "const": 0
+        },
+        "custom_mop_header": {
+          "const": ""
+        },
+        "custom_mop_footer": {
+          "const": ""
+        },
+        "roughing_finishing": {
+          "const": "Roughing"
+        },
+        "final_depth_increment": {
+          "const": 0
+        },
+        "cut_ordering": {
+          "const": "DepthFirst"
+        }
+      },
+      "required": [
+        "target_depth",
+        "depth_increment",
+        "tool_diameter",
+        "cut_feedrate",
+        "plunge_feedrate",
+        "spindle_speed",
+        "stock_surface",
+        "clearance_plane",
+        "enabled",
+        "work_plane",
+        "tool_profile",
+        "spindle_direction",
+        "velocity_mode",
+        "roughing_clearance",
+        "tool_number",
+        "custom_mop_header",
+        "custom_mop_footer",
+        "roughing_finishing",
+        "final_depth_increment",
+        "cut_ordering"
+      ],
+      "additionalProperties": false
+    },
+    "DrillParameters": {
+      "type": "object",
+      "properties": {
+        "target_depth": {
+          "$ref": "#/$defs/Number"
+        },
+        "depth_increment": {
+          "$ref": "#/$defs/Positive"
+        },
+        "tool_diameter": {
+          "$ref": "#/$defs/Positive"
+        },
+        "cut_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "plunge_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "spindle_speed": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "stock_surface": {
+          "$ref": "#/$defs/Number",
+          "default": 0
+        },
+        "clearance_plane": {
+          "$ref": "#/$defs/Number"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "peck_distance": {
+          "$ref": "#/$defs/NonNegative"
+        },
+        "retract_height": {
+          "$ref": "#/$defs/Number"
+        },
+        "dwell": {
+          "$ref": "#/$defs/NonNegative"
+        },
+        "drilling_method": {
+          "const": "CannedCycle"
+        },
+        "tool_profile": {
+          "const": "Drill"
+        },
+        "work_plane": {
+          "const": "XY"
+        },
+        "spindle_direction": {
+          "const": "CW"
+        },
+        "velocity_mode": {
+          "const": "ExactStop"
+        },
+        "roughing_clearance": {
+          "const": 0
+        },
+        "tool_number": {
+          "const": 0
+        },
+        "custom_mop_header": {
+          "const": ""
+        },
+        "custom_mop_footer": {
+          "const": ""
+        }
+      },
+      "required": [
+        "target_depth",
+        "depth_increment",
+        "tool_diameter",
+        "cut_feedrate",
+        "plunge_feedrate",
+        "spindle_speed",
+        "stock_surface",
+        "clearance_plane",
+        "enabled",
+        "peck_distance",
+        "retract_height",
+        "dwell",
+        "drilling_method",
+        "tool_profile",
+        "work_plane",
+        "spindle_direction",
+        "velocity_mode",
+        "roughing_clearance",
+        "tool_number",
+        "custom_mop_header",
+        "custom_mop_footer"
+      ],
+      "additionalProperties": false
+    },
     "EntityRecord": {
       "oneOf": [
         {
@@ -375,35 +786,17 @@
                 "$ref": "#/$defs/UUID"
               }
             },
-            "world_xyz": {
-              "anyOf": [
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/$defs/Number"
-                    },
-                    "minItems": 3,
-                    "maxItems": 3
-                  },
-                  "minItems": 4,
-                  "maxItems": 4
-                },
-                {
-                  "type": "null"
-                }
-              ]
+            "groups": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 128
+              }
             },
-            "bounds": {
+            "geometry": {
               "anyOf": [
                 {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/$defs/Number"
-                  },
-                  "minItems": 4,
-                  "maxItems": 4
+                  "$ref": "#/$defs/Geometry"
                 },
                 {
                   "type": "null"
@@ -419,8 +812,8 @@
             "layer",
             "parent",
             "children",
-            "world_xyz",
-            "bounds"
+            "groups",
+            "geometry"
           ],
           "additionalProperties": false
         },
@@ -461,6 +854,15 @@
                   "$ref": "#/$defs/ProfileParameters"
                 },
                 {
+                  "$ref": "#/$defs/PocketParameters"
+                },
+                {
+                  "$ref": "#/$defs/EngraveParameters"
+                },
+                {
+                  "$ref": "#/$defs/DrillParameters"
+                },
+                {
                   "type": "object",
                   "properties": {},
                   "required": [],
@@ -479,6 +881,289 @@
             "parameters"
           ],
           "additionalProperties": false
+        }
+      ]
+    },
+    "RectGeometry": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "rect"
+        },
+        "world_xyz": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XYZ"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "bounds": {
+          "$ref": "#/$defs/Bounds"
+        }
+      },
+      "required": [
+        "kind",
+        "world_xyz",
+        "bounds"
+      ],
+      "additionalProperties": false
+    },
+    "CircleGeometry": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "circle"
+        },
+        "center": {
+          "$ref": "#/$defs/XYZ"
+        },
+        "diameter": {
+          "$ref": "#/$defs/Positive"
+        },
+        "bounds": {
+          "$ref": "#/$defs/Bounds"
+        }
+      },
+      "required": [
+        "kind",
+        "center",
+        "diameter",
+        "bounds"
+      ],
+      "additionalProperties": false
+    },
+    "ArcGeometry": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "arc"
+        },
+        "center": {
+          "$ref": "#/$defs/XYZ"
+        },
+        "radius": {
+          "$ref": "#/$defs/Positive"
+        },
+        "start_angle": {
+          "$ref": "#/$defs/Number"
+        },
+        "extent_angle": {
+          "$ref": "#/$defs/Number"
+        },
+        "bounds": {
+          "$ref": "#/$defs/Bounds"
+        }
+      },
+      "required": [
+        "kind",
+        "center",
+        "radius",
+        "start_angle",
+        "extent_angle",
+        "bounds"
+      ],
+      "additionalProperties": false
+    },
+    "PlineGeometry": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "pline"
+        },
+        "world_xyz": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XYZ"
+          },
+          "minItems": 1,
+          "maxItems": 10000
+        },
+        "bulges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Number"
+          },
+          "minItems": 1,
+          "maxItems": 10000
+        },
+        "closed": {
+          "type": "boolean"
+        },
+        "bounds": {
+          "$ref": "#/$defs/Bounds"
+        }
+      },
+      "required": [
+        "kind",
+        "world_xyz",
+        "bulges",
+        "closed",
+        "bounds"
+      ],
+      "additionalProperties": false
+    },
+    "PointsGeometry": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "points"
+        },
+        "world_xyz": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XYZ"
+          },
+          "minItems": 1,
+          "maxItems": 10000
+        },
+        "bounds": {
+          "$ref": "#/$defs/Bounds"
+        }
+      },
+      "required": [
+        "kind",
+        "world_xyz",
+        "bounds"
+      ],
+      "additionalProperties": false
+    },
+    "TextGeometry": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "text"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "anchor": {
+          "$ref": "#/$defs/XYZ"
+        },
+        "height": {
+          "$ref": "#/$defs/Positive"
+        },
+        "font": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "style": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "line_spacing": {
+          "$ref": "#/$defs/Number"
+        },
+        "align_horizontal": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "align_vertical": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "p2": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XYZ"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "text",
+        "anchor",
+        "height",
+        "font",
+        "style",
+        "line_spacing",
+        "align_horizontal",
+        "align_vertical",
+        "p2"
+      ],
+      "additionalProperties": false
+    },
+    "ContourGeometry": {
+      "type": "object",
+      "properties": {
+        "world_xyz": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XYZ"
+          },
+          "minItems": 2,
+          "maxItems": 10000
+        },
+        "bulges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Number"
+          },
+          "minItems": 2,
+          "maxItems": 10000
+        }
+      },
+      "required": [
+        "world_xyz",
+        "bulges"
+      ],
+      "additionalProperties": false
+    },
+    "RegionGeometry": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "region"
+        },
+        "outer_curve": {
+          "$ref": "#/$defs/ContourGeometry"
+        },
+        "hole_curves": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContourGeometry"
+          },
+          "maxItems": 100
+        },
+        "bounds": {
+          "$ref": "#/$defs/Bounds"
+        }
+      },
+      "required": [
+        "kind",
+        "outer_curve",
+        "hole_curves",
+        "bounds"
+      ],
+      "additionalProperties": false
+    },
+    "Geometry": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/RectGeometry"
+        },
+        {
+          "$ref": "#/$defs/CircleGeometry"
+        },
+        {
+          "$ref": "#/$defs/ArcGeometry"
+        },
+        {
+          "$ref": "#/$defs/PlineGeometry"
+        },
+        {
+          "$ref": "#/$defs/PointsGeometry"
+        },
+        {
+          "$ref": "#/$defs/TextGeometry"
+        },
+        {
+          "$ref": "#/$defs/RegionGeometry"
         }
       ]
     },
@@ -962,6 +1647,622 @@
         }
       ]
     },
+    "geometry_add_circle_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "identifier": {
+          "$ref": "#/$defs/Name"
+        },
+        "layer": {
+          "$ref": "#/$defs/Name"
+        },
+        "x": {
+          "$ref": "#/$defs/Number"
+        },
+        "y": {
+          "$ref": "#/$defs/Number"
+        },
+        "diameter": {
+          "$ref": "#/$defs/Positive"
+        },
+        "z": {
+          "$ref": "#/$defs/Number",
+          "default": 0
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "identifier",
+        "layer",
+        "x",
+        "y",
+        "diameter"
+      ],
+      "additionalProperties": false
+    },
+    "geometry_add_circle_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "layer": {
+                      "$ref": "#/$defs/Name"
+                    }
+                  },
+                  "required": [
+                    "entity_id",
+                    "layer"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "geometry_add_arc_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "identifier": {
+          "$ref": "#/$defs/Name"
+        },
+        "layer": {
+          "$ref": "#/$defs/Name"
+        },
+        "x": {
+          "$ref": "#/$defs/Number"
+        },
+        "y": {
+          "$ref": "#/$defs/Number"
+        },
+        "radius": {
+          "$ref": "#/$defs/Positive"
+        },
+        "start_angle": {
+          "$ref": "#/$defs/Number"
+        },
+        "extent_angle": {
+          "$ref": "#/$defs/Number"
+        },
+        "z": {
+          "$ref": "#/$defs/Number",
+          "default": 0
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "identifier",
+        "layer",
+        "x",
+        "y",
+        "radius",
+        "start_angle",
+        "extent_angle"
+      ],
+      "additionalProperties": false
+    },
+    "geometry_add_arc_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "layer": {
+                      "$ref": "#/$defs/Name"
+                    }
+                  },
+                  "required": [
+                    "entity_id",
+                    "layer"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "geometry_add_pline_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "identifier": {
+          "$ref": "#/$defs/Name"
+        },
+        "layer": {
+          "$ref": "#/$defs/Name"
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/VertexPoint"
+          },
+          "minItems": 2,
+          "maxItems": 10000
+        },
+        "closed": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "identifier",
+        "layer",
+        "points"
+      ],
+      "additionalProperties": false
+    },
+    "geometry_add_pline_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "layer": {
+                      "$ref": "#/$defs/Name"
+                    }
+                  },
+                  "required": [
+                    "entity_id",
+                    "layer"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "geometry_add_points_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "identifier": {
+          "$ref": "#/$defs/Name"
+        },
+        "layer": {
+          "$ref": "#/$defs/Name"
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlainPoint"
+          },
+          "minItems": 1,
+          "maxItems": 10000
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "identifier",
+        "layer",
+        "points"
+      ],
+      "additionalProperties": false
+    },
+    "geometry_add_points_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "layer": {
+                      "$ref": "#/$defs/Name"
+                    }
+                  },
+                  "required": [
+                    "entity_id",
+                    "layer"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "geometry_add_text_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "identifier": {
+          "$ref": "#/$defs/Name"
+        },
+        "layer": {
+          "$ref": "#/$defs/Name"
+        },
+        "text": {
+          "$ref": "#/$defs/TextContent"
+        },
+        "x": {
+          "$ref": "#/$defs/Number"
+        },
+        "y": {
+          "$ref": "#/$defs/Number"
+        },
+        "height": {
+          "$ref": "#/$defs/Positive",
+          "default": 10
+        },
+        "font": {
+          "$ref": "#/$defs/FontName",
+          "default": "Arial"
+        },
+        "style": {
+          "$ref": "#/$defs/FontStyle",
+          "default": ""
+        },
+        "line_spacing": {
+          "$ref": "#/$defs/Positive",
+          "default": 1
+        },
+        "align_horizontal": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "default": "center"
+        },
+        "align_vertical": {
+          "type": "string",
+          "enum": [
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "center"
+        },
+        "z": {
+          "$ref": "#/$defs/Number",
+          "default": 0
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "identifier",
+        "layer",
+        "text",
+        "x",
+        "y"
+      ],
+      "additionalProperties": false
+    },
+    "geometry_add_text_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "layer": {
+                      "$ref": "#/$defs/Name"
+                    }
+                  },
+                  "required": [
+                    "entity_id",
+                    "layer"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "geometry_add_region_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "identifier": {
+          "$ref": "#/$defs/Name"
+        },
+        "layer": {
+          "$ref": "#/$defs/Name"
+        },
+        "outer": {
+          "$ref": "#/$defs/ContourInput"
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContourInput"
+          },
+          "maxItems": 100,
+          "default": []
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "identifier",
+        "layer",
+        "outer"
+      ],
+      "additionalProperties": false
+    },
+    "geometry_add_region_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "layer": {
+                      "$ref": "#/$defs/Name"
+                    }
+                  },
+                  "required": [
+                    "entity_id",
+                    "layer"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
     "machining_add_profile_input": {
       "type": "object",
       "properties": {
@@ -1085,6 +2386,1362 @@
                     "mop_id",
                     "part",
                     "targets"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "machining_add_pocket_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "identifier": {
+          "$ref": "#/$defs/Name"
+        },
+        "part": {
+          "$ref": "#/$defs/Name"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UUID"
+          },
+          "minItems": 1,
+          "maxItems": 100,
+          "uniqueItems": true
+        },
+        "target_depth": {
+          "$ref": "#/$defs/Number"
+        },
+        "depth_increment": {
+          "$ref": "#/$defs/Positive"
+        },
+        "tool_diameter": {
+          "$ref": "#/$defs/Positive"
+        },
+        "cut_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "plunge_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "spindle_speed": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "stock_surface": {
+          "$ref": "#/$defs/Number",
+          "default": 0
+        },
+        "clearance_plane": {
+          "$ref": "#/$defs/Number"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "identifier",
+        "part",
+        "targets",
+        "target_depth",
+        "depth_increment",
+        "tool_diameter",
+        "cut_feedrate",
+        "plunge_feedrate",
+        "spindle_speed",
+        "clearance_plane"
+      ],
+      "additionalProperties": false
+    },
+    "machining_add_pocket_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "mop_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "part": {
+                      "$ref": "#/$defs/Name"
+                    },
+                    "targets": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/UUID"
+                      },
+                      "minItems": 1,
+                      "maxItems": 100,
+                      "uniqueItems": true
+                    }
+                  },
+                  "required": [
+                    "mop_id",
+                    "part",
+                    "targets"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "machining_add_engrave_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "identifier": {
+          "$ref": "#/$defs/Name"
+        },
+        "part": {
+          "$ref": "#/$defs/Name"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UUID"
+          },
+          "minItems": 1,
+          "maxItems": 100,
+          "uniqueItems": true
+        },
+        "target_depth": {
+          "$ref": "#/$defs/Number"
+        },
+        "depth_increment": {
+          "$ref": "#/$defs/Positive"
+        },
+        "tool_diameter": {
+          "$ref": "#/$defs/Positive"
+        },
+        "cut_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "plunge_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "spindle_speed": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "stock_surface": {
+          "$ref": "#/$defs/Number",
+          "default": 0
+        },
+        "clearance_plane": {
+          "$ref": "#/$defs/Number"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "identifier",
+        "part",
+        "targets",
+        "target_depth",
+        "depth_increment",
+        "tool_diameter",
+        "cut_feedrate",
+        "plunge_feedrate",
+        "spindle_speed",
+        "clearance_plane"
+      ],
+      "additionalProperties": false
+    },
+    "machining_add_engrave_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "mop_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "part": {
+                      "$ref": "#/$defs/Name"
+                    },
+                    "targets": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/UUID"
+                      },
+                      "minItems": 1,
+                      "maxItems": 100,
+                      "uniqueItems": true
+                    }
+                  },
+                  "required": [
+                    "mop_id",
+                    "part",
+                    "targets"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "machining_add_drill_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "identifier": {
+          "$ref": "#/$defs/Name"
+        },
+        "part": {
+          "$ref": "#/$defs/Name"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UUID"
+          },
+          "minItems": 1,
+          "maxItems": 100,
+          "uniqueItems": true
+        },
+        "target_depth": {
+          "$ref": "#/$defs/Number"
+        },
+        "depth_increment": {
+          "$ref": "#/$defs/Positive"
+        },
+        "tool_diameter": {
+          "$ref": "#/$defs/Positive"
+        },
+        "cut_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "plunge_feedrate": {
+          "$ref": "#/$defs/Positive"
+        },
+        "spindle_speed": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "stock_surface": {
+          "$ref": "#/$defs/Number",
+          "default": 0
+        },
+        "clearance_plane": {
+          "$ref": "#/$defs/Number"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "peck_distance": {
+          "$ref": "#/$defs/NonNegative",
+          "default": 0
+        },
+        "retract_height": {
+          "$ref": "#/$defs/Number",
+          "default": 5
+        },
+        "dwell": {
+          "$ref": "#/$defs/NonNegative",
+          "default": 0
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "identifier",
+        "part",
+        "targets",
+        "target_depth",
+        "depth_increment",
+        "tool_diameter",
+        "cut_feedrate",
+        "plunge_feedrate",
+        "spindle_speed",
+        "clearance_plane"
+      ],
+      "additionalProperties": false
+    },
+    "machining_add_drill_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "mop_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "part": {
+                      "$ref": "#/$defs/Name"
+                    },
+                    "targets": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/UUID"
+                      },
+                      "minItems": 1,
+                      "maxItems": 100,
+                      "uniqueItems": true
+                    }
+                  },
+                  "required": [
+                    "mop_id",
+                    "part",
+                    "targets"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "machining_set_mop_targets_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "mop_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UUID"
+          },
+          "minItems": 1,
+          "maxItems": 100,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "mop_id",
+        "targets"
+      ],
+      "additionalProperties": false
+    },
+    "machining_set_mop_targets_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "mop_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "targets": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/UUID"
+                      },
+                      "minItems": 1,
+                      "maxItems": 100,
+                      "uniqueItems": true
+                    }
+                  },
+                  "required": [
+                    "mop_id",
+                    "targets"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "relationship_set_parent_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "entity_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "parent_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "entity_id",
+        "parent_id"
+      ],
+      "additionalProperties": false
+    },
+    "relationship_set_parent_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "parent": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/UUID"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "entity_id",
+                    "parent"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "relationship_add_to_group_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "entity_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "group": {
+          "$ref": "#/$defs/Name"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "entity_id",
+        "group"
+      ],
+      "additionalProperties": false
+    },
+    "relationship_add_to_group_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "groups": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/Name"
+                      }
+                    }
+                  },
+                  "required": [
+                    "entity_id",
+                    "groups"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "relationship_remove_from_group_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "entity_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "group": {
+          "$ref": "#/$defs/Name"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "entity_id",
+        "group"
+      ],
+      "additionalProperties": false
+    },
+    "relationship_remove_from_group_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "groups": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/Name"
+                      }
+                    }
+                  },
+                  "required": [
+                    "entity_id",
+                    "groups"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "relationship_copy_tree_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "root": {
+          "$ref": "#/$defs/UUID"
+        },
+        "include_mops": {
+          "type": "boolean",
+          "default": false
+        },
+        "identifier_map": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/Name"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/Name"
+          },
+          "maxProperties": 10000,
+          "default": {}
+        },
+        "group_map": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/Name"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/Name"
+          },
+          "maxProperties": 10000,
+          "default": {}
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "root"
+      ],
+      "additionalProperties": false
+    },
+    "relationship_copy_tree_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "mapping": {
+                      "type": "object",
+                      "propertyNames": {
+                        "$ref": "#/$defs/UUID"
+                      },
+                      "additionalProperties": {
+                        "$ref": "#/$defs/UUID"
+                      },
+                      "maxProperties": 10000
+                    }
+                  },
+                  "required": [
+                    "mapping"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "geometry_translate_z_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "entity_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "dz": {
+          "$ref": "#/$defs/Number"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "entity_id",
+        "dz"
+      ],
+      "additionalProperties": false
+    },
+    "geometry_translate_z_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    }
+                  },
+                  "required": [
+                    "entity_id"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "geometry_rotate_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "entity_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "angle_deg": {
+          "$ref": "#/$defs/Number"
+        },
+        "cx": {
+          "$ref": "#/$defs/Number"
+        },
+        "cy": {
+          "$ref": "#/$defs/Number"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "anyOf": [
+              {
+                "required": [
+                  "cx"
+                ]
+              },
+              {
+                "required": [
+                  "cy"
+                ]
+              }
+            ]
+          },
+          "then": {
+            "required": [
+              "cx",
+              "cy"
+            ]
+          }
+        }
+      ],
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "entity_id",
+        "angle_deg"
+      ],
+      "additionalProperties": false
+    },
+    "geometry_rotate_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    }
+                  },
+                  "required": [
+                    "entity_id"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "geometry_scale_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "entity_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "factor": {
+          "$ref": "#/$defs/Positive"
+        },
+        "cx": {
+          "$ref": "#/$defs/Number"
+        },
+        "cy": {
+          "$ref": "#/$defs/Number"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "anyOf": [
+              {
+                "required": [
+                  "cx"
+                ]
+              },
+              {
+                "required": [
+                  "cy"
+                ]
+              }
+            ]
+          },
+          "then": {
+            "required": [
+              "cx",
+              "cy"
+            ]
+          }
+        }
+      ],
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "entity_id",
+        "factor"
+      ],
+      "additionalProperties": false
+    },
+    "geometry_scale_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    }
+                  },
+                  "required": [
+                    "entity_id"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "geometry_mirror_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "entity_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "axis": {
+          "type": "string",
+          "enum": [
+            "x",
+            "y"
+          ]
+        },
+        "position": {
+          "$ref": "#/$defs/Number"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "entity_id",
+        "axis"
+      ],
+      "additionalProperties": false
+    },
+    "geometry_mirror_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    }
+                  },
+                  "required": [
+                    "entity_id"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "geometry_bake_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "entity_id": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "document",
+        "expected_revision",
+        "request_id",
+        "entity_id"
+      ],
+      "additionalProperties": false
+    },
+    "geometry_bake_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": {
+                      "$ref": "#/$defs/UUID"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "entity_id",
+                    "type"
                   ],
                   "additionalProperties": false
                 },

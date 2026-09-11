@@ -1626,3 +1626,258 @@ to this framework/adapter parity slice. Named desktop/second-PC connection and
 CamBam units, property and toolpath acceptance remain backlog 4e. Broader entity,
 relationship and operation coverage remains 4d and must not be inferred from this
 Rect/Profile proof.
+
+## MCP geometry breadth batch 1 - 2026-09-10
+
+Backlog 4d's reopening criterion asked for one concrete high-value family from
+the contract's documented mappings. The curve/point geometry family
+(Circle/Arc/Pline/Points adders with their public world queries) was selected:
+Rect-only authoring blocked most drawing work, and later Drill/Pocket MOP
+breadth needs Points/Circle targets to be expressible at all. Text, Region,
+Pocket/Engrave/Drill, parenting/groups/copy-transfer and bake transforms stay
+explicitly unsupported with reopening criteria in
+[PROGRESS.md](PROGRESS.md#active-work-and-next-priority).
+
+Implemented contract surface (schema `docs/mcp_contract_v1.schema.json`, byte
+identical packaged copy, contract sections updated in the same increment):
+
+- Four new tools map only to public framework adders:
+  `geometry_add_circle` (center/diameter/elevation), `geometry_add_arc`
+  (center/radius/CCW-positive degree sweep/elevation), `geometry_add_pline`
+  (2..10000 vertex records with per-vertex Z and bulge, optional `closed`) and
+  `geometry_add_points` (1..10000 plain XYZ points; bulge input is rejected by
+  the schema). All create root primitives on a possibly new default layer and
+  return the primitive UUID plus layer name.
+- `geometry_translate` accepts root Rect/Circle/Arc/Pline/Points primitives in
+  the translation-only slice (identity or pure-translation world matrix, zero
+  local Z offset, no parent/children/groups, valid positive geometry) and still
+  never bakes. Profile targets deliberately remain root Rects only.
+- Inspection's primitive record now carries one closed typed `geometry` payload
+  instead of top-level `world_xyz`/`bounds`: `rect` corners, `circle`
+  center/diameter, `arc` center/radius/degree angles, `pline` vertices with a
+  parallel `bulges` array plus `closed`, and `points` vertices, each with
+  directed analytic world bounds. The bulge convention is documented: the bulge
+  stored on vertex i curves the segment that starts at vertex i. Unsupported
+  primitives (Text, Region, transformed or related shapes) keep
+  `geometry: null` with `INSPECTION_UNSUPPORTED`; no geometry is invented.
+- Retry identity canonicalizes nested defaults, so omitting `z`/`bulge` and
+  sending explicit zeros replay as the same request instead of conflicting.
+- Verification notes: the Arc world `start_angle` comes from the public
+  direction-based query and may differ from the authored angle by float noise
+  (30 degrees reports 29.999999999999996 before the 9-decimal XML round trip),
+  and primitive document order is the framework's UUID-sorted
+  `list_primitives()` order, not insertion order. Parity fixtures therefore
+  compare inspection records with a tolerance-aware deep comparison and XML
+  with order/id-canonicalized semantics; the saved artifacts themselves are
+  bit-compared only within one run (A bytes unchanged across reopen).
+
+Results on the repository Python 3.13 environment with MCP 2.2.0:
+
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p test_mcp_geometry.py -v`:
+  5 passed (analytic guard, round-trip parity, translate parity/replay,
+  negative/conflict/atomicity, imported out-of-slice diagnostics).
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p 'test_mcp_*.py' -v`:
+  33 tests, one Windows symlink-privilege skip.
+- `.venv/Scripts/python.exe -m unittest discover -s tests -v`: 185 tests with
+  the same one skip (184 passed).
+- `.venv/Scripts/python.exe -m compileall -q cambam_builder legacy_cambam_builder tests demos`,
+  `git diff --check`, and `.venv/Scripts/python.exe demos/mcp_authoring_slice.py`
+  (updated for the `geometry` payload): pass.
+- Direct-framework parity confirmed for all four families: adapter inspection
+  payloads equal independently computed public query values (`1e-9` for the
+  noise-bearing arc angle), XML semantics match after UUID/order/id
+  normalization, save/reopen retains primitive identities and typed geometry,
+  and failed edits preserve complete inspection.
+
+Remaining limits: no Text/Region detail, no Pocket/Engrave/Drill, no
+parenting/groups/copy-transfer, no bake transforms, Profile targets still
+Rect-only, and inspection of a very large single primitive is not separately
+bounded. The next batch reopens with Text/Region authoring or another
+family if user needs change the priority.
+
+## MCP Text and Region breadth batch 2 - 2026-09-10
+
+4d batch 2 adds the annotation/composite authoring family: `geometry_add_text`
+and `geometry_add_region`, with typed inspection detail for both and
+`geometry_translate` extended to root Text/Region primitives. The reopening
+criterion (curve/point family complete in batch 1) made Text/Region the next
+mapped family; Pocket/Engrave/Drill MOP breadth remains next.
+
+Implemented contract surface (schema copies updated and re-verified identical):
+
+- `geometry_add_text` maps only to the public `add_text` adder: required
+  identifier/layer/content/anchor, optional height (default 10), font (default
+  Arial), style (default empty), line spacing (default 1) and alignment enums,
+  plus elevation. Content is bounded 1..1024 characters, rejects control
+  characters except newlines, and must contain at least one non-whitespace
+  character because whitespace-only content does not survive the XML round
+  trip. The optional unused `xml_p2_*` interchange fields are not authorable.
+- `geometry_add_region` maps only to the public `add_region` adder: one closed
+  outer contour plus 0..100 closed hole contours, each 2..10000 vertex records
+  with per-vertex Z/bulge. The framework validates XY topology (closed, simple,
+  finite nonzero area, holes contained and disjoint, no nesting) and topology
+  failures are surfaced as `INVALID_ARGUMENT` with the bounded framework
+  message by re-running the public `Region` validation on the rejected inputs;
+  staged clones keep failure atomic.
+- Inspection adds closed `text` payloads (anchor/height/font/style/line
+  spacing/alignment plus the optional unused `p2`, no bounds because text
+  extents are a font-dependent framework estimate) and `region` payloads
+  (outer/hole contour `world_xyz`+`bulges` plus directed analytic bounds).
+  Out-of-slice Text/Region (transformed or related primitives) stay
+  `geometry: null` with `INSPECTION_UNSUPPORTED`.
+- Verification notes: the batch-1 parity findings carry over (arc/text angle
+  noise is absent here, but primitive document order remains the UUID-sorted
+  listing), and the `objects`/id-canonicalized XML comparison is reused. A
+  bulged outer Region (bulge 0.2 on the bottom segment, center (5,12), radius
+  13) dips exactly to y=-1 and both the in-memory payload and the reloaded XML
+  agree.
+
+Results on the repository Python 3.13 environment with MCP 2.2.0:
+
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p test_mcp_text_region.py -v`:
+  5 passed (analytic guard, round-trip parity, translate parity/replay,
+  negative/topology/conflict/atomicity, imported out-of-slice diagnostics).
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p 'test_mcp_*.py' -v`:
+  38 tests, one Windows symlink-privilege skip.
+- `.venv/Scripts/python.exe -m unittest discover -s tests -v`: 190 tests with
+  the same one skip (189 passed).
+- `compileall`, contract schema-copy identity, `git diff --check` and
+  `demos/mcp_authoring_slice.py`: pass.
+
+Remaining limits: no Pocket/Engrave/Drill MOPs, no parenting/groups/
+copy-transfer, no bake transforms, Profile targets still Rect-only, text bounds
+deliberately not reported. The next batch reopens with Pocket/Engrave/Drill
+machining breadth or another family if user needs change the priority.
+
+## MCP Pocket, Engrave, Drill breadth batch 3 - 2026-09-10
+
+4d batch 3 adds the remaining basic machining MOPs and the public target-state
+operation: `machining_add_pocket`, `machining_add_engrave`,
+`machining_add_drill` and `machining_set_mop_targets`. This completes the four
+basic CamBam MOP kinds behind closed, explicit parameter records.
+
+Implemented contract surface (schema copies updated and re-verified identical):
+
+- The three adders map only to the public `add_pocket_mop`/`add_engrave_mop`/
+  `add_drill_mop` adders. Inputs are the shared closed machining record
+  (targets, depth/increment, tool, feeds, spindle, stock surface, clearance,
+  enabled); Pocket additionally pins stepover 0.4, `Plunge Feedrate` stepover
+  feed, Conventional milling, collision detection, Spiral lead-in,
+  `InsideOutsideOffsets` fill, finish stepover 0 and Roughing; Engrave pins
+  Roughing, final increment 0 and DepthFirst with an EndMill; Drill pins the
+  CannedCycle method, a `Drill` tool profile and exposes peck distance,
+  retract height and dwell (defaults 0/5/0). All non-input settings match the
+  current public framework defaults; Profile keeps its 4c record unchanged.
+- `machining_set_mop_targets` maps to the public `set_mop_targets` and enforces
+  the same per-kind target rules as creation before replacing the
+  project-owned selection atomically on the staged clone. Targets are returned
+  in the project's UUID-sorted snapshot order in results and inspection.
+- Per-kind target rules are explicit: Profile root Rects; Pocket root
+  Rect/Circle/closed-Pline/Region; Engrave root Rect/Circle/Arc/Pline; Drill
+  root Points/Circle. CamBam resolves drill positions (point locations, circle
+  centers) at toolpath time; that production semantics acceptance stays with 4e.
+- Inspection generalizes the Profile parameter guard to all four kinds: a
+  record is returned only when every exposed value matches the pinned fixed
+  settings, every unexposed public field keeps its default, all scalar/range
+  checks pass, every returned field's XML path is explicitly `Value` (never
+  inherited) and every target resolves slice-valid under the kind rule.
+  Imported or edited MOPs outside the slice stay diagnostic (`{}` parameters
+  with `INSPECTION_UNSUPPORTED`).
+- The shared prelude also centralizes depth/clearance relations, identifier
+  and part-name conflicts, part auto-creation and limit checks for all four
+  MOP adders; behavior for Profile is unchanged.
+
+Results on the repository Python 3.13 environment with MCP 2.2.0:
+
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p test_mcp_mops.py -v`:
+  2 passed (pocket/engrave/drill creation + target replacement round trip with
+  direct-framework XML parity; target-kind rules, negatives, replay,
+  stale-revision and concurrency serialization).
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p 'test_mcp_*.py' -v`:
+  40 tests, one Windows symlink-privilege skip.
+- `.venv/Scripts/python.exe -m unittest discover -s tests -v`: 192 tests with
+  the same one skip (191 passed).
+- `compileall`, contract schema-copy identity, `git diff --check` and
+  `demos/mcp_authoring_slice.py`: pass.
+
+Remaining limits: no parenting/groups/copy-transfer tools, no bake/rotate/scale/
+mirror/translate-Z tools, CamBam production toolpath semantics unverified
+(4e), and MOP parameter editing beyond target replacement remains excluded.
+The next batch reopens with the relationship/transform family.
+
+## MCP relationship and transform breadth batch 4 - 2026-09-10
+
+4d batch 4 adds the relationship and transform families and generalizes the
+inspection slice from translation-only to similarity transforms, completing
+the documented 4d mapping except cross-document copy/transfer.
+
+Implemented contract surface (schema copies updated and re-verified identical):
+
+- `relationship_set_parent` maps to the public `link_primitive_parent` (null
+  detaches). Local transforms are preserved, so the world pose follows the new
+  frame; self links and framework-rejected cycles return `INVALID_ARGUMENT`
+  with complete inspection preservation. After linking, both endpoints leave
+  the similarity slice by contract (relationships are diagnostic), which is
+  asserted in inspection.
+- `relationship_add_to_group`/`relationship_remove_from_group` map to the
+  public group membership methods and return the sorted group names. Primitive
+  inspection records now carry their sorted `groups` field.
+- `relationship_copy_tree` maps to the public `copy_primitive_tree` into the
+  same document with `preserve_ids=False`: copies get fresh UUIDs, and the
+  framework's collision rejection (layer, primitive, group, part, MOP names)
+  surfaces as `INVALID_ARGUMENT` unless the caller supplies the explicit
+  identifier/group maps. `include_mops` (default false) copies MOPs whose
+  selections lie inside the subtree. The result mapping includes copied
+  layers/parts as well as primitives. Copied childless primitives return to
+  the supported slice with typed geometry, and copied MOPs keep valid
+  parameter records.
+- Transform tools map to public methods only: `geometry_translate_z` uses
+  `translate_primitive_z(..., bake=True)` (stored-geometry Z shift, world
+  matrices retained), `geometry_rotate`/`geometry_scale`/`geometry_mirror`
+  compose similarity world transforms (`bake=False`; scale is uniform-only
+  because non-uniform scale leaves the slice), and `geometry_bake` calls the
+  public `bake_geometry()` (non-axis-aligned Rects become closed Plines and
+  the result type is returned; Text bakes only translation/positive uniform
+  scale and otherwise fails `UNSUPPORTED_OPERATION`).
+- The similarity slice: `_slice_supported` now accepts any root primitive
+  whose world matrix is a finite non-degenerate XY similarity (translation,
+  rotation, uniform scale, reflection) with zero local Z offset and no
+  relationships. All public world queries and analytic bounds already support
+  similarities, so rotated/scaled/mirrored primitives keep typed payloads and
+  reflection flips bulge signs via the framework's orientation rule. The
+  previously rotated-out-of-slice expectations in earlier suites were updated
+  to non-uniform scale/shear cases, which remain diagnostic.
+- Deliberately deferred: cross-document copy/transfer. The framework supports
+  it (`transfer_primitive_tree` to another project), but an adapter tool
+  spans two document handles, two revisions and one request ledger key, and
+  cannot publish atomically across documents. A two-document staging,
+  revision and failure-semantics decision must be recorded in the contract
+  before such tools are advertised; the reopening criterion is in
+  [PROGRESS.md](PROGRESS.md#active-work-and-next-priority).
+
+Post-review corrections close three resilience/contract gaps before commit:
+same-document copies now recheck the 10,000-primitive/1,000-MOP hard limits
+before publication; typed geometry payloads are checked against their advertised
+output schema so oversized imported Pline/Text detail returns `geometry: null`
+with `INSPECTION_UNSUPPORTED`; and create/open/new-file save annotations are
+nondestructive as required. Boundary regressions verify atomic state/revision
+preservation for both copy limits, strict reopen of a 10,001-vertex Pline and a
+1,025-character Text, and exact annotations for all advertised tools.
+
+Results on the repository Python 3.13 environment with MCP 2.2.0:
+
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p test_mcp_relationships_transforms.py -v`:
+  5 passed (similarity transform parity incl. bake; parent/group/copy parity
+  with cycle/self/missing rejection and copy collisions; copy-with-MOPs slice
+  validity and limit atomicity; transform negatives, replay, stale and concurrency).
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p 'test_mcp_*.py' -v`:
+  45 tests, one Windows symlink-privilege skip.
+- `.venv/Scripts/python.exe -m unittest discover -s tests -v`: 197 tests with
+  the same one skip (196 passed).
+- `compileall`, contract schema-copy identity, `git diff --check` and
+  `demos/mcp_authoring_slice.py`: pass.
+
+Remaining limits: cross-document copy/transfer (deferred above), no generic
+field setters or deletion tools, and CamBam production acceptance stays with
+4e. Same-document copy requires explicit identifier/group maps for every
+included non-unique name by framework contract.

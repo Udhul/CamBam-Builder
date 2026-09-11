@@ -115,7 +115,7 @@ known limits are recorded. Start 4c in a fresh session.
 ### 4c. First authoring and round-trip vertical slice
 
 **Completed 2026-09-10.** Durable behavior remains in the
-[adapter contract](MCP_CONTRACT.md#initial-tools-and-public-api-mapping), current
+[adapter contract](MCP_CONTRACT.md#tools-and-public-api-mapping), current
 state in [PROGRESS.md](PROGRESS.md), and verification evidence in
 [REVIEW.md](REVIEW.md#mcp-first-authoring-and-round-trip-slice---2026-09-10).
 

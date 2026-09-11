@@ -280,10 +280,10 @@ class AuthoringTests(unittest.TestCase):
             self.assertEqual(primitive_a1["layer"], "Geometry")
             self.assertIsNone(primitive_a1["parent"])
             self.assertEqual(primitive_a1["children"], [])
-            self.assertEqual(primitive_a1["bounds"], [0, 0, 20, 10])
+            self.assertEqual(primitive_a1["geometry"]["bounds"], [0, 0, 20, 10])
             self.assert_cyclic_xyz(
                 self,
-                primitive_a1["world_xyz"],
+                primitive_a1["geometry"]["world_xyz"],
                 [(0, 0, 0), (20, 0, 0), (20, 10, 0), (0, 10, 0)],
             )
 
@@ -372,10 +372,10 @@ class AuthoringTests(unittest.TestCase):
             self.assertEqual(records_b[3], records_a2[3])
             self.assert_cyclic_xyz(
                 self,
-                records_b[2]["world_xyz"],
+                records_b[2]["geometry"]["world_xyz"],
                 [(5, 2, 0), (25, 2, 0), (25, 12, 0), (5, 12, 0)],
             )
-            self.assertEqual(records_b[2]["bounds"], [5, 2, 25, 12])
+            self.assertEqual(records_b[2]["geometry"]["bounds"], [5, 2, 25, 12])
             self.assertEqual(records_b[2]["id"], rectangle_id)
             self.assertEqual(records_b[3]["id"], mop_id)
             self.assertEqual(records_b[3]["targets"], [rectangle_id])
@@ -411,7 +411,9 @@ class AuthoringTests(unittest.TestCase):
         async def test():
             handle = await self.create()
 
-            for tool in ("geometry_add_rectangle", "machining_add_profile", "geometry_translate"):
+            for tool in ("geometry_add_rectangle", "geometry_add_circle", "geometry_add_arc",
+                         "geometry_add_pline", "geometry_add_points", "geometry_translate",
+                         "machining_add_profile"):
                 malformed = await self.call(tool, {})
                 self.assertFalse(malformed["ok"])
                 self.assertIsNone(malformed["document"])
@@ -624,8 +626,8 @@ class AuthoringTests(unittest.TestCase):
         async def test():
             source = CBProject("transformed")
             layer = source.add_layer("Geometry")
-            rectangle = source.add_rect(layer, identifier="rotated", width=20, height=10)
-            source.rotate_primitive_deg(rectangle, 15, bake=False)
+            rectangle = source.add_rect(layer, identifier="stretched", width=20, height=10)
+            self.assertTrue(source.scale_primitive(rectangle, 2, 1, bake=False))
             source_path = self.root / "transformed.cb"
             source.save(str(source_path))
 
@@ -634,13 +636,13 @@ class AuthoringTests(unittest.TestCase):
             handle = opened["document"]
             records_before = await self.inspect_records(handle, revision=0)
             rectangle_id = next(record["id"] for record in records_before if record["kind"] == "primitive")
-            self.assertIsNone(next(record for record in records_before if record["kind"] == "primitive")["world_xyz"])
+            self.assertIsNone(next(record for record in records_before if record["kind"] == "primitive")["geometry"])
 
             rejected = await self.call("machining_add_profile", self.args(
                 document=handle,
                 expected_revision=0,
                 targets=[rectangle_id],
-                **self.profile_arguments(identifier="rotated-profile"),
+                **self.profile_arguments(identifier="stretched-profile"),
             ))
             self.assertEqual(rejected["error"]["code"], "UNSUPPORTED_OPERATION")
             records_after = await self.inspect_records(handle, revision=0)
@@ -654,7 +656,11 @@ class AuthoringTests(unittest.TestCase):
         async def test():
             source = CBProject("unsupported")
             source.add_layer("Geometry")
-            circle = source.add_circle("Geometry", center=(5, 5), diameter=4, identifier="circle")
+            note = source.add_text(
+                "Geometry", text="private note", position=(5, 5), height=4,
+                identifier="note",
+            )
+            self.assertTrue(source.scale_primitive(note, 2, 1, bake=False))
             part = source.add_part(
                 "Part",
                 enabled=True,
@@ -665,7 +671,7 @@ class AuthoringTests(unittest.TestCase):
             )
             profile_mop = source.add_profile_mop(
                 part,
-                targets=[circle],
+                targets=[note],
                 identifier="inherited-profile",
                 name="inherited-profile",
                 profile_side="Outside",
@@ -689,10 +695,9 @@ class AuthoringTests(unittest.TestCase):
             records = await self.inspect_records(opened["document"], revision=0)
             self.assertEqual([record["kind"] for record in records], ["layer", "part", "primitive", "mop"])
             primitive, mop_record = records[2], records[3]
-            self.assertEqual(primitive["identifier"], "circle")
-            self.assertEqual(primitive["type"], "Circle")
-            self.assertIsNone(primitive["world_xyz"])
-            self.assertIsNone(primitive["bounds"])
+            self.assertEqual(primitive["identifier"], "note")
+            self.assertEqual(primitive["type"], "Text")
+            self.assertIsNone(primitive["geometry"])
             self.assertEqual(mop_record["identifier"], "inherited-profile")
             self.assertEqual(mop_record["type"], "ProfileMop")
             self.assertEqual(mop_record["targets"], [primitive["id"]])

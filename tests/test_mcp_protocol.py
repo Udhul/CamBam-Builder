@@ -156,12 +156,34 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertEqual([tool["name"] for tool in tools], sorted(tool["name"] for tool in tools))
         self.assertEqual([tool["name"] for tool in tools], [
             "document_close", "document_create", "document_inspect", "document_open", "document_save",
-            "geometry_add_rectangle", "geometry_translate", "machining_add_profile",
+            "geometry_add_arc", "geometry_add_circle", "geometry_add_pline", "geometry_add_points",
+            "geometry_add_rectangle", "geometry_add_region", "geometry_add_text", "geometry_bake",
+            "geometry_mirror", "geometry_rotate", "geometry_scale", "geometry_translate",
+            "geometry_translate_z", "machining_add_drill", "machining_add_engrave",
+            "machining_add_pocket", "machining_add_profile", "machining_set_mop_targets",
+            "relationship_add_to_group", "relationship_copy_tree",
+            "relationship_remove_from_group", "relationship_set_parent",
         ])
+        expected_annotations = {
+            "document_close": {"openWorldHint": False, "readOnlyHint": False,
+                               "idempotentHint": True, "destructiveHint": True},
+            "document_create": {"openWorldHint": False, "readOnlyHint": False,
+                                "idempotentHint": True, "destructiveHint": False},
+            "document_inspect": {"openWorldHint": False, "readOnlyHint": True,
+                                 "idempotentHint": True, "destructiveHint": False},
+            "document_open": {"openWorldHint": False, "readOnlyHint": False,
+                               "idempotentHint": True, "destructiveHint": False},
+            "document_save": {"openWorldHint": False, "readOnlyHint": False,
+                               "idempotentHint": True, "destructiveHint": False},
+        }
         for tool in tools:
             self.assertIn("inputSchema", tool)
             self.assertIn("outputSchema", tool)
-            self.assertEqual(tool["annotations"]["openWorldHint"], False)
+            expected_annotations.setdefault(
+                tool["name"], {"openWorldHint": False, "readOnlyHint": False,
+                                "idempotentHint": True, "destructiveHint": True}
+            )
+            self.assertEqual(tool["annotations"], expected_annotations[tool["name"]])
         self.assertEqual(listing["result"]["ttlMs"], 0)
         self.assertEqual(listing["result"]["cacheScope"], "private")
 
@@ -228,7 +250,13 @@ class MCPProtocolTests(unittest.TestCase):
         listing = self.server.request({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         self.assertEqual([tool["name"] for tool in listing["result"]["tools"]], [
             "document_close", "document_create", "document_inspect", "document_open", "document_save",
-            "geometry_add_rectangle", "geometry_translate", "machining_add_profile",
+            "geometry_add_arc", "geometry_add_circle", "geometry_add_pline", "geometry_add_points",
+            "geometry_add_rectangle", "geometry_add_region", "geometry_add_text", "geometry_bake",
+            "geometry_mirror", "geometry_rotate", "geometry_scale", "geometry_translate",
+            "geometry_translate_z", "machining_add_drill", "machining_add_engrave",
+            "machining_add_pocket", "machining_add_profile", "machining_set_mop_targets",
+            "relationship_add_to_group", "relationship_copy_tree",
+            "relationship_remove_from_group", "relationship_set_parent",
         ])
         result = self.server.request(
             {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
