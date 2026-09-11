@@ -10,9 +10,12 @@ MAX_XML_BYTES = 10 * 1024 * 1024
 
 
 class DomainError(Exception):
-    def __init__(self, code, message, field=None):
+    def __init__(self, code, message, field=None, document=None):
         super().__init__(message)
         self.code, self.field = code, field
+        # Two-document failures address the failing handle in the result envelope;
+        # single-document tools leave this unset and use their own document argument.
+        self.document = document
 
 
 class Workspace:

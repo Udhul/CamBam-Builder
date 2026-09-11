@@ -35,8 +35,10 @@ TOOLS = tuple(sorted((
     "machining_set_mop_targets",
     "relationship_add_to_group",
     "relationship_copy_tree",
+    "relationship_copy_tree_between",
     "relationship_remove_from_group",
     "relationship_set_parent",
+    "relationship_transfer_tree_between",
 )))
 
 
@@ -119,6 +121,8 @@ def tool_definitions():
         "relationship_add_to_group": "Add a primitive to a named group.",
         "relationship_remove_from_group": "Remove a primitive from a named group.",
         "relationship_copy_tree": "Copy a primitive subtree inside the same document with fresh identities; identifier collisions require an explicit identifier map.",
+        "relationship_copy_tree_between": "Copy a primitive subtree from one open document into another in this workspace with fresh identities; both documents keep their handles and the source is unchanged.",
+        "relationship_transfer_tree_between": "Move a primitive subtree from one open document into another in this workspace, removing it from the source; both revisions advance together.",
     }
     nondestructive = {"document_create", "document_export", "document_import",
                       "document_inspect", "document_open", "document_save"}

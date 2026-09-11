@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:cambam-builder:mcp-contract:1",
   "title": "MCP adapter v1 tool contracts",
-  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All twenty-nine version 1 document and authoring tools are implemented; typed detail covers the seven supported primitive kinds and the four supported MOP kinds within the similarity slice, while non-similarity transforms and relationships stay diagnostic. Cross-document copy/transfer remains future work.",
+  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All thirty-one version 1 document and authoring tools are implemented, including cross-document copy/transfer between two open documents; typed detail covers the seven supported primitive kinds and the four supported MOP kinds within the similarity slice, while non-similarity transforms and relationships stay diagnostic.",
   "$defs": {
     "UUID": {
       "type": "string",
@@ -3410,6 +3410,268 @@
                   },
                   "required": [
                     "mapping"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "relationship_copy_tree_between_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "source_document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "source_expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "target_document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "target_expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "root": {
+          "$ref": "#/$defs/UUID"
+        },
+        "include_mops": {
+          "type": "boolean",
+          "default": false
+        },
+        "identifier_map": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/Name"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/Name"
+          },
+          "maxProperties": 10000,
+          "default": {}
+        },
+        "group_map": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/Name"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/Name"
+          },
+          "maxProperties": 10000,
+          "default": {}
+        }
+      },
+      "required": [
+        "workspace_id",
+        "source_document",
+        "source_expected_revision",
+        "target_document",
+        "target_expected_revision",
+        "request_id",
+        "root"
+      ],
+      "additionalProperties": false
+    },
+    "relationship_copy_tree_between_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "mapping": {
+                      "type": "object",
+                      "propertyNames": {
+                        "$ref": "#/$defs/UUID"
+                      },
+                      "additionalProperties": {
+                        "$ref": "#/$defs/UUID"
+                      },
+                      "maxProperties": 10000
+                    },
+                    "source_document": {
+                      "$ref": "#/$defs/Handle"
+                    },
+                    "target_document": {
+                      "$ref": "#/$defs/Handle"
+                    },
+                    "source_revision": {
+                      "$ref": "#/$defs/Revision"
+                    },
+                    "target_revision": {
+                      "$ref": "#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "mapping",
+                    "source_document",
+                    "target_document",
+                    "source_revision",
+                    "target_revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "ok": {
+                  "const": false
+                },
+                "data": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/$defs/Error"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "relationship_transfer_tree_between_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "source_document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "source_expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "target_document": {
+          "$ref": "#/$defs/Handle"
+        },
+        "target_expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "root": {
+          "$ref": "#/$defs/UUID"
+        },
+        "include_mops": {
+          "type": "boolean",
+          "default": false
+        },
+        "identifier_map": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/Name"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/Name"
+          },
+          "maxProperties": 10000,
+          "default": {}
+        },
+        "group_map": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/Name"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/Name"
+          },
+          "maxProperties": 10000,
+          "default": {}
+        }
+      },
+      "required": [
+        "workspace_id",
+        "source_document",
+        "source_expected_revision",
+        "target_document",
+        "target_expected_revision",
+        "request_id",
+        "root"
+      ],
+      "additionalProperties": false
+    },
+    "relationship_transfer_tree_between_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "mapping": {
+                      "type": "object",
+                      "propertyNames": {
+                        "$ref": "#/$defs/UUID"
+                      },
+                      "additionalProperties": {
+                        "$ref": "#/$defs/UUID"
+                      },
+                      "maxProperties": 10000
+                    },
+                    "source_document": {
+                      "$ref": "#/$defs/Handle"
+                    },
+                    "target_document": {
+                      "$ref": "#/$defs/Handle"
+                    },
+                    "source_revision": {
+                      "$ref": "#/$defs/Revision"
+                    },
+                    "target_revision": {
+                      "$ref": "#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "mapping",
+                    "source_document",
+                    "target_document",
+                    "source_revision",
+                    "target_revision"
                   ],
                   "additionalProperties": false
                 },

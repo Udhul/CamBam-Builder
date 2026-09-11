@@ -563,11 +563,13 @@ and stops this process. Close stdin to stop it, or use Ctrl+C for an interactive
 launch. Stdout is exclusively MCP; stderr emits the content-free workspace/boot
 bootstrap. Restart loses all open handles, unsaved edits and retry records.
 
-Twenty-nine tools create, open/import, inspect, save/export and close documents; add root
+Thirty-one tools create, open/import, inspect, save/export and close documents; add root
 Rect, Circle, Arc, Pline, Points, Text and Region primitives; add explicit
 Profile, Pocket, Engrave and Drill MOPs and replace MOP targets; link/group
-and same-document copy primitives; and translate, rotate, uniformly scale,
-mirror, Z-shift or bake those supported root primitives. Inspection reports
+and same-document copy primitives; copy or transfer a subtree between two
+distinct open documents under per-document revisions; and translate, rotate,
+uniformly scale, mirror, Z-shift or bake those supported root primitives.
+Inspection reports
 typed world geometry/bounds and per-kind machining parameter records for the
 similarity slice, while diagnosing other entity detail as unsupported. Saves
 only create new `.cb` paths under the workspace and never overwrite. File

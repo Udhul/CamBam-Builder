@@ -70,6 +70,10 @@ class DocumentService:
         "machining_add_drill", "machining_set_mop_targets",
         "relationship_set_parent", "relationship_add_to_group",
         "relationship_remove_from_group", "relationship_copy_tree",
+        "relationship_copy_tree_between", "relationship_transfer_tree_between",
+    ))
+    CROSS_EDIT_TOOLS = frozenset((
+        "relationship_copy_tree_between", "relationship_transfer_tree_between",
     ))
     MOP_TARGET_RULES = {
         "profile": ("supported root rectangles", lambda e: isinstance(e, Rect)),
@@ -172,10 +176,17 @@ class DocumentService:
             if validation_error:
                 raise validation_error
             args = validated
+            if name in self.CROSS_EDIT_TOOLS:
+                # Cross-document envelopes address the source handle by
+                # default; target-side failures carry their own handle on
+                # the error.
+                args["document"] = args["source_document"]
             if args["workspace_id"] != self.workspace.id:
                 raise DomainError("WORKSPACE_MISMATCH", "Workspace ID does not match this server", "workspace_id")
             if name in ("document_create", "document_import", "document_open"):
                 return await self._new(name, args, entry)
+            if name in self.CROSS_EDIT_TOOLS:
+                return await self._cross_edit(name, args, entry)
             handle = args["document"]
             if handle.split(":")[0] != self.bootstrap["boot_id"]:
                 raise DomainError("DOCUMENT_EXPIRED", "Document belongs to a previous server process", "document")
@@ -206,7 +217,7 @@ class DocumentService:
                 self._complete(name, entry, self._envelope(args, error=DomainError("REQUEST_CANCELLED", "Request canceled before publication")))
             raise
         except DomainError as exc:
-            result = self._envelope(args, error=exc)
+            result = self._envelope(args, error=exc, document=getattr(exc, "document", None))
         except OSError:
             result = self._envelope(args, error=DomainError("IO_ERROR", "Workspace I/O failed"))
         except Exception:
@@ -1000,6 +1011,108 @@ class DocumentService:
             document.project = staged
             document.revision = revision
             return self._complete(name, entry, result)
+
+    def _stage_cross_edit(self, name, args, source_project, target_project):
+        """Validate and stage one two-document subtree operation on clones.
+
+        Copy publishes into a staged clone of the target while reading the live
+        source (the public copy operation never mutates it).  Transfer stages
+        both documents and runs the public transfer between the clones, so
+        source removal and target insertion commit as one framework operation.
+        The live documents are replaced only by the caller after all checks.
+        """
+        root = source_project.get_entity(UUID(args["root"]))
+        if root is None:
+            raise DomainError("ENTITY_NOT_FOUND", "Root was not found", "root")
+        if not isinstance(root, Primitive):
+            raise DomainError("UNSUPPORTED_OPERATION", "Root is not a primitive", "root")
+        transfer = name == "relationship_transfer_tree_between"
+        staged_source = source_project.clone() if transfer else None
+        staged_target = target_project.clone()
+        try:
+            if transfer:
+                mapping = staged_source.transfer_primitive_tree(
+                    root, staged_target, preserve_ids=False,
+                    identifier_map=args.get("identifier_map") or None,
+                    group_map=args.get("group_map") or None,
+                    include_mops=args["include_mops"])
+            else:
+                mapping = source_project.copy_primitive_tree(
+                    root, staged_target, preserve_ids=False,
+                    identifier_map=args.get("identifier_map") or None,
+                    group_map=args.get("group_map") or None,
+                    include_mops=args["include_mops"])
+        except (TypeError, ValueError) as exc:
+            raise DomainError("INVALID_ARGUMENT", str(exc)[:512], "root") from None
+        self._check_limits(staged_target)
+        data = {"mapping": {str(source): str(target)
+                            for source, target in mapping.items()}}
+        return staged_source, staged_target, data
+
+    async def _cross_edit(self, name, args, entry):
+        source_handle = args["source_document"]
+        target_handle = args["target_document"]
+        if source_handle == target_handle:
+            raise DomainError("INVALID_ARGUMENT",
+                              "Source and target documents must be different",
+                              "target_document")
+        for handle, field in ((source_handle, "source_document"),
+                              (target_handle, "target_document")):
+            if handle.split(":")[0] != self.bootstrap["boot_id"]:
+                raise DomainError("DOCUMENT_EXPIRED",
+                                  "Document belongs to a previous server process",
+                                  field, document=handle)
+        source = self.documents.get(source_handle)
+        if source is None:
+            raise DomainError("DOCUMENT_NOT_FOUND", "Document is not open",
+                              "source_document", document=source_handle)
+        target = self.documents.get(target_handle)
+        if target is None:
+            raise DomainError("DOCUMENT_NOT_FOUND", "Document is not open",
+                              "target_document", document=target_handle)
+        transfer = name == "relationship_transfer_tree_between"
+        # Canonical lock order prevents deadlock; no other path holds two
+        # document locks, and nothing waits on a document lock while holding
+        # the registry or ledger lock.
+        handles = {source_handle: source, target_handle: target}
+        first, second = sorted((source_handle, target_handle))
+        async with handles[first].lock, handles[second].lock:
+            for handle, document, field in (
+                    (source_handle, source, "source_document"),
+                    (target_handle, target, "target_document")):
+                if self.documents.get(handle) is not document:
+                    raise DomainError("DOCUMENT_NOT_FOUND", "Document is not open",
+                                      field, document=handle)
+            if args["source_expected_revision"] != source.revision:
+                raise DomainError("STALE_REVISION", "Expected source revision does not match",
+                                  "source_expected_revision", document=source_handle)
+            if args["target_expected_revision"] != target.revision:
+                raise DomainError("STALE_REVISION", "Expected target revision does not match",
+                                  "target_expected_revision", document=target_handle)
+            staged_source, staged_target, data = await anyio.to_thread.run_sync(
+                self._stage_cross_edit, name, args, source.project, target.project
+            )
+            await anyio.lowlevel.checkpoint()
+            source_revision = source.revision + int(transfer)
+            target_revision = target.revision + 1
+            if max(source_revision, target_revision) > 9007199254740991:
+                raise DomainError("LIMIT_EXCEEDED", "Document revision limit reached")
+            data.update({"source_document": source_handle,
+                         "target_document": target_handle,
+                         "source_revision": source_revision,
+                         "target_revision": target_revision})
+            result = self._envelope(args, data=data, document=source_handle,
+                                    revision=source_revision)
+            OUTPUTS[name].validate(result)
+            with anyio.CancelScope(shield=True):
+                # No await between these assignments and completion: the
+                # two-document publication cannot be split by cancellation.
+                if staged_source is not None:
+                    source.project = staged_source
+                    source.revision = source_revision
+                target.project = staged_target
+                target.revision = target_revision
+                return self._complete(name, entry, result)
 
     PROFILE_XML_PATHS = {
         "target_depth": ("TargetDepth",), "depth_increment": ("DepthIncrement",),

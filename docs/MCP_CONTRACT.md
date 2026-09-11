@@ -1,9 +1,9 @@
 # Local MCP adapter contract
 
 Contract version 1, decided 2026-09-10 for backlog 4a. This is the authoritative
-implementation contract; all twenty-nine version 1 document and authoring tools
-are implemented. Cross-document copy/transfer remains deferred future work with
-a reopening criterion in [PROGRESS.md](PROGRESS.md).
+implementation contract; all thirty-one version 1 document and authoring tools
+are implemented, including cross-document copy/transfer between two open
+documents (batch 5).
 Priority and delivery state live in [PROGRESS.md](PROGRESS.md), and increment boundaries in
 [MCP_PLAN.md](MCP_PLAN.md#delivery-increments-and-session-boundaries).
 
@@ -170,6 +170,56 @@ cross-restart exactly-once claim for create/open; clients must start a new workf
 For interrupted saves inspect/open the intended path and compare its byte hash;
 never blindly repeat an uncertain save to a different name after restart.
 
+## Cross-document copy and transfer
+
+Batch 5 (2026-09-11) completes 4d with two-document subtree operations. The
+`relationship_copy_tree_between` and `relationship_transfer_tree_between` tools
+accept exactly two **distinct live handles** in this workspace and boot:
+`source_document` and `target_document`, each with its own required revision
+assertion (`source_expected_revision`, `target_expected_revision`). Any open
+document works as either side (created, opened or imported); there is no special
+staging document and no cross-document identity relationship beyond the one
+operation. Equal source and target handles return `INVALID_ARGUMENT`.
+
+Both document locks are acquired in canonical sorted-handle order and held from
+the revision checks through publication; a concurrent close cannot remove a
+locked document, and concurrent edits or saves on either side wait. After
+acquiring both locks, both handles' liveness and both revisions are rechecked.
+Copy stages on an independent full-project clone of the target and reads the
+live source, because the public copy operation never mutates the source.
+Transfer stages on independent clones of both documents and runs the public
+`transfer_primitive_tree` between the clones, so the source removal and target
+insertion are one transactional framework operation. Publication replaces the
+staged projects and increments revisions inside a cancellation shield with no
+await between assignments: a two-document publication cannot be observed
+partially, and process restart still leaves only durable saved files. Copy
+increments only the target revision; transfer increments both by exactly one.
+A revision overflow on either document fails `LIMIT_EXCEEDED` before
+publication.
+
+Per-call failures never partially apply: a missing root (`ENTITY_NOT_FOUND`),
+non-primitive root (`UNSUPPORTED_OPERATION`), framework collision/topology
+rejection (`INVALID_ARGUMENT` with the bounded framework message, field `root`),
+staged-target limit overflow (`LIMIT_EXCEEDED`) or any per-document
+handle/revision failure leave both documents, both revisions and all files
+unchanged. Envelope addressing: a failing **target** document check (expired,
+not found, or stale target revision) references the target handle in
+`document` and reports its current revision; every other outcome references
+the source handle. Success sets `revision` to the source document's revision
+after the operation, and `data` always carries both handles and both resulting
+revisions:
+
+```text
+data = {mapping: {UUID: UUID}, source_document: Handle, target_document: Handle,
+        source_revision: Revision, target_revision: Revision}
+```
+
+Ledger rules are unchanged: these are regular edit tools with one entry per
+`(workspace_id, request_id)`; an identical retry joins or replays the original
+two-document result before any stale/closed check, and a different-argument
+reuse returns `REQUEST_ID_CONFLICT`. `document_close` on either side still
+requires its own revision and frees only that document.
+
 Initial hard limits: 16 live documents, 10 MiB imported/opened/exported/saved XML, 10,000
 primitives and 1,000 MOPs per document. At 10,000 reserved/completed **regular**
 ledger entries, reject new create/open/edit requests before reservation with
@@ -312,6 +362,8 @@ Z coordinate, and translation is relative to the existing local transform.
 | `relationship_add_to_group` | `Write + {entity_id: UUID, group: Name}` | Public `add_primitive_to_group`; return the entity UUID and its sorted group names. |
 | `relationship_remove_from_group` | `Write + {entity_id: UUID, group: Name}` | Public `remove_primitive_from_group`; return the entity UUID and its sorted remaining group names. |
 | `relationship_copy_tree` | `Write + {root: UUID, include_mops?: boolean =false, identifier_map?: {Name: Name} ={}, group_map?: {Name: Name} ={}}` | Public `copy_primitive_tree` into the same document with `preserve_ids=False`; copies get fresh UUIDs. Included layers, groups and (with `include_mops`) their parts/MOPs must have unmapped names remapped via the maps or the framework's collision rejection returns `INVALID_ARGUMENT`; MOP selections must lie inside the subtree. Return the source-to-copy UUID mapping (including copied layers/parts). |
+| `relationship_copy_tree_between` | `Write` (document/expected_revision become `source_document`/`source_expected_revision`) plus `{target_document: Handle, target_expected_revision: Revision, root: UUID, include_mops?: boolean =false, identifier_map?: {Name: Name} ={}, group_map?: {Name: Name} ={}}` | Public `copy_primitive_tree` from the source project into a staged clone of the target project with `preserve_ids=False`; both documents must be open and distinct. Same mapping/name rules as the same-document copy. Only the target revision increments. Return `{mapping, source_document, target_document, source_revision, target_revision}`. |
+| `relationship_transfer_tree_between` | Same closed record as `relationship_copy_tree_between` | Public `transfer_primitive_tree` between staged clones of both documents: the source subtree is removed and both revisions increment together under one transactional publication. Return `{mapping, source_document, target_document, source_revision, target_revision}`. |
 | `geometry_translate_z` | `Write + {entity_id: UUID, dz: Number}` | Public `translate_primitive_z(..., bake=True)`: one explicit stored-geometry Z shift that keeps world matrices; return the entity UUID. |
 | `geometry_rotate` | `Write + {entity_id: UUID, angle_deg: Number, cx?: Number, cy?: Number}` (cx/cy together or absent) | Public `rotate_primitive_deg`; absent center uses the framework's geometric center. The world pose stays a similarity, so typed inspection remains available; return the entity UUID. |
 | `geometry_scale` | `Write + {entity_id: UUID, factor: Positive, cx?: Number, cy?: Number}` (cx/cy together or absent) | Uniform `scale_primitive(factor, factor, ...)`; non-uniform scale is unsupported because it leaves the similarity slice; return the entity UUID. |
@@ -398,8 +450,8 @@ above, using public dataclass fields. For other out-of-slice primitives/MOPs,
 including MOPs with inherited or out-of-slice settings or targets, return
 type/identity/relationships but null geometry or empty parameters and
 `INSPECTION_UNSUPPORTED`; no invented geometry or calculated effective
-inheritance values. Cross-document copy/transfer (two-document staging,
-revisions and failure semantics) is the remaining deferred 4d item.
+inheritance values. Cross-document copy/transfer between two open documents is
+specified in [its own section](#cross-document-copy-and-transfer).
 
 ## Results and failures
 
@@ -477,22 +529,23 @@ connection and CamBam units/geometry/property/toolpath acceptance. Current produ
 toolpath acceptance is not extended by this contract.
 
 4d broadens only documented mappings, one outcome-sized family per session with
-schema/parity/negative tests before advertisement. **Batches 1-4 (2026-09-10)
-are implemented:** the Circle/Arc/Pline/Points adders, the Text/Region adders
+schema/parity/negative tests before advertisement. **Batches 1-5 are
+implemented:** the Circle/Arc/Pline/Points adders, the Text/Region adders
 with framework-validated XY topology, typed world-geometry inspection for all
 seven supported primitive kinds under the similarity slice (including
 bulge-aware bounds and the Text parameter record without font-dependent
 bounds), the translation/rotation/uniform-scale/mirror/Z/bake transform tools,
 the Pocket/Engrave/Drill adders plus public `set_mop_targets` with per-kind
-target rules and closed parameter records, and the parenting/group/copy
-relationship tools with fresh-identity same-document copies. The one deferred
-4d item is **cross-document copy/transfer**, which needs a two-document
-staging, revision and failure-semantics decision recorded in the contract
-before tools are advertised; its reopening criterion is in
-[PROGRESS.md](PROGRESS.md). Remote hosting, arbitrary Python/private
-registries, pickle, generic field setters, deletion/batch edits, arbitrary XML
-editing, overwrite and machine/G-code execution remain excluded. Reopen
-volatile storage only for a demonstrated unsaved-recovery need; reopen
+target rules and closed parameter records, the parenting/group/copy
+relationship tools with fresh-identity same-document copies, and batch 5's
+cross-document copy/transfer under the two-document contract in
+[its section](#cross-document-copy-and-transfer), with direct-framework parity
+for both operations, per-document revision semantics and failure addressing,
+limit atomicity and ledger replay tests before advertisement. 4d is complete;
+the next increment is 4e desktop/second-PC acceptance. Remote hosting, arbitrary
+Python/private registries, pickle, generic field setters, deletion/batch edits,
+arbitrary XML editing, overwrite and machine/G-code execution remain excluded.
+Reopen volatile storage only for a demonstrated unsaved-recovery need; reopen
 overwrite only with expected-file-hash concurrency and fidelity acceptance;
 reopen additional protocol versions only with a concrete client need and wire
 evidence; supported legacy versions remain required acceptance coverage.

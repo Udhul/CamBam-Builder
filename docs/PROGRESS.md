@@ -7,8 +7,38 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**4d batch 5, cross-document copy/transfer: implemented and verified**
+(2026-09-11). The adapter advertises thirty-one version 1 tools after adding
+`relationship_copy_tree_between` and `relationship_transfer_tree_between`
+under the two-document contract recorded in the [MCP contract](MCP_CONTRACT.md#cross-document-copy-and-transfer).
+Both tools take two distinct live handles (any two imported, opened or created
+documents), each with its own required revision. Both document locks are held
+in sorted-handle order from the revision checks through publication; copy
+stages on a target clone and reads the live source, transfer stages both
+documents and runs the public `transfer_primitive_tree` between the clones;
+publication and both revision increments happen inside a cancellation shield,
+so copy increments only the target and transfer advances both together, never
+partially. All per-call failures leave both documents and all files unchanged;
+a failing target document check addresses the target handle with its current
+revision, other outcomes address the source, and success data carries the
+mapping plus both handles and revisions. Tests copy and transfer between two
+populated imported documents, compare both saved sides against independently
+authored public-framework copy/transfer projects by XML semantics, and cover
+replay, request conflicts, stale handling, closed/expired targets, limit and
+cancellation atomicity, same-revision transfers, and opposing-direction lock
+ordering under a timeout. The six cross-document tests pass; the full suite
+reports 207 tests (206 passed; one Windows symlink-privilege
+skip). Evidence is in the
+[review](REVIEW.md#mcp-cross-document-copytransfer---2026-09-11).
+
+**4d state: complete.** All five 4d batches plus portable interchange are
+implemented and verified, closing the documented adapter surface. The next
+increment is **4e desktop/second-PC acceptance** for the implemented surface:
+clean installation, a named desktop client connection at the actually
+negotiated protocol, and CamBam units/geometry/property/toolpath acceptance.
+
 **4d portable client document interchange: implemented and verified**
-(2026-09-11). The adapter now advertises twenty-nine version 1 tools.
+(2026-09-11). The adapter then advertised twenty-nine version 1 tools.
 `document_import` accepts complete client-supplied UTF-8 `.cb` XML and publishes
 a new volatile revision-0 handle through the same strict reader, 10 MiB byte
 limit, entity limits, capacity reservation and retry rules as workspace open;
@@ -144,12 +174,13 @@ parenting/groups/copy-transfer and bake transforms are still unsupported;
 Profile targets remain root Rects only. Evidence is in the
 [review](REVIEW.md#mcp-text-and-region-breadth-batch-2---2026-09-10).
 
-**4d state after batches 1-4 plus portable interchange: complete except cross-document copy/transfer.**
-The next increment is **4d batch 5: cross-document copy/transfer**, which first
-needs a recorded two-document staging/revision/failure contract decision in
-[MCP_CONTRACT.md](MCP_CONTRACT.md); alternatively start **4e desktop/second-PC
-acceptance** for the implemented surface if the first deployment does not need
-cross-document moves.
+**4d state after batches 1-4 plus portable interchange (historical snapshot,
+2026-09-11):** complete except cross-document copy/transfer, which was then the
+next increment and needed a two-document staging/revision/failure contract
+decision in [MCP_CONTRACT.md](MCP_CONTRACT.md) before its tools were
+advertised. That decision is now recorded and batch 5 is implemented; see the
+active entries above and the
+[review](REVIEW.md#mcp-cross-document-copytransfer---2026-09-11).
 
 **Secure MCP server and document foundation: complete** (2026-09-10; backlog
 4b). The optional Python >=3.10 adapter provides a strict stdio boundary, an
@@ -432,14 +463,13 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
      public clone/strict-import contracts and backward protocol negotiation.
    - **4c — completed 2026-09-10:** one authoring/MOP/inspect/save/reload parity
      slice, including the runnable synthetic demonstration.
-   - **4d — implemented except cross-document copy/transfer (batches 1-4
-     complete 2026-09-10):** expand the explicitly supported API and resilience
-     coverage. Batches 1-4 delivered the seven primitive authoring families
-     with typed world queries, all four basic MOPs with explicit target
-     replacement, the similarity transform/bake tools, and the
-     parenting/group/copy relationship tools. Remaining: cross-document
-     copy/transfer behind a two-document contract decision.
-     Sol/high, with Terra/xhigh suitable for settled coverage batches.
+   - **4d — completed 2026-09-11 (batches 1-5):** expand the explicitly
+      supported API and resilience coverage. Batches 1-4 delivered the seven
+      primitive authoring families with typed world queries, all four basic
+      MOPs with explicit target replacement, the similarity transform/bake
+      tools, and the parenting/group/copy relationship tools; batch 5 added
+      cross-document copy/transfer under the recorded two-document contract.
+      Sol/high, with Terra/xhigh suitable for settled coverage batches.
    - **4e:** validate installation, named desktop-client interoperability and
      second-PC/user acceptance. Terra/high; escalate interoperability defects to
      Sol/high.
@@ -503,9 +533,10 @@ are authoritative. MOP ownership, supported interchange, curved geometry bounds
 (1a), copy/transfer (1b) and shape parity (2) are recorded above with their
 verification and acceptance state.
 
-This is a good fresh-session breakpoint: 4d batches 1-4's authoring, machining,
-relationship and transform contracts, parity and negative-case evidence are
-persisted, and the deferred cross-document copy/transfer needs a recorded
-contract decision rather than conversational context. 4e desktop/second-PC
-acceptance can also start on the implemented surface.
-Suggested commit: `feat: add MCP supported API breadth and resilience`.
+This is a good fresh-session breakpoint: 4d's authoring, machining,
+relationship, transform and cross-document copy/transfer contracts, parity and
+negative-case evidence are persisted, and batch 5 needed only the recorded
+contract decision, which is now in [MCP_CONTRACT.md](MCP_CONTRACT.md).
+4e desktop/second-PC acceptance is the next priority and starts fresh on the
+implemented surface.
+Suggested commit: `feat: add MCP cross-document copy/transfer`.

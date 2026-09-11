@@ -176,7 +176,9 @@ class MCPProtocolTests(unittest.TestCase):
             "geometry_translate_z", "machining_add_drill", "machining_add_engrave",
             "machining_add_pocket", "machining_add_profile", "machining_set_mop_targets",
             "relationship_add_to_group", "relationship_copy_tree",
+            "relationship_copy_tree_between",
             "relationship_remove_from_group", "relationship_set_parent",
+            "relationship_transfer_tree_between",
         ])
         expected_annotations = {
             "document_close": {"openWorldHint": False, "readOnlyHint": False,
@@ -190,9 +192,15 @@ class MCPProtocolTests(unittest.TestCase):
             "document_inspect": {"openWorldHint": False, "readOnlyHint": True,
                                  "idempotentHint": True, "destructiveHint": False},
             "document_open": {"openWorldHint": False, "readOnlyHint": False,
-                               "idempotentHint": True, "destructiveHint": False},
+                              "idempotentHint": True, "destructiveHint": False},
             "document_save": {"openWorldHint": False, "readOnlyHint": False,
-                               "idempotentHint": True, "destructiveHint": False},
+                              "idempotentHint": True, "destructiveHint": False},
+            "relationship_copy_tree_between": {
+                "openWorldHint": False, "readOnlyHint": False,
+                "idempotentHint": True, "destructiveHint": True},
+            "relationship_transfer_tree_between": {
+                "openWorldHint": False, "readOnlyHint": False,
+                "idempotentHint": True, "destructiveHint": True},
         }
         for tool in tools:
             self.assertIn("inputSchema", tool)
@@ -275,7 +283,9 @@ class MCPProtocolTests(unittest.TestCase):
             "geometry_translate_z", "machining_add_drill", "machining_add_engrave",
             "machining_add_pocket", "machining_add_profile", "machining_set_mop_targets",
             "relationship_add_to_group", "relationship_copy_tree",
+            "relationship_copy_tree_between",
             "relationship_remove_from_group", "relationship_set_parent",
+            "relationship_transfer_tree_between",
         ])
         result = self.server.request(
             {"jsonrpc": "2.0", "id": 3, "method": "tools/call",

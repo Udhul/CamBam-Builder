@@ -1935,3 +1935,72 @@ the existing interchange acceptance. Named desktop-client handling of a local
 file and returned inline artifact remains 4e user acceptance. The next coherent
 increment remains 4d batch 5 cross-document copy, now testable with two documents
 imported from client content.
+
+## MCP cross-document copy/transfer - 2026-09-11
+
+4d batch 5 completes the documented 4d surface with two-document subtree
+operations, advertised as `relationship_copy_tree_between` and
+`relationship_transfer_tree_between` (thirty-one version 1 tools).
+
+Recorded contract (now in the
+[MCP contract](MCP_CONTRACT.md#cross-document-copy-and-transfer)): the tools
+require two distinct live handles in this workspace and boot, each with its own
+required revision assertion. Both document locks are acquired in canonical
+sorted-handle order and held from the revision checks through publication;
+concurrent edits/saves wait and concurrent closes cannot remove a locked
+document. Copy stages on an independent full-project clone of the target and
+reads the live source (the public copy never mutates it); transfer stages
+independent clones of both documents and runs the public
+`transfer_primitive_tree` between the clones, so source removal and target
+insertion are one transactional framework operation. Publication replaces the
+staged projects and increments revisions inside a cancellation shield with no
+await between assignments: copy increments only the target revision, transfer
+increments both by exactly one, and no partial two-document publication is
+observable. Per-call failures (root resolution, framework collision/topology
+rejection as `INVALID_ARGUMENT` with the bounded message, staged-target
+limit overflow, per-document handle/revision mismatch) leave both documents,
+both revisions and all files unchanged. `DomainError` gained an optional
+addressed handle: a failing target document check (expired, not found, stale
+target revision) references the target handle in the result envelope with its
+current revision, and every other outcome references the source. Success data
+always carries `{mapping, source_document, target_document, source_revision,
+target_revision}` while the envelope's `document`/`revision` refer to the
+source. Ledger rules are unchanged: regular edit entry per
+`(workspace_id, request_id)`, replay before stale/closed checks, and
+`REQUEST_ID_CONFLICT` on argument reuse.
+
+Coverage: six tests in `tests/test_mcp_cross_document.py` — copy parity
+between two imported documents (parented/grouped subtree with layer, part and
+Profile MOP closure; a second childless copy returns to the typed similarity
+slice; both saved sides match independently authored public-framework projects
+by XML semantics); transfer into a populated imported document with both-revision
+advancement, preservation of its existing content, source removal keeping the
+untouched primitive/layer/part, and two-sided XML parity; failure addressing and
+state preservation (same-handle
+rejection, expired and closed targets addressed to the target, stale
+source/target fields each reporting that document's current revision, missing
+and non-primitive roots, framework collision message, failure replay with the
+original key, and `REQUEST_ID_CONFLICT`); and limit/concurrency atomicity
+(patched primitive and MOP limits reject without publication; two concurrent
+same-revision transfers produce exactly one success and one `STALE_REVISION`
+with correct final counts). Cancellation before publication preserves both live
+project objects and revisions and replays `REQUEST_CANCELLED`; cancellation
+inside the shielded publication completes both revisions and is recoverable as
+a successful replay. Opposing A-to-B and B-to-A transfers complete under a
+five-second timeout, proving both directions contend in canonical lock order.
+
+Results on the repository Python 3.13 environment with MCP 2.2.0:
+
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p test_mcp_cross_document.py -v`:
+  6 passed.
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p 'test_mcp_*.py' -v`:
+  55 tests, one Windows symlink-privilege skip (tool listing/annotation
+  expectations updated to the thirty-one tools).
+- `.venv/Scripts/python.exe -m unittest discover -s tests -v`: 207 tests with
+  the same one skip (206 passed).
+- `compileall`, contract schema-copy identity (inside the document suite),
+  `demos/mcp_authoring_slice.py` and `git diff --check`: pass.
+
+Remaining limits: no deletion or batch tools, no cross-restart recovery of
+volatile state, and CamBam production acceptance stays with 4e. 4d is
+complete; the next increment is 4e desktop/second-PC acceptance.
