@@ -1840,11 +1840,15 @@
                     },
                     "layer": {
                       "$ref": "#/$defs/Name"
+                    },
+                    "geometry": {
+                      "$ref": "#/$defs/CircleGeometry"
                     }
                   },
                   "required": [
                     "entity_id",
-                    "layer"
+                    "layer",
+                    "geometry"
                   ],
                   "additionalProperties": false
                 },
@@ -2041,11 +2045,15 @@
                     },
                     "layer": {
                       "$ref": "#/$defs/Name"
+                    },
+                    "geometry": {
+                      "$ref": "#/$defs/PlineGeometry"
                     }
                   },
                   "required": [
                     "entity_id",
-                    "layer"
+                    "layer",
+                    "geometry"
                   ],
                   "additionalProperties": false
                 },
@@ -2497,6 +2505,12 @@
                     "part": {
                       "$ref": "#/$defs/Name"
                     },
+                    "side": {
+                      "enum": [
+                        "Inside",
+                        "Outside"
+                      ]
+                    },
                     "targets": {
                       "type": "array",
                       "items": {
@@ -2510,6 +2524,7 @@
                   "required": [
                     "mop_id",
                     "part",
+                    "side",
                     "targets"
                   ],
                   "additionalProperties": false

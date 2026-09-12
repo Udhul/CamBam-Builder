@@ -76,7 +76,9 @@ class DocumentService:
         "relationship_copy_tree_between", "relationship_transfer_tree_between",
     ))
     MOP_TARGET_RULES = {
-        "profile": ("supported root rectangles", lambda e: isinstance(e, Rect)),
+        "profile": ("supported root Rect/Circle/closed-Pline/Region shapes",
+                    lambda e: isinstance(e, (Rect, Circle, Region))
+                    or (isinstance(e, Pline) and bool(e.closed))),
         "pocket": ("supported root Rect/Circle/closed-Pline/Region shapes",
                    lambda e: isinstance(e, (Rect, Circle, Region))
                    or (isinstance(e, Pline) and bool(e.closed))),
@@ -129,9 +131,18 @@ class DocumentService:
             try:
                 validated = validated_arguments(name, arguments)
                 validation_error = None
-            except (ValidationError, TypeError, ValueError, OverflowError):
+            except ValidationError as exc:
                 validated = copy.deepcopy(args)
-                validation_error = DomainError("INVALID_ARGUMENT", "Arguments do not match the tool schema")
+                path = list(exc.absolute_path)
+                validation_error = DomainError(
+                    "INVALID_ARGUMENT", "Arguments do not match the tool schema",
+                    str(path[0]) if path else None,
+                )
+            except (TypeError, ValueError, OverflowError):
+                validated = copy.deepcopy(args)
+                validation_error = DomainError(
+                    "INVALID_ARGUMENT", "Arguments do not match the tool schema"
+                )
             # Invalid identity cannot reserve ledger state. Valid identity with invalid
             # remaining arguments does reserve and caches its terminal failure.
             request_id = _typed(args.get("request_id"), "UUID")
@@ -319,6 +330,14 @@ class DocumentService:
             temporary, artifact = await anyio.to_thread.run_sync(stage)
             await anyio.lowlevel.checkpoint()
             diagnostics = self._diagnostics(document.units, True)
+            diagnostics.append({
+                "code": "SERVER_WORKSPACE_ONLY",
+                "message": (
+                    "The saved path belongs to the MCP server workspace. Do not read or "
+                    "copy absolute_path with client filesystem tools; use document_export "
+                    "for client-local delivery."
+                ),
+            })
             result = self._envelope(args, data=artifact, diagnostics=diagnostics)
             OUTPUTS[name].validate(result)
             with anyio.CancelScope(shield=True):
@@ -708,9 +727,10 @@ class DocumentService:
             )
             if circle is None:
                 raise DomainError("INTERNAL_ERROR", "Framework rejected circle creation")
-            self._circle_geometry(circle)
+            geometry = self._circle_geometry(circle)
             self._check_limits(staged)
-            data = {"entity_id": str(circle.internal_id), "layer": args["layer"]}
+            data = {"entity_id": str(circle.internal_id), "layer": args["layer"],
+                    "geometry": geometry}
         elif name == "geometry_add_arc":
             self._identifier_available(staged, args["identifier"], "identifier")
             self._check_new_layer_name(staged, args)
@@ -735,9 +755,10 @@ class DocumentService:
             )
             if pline is None:
                 raise DomainError("INTERNAL_ERROR", "Framework rejected polyline creation")
-            self._pline_geometry(pline)
+            geometry = self._pline_geometry(pline)
             self._check_limits(staged)
-            data = {"entity_id": str(pline.internal_id), "layer": args["layer"]}
+            data = {"entity_id": str(pline.internal_id), "layer": args["layer"],
+                    "geometry": geometry}
         elif name == "geometry_add_points":
             self._identifier_available(staged, args["identifier"], "identifier")
             self._check_new_layer_name(staged, args)
@@ -915,6 +936,7 @@ class DocumentService:
                 raise DomainError("INTERNAL_ERROR", "Framework rejected Profile creation")
             self._check_limits(staged)
             data = {"mop_id": str(mop.internal_id), "part": args["part"],
+                    "side": args["side"],
                     "targets": [str(value) for value in staged.get_mop_targets(mop)]}
         elif name == "machining_add_pocket":
             part, targets = self._stage_mop_prelude(staged, args, "pocket")

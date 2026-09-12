@@ -586,6 +586,23 @@ current revision and a suggested leaf filename, write the returned `content`
 unchanged to the desired client-local path, and verify its SHA-256 when possible.
 Both directions accept up to 10 MiB of XML. Inline results are intentionally the
 compatibility baseline; large results may consume substantial model context.
+This content flow is the default even when client and server run on the same PC.
+`document_open` and `document_save` are only for artifacts explicitly requested in
+the MCP workspace. An agent must not use their server `absolute_path` with client
+filesystem tools or request client access to that directory.
+
+Circle and Pline creation results include their typed geometry. For any geometry
+calculated from a verbal dimension, bounding box, center, symmetry or containment
+constraint, compare those returned coordinates/bounds and a `document_inspect`
+snapshot with every requested constraint before creating MOPs. Obtain missing stock
+thickness/target depth, depth increment, feeds and spindle speed from the user; they
+are not safe geometric defaults.
+
+Plan MOP creation order before calling the add tools because each operation appends
+to its Part. Verify the inspection order places enclosed/internal and non-releasing
+detail work before any through-cut Outside Profile that releases the containing part.
+The v1 MCP surface cannot reorder an existing sequence; rebuild it rather than export
+a known-unsafe order.
 
 Codex client configuration (replace both absolute paths):
 
@@ -658,17 +675,23 @@ removed; user `.cb` files and workspace artifacts are not removed automatically.
 
 ### 4e OpenCode and CamBam acceptance
 
-Start with a new empty workspace, register the local command above, and confirm
-`opencode mcp list` reports `cambam connected`. Then ask the OpenCode agent:
+Start in a client project directory outside the MCP workspace, register the local
+command above, and confirm `opencode mcp list` reports `cambam connected`. Then ask
+the OpenCode agent:
 
 ```text
-Use only the cambam MCP tools. Report the server workspace ID and available tool
-count. Create a document named slice with asserted mm units. Add Rect outline on
+Use cambam MCP tools for document/CAD/CAM work and your normal local file tools only
+to read or write complete exported .cb content. Do not call document_open or
+document_save, and do not access the MCP server workspace. Report the server
+workspace ID and available tool count. Create a document named slice with asserted
+mm units. Add Rect outline on
 layer Geometry at (0,0,0), width 20 and height 10. Add an enabled outside Profile
 named profile in Part targeting outline: target depth -1, depth increment 0.5,
 tool diameter 3, cut/plunge feeds 300/100, spindle 12000, stock surface 0 and
-clearance plane 5. Inspect it and save A.cb. Open A.cb as a new document, translate
-outline by (5,2), inspect it, save B.cb, and close both handles. Do not retry failed
+clearance plane 5. Inspect it, export it, and write the returned content unchanged
+as A.cb in this client project. Read that local A.cb content, import it as a new
+document, translate outline by (5,2), inspect it, export it, and write the returned
+content unchanged as B.cb here. Close both handles. Do not retry failed
 mutations with changed arguments under the same request ID. Report every resulting
 revision, the final world corners, target ID, hashes, errors, and whether any MCP
 argument needed manual correction.
@@ -679,12 +702,24 @@ The expected revisions are create 0, Rect 1, Profile/A 2, reopened 0, translated
 order. Before opening either file in CamBam, independently validate the artifacts:
 
 ```powershell
-.venv/Scripts/python.exe demos/mcp_client_acceptance_verify.py D:/CAD/AgentWork/A.cb D:/CAD/AgentWork/B.cb
+.venv/Scripts/python.exe demos/mcp_client_acceptance_verify.py C:/path/to/client/project/A.cb C:/path/to/client/project/B.cb
 ```
 
 The verifier checks strict import, hashes, identities, relationships, A/B geometry,
 zero/unspecified stock and all explicit Profile values. It does not establish the
 client connection or native CamBam behavior.
+
+Also run one unprimed usability check from that client directory: ask the agent in
+ordinary terms to create and save a new `.cb` there containing a non-rectangular
+closed outside boundary, a circular internal opening and suitable machining
+operations to cut both with a stated end-mill diameter. Do not mention import/export
+or operation names. Pass requires export followed by a client-local write with no
+server-workspace access request, an Inside Profile targeting the original circle, and
+an Outside Profile targeting the original closed boundary. It must not add compensated
+helper geometry or substitute Engrave. Open the result in CamBam, generate toolpaths,
+and verify the cutter centerline is offset inward from the opening and outward from
+the exterior by half the tool diameter. Report any permission prompt, wrong tool call,
+argument correction, rejected target, unexpected helper geometry or wrong-side path.
 
 For required domain acceptance in CamBam Plus 1.0, open A and B separately and
 report the exact CamBam version. Confirm the drawing is using millimeters—the XML

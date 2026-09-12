@@ -214,6 +214,19 @@ class MCPProtocolTests(unittest.TestCase):
                                 "idempotentHint": True, "destructiveHint": True}
             )
             self.assertEqual(tool["annotations"], expected_annotations[tool["name"]])
+        descriptions = {tool["name"]: tool["description"] for tool in tools}
+        self.assertIn("Default delivery", descriptions["document_export"])
+        self.assertIn("client's own file-write tool", descriptions["document_save"])
+        self.assertIn("absolute center", descriptions["geometry_add_circle"])
+        self.assertIn("lies to the right", descriptions["geometry_add_pline"])
+        self.assertIn("finished exterior part edge", descriptions["machining_add_profile"])
+        self.assertIn("create that cutout last", descriptions["machining_add_profile"])
+        self.assertIn("loose slug", descriptions["machining_add_pocket"])
+        self.assertIn("before an Outside Profile", descriptions["machining_add_pocket"])
+        self.assertIn("no cutter-radius compensation", descriptions["machining_add_engrave"])
+        self.assertIn("before cutting that part loose", descriptions["machining_add_engrave"])
+        self.assertIn("Circle centers", descriptions["machining_add_drill"])
+        self.assertIn("before an Outside Profile", descriptions["machining_add_drill"])
         self.assertEqual(listing["result"]["ttlMs"], 0)
         self.assertEqual(listing["result"]["cacheScope"], "private")
 
@@ -223,6 +236,13 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertEqual(structured["revision"], 0)
         self.assertEqual(result["result"]["resultType"], "complete")
         self.assertEqual(json.loads(result["result"]["content"][0]["text"]), structured)
+
+        invalid_uuid = self.call(4, "document_create", {
+            **self.new_args(), "request_id": "not-a-uuid",
+        })["result"]["structuredContent"]
+        self.assertFalse(invalid_uuid["ok"])
+        self.assertEqual(invalid_uuid["error"]["code"], "INVALID_ARGUMENT")
+        self.assertEqual(invalid_uuid["error"]["field"], "request_id")
 
     def test_missing_metadata_and_legacy_initialize_are_rejected(self):
         first_ping = self.server.request(
@@ -277,6 +297,12 @@ class MCPProtocolTests(unittest.TestCase):
             'CAMBAM_MCP_PROTOCOL {"protocol_version":"2025-11-25","mode":"legacy"}',
         )
         self.assertIn(self.workspace_id, initialized["result"]["instructions"])
+        self.assertIn("Never call document_save", initialized["result"]["instructions"])
+        self.assertIn("Profile offsets inside/outside", initialized["result"]["instructions"])
+        self.assertIn("Do not invent target depth", initialized["result"]["instructions"])
+        self.assertIn("Recompute after clarifications", initialized["result"]["instructions"])
+        self.assertIn("MOPs are appended within a Part", initialized["result"]["instructions"])
+        self.assertIn("containing part last", initialized["result"]["instructions"])
         self.assertEqual(
             initialized["result"]["_meta"]["cambam-builder/workspace"]["workspace_id"],
             self.workspace_id,

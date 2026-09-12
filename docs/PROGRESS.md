@@ -22,6 +22,28 @@ exact OpenCode/CamBam acceptance procedure are in the
 still requires the user's OpenCode 4c workflow plus CamBam mm/geometry/Profile/toolpath
 report. Streamable HTTP/remote-PC hosting is non-urgent future scope and must add
 origin validation, authentication and an explicit exposure policy before any LAN bind.
+The first real agentic OpenCode attempt exposed two release-blocking usability defects:
+the agent treated server-workspace save paths as client-local delivery, and the adapter
+artificially rejected Profile targets except Rects. The model-facing instructions now
+make import/export plus client-local read/write the default, reserve open/save for
+explicit server-workspace use, and explain Profile/Pocket/Engrave/Drill by machining
+intent. Profile now accepts root Circle, closed-Pline and Region boundaries as well as
+Rect; schema errors identify their top-level field. The 57-test MCP suite and
+209-test full suite pass with the existing Windows symlink-privilege skip. Repeat
+OpenCode plus CamBam acceptance remains required before 4e completes.
+The next OpenCode attempt accepted the portable export/client-write workflow, closing
+that usability defect. It exposed a separate geometry-planning failure: one Pline
+vertex and the derived hole center were arithmetically wrong, the agent changed only
+the bulge after clarification, never inspected the resulting bounds, and invented
+unspecified machining depth/feed values. Circle and Pline creation now return typed
+geometry immediately; server/tool guidance requires bounds/center/symmetry/containment
+verification before CAM/export and prohibits invented machining parameters. Profile
+and Pocket descriptions now distinguish preserved exterior edge, released opening
+slug and fully cleared cavity. The transcript itself records Profile `Outside`; if a
+corrected file still generates an inside path, its artifact or screenshot is needed
+to investigate a distinct CamBam interpretation defect. Generic containment checks
+and higher-level parametric polygon construction remain candidate future affordances,
+not requirements for this bounded 4e correction.
 
 **4d batch 5, cross-document copy/transfer: implemented and verified**
 (2026-09-11). The adapter advertises thirty-one version 1 tools after adding
@@ -523,6 +545,14 @@ retains 2026-07-28 as its target and also supports 2025-06-18 and 2025-11-25;
 reprobe the clients during 4e and retire an older version only after deployed
 clients no longer need it. No blocker prevents 4d implementation; keep broader
 CAD/CAM coverage explicit and test each advertised family before discovery.
+
+The second OpenCode run also created the final outside cutout before its enclosed
+hole operation. Server instructions and all four MOP descriptions now state that MOPs
+append in call order and that enclosed/internal or non-releasing detail work normally
+precedes a through-cut Outside Profile that releases the containing part. Contract v1
+still cannot reorder an existing sequence. Reopen a focused reorder-tool increment via
+the public `assign_mop_to_part` API if another named-client run misorders operations or
+needs to repair an existing file; do not expand 4e merely for hypothetical ordering.
 
 ## Completion and verification
 

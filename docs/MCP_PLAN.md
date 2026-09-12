@@ -171,13 +171,20 @@ execution; move to Sol high only for substantive interoperability defects.
 - Record agent usability and required CamBam geometry/property/toolpath inspection
   as user/domain acceptance, keeping automated, protocol and production evidence
   separate.
+- Treat portable import/export content as the default for the client's own project
+  files. Server-workspace open/save is explicit scratch or artifact scope and must
+  never cause a client agent to request filesystem access to the server workspace.
+- Require agents to verify returned/inspected geometry against requested bounds,
+  centers, dimensions and containment before CAM or export, and to ask rather than
+  fabricate unspecified machining depths, feeds or spindle settings.
 
 **Stopping condition:** isolated clean install, local stdio connection, protocol
 conformance, end-to-end client behavior and required user acceptance are recorded;
 rollback is demonstrated and the live backlog advances. This completes the initial
 adapter. The user accepted same-machine stdio as the initial deployment boundary on
 2026-09-11 because second-PC hardware is unavailable; Streamable HTTP and remote-PC
-deployment are a separate non-urgent backlog item.
+deployment are a separate non-urgent backlog item. Named-client CAM acceptance must
+also verify that enclosed/detail MOPs precede any final through-cut Outside Profile.
 
 ## First implementation proof and acceptance
 

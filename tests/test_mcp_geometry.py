@@ -306,6 +306,7 @@ class GeometryBreadthTests(unittest.TestCase):
             layer = "Geometry"
             revision = 0
             ids = {}
+            created_geometry = {}
             for tool, arguments in (
                 ("geometry_add_circle", {
                     "identifier": "circle", "layer": layer,
@@ -335,6 +336,8 @@ class GeometryBreadthTests(unittest.TestCase):
                 self.assertEqual(result["revision"], revision)
                 self.assertEqual(result["data"]["layer"], layer)
                 ids[arguments["identifier"]] = result["data"]["entity_id"]
+                if tool in ("geometry_add_circle", "geometry_add_pline"):
+                    created_geometry[arguments["identifier"]] = result["data"]["geometry"]
 
             records = await self.inspect_records(handle, revision=revision)
             self.assertEqual(
@@ -345,6 +348,8 @@ class GeometryBreadthTests(unittest.TestCase):
                 "INSPECTION_UNSUPPORTED", self.diagnostics(await self.inspect(handle)))
             by_identifier = {record["identifier"]: record for record in records[1:]}
             expected = self.expected_geometries(*self.direct_project()[1:])
+            self.assertEqual(created_geometry["circle"], expected["circle"])
+            self.assertEqual(created_geometry["shape"], expected["pline"])
             for name, identifier in (("circle", "circle"), ("arc", "arc"),
                                      ("pline", "shape"), ("points", "marks")):
                 record = by_identifier[identifier]
@@ -603,8 +608,8 @@ class GeometryBreadthTests(unittest.TestCase):
             mop_id = profile["data"]["mop_id"]
 
             wrong_kind_target = await self.call("machining_add_profile", self.args(
-                document=handle, expected_revision=3, identifier="circle-profile",
-                part="Part", targets=[circle_id], side="Outside",
+                document=handle, expected_revision=3, identifier="mop-profile",
+                part="Part", targets=[mop_id], side="Outside",
                 target_depth=-1, depth_increment=0.5, tool_diameter=3,
                 cut_feedrate=300, plunge_feedrate=100, spindle_speed=12000,
                 clearance_plane=5))

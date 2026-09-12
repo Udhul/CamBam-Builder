@@ -297,6 +297,7 @@ class AuthoringTests(unittest.TestCase):
             self.assertTrue(profile_result["ok"], profile_result)
             self.assertEqual(profile_result["revision"], 2)
             self.assertEqual(profile_result["data"]["part"], "Part")
+            self.assertEqual(profile_result["data"]["side"], "Outside")
             self.assertEqual(profile_result["data"]["targets"], [rectangle_id])
             mop_id = profile_result["data"]["mop_id"]
 

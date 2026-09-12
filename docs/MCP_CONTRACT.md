@@ -288,6 +288,16 @@ Export is a read-only call without `request_id` or ledger retention, preventing 
 process-lifetime ledger from retaining repeated 10 MiB artifacts. Inline delivery is
 the version 1 compatibility baseline. MCP resources may be reconsidered in 4e only
 after named clients prove that resource results remain accessible to their agents.
+Portable content exchange is the default client-project workflow, including when the
+client and server run on the same machine. For a new document, create/edit/export and
+have the client write the returned content. For an existing client-local document,
+have the client read/import/edit/export/write. The agent must not call `document_save`
+and then use client filesystem tools to read or copy its returned `absolute_path`.
+`document_open` and `document_save` are reserved for an explicitly requested artifact
+inside the server workspace; that workspace may be used as server-side scratch but is
+not an implied client filesystem root. Every successful `document_save` includes a
+`SERVER_WORKSPACE_ONLY` diagnostic reiterating that its `absolute_path` must not be
+read or copied with client filesystem tools.
 
 **Save always creates a new file; overwrite is unsupported in version 1.** This
 protects source files whose unsupported metadata may not survive interchange.
@@ -347,6 +357,30 @@ material inference or feed calculation is provided by the adapter. Distances and
 Z depths use asserted units, feeds units/minute, spindle speed revolutions/minute.
 Coordinates use the framework's XY plane; positive Z is up, depth is an absolute
 Z coordinate, and translation is relative to the existing local transform.
+Circle `x,y` inputs are absolute center coordinates. Pline vertices are absolute
+coordinates in traversal order. A bulge on vertex i curves its directed segment to
+vertex i+1 (or the first vertex for the last segment of a closed Pline): positive
+bulge is a counter-clockwise sweep lying to the right of that directed chord,
+negative lies to its left, and `abs(bulge)=tan(abs(sweep)/4)`. Direction mnemonics
+alone are insufficient for semantic "inward"/"outward" requests because contour
+winding changes which chord side contains the interior.
+
+For computed or multi-point geometry, the caller must compare the creation result
+and `document_inspect` data against requested absolute bounds, center, dimensions,
+symmetry and containment before attaching MOPs or exporting. Clarified requirements
+invalidate prior calculations: recompute them rather than changing only one field.
+The adapter validates representability and topology where declared; it cannot infer
+the intended shape from valid but incorrect coordinates.
+
+MOPs are appended to their Part in tool-call order, and inspection/export preserve
+that order. The caller must plan the complete sequence before adding operations:
+normally machine enclosed/internal features and non-releasing details before a
+through-cut Outside Profile that releases their containing part. Not every Outside
+Profile is a cutout, so unclear stock thickness, target depth or holding intent must
+be resolved with the user. Contract v1 has no MOP reorder tool; a wrong order must
+currently be rebuilt. Reopen a dedicated reorder increment using the public
+`assign_mop_to_part` operation if named-client acceptance still misorders operations
+or demonstrates a practical need to repair an existing sequence.
 
 ## Tools and public API mapping
 
@@ -357,13 +391,13 @@ Z coordinate, and translation is relative to the existing local transform.
 | `document_open` | `New + {path: Path}` | Strict `read_cambam_bytes` of a bounded snapshot; return `DocumentSummary` with source path/hash. |
 | `document_inspect` | `Read + {offset?: integer >=0 =0, limit?: integer 1..100 =100, expected_revision?: Revision}` | Public `list_*`, relationship getters and world-coordinate/bounds queries; return `InspectionPage`. If supplied, revision must match. |
 | `geometry_add_rectangle` | `Write + {identifier: Name, layer: Name, x: Number, y: Number, width: Positive, height: Positive, z?: Number =0}` | `add_rect(layer, corner=(x,y), width=width, height=height, identifier=identifier, elevation=z)`; absent layer created through public API. Return primitive UUID and layer name. |
-| `geometry_add_circle` | `Write + {identifier: Name, layer: Name, x: Number, y: Number, diameter: Positive, z?: Number =0}` | `add_circle(layer, center=(x,y), diameter=diameter, identifier=identifier, elevation=z)`; absent layer created through public API. Return primitive UUID and layer name. |
+| `geometry_add_circle` | `Write + {identifier: Name, layer: Name, x: Number, y: Number, diameter: Positive, z?: Number =0}` | `add_circle(layer, center=(x,y), diameter=diameter, identifier=identifier, elevation=z)`; absent layer created through public API. Return primitive UUID, layer name and typed Circle geometry so the caller can verify its absolute center and bounds immediately. |
 | `geometry_add_arc` | `Write + {identifier: Name, layer: Name, x: Number, y: Number, radius: Positive, start_angle: Number, extent_angle: Number, z?: Number =0}` | `add_arc(layer, center=(x,y), radius=radius, start_angle=start_angle, extent_angle=extent_angle, identifier=identifier, elevation=z)`; degrees, CCW-positive signed sweep; return primitive UUID and layer name. |
-| `geometry_add_pline` | `Write + {identifier: Name, layer: Name, points: VertexPoint[2..10000], closed?: boolean =false}` where `VertexPoint` is `{x: Number, y: Number, z?: Number =0, bulge?: Number =0}` | `add_pline(layer, points=[Vertex(...)], closed=closed, identifier=identifier)`; the bulge stored on one vertex curves the segment that starts there; return primitive UUID and layer name. |
+| `geometry_add_pline` | `Write + {identifier: Name, layer: Name, points: VertexPoint[2..10000], closed?: boolean =false}` where `VertexPoint` is `{x: Number, y: Number, z?: Number =0, bulge?: Number =0}` | `add_pline(layer, points=[Vertex(...)], closed=closed, identifier=identifier)`; the bulge stored on one vertex curves the segment that starts there. Return primitive UUID, layer name and typed Pline geometry with world vertices, bulges and curved bounds. |
 | `geometry_add_points` | `Write + {identifier: Name, layer: Name, points: PlainPoint[1..10000]}` where `PlainPoint` is `{x: Number, y: Number, z?: Number =0}` | `add_points(layer, points=[Vertex(...)], identifier=identifier)`; bulge input is rejected by the schema; return primitive UUID and layer name. |
 | `geometry_add_text` | `Write + {identifier: Name, layer: Name, text: TextContent 1..1024 non-whitespace-only, x: Number, y: Number, height?: Positive =10, font?: FontName ="Arial", style?: FontStyle ="", line_spacing?: Positive =1, align_horizontal?: "left"\|"center"\|"right" ="center", align_vertical?: "top"\|"center"\|"bottom" ="center", z?: Number =0}` | `add_text(layer, text, position=(x,y), height, font, style, line_spacing, align_horizontal, align_vertical, identifier, elevation=z)`; return primitive UUID and layer name. The optional unused `xml_p2_*` interchange fields are not authorable inputs. |
 | `geometry_add_region` | `Write + {identifier: Name, layer: Name, outer: {points: VertexPoint[2..10000]}, holes?: {points: VertexPoint[2..10000]}[0..100] =[]}` | Contours become closed `Pline` records; `add_region(layer, outer_curve=..., hole_curves=..., identifier=identifier)`; XY topology (closed, simple, nonzero area, contained disjoint holes) is validated by the framework and topology failures return `INVALID_ARGUMENT` with the bounded framework message; return primitive UUID and layer name. |
-| `machining_add_profile` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], side: "Inside" | "Outside", target_depth: Number, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true}` | `add_part` if absent, then `add_profile_mop(part, targets=..., identifier=identifier, name=identifier, profile_side=side, ...)`; return MOP UUID, part name and resolved target UUIDs. |
+| `machining_add_profile` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], side: "Inside" | "Outside", target_depth: Number, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true}` | `add_part` if absent, then `add_profile_mop(part, targets=..., identifier=identifier, name=identifier, profile_side=side, ...)`; return MOP UUID, part name, echoed side and resolved target UUIDs. |
 | `machining_add_pocket` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], target_depth, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true}` | `add_pocket_mop(...)` with the pocket settings pinned in the schema record (stepover 0.4, `InsideOutsideOffsets` fill, Spiral lead-in, Roughing); return MOP UUID, part name and resolved targets. |
 | `machining_add_engrave` | Same closed record as Pocket (no side, no pocket-specific inputs) | `add_engrave_mop(...)` with Engrave settings pinned in the schema record (Roughing, final increment 0, DepthFirst, EndMill); return MOP UUID, part name and resolved targets. |
 | `machining_add_drill` | Pocket record plus `peck_distance?: NonNegative =0`, `retract_height?: Number =5`, `dwell?: NonNegative =0` | `add_drill_mop(...)` pinned to the CannedCycle method and a `Drill` tool profile; return MOP UUID, part name and resolved targets. |
@@ -402,16 +436,28 @@ get new UUIDs on open; independent opens need not agree in that case.
 
 MOP targets are unique UUIDs resolving to supported root primitives in the same
 document; reject missing, duplicate, wrong-kind or transformed-out-of-scope
-targets before mutation. Per-kind supported target sets: Profile accepts root
-Rects; Pocket accepts root Rect/Circle/closed-Pline/Region shapes; Engrave
+targets before mutation. Per-kind supported target sets: Profile and Pocket accept
+root Rect/Circle/closed-Pline/Region shapes; Engrave
 accepts root Rect/Circle/Arc/Pline curves (open or closed); Drill accepts root
-Points/Circle primitives (CamBam resolves drill positions from targets at
-toolpath time; 4e owns that acceptance). Require `target_depth < stock_surface`
+Points/Circle primitives. Profile produces a cutter-radius-compensated contour:
+Outside preserves the selected boundary as the finished exterior part edge and cuts
+in surrounding stock. Inside preserves it as the finished opening edge and cuts on
+the removable interior side. Pocket clears the entire bounded interior into chips;
+for a through-opening that may release a slug, Profile Inside is normally preferred.
+Engrave follows the selected curve as the tool
+centerline without inside/outside cutter-radius compensation. Drill operates at
+point-list entries or circle centers rather than tracing circle boundaries. Select
+among them by requested machining intent; never silently replace an unavailable
+Profile with compensated helper geometry and Engrave. CamBam resolves the final
+toolpaths from these targets; 4e owns visual acceptance. Require
+`target_depth < stock_surface`
 and `clearance_plane > stock_surface`. New parts use enabled=true, zero stock
 dimensions, empty material, origin (0,0), and no spindle/tool override; no
 fabricated MDF/stock-size defaults. This is unspecified stock, not a
 zero-thickness machining recommendation. Explicit MOP parameters bypass
-framework inferred tool/feed/depth defaults. Pin other settings to the current
+framework inferred tool/feed/depth defaults. The agent must obtain unspecified
+target depth, depth increment, feeds and spindle speed from the user or established
+project data rather than invent machining values. Pin other settings to the current
 public defaults: Profile keeps `lead_in_type="None"` for this slice; Pocket
 pins Spiral lead-in, stepover 0.4, `InsideOutsideOffsets` fill, Roughing,
 finish stepover 0; Engrave pins Roughing, final increment 0, DepthFirst, EndMill;

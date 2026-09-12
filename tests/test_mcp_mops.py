@@ -452,17 +452,38 @@ class MopBreadthTests(unittest.TestCase):
             open_path = (await add("geometry_add_pline", identifier="path",
                                    layer="Geometry", closed=False,
                                    points=[{"x": 0, "y": 20}, {"x": 15, "y": 20}]))
+            closed_path = (await add("geometry_add_pline", identifier="closed-path",
+                                     layer="Geometry", closed=True,
+                                     points=[{"x": 0, "y": 30}, {"x": 15, "y": 30},
+                                             {"x": 10, "y": 40}]))
+            region = (await add(
+                "geometry_add_region", identifier="region", layer="Geometry",
+                outer={"points": [{"x": 40, "y": 20}, {"x": 50, "y": 20},
+                                   {"x": 50, "y": 30}, {"x": 40, "y": 30}]},
+            ))
             marks = (await add("geometry_add_points", identifier="marks",
                                layer="Geometry",
                                points=[{"x": 3, "y": 3}, {"x": 9, "y": 4}]))
             rectangle_id = rectangle["data"]["entity_id"]
             circle_id = circle["data"]["entity_id"]
             open_path_id = open_path["data"]["entity_id"]
+            closed_path_id = closed_path["data"]["entity_id"]
+            region_id = region["data"]["entity_id"]
             marks_id = marks["data"]["entity_id"]
 
             pocket = (await add("machining_add_pocket", **self.mop_arguments(
                 identifier="pocket", part="Part", targets=[rectangle_id])))
             mop_id = pocket["data"]["mop_id"]
+
+            profile = await add(
+                "machining_add_profile", identifier="profile", part="Part",
+                targets=[circle_id, closed_path_id, region_id], side="Inside",
+                **self.mop_arguments(),
+            )
+            self.assertEqual(
+                set(profile["data"]["targets"]),
+                {circle_id, closed_path_id, region_id},
+            )
 
             for tool, target_id, expected_code in (
                 ("machining_add_pocket", open_path_id, "UNSUPPORTED_OPERATION"),
@@ -470,7 +491,8 @@ class MopBreadthTests(unittest.TestCase):
                 ("machining_add_engrave", marks_id, "UNSUPPORTED_OPERATION"),
                 ("machining_add_drill", rectangle_id, "UNSUPPORTED_OPERATION"),
                 ("machining_add_drill", open_path_id, "UNSUPPORTED_OPERATION"),
-                ("machining_add_profile", circle_id, "UNSUPPORTED_OPERATION"),
+                ("machining_add_profile", open_path_id, "UNSUPPORTED_OPERATION"),
+                ("machining_add_profile", marks_id, "UNSUPPORTED_OPERATION"),
                 ("machining_add_pocket", str(uuid4()), "ENTITY_NOT_FOUND"),
             ):
                 result = await self.call(tool, self.args(
@@ -564,9 +586,36 @@ class MopBreadthTests(unittest.TestCase):
             final = await self.inspect(handle)
             self.assertEqual(
                 final["data"]["summary"]["counts"],
-                {"layers": 1, "parts": 1, "primitives": 4, "mops": 3},
+                {"layers": 1, "parts": 1, "primitives": 6, "mops": 4},
             )
             self.assertNotIn("INSPECTION_UNSUPPORTED", self.diagnostics(final))
+            profile_record = next(
+                record for record in await self.inspect_records(handle)
+                if record["kind"] == "mop" and record["identifier"] == "profile"
+            )
+            self.assertEqual(
+                set(profile_record["targets"]),
+                {circle_id, closed_path_id, region_id},
+            )
+
+            saved = await self.call("document_save", self.args(
+                document=handle, expected_revision=final["revision"],
+                path="profile-closed-contours.cb",
+            ))
+            self.assertTrue(saved["ok"], saved)
+            self.assertIn("SERVER_WORKSPACE_ONLY", self.diagnostics(saved))
+            reopened = await self.call("document_open", self.args(
+                path="profile-closed-contours.cb", units="mm",
+            ))
+            self.assertTrue(reopened["ok"], reopened)
+            reopened_profile = next(
+                record for record in await self.inspect_records(reopened["document"])
+                if record["kind"] == "mop" and record["identifier"] == "profile"
+            )
+            self.assertEqual(
+                set(reopened_profile["targets"]),
+                {circle_id, closed_path_id, region_id},
+            )
 
         self.run_async(test)
 

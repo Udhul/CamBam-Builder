@@ -2005,6 +2005,122 @@ Remaining limits: no deletion or batch tools, no cross-restart recovery of
 volatile state, and CamBam production acceptance stays with 4e. 4d is
 complete; the next increment is 4e desktop/second-PC acceptance.
 
+## MCP agentic OpenCode usability correction - 2026-09-11
+
+The user's first agent-driven OpenCode run supplied production evidence that the
+connection itself worked but the advertised behavior did not guide the agent reliably.
+It exported a current document and then unnecessarily saved an older server-workspace
+copy, tried to access that server absolute path with client filesystem tools, and later
+copied the stale server copy instead of the current export. The second document's
+successful export-to-client-write flow demonstrated that stdio inline transfer was
+working; the failure was the model-facing contract and default workflow.
+
+Initialization instructions and document tool descriptions now make portable content
+exchange the default for client-project files: client read -> `document_import` for
+existing files, and `document_export` -> client write for every new or changed result.
+They prohibit `document_save` or access to its returned server `absolute_path` for
+client-local delivery. Open/save remain available only for explicitly requested
+server-workspace artifacts, and successful saves now repeat this boundary in a
+`SERVER_WORKSPACE_ONLY` diagnostic. The README and 4e runbook use this workflow.
+
+The same session also found an artificial implementation restriction: the adapter
+allowed Profile only on Rect, despite the public framework accepting primitive targets.
+Profile now accepts the bounded closed-contour set Rect, Circle, closed Pline and Region;
+open Pline remains rejected because the adapter's required Inside/Outside input does not
+express the direction-dependent semantics of open geometry. Regression creates one
+Profile over Circle/closed-Pline/Region targets, inspects it, saves and reopens it with
+all target UUIDs retained, and checks open-Pline/Points rejection. This matches CamBam's
+documented semantics: [Profile offsets inside or outside selected shapes](https://www.cambam.info/doc/api/MOPProfile.htm),
+[Engrave follows selected geometry while Pocket clears a bounded area](https://www.cambam.info/doc/1.0/cam/basics.html),
+and [Drill uses point-list entries or circle centers](https://www.cambam.info/doc/plus/cam/Drill.htm).
+The four machining tool descriptions now state those intent differences and warn that
+Engrave has no cutter-radius compensation. A Profile failure must not be silently
+worked around by inventing compensated Engrave geometry.
+
+The transcript also exposed two smaller diagnostics issues. An invalid non-hex request
+UUID had returned a schema error without a field; top-level JSON Schema failures now
+report their input field (`request_id` in that case). A Part name collision with an
+existing entity was valid behavior, and all machining descriptions now say the Part
+name must be project-unique.
+
+Verification on the repository Python 3.13 environment with MCP 2.2.0:
+
+- Focused MOP/protocol regressions: 12 passed.
+- `python -m unittest discover -s tests -p 'test_mcp_*.py' -v`: 57 tests,
+  56 passed and the existing Windows symlink-privilege skip.
+- `python -m unittest discover -s tests -v`: 209 tests, 208 passed with the same skip.
+- `compileall` and `git diff --check`: passed.
+
+Automated behavior is complete for this correction. It does not prove how OpenCode's
+model will act from the revised descriptions or that CamBam generates the expected
+toolpaths. The following external run accepted content-transfer behavior; geometry/CAM
+planning and CamBam visual Profile inspection remain required 4e checks.
+
+## MCP agent geometry feedback correction - 2026-09-11
+
+The second external OpenCode run successfully used `document_export` followed by the
+client's local write tool without attempting to access the server workspace. This
+accepts the portable file-boundary behavior for OpenCode 1.18.30 in the tested session.
+
+Its geometry was nevertheless wrong before reaching the adapter. A requested 200 by
+200 bounding box with lower-left `(10,20)` has center `(110,120)`, but the agent sent
+the circle center as `(210,220)`. Seven Pline vertices followed the intended translated
+radius-100 construction while one bottom vertex was sent as `(110,49.2893)` instead of
+`(110,20)`, breaking symmetry. After useful clarification questions, the agent changed
+only the bulge signs and reused both incorrect coordinates without inspecting the
+result. The service preserved the submitted values exactly; this was not a coordinate
+transform or serialization defect.
+
+The transcript also demonstrated why only describing bulge as a per-vertex value was
+insufficient. Its exact convention is now advertised: the value belongs to the directed
+segment from its vertex to the next, positive is a counter-clockwise sweep on the right
+of that chord, negative is on the left, and magnitude is `tan(abs(sweep)/4)`. Which sign
+means semantic inward depends on contour winding. Circle and Pline creation results now
+echo their complete typed geometry, including absolute center/world vertices, bulges and
+exact curved bounds. Initialization and tool descriptions require comparing those
+results and an inspection snapshot with requested dimensions, center, symmetry and
+containment before dependent geometry, MOPs or export; clarifications require a full
+recalculation.
+
+Machining guidance now describes resulting material rather than only operation names:
+Profile Outside preserves an exterior part edge, Profile Inside preserves an opening
+edge and may release a slug, while Pocket clears the complete bounded area into chips.
+Profile results echo the accepted side as well as target IDs. The agent had also invented
+10 mm depth and feed/spindle values; instructions now require missing machining values
+from the user or established project data.
+
+The agent created the final outside cutout MOP before the enclosed hole MOP. The adapter
+appends MOPs to a Part in tool-call order, so the exported order was faithful but unsafe
+for a through-cut that releases the stock-held part. Initialization instructions now
+carry the cross-tool rule: plan the whole sequence, machine enclosed/internal and
+non-releasing detail work first, and place a releasing Outside Profile last. Each MOP
+description reinforces the relevant local consequence. Because depth and workholding
+determine whether an Outside Profile actually releases material, the server directs the
+agent to ask rather than infer when that intent is unclear.
+
+The underlying project API supports ordered reassignment, but contract v1 exposes no
+MOP reorder tool. That repair affordance remains a bounded follow-up, to be reopened if
+the next named-client run still misorders operations or needs to edit an existing file.
+
+The transcript and both exported XML payloads actually contain `Profile Outside` on the
+outer Pline, not Inside. Therefore no Profile-side persistence bug is established by
+this evidence. If a geometrically corrected file still displays or generates an inside
+path in CamBam, retain that artifact or a property/toolpath screenshot for a separate
+reader/writer/native interpretation investigation.
+
+Verification on Python 3.13 with MCP 2.2.0:
+
+- Focused geometry/authoring/protocol verification: 20 passed.
+- MCP suite: 57 tests, 56 passed and the existing Windows symlink-privilege skip.
+- Full suite: 209 tests, 208 passed with the same skip.
+- The schema regression verifies that authoritative and packaged contract copies remain
+  byte-identical; `compileall` and `git diff --check` pass.
+
+Generic closed-shape containment analysis and a higher-level regular-polygon constructor
+could further reduce model arithmetic, but are deferred as separate API affordances;
+the current increment first makes existing tools self-describing and their actual output
+immediately auditable.
+
 ## MCP local stdio installation and client acceptance preparation - 2026-09-11
 
 The user accepted same-machine stdio as the initial 4e deployment boundary because
