@@ -2107,6 +2107,13 @@ penultimate pass must remain above the stock bottom, and normally at least one t
 the final pass should remain engaged in stock before entering the cut-through allowance.
 The user must confirm the proposed parameter. The contract records the 9 mm stock,
 0.5 mm cut-through and 3.2 mm increment example and its actual clamped final pass.
+This arithmetic is now exposed through the read-only
+`machining_calculate_depth_increment` tool. Exact-pass mode reproduces 3.2, 6.4 and
+9.5 mm depths for that example. Maximum-stepdown mode derives the minimum feasible
+pass count. Both modes flag rounding or pass constraints that reach the stock bottom
+before the final pass or leave less than one third of that pass in stock. They still
+return a valid explicitly requested plan rather than overruling the user. The result
+exposes every derived value so an agent can explain it before confirmation.
 
 The underlying project API supports ordered reassignment, but contract v1 exposes no
 MOP reorder tool. That repair affordance remains a bounded follow-up, to be reopened if
@@ -2121,8 +2128,8 @@ reader/writer/native interpretation investigation.
 Verification on Python 3.13 with MCP 2.2.0:
 
 - Focused geometry/authoring/protocol verification: 20 passed.
-- MCP suite: 57 tests, 56 passed and the existing Windows symlink-privilege skip.
-- Full suite: 209 tests, 208 passed with the same skip.
+- MCP suite: 58 tests, 57 passed and the existing Windows symlink-privilege skip.
+- Full suite: 210 tests, 209 passed with the same skip.
 - The packaged schema is now the single machine-readable contract owner; its asset test,
   `compileall` and `git diff --check` pass.
 

@@ -600,6 +600,13 @@ reasoned proposal may use known stock, material and tool context, but requires u
 confirmation. For a through-cut, choose a tool/material-safe increment whose nominal
 multiples slightly exceed total depth, whose penultimate pass remains above the stock
 bottom, and whose final pass normally spends at least one third of its depth in stock.
+Use `machining_calculate_depth_increment` for that arithmetic. Supply either the exact
+desired pass count or the maximum depth increment already judged safe for the material
+and tool, never both. Inspect its returned pass depths and final-stock fraction, then
+obtain user confirmation before passing the proposed increment to a MOP add tool.
+If the user explicitly chooses a different valid value, preserve it. Treat a low final
+stock fraction or relaxed rounding as a warning to explain, not an authorization to
+reject or replace the user's machining decision.
 
 Plan MOP creation order before calling the add tools because each operation appends
 to its Part. Verify the inspection order places enclosed/internal and non-releasing

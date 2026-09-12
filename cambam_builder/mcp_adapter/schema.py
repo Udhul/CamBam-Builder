@@ -32,6 +32,7 @@ TOOLS = tuple(sorted((
     "machining_add_engrave",
     "machining_add_pocket",
     "machining_add_profile",
+    "machining_calculate_depth_increment",
     "machining_set_mop_targets",
     "relationship_add_to_group",
     "relationship_copy_tree",
@@ -116,6 +117,7 @@ def tool_definitions():
         "machining_add_engrave": "Add an Engrave operation whose tool center follows the selected Rect/Circle/Arc/Pline curves with no cutter-radius compensation. Choose it only when centerline tracing or engraving is intended, not as a substitute for dimensionally accurate inside/outside contour cutting. MOPs append in call order; engrave a contained part before cutting that part loose. The part name must be project-unique and is created when absent.",
         "machining_add_pocket": "Add a Pocket operation that clears the entire area inside selected root Rect/Circle/closed-Pline/Region boundaries into chips. Use Pocket for a cavity or when no loose slug should remain; for a through-opening whose interior may be released as a slug, normally use Profile Inside. MOPs append in call order; pocket enclosed features before an Outside Profile that cuts their containing part loose. The part name must be project-unique and is created when absent. Do not silently invent machining parameters; elicit confirmation of a reasoned proposal based on known stock, material and tool limits.",
         "machining_add_profile": "Add a cutter-radius-compensated Profile around root Rect/Circle/closed-Pline/Region boundaries. Outside keeps the selected boundary as the finished exterior part edge and cuts in surrounding stock; Inside keeps it as the finished opening edge and cuts on the removable interior side. Use Inside for a through-opening when releasing a slug is intended; use Pocket only to clear its whole area. MOPs append in call order: create enclosed/detail operations first, and if an Outside Profile cuts their containing part loose, create that cutout last. For through-cuts, choose a material/tool-safe depth increment whose multiples slightly exceed total depth and whose final pass still cuts meaningful stock before crossing the stock bottom; confirm the proposal with the user. The result echoes side and target IDs: verify them against inspected geometry. The part name must be project-unique and is created when absent. Do not silently invent machining parameters.",
+        "machining_calculate_depth_increment": "Calculate a rounded through-cut depth increment from stock thickness, cut-through allowance and either an exact pass count or a maximum material/tool-safe depth increment. Returns every depth below stock surface and reports whether at least one third of the final pass remains in stock. This is an advisory heuristic, not a material/tool safety calculator or a veto: preserve valid user-requested constraints, surface warnings, and confirm the result before adding a MOP.",
         "machining_set_mop_targets": "Atomically replace one supported MOP's target selection with explicit primitive targets.",
         "relationship_set_parent": "Link a primitive under a parent, or detach it with a null parent; local transforms are kept, so the world pose follows the new frame.",
         "relationship_add_to_group": "Add a primitive to a named group.",
@@ -125,11 +127,13 @@ def tool_definitions():
         "relationship_transfer_tree_between": "Move a primitive subtree from one open document into another in this workspace, removing it from the source; both revisions advance together.",
     }
     nondestructive = {"document_create", "document_export", "document_import",
-                      "document_inspect", "document_open", "document_save"}
+                      "document_inspect", "document_open", "document_save",
+                      "machining_calculate_depth_increment"}
     return [{"name": name, "description": descriptions[name],
              "inputSchema": schema(name, "input"), "outputSchema": schema(name, "output"),
              "annotations": {"openWorldHint": False,
-                             "readOnlyHint": name in {"document_export", "document_inspect"},
+                             "readOnlyHint": name in {"document_export", "document_inspect",
+                                                       "machining_calculate_depth_increment"},
                              "idempotentHint": True,
                              "destructiveHint": name not in nondestructive}}
             for name in TOOLS]

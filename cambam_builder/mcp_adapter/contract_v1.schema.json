@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:cambam-builder:mcp-contract:1",
   "title": "MCP adapter v1 tool contracts",
-  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All thirty-one version 1 document and authoring tools are implemented, including cross-document copy/transfer between two open documents; typed detail covers the seven supported primitive kinds and the four supported MOP kinds within the similarity slice, while non-similarity transforms and relationships stay diagnostic.",
+  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All thirty-two version 1 document, planning and authoring tools are implemented, including cross-document copy/transfer between two open documents; typed detail covers the seven supported primitive kinds and the four supported MOP kinds within the similarity slice, while non-similarity transforms and relationships stay diagnostic.",
   "$defs": {
     "UUID": {
       "type": "string",
@@ -4351,6 +4351,127 @@
               "properties": {
                 "ok": { "const": true },
                 "data": { "$ref": "#/$defs/SerializedArtifact" },
+                "error": { "type": "null" }
+              }
+            },
+            {
+              "properties": {
+                "ok": { "const": false },
+                "data": { "type": "null" },
+                "error": { "$ref": "#/$defs/Error" }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "machining_calculate_depth_increment_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/$defs/Workspace"
+        },
+        "units": {
+          "$ref": "#/$defs/Units"
+        },
+        "stock_thickness": {
+          "$ref": "#/$defs/Positive",
+          "description": "Stock thickness from stock surface to stock bottom."
+        },
+        "cut_through": {
+          "$ref": "#/$defs/Positive",
+          "description": "Positive distance to cut below the stock bottom."
+        },
+        "pass_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "Exact desired number of passes; mutually exclusive with max_depth_increment."
+        },
+        "max_depth_increment": {
+          "$ref": "#/$defs/Positive",
+          "description": "Maximum stepdown already judged safe for the material and tool; mutually exclusive with pass_count."
+        },
+        "rounding_increment": {
+          "$ref": "#/$defs/Positive",
+          "description": "Optional upward rounding quantum; defaults to 0.1 mm or 0.001 in."
+        }
+      },
+      "required": [
+        "workspace_id",
+        "units",
+        "stock_thickness",
+        "cut_through"
+      ],
+      "oneOf": [
+        {
+          "required": ["pass_count"]
+        },
+        {
+          "required": ["max_depth_increment"]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "machining_calculate_depth_increment_output": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": { "const": true },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "units": { "$ref": "#/$defs/Units" },
+                    "mode": {
+                      "type": "string",
+                      "enum": ["pass_count", "max_depth_increment"]
+                    },
+                    "stock_thickness": { "$ref": "#/$defs/Positive" },
+                    "cut_through": { "$ref": "#/$defs/Positive" },
+                    "total_depth": { "$ref": "#/$defs/Positive" },
+                    "pass_count": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 10000
+                    },
+                    "depth_increment": { "$ref": "#/$defs/Positive" },
+                    "rounding_increment": { "$ref": "#/$defs/Positive" },
+                    "nominal_overshoot": { "$ref": "#/$defs/NonNegative" },
+                    "pass_depths": {
+                      "type": "array",
+                      "items": { "$ref": "#/$defs/Positive" },
+                      "minItems": 1,
+                      "maxItems": 10000,
+                      "description": "Cumulative positive depths below stock surface; the final value is clamped to total_depth."
+                    },
+                    "final_pass_depth": { "$ref": "#/$defs/Positive" },
+                    "final_pass_stock": { "$ref": "#/$defs/NonNegative" },
+                    "final_pass_cut_through": { "$ref": "#/$defs/Positive" },
+                    "final_stock_fraction": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "recommendation_met": {
+                      "type": "boolean",
+                      "description": "True when at least one third of the final pass remains in stock. False is advisory and does not invalidate an explicit user constraint."
+                    }
+                  },
+                  "required": [
+                    "units", "mode", "stock_thickness", "cut_through",
+                    "total_depth", "pass_count", "depth_increment",
+                    "rounding_increment", "nominal_overshoot", "pass_depths",
+                    "final_pass_depth", "final_pass_stock",
+                    "final_pass_cut_through", "final_stock_fraction",
+                    "recommendation_met"
+                  ],
+                  "additionalProperties": false
+                },
                 "error": { "type": "null" }
               }
             },

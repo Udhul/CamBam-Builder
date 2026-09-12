@@ -178,7 +178,8 @@ class MCPProtocolTests(unittest.TestCase):
             "geometry_add_rectangle", "geometry_add_region", "geometry_add_text", "geometry_bake",
             "geometry_mirror", "geometry_rotate", "geometry_scale", "geometry_translate",
             "geometry_translate_z", "machining_add_drill", "machining_add_engrave",
-            "machining_add_pocket", "machining_add_profile", "machining_set_mop_targets",
+            "machining_add_pocket", "machining_add_profile",
+            "machining_calculate_depth_increment", "machining_set_mop_targets",
             "relationship_add_to_group", "relationship_copy_tree",
             "relationship_copy_tree_between",
             "relationship_remove_from_group", "relationship_set_parent",
@@ -199,6 +200,9 @@ class MCPProtocolTests(unittest.TestCase):
                               "idempotentHint": True, "destructiveHint": False},
             "document_save": {"openWorldHint": False, "readOnlyHint": False,
                               "idempotentHint": True, "destructiveHint": False},
+            "machining_calculate_depth_increment": {
+                "openWorldHint": False, "readOnlyHint": True,
+                "idempotentHint": True, "destructiveHint": False},
             "relationship_copy_tree_between": {
                 "openWorldHint": False, "readOnlyHint": False,
                 "idempotentHint": True, "destructiveHint": True},
@@ -227,6 +231,11 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertIn("before cutting that part loose", descriptions["machining_add_engrave"])
         self.assertIn("Circle centers", descriptions["machining_add_drill"])
         self.assertIn("before an Outside Profile", descriptions["machining_add_drill"])
+        self.assertIn("at least one third", descriptions["machining_calculate_depth_increment"])
+        planning = next(tool for tool in tools
+                        if tool["name"] == "machining_calculate_depth_increment")
+        self.assertTrue(planning["annotations"]["readOnlyHint"])
+        self.assertFalse(planning["annotations"]["destructiveHint"])
         self.assertEqual(listing["result"]["ttlMs"], 0)
         self.assertEqual(listing["result"]["cacheScope"], "private")
 
@@ -300,6 +309,9 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertIn("Never call document_save", initialized["result"]["instructions"])
         self.assertIn("Profile offsets inside/outside", initialized["result"]["instructions"])
         self.assertIn("Do not silently invent target depth", initialized["result"]["instructions"])
+        self.assertIn("use machining_calculate_depth_increment", initialized["result"]["instructions"])
+        self.assertIn("honor valid values explicitly requested by the user", initialized["result"]["instructions"])
+        self.assertIn("do not reject or silently replace", initialized["result"]["instructions"])
         self.assertIn("Recompute after clarifications", initialized["result"]["instructions"])
         self.assertIn("MOPs are appended within a Part", initialized["result"]["instructions"])
         self.assertIn("containing part last", initialized["result"]["instructions"])
@@ -317,7 +329,8 @@ class MCPProtocolTests(unittest.TestCase):
             "geometry_add_rectangle", "geometry_add_region", "geometry_add_text", "geometry_bake",
             "geometry_mirror", "geometry_rotate", "geometry_scale", "geometry_translate",
             "geometry_translate_z", "machining_add_drill", "machining_add_engrave",
-            "machining_add_pocket", "machining_add_profile", "machining_set_mop_targets",
+            "machining_add_pocket", "machining_add_profile",
+            "machining_calculate_depth_increment", "machining_set_mop_targets",
             "relationship_add_to_group", "relationship_copy_tree",
             "relationship_copy_tree_between",
             "relationship_remove_from_group", "relationship_set_parent",

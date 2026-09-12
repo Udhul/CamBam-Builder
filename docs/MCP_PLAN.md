@@ -177,6 +177,9 @@ execution; move to Sol high only for substantive interoperability defects.
 - Require agents to verify returned/inspected geometry against requested bounds,
   centers, dimensions and containment before CAM or export, and to ask rather than
   fabricate unspecified machining depths, feeds or spindle settings.
+- Use the read-only depth-increment planner for through-cuts when pass count or a
+  material/tool-safe maximum stepdown is known; verify its pass sequence and obtain
+  user confirmation before authoring the MOP.
 
 **Stopping condition:** isolated clean install, local stdio connection, protocol
 conformance, end-to-end client behavior and required user acceptance are recorded;

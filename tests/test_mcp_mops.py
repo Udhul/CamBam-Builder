@@ -432,6 +432,98 @@ class MopBreadthTests(unittest.TestCase):
 
         self.run_async(test)
 
+    def test_depth_increment_planner_balances_and_warns_on_heuristic_divergence(self):
+        async def test():
+            base = {
+                "workspace_id": self.service.workspace.id,
+                "units": "mm",
+                "stock_thickness": 9,
+                "cut_through": 0.5,
+            }
+            exact = await self.call("machining_calculate_depth_increment", {
+                **base, "pass_count": 3,
+            })
+            self.assertTrue(exact["ok"], exact)
+            self.assertIsNone(exact["document"])
+            self.assertEqual(exact["data"]["mode"], "pass_count")
+            self.assertEqual(exact["data"]["depth_increment"], 3.2)
+            self.assertEqual(exact["data"]["pass_depths"], [3.2, 6.4, 9.5])
+            self.assertAlmostEqual(exact["data"]["nominal_overshoot"], 0.1)
+            self.assertAlmostEqual(exact["data"]["final_pass_depth"], 3.1)
+            self.assertAlmostEqual(exact["data"]["final_pass_stock"], 2.6)
+            self.assertEqual(exact["data"]["final_pass_cut_through"], 0.5)
+            self.assertGreater(exact["data"]["final_stock_fraction"], 1 / 3)
+            self.assertTrue(exact["data"]["recommendation_met"])
+            self.assertFalse(exact["diagnostics"])
+
+            bounded = await self.call("machining_calculate_depth_increment", {
+                **base, "max_depth_increment": 3,
+            })
+            self.assertTrue(bounded["ok"], bounded)
+            self.assertEqual(bounded["data"]["mode"], "max_depth_increment")
+            self.assertEqual(bounded["data"]["pass_count"], 4)
+            self.assertEqual(bounded["data"]["depth_increment"], 2.4)
+            self.assertEqual(bounded["data"]["pass_depths"], [2.4, 4.8, 7.2, 9.5])
+            self.assertAlmostEqual(bounded["data"]["final_pass_stock"], 1.8)
+            self.assertTrue(bounded["data"]["recommendation_met"])
+
+            inches = await self.call("machining_calculate_depth_increment", {
+                **base, "units": "in", "stock_thickness": 0.354,
+                "cut_through": 0.02, "pass_count": 3,
+            })
+            self.assertTrue(inches["ok"], inches)
+            self.assertEqual(inches["data"]["rounding_increment"], 0.001)
+            self.assertEqual(inches["data"]["depth_increment"], 0.125)
+            self.assertEqual(inches["data"]["pass_depths"], [0.125, 0.25, 0.374])
+
+            low_engagement = await self.call("machining_calculate_depth_increment", {
+                **base, "pass_count": 19,
+            })
+            self.assertTrue(low_engagement["ok"], low_engagement)
+            self.assertEqual(low_engagement["data"]["depth_increment"], 0.5)
+            self.assertEqual(low_engagement["data"]["final_pass_stock"], 0)
+            self.assertFalse(low_engagement["data"]["recommendation_met"])
+            self.assertEqual(
+                {item["code"] for item in low_engagement["diagnostics"]},
+                {"DEPTH_ROUNDING_RELAXED", "FINAL_STOCK_ENGAGEMENT_LOW"},
+            )
+
+            shallow_maximum = await self.call("machining_calculate_depth_increment", {
+                **base, "max_depth_increment": 0.4,
+            })
+            self.assertTrue(shallow_maximum["ok"], shallow_maximum)
+            self.assertEqual(shallow_maximum["data"]["depth_increment"], 0.4)
+            self.assertFalse(shallow_maximum["data"]["recommendation_met"])
+            self.assertIn("FINAL_STOCK_ENGAGEMENT_LOW",
+                          {item["code"] for item in shallow_maximum["diagnostics"]})
+
+            coarse_rounding = await self.call("machining_calculate_depth_increment", {
+                **base, "pass_count": 3, "rounding_increment": 5,
+            })
+            self.assertTrue(coarse_rounding["ok"], coarse_rounding)
+            self.assertAlmostEqual(coarse_rounding["data"]["depth_increment"], 9.5 / 3)
+            self.assertIn("DEPTH_ROUNDING_RELAXED",
+                          {item["code"] for item in coarse_rounding["diagnostics"]})
+
+            for arguments, field in (
+                ({**base, "pass_count": 3, "max_depth_increment": 3.5}, None),
+                ({**base}, None),
+                ({**base, "stock_thickness": 1000000000,
+                  "cut_through": 1, "pass_count": 1}, "stock_thickness"),
+                ({**base, "pass_count": 3, "workspace_id": "0" * 64}, "workspace_id"),
+            ):
+                result = await self.call("machining_calculate_depth_increment", arguments)
+                self.assertFalse(result["ok"], (arguments, result))
+                self.assertEqual(result["error"]["code"],
+                                 "WORKSPACE_MISMATCH" if field == "workspace_id"
+                                 else "INVALID_ARGUMENT")
+                self.assertEqual(result["error"]["field"], field)
+
+            self.assertFalse(self.service.documents)
+            self.assertFalse(self.service.ledger)
+
+        self.run_async(test)
+
     def test_target_kind_rules_negatives_retries_and_atomic_failure(self):
         async def test():
             handle = await self.create()

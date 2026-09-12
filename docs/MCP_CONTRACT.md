@@ -1,7 +1,7 @@
 # Local MCP adapter contract
 
 Contract version 1, decided 2026-09-10 for backlog 4a. This is the authoritative
-implementation contract; all thirty-one version 1 document and authoring tools
+implementation contract; all thirty-two version 1 document, planning and authoring tools
 are implemented, including cross-document copy/transfer between two open
 documents (batch 5).
 Priority and delivery state live in [PROGRESS.md](PROGRESS.md), and increment boundaries in
@@ -401,6 +401,7 @@ or demonstrates a practical need to repair an existing sequence.
 | `machining_add_pocket` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], target_depth, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true}` | `add_pocket_mop(...)` with the pocket settings pinned in the schema record (stepover 0.4, `InsideOutsideOffsets` fill, Spiral lead-in, Roughing); return MOP UUID, part name and resolved targets. |
 | `machining_add_engrave` | Same closed record as Pocket (no side, no pocket-specific inputs) | `add_engrave_mop(...)` with Engrave settings pinned in the schema record (Roughing, final increment 0, DepthFirst, EndMill); return MOP UUID, part name and resolved targets. |
 | `machining_add_drill` | Pocket record plus `peck_distance?: NonNegative =0`, `retract_height?: Number =5`, `dwell?: NonNegative =0` | `add_drill_mop(...)` pinned to the CannedCycle method and a `Drill` tool profile; return MOP UUID, part name and resolved targets. |
+| `machining_calculate_depth_increment` | `Read + {units: "mm"|"in", stock_thickness: Positive, cut_through: Positive, exactly one of pass_count: integer 1..10000 or max_depth_increment: Positive, rounding_increment?: Positive}` | Pure planning calculation with no document handle or mutation. Upward rounding defaults to 0.1 mm or 0.001 in. Return the increment, actual clamped depths, nominal overshoot, final-pass depth/stock/cut-through, stock fraction and `recommendation_met`. A valid explicit constraint that misses the one-third recommendation is returned with diagnostics rather than rejected; the supplied maximum must already reflect material/tool safety. |
 | `machining_set_mop_targets` | `Write + {mop_id: UUID, targets: UUID[1..100]}` | Public `set_mop_targets`; atomically replaces the MOP's explicit target selection after the same per-kind target rules and slice checks; return MOP UUID and the project's UUID-sorted resolved targets. |
 | `relationship_set_parent` | `Write + {entity_id: UUID, parent_id: UUID\|null}` | Public `link_primitive_parent`; null detaches. Local transforms are kept, so the world pose follows the new frame; self links and cycles return `INVALID_ARGUMENT`, missing/non-primitive entities `ENTITY_NOT_FOUND`/`UNSUPPORTED_OPERATION`. Return the child UUID and the resulting parent UUID or null. |
 | `relationship_add_to_group` | `Write + {entity_id: UUID, group: Name}` | Public `add_primitive_to_group`; return the entity UUID and its sorted group names. |
@@ -468,7 +469,10 @@ a final pass that cuts only below the stock. The actual final pass is
 the bottom. For 9 mm stock with a 0.5 mm cut-through, `D=9.5`; three nominal passes at
 `I=3.2` produce actual depths 3.2, 6.4 and 9.5 mm, leaving 2.6 mm of stock plus 0.5 mm
 cut-through in the final 3.1 mm pass. This is a sequencing heuristic, not permission
-to exceed the safe stepdown or infer unknown stock/tool/material data. Pin other settings to the current
+to exceed the safe stepdown or infer unknown stock/tool/material data. A valid value
+explicitly requested by the user takes precedence: report any divergence as advisory
+diagnostics, but do not reject or silently substitute it solely because it misses this
+recommendation. Pin other settings to the current
 public defaults: Profile keeps `lead_in_type="None"` for this slice; Pocket
 pins Spiral lead-in, stepover 0.4, `InsideOutsideOffsets` fill, Roughing,
 finish stepover 0; Engrave pins Roughing, final increment 0, DepthFirst, EndMill;

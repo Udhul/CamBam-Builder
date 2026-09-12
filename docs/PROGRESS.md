@@ -28,8 +28,8 @@ artificially rejected Profile targets except Rects. The model-facing instruction
 make import/export plus client-local read/write the default, reserve open/save for
 explicit server-workspace use, and explain Profile/Pocket/Engrave/Drill by machining
 intent. Profile now accepts root Circle, closed-Pline and Region boundaries as well as
-Rect; schema errors identify their top-level field. The 57-test MCP suite and
-209-test full suite pass with the existing Windows symlink-privilege skip. Repeat
+Rect; schema errors identify their top-level field. The 58-test MCP suite and
+210-test full suite pass with the existing Windows symlink-privilege skip. Repeat
 OpenCode plus CamBam acceptance remains required before 4e completes.
 The next OpenCode attempt accepted the portable export/client-write workflow, closing
 that usability defect. It exposed a separate geometry-planning failure: one Pline
@@ -51,6 +51,14 @@ respect the material/tool stepdown limit, make nominal multiples slightly exceed
 depth, keep the penultimate pass above the stock bottom, and normally keep at least one
 third of the final pass engaged in stock. This avoids a separate below-stock cleanup
 pass without presenting the heuristic as a universally safe cutting parameter.
+The heuristic is now implemented as the read-only
+`machining_calculate_depth_increment` tool, bringing the advertised total to thirty-two.
+It accepts either an exact pass count or a maximum stepdown, uses unit-appropriate
+upward rounding, returns the complete clamped pass sequence and final engagement, and
+marks whether the plan retains the one-third final-stock fraction. A valid explicit
+constraint that diverges is returned with diagnostics rather than rejected or replaced.
+The tool deliberately does not infer material/tool limits; the caller supplies and
+confirms that constraint.
 
 **4d batch 5, cross-document copy/transfer: implemented and verified**
 (2026-09-11). The adapter advertises thirty-one version 1 tools after adding
