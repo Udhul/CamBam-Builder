@@ -431,7 +431,9 @@ class DocumentTests(unittest.TestCase):
         self.run_async(test)
 
     def test_schema_asset_and_strict_values(self):
-        self.assertEqual(CONTRACT, json.loads((Path(__file__).parents[1] / "docs/mcp_contract_v1.schema.json").read_text()))
+        schema_asset = Path(__file__).parents[1] / "cambam_builder/mcp_adapter/contract_v1.schema.json"
+        self.assertTrue(schema_asset.is_file())
+        self.assertEqual(CONTRACT, json.loads(schema_asset.read_text(encoding="utf-8")))
         async def test():
             for name in TOOLS:
                 for value in [None, [], {}, {"request_id": str(uuid4()), "workspace_id": "bad"}]:

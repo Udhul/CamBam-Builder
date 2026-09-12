@@ -319,10 +319,10 @@ visibility is promised; survival of sudden power loss is not.
 
 ## Tool schema conventions
 
-The [machine-readable schema](mcp_contract_v1.schema.json) owns field structure,
-required fields and bounds. Its packaged copy `mcp_adapter/contract_v1.schema.json`
-must remain identical (verified by regression); it makes installed wheels
-self-contained. Each tool has `<name>_input` and `<name>_output` in
+The [machine-readable schema](../cambam_builder/mcp_adapter/contract_v1.schema.json)
+owns field structure, required fields and bounds. It lives in the adapter package so
+installed wheels are self-contained; there is no separately maintained documentation
+copy. Each tool has `<name>_input` and `<name>_output` in
 `$defs`. Bundle the shared definitions into each advertised input/output schema.
 The tables below map those schemas to framework behavior. Implement strict typed
 models; do not coerce
@@ -455,9 +455,20 @@ and `clearance_plane > stock_surface`. New parts use enabled=true, zero stock
 dimensions, empty material, origin (0,0), and no spindle/tool override; no
 fabricated MDF/stock-size defaults. This is unspecified stock, not a
 zero-thickness machining recommendation. Explicit MOP parameters bypass
-framework inferred tool/feed/depth defaults. The agent must obtain unspecified
-target depth, depth increment, feeds and spindle speed from the user or established
-project data rather than invent machining values. Pin other settings to the current
+framework inferred tool/feed/depth defaults. The agent must not silently invent
+target depth, depth increment, feeds or spindle speed. It may offer a reasoned proposal
+from known stock, material and tool context, but must elicit user confirmation.
+
+For a through-cut, let `D = stock_surface - target_depth` be total requested depth,
+`S` be stock thickness, `n` the pass count and `I` the depth increment. First constrain
+`I` by the tool/material-safe stepdown. Then prefer `n*I > D` by a small margin and
+`(n-1)*I < S`, so a rounded multiple neither lands exactly at target depth nor leaves
+a final pass that cuts only below the stock. The actual final pass is
+`D-(n-1)*I`; normally at least one third of it should remain in stock before crossing
+the bottom. For 9 mm stock with a 0.5 mm cut-through, `D=9.5`; three nominal passes at
+`I=3.2` produce actual depths 3.2, 6.4 and 9.5 mm, leaving 2.6 mm of stock plus 0.5 mm
+cut-through in the final 3.1 mm pass. This is a sequencing heuristic, not permission
+to exceed the safe stepdown or infer unknown stock/tool/material data. Pin other settings to the current
 public defaults: Profile keeps `lead_in_type="None"` for this slice; Pocket
 pins Spiral lead-in, stepover 0.4, `InsideOutsideOffsets` fill, Roughing,
 finish stepover 0; Engrave pins Roughing, final increment 0, DepthFirst, EndMill;

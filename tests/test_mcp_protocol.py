@@ -299,10 +299,12 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertIn(self.workspace_id, initialized["result"]["instructions"])
         self.assertIn("Never call document_save", initialized["result"]["instructions"])
         self.assertIn("Profile offsets inside/outside", initialized["result"]["instructions"])
-        self.assertIn("Do not invent target depth", initialized["result"]["instructions"])
+        self.assertIn("Do not silently invent target depth", initialized["result"]["instructions"])
         self.assertIn("Recompute after clarifications", initialized["result"]["instructions"])
         self.assertIn("MOPs are appended within a Part", initialized["result"]["instructions"])
         self.assertIn("containing part last", initialized["result"]["instructions"])
+        self.assertIn("n*I slightly exceeds D", initialized["result"]["instructions"])
+        self.assertIn("at least one third", initialized["result"]["instructions"])
         self.assertEqual(
             initialized["result"]["_meta"]["cambam-builder/workspace"]["workspace_id"],
             self.workspace_id,

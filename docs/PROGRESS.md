@@ -44,6 +44,13 @@ corrected file still generates an inside path, its artifact or screenshot is nee
 to investigate a distinct CamBam interpretation defect. Generic containment checks
 and higher-level parametric polygon construction remain candidate future affordances,
 not requirements for this bounded 4e correction.
+The runtime package schema is now the single machine-readable contract owner; the
+redundant `docs/` copy was removed and documentation links target the packaged asset.
+Through-cut guidance now permits a contextual, user-confirmed depth-increment proposal:
+respect the material/tool stepdown limit, make nominal multiples slightly exceed total
+depth, keep the penultimate pass above the stock bottom, and normally keep at least one
+third of the final pass engaged in stock. This avoids a separate below-stock cleanup
+pass without presenting the heuristic as a universally safe cutting parameter.
 
 **4d batch 5, cross-document copy/transfer: implemented and verified**
 (2026-09-11). The adapter advertises thirty-one version 1 tools after adding
@@ -240,7 +247,7 @@ is exercised and passes.
 The authoring boundary subsequently advanced through the completed 4c slice.
 
 **MCP protocol/client/adapter contract: complete** (2026-09-10; backlog 4a).
-The [current contract guide](MCP_CONTRACT.md) and [twenty-nine tool schemas](mcp_contract_v1.schema.json)
+The [current contract guide](MCP_CONTRACT.md) and [twenty-nine tool schemas](../cambam_builder/mcp_adapter/contract_v1.schema.json)
 settle stdio MCP 2026-07-28, optional SDK 2.2.0/Python >=3.10, volatile explicit
 handles, revision/retry rules, workspace containment and new-file-only saves.
 SDK stdio direct-call/discovery probes passed. OpenCode 1.18.29's installed backend

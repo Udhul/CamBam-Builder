@@ -1338,7 +1338,7 @@ CLI/distribution work only for an actual user workflow.
 
 Backlog 4a is a contract/probe outcome, not an implemented adapter. The lasting
 decisions and first-slice acceptance are in [MCP_CONTRACT.md](MCP_CONTRACT.md),
-with [machine-readable input/output schemas](mcp_contract_v1.schema.json).
+with [machine-readable input/output schemas](../cambam_builder/mcp_adapter/contract_v1.schema.json).
 No runtime source, base dependency, installed client configuration or launcher
 was changed. Disposable scripts, environments, public-source snapshots and
 synthetic artifacts are under `output/mcp-contract-haugv1gu/`.
@@ -1638,8 +1638,9 @@ Pocket/Engrave/Drill, parenting/groups/copy-transfer and bake transforms stay
 explicitly unsupported with reopening criteria in
 [PROGRESS.md](PROGRESS.md#active-work-and-next-priority).
 
-Implemented contract surface (schema `docs/mcp_contract_v1.schema.json`, byte
-identical packaged copy, contract sections updated in the same increment):
+Implemented contract surface (now owned by the packaged schema
+`cambam_builder/mcp_adapter/contract_v1.schema.json`; contract sections were updated
+in the same increment):
 
 - Four new tools map only to public framework adders:
   `geometry_add_circle` (center/diameter/elevation), `geometry_add_arc`
@@ -2098,6 +2099,15 @@ description reinforces the relevant local consequence. Because depth and workhol
 determine whether an Outside Profile actually releases material, the server directs the
 agent to ask rather than infer when that intent is unclear.
 
+Follow-up clarified that a useful depth-increment proposal need not be a fabricated
+default. For a known stock thickness, cut-through allowance, material and tool, the
+instructions now tell the agent to respect the safe stepdown limit while selecting a
+pass count whose nominal increment multiples slightly exceed total depth. The
+penultimate pass must remain above the stock bottom, and normally at least one third of
+the final pass should remain engaged in stock before entering the cut-through allowance.
+The user must confirm the proposed parameter. The contract records the 9 mm stock,
+0.5 mm cut-through and 3.2 mm increment example and its actual clamped final pass.
+
 The underlying project API supports ordered reassignment, but contract v1 exposes no
 MOP reorder tool. That repair affordance remains a bounded follow-up, to be reopened if
 the next named-client run still misorders operations or needs to edit an existing file.
@@ -2113,8 +2123,8 @@ Verification on Python 3.13 with MCP 2.2.0:
 - Focused geometry/authoring/protocol verification: 20 passed.
 - MCP suite: 57 tests, 56 passed and the existing Windows symlink-privilege skip.
 - Full suite: 209 tests, 208 passed with the same skip.
-- The schema regression verifies that authoritative and packaged contract copies remain
-  byte-identical; `compileall` and `git diff --check` pass.
+- The packaged schema is now the single machine-readable contract owner; its asset test,
+  `compileall` and `git diff --check` pass.
 
 Generic closed-shape containment analysis and a higher-level regular-polygon constructor
 could further reduce model arithmetic, but are deferred as separate API affordances;

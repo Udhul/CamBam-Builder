@@ -3,7 +3,7 @@
 User-requested direction, captured 2026-09-07. This is a delivery plan,
 not an implemented API or installation guide. Priority/state belong exclusively
 to [PROGRESS.md](PROGRESS.md). The decided 4a design lives in the
-[MCP contract](MCP_CONTRACT.md), with [machine-readable schemas](mcp_contract_v1.schema.json).
+[MCP contract](MCP_CONTRACT.md), with its [machine-readable schemas](../cambam_builder/mcp_adapter/contract_v1.schema.json).
 
 ## Outcome and requirements
 

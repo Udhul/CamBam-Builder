@@ -594,9 +594,12 @@ filesystem tools or request client access to that directory.
 Circle and Pline creation results include their typed geometry. For any geometry
 calculated from a verbal dimension, bounding box, center, symmetry or containment
 constraint, compare those returned coordinates/bounds and a `document_inspect`
-snapshot with every requested constraint before creating MOPs. Obtain missing stock
-thickness/target depth, depth increment, feeds and spindle speed from the user; they
-are not safe geometric defaults.
+snapshot with every requested constraint before creating MOPs. Do not silently invent
+missing stock thickness, target depth, depth increment, feeds or spindle speed. A
+reasoned proposal may use known stock, material and tool context, but requires user
+confirmation. For a through-cut, choose a tool/material-safe increment whose nominal
+multiples slightly exceed total depth, whose penultimate pass remains above the stock
+bottom, and whose final pass normally spends at least one third of its depth in stock.
 
 Plan MOP creation order before calling the add tools because each operation appends
 to its Part. Verify the inspection order places enclosed/internal and non-releasing
