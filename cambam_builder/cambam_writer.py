@@ -110,7 +110,12 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
             for child in list(part_elem):
                 if child.tag not in {"Stock", "MachiningOrigin", "ToolDiameter"}:
                     part_elem.remove(child)
-            part_elem.extend(deepcopy(part._xml_machining_parameters))
+            for child in part._xml_machining_parameters:
+                if child.tag == "Nesting":
+                    nesting = getattr(part, "_xml_nesting", None)
+                    part_elem.append(deepcopy(nesting if nesting is not None else part_elem.find("Nesting")))
+                else:
+                    part_elem.append(deepcopy(child))
         if (hasattr(part, "_xml_tool_diameter_value")
                 and part.default_tool_diameter == part._xml_tool_diameter_value):
             insertion_index = 2  # After the modeled Stock and MachiningOrigin.

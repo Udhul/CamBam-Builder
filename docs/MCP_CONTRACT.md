@@ -1,7 +1,7 @@
 # Local MCP adapter contract
 
 Contract version 1, decided 2026-09-10 for backlog 4a. This is the authoritative
-implementation contract; all thirty-two version 1 document, planning and authoring tools
+implementation contract; all thirty-four version 1 document, planning and authoring tools
 are implemented, including cross-document copy/transfer between two open
 documents (batch 5).
 Priority and delivery state live in [PROGRESS.md](PROGRESS.md), and increment boundaries in
@@ -341,6 +341,7 @@ escaping/envelope overhead). All UUIDs use canonical lowercase hyphenated text.
 | `Path` | String 1..1024 characters satisfying the workspace path policy |
 | `Filename` | Client-facing leaf filename ending `.cb`, 4..255 characters, with no path separators or control characters |
 | `XmlContent` | Complete UTF-8 XML text; encoded bytes, not character count, are limited to 10 MiB |
+| `TextContent` | String 1..1024 characters with at least one non-whitespace character and no forbidden control characters; its regex stays within the portable no-lookaround subset used by OpenAI-backed tool-schema compilers |
 | `Number` | Finite JSON number; geometry/translation magnitude <=1e9 |
 | `Positive` | Finite JSON number >0 and <=1e9 |
 | `Read` | `{workspace_id: Workspace, document: Handle}` |
@@ -397,12 +398,14 @@ or demonstrates a practical need to repair an existing sequence.
 | `geometry_add_points` | `Write + {identifier: Name, layer: Name, points: PlainPoint[1..10000]}` where `PlainPoint` is `{x: Number, y: Number, z?: Number =0}` | `add_points(layer, points=[Vertex(...)], identifier=identifier)`; bulge input is rejected by the schema; return primitive UUID and layer name. |
 | `geometry_add_text` | `Write + {identifier: Name, layer: Name, text: TextContent 1..1024 non-whitespace-only, x: Number, y: Number, height?: Positive =10, font?: FontName ="Arial", style?: FontStyle ="", line_spacing?: Positive =1, align_horizontal?: "left"\|"center"\|"right" ="center", align_vertical?: "top"\|"center"\|"bottom" ="center", z?: Number =0}` | `add_text(layer, text, position=(x,y), height, font, style, line_spacing, align_horizontal, align_vertical, identifier, elevation=z)`; return primitive UUID and layer name. The optional unused `xml_p2_*` interchange fields are not authorable inputs. |
 | `geometry_add_region` | `Write + {identifier: Name, layer: Name, outer: {points: VertexPoint[2..10000]}, holes?: {points: VertexPoint[2..10000]}[0..100] =[]}` | Contours become closed `Pline` records; `add_region(layer, outer_curve=..., hole_curves=..., identifier=identifier)`; XY topology (closed, simple, nonzero area, contained disjoint holes) is validated by the framework and topology failures return `INVALID_ARGUMENT` with the bounded framework message; return primitive UUID and layer name. |
-| `machining_add_profile` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], side: "Inside" | "Outside", target_depth: Number, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true}` | `add_part` if absent, then `add_profile_mop(part, targets=..., identifier=identifier, name=identifier, profile_side=side, ...)`; return MOP UUID, part name, echoed side and resolved target UUIDs. |
+| `machining_add_profile` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], side: "Inside" | "Outside", target_depth: Number, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true, corner_overcut?: boolean =false}` | `add_part` if absent, then `add_profile_mop(part, targets=..., identifier=identifier, name=identifier, profile_side=side, corner_overcut=corner_overcut, ...)`; `corner_overcut` is a Profile-only CamBam option that overcuts inside corners for round tools and may remove extra adjacent-side material; return MOP UUID, part name, echoed side and resolved target UUIDs. |
 | `machining_add_pocket` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], target_depth, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true}` | `add_pocket_mop(...)` with the pocket settings pinned in the schema record (stepover 0.4, `InsideOutsideOffsets` fill, Spiral lead-in, Roughing); return MOP UUID, part name and resolved targets. |
 | `machining_add_engrave` | Same closed record as Pocket (no side, no pocket-specific inputs) | `add_engrave_mop(...)` with Engrave settings pinned in the schema record (Roughing, final increment 0, DepthFirst, EndMill); return MOP UUID, part name and resolved targets. |
 | `machining_add_drill` | Pocket record plus `peck_distance?: NonNegative =0`, `retract_height?: Number =5`, `dwell?: NonNegative =0` | `add_drill_mop(...)` pinned to the CannedCycle method and a `Drill` tool profile; return MOP UUID, part name and resolved targets. |
 | `machining_calculate_depth_increment` | `Read + {units: "mm"|"in", stock_thickness: Positive, cut_through: Positive, exactly one of pass_count: integer 1..10000 or max_depth_increment: Positive, rounding_increment?: Positive}` | Pure planning calculation with no document handle or mutation. Upward rounding defaults to 0.1 mm or 0.001 in. Return the increment, actual clamped depths, nominal overshoot, final-pass depth/stock/cut-through, stock fraction and `recommendation_met`. A valid explicit constraint that misses the one-third recommendation is returned with diagnostics rather than rejected; the supplied maximum must already reflect material/tool safety. |
+| `machining_configure_part` | `Write + {part: Name, stock_width/height/thickness: Positive, stock_material: Name, stock_color?: Name, nest_method?: None\|Grid\|IsoGrid, nest_rows/columns?: integer, nest_spacing?: NonNegative, grid_order?, grid_alternate?}` | Create or update the Part's stock definition and native CamBam nesting settings. Grid/IsoGrid repeats the whole Part's MOP sequence; it is distinct from copying geometry. |
 | `machining_set_mop_targets` | `Write + {mop_id: UUID, targets: UUID[1..100]}` | Public `set_mop_targets`; atomically replaces the MOP's explicit target selection after the same per-kind target rules and slice checks; return MOP UUID and the project's UUID-sorted resolved targets. |
+| `document_set_layer_properties` | `Write + {layer: Name, color?: Name, alpha?: 0..1, pen_width?: Positive, visible?: boolean, locked?: boolean}` | Create or update layer display properties. These are presentation settings and do not affect machining geometry or MOP semantics. |
 | `relationship_set_parent` | `Write + {entity_id: UUID, parent_id: UUID\|null}` | Public `link_primitive_parent`; null detaches. Local transforms are kept, so the world pose follows the new frame; self links and cycles return `INVALID_ARGUMENT`, missing/non-primitive entities `ENTITY_NOT_FOUND`/`UNSUPPORTED_OPERATION`. Return the child UUID and the resulting parent UUID or null. |
 | `relationship_add_to_group` | `Write + {entity_id: UUID, group: Name}` | Public `add_primitive_to_group`; return the entity UUID and its sorted group names. |
 | `relationship_remove_from_group` | `Write + {entity_id: UUID, group: Name}` | Public `remove_primitive_from_group`; return the entity UUID and its sorted remaining group names. |
@@ -492,9 +495,13 @@ integer, entities: EntityRecord[]}`. Enumerate layers in project order, parts in
 project order, primitives by UUID, MOPs in part/MOP order; concatenate in that order
 and paginate. Later pages should provide the first page's `expected_revision`.
 
-`EntityRecord` is a discriminated union: layers `{kind:"layer", name}`; parts
+`EntityRecord` is a discriminated union: layers `{kind:"layer", name, color, alpha,
+pen_width, visible, locked}`; parts
 `{kind:"part", name, enabled, stock_width, stock_height, stock_thickness,
-stock_material}`; primitives `{kind:"primitive", id, identifier: string|null,
+stock_material, stock_color, machining_origin, default_tool_diameter,
+default_spindle_speed, nest_method, nest_rows,
+nest_columns, nest_spacing, grid_order, grid_alternate}`; primitives
+`{kind:"primitive", id, identifier: string|null,
 type, layer, parent: UUID|null, children: UUID[], groups: string[], geometry:
 Geometry|null}`; MOPs `{kind:"mop", id, identifier: string|null, type, part,
 targets: UUID[], parameters}`. `geometry` is a closed typed record when the

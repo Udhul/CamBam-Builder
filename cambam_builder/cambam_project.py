@@ -605,6 +605,10 @@ class CamBamProject:
                  machining_origin: Tuple[float, float] = (0.0, 0.0),
                  default_tool_diameter: Optional[float] = None,
                  default_spindle_speed: Optional[int] = None,
+                 nesting_method: str = "None", nesting_rows: int = 1,
+                 nesting_columns: int = 1, nesting_spacing: float = 0.0,
+                 nesting_grid_order: str = "RightUp",
+                 nesting_grid_alternate: bool = False,
                  target_identifier: Optional[Identifiable] = None, place_last: bool = True) -> Optional[Part]:
         """Creates or updates a part and adds it to the project."""
         existing_uuid = self._resolve_identifier(identifier, Part)
@@ -620,6 +624,12 @@ class CamBamProject:
             part.machining_origin = machining_origin
             part.default_tool_diameter = default_tool_diameter
             part.default_spindle_speed = default_spindle_speed
+            part.nesting_method = nesting_method
+            part.nesting_rows = nesting_rows
+            part.nesting_columns = nesting_columns
+            part.nesting_spacing = nesting_spacing
+            part.nesting_grid_order = nesting_grid_order
+            part.nesting_grid_alternate = nesting_grid_alternate
             if part.internal_id not in self._part_order:
                  pos = self._find_insert_position(target_identifier, self._part_order, place_last)
                  self._part_order.insert(pos, part.internal_id)
@@ -628,7 +638,11 @@ class CamBamProject:
             new_part = Part(user_identifier=identifier, enabled=enabled, stock_thickness=stock_thickness,
                             stock_width=stock_width, stock_height=stock_height, stock_material=stock_material,
                             stock_color=stock_color, machining_origin=machining_origin,
-                            default_tool_diameter=default_tool_diameter, default_spindle_speed=default_spindle_speed)
+                            default_tool_diameter=default_tool_diameter, default_spindle_speed=default_spindle_speed,
+                            nesting_method=nesting_method, nesting_rows=nesting_rows,
+                            nesting_columns=nesting_columns, nesting_spacing=nesting_spacing,
+                            nesting_grid_order=nesting_grid_order,
+                            nesting_grid_alternate=nesting_grid_alternate)
             if not self._register_entity(new_part, self._parts):
                 return None
             pos = self._find_insert_position(target_identifier, self._part_order, place_last)
@@ -793,8 +807,11 @@ class CamBamProject:
     # --- Public API: Concrete MOP Adders ---
 
     def add_profile_mop(self, part: Identifiable, targets: Sequence[Identifiable] = (), name: str = 'Profile',
-                        identifier: Optional[str] = None, target_mop: Optional[Identifiable] = None, place_last: bool = True, *, target_group: Optional[str] = None, **kwargs) -> Optional[ProfileMop]:
-        return self._add_mop_internal(ProfileMop, part, targets, name, identifier, target_mop, place_last, target_group=target_group, **kwargs) # type: ignore
+                        identifier: Optional[str] = None, target_mop: Optional[Identifiable] = None, place_last: bool = True, *, target_group: Optional[str] = None, corner_overcut: bool = False, **kwargs) -> Optional[ProfileMop]:
+        """Add a Profile MOP, optionally overcutting inside corners for round tools."""
+        return self._add_mop_internal(
+            ProfileMop, part, targets, name, identifier, target_mop, place_last,
+            target_group=target_group, corner_overcut=corner_overcut, **kwargs) # type: ignore
 
     def add_pocket_mop(self, part: Identifiable, targets: Sequence[Identifiable] = (), name: str = 'Pocket',
                        identifier: Optional[str] = None, target_mop: Optional[Identifiable] = None, place_last: bool = True, *, target_group: Optional[str] = None, **kwargs) -> Optional[PocketMop]:

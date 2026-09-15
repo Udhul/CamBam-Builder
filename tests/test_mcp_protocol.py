@@ -173,13 +173,13 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertEqual([tool["name"] for tool in tools], sorted(tool["name"] for tool in tools))
         self.assertEqual([tool["name"] for tool in tools], [
             "document_close", "document_create", "document_export", "document_import",
-            "document_inspect", "document_open", "document_save",
+            "document_inspect", "document_open", "document_save", "document_set_layer_properties",
             "geometry_add_arc", "geometry_add_circle", "geometry_add_pline", "geometry_add_points",
             "geometry_add_rectangle", "geometry_add_region", "geometry_add_text", "geometry_bake",
             "geometry_mirror", "geometry_rotate", "geometry_scale", "geometry_translate",
             "geometry_translate_z", "machining_add_drill", "machining_add_engrave",
             "machining_add_pocket", "machining_add_profile",
-            "machining_calculate_depth_increment", "machining_set_mop_targets",
+            "machining_calculate_depth_increment", "machining_configure_part", "machining_set_mop_targets",
             "relationship_add_to_group", "relationship_copy_tree",
             "relationship_copy_tree_between",
             "relationship_remove_from_group", "relationship_set_parent",
@@ -220,10 +220,14 @@ class MCPProtocolTests(unittest.TestCase):
             self.assertEqual(tool["annotations"], expected_annotations[tool["name"]])
         descriptions = {tool["name"]: tool["description"] for tool in tools}
         self.assertIn("Default delivery", descriptions["document_export"])
+        self.assertIn("omit request_id", descriptions["document_export"])
+        self.assertIn("omit request_id", descriptions["document_inspect"])
         self.assertIn("client's own file-write tool", descriptions["document_save"])
         self.assertIn("absolute center", descriptions["geometry_add_circle"])
+        self.assertIn("identifier and layer must be different", descriptions["geometry_add_pline"])
         self.assertIn("lies to the right", descriptions["geometry_add_pline"])
         self.assertIn("finished exterior part edge", descriptions["machining_add_profile"])
+        self.assertIn("corner_overcut=true", descriptions["machining_add_profile"])
         self.assertIn("create that cutout last", descriptions["machining_add_profile"])
         self.assertIn("loose slug", descriptions["machining_add_pocket"])
         self.assertIn("before an Outside Profile", descriptions["machining_add_pocket"])
@@ -232,6 +236,8 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertIn("Circle centers", descriptions["machining_add_drill"])
         self.assertIn("before an Outside Profile", descriptions["machining_add_drill"])
         self.assertIn("at least one third", descriptions["machining_calculate_depth_increment"])
+        self.assertIn("display properties", descriptions["document_set_layer_properties"])
+        self.assertIn("native CamBam nesting", descriptions["machining_configure_part"])
         planning = next(tool for tool in tools
                         if tool["name"] == "machining_calculate_depth_increment")
         self.assertTrue(planning["annotations"]["readOnlyHint"])
@@ -252,6 +258,17 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertFalse(invalid_uuid["ok"])
         self.assertEqual(invalid_uuid["error"]["code"], "INVALID_ARGUMENT")
         self.assertEqual(invalid_uuid["error"]["field"], "request_id")
+
+        invalid_export = self.call(5, "document_export", {
+            "workspace_id": self.workspace_id,
+            "document": structured["document"],
+            "expected_revision": 0,
+            "suggested_filename": "unexpected-request-id.cb",
+            "request_id": str(uuid.uuid4()),
+        })["result"]["structuredContent"]
+        self.assertFalse(invalid_export["ok"])
+        self.assertEqual(invalid_export["error"]["code"], "INVALID_ARGUMENT")
+        self.assertEqual(invalid_export["error"]["field"], "request_id")
 
     def test_missing_metadata_and_legacy_initialize_are_rejected(self):
         first_ping = self.server.request(
@@ -315,6 +332,8 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertIn("Recompute after clarifications", initialized["result"]["instructions"])
         self.assertIn("MOPs are appended within a Part", initialized["result"]["instructions"])
         self.assertIn("containing part last", initialized["result"]["instructions"])
+        self.assertIn("machining_configure_part", initialized["result"]["instructions"])
+        self.assertIn("document_set_layer_properties", initialized["result"]["instructions"])
         self.assertIn("n*I slightly exceeds D", initialized["result"]["instructions"])
         self.assertIn("at least one third", initialized["result"]["instructions"])
         self.assertEqual(
@@ -324,13 +343,13 @@ class MCPProtocolTests(unittest.TestCase):
         listing = self.server.request({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         self.assertEqual([tool["name"] for tool in listing["result"]["tools"]], [
             "document_close", "document_create", "document_export", "document_import",
-            "document_inspect", "document_open", "document_save",
+            "document_inspect", "document_open", "document_save", "document_set_layer_properties",
             "geometry_add_arc", "geometry_add_circle", "geometry_add_pline", "geometry_add_points",
             "geometry_add_rectangle", "geometry_add_region", "geometry_add_text", "geometry_bake",
             "geometry_mirror", "geometry_rotate", "geometry_scale", "geometry_translate",
             "geometry_translate_z", "machining_add_drill", "machining_add_engrave",
             "machining_add_pocket", "machining_add_profile",
-            "machining_calculate_depth_increment", "machining_set_mop_targets",
+            "machining_calculate_depth_increment", "machining_configure_part", "machining_set_mop_targets",
             "relationship_add_to_group", "relationship_copy_tree",
             "relationship_copy_tree_between",
             "relationship_remove_from_group", "relationship_set_parent",

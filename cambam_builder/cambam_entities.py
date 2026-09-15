@@ -308,6 +308,12 @@ class Part(CamBamEntity):
     machining_origin: Tuple[float, float] = (0.0, 0.0) # XY offset
     default_tool_diameter: Optional[float] = None
     default_spindle_speed: Optional[int] = None
+    nesting_method: str = "None"
+    nesting_rows: int = 1
+    nesting_columns: int = 1
+    nesting_spacing: float = 0.0
+    nesting_grid_order: str = "RightUp"
+    nesting_grid_alternate: bool = False
     # Note: No mop_ids or _xml_machineops_element here. Managed by Project.
 
     def to_xml_element(self) -> ET.Element:
@@ -343,7 +349,12 @@ class Part(CamBamEntity):
         ET.SubElement(part_elem, "ToolProfile").text = "EndMill" # Default, can be overridden by MOPs
         nesting = ET.SubElement(part_elem, "Nesting")
         ET.SubElement(nesting, "BasePoint").text = "0,0"
-        ET.SubElement(nesting, "NestMethod").text = "None"
+        ET.SubElement(nesting, "NestMethod").text = self.nesting_method
+        ET.SubElement(nesting, "Rows").text = str(self.nesting_rows)
+        ET.SubElement(nesting, "Columns").text = str(self.nesting_columns)
+        ET.SubElement(nesting, "Spacing").text = str(self.nesting_spacing)
+        ET.SubElement(nesting, "GridOrder").text = self.nesting_grid_order
+        ET.SubElement(nesting, "GridDirectionAlternate").text = str(self.nesting_grid_alternate).lower()
 
         return part_elem
 
@@ -2068,6 +2079,8 @@ class ProfileMop(Mop):
     profile_side: str = 'Inside' # 'Inside', 'Outside'
     milling_direction: str = 'Conventional' # 'Conventional', 'Climb'
     collision_detection: bool = True
+    # Allow CamBam to overcut inside corners for round tools; may remove
+    # additional material along adjacent sides.
     corner_overcut: bool = False
     lead_in_type: str = 'Spiral' # 'None', 'Spiral', 'Tangent', 'Ramp'
     lead_in_spiral_angle: float = 30.0

@@ -2133,10 +2133,72 @@ Verification on Python 3.13 with MCP 2.2.0:
 - The packaged schema is now the single machine-readable contract owner; its asset test,
   `compileall` and `git diff --check` pass.
 
+### Part stock, native nesting and layer settings follow-up — 2026-09-12
+
+The next named-client transcript showed that the MCP surface had no operation for
+configuring a Part after an MOP implicitly created it, so exported stock stayed
+zero/undefined. It also had no native nesting settings: the client copied nine
+geometries instead of asking CamBam to repeat one Part's complete MOP sequence. The
+core `Part` model now writes and reads `NestMethod`, `Rows`, `Columns`, `Spacing`,
+`GridOrder` and `GridDirectionAlternate`; imported native nesting subtrees are
+preserved in ordering until explicitly reconfigured. The new
+`machining_configure_part` MCP tool sets stock dimensions/material/color, machining
+origin, defaults and Grid/IsoGrid settings. `document_inspect` echoes these values.
+Layer display properties are similarly exposed through
+`document_set_layer_properties` and inspection; this is a general capability, not a
+claim that the cited request asked for white layers.
+
+Verification: focused MCP/authoring/protocol/context checks 20 passed; full suite
+211 passed with the existing Windows symlink-privilege skip. Named OpenCode and
+CamBam acceptance must still confirm that CamBam generates the requested native
+3x3 nested toolpaths and interprets the stock dimensions as intended.
+
 Generic closed-shape containment analysis and a higher-level regular-polygon constructor
 could further reduce model arithmetic, but are deferred as separate API affordances;
 the current increment first makes existing tools self-describing and their actual output
 immediately auditable.
+
+### OpenCode error transcript audit — 2026-09-12
+
+The next OpenCode 1.18.30 transcript contained 17 tool calls. Fifteen completed on
+their first attempt; the two failures were bounded client-input mistakes, not a
+transport or dispatch mismatch. The first `geometry_add_pline` call used the same
+`identifier` and newly-created `layer` name (`Octagon`), correctly returning
+`IDENTIFIER_CONFLICT`; the retry used `OctagonOutline` and succeeded. The first
+`document_export` call supplied an extra `request_id`, while export is intentionally
+read-only and has no request ledger; it returned `INVALID_ARGUMENT`, after which the
+client omitted that field and succeeded. The export artifact was then written locally
+and its SHA-256 verified.
+
+The strict contract is retained. Geometry tool descriptions and initialization now
+state that a new primitive identifier must differ from its layer name, and the export
+description explicitly says to omit `request_id`. Schema validation also reports the
+unexpected/missing top-level field when JSON Schema rejects an object-level property,
+making future client retries actionable. This audit does not establish a protocol,
+stdio framing, or server-workspace boundary defect; a fresh OpenCode run remains the
+named-agent acceptance required by 4e.
+
+### OpenAI tool-schema compatibility — 2026-09-15
+
+An OpenAI-backed OpenCode run failed before any MCP session because the shared
+`TextContent` definition used the positive-lookahead pattern `(?=\S)`. The model
+provider reported that regex lookaround is unsupported while compiling the tool
+schemas. The pattern was rewritten as an anchored expression with an explicit
+non-whitespace character and no lookaround; it still permits ordinary whitespace
+around text, preserves the existing control-character exclusion, and rejects
+whitespace-only values. A maintained schema test now scans every packaged pattern
+for lookaround syntax. This is a provider schema-compatibility fix, not a change to
+MCP transport or tool behavior.
+
+### Profile corner overcut exposure — 2026-09-15
+
+The framework already modeled CamBam's Profile-only `CornerOvercut` XML field,
+including import and export. The public `add_profile_mop` signature now exposes
+the boolean directly, and the MCP profile tool accepts and reports it through
+the typed inspection record. The default remains `false`; enabling it delegates
+the actual toolpath calculation to CamBam and is documented as potentially
+removing extra material beside inside corners. No synthetic equivalent was added
+to Pocket, Engrave or Drill because their native XML has no such field.
 
 ## MCP local stdio installation and client acceptance preparation - 2026-09-11
 

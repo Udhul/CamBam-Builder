@@ -5,6 +5,7 @@ from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR
 import hashlib
 import json
 import math
+import re
 from uuid import UUID, uuid4
 
 import anyio
@@ -69,6 +70,8 @@ class DocumentService:
         "geometry_rotate", "geometry_scale", "geometry_mirror", "geometry_bake",
         "machining_add_profile", "machining_add_pocket", "machining_add_engrave",
         "machining_add_drill", "machining_set_mop_targets",
+        "machining_configure_part",
+        "document_set_layer_properties",
         "relationship_set_parent", "relationship_add_to_group",
         "relationship_remove_from_group", "relationship_copy_tree",
         "relationship_copy_tree_between", "relationship_transfer_tree_between",
@@ -122,6 +125,19 @@ class DocumentService:
             result.append({"code": "INTERCHANGE_LIMITED", "message": "Unsupported XML metadata has no preservation guarantee."})
         return result
 
+    @staticmethod
+    def _validation_field(exc):
+        """Return the most useful top-level input field from a schema failure."""
+        path = list(exc.absolute_path)
+        if path:
+            return str(path[0])
+        message = getattr(exc, "message", "")
+        if getattr(exc, "validator", None) in {"additionalProperties", "required"}:
+            match = re.search(r"'([^']+)'", message)
+            if match:
+                return match.group(1)
+        return None
+
     async def call_tool(self, name, arguments):
         if name not in TOOLS:
             raise ValueError("Unknown tool")
@@ -134,10 +150,9 @@ class DocumentService:
                 validation_error = None
             except ValidationError as exc:
                 validated = copy.deepcopy(args)
-                path = list(exc.absolute_path)
                 validation_error = DomainError(
                     "INVALID_ARGUMENT", "Arguments do not match the tool schema",
-                    str(path[0]) if path else None,
+                    self._validation_field(exc),
                 )
             except (TypeError, ValueError, OverflowError):
                 validated = copy.deepcopy(args)
@@ -811,7 +826,54 @@ class DocumentService:
 
     def _stage_edit(self, name, args, project):
         staged = project.clone()
-        if name == "geometry_add_rectangle":
+        if name == "document_set_layer_properties":
+            existing_layer = staged.get_layer(args["layer"])
+            layer = staged.add_layer(
+                args["layer"],
+                color=args.get("color", existing_layer.color if existing_layer else "Green"),
+                alpha=args.get("alpha", existing_layer.alpha if existing_layer else 1.0),
+                pen_width=args.get("pen_width", existing_layer.pen_width if existing_layer else 1.0),
+                visible=args.get("visible", existing_layer.visible if existing_layer else True),
+                locked=args.get("locked", existing_layer.locked if existing_layer else False),
+            )
+            if layer is None:
+                raise DomainError("INTERNAL_ERROR", "Framework rejected layer configuration")
+            data = {"layer": layer.user_identifier, "color": layer.color,
+                    "alpha": layer.alpha, "pen_width": layer.pen_width,
+                    "visible": layer.visible, "locked": layer.locked}
+        elif name == "machining_configure_part":
+            part = staged.add_part(
+                args["part"], enabled=args["enabled"],
+                stock_thickness=args["stock_thickness"],
+                stock_width=args["stock_width"], stock_height=args["stock_height"],
+                stock_material=args["stock_material"], stock_color=args["stock_color"],
+                machining_origin=(args["machining_origin_x"], args["machining_origin_y"]),
+                default_tool_diameter=args.get("default_tool_diameter"),
+                default_spindle_speed=args.get("default_spindle_speed"),
+                nesting_method=args["nest_method"], nesting_rows=args["nest_rows"],
+                nesting_columns=args["nest_columns"], nesting_spacing=args["nest_spacing"],
+                nesting_grid_order=args["grid_order"],
+                nesting_grid_alternate=args["grid_alternate"],
+            )
+            if part is None:
+                raise DomainError("INTERNAL_ERROR", "Framework rejected part configuration")
+            # An explicit MCP configuration supersedes any preserved native
+            # nesting subtree imported from the source file.
+            if hasattr(part, "_xml_nesting"):
+                delattr(part, "_xml_nesting")
+            data = {"part": part.user_identifier, "enabled": part.enabled,
+                    "stock_width": part.stock_width, "stock_height": part.stock_height,
+                    "stock_thickness": part.stock_thickness, "stock_material": part.stock_material,
+                    "stock_color": part.stock_color,
+                    "machining_origin_x": part.machining_origin[0],
+                    "machining_origin_y": part.machining_origin[1],
+                    "default_tool_diameter": part.default_tool_diameter,
+                    "default_spindle_speed": part.default_spindle_speed,
+                    "nest_method": part.nesting_method, "nest_rows": part.nesting_rows,
+                    "nest_columns": part.nesting_columns, "nest_spacing": part.nesting_spacing,
+                    "grid_order": part.nesting_grid_order,
+                    "grid_alternate": part.nesting_grid_alternate}
+        elif name == "geometry_add_rectangle":
             self._identifier_available(staged, args["identifier"], "identifier")
             self._check_new_layer_name(staged, args)
             rectangle = staged.add_rect(
@@ -1033,7 +1095,7 @@ class DocumentService:
                 plunge_feedrate=args["plunge_feedrate"], cut_feedrate=args["cut_feedrate"],
                 max_crossover_distance=0.7, custom_mop_header="", custom_mop_footer="",
                 stepover=0.4, profile_side=args["side"], milling_direction="Conventional",
-                collision_detection=True, corner_overcut=False, lead_in_type="None",
+                collision_detection=True, corner_overcut=args["corner_overcut"], lead_in_type="None",
                 lead_in_spiral_angle=30.0, final_depth_increment=0.0,
                 cut_ordering="DepthFirst", tab_method="None", tab_width=6.0,
                 tab_height=1.5, tab_min_tabs=3, tab_max_tabs=3, tab_distance=40.0,
@@ -1370,7 +1432,7 @@ class DocumentService:
                 "work_plane": "XY", "tool_profile": "EndMill", "spindle_direction": "CW",
                 "velocity_mode": "ExactStop", "milling_direction": "Conventional",
                 "roughing_clearance": 0.0, "stepover": 0.4, "tool_number": 0,
-                "collision_detection": True, "corner_overcut": False,
+                "collision_detection": True,
                 "final_depth_increment": 0.0, "cut_ordering": "DepthFirst",
                 "lead_in_type": "None", "tab_method": "None",
                 "custom_mop_header": "", "custom_mop_footer": "",
@@ -1516,10 +1578,21 @@ class DocumentService:
 
     def _inspect(self, document, args):
         project = document.project
-        records = [{"kind": "layer", "name": layer.user_identifier} for layer in project.list_layers()]
+        records = [{"kind": "layer", "name": layer.user_identifier, "color": layer.color,
+                    "alpha": layer.alpha, "pen_width": layer.pen_width,
+                    "visible": layer.visible, "locked": layer.locked}
+                   for layer in project.list_layers()]
         records.extend({"kind": "part", "name": part.user_identifier, "enabled": part.enabled,
                         "stock_width": part.stock_width, "stock_height": part.stock_height,
-                        "stock_thickness": part.stock_thickness, "stock_material": part.stock_material}
+                        "stock_thickness": part.stock_thickness, "stock_material": part.stock_material,
+                        "stock_color": part.stock_color,
+                        "machining_origin": list(part.machining_origin),
+                        "default_tool_diameter": part.default_tool_diameter,
+                        "default_spindle_speed": part.default_spindle_speed,
+                        "nest_method": part.nesting_method, "nest_rows": part.nesting_rows,
+                        "nest_columns": part.nesting_columns, "nest_spacing": part.nesting_spacing,
+                        "grid_order": part.nesting_grid_order,
+                        "grid_alternate": part.nesting_grid_alternate}
                        for part in project.list_parts())
         for primitive in project.list_primitives():
             parent = project.get_parent_of_primitive(primitive)

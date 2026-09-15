@@ -23,6 +23,7 @@ class MopParameterTests(unittest.TestCase):
         mops = [
             project.add_profile_mop(part, targets=[target], identifier="profile",
                                     target_depth=-1.25, stepover=0.2,
+                                    corner_overcut=True,
                                     custom_mop_header="  G0 X0\n",
                                     tab_method="Automatic", tab_style="Triangle"),
             project.add_pocket_mop(part, targets=[target], identifier="pocket",
@@ -64,6 +65,7 @@ class MopParameterTests(unittest.TestCase):
             self.assertEqual(-99.5, loaded.get_mop("profile").target_depth)
             self.assertEqual("Default", loaded.get_mop("profile")._xml_parameter_states["target_depth"])
             self.assertEqual("Triangle", loaded.get_mop("profile").tab_style)
+            self.assertTrue(loaded.get_mop("profile").corner_overcut)
             self.assertEqual("  G0 X0\n", loaded.get_mop("profile").custom_mop_header)
             self.assertEqual("HorizontalScanline", loaded.get_mop("pocket").region_fill_style)
             self.assertEqual("LevelFirst", loaded.get_mop("engrave").cut_ordering)
@@ -72,6 +74,8 @@ class MopParameterTests(unittest.TestCase):
             second = self.save(loaded, directory, "second")
             round_trip = ET.parse(second)
             profile = self.mop(round_trip, "profile")
+            self.assertEqual("Value", profile.find("CornerOvercut").get("state"))
+            self.assertEqual("true", profile.findtext("CornerOvercut"))
             self.assertEqual("retained", profile.findtext("NativeExtension"))
             self.assertEqual("keep", profile.findtext("LeadOutMove/NativeLeadOutField"))
             self.assertEqual("Default", profile.find("TargetDepth").get("state"))

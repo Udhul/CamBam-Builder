@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:cambam-builder:mcp-contract:1",
   "title": "MCP adapter v1 tool contracts",
-  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All thirty-two version 1 document, planning and authoring tools are implemented, including cross-document copy/transfer between two open documents; typed detail covers the seven supported primitive kinds and the four supported MOP kinds within the similarity slice, while non-similarity transforms and relationships stay diagnostic.",
+  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All thirty-four version 1 document, planning and authoring tools are implemented, including explicit layer/part settings and native part nesting; typed detail covers the seven supported primitive kinds and the four supported MOP kinds within the similarity slice, while non-similarity transforms and relationships stay diagnostic.",
   "$defs": {
     "UUID": {
       "type": "string",
@@ -132,7 +132,7 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 1024,
-      "pattern": "^(?=.*\\S)[^\\x00-\\x09\\x0b-\\x1f\\x7f]+$"
+      "pattern": "^[^\\x00-\\x09\\x0b-\\x1f\\x7f]*[^\\s\\x00-\\x1f\\x7f][^\\x00-\\x09\\x0b-\\x1f\\x7f]*$"
     },
     "FontName": {
       "type": "string",
@@ -170,6 +170,41 @@
         "boot_id": { "$ref": "#/$defs/UUID" }
       },
       "required": ["schema_version", "workspace_id", "boot_id"],
+      "additionalProperties": false
+    },
+    "LayerSettings": {
+      "type": "object",
+      "properties": {
+        "layer": { "$ref": "#/$defs/Name" }, "color": { "$ref": "#/$defs/Name" },
+        "alpha": { "type": "number", "minimum": 0, "maximum": 1 },
+        "pen_width": { "$ref": "#/$defs/Positive" },
+        "visible": { "type": "boolean" }, "locked": { "type": "boolean" }
+      },
+      "required": ["layer", "color", "alpha", "pen_width", "visible", "locked"],
+      "additionalProperties": false
+    },
+    "PartSettings": {
+      "type": "object",
+      "properties": {
+        "part": { "$ref": "#/$defs/Name" },
+        "enabled": { "type": "boolean" },
+        "stock_width": { "$ref": "#/$defs/Positive" },
+        "stock_height": { "$ref": "#/$defs/Positive" },
+        "stock_thickness": { "$ref": "#/$defs/Positive" },
+        "stock_material": { "$ref": "#/$defs/Name" },
+        "stock_color": { "$ref": "#/$defs/Name" },
+        "machining_origin_x": { "$ref": "#/$defs/Number" },
+        "machining_origin_y": { "$ref": "#/$defs/Number" },
+        "default_tool_diameter": { "anyOf": [{ "$ref": "#/$defs/Positive" }, { "type": "null" }] },
+        "default_spindle_speed": { "anyOf": [{ "type": "integer", "minimum": 1, "maximum": 1000000 }, { "type": "null" }] },
+        "nest_method": { "type": "string", "enum": ["None", "Grid", "IsoGrid"] },
+        "nest_rows": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "nest_columns": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "nest_spacing": { "$ref": "#/$defs/NonNegative" },
+        "grid_order": { "type": "string", "enum": ["RightUp", "RightDown", "LeftUp", "LeftDown"] },
+        "grid_alternate": { "type": "boolean" }
+      },
+      "required": ["part", "enabled", "stock_width", "stock_height", "stock_thickness", "stock_material", "stock_color", "machining_origin_x", "machining_origin_y", "default_tool_diameter", "default_spindle_speed", "nest_method", "nest_rows", "nest_columns", "nest_spacing", "grid_order", "grid_alternate"],
       "additionalProperties": false
     },
     "DocumentSummary": {
@@ -400,7 +435,8 @@
           "const": true
         },
         "corner_overcut": {
-          "const": false
+          "type": "boolean",
+          "description": "Profile-only CamBam option: overcut inside corners for a round tool; may remove extra material along adjacent sides."
         },
         "final_depth_increment": {
           "const": 0
@@ -773,11 +809,15 @@
             },
             "name": {
               "type": "string"
-            }
+            },
+            "color": { "$ref": "#/$defs/Name" },
+            "alpha": { "type": "number", "minimum": 0, "maximum": 1 },
+            "pen_width": { "$ref": "#/$defs/Positive" },
+            "visible": { "type": "boolean" },
+            "locked": { "type": "boolean" }
           },
           "required": [
-            "kind",
-            "name"
+            "kind", "name", "color", "alpha", "pen_width", "visible", "locked"
           ],
           "additionalProperties": false
         },
@@ -804,7 +844,17 @@
             },
             "stock_material": {
               "type": "string"
-            }
+            },
+            "stock_color": { "$ref": "#/$defs/Name" },
+            "machining_origin": { "type": "array", "items": { "$ref": "#/$defs/Number" }, "minItems": 2, "maxItems": 2 },
+            "default_tool_diameter": { "anyOf": [{ "$ref": "#/$defs/Positive" }, { "type": "null" }] },
+            "default_spindle_speed": { "anyOf": [{ "type": "integer", "minimum": 1, "maximum": 1000000 }, { "type": "null" }] },
+            "nest_method": { "type": "string", "enum": ["None", "Grid", "IsoGrid"] },
+            "nest_rows": { "type": "integer", "minimum": 1, "maximum": 1000 },
+            "nest_columns": { "type": "integer", "minimum": 1, "maximum": 1000 },
+            "nest_spacing": { "$ref": "#/$defs/NonNegative" },
+            "grid_order": { "type": "string", "enum": ["RightUp", "RightDown", "LeftUp", "LeftDown"] },
+            "grid_alternate": { "type": "boolean" }
           },
           "required": [
             "kind",
@@ -813,7 +863,9 @@
             "stock_width",
             "stock_height",
             "stock_thickness",
-            "stock_material"
+            "stock_material", "stock_color", "machining_origin", "default_tool_diameter",
+            "default_spindle_speed", "nest_method",
+            "nest_rows", "nest_columns", "nest_spacing", "grid_order", "grid_alternate"
           ],
           "additionalProperties": false
         },
@@ -2463,6 +2515,11 @@
         "enabled": {
           "type": "boolean",
           "default": true
+        },
+        "corner_overcut": {
+          "type": "boolean",
+          "default": false,
+          "description": "Profile-only CamBam option: overcut inside corners for a round tool; may remove extra material along adjacent sides."
         }
       },
       "required": [
@@ -4363,6 +4420,69 @@
             }
           ]
         }
+      ]
+    },
+    "document_set_layer_properties_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": { "$ref": "#/$defs/Workspace" },
+        "document": { "$ref": "#/$defs/Handle" },
+        "expected_revision": { "$ref": "#/$defs/Revision" },
+        "request_id": { "$ref": "#/$defs/UUID" },
+        "layer": { "$ref": "#/$defs/Name" },
+        "color": { "$ref": "#/$defs/Name" },
+        "alpha": { "type": "number", "minimum": 0, "maximum": 1 },
+        "pen_width": { "$ref": "#/$defs/Positive" },
+        "visible": { "type": "boolean" },
+        "locked": { "type": "boolean" }
+      },
+      "required": ["workspace_id", "document", "expected_revision", "request_id", "layer"],
+      "additionalProperties": false
+    },
+    "document_set_layer_properties_output": {
+      "allOf": [
+        { "$ref": "#/$defs/Envelope" },
+        { "oneOf": [
+          { "properties": { "ok": { "const": true }, "data": { "$ref": "#/$defs/LayerSettings" }, "error": { "type": "null" } } },
+          { "properties": { "ok": { "const": false }, "data": { "type": "null" }, "error": { "$ref": "#/$defs/Error" } } }
+        ] }
+      ]
+    },
+    "machining_configure_part_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": { "$ref": "#/$defs/Workspace" },
+        "document": { "$ref": "#/$defs/Handle" },
+        "expected_revision": { "$ref": "#/$defs/Revision" },
+        "request_id": { "$ref": "#/$defs/UUID" },
+        "part": { "$ref": "#/$defs/Name" },
+        "enabled": { "type": "boolean", "default": true },
+        "stock_width": { "$ref": "#/$defs/Positive" },
+        "stock_height": { "$ref": "#/$defs/Positive" },
+        "stock_thickness": { "$ref": "#/$defs/Positive" },
+        "stock_material": { "$ref": "#/$defs/Name" },
+        "stock_color": { "$ref": "#/$defs/Name", "default": "210,180,140" },
+        "machining_origin_x": { "$ref": "#/$defs/Number", "default": 0 },
+        "machining_origin_y": { "$ref": "#/$defs/Number", "default": 0 },
+        "default_tool_diameter": { "$ref": "#/$defs/Positive" },
+        "default_spindle_speed": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "nest_method": { "type": "string", "enum": ["None", "Grid", "IsoGrid"], "default": "None" },
+        "nest_rows": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 1 },
+        "nest_columns": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 1 },
+        "nest_spacing": { "$ref": "#/$defs/NonNegative", "default": 0 },
+        "grid_order": { "type": "string", "enum": ["RightUp", "RightDown", "LeftUp", "LeftDown"], "default": "RightUp" },
+        "grid_alternate": { "type": "boolean", "default": false }
+      },
+      "required": ["workspace_id", "document", "expected_revision", "request_id", "part", "stock_width", "stock_height", "stock_thickness", "stock_material"],
+      "additionalProperties": false
+    },
+    "machining_configure_part_output": {
+      "allOf": [
+        { "$ref": "#/$defs/Envelope" },
+        { "oneOf": [
+          { "properties": { "ok": { "const": true }, "data": { "$ref": "#/$defs/PartSettings" }, "error": { "type": "null" } } },
+          { "properties": { "ok": { "const": false }, "data": { "type": "null" }, "error": { "$ref": "#/$defs/Error" } } }
+        ] }
       ]
     },
     "machining_calculate_depth_increment_input": {

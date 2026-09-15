@@ -314,6 +314,16 @@ class AuthoringTests(unittest.TestCase):
                 "stock_height": 0,
                 "stock_thickness": 0,
                 "stock_material": "",
+                "stock_color": "210,180,140",
+                "machining_origin": [0.0, 0.0],
+                "default_tool_diameter": None,
+                "default_spindle_speed": None,
+                "nest_method": "None",
+                "nest_rows": 1,
+                "nest_columns": 1,
+                "nest_spacing": 0.0,
+                "grid_order": "RightUp",
+                "grid_alternate": False,
             })
             primitive_a2, mop_a2 = records_a2[2], records_a2[3]
             self.assertEqual(primitive_a2, primitive_a1)
@@ -406,6 +416,54 @@ class AuthoringTests(unittest.TestCase):
                 [(5, 2, 0), (25, 2, 0), (25, 12, 0), (5, 12, 0)],
             )
 
+        self.run_async(test)
+
+    def test_profile_corner_overcut_is_authorable_and_inspectable(self):
+        async def test():
+            handle = await self.create("corner-overcut")
+            rectangle = await self.call("geometry_add_rectangle", self.args(
+                document=handle, expected_revision=0, identifier="outline",
+                layer="Geometry", x=0, y=0, width=20, height=10, z=0))
+            self.assertTrue(rectangle["ok"], rectangle)
+            profile = await self.call("machining_add_profile", self.args(
+                document=handle, expected_revision=1,
+                targets=[rectangle["data"]["entity_id"]],
+                **self.profile_arguments(corner_overcut=True)))
+            self.assertTrue(profile["ok"], profile)
+            records = await self.inspect_records(handle, revision=2)
+            mop = next(record for record in records if record["kind"] == "mop")
+            self.assertTrue(mop["parameters"]["corner_overcut"])
+
+        self.run_async(test)
+
+    def test_part_stock_nesting_and_layer_properties_are_explicitly_configurable(self):
+        async def test():
+            handle = await self.create("settings")
+            layer = await self.call("document_set_layer_properties", self.args(
+                document=handle, expected_revision=0, layer="Geometry",
+                color="White", alpha=0.8, pen_width=1.5, visible=True, locked=False))
+            self.assertTrue(layer["ok"], layer)
+            part = await self.call("machining_configure_part", self.args(
+                document=handle, expected_revision=1, part="Sheet",
+                stock_width=1220, stock_height=2440, stock_thickness=9,
+                stock_material="Plywood", stock_color="210,180,140",
+                nest_method="Grid", nest_rows=3, nest_columns=3,
+                nest_spacing=40, grid_order="RightUp", grid_alternate=False))
+            self.assertTrue(part["ok"], part)
+            self.assertEqual(part["data"]["nest_method"], "Grid")
+            inspected = await self.inspect_records(handle, revision=2)
+            layer_record = next(item for item in inspected if item["kind"] == "layer")
+            part_record = next(item for item in inspected if item["kind"] == "part")
+            self.assertEqual(layer_record["color"], "White")
+            self.assertEqual(part_record["stock_thickness"], 9)
+            self.assertEqual(part_record["nest_rows"], 3)
+            exported = await self.call("document_export", {
+                "workspace_id": self.service.workspace.id, "document": handle,
+                "expected_revision": 2, "suggested_filename": "settings.cb"})
+            self.assertIn('<NestMethod>Grid</NestMethod>', exported["data"]["content"])
+            self.assertIn('<Rows>3</Rows>', exported["data"]["content"])
+            self.assertIn('<GridDirectionAlternate>false</GridDirectionAlternate>', exported["data"]["content"])
+            self.assertIn('color="White"', exported["data"]["content"])
         self.run_async(test)
 
     def test_invalid_references_identifier_conflicts_retries_and_atomic_failure(self):

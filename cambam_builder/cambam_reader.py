@@ -590,6 +590,15 @@ def _reconstruct_part(project: CamBamProject, part_elem: ET.Element, *, strict: 
     default_tool_dia = _parse_float(part_elem.findtext("ToolDiameter"), None) # Use None if not present
     # SpindleSpeed default seems not stored at Part level in standard XML?
     default_spindle_speed = None # Assume None
+    nesting = part_elem.find("Nesting")
+    nesting_method = nesting.findtext("NestMethod", "None") if nesting is not None else "None"
+    nesting_rows = _parse_int(nesting.findtext("Rows"), 1) if nesting is not None else 1
+    nesting_columns = _parse_int(nesting.findtext("Columns"), 1) if nesting is not None else 1
+    nesting_spacing = _parse_float(nesting.findtext("Spacing"), 0.0) if nesting is not None else 0.0
+    nesting_grid_order = nesting.findtext("GridOrder", "RightUp") if nesting is not None else "RightUp"
+    nesting_grid_alternate = _parse_bool(
+        nesting.findtext("GridDirectionAlternate", nesting.findtext("GridAlternate")), False
+    ) if nesting is not None else False
 
     # Use project's add_part
     part = project.add_part(
@@ -602,7 +611,11 @@ def _reconstruct_part(project: CamBamProject, part_elem: ET.Element, *, strict: 
         stock_color=stock_color,
         machining_origin=machining_origin,
         default_tool_diameter=default_tool_dia,
-        default_spindle_speed=default_spindle_speed
+        default_spindle_speed=default_spindle_speed,
+        nesting_method=nesting_method, nesting_rows=nesting_rows,
+        nesting_columns=nesting_columns, nesting_spacing=nesting_spacing,
+        nesting_grid_order=nesting_grid_order,
+        nesting_grid_alternate=nesting_grid_alternate
         # Order handled by XML sequence
     )
     if part is None:
@@ -611,6 +624,7 @@ def _reconstruct_part(project: CamBamProject, part_elem: ET.Element, *, strict: 
         return
     part._xml_tool_diameter = deepcopy(part_elem.find("ToolDiameter"))
     part._xml_tool_diameter_value = part.default_tool_diameter
+    part._xml_nesting = deepcopy(nesting)
     part._xml_machining_parameters = tuple(
         deepcopy(child) for child in part_elem
         if child.tag not in {"Stock", "MachiningOrigin", "ToolDiameter", "machineops"}

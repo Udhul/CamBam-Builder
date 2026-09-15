@@ -28,8 +28,8 @@ artificially rejected Profile targets except Rects. The model-facing instruction
 make import/export plus client-local read/write the default, reserve open/save for
 explicit server-workspace use, and explain Profile/Pocket/Engrave/Drill by machining
 intent. Profile now accepts root Circle, closed-Pline and Region boundaries as well as
-Rect; schema errors identify their top-level field. The 58-test MCP suite and
-210-test full suite pass with the existing Windows symlink-privilege skip. Repeat
+Rect; schema errors identify their top-level field. The 59-test MCP suite and
+211-test full suite pass with the existing Windows symlink-privilege skip. Repeat
 OpenCode plus CamBam acceptance remains required before 4e completes.
 The next OpenCode attempt accepted the portable export/client-write workflow, closing
 that usability defect. It exposed a separate geometry-planning failure: one Pline
@@ -53,12 +53,47 @@ third of the final pass engaged in stock. This avoids a separate below-stock cle
 pass without presenting the heuristic as a universally safe cutting parameter.
 The heuristic is now implemented as the read-only
 `machining_calculate_depth_increment` tool, bringing the advertised total to thirty-two.
+
+The follow-up settings increment adds explicit MCP operations for Part stock/native
+Grid nesting and layer display properties. A Part can now be configured before MOP
+creation, so clients need not clone geometry to represent a 3x3 nested Part or leave
+the exported stock undefined.
 It accepts either an exact pass count or a maximum stepdown, uses unit-appropriate
 upward rounding, returns the complete clamped pass sequence and final engagement, and
 marks whether the plan retains the one-third final-stock fraction. A valid explicit
 constraint that diverges is returned with diagnostics rather than rejected or replaced.
 The tool deliberately does not infer material/tool limits; the caller supplies and
 confirms that constraint.
+
+The latest OpenCode transcript exposed missing Part-level controls: MOP creation
+defaulted to zero/undefined stock and a requested 3x3 repetition was represented as
+nine geometry copies while `<Nesting>` remained `None`. The adapter now exposes
+`machining_configure_part` for stock dimensions/material and native Grid/IsoGrid
+settings, and inspection returns those resolved values. A separate
+`document_set_layer_properties` operation exposes the existing layer presentation
+API; it is not a requirement of the cited transcript. The settings regression and
+native XML checks are covered in the authoring suite; named-client/CamBam acceptance
+of generated nesting toolpaths remains pending.
+
+The following OpenCode transcript audit found 17 MCP calls with two recoverable
+input errors: a primitive identifier collided with its new layer, and a read-only
+`document_export` call included the unsupported `request_id` field. Both retries
+succeeded, the artifact was written in the client workspace, and its hash matched.
+The adapter now states both constraints directly in tool/initialization guidance and
+reports object-level schema failures with the offending top-level field. No transport
+or stdio mismatch was found; repeat the named-agent/CamBam acceptance with a fresh
+client process after these descriptions are loaded.
+
+An OpenAI-backed client then rejected the tool listing because `TextContent` used a
+positive-lookahead regex (`(?=\S)`), which its JSON-schema compiler does not support.
+The packaged pattern now expresses the same non-whitespace/content rule without
+lookaround, and a schema regression rejects reintroducing lookaround syntax.
+
+Profile `CornerOvercut` is now explicitly exposed through the public
+`add_profile_mop` API and the MCP `machining_add_profile` input. It defaults to
+`false`; when enabled, CamBam performs its native round-tool inside-corner
+overcut calculation. Pocket, Engrave and Drill have no corresponding native
+CamBam field and remain unchanged.
 
 **4d batch 5, cross-document copy/transfer: implemented and verified**
 (2026-09-11). The adapter advertises thirty-one version 1 tools after adding

@@ -731,6 +731,14 @@ and verify the cutter centerline is offset inward from the opening and outward f
 the exterior by half the tool diameter. Report any permission prompt, wrong tool call,
 argument correction, rejected target, unexpected helper geometry or wrong-side path.
 
+For stock and repetition acceptance, explicitly request a configured Part rather
+than nine copied shapes. The agent should call `machining_configure_part` with the
+sheet width/height/thickness/material, then set `nest_method` to `Grid` (or
+`IsoGrid`) with the requested rows, columns and spacing before adding the MOPs.
+Inspection and exported XML must show the nonzero `<Stock>` bounds and native
+`<Nesting>` settings. This is distinct from geometry copies: CamBam nesting repeats
+the complete Part's MOP sequence at generated positions.
+
 For required domain acceptance in CamBam Plus 1.0, open A and B separately and
 report the exact CamBam version. Confirm the drawing is using millimeters—the XML
 does not persist a verified unit setting—and reject the case if CamBam interprets

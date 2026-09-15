@@ -4,6 +4,7 @@ import hashlib
 from importlib.util import find_spec
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
 import tempfile
@@ -434,6 +435,23 @@ class DocumentTests(unittest.TestCase):
         schema_asset = Path(__file__).parents[1] / "cambam_builder/mcp_adapter/contract_v1.schema.json"
         self.assertTrue(schema_asset.is_file())
         self.assertEqual(CONTRACT, json.loads(schema_asset.read_text(encoding="utf-8")))
+
+        def patterns(value):
+            if isinstance(value, dict):
+                if isinstance(value.get("pattern"), str):
+                    yield value["pattern"]
+                for child in value.values():
+                    yield from patterns(child)
+            elif isinstance(value, list):
+                for child in value:
+                    yield from patterns(child)
+
+        # The OpenAI-backed provider rejects regex lookaround while compiling
+        # function/tool schemas. Keep the packaged contract in the portable
+        # regex subset used by OpenAI-backed MCP clients.
+        for pattern in patterns(CONTRACT):
+            self.assertIsNone(re.search(r"\(\?[=!<]", pattern), pattern)
+
         async def test():
             for name in TOOLS:
                 for value in [None, [], {}, {"request_id": str(uuid4()), "workspace_id": "bad"}]:
