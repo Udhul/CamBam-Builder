@@ -28,8 +28,8 @@ artificially rejected Profile targets except Rects. The model-facing instruction
 make import/export plus client-local read/write the default, reserve open/save for
 explicit server-workspace use, and explain Profile/Pocket/Engrave/Drill by machining
 intent. Profile now accepts root Circle, closed-Pline and Region boundaries as well as
-Rect; schema errors identify their top-level field. The 59-test MCP suite and
-211-test full suite pass with the existing Windows symlink-privilege skip. Repeat
+Rect; schema errors identify their top-level field. The 63-test MCP suite and
+217-test full suite pass with the existing Windows symlink-privilege skip. Repeat
 OpenCode plus CamBam acceptance remains required before 4e completes.
 The next OpenCode attempt accepted the portable export/client-write workflow, closing
 that usability defect. It exposed a separate geometry-planning failure: one Pline
@@ -54,10 +54,6 @@ pass without presenting the heuristic as a universally safe cutting parameter.
 The heuristic is now implemented as the read-only
 `machining_calculate_depth_increment` tool, bringing the advertised total to thirty-two.
 
-The follow-up settings increment adds explicit MCP operations for Part stock/native
-Grid nesting and layer display properties. A Part can now be configured before MOP
-creation, so clients need not clone geometry to represent a 3x3 nested Part or leave
-the exported stock undefined.
 It accepts either an exact pass count or a maximum stepdown, uses unit-appropriate
 upward rounding, returns the complete clamped pass sequence and final engagement, and
 marks whether the plan retains the one-third final-stock fraction. A valid explicit
@@ -65,24 +61,42 @@ constraint that diverges is returned with diagnostics rather than rejected or re
 The tool deliberately does not infer material/tool limits; the caller supplies and
 confirms that constraint.
 
+The follow-up settings increment adds explicit MCP operations for Part stock/native
+Grid nesting and layer display properties. A Part can now be configured before MOP
+creation, so clients need not clone geometry to represent a 3x3 nested Part or leave
+the exported stock undefined.
+
 The latest OpenCode transcript exposed missing Part-level controls: MOP creation
 defaulted to zero/undefined stock and a requested 3x3 repetition was represented as
 nine geometry copies while `<Nesting>` remained `None`. The adapter now exposes
 `machining_configure_part` for stock dimensions/material and native Grid/IsoGrid
 settings, and inspection returns those resolved values. A separate
 `document_set_layer_properties` operation exposes the existing layer presentation
-API; it is not a requirement of the cited transcript. The settings regression and
-native XML checks are covered in the authoring suite; named-client/CamBam acceptance
-of generated nesting toolpaths remains pending.
+API; it is not a requirement of the cited transcript. Imported native nesting is
+preserved while unchanged and modeled settings become authoritative after explicit
+direct-framework or MCP reconfiguration. Export and strict re-import cover every
+modeled nesting field; cross-entity names return `IDENTIFIER_CONFLICT`, and the
+legacy positional `add_part` ordering remains compatible. Named-client/CamBam
+acceptance of generated nesting toolpaths remains pending.
 
 The following OpenCode transcript audit found 17 MCP calls with two recoverable
 input errors: a primitive identifier collided with its new layer, and a read-only
-`document_export` call included the unsupported `request_id` field. Both retries
+`document_export` call included the then-unsupported `request_id` field. Both retries
 succeeded, the artifact was written in the client workspace, and its hash matched.
-The adapter now states both constraints directly in tool/initialization guidance and
-reports object-level schema failures with the offending top-level field. No transport
+The adapter now states the identifier constraint directly, reports object-level schema
+failures with the offending top-level field, and tolerates an optional valid request
+UUID on every read-only call without retaining it in the retry ledger. No transport
 or stdio mismatch was found; repeat the named-agent/CamBam acceptance with a fresh
 client process after these descriptions are loaded.
+
+Human/AI continuity is now an explicit contract rather than assumed conversational
+state. `document_list` brings the advertised total to thirty-five and discovers the
+current boot's live handles, revisions and original source hashes. Client-local files
+remain authoritative: after a manual save, hash and import the complete current XML
+as a new revision-0 handle; after restart do the same; after `STALE_REVISION`, inspect
+the current snapshot and retry a still-applicable mutation with a new request ID.
+Automated coverage exercises manual-change re-import, discovery, follow-up editing,
+hashes, ignored read-only UUIDs and stale-revision recovery.
 
 An OpenAI-backed client then rejected the tool listing because `TextContent` used a
 positive-lookahead regex (`(?=\S)`), which its JSON-schema compiler does not support.

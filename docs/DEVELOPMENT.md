@@ -565,7 +565,7 @@ bootstrap and, after the first accepted request, a `CAMBAM_MCP_PROTOCOL` record
 containing the actual version and `legacy`/`modern` mode. Restart loses all open
 handles, unsaved edits and retry records.
 
-Thirty-one tools create, open/import, inspect, save/export and close documents; add root
+Thirty-five tools create, open/import, list/inspect, save/export and close documents; add root
 Rect, Circle, Arc, Pline, Points, Text and Region primitives; add explicit
 Profile, Pocket, Engrave and Drill MOPs and replace MOP targets; link/group
 and same-document copy primitives; copy or transfer a subtree between two
@@ -590,6 +590,55 @@ This content flow is the default even when client and server run on the same PC.
 `document_open` and `document_save` are only for artifacts explicitly requested in
 the MCP workspace. An agent must not use their server `absolute_path` with client
 filesystem tools or request client access to that directory.
+
+### Human/AI follow-up and session recovery
+
+Treat the client-local `.cb` file as the durable shared artifact and an MCP handle
+as one server-process working snapshot. Keep the last successful file SHA-256,
+handle, boot ID and successfully written export revision when the client can do so.
+Before a later AI edit—most
+importantly after the user has opened and saved the file manually—reread the complete
+file and compare its hash with the last imported or exported-and-written hash.
+
+- If the file changed, call `document_import` with its complete current UTF-8
+  content and leaf `source_name`. Continue from the returned new handle at revision
+  0; do not apply the manual edit to an older handle. If that handle also contains
+  MCP mutations newer than the last export actually written to the durable file,
+  preserve both versions, export the MCP candidate under a different client-local
+  name, and ask the user which changes to keep or merge.
+- If conversational context was lost or the client reconnected, call
+  `document_list`. Reuse a handle only when it is listed under the current boot and
+  the durable file hash is still the expected one. A server restart normally returns
+  an empty list and requires re-importing client-local content.
+- If a mutation returns `STALE_REVISION`, call `document_inspect` without
+  `expected_revision`, review the current contents, and retry only if the requested
+  change still applies. Use the reported revision and a new `request_id`; failed
+  request IDs replay their original terminal result.
+- After `document_export`, write `content` unchanged, verify `sha256`, and retain
+  that hash as the synchronization point. A valid UUID accidentally supplied to a
+  read-only list/inspect/export/planning call is ignored and does not create retry
+  state.
+
+The source hash shown by `document_list` is the originally imported/opened byte
+snapshot. A revision greater than zero means MCP has mutated that in-memory document;
+export it to obtain the current serialized content and hash. Because the server
+cannot see a client-local path, it cannot detect a manual file save without the
+client rereading and re-importing that content.
+
+The required identity fields for that flow are:
+
+```text
+document_list:    {workspace_id}
+document_import:  {workspace_id, new request_id, units, source_name, complete content}
+document_inspect: {workspace_id, document}; add expected_revision only for a pinned page
+mutation:         {workspace_id, document, current expected_revision, new request_id, ...}
+document_export:  {workspace_id, document, current expected_revision, suggested_filename}
+```
+
+Use a fresh UUID for each new mutation intent. Reuse a write request UUID only to
+recover the result of the exact same arguments; changed arguments always need a new
+UUID. `source_name` and `suggested_filename` are leaf names, never client paths, and
+`content` is the complete XML document rather than a diff or selected fragment.
 
 Circle and Pline creation results include their typed geometry. For any geometry
 calculated from a verbal dimension, bounding box, center, symmetry or containment

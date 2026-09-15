@@ -605,11 +605,11 @@ class CamBamProject:
                  machining_origin: Tuple[float, float] = (0.0, 0.0),
                  default_tool_diameter: Optional[float] = None,
                  default_spindle_speed: Optional[int] = None,
+                 target_identifier: Optional[Identifiable] = None, place_last: bool = True, *,
                  nesting_method: str = "None", nesting_rows: int = 1,
                  nesting_columns: int = 1, nesting_spacing: float = 0.0,
                  nesting_grid_order: str = "RightUp",
-                 nesting_grid_alternate: bool = False,
-                 target_identifier: Optional[Identifiable] = None, place_last: bool = True) -> Optional[Part]:
+                 nesting_grid_alternate: bool = False) -> Optional[Part]:
         """Creates or updates a part and adds it to the project."""
         existing_uuid = self._resolve_identifier(identifier, Part)
         if existing_uuid:

@@ -466,6 +466,93 @@ class AuthoringTests(unittest.TestCase):
             self.assertIn('color="White"', exported["data"]["content"])
         self.run_async(test)
 
+    def test_settings_tools_report_cross_entity_identifier_conflicts(self):
+        async def test():
+            handle = await self.create("settings-conflicts")
+            rectangle = await self.call("geometry_add_rectangle", self.args(
+                document=handle, expected_revision=0, identifier="outline",
+                layer="Geometry", x=0, y=0, width=20, height=10, z=0))
+            self.assertTrue(rectangle["ok"], rectangle)
+
+            layer_conflict = await self.call("document_set_layer_properties", self.args(
+                document=handle, expected_revision=1, layer="outline", color="White"))
+            self.assertFalse(layer_conflict["ok"])
+            self.assertEqual(layer_conflict["error"]["code"], "IDENTIFIER_CONFLICT")
+            self.assertEqual(layer_conflict["error"]["field"], "layer")
+
+            part_conflict = await self.call("machining_configure_part", self.args(
+                document=handle, expected_revision=1, part="outline",
+                stock_width=1220, stock_height=2440, stock_thickness=9,
+                stock_material="Plywood"))
+            self.assertFalse(part_conflict["ok"])
+            self.assertEqual(part_conflict["error"]["code"], "IDENTIFIER_CONFLICT")
+            self.assertEqual(part_conflict["error"]["field"], "part")
+
+            unchanged = await self.inspect(handle, revision=1)
+            self.assertEqual(unchanged["data"]["summary"]["counts"]["parts"], 0)
+            self.assertEqual(unchanged["data"]["summary"]["counts"]["layers"], 1)
+        self.run_async(test)
+
+    def test_imported_part_can_be_reconfigured_exported_and_strictly_reimported(self):
+        async def test():
+            source = CBProject("imported-part")
+            source.add_part(
+                "Sheet", enabled=True, stock_width=100, stock_height=200,
+                stock_thickness=3, stock_material="MDF", stock_color="1,2,3",
+                machining_origin=(4, 5), default_tool_diameter=6,
+                nesting_method="Grid", nesting_rows=2, nesting_columns=3,
+                nesting_spacing=7, nesting_grid_order="RightUp",
+                nesting_grid_alternate=False,
+            )
+            source_path = self.root / "imported-part-source.cb"
+            source.save(str(source_path))
+            imported = await self.call("document_import", self.args(
+                units="mm", source_name=source_path.name,
+                content=source_path.read_text(encoding="utf-8")))
+            self.assertTrue(imported["ok"], imported)
+
+            configured = await self.call("machining_configure_part", self.args(
+                document=imported["document"], expected_revision=0, part="Sheet",
+                enabled=False, stock_width=321, stock_height=654,
+                stock_thickness=7, stock_material="Aluminum", stock_color="9,8,7",
+                machining_origin_x=11, machining_origin_y=13,
+                default_tool_diameter=8.5, default_spindle_speed=1234,
+                nest_method="IsoGrid", nest_rows=4, nest_columns=5,
+                nest_spacing=6.25, grid_order="LeftDown", grid_alternate=True))
+            self.assertTrue(configured["ok"], configured)
+            self.assertIn(
+                "SESSION_ONLY_SETTING",
+                {item["code"] for item in configured["diagnostics"]},
+            )
+
+            exported = await self.call("document_export", {
+                "workspace_id": self.service.workspace.id,
+                "document": imported["document"], "expected_revision": 1,
+                "suggested_filename": "reconfigured-part.cb",
+            })
+            self.assertTrue(exported["ok"], exported)
+            reimported = await self.call("document_import", self.args(
+                units="mm", source_name="reconfigured-part.cb",
+                content=exported["data"]["content"]))
+            self.assertTrue(reimported["ok"], reimported)
+            records = await self.inspect_records(reimported["document"], revision=0)
+            part = next(record for record in records if record["kind"] == "part")
+            self.assertEqual({key: part[key] for key in (
+                "name", "enabled", "stock_width", "stock_height", "stock_thickness",
+                "stock_material", "stock_color", "machining_origin",
+                "default_tool_diameter", "nest_method", "nest_rows", "nest_columns",
+                "nest_spacing", "grid_order", "grid_alternate",
+            )}, {
+                "name": "Sheet", "enabled": False, "stock_width": 321,
+                "stock_height": 654, "stock_thickness": 7,
+                "stock_material": "Aluminum", "stock_color": "9,8,7",
+                "machining_origin": [11, 13], "default_tool_diameter": 8.5,
+                "nest_method": "IsoGrid", "nest_rows": 4, "nest_columns": 5,
+                "nest_spacing": 6.25, "grid_order": "LeftDown",
+                "grid_alternate": True,
+            })
+        self.run_async(test)
+
     def test_invalid_references_identifier_conflicts_retries_and_atomic_failure(self):
         async def test():
             handle = await self.create()

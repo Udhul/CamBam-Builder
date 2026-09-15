@@ -173,7 +173,7 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertEqual([tool["name"] for tool in tools], sorted(tool["name"] for tool in tools))
         self.assertEqual([tool["name"] for tool in tools], [
             "document_close", "document_create", "document_export", "document_import",
-            "document_inspect", "document_open", "document_save", "document_set_layer_properties",
+            "document_inspect", "document_list", "document_open", "document_save", "document_set_layer_properties",
             "geometry_add_arc", "geometry_add_circle", "geometry_add_pline", "geometry_add_points",
             "geometry_add_rectangle", "geometry_add_region", "geometry_add_text", "geometry_bake",
             "geometry_mirror", "geometry_rotate", "geometry_scale", "geometry_translate",
@@ -195,7 +195,9 @@ class MCPProtocolTests(unittest.TestCase):
             "document_import": {"openWorldHint": False, "readOnlyHint": False,
                                 "idempotentHint": True, "destructiveHint": False},
             "document_inspect": {"openWorldHint": False, "readOnlyHint": True,
-                                 "idempotentHint": True, "destructiveHint": False},
+                                  "idempotentHint": True, "destructiveHint": False},
+            "document_list": {"openWorldHint": False, "readOnlyHint": True,
+                              "idempotentHint": True, "destructiveHint": False},
             "document_open": {"openWorldHint": False, "readOnlyHint": False,
                               "idempotentHint": True, "destructiveHint": False},
             "document_save": {"openWorldHint": False, "readOnlyHint": False,
@@ -220,8 +222,9 @@ class MCPProtocolTests(unittest.TestCase):
             self.assertEqual(tool["annotations"], expected_annotations[tool["name"]])
         descriptions = {tool["name"]: tool["description"] for tool in tools}
         self.assertIn("Default delivery", descriptions["document_export"])
-        self.assertIn("omit request_id", descriptions["document_export"])
-        self.assertIn("omit request_id", descriptions["document_inspect"])
+        self.assertIn("accepted", descriptions["document_export"])
+        self.assertIn("stale follow-up", descriptions["document_inspect"])
+        self.assertIn("context loss", descriptions["document_list"])
         self.assertIn("client's own file-write tool", descriptions["document_save"])
         self.assertIn("absolute center", descriptions["geometry_add_circle"])
         self.assertIn("identifier and layer must be different", descriptions["geometry_add_pline"])
@@ -259,16 +262,27 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertEqual(invalid_uuid["error"]["code"], "INVALID_ARGUMENT")
         self.assertEqual(invalid_uuid["error"]["field"], "request_id")
 
-        invalid_export = self.call(5, "document_export", {
+        compatible_export = self.call(5, "document_export", {
             "workspace_id": self.workspace_id,
             "document": structured["document"],
             "expected_revision": 0,
             "suggested_filename": "unexpected-request-id.cb",
             "request_id": str(uuid.uuid4()),
         })["result"]["structuredContent"]
-        self.assertFalse(invalid_export["ok"])
-        self.assertEqual(invalid_export["error"]["code"], "INVALID_ARGUMENT")
-        self.assertEqual(invalid_export["error"]["field"], "request_id")
+        self.assertTrue(compatible_export["ok"], compatible_export)
+        self.assertIsNone(compatible_export["request_id"])
+        self.assertFalse(compatible_export["replayed"])
+
+        invalid_read = self.call(6, "document_export", {
+            "workspace_id": self.workspace_id,
+            "document": "not-a-handle",
+            "expected_revision": 0,
+            "suggested_filename": "invalid.cb",
+            "request_id": str(uuid.uuid4()),
+        })["result"]["structuredContent"]
+        self.assertFalse(invalid_read["ok"])
+        self.assertEqual(invalid_read["error"]["field"], "document")
+        self.assertIsNone(invalid_read["request_id"])
 
     def test_missing_metadata_and_legacy_initialize_are_rejected(self):
         first_ping = self.server.request(
@@ -334,6 +348,9 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertIn("containing part last", initialized["result"]["instructions"])
         self.assertIn("machining_configure_part", initialized["result"]["instructions"])
         self.assertIn("document_set_layer_properties", initialized["result"]["instructions"])
+        self.assertIn("Use document_list", initialized["result"]["instructions"])
+        self.assertIn("On STALE_REVISION", initialized["result"]["instructions"])
+        self.assertIn("preserve both versions", initialized["result"]["instructions"])
         self.assertIn("n*I slightly exceeds D", initialized["result"]["instructions"])
         self.assertIn("at least one third", initialized["result"]["instructions"])
         self.assertEqual(
@@ -343,7 +360,7 @@ class MCPProtocolTests(unittest.TestCase):
         listing = self.server.request({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         self.assertEqual([tool["name"] for tool in listing["result"]["tools"]], [
             "document_close", "document_create", "document_export", "document_import",
-            "document_inspect", "document_open", "document_save", "document_set_layer_properties",
+            "document_inspect", "document_list", "document_open", "document_save", "document_set_layer_properties",
             "geometry_add_arc", "geometry_add_circle", "geometry_add_pline", "geometry_add_points",
             "geometry_add_rectangle", "geometry_add_region", "geometry_add_text", "geometry_bake",
             "geometry_mirror", "geometry_rotate", "geometry_scale", "geometry_translate",

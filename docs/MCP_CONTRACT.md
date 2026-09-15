@@ -1,7 +1,7 @@
 # Local MCP adapter contract
 
 Contract version 1, decided 2026-09-10 for backlog 4a. This is the authoritative
-implementation contract; all thirty-four version 1 document, planning and authoring tools
+implementation contract; all thirty-five version 1 document, planning and authoring tools
 are implemented, including cross-document copy/transfer between two open
 documents (batch 5).
 Priority and delivery state live in [PROGRESS.md](PROGRESS.md), and increment boundaries in
@@ -180,6 +180,29 @@ cross-restart exactly-once claim for create/open; clients must start a new workf
 For interrupted saves inspect/open the intended path and compare its byte hash;
 never blindly repeat an uncertain save to a different name after restart.
 
+`document_list` is the recovery/discovery surface for a reconnect, a new agent
+turn without retained handles, or ambiguous session state. It returns the current
+`boot_id` and every live handle with its revision and `DocumentSummary`. Its source
+hash identifies the bytes originally opened/imported; it is not a hash of later
+unsaved MCP mutations. An empty list or a changed boot is normal after restart.
+No tool automatically selects the newest or similarly named document.
+
+The durable client-local file remains authoritative across human and AI work. A
+client that may have allowed a manual edit must reread and hash the file before a
+later AI mutation. When its hash differs from the last imported or successfully
+written/exported artifact, import the complete current content into a new revision-0
+handle and continue there; never retarget or patch the older handle implicitly.
+The older handle may be closed after the new import succeeds. If the hash is
+unchanged and the handle remains listed under the same boot, continue with its
+current revision. On `STALE_REVISION`, inspect without `expected_revision`, review
+whether the proposed change still applies, then retry with the returned revision
+and a new `request_id`; the failed request ID retains its terminal stale result.
+Track the last successfully written export revision as well as its hash. If the
+durable file changed and the live handle has newer MCP mutations than that common
+synchronization point, the versions have diverged: preserve both, export the MCP
+candidate under a different client-local name, and ask the user which changes to
+keep or merge. Never overwrite either side automatically.
+
 ## Cross-document copy and transfer
 
 Batch 5 (2026-09-11) completes 4d with two-document subtree operations. The
@@ -284,10 +307,13 @@ publishing a user-visible server file. Return `{kind: "cambam_document", mime_ty
 "application/xml", encoding: "utf-8", suggested_filename, sha256, bytes, content}`.
 The client should write the UTF-8 `content` unchanged to its requested local `.cb`
 destination and may verify `sha256`; the server cannot write a client-local path.
-Export is a read-only call without `request_id` or ledger retention, preventing a
+Export is a read-only call without ledger retention, preventing a
 process-lifetime ledger from retaining repeated 10 MiB artifacts. Inline delivery is
 the version 1 compatibility baseline. MCP resources may be reconsidered in 4e only
 after named clients prove that resource results remain accessible to their agents.
+For compatibility with clients that attach one UUID to every tool invocation,
+export, inspect, list and the depth planner accept an optional valid `request_id`,
+ignore it, return `request_id:null`, and never reserve or replay a ledger entry.
 Portable content exchange is the default client-project workflow, including when the
 client and server run on the same machine. For a new document, create/edit/export and
 have the client write the returned content. For an existing client-local document,
@@ -391,6 +417,7 @@ or demonstrates a practical need to repair an existing sequence.
 | `document_import` | `New + {source_name: Filename, content: XmlContent}` | Strict `read_cambam_bytes(content.encode("utf-8"))`; publish a new revision-0 volatile handle and return `DocumentSummary` with client-source name/hash/bytes. |
 | `document_open` | `New + {path: Path}` | Strict `read_cambam_bytes` of a bounded snapshot; return `DocumentSummary` with source path/hash. |
 | `document_inspect` | `Read + {offset?: integer >=0 =0, limit?: integer 1..100 =100, expected_revision?: Revision}` | Public `list_*`, relationship getters and world-coordinate/bounds queries; return `InspectionPage`. If supplied, revision must match. |
+| `document_list` | `{workspace_id: Workspace, request_id?: UUID}` | Return the current boot ID and all live handles with revision and summary. The optional request ID is ignored. This discovers volatile snapshots; it does not inspect client-local files or detect manual file changes. |
 | `geometry_add_rectangle` | `Write + {identifier: Name, layer: Name, x: Number, y: Number, width: Positive, height: Positive, z?: Number =0}` | `add_rect(layer, corner=(x,y), width=width, height=height, identifier=identifier, elevation=z)`; absent layer created through public API. Return primitive UUID and layer name. |
 | `geometry_add_circle` | `Write + {identifier: Name, layer: Name, x: Number, y: Number, diameter: Positive, z?: Number =0}` | `add_circle(layer, center=(x,y), diameter=diameter, identifier=identifier, elevation=z)`; absent layer created through public API. Return primitive UUID, layer name and typed Circle geometry so the caller can verify its absolute center and bounds immediately. |
 | `geometry_add_arc` | `Write + {identifier: Name, layer: Name, x: Number, y: Number, radius: Positive, start_angle: Number, extent_angle: Number, z?: Number =0}` | `add_arc(layer, center=(x,y), radius=radius, start_angle=start_angle, extent_angle=extent_angle, identifier=identifier, elevation=z)`; degrees, CCW-positive signed sweep; return primitive UUID and layer name. |
@@ -403,7 +430,7 @@ or demonstrates a practical need to repair an existing sequence.
 | `machining_add_engrave` | Same closed record as Pocket (no side, no pocket-specific inputs) | `add_engrave_mop(...)` with Engrave settings pinned in the schema record (Roughing, final increment 0, DepthFirst, EndMill); return MOP UUID, part name and resolved targets. |
 | `machining_add_drill` | Pocket record plus `peck_distance?: NonNegative =0`, `retract_height?: Number =5`, `dwell?: NonNegative =0` | `add_drill_mop(...)` pinned to the CannedCycle method and a `Drill` tool profile; return MOP UUID, part name and resolved targets. |
 | `machining_calculate_depth_increment` | `Read + {units: "mm"|"in", stock_thickness: Positive, cut_through: Positive, exactly one of pass_count: integer 1..10000 or max_depth_increment: Positive, rounding_increment?: Positive}` | Pure planning calculation with no document handle or mutation. Upward rounding defaults to 0.1 mm or 0.001 in. Return the increment, actual clamped depths, nominal overshoot, final-pass depth/stock/cut-through, stock fraction and `recommendation_met`. A valid explicit constraint that misses the one-third recommendation is returned with diagnostics rather than rejected; the supplied maximum must already reflect material/tool safety. |
-| `machining_configure_part` | `Write + {part: Name, stock_width/height/thickness: Positive, stock_material: Name, stock_color?: Name, nest_method?: None\|Grid\|IsoGrid, nest_rows/columns?: integer, nest_spacing?: NonNegative, grid_order?, grid_alternate?}` | Create or update the Part's stock definition and native CamBam nesting settings. Grid/IsoGrid repeats the whole Part's MOP sequence; it is distinct from copying geometry. |
+| `machining_configure_part` | `Write + {part: Name, stock_width/height/thickness: Positive, stock_material: Name, stock_color?: Name, nest_method?: None\|Grid\|IsoGrid, nest_rows/columns?: integer, nest_spacing?: NonNegative, grid_order?, grid_alternate?}` | Create or update the Part's stock definition and native CamBam nesting settings. Grid/IsoGrid repeats the whole Part's MOP sequence; it is distinct from copying geometry. `default_spindle_speed`, when supplied, is diagnosed as session-only framework context; durable MOPs carry their own spindle speed. |
 | `machining_set_mop_targets` | `Write + {mop_id: UUID, targets: UUID[1..100]}` | Public `set_mop_targets`; atomically replaces the MOP's explicit target selection after the same per-kind target rules and slice checks; return MOP UUID and the project's UUID-sorted resolved targets. |
 | `document_set_layer_properties` | `Write + {layer: Name, color?: Name, alpha?: 0..1, pen_width?: Positive, visible?: boolean, locked?: boolean}` | Create or update layer display properties. These are presentation settings and do not affect machining geometry or MOP semantics. |
 | `relationship_set_parent` | `Write + {entity_id: UUID, parent_id: UUID\|null}` | Public `link_primitive_parent`; null detaches. Local transforms are kept, so the world pose follows the new frame; self links and cycles return `INVALID_ARGUMENT`, missing/non-primitive entities `ENTITY_NOT_FOUND`/`UNSUPPORTED_OPERATION`. Return the child UUID and the resulting parent UUID or null. |
@@ -418,12 +445,13 @@ or demonstrates a practical need to repair an existing sequence.
 | `geometry_mirror` | `Write + {entity_id: UUID, axis: "x"\|"y", position?: Number}` | Public `mirror_primitive_x` (across y=position) or `mirror_primitive_y` (across x=position); absent position uses the geometric center. Bulged vertices flip sign under reflection; return the entity UUID. |
 | `geometry_bake` | `Write + {entity_id: UUID}` | Public `bake_geometry()` on the staged primitive: folds the world transform into stored geometry and resets the matrix to identity. Non-axis-aligned Rects become closed Plines (reported `type`); Text bakes only translation/positive uniform scale and otherwise fails `UNSUPPORTED_OPERATION`; return the entity UUID and resulting type. |
 | `geometry_translate` | `Write + {entity_id: UUID, dx: Number, dy: Number}` | `translate_primitive(entity_id, dx, dy, bake=False)`; return primitive UUID. Accepts root Rect/Circle/Arc/Pline/Points/Text/Region primitives inside the similarity slice: a finite non-degenerate XY similarity world matrix (translation, rotation, uniform scale, reflection), zero local Z offset, no parent/children/groups and valid positive geometry. |
-| `document_export` | `{workspace_id: Workspace, document: Handle, expected_revision: Revision, suggested_filename: Filename}` | Serialize a clone of the exact revision; return a complete `SerializedArtifact` without publishing a workspace file. |
+| `document_export` | `{workspace_id: Workspace, document: Handle, expected_revision: Revision, suggested_filename: Filename, request_id?: UUID}` | Serialize a clone of the exact revision; return a complete `SerializedArtifact` without publishing a workspace file. The optional request ID is ignored. |
 | `document_save` | `Write + {path: Path}` | Clone + `save` + no-replace publication above; return `SavedArtifact`. |
 | `document_close` | `Write` | Drop handle after revision check; return `{closed: true}`. Unsaved edits are discarded explicitly. |
 
 Set tool annotations `openWorldHint=false` for all tools, `readOnlyHint=true` only
-for inspect/export, and `idempotentHint=true` for read-only calls and ledger-protected writes.
+for list/inspect/export and the depth planner, and `idempotentHint=true` for
+read-only calls and ledger-protected writes.
 Mark close/geometry mutations destructive; new-file save and create/open are
 nondestructive. Hints describe behavior, not authorization or protocol enforcement.
 
@@ -546,7 +574,8 @@ Every completed tool result's `structuredContent` conforms to this closed envelo
 
 Success has `ok=true`, `error=null`, the tool's specific result data and
 `isError=false`. Failure has `ok=false`, `data=null`, `error` set and `isError=true`.
-Inspect uses null request ID; create/open failures use null handle/revision.
+Read-only inspect/export/list/planning calls use null request ID even when a valid
+compatibility UUID was supplied; create/open failures use null handle/revision.
 Close success reports its final revision. Other failed document calls report a
 current revision only if the handle exists in this workspace. Diagnostic messages
 are bounded to 1024 characters; no traces, raw imported XML or outside paths.

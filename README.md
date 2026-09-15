@@ -27,7 +27,7 @@ For development, install the environment with `uv sync`, then run the
 project through `.venv\Scripts\python.exe`. Python 3.9 through 3.13 are verified;
 see the [development runbook](docs/DEVELOPMENT.md#environment-and-setup).
 
-The optional local MCP server exposes thirty-four document, planning and authoring
+The optional local MCP server exposes thirty-five document, planning and authoring
 tools for AI clients, including verified geometry authoring (Rect, Circle,
 Arc, Pline, Points, Text, Region), Profile/Pocket/Engrave/Drill MOPs with
 target replacement, similarity transforms with baking, and parent/group/copy
@@ -56,6 +56,5 @@ opencode.cmd mcp list
 ```
 
 Expect `cambam connected`. OpenCode now starts and stops the local stdio server
-automatically; use `cambam` tools in an agent prompt. Files in the OpenCode
-project are exchanged as content: the agent should use `document_export` and its
-normal local write tool, not access or copy files from the MCP workspace.
+automatically. The server publishes its operating guidance and individual tool
+contracts to the connected MCP client.

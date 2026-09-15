@@ -63,6 +63,10 @@ class DocumentService:
     MAX_PRIMITIVES = 10000
     MAX_MOPS = 1000
     SLICE_TYPES = (Rect, Circle, Arc, Pline, Points, Text, Region)
+    READ_ONLY_TOOLS = frozenset((
+        "document_export", "document_inspect", "document_list",
+        "machining_calculate_depth_increment",
+    ))
     EDIT_TOOLS = frozenset((
         "geometry_add_rectangle", "geometry_add_circle", "geometry_add_arc",
         "geometry_add_pline", "geometry_add_points", "geometry_add_text",
@@ -163,7 +167,7 @@ class DocumentService:
             # remaining arguments does reserve and caches its terminal failure.
             request_id = _typed(args.get("request_id"), "UUID")
             workspace_id = _typed(args.get("workspace_id"), "Workspace")
-            if name not in ("document_export", "document_inspect") and request_id is not None and workspace_id is not None:
+            if name not in self.READ_ONLY_TOOLS and request_id is not None and workspace_id is not None:
                 ledger_key = (workspace_id, request_id)
                 try:
                     signature_args = {k: v for k, v in validated.items() if k != "request_id"}
@@ -200,9 +204,14 @@ class DocumentService:
                     result = copy.deepcopy(entry.result)
                     result["replayed"] = True
                     return result
+            args = validated
+            if name in self.READ_ONLY_TOOLS:
+                # Some clients attach a request UUID uniformly to every tool.
+                # Read-only calls accept it for compatibility but never retain or
+                # echo it as an exactly-once ledger identity.
+                args.pop("request_id", None)
             if validation_error:
                 raise validation_error
-            args = validated
             if name in self.CROSS_EDIT_TOOLS:
                 # Cross-document envelopes address the source handle by
                 # default; target-side failures carry their own handle on
@@ -215,6 +224,8 @@ class DocumentService:
                 return self._complete(
                     name, entry, self._envelope(args, data=data, diagnostics=diagnostics)
                 )
+            if name == "document_list":
+                return await self._list_documents(name, args)
             if name in ("document_create", "document_import", "document_open"):
                 return await self._new(name, args, entry)
             if name in self.CROSS_EDIT_TOOLS:
@@ -373,6 +384,19 @@ class DocumentService:
         return {"name": project.project_name, "units": document.units, "source": copy.deepcopy(document.source),
                 "counts": {"layers": len(project.list_layers()), "parts": len(project.list_parts()),
                            "primitives": len(project.list_primitives()), "mops": len(project.list_mops())}}
+
+    async def _list_documents(self, name, args):
+        async with self.registry_lock:
+            candidates = list(self.documents.items())
+        records = []
+        for handle, document in sorted(candidates):
+            async with document.lock:
+                if self.documents.get(handle) is not document:
+                    continue
+                records.append({"document": handle, "revision": document.revision,
+                                "summary": self._summary(document)})
+        data = {"boot_id": self.bootstrap["boot_id"], "documents": records}
+        return self._complete(name, None, self._envelope(args, data=data))
 
     @classmethod
     def _check_limits(cls, project):
@@ -827,6 +851,13 @@ class DocumentService:
     def _stage_edit(self, name, args, project):
         staged = project.clone()
         if name == "document_set_layer_properties":
+            layer_entity = staged.get_entity(args["layer"])
+            if layer_entity is not None and staged.get_layer(args["layer"]) is None:
+                raise DomainError(
+                    "IDENTIFIER_CONFLICT",
+                    "Layer name is used by another entity",
+                    "layer",
+                )
             existing_layer = staged.get_layer(args["layer"])
             layer = staged.add_layer(
                 args["layer"],
@@ -842,6 +873,13 @@ class DocumentService:
                     "alpha": layer.alpha, "pen_width": layer.pen_width,
                     "visible": layer.visible, "locked": layer.locked}
         elif name == "machining_configure_part":
+            part_entity = staged.get_entity(args["part"])
+            if part_entity is not None and staged.get_part(args["part"]) is None:
+                raise DomainError(
+                    "IDENTIFIER_CONFLICT",
+                    "Part name is used by another entity",
+                    "part",
+                )
             part = staged.add_part(
                 args["part"], enabled=args["enabled"],
                 stock_thickness=args["stock_thickness"],
@@ -1196,7 +1234,17 @@ class DocumentService:
         revision = document.revision + 1
         if revision > 9007199254740991:
             raise DomainError("LIMIT_EXCEEDED", "Document revision limit reached")
-        result = self._envelope(args, data=data, revision=revision)
+        diagnostics = []
+        if name == "machining_configure_part" and args.get("default_spindle_speed") is not None:
+            diagnostics.append({
+                "code": "SESSION_ONLY_SETTING",
+                "message": (
+                    "Part default_spindle_speed is framework session context and is not "
+                    "serialized by the supported CamBam XML writer. Set spindle_speed "
+                    "explicitly on every authored MOP that must survive export/re-import."
+                ),
+            })
+        result = self._envelope(args, data=data, revision=revision, diagnostics=diagnostics)
         OUTPUTS[name].validate(result)
         with anyio.CancelScope(shield=True):
             document.project = staged

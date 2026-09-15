@@ -2148,8 +2148,9 @@ Layer display properties are similarly exposed through
 `document_set_layer_properties` and inspection; this is a general capability, not a
 claim that the cited request asked for white layers.
 
-Verification: focused MCP/authoring/protocol/context checks 20 passed; full suite
-211 passed with the existing Windows symlink-privilege skip. Named OpenCode and
+Verification at that checkpoint: focused MCP/authoring/protocol/context checks
+passed; the later branch review observed 212 full-suite tests with the existing
+Windows symlink-privilege skip. Named OpenCode and
 CamBam acceptance must still confirm that CamBam generates the requested native
 3x3 nested toolpaths and interprets the stock dimensions as intended.
 
@@ -2199,6 +2200,39 @@ the typed inspection record. The default remains `false`; enabling it delegates
 the actual toolpath calculation to CamBam and is documented as potentially
 removing extra material beside inside corners. No synthetic equivalent was added
 to Pocket, Engrave or Drill because their native XML has no such field.
+
+### MCP human/AI continuity and imported nesting repair — 2026-09-15
+
+Branch review found that explicitly reconfiguring an imported Part deleted its
+preserved native nesting marker, after which the writer attempted to append a null
+XML node. Direct framework reconfiguration instead left the preserved node in place
+and silently serialized the old nesting values. The repair keeps an unchanged native
+subtree, including unknown children and ordering, but emits the current modeled
+nesting after a direct or MCP edit. `add_part` retains its historical positional
+`target_identifier`/`place_last` order and makes the new nesting options keyword-only.
+The two settings tools now report cross-entity name conflicts as
+`IDENTIFIER_CONFLICT`. A supplied Part default spindle speed is diagnosed as
+session-only because the supported writer has no durable CamBam Part field for it.
+
+Human/AI file continuity now has an executable contract. The read-only
+`document_list` tool exposes the current boot's live handles, revisions and original
+source hashes. Manual client-local saves are detected by the client rereading and
+hashing the durable file; changed content is imported into a new revision-0 handle.
+Restart likewise requires re-import. A stale MCP mutation is recovered by inspecting
+without a revision and retrying a still-applicable change with the returned revision
+and a fresh request ID. Valid UUIDs supplied uniformly to list/inspect/export/planning
+are accepted and ignored rather than causing a schema-only retry.
+
+Verification on Python 3.13 with MCP 2.2.0:
+
+- Focused protocol, document, authoring and native-context suites: 41 tests passed
+  with one Windows symlink-privilege skip.
+- MCP suite: 63 tests, 62 passed with the same skip.
+- Full suite: 217 tests, 216 passed with the same skip.
+- `compileall`, import/construct smoke and `git diff --check` pass.
+
+Named OpenCode and CamBam acceptance remains required for actual agent behavior,
+manual-save follow-up usability and generated native nesting toolpaths.
 
 ## MCP local stdio installation and client acceptance preparation - 2026-09-11
 

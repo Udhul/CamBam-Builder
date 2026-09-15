@@ -20,6 +20,77 @@ from .cambam_entities import Primitive, Layer, Part, Mop # For type checking if 
 
 logger = logging.getLogger(__name__)
 
+
+def _parse_native_float(value, default):
+    """Parse the numeric spelling used by the reader for imported nesting."""
+    if value is None:
+        return default
+    try:
+        return float(value.strip())
+    except (AttributeError, TypeError, ValueError):
+        return default
+
+
+def _parse_native_int(value, default):
+    """Parse integer nesting values, including CamBam's occasional ``1.0``."""
+    if value is None:
+        return default
+    try:
+        return int(float(value.strip()))
+    except (AttributeError, TypeError, ValueError):
+        return default
+
+
+def _parse_native_bool(value, default=False):
+    if value is None:
+        return default
+    return value.strip().lower() == "true"
+
+
+def _nesting_matches_model(part: Part, nesting: ET.Element) -> bool:
+    """Return whether an imported native subtree still represents the model.
+
+    Imported parts retain the complete native ``Nesting`` element so unknown
+    attributes/children and its position can round-trip.  Once a modeled
+    nesting field is changed, the generated element must replace that native
+    subtree; otherwise a later export would silently discard the requested
+    edit.  Compare parsed values using the same defaults/conversions as the
+    reader, rather than comparing XML text formatting.
+    """
+    alternate = nesting.findtext(
+        "GridDirectionAlternate", nesting.findtext("GridAlternate")
+    )
+    native = (
+        nesting.findtext("NestMethod", "None"),
+        _parse_native_int(nesting.findtext("Rows"), 1),
+        _parse_native_int(nesting.findtext("Columns"), 1),
+        _parse_native_float(nesting.findtext("Spacing"), 0.0),
+        nesting.findtext("GridOrder", "RightUp"),
+        _parse_native_bool(alternate, False),
+    )
+    modeled = (
+        part.nesting_method,
+        part.nesting_rows,
+        part.nesting_columns,
+        part.nesting_spacing,
+        part.nesting_grid_order,
+        part.nesting_grid_alternate,
+    )
+    return native == modeled
+
+
+def _nesting_is_default(part: Part) -> bool:
+    """Whether an imported part with no native Nesting remains untouched."""
+    return (
+        part.nesting_method == "None"
+        and part.nesting_rows == 1
+        and part.nesting_columns == 1
+        and part.nesting_spacing == 0.0
+        and part.nesting_grid_order == "RightUp"
+        and part.nesting_grid_alternate is False
+    )
+
+
 def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
     """Construct the XML tree, propagating encoding errors without omitting entities."""
 
@@ -107,15 +178,33 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
         # Create the <part> element itself
         part_elem = part.to_xml_element()
         if hasattr(part, "_xml_machining_parameters"):
+            # ``to_xml_element`` creates a fresh, model-backed Nesting node.
+            # Keep it available while restoring native children: the native
+            # subtree is preferred only while its modeled values are unchanged.
+            generated_nesting = part_elem.find("Nesting")
+            native_nesting = getattr(part, "_xml_nesting", None)
+            preserve_native_nesting = (
+                native_nesting is not None
+                and _nesting_matches_model(part, native_nesting)
+            )
+            emitted_nesting = False
             for child in list(part_elem):
                 if child.tag not in {"Stock", "MachiningOrigin", "ToolDiameter"}:
                     part_elem.remove(child)
             for child in part._xml_machining_parameters:
                 if child.tag == "Nesting":
-                    nesting = getattr(part, "_xml_nesting", None)
-                    part_elem.append(deepcopy(nesting if nesting is not None else part_elem.find("Nesting")))
+                    nesting = native_nesting if preserve_native_nesting else generated_nesting
+                    if nesting is not None:
+                        part_elem.append(deepcopy(nesting))
+                    emitted_nesting = True
                 else:
                     part_elem.append(deepcopy(child))
+            # A malformed/older imported file may not contain a Nesting node.
+            # Preserve that shape until a modeled nesting field is changed; a
+            # subsequent explicit edit then gets a usable generated node.
+            if not emitted_nesting and not _nesting_is_default(part):
+                if generated_nesting is not None:
+                    part_elem.append(deepcopy(generated_nesting))
         if (hasattr(part, "_xml_tool_diameter_value")
                 and part.default_tool_diameter == part._xml_tool_diameter_value):
             insertion_index = 2  # After the modeled Stock and MachiningOrigin.

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:cambam-builder:mcp-contract:1",
   "title": "MCP adapter v1 tool contracts",
-  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All thirty-four version 1 document, planning and authoring tools are implemented, including explicit layer/part settings and native part nesting; typed detail covers the seven supported primitive kinds and the four supported MOP kinds within the similarity slice, while non-similarity transforms and relationships stay diagnostic.",
+  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All thirty-five version 1 document, planning and authoring tools are implemented, including open-document discovery, explicit layer/part settings and native part nesting; typed detail covers the seven supported primitive kinds and the four supported MOP kinds within the similarity slice, while non-similarity transforms and relationships stay diagnostic.",
   "$defs": {
     "UUID": {
       "type": "string",
@@ -326,6 +326,29 @@
         "sha256",
         "bytes"
       ],
+      "additionalProperties": false
+    },
+    "OpenDocument": {
+      "type": "object",
+      "properties": {
+        "document": { "$ref": "#/$defs/Handle" },
+        "revision": { "$ref": "#/$defs/Revision" },
+        "summary": { "$ref": "#/$defs/DocumentSummary" }
+      },
+      "required": ["document", "revision", "summary"],
+      "additionalProperties": false
+    },
+    "DocumentList": {
+      "type": "object",
+      "properties": {
+        "boot_id": { "$ref": "#/$defs/UUID" },
+        "documents": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/OpenDocument" },
+          "maxItems": 16
+        }
+      },
+      "required": ["boot_id", "documents"],
       "additionalProperties": false
     },
     "SerializedArtifact": {
@@ -1677,6 +1700,9 @@
         },
         "expected_revision": {
           "$ref": "#/$defs/Revision"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
         }
       },
       "required": [
@@ -4373,6 +4399,24 @@
         }
       ]
     },
+    "document_list_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": { "$ref": "#/$defs/Workspace" },
+        "request_id": { "$ref": "#/$defs/UUID" }
+      },
+      "required": ["workspace_id"],
+      "additionalProperties": false
+    },
+    "document_list_output": {
+      "allOf": [
+        { "$ref": "#/$defs/Envelope" },
+        { "oneOf": [
+          { "properties": { "ok": { "const": true }, "data": { "$ref": "#/$defs/DocumentList" }, "error": { "type": "null" } } },
+          { "properties": { "ok": { "const": false }, "data": { "type": "null" }, "error": { "$ref": "#/$defs/Error" } } }
+        ] }
+      ]
+    },
     "document_export_input": {
       "type": "object",
       "properties": {
@@ -4387,6 +4431,9 @@
         },
         "suggested_filename": {
           "$ref": "#/$defs/Filename"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
         }
       },
       "required": [
@@ -4465,7 +4512,10 @@
         "machining_origin_x": { "$ref": "#/$defs/Number", "default": 0 },
         "machining_origin_y": { "$ref": "#/$defs/Number", "default": 0 },
         "default_tool_diameter": { "$ref": "#/$defs/Positive" },
-        "default_spindle_speed": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "default_spindle_speed": {
+          "type": "integer", "minimum": 1, "maximum": 1000000,
+          "description": "Optional framework-session context only; not serialized as a supported CamBam Part field. Set spindle speed explicitly on each MOP for durable interchange."
+        },
         "nest_method": { "type": "string", "enum": ["None", "Grid", "IsoGrid"], "default": "None" },
         "nest_rows": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 1 },
         "nest_columns": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 1 },
@@ -4515,6 +4565,9 @@
         "rounding_increment": {
           "$ref": "#/$defs/Positive",
           "description": "Optional upward rounding quantum; defaults to 0.1 mm or 0.001 in."
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
         }
       },
       "required": [

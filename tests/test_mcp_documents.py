@@ -22,6 +22,8 @@ else:
     DocumentService = None
 
 from cambam_builder import CBProject
+from cambam_builder.cambam_reader import read_cambam_bytes
+from cambam_builder.cambam_writer import serialize_cambam_bytes
 
 
 @unittest.skipIf(DocumentService is None, "Install .[mcp] for adapter checks")
@@ -160,6 +162,97 @@ class DocumentTests(unittest.TestCase):
                 rectangle.internal_id
             )
             self.assertEqual(tuple(entity.get_absolute_coordinates_xyz()[0]), (7.0, 1.0, 0.0))
+        self.run_async(test)
+
+    def test_manual_file_change_is_reimported_and_open_documents_are_discoverable(self):
+        async def test():
+            source = CBProject("human-ai-continuity")
+            layer = source.add_layer("Geometry")
+            rectangle = source.add_rect(
+                layer, identifier="outline", corner=(0, 0), width=10, height=5
+            )
+            initial_content = serialize_cambam_bytes(source).decode("utf-8")
+            first = await self.call("document_import", self.args(
+                units="mm", source_name="shared.cb", content=initial_content))
+            self.assertTrue(first["ok"], first)
+
+            ledger_size = len(self.service.ledger)
+            read_request_id = str(uuid4())
+            listing = await self.call("document_list", {
+                "workspace_id": self.service.workspace.id,
+                "request_id": read_request_id,
+            })
+            self.assertTrue(listing["ok"], listing)
+            self.assertIsNone(listing["request_id"])
+            self.assertEqual(len(self.service.ledger), ledger_size)
+            self.assertEqual(listing["data"]["boot_id"], self.service.bootstrap["boot_id"])
+            self.assertEqual(listing["data"]["documents"][0]["document"], first["document"])
+            self.assertEqual(listing["data"]["documents"][0]["revision"], 0)
+            self.assertEqual(
+                listing["data"]["documents"][0]["summary"]["source"]["sha256"],
+                hashlib.sha256(initial_content.encode("utf-8")).hexdigest(),
+            )
+
+            # Stand in for a user opening the durable client-local file in
+            # CamBam, moving geometry, and saving it outside the MCP process.
+            manual_project = read_cambam_bytes(
+                initial_content.encode("utf-8"), source_name="shared.cb", strict=True
+            )
+            manual_project.translate_primitive(rectangle.internal_id, 4, 0)
+            manual_content = serialize_cambam_bytes(manual_project).decode("utf-8")
+            manual_hash = hashlib.sha256(manual_content.encode("utf-8")).hexdigest()
+            self.assertNotEqual(manual_hash, first["data"]["source"]["sha256"])
+
+            # A changed durable file becomes a new revision-0 snapshot; the
+            # older handle is not silently retargeted.
+            refreshed = await self.call("document_import", self.args(
+                units="mm", source_name="shared.cb", content=manual_content))
+            self.assertTrue(refreshed["ok"], refreshed)
+            self.assertNotEqual(refreshed["document"], first["document"])
+            self.assertEqual(refreshed["revision"], 0)
+            self.assertEqual(refreshed["data"]["source"]["sha256"], manual_hash)
+            self.assertEqual(self.service.documents[first["document"]].revision, 0)
+
+            follow_up = await self.call("geometry_translate", self.args(
+                document=refreshed["document"], expected_revision=0,
+                entity_id=str(rectangle.internal_id), dx=0, dy=3))
+            self.assertTrue(follow_up["ok"], follow_up)
+
+            stale_args = self.args(
+                document=refreshed["document"], expected_revision=0,
+                entity_id=str(rectangle.internal_id), dx=0, dy=2,
+            )
+            stale = await self.call("geometry_translate", stale_args)
+            self.assertEqual(stale["error"]["code"], "STALE_REVISION")
+            discovered = await self.call("document_inspect", {
+                "workspace_id": self.service.workspace.id,
+                "document": refreshed["document"],
+                "request_id": stale_args["request_id"],
+            })
+            self.assertTrue(discovered["ok"], discovered)
+            self.assertEqual(discovered["revision"], 1)
+            self.assertIsNone(discovered["request_id"])
+            retried = await self.call("geometry_translate", self.args(
+                document=refreshed["document"], expected_revision=1,
+                entity_id=str(rectangle.internal_id), dx=0, dy=2,
+            ))
+            self.assertTrue(retried["ok"], retried)
+            exported = await self.call("document_export", {
+                "workspace_id": self.service.workspace.id,
+                "document": refreshed["document"], "expected_revision": 2,
+                "suggested_filename": "shared.cb", "request_id": read_request_id,
+            })
+            self.assertTrue(exported["ok"], exported)
+            self.assertIsNone(exported["request_id"])
+            final_project = read_cambam_bytes(
+                exported["data"]["content"].encode("utf-8"),
+                source_name="shared.cb", strict=True,
+            )
+            self.assertEqual(
+                tuple(final_project.get_primitive(rectangle.internal_id)
+                      .get_absolute_coordinates_xyz()[0]),
+                (4.0, 5.0, 0.0),
+            )
         self.run_async(test)
 
     def test_content_import_export_limits_failures_and_stale_revision(self):
