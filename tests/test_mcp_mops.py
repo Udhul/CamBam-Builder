@@ -432,6 +432,55 @@ class MopBreadthTests(unittest.TestCase):
 
         self.run_async(test)
 
+    def test_missing_revision_reports_field_and_does_not_implicate_region_target(self):
+        async def test():
+            handle = await self.create("region-pocket-validation")
+            region = await self.call("geometry_add_region", self.args(
+                document=handle, expected_revision=0, identifier="region",
+                layer="Geometry",
+                outer={"points": [
+                    {"x": 0, "y": 0}, {"x": 40, "y": 0},
+                    {"x": 40, "y": 20}, {"x": 0, "y": 20},
+                ]},
+                holes=[{"points": [
+                    {"x": 20, "y": 10}, {"x": 31, "y": 10},
+                    {"x": 31, "y": 14}, {"x": 20, "y": 14},
+                ]}],
+            ))
+            self.assertTrue(region["ok"], region)
+            pocket_arguments = {
+                "workspace_id": self.service.workspace.id,
+                "document": handle,
+                "request_id": str(uuid4()),
+                "identifier": "pocket",
+                "part": "Part",
+                "targets": [region["data"]["entity_id"]],
+                **self.mop_arguments(target_depth=-2, depth_increment=1,
+                                     clearance_plane=3),
+            }
+
+            missing_revision = await self.call(
+                "machining_add_pocket", pocket_arguments)
+            self.assertFalse(missing_revision["ok"], missing_revision)
+            self.assertEqual(missing_revision["error"]["code"], "INVALID_ARGUMENT")
+            self.assertEqual(missing_revision["error"]["field"], "expected_revision")
+            self.assertEqual(missing_revision["error"]["message"],
+                             "Missing required field: expected_revision")
+            self.assertEqual(missing_revision["revision"], 1)
+
+            pocket = await self.call("machining_add_pocket", {
+                **pocket_arguments,
+                "expected_revision": 1,
+                "request_id": str(uuid4()),
+            })
+            self.assertTrue(pocket["ok"], pocket)
+            self.assertEqual(pocket["data"]["targets"],
+                             [region["data"]["entity_id"]])
+            inspected = await self.inspect(handle, revision=2)
+            self.assertEqual(inspected["data"]["summary"]["counts"]["mops"], 1)
+
+        self.run_async(test)
+
     def test_depth_increment_planner_balances_and_warns_on_heuristic_divergence(self):
         async def test():
             base = {
@@ -695,7 +744,7 @@ class MopBreadthTests(unittest.TestCase):
                 path="profile-closed-contours.cb",
             ))
             self.assertTrue(saved["ok"], saved)
-            self.assertIn("SERVER_WORKSPACE_ONLY", self.diagnostics(saved))
+            self.assertIn("SERVER_WORKSPACE_ARTIFACT", self.diagnostics(saved))
             reopened = await self.call("document_open", self.args(
                 path="profile-closed-contours.cb", units="mm",
             ))

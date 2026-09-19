@@ -32,6 +32,21 @@ ROOT = Path(__file__).resolve().parents[1]
 PYTHON = Path(sys.executable)
 
 
+class ConsumerAgentTemplateTests(unittest.TestCase):
+    def test_first_run_is_an_explicit_separate_question_gate(self):
+        template = (
+            ROOT / "cambam_builder" / "mcp_adapter" / "consumer_AGENTS.template.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("`FIRST_RUN_SETUP: PENDING`", template)
+        self.assertIn("Each unresolved\n   item below must be its own", template)
+        self.assertIn("Never collapse several items into one free-text question", template)
+        self.assertIn("continue with\n   another setup dialog", template)
+        self.assertIn("Do not ask for the current document's filename", template)
+        self.assertIn("resume the preserved original request", template)
+        self.assertIn("`FIRST_RUN_SETUP: COMPLETE`", template)
+
+
 class MCPProcess:
     READ_TIMEOUT_SECONDS = 10
 
@@ -176,8 +191,8 @@ class MCPProtocolTests(unittest.TestCase):
             "document_inspect", "document_list", "document_open", "document_save", "document_set_layer_properties",
             "geometry_add_arc", "geometry_add_circle", "geometry_add_pline", "geometry_add_points",
             "geometry_add_rectangle", "geometry_add_region", "geometry_add_text", "geometry_bake",
-            "geometry_mirror", "geometry_rotate", "geometry_scale", "geometry_translate",
-            "geometry_translate_z", "machining_add_drill", "machining_add_engrave",
+            "geometry_mirror", "geometry_replace_with_region", "geometry_rotate", "geometry_scale", "geometry_translate",
+            "geometry_translate_z", "geometry_update_region", "machining_add_drill", "machining_add_engrave",
             "machining_add_pocket", "machining_add_profile",
             "machining_calculate_depth_increment", "machining_configure_part", "machining_set_mop_targets",
             "relationship_add_to_group", "relationship_copy_tree",
@@ -221,11 +236,20 @@ class MCPProtocolTests(unittest.TestCase):
             )
             self.assertEqual(tool["annotations"], expected_annotations[tool["name"]])
         descriptions = {tool["name"]: tool["description"] for tool in tools}
-        self.assertIn("Default delivery", descriptions["document_export"])
+        self.assertIn("INLINE CONTENT ONLY", descriptions["document_export"])
         self.assertIn("accepted", descriptions["document_export"])
+        self.assertIn("CREATES NO FILE IN ANY WORKSPACE", descriptions["document_export"])
+        self.assertIn("hash mismatch means delivery failed", descriptions["document_export"])
         self.assertIn("stale follow-up", descriptions["document_inspect"])
+        self.assertIn("trustworthy baseline", descriptions["document_inspect"])
+        self.assertIn("measured common delta", descriptions["document_inspect"])
         self.assertIn("context loss", descriptions["document_list"])
-        self.assertIn("client's own file-write tool", descriptions["document_save"])
+        self.assertIn("workspace_path", descriptions["document_list"])
+        self.assertIn("expected_sha256", descriptions["document_open"])
+        self.assertIn("never fall back", descriptions["document_open"])
+        self.assertIn("INTERMEDIATE SAME-HOST HANDOFF", descriptions["document_save"])
+        self.assertIn("client_file_created=false", descriptions["document_save"])
+        self.assertIn("expected_sha256", descriptions["document_import"])
         self.assertIn("absolute center", descriptions["geometry_add_circle"])
         self.assertIn("identifier and layer must be different", descriptions["geometry_add_pline"])
         self.assertIn("lies to the right", descriptions["geometry_add_pline"])
@@ -233,6 +257,7 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertIn("corner_overcut=true", descriptions["machining_add_profile"])
         self.assertIn("create that cutout last", descriptions["machining_add_profile"])
         self.assertIn("loose slug", descriptions["machining_add_pocket"])
+        self.assertIn("requires expected_revision", descriptions["machining_add_pocket"])
         self.assertIn("before an Outside Profile", descriptions["machining_add_pocket"])
         self.assertIn("no cutter-radius compensation", descriptions["machining_add_engrave"])
         self.assertIn("before cutting that part loose", descriptions["machining_add_engrave"])
@@ -241,6 +266,12 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertIn("at least one third", descriptions["machining_calculate_depth_increment"])
         self.assertIn("display properties", descriptions["document_set_layer_properties"])
         self.assertIn("native CamBam nesting", descriptions["machining_configure_part"])
+        self.assertIn("no MOPs has nothing to nest", descriptions["machining_configure_part"])
+        self.assertIn("excluded holes/islands", descriptions["geometry_add_region"])
+        self.assertIn("preserved", descriptions["geometry_update_region"])
+        self.assertIn("MUST BE SEQUENTIAL", descriptions["geometry_add_circle"])
+        self.assertIn("Each success increments revision", descriptions["machining_add_pocket"])
+        self.assertNotIn("MUST BE SEQUENTIAL", descriptions["document_inspect"])
         planning = next(tool for tool in tools
                         if tool["name"] == "machining_calculate_depth_increment")
         self.assertTrue(planning["annotations"]["readOnlyHint"])
@@ -272,6 +303,12 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertTrue(compatible_export["ok"], compatible_export)
         self.assertIsNone(compatible_export["request_id"])
         self.assertFalse(compatible_export["replayed"])
+        self.assertEqual(compatible_export["data"]["delivery"], "inline_content_only")
+        self.assertFalse(compatible_export["data"]["file_created"])
+        self.assertIn(
+            "INLINE_ONLY_NO_FILE",
+            {item["code"] for item in compatible_export["diagnostics"]},
+        )
 
         invalid_read = self.call(6, "document_export", {
             "workspace_id": self.workspace_id,
@@ -337,7 +374,15 @@ class MCPProtocolTests(unittest.TestCase):
             'CAMBAM_MCP_PROTOCOL {"protocol_version":"2025-11-25","mode":"legacy"}',
         )
         self.assertIn(self.workspace_id, initialized["result"]["instructions"])
-        self.assertIn("Never call document_save", initialized["result"]["instructions"])
+        self.assertIn("share a filesystem", initialized["result"]["instructions"])
+        self.assertIn("document_list returns workspace_path", initialized["result"]["instructions"])
+        self.assertIn("Never reconstruct XML", initialized["result"]["instructions"])
+        self.assertIn("new revision-0 snapshot", initialized["result"]["instructions"])
+        self.assertIn("never reconstruct, abbreviate or retype", initialized["result"]["instructions"])
+        self.assertIn("compare a baseline and current snapshot", initialized["result"]["instructions"])
+        self.assertIn("never claim delivery", initialized["result"]["instructions"])
+        self.assertIn("hash mismatch means delivery failed",
+                      initialized["result"]["instructions"])
         self.assertIn("Profile offsets inside/outside", initialized["result"]["instructions"])
         self.assertIn("Do not silently invent target depth", initialized["result"]["instructions"])
         self.assertIn("use machining_calculate_depth_increment", initialized["result"]["instructions"])
@@ -346,8 +391,16 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertIn("Recompute after clarifications", initialized["result"]["instructions"])
         self.assertIn("MOPs are appended within a Part", initialized["result"]["instructions"])
         self.assertIn("containing part last", initialized["result"]["instructions"])
+        self.assertIn("Every edit of an existing document requires expected_revision",
+                      initialized["result"]["instructions"])
+        self.assertIn("Never issue mutations in parallel",
+                      initialized["result"]["instructions"])
+        self.assertIn("file_created=false", initialized["result"]["instructions"])
+        self.assertIn("client_file_created=false", initialized["result"]["instructions"])
         self.assertIn("machining_configure_part", initialized["result"]["instructions"])
         self.assertIn("document_set_layer_properties", initialized["result"]["instructions"])
+        self.assertIn("geometry_replace_with_region", initialized["result"]["instructions"])
+        self.assertIn("geometry_update_region", initialized["result"]["instructions"])
         self.assertIn("Use document_list", initialized["result"]["instructions"])
         self.assertIn("On STALE_REVISION", initialized["result"]["instructions"])
         self.assertIn("preserve both versions", initialized["result"]["instructions"])
@@ -363,8 +416,8 @@ class MCPProtocolTests(unittest.TestCase):
             "document_inspect", "document_list", "document_open", "document_save", "document_set_layer_properties",
             "geometry_add_arc", "geometry_add_circle", "geometry_add_pline", "geometry_add_points",
             "geometry_add_rectangle", "geometry_add_region", "geometry_add_text", "geometry_bake",
-            "geometry_mirror", "geometry_rotate", "geometry_scale", "geometry_translate",
-            "geometry_translate_z", "machining_add_drill", "machining_add_engrave",
+            "geometry_mirror", "geometry_replace_with_region", "geometry_rotate", "geometry_scale", "geometry_translate",
+            "geometry_translate_z", "geometry_update_region", "machining_add_drill", "machining_add_engrave",
             "machining_add_pocket", "machining_add_profile",
             "machining_calculate_depth_increment", "machining_configure_part", "machining_set_mop_targets",
             "relationship_add_to_group", "relationship_copy_tree",

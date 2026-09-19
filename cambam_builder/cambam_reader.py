@@ -963,7 +963,11 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
              prim_specific_kwargs.update(relative_center=center[:2], elevation=center[2])
              prim_specific_kwargs["diameter"] = diameter
         elif prim_class is Rect:
-             corner = _geometry_point(prim_elem.get("p"))
+             # CamBam suppresses the rectangle position attribute when the
+             # corner is the default origin.  Its saved XML may still contain
+             # the redundant four-point cache, but ``p`` remains the modeled
+             # Rect position and an omitted value means (0, 0, 0).
+             corner = _geometry_point(prim_elem.get("p", "0,0,0"))
              width = _geometry_float(prim_elem.get("w"), 1.0, "rectangle width", strict)
              height = _geometry_float(prim_elem.get("h"), 1.0, "rectangle height", strict)
              prim_specific_kwargs.update(relative_corner=corner[:2], elevation=corner[2])

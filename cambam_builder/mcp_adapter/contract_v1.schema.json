@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:cambam-builder:mcp-contract:1",
   "title": "MCP adapter v1 tool contracts",
-  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All thirty-five version 1 document, planning and authoring tools are implemented, including open-document discovery, explicit layer/part settings and native part nesting; typed detail covers the seven supported primitive kinds and the four supported MOP kinds within the similarity slice, while non-similarity transforms and relationships stay diagnostic.",
+  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All thirty-seven version 1 document, planning and authoring tools are implemented, including open-document discovery, explicit layer/part settings and native part nesting; typed detail covers the seven supported primitive kinds and the four supported MOP kinds within the similarity slice, while non-similarity transforms and relationships stay diagnostic.",
   "$defs": {
     "UUID": {
       "type": "string",
@@ -14,7 +14,8 @@
     },
     "Handle": {
       "type": "string",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "Opaque volatile handle. Copy the complete value exactly from the latest successful result or document_list; never reconstruct, abbreviate or retype it."
     },
     "Revision": {
       "type": "integer",
@@ -45,6 +46,10 @@
       "type": "string",
       "minLength": 1,
       "description": "Complete UTF-8 CamBam XML. The encoded byte length is also limited to 10 MiB."
+    },
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
     },
     "Number": {
       "type": "number",
@@ -318,13 +323,25 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 10485760
+        },
+        "delivery": {
+          "const": "server_workspace_handoff"
+        },
+        "workspace_file_created": {
+          "const": true
+        },
+        "client_file_created": {
+          "const": false
         }
       },
       "required": [
         "path",
         "absolute_path",
         "sha256",
-        "bytes"
+        "bytes",
+        "delivery",
+        "workspace_file_created",
+        "client_file_created"
       ],
       "additionalProperties": false
     },
@@ -342,13 +359,18 @@
       "type": "object",
       "properties": {
         "boot_id": { "$ref": "#/$defs/UUID" },
+        "workspace_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
         "documents": {
           "type": "array",
           "items": { "$ref": "#/$defs/OpenDocument" },
           "maxItems": 16
         }
       },
-      "required": ["boot_id", "documents"],
+      "required": ["boot_id", "workspace_path", "documents"],
       "additionalProperties": false
     },
     "SerializedArtifact": {
@@ -376,6 +398,12 @@
         },
         "content": {
           "$ref": "#/$defs/XmlContent"
+        },
+        "delivery": {
+          "const": "inline_content_only"
+        },
+        "file_created": {
+          "const": false
         }
       },
       "required": [
@@ -385,7 +413,9 @@
         "suggested_filename",
         "sha256",
         "bytes",
-        "content"
+        "content",
+        "delivery",
+        "file_created"
       ],
       "additionalProperties": false
     },
@@ -1371,6 +1401,7 @@
             "PATH_INVALID",
             "PATH_EXISTS",
             "IMPORT_FAILED",
+            "CONTENT_MISMATCH",
             "EXPORT_FAILED",
             "LIMIT_EXCEEDED",
             "IO_ERROR",
@@ -1577,6 +1608,9 @@
         },
         "path": {
           "$ref": "#/$defs/Path"
+        },
+        "expected_sha256": {
+          "$ref": "#/$defs/Sha256"
         }
       },
       "required": [
@@ -1641,6 +1675,9 @@
         },
         "content": {
           "$ref": "#/$defs/XmlContent"
+        },
+        "expected_sha256": {
+          "$ref": "#/$defs/Sha256"
         }
       },
       "required": [
@@ -2468,6 +2505,115 @@
                 "error": {
                   "$ref": "#/$defs/Error"
                 }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "geometry_replace_with_region_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": { "$ref": "#/$defs/Workspace" },
+        "document": { "$ref": "#/$defs/Handle" },
+        "expected_revision": { "$ref": "#/$defs/Revision" },
+        "request_id": { "$ref": "#/$defs/UUID" },
+        "identifier": { "$ref": "#/$defs/Name" },
+        "outer_id": { "$ref": "#/$defs/UUID" },
+        "hole_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/UUID" },
+          "maxItems": 100,
+          "uniqueItems": true,
+          "default": []
+        }
+      },
+      "required": ["workspace_id", "document", "expected_revision", "request_id", "identifier", "outer_id"],
+      "additionalProperties": false
+    },
+    "geometry_replace_with_region_output": {
+      "allOf": [
+        { "$ref": "#/$defs/Envelope" },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": { "const": true },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": { "$ref": "#/$defs/UUID" },
+                    "layer": { "$ref": "#/$defs/Name" },
+                    "removed_entity_ids": {
+                      "type": "array",
+                      "items": { "$ref": "#/$defs/UUID" },
+                      "minItems": 1,
+                      "maxItems": 101,
+                      "uniqueItems": true
+                    }
+                  },
+                  "required": ["entity_id", "layer", "removed_entity_ids"],
+                  "additionalProperties": false
+                },
+                "error": { "type": "null" }
+              }
+            },
+            {
+              "properties": {
+                "ok": { "const": false },
+                "data": { "type": "null" },
+                "error": { "$ref": "#/$defs/Error" }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "geometry_update_region_input": {
+      "type": "object",
+      "properties": {
+        "workspace_id": { "$ref": "#/$defs/Workspace" },
+        "document": { "$ref": "#/$defs/Handle" },
+        "expected_revision": { "$ref": "#/$defs/Revision" },
+        "request_id": { "$ref": "#/$defs/UUID" },
+        "entity_id": { "$ref": "#/$defs/UUID" },
+        "outer": { "$ref": "#/$defs/ContourInput" },
+        "holes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ContourInput" },
+          "maxItems": 100,
+          "default": []
+        }
+      },
+      "required": ["workspace_id", "document", "expected_revision", "request_id", "entity_id", "outer"],
+      "additionalProperties": false
+    },
+    "geometry_update_region_output": {
+      "allOf": [
+        { "$ref": "#/$defs/Envelope" },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "ok": { "const": true },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "entity_id": { "$ref": "#/$defs/UUID" },
+                    "layer": { "$ref": "#/$defs/Name" },
+                    "geometry": { "$ref": "#/$defs/RegionGeometry" }
+                  },
+                  "required": ["entity_id", "layer", "geometry"],
+                  "additionalProperties": false
+                },
+                "error": { "type": "null" }
+              }
+            },
+            {
+              "properties": {
+                "ok": { "const": false },
+                "data": { "type": "null" },
+                "error": { "$ref": "#/$defs/Error" }
               }
             }
           ]

@@ -27,18 +27,30 @@ For development, install the environment with `uv sync`, then run the
 project through `.venv\Scripts\python.exe`. Python 3.9 through 3.13 are verified;
 see the [development runbook](docs/DEVELOPMENT.md#environment-and-setup).
 
-The optional local MCP server exposes thirty-five document, planning and authoring
+The optional local MCP server exposes thirty-seven document, planning and authoring
 tools for AI clients, including verified geometry authoring (Rect, Circle,
 Arc, Pline, Points, Text, Region), Profile/Pocket/Engrave/Drill MOPs with
 target replacement, similarity transforms with baking, and parent/group/copy
 relationships including cross-document subtree copy and transfer between two
 open documents. Part stock/nesting and layer display settings are explicitly
-configurable. Complete UTF-8 `.cb` XML can be imported from a client and
-exported back as a hashed artifact without using server workspace paths. Install
+configurable. Complete UTF-8 `.cb` XML can be imported across hosts. On the normal
+same-host path, `document_list` exposes the shared staging directory so a client can
+binary-copy an existing or manually edited `.cb` there and hash-guard `document_open`;
+this avoids model-mediated XML. Export returns inline content and explicitly creates
+no file; same-host clients can instead copy an exact server-generated `document_save`
+handoff artifact and verify its SHA-256. Install
 with `uv sync --extra mcp` on Python 3.10+;
 see [MCP setup and client configuration](docs/DEVELOPMENT.md#local-mcp-setup-and-verification).
 Clean Windows installation and an OpenCode stdio connection are verified;
 agentic OpenCode and CamBam domain acceptance remain pending.
+
+For a new AI-assisted CamBam project, copy the packaged
+[`consumer_AGENTS.template.md`](cambam_builder/mcp_adapter/consumer_AGENTS.template.md)
+to the project root as `AGENTS.md`. Its one-time section elicits project defaults and
+then replaces itself with concise daily-work instructions. The explicit pending gate
+uses one separately answerable prompt per durable policy and defers document-specific
+inputs until the held first task resumes; it does not alter this repository's
+development-agent policy.
 
 ## Add to OpenCode (Windows)
 

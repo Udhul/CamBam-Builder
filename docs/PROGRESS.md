@@ -7,6 +7,81 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**2026-09-19 consumer onboarding correction implemented; fresh named-agent rerun
+pending.** The first live use of the reusable template exposed an instruction defect:
+"ask one concise, grouped set" produced one overloaded prompt mixing durable project
+policy with the current test document's filename and machining values. The template
+now has an explicit pending/completed gate, requires one separately answerable prompt
+per unresolved durable policy (across multiple dialogs when necessary), prohibits
+document-instance inputs during onboarding, persists the answers, and resumes the
+preserved first request only after setup. A static contract test guards those
+distinctions. This supersedes the earlier bootstrap wording; runtime MCP behavior is
+unchanged by this correction.
+
+**2026-09-18 transcript corrections implemented; fresh named-agent rerun pending.**
+The 2026-09-19 rerun verified exact same-host staging/open, but exposed three
+remaining consuming-agent gaps. Four MOP failures carried valid revisions but a
+manually corrupted document handle; malformed-handle errors now tell clients to copy
+the opaque value exactly. `document_save` had created only server-workspace files
+while the agent repeatedly reported them as saved deliverables; saved artifacts now
+carry `delivery=server_workspace_handoff`, `workspace_file_created=true` and
+`client_file_created=false`, with stronger completion guidance. Finally, the agent
+compared no baseline before repeating a manual edit: stable-ID bounds prove all three
+Part A entities moved only `(0,+50)` while Part B was unchanged, yet it invented a
+90-degree rotation and alignment translation. Server guidance and the new reusable
+consumer-agent template require baseline/current comparison and propagation of only
+the measured common delta. Fresh named-agent validation of these refinements remains
+pending.
+
+The latest same-host rerun confirmed that the actual 18,594-byte CamBam-saved file
+strictly imports with all three layers, five primitives (including the Region), two
+Parts and five MOPs. The failed import received a model-reconstructed 16,179-byte
+string instead, correctly returned `CONTENT_MISMATCH`, and was followed by an
+unguarded open of an older 12,911-byte workspace file. That stale snapshot caused
+the false conclusion that native Region/nesting content was unsupported. The
+same-host ingress path now mirrors exact egress: `document_list` returns
+`workspace_path`; clients binary-copy the current file under a fresh staging name;
+and `document_open(expected_sha256=...)` rejects stale/wrong workspace bytes before
+parsing or publishing a handle. Tool/server guidance prohibits model-mediated XML
+and fallback to similarly named old artifacts. A successful refresh deliberately
+returns a new revision-0 snapshot; ordinary mutations still remain sequential.
+The MCP suite passes 71 tests with one Windows symlink-privilege skip and the full
+suite passes 226 with the same skip; compileall and `git diff --check` pass.
+
+The prior rerun against the combined changes exposed an additional agent-sequencing
+and result-interpretation gap. OpenCode issued six same-document geometry mutations
+concurrently at revision 0; one correctly committed and five correctly returned
+`STALE_REVISION`, after which sequential retries all succeeded. Mutation descriptions
+now share one mandatory sequential rule, and stale errors state the current revision,
+new-request-ID recovery, and concurrency cause. A later name collision now identifies
+the occupying entity type. `document_export` now returns machine-readable
+`delivery=inline_content_only`, `file_created=false`, and `INLINE_ONLY_NO_FILE`, so
+its suggested filename cannot be presented as an existing workspace file.
+
+The first supplied OpenCode dump was produced against `main`, not this branch; its
+missing schema-field extraction and provider-schema failures therefore are not
+evidence against commit `e2fd2c3`. The newer dump did exercise that commit. All 36
+successful MCP calls retained the four MOPs and both exports returned complete,
+stable artifacts; the only failed MCP call correctly rejected malformed client-made
+XML. The regression occurred because the agent manually rebuilt 13,099/15,654-byte
+exports as different 6,177/4,768-byte files, ignored their different hashes, then
+copied a stale file during recovery. Detailed evidence and the baseline/staged split
+are recorded in [REVIEW.md](REVIEW.md#mcp-opencode-local-delivery-and-existing-region-audit--2026-09-18).
+
+The retained staged fixes remain distinct: origin Rect import compatibility,
+actionable bounded import/schema errors, and atomic conversion of existing root
+contours into a Region. The adapter now advertises thirty-seven tools. The new
+`geometry_update_region` changes an existing Region atomically while preserving its
+UUID, layer, identifier and Profile/Pocket targets. Exact delivery no longer needs
+model-mediated XML on a shared filesystem: `document_save` is an explicit atomic
+handoff artifact, while portable `document_export` remains the cross-host fallback;
+the destination is reread and `document_import(expected_sha256=...)` rejects a byte
+mismatch before XML parsing. Region and Part descriptions now explain pocket islands
+and that an empty Part has nothing to nest. The 70-test MCP suite and 225-test full
+suite pass with the existing Windows symlink-privilege skip; strict-import and
+compile checks plus `git diff --check` also pass. A fresh OpenCode/CamBam acceptance
+run remains pending.
+
 **4e local stdio acceptance: implementation and automated evidence complete;
 named-agent and CamBam acceptance pending** (2026-09-11). The user accepted a
 same-machine external client launching its own server subprocess as the initial
@@ -90,7 +165,7 @@ or stdio mismatch was found; repeat the named-agent/CamBam acceptance with a fre
 client process after these descriptions are loaded.
 
 Human/AI continuity is now an explicit contract rather than assumed conversational
-state. `document_list` brings the advertised total to thirty-five and discovers the
+state. `document_list` brought the then-advertised total to thirty-five and discovers the
 current boot's live handles, revisions and original source hashes. Client-local files
 remain authoritative: after a manual save, hash and import the complete current XML
 as a new revision-0 handle; after restart do the same; after `STALE_REVISION`, inspect

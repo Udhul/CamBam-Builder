@@ -13,6 +13,7 @@ Read this map after the root README; follow only the relevant owner.
 | Review evidence and rejected approaches | [REVIEW.md](REVIEW.md) | Dated findings, acceptance evidence and reopening conditions; not a second backlog |
 | Local MCP requirements and delivery outline | [MCP_PLAN.md](MCP_PLAN.md) | Increment scope/acceptance; priority stays in PROGRESS |
 | Local MCP protocol, state, tools and compatibility contract | [MCP_CONTRACT.md](MCP_CONTRACT.md) and [tool schemas](../cambam_builder/mcp_adapter/contract_v1.schema.json) | Document foundation and modern/legacy protocols; authoring and desktop/second-PC acceptance follow |
+| Reusable consuming-project agent policy | [consumer_AGENTS.template.md](../cambam_builder/mcp_adapter/consumer_AGENTS.template.md) | Copy-and-customize bootstrap plus daily natural-language CamBam collaboration workflow; not repository development policy |
 | Region and all-shape Z-coordinate parity | [SHAPE_PARITY_PLAN.md](SHAPE_PARITY_PLAN.md) | Independent upstream feature support; priority stays in PROGRESS |
 | Future rest machining and V-cutter planning | [REST_MACHINING_PLAN.md](REST_MACHINING_PLAN.md) | Optional feature proposal and acceptance; low priority stays in PROGRESS |
 | Package metadata and dependency declarations | `pyproject.toml` | Sole source for published metadata and direct dependencies |

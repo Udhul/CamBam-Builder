@@ -65,7 +65,8 @@ class DocumentTests(unittest.TestCase):
             self.assertEqual({**saved, "replayed": True}, replay)
             exists = await self.call("document_save", {**args, "request_id": str(uuid4())})
             self.assertEqual(exists["error"]["code"], "PATH_EXISTS")
-            opened = await self.call("document_open", self.args(path="A.cb", units="mm"))
+            opened = await self.call("document_open", self.args(
+                path="A.cb", units="mm", expected_sha256=saved["data"]["sha256"]))
             self.assertTrue(opened["ok"], opened)
             self.assertNotEqual(opened["document"], handle)
             read = {"workspace_id": self.service.workspace.id, "document": opened["document"]}
@@ -146,8 +147,34 @@ class DocumentTests(unittest.TestCase):
             self.assertEqual(artifact["suggested_filename"], "client-result.cb")
             self.assertEqual(artifact["bytes"], len(exported_bytes))
             self.assertEqual(artifact["sha256"], hashlib.sha256(exported_bytes).hexdigest())
+            self.assertEqual(artifact["delivery"], "inline_content_only")
+            self.assertFalse(artifact["file_created"])
+            self.assertIn(
+                "INLINE_ONLY_NO_FILE",
+                [item["code"] for item in exported["diagnostics"]],
+            )
             self.assertFalse(list(self.root.glob("*.cb")))
             self.assertFalse(list(self.root.glob(".cambam-mcp-*")))
+
+            handoff = await self.call(
+                "document_save",
+                self.args(
+                    document=imported["document"], expected_revision=1,
+                    path="exact-handoff.cb",
+                ),
+            )
+            self.assertTrue(handoff["ok"], handoff)
+            handoff_bytes = (self.root / "exact-handoff.cb").read_bytes()
+            self.assertEqual(handoff_bytes, exported_bytes)
+            self.assertEqual(handoff["data"]["bytes"], artifact["bytes"])
+            self.assertEqual(handoff["data"]["sha256"], artifact["sha256"])
+            self.assertEqual(handoff["data"]["delivery"], "server_workspace_handoff")
+            self.assertTrue(handoff["data"]["workspace_file_created"])
+            self.assertFalse(handoff["data"]["client_file_created"])
+            self.assertIn(
+                "SERVER_WORKSPACE_ARTIFACT",
+                [item["code"] for item in handoff["diagnostics"]],
+            )
 
             reopened = await self.call(
                 "document_import",
@@ -155,6 +182,7 @@ class DocumentTests(unittest.TestCase):
                     units="mm",
                     source_name="client-result.cb",
                     content=artifact["content"],
+                    expected_sha256=artifact["sha256"],
                 ),
             )
             self.assertTrue(reopened["ok"], reopened)
@@ -162,6 +190,56 @@ class DocumentTests(unittest.TestCase):
                 rectangle.internal_id
             )
             self.assertEqual(tuple(entity.get_absolute_coordinates_xyz()[0]), (7.0, 1.0, 0.0))
+
+            corrupted = await self.call(
+                "document_import",
+                self.args(
+                    units="mm",
+                    source_name="client-result.cb",
+                    content=artifact["content"][:-1],
+                    expected_sha256=artifact["sha256"],
+                ),
+            )
+            self.assertFalse(corrupted["ok"], corrupted)
+            self.assertEqual(corrupted["error"]["code"], "CONTENT_MISMATCH")
+            self.assertEqual(corrupted["error"]["field"], "content")
+            self.assertIn(artifact["sha256"], corrupted["error"]["message"])
+            self.assertIn("delivery is not synchronized", corrupted["error"]["message"])
+            self.assertIn("Do not parse this text", corrupted["error"]["message"])
+            self.assertIn("fresh workspace name", corrupted["error"]["message"])
+            self.assertEqual(len(self.service.documents), 2)
+        self.run_async(test)
+
+    def test_workspace_open_hash_guard_rejects_stale_snapshot(self):
+        async def test():
+            source = CBProject("current-client-version")
+            source.add_rect(source.add_layer("Geometry"), identifier="outline",
+                            corner=(0, 0), width=10, height=5)
+            staged = self.root / "manual-edit-staged.cb"
+            source.save(str(staged))
+            staged_bytes = staged.read_bytes()
+            staged_hash = hashlib.sha256(staged_bytes).hexdigest()
+
+            wrong_hash = hashlib.sha256(b"older workspace artifact").hexdigest()
+            rejected = await self.call("document_open", self.args(
+                path=staged.name, units="mm", expected_sha256=wrong_hash))
+            self.assertFalse(rejected["ok"], rejected)
+            self.assertEqual(rejected["error"]["code"], "CONTENT_MISMATCH")
+            self.assertEqual(rejected["error"]["field"], "path")
+            self.assertIn(staged_hash, rejected["error"]["message"])
+            self.assertIn("fresh workspace-relative name", rejected["error"]["message"])
+            self.assertFalse(self.service.documents)
+
+            opened = await self.call("document_open", self.args(
+                path=staged.name, units="mm", expected_sha256=staged_hash))
+            self.assertTrue(opened["ok"], opened)
+            self.assertEqual(opened["revision"], 0)
+            self.assertEqual(opened["data"]["source"]["sha256"], staged_hash)
+
+            listing = await self.call("document_list", {
+                "workspace_id": self.service.workspace.id,
+            })
+            self.assertEqual(listing["data"]["workspace_path"], str(self.root.resolve()))
         self.run_async(test)
 
     def test_manual_file_change_is_reimported_and_open_documents_are_discoverable(self):
@@ -224,6 +302,9 @@ class DocumentTests(unittest.TestCase):
             )
             stale = await self.call("geometry_translate", stale_args)
             self.assertEqual(stale["error"]["code"], "STALE_REVISION")
+            self.assertIn("Never run mutations concurrently", stale["error"]["message"])
+            self.assertIn("expected_revision 1", stale["error"]["message"])
+            self.assertIn("new request_id", stale["error"]["message"])
             discovered = await self.call("document_inspect", {
                 "workspace_id": self.service.workspace.id,
                 "document": refreshed["document"],
@@ -272,6 +353,23 @@ class DocumentTests(unittest.TestCase):
                     self.args(units="mm", source_name="bad.cb", content=content),
                 )
                 self.assertEqual(result["error"]["code"], "IMPORT_FAILED")
+            malformed_rect = await self.call(
+                "document_import",
+                self.args(
+                    units="mm",
+                    source_name="bad-geometry.cb",
+                    content=(
+                        '<CADFile><layers><layer name="Geometry"><objects>'
+                        '<rect id="1" p="0,0,0" w="private-raw-value" h="2" />'
+                        '</objects></layer></layers></CADFile>'
+                    ),
+                ),
+            )
+            self.assertEqual(malformed_rect["error"]["code"], "IMPORT_FAILED")
+            self.assertEqual(malformed_rect["error"]["field"], "content")
+            self.assertIn("Invalid rectangle width", malformed_rect["error"]["message"])
+            self.assertIn("bad-geometry.cb", malformed_rect["error"]["message"])
+            self.assertNotIn("private-raw-value", malformed_rect["error"]["message"])
             self.assertFalse(self.service.documents)
 
             prefix = '<?xml version="1.0" encoding="utf-8"?><CADFile><!--'
@@ -406,6 +504,13 @@ class DocumentTests(unittest.TestCase):
             self.assertIsNone(bad["document"])
             self.assertIsNone(bad["request_id"])
             self.assertEqual(bad["workspace_id"], self.service.workspace.id)
+            malformed = await self.call("document_close", self.args(
+                document="d6e8007c-c263-41ba-9c97-1f6fc6b904df",
+                expected_revision=0,
+            ))
+            self.assertEqual(malformed["error"]["code"], "INVALID_ARGUMENT")
+            self.assertEqual(malformed["error"]["field"], "document")
+            self.assertIn("copy the complete handle exactly", malformed["error"]["message"])
         self.run_async(test)
 
     def test_ledger_keys_include_workspace_identity(self):

@@ -88,8 +88,15 @@ class Workspace:
                 if not data or len(data) > MAX_XML_BYTES:
                     raise DomainError("LIMIT_EXCEEDED", "Saved XML must be 1 byte through 10 MiB")
                 os.fsync(stream.fileno())
-            return temporary, {"path": relative, "absolute_path": str(destination),
-                               "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)}
+            return temporary, {
+                "path": relative,
+                "absolute_path": str(destination),
+                "sha256": hashlib.sha256(data).hexdigest(),
+                "bytes": len(data),
+                "delivery": "server_workspace_handoff",
+                "workspace_file_created": True,
+                "client_file_created": False,
+            }
         except BaseException:
             self.cleanup(temporary)
             raise

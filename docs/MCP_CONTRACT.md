@@ -1,7 +1,7 @@
 # Local MCP adapter contract
 
 Contract version 1, decided 2026-09-10 for backlog 4a. This is the authoritative
-implementation contract; all thirty-five version 1 document, planning and authoring tools
+implementation contract; all thirty-seven version 1 document, planning and authoring tools
 are implemented, including cross-document copy/transfer between two open
 documents (batch 5).
 Priority and delivery state live in [PROGRESS.md](PROGRESS.md), and increment boundaries in
@@ -182,21 +182,29 @@ never blindly repeat an uncertain save to a different name after restart.
 
 `document_list` is the recovery/discovery surface for a reconnect, a new agent
 turn without retained handles, or ambiguous session state. It returns the current
-`boot_id` and every live handle with its revision and `DocumentSummary`. Its source
+`boot_id`, absolute `workspace_path`, and every live handle with its revision and
+`DocumentSummary`. Its source
 hash identifies the bytes originally opened/imported; it is not a hash of later
 unsaved MCP mutations. An empty list or a changed boot is normal after restart.
 No tool automatically selects the newest or similarly named document.
 
 The durable client-local file remains authoritative across human and AI work. A
 client that may have allowed a manual edit must reread and hash the file before a
-later AI mutation. When its hash differs from the last imported or successfully
-written/exported artifact, import the complete current content into a new revision-0
-handle and continue there; never retarget or patch the older handle implicitly.
-The older handle may be closed after the new import succeeds. If the hash is
+later AI mutation. When its hash differs from the last opened/imported or successfully
+written/exported artifact, a same-host client copies the file bytes under a fresh
+name in `workspace_path`, verifies the hash, and opens that relative path with
+`expected_sha256`; a cross-host client imports the complete current content with the
+same hash guard. Either operation creates a new revision-0 handle. Never retarget or
+patch the older handle implicitly, and never fall back to a similarly named older
+workspace artifact after `CONTENT_MISMATCH`. The older handle may be closed after
+the new snapshot succeeds. If the hash is
 unchanged and the handle remains listed under the same boot, continue with its
 current revision. On `STALE_REVISION`, inspect without `expected_revision`, review
 whether the proposed change still applies, then retry with the returned revision
 and a new `request_id`; the failed request ID retains its terminal stale result.
+Never issue multiple mutations concurrently against the same document: every success
+advances its revision, so await it and pass the returned revision to the next mutation.
+Read-only calls and mutations against independent documents may run concurrently.
 Track the last successfully written export revision as well as its hash. If the
 durable file changed and the live handle has newer MCP mutations than that common
 synchronization point, the versions have diverged: preserve both, export the MCP
@@ -304,7 +312,10 @@ as instructions, or offer pickle loading.
 
 `document_export` clones and serializes the revision under the document lock without
 publishing a user-visible server file. Return `{kind: "cambam_document", mime_type:
-"application/xml", encoding: "utf-8", suggested_filename, sha256, bytes, content}`.
+"application/xml", encoding: "utf-8", suggested_filename, sha256, bytes, content,
+delivery: "inline_content_only", file_created: false}` plus an
+`INLINE_ONLY_NO_FILE` diagnostic. These fields mean that no client or server
+workspace file exists; `suggested_filename` is not a saved path.
 The client should write the UTF-8 `content` unchanged to its requested local `.cb`
 destination and may verify `sha256`; the server cannot write a client-local path.
 Export is a read-only call without ledger retention, preventing a
@@ -314,16 +325,20 @@ after named clients prove that resource results remain accessible to their agent
 For compatibility with clients that attach one UUID to every tool invocation,
 export, inspect, list and the depth planner accept an optional valid `request_id`,
 ignore it, return `request_id:null`, and never reserve or replay a ledger entry.
-Portable content exchange is the default client-project workflow, including when the
-client and server run on the same machine. For a new document, create/edit/export and
-have the client write the returned content. For an existing client-local document,
-have the client read/import/edit/export/write. The agent must not call `document_save`
-and then use client filesystem tools to read or copy its returned `absolute_path`.
-`document_open` and `document_save` are reserved for an explicitly requested artifact
-inside the server workspace; that workspace may be used as server-side scratch but is
-not an implied client filesystem root. Every successful `document_save` includes a
-`SERVER_WORKSPACE_ONLY` diagnostic reiterating that its `absolute_path` must not be
-read or copied with client filesystem tools.
+Portable content exchange remains the cross-host baseline. When the client and server
+share a filesystem, `document_save` may also create an exact-byte handoff artifact in
+the server workspace. The client copies that returned `absolute_path` with a
+deterministic binary operation to its requested local destination and verifies the
+returned byte count and SHA-256. The live handle remains authoritative until that
+destination changes; a later manual change follows the fresh staging/open flow above.
+The server path is not itself the client-local
+destination, and `document_save` never accepts or expands an arbitrary client path.
+When the filesystems differ, use `document_export` and write its inline content.
+Every successful `document_save` includes a `SERVER_WORKSPACE_ARTIFACT` diagnostic
+that states this boundary and fallback. Its structured delivery fields are
+`delivery: "server_workspace_handoff"`, `workspace_file_created: true` and
+`client_file_created: false`; a client-local task is not delivered until the client
+copies and verifies that artifact at its intended destination.
 
 **Save always creates a new file; overwrite is unsupported in version 1.** This
 protects source files whose unsupported metadata may not survive interchange.
@@ -414,10 +429,10 @@ or demonstrates a practical need to repair an existing sequence.
 | Tool | Closed input record | Public framework mapping / result data |
 | --- | --- | --- |
 | `document_create` | `New + {name: Name}` | `CBProject(name)`; empty document. Return `DocumentSummary`. |
-| `document_import` | `New + {source_name: Filename, content: XmlContent}` | Strict `read_cambam_bytes(content.encode("utf-8"))`; publish a new revision-0 volatile handle and return `DocumentSummary` with client-source name/hash/bytes. |
-| `document_open` | `New + {path: Path}` | Strict `read_cambam_bytes` of a bounded snapshot; return `DocumentSummary` with source path/hash. |
+| `document_import` | `New + {source_name: Filename, content: XmlContent, expected_sha256?: Sha256}` | If supplied, require the complete UTF-8 content to match `expected_sha256` before parsing. Strict `read_cambam_bytes(content.encode("utf-8"))`; publish a new revision-0 volatile handle and return `DocumentSummary` with client-source name/hash/bytes. |
+| `document_open` | `New + {path: Path, expected_sha256?: Sha256}` | Read one bounded workspace snapshot; if supplied, reject a hash mismatch before strict parsing or publication. Return a new revision-0 handle and `DocumentSummary` with source path/hash. |
 | `document_inspect` | `Read + {offset?: integer >=0 =0, limit?: integer 1..100 =100, expected_revision?: Revision}` | Public `list_*`, relationship getters and world-coordinate/bounds queries; return `InspectionPage`. If supplied, revision must match. |
-| `document_list` | `{workspace_id: Workspace, request_id?: UUID}` | Return the current boot ID and all live handles with revision and summary. The optional request ID is ignored. This discovers volatile snapshots; it does not inspect client-local files or detect manual file changes. |
+| `document_list` | `{workspace_id: Workspace, request_id?: UUID}` | Return the current boot ID, absolute shared `workspace_path`, and all live handles with revision and summary. The optional request ID is ignored. This discovers volatile snapshots and the same-host staging boundary; it does not inspect client-local files or detect manual changes itself. |
 | `geometry_add_rectangle` | `Write + {identifier: Name, layer: Name, x: Number, y: Number, width: Positive, height: Positive, z?: Number =0}` | `add_rect(layer, corner=(x,y), width=width, height=height, identifier=identifier, elevation=z)`; absent layer created through public API. Return primitive UUID and layer name. |
 | `geometry_add_circle` | `Write + {identifier: Name, layer: Name, x: Number, y: Number, diameter: Positive, z?: Number =0}` | `add_circle(layer, center=(x,y), diameter=diameter, identifier=identifier, elevation=z)`; absent layer created through public API. Return primitive UUID, layer name and typed Circle geometry so the caller can verify its absolute center and bounds immediately. |
 | `geometry_add_arc` | `Write + {identifier: Name, layer: Name, x: Number, y: Number, radius: Positive, start_angle: Number, extent_angle: Number, z?: Number =0}` | `add_arc(layer, center=(x,y), radius=radius, start_angle=start_angle, extent_angle=extent_angle, identifier=identifier, elevation=z)`; degrees, CCW-positive signed sweep; return primitive UUID and layer name. |
@@ -425,6 +440,8 @@ or demonstrates a practical need to repair an existing sequence.
 | `geometry_add_points` | `Write + {identifier: Name, layer: Name, points: PlainPoint[1..10000]}` where `PlainPoint` is `{x: Number, y: Number, z?: Number =0}` | `add_points(layer, points=[Vertex(...)], identifier=identifier)`; bulge input is rejected by the schema; return primitive UUID and layer name. |
 | `geometry_add_text` | `Write + {identifier: Name, layer: Name, text: TextContent 1..1024 non-whitespace-only, x: Number, y: Number, height?: Positive =10, font?: FontName ="Arial", style?: FontStyle ="", line_spacing?: Positive =1, align_horizontal?: "left"\|"center"\|"right" ="center", align_vertical?: "top"\|"center"\|"bottom" ="center", z?: Number =0}` | `add_text(layer, text, position=(x,y), height, font, style, line_spacing, align_horizontal, align_vertical, identifier, elevation=z)`; return primitive UUID and layer name. The optional unused `xml_p2_*` interchange fields are not authorable inputs. |
 | `geometry_add_region` | `Write + {identifier: Name, layer: Name, outer: {points: VertexPoint[2..10000]}, holes?: {points: VertexPoint[2..10000]}[0..100] =[]}` | Contours become closed `Pline` records; `add_region(layer, outer_curve=..., hole_curves=..., identifier=identifier)`; XY topology (closed, simple, nonzero area, contained disjoint holes) is validated by the framework and topology failures return `INVALID_ARGUMENT` with the bounded framework message; return primitive UUID and layer name. |
+| `geometry_replace_with_region` | `Write + {identifier: Name, outer_id: UUID, hole_ids?: UUID[0..100] =[]}` | Atomically convert the world geometry of existing supported root Rect, Circle or closed-Pline contours on one layer into one Region. Validate topology on a staged clone, remove the source primitives only on success, retarget explicit Profile/Pocket selections from any source to the new Region, and reject sources used by Engrave/Drill or carrying unsupported parent/child/group relationships. Return the new UUID, layer and ordered removed UUIDs. |
+| `geometry_update_region` | `Write + {entity_id: UUID, outer: ContourInput, holes?: ContourInput[0..100] =[]}` | Atomically replace one supported root Region's absolute contours after topology validation. Preserve its UUID, identifier, layer and project-owned Profile/Pocket target relationships; return the UUID, layer and typed Region geometry. |
 | `machining_add_profile` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], side: "Inside" | "Outside", target_depth: Number, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true, corner_overcut?: boolean =false}` | `add_part` if absent, then `add_profile_mop(part, targets=..., identifier=identifier, name=identifier, profile_side=side, corner_overcut=corner_overcut, ...)`; `corner_overcut` is a Profile-only CamBam option that overcuts inside corners for round tools and may remove extra adjacent-side material; return MOP UUID, part name, echoed side and resolved target UUIDs. |
 | `machining_add_pocket` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], target_depth, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true}` | `add_pocket_mop(...)` with the pocket settings pinned in the schema record (stepover 0.4, `InsideOutsideOffsets` fill, Spiral lead-in, Roughing); return MOP UUID, part name and resolved targets. |
 | `machining_add_engrave` | Same closed record as Pocket (no side, no pocket-specific inputs) | `add_engrave_mop(...)` with Engrave settings pinned in the schema record (Roughing, final increment 0, DepthFirst, EndMill); return MOP UUID, part name and resolved targets. |
@@ -445,7 +462,7 @@ or demonstrates a practical need to repair an existing sequence.
 | `geometry_mirror` | `Write + {entity_id: UUID, axis: "x"\|"y", position?: Number}` | Public `mirror_primitive_x` (across y=position) or `mirror_primitive_y` (across x=position); absent position uses the geometric center. Bulged vertices flip sign under reflection; return the entity UUID. |
 | `geometry_bake` | `Write + {entity_id: UUID}` | Public `bake_geometry()` on the staged primitive: folds the world transform into stored geometry and resets the matrix to identity. Non-axis-aligned Rects become closed Plines (reported `type`); Text bakes only translation/positive uniform scale and otherwise fails `UNSUPPORTED_OPERATION`; return the entity UUID and resulting type. |
 | `geometry_translate` | `Write + {entity_id: UUID, dx: Number, dy: Number}` | `translate_primitive(entity_id, dx, dy, bake=False)`; return primitive UUID. Accepts root Rect/Circle/Arc/Pline/Points/Text/Region primitives inside the similarity slice: a finite non-degenerate XY similarity world matrix (translation, rotation, uniform scale, reflection), zero local Z offset, no parent/children/groups and valid positive geometry. |
-| `document_export` | `{workspace_id: Workspace, document: Handle, expected_revision: Revision, suggested_filename: Filename, request_id?: UUID}` | Serialize a clone of the exact revision; return a complete `SerializedArtifact` without publishing a workspace file. The optional request ID is ignored. |
+| `document_export` | `{workspace_id: Workspace, document: Handle, expected_revision: Revision, suggested_filename: Filename, request_id?: UUID}` | Serialize a clone of the exact revision; return a complete `SerializedArtifact` with `delivery=inline_content_only`, `file_created=false`, and `INLINE_ONLY_NO_FILE` without publishing any file. The optional request ID is ignored. |
 | `document_save` | `Write + {path: Path}` | Clone + `save` + no-replace publication above; return `SavedArtifact`. |
 | `document_close` | `Write` | Drop handle after revision check; return `{closed: true}`. Unsaved edits are discarded explicitly. |
 
@@ -516,8 +533,10 @@ too as closed per-kind parameter records. No unrestricted `**kwargs` input.
 Inspection serializes copies, never mutable entity objects. `DocumentSummary` is
 `{name, units, source: null | {path, sha256} | {name, sha256, bytes}, counts: {layers, parts, primitives,
 mops}}`; counts are nonnegative integers. Source is informational and never means
-save-in-place. `SavedArtifact` is `{path, absolute_path, sha256, bytes}` with positive
-bytes. `SerializedArtifact` is the complete typed content record defined above.
+save-in-place. `SavedArtifact` is `{path, absolute_path, sha256, bytes,
+delivery: "server_workspace_handoff", workspace_file_created: true,
+client_file_created: false}` with positive bytes. `SerializedArtifact` is the complete typed inline-content record defined above;
+its suggested filename does not assert file creation.
 `InspectionPage` is `{summary: DocumentSummary, offset, next_offset: null |
 integer, entities: EntityRecord[]}`. Enumerate layers in project order, parts in
 project order, primitives by UUID, MOPs in part/MOP order; concatenate in that order

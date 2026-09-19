@@ -71,6 +71,7 @@ class DocumentService:
         "geometry_add_rectangle", "geometry_add_circle", "geometry_add_arc",
         "geometry_add_pline", "geometry_add_points", "geometry_add_text",
         "geometry_add_region", "geometry_translate", "geometry_translate_z",
+        "geometry_replace_with_region", "geometry_update_region",
         "geometry_rotate", "geometry_scale", "geometry_mirror", "geometry_bake",
         "machining_add_profile", "machining_add_pocket", "machining_add_engrave",
         "machining_add_drill", "machining_set_mop_targets",
@@ -142,6 +143,26 @@ class DocumentService:
                 return match.group(1)
         return None
 
+    @classmethod
+    def _validation_problem(cls, exc):
+        """Return a value-free, actionable schema error and its top-level field."""
+        field = cls._validation_field(exc)
+        validator = getattr(exc, "validator", None)
+        if field is not None and validator == "required":
+            return f"Missing required field: {field}", field
+        if field is not None and validator == "additionalProperties":
+            return f"Unexpected field: {field}", field
+        if field == "document":
+            return (
+                "Malformed document handle; copy the complete handle exactly from the "
+                "latest successful tool result or document_list, without abbreviating or "
+                "retyping it",
+                field,
+            )
+        if field is not None:
+            return f"Invalid value for field: {field}", field
+        return "Arguments do not match the tool schema", None
+
     async def call_tool(self, name, arguments):
         if name not in TOOLS:
             raise ValueError("Unknown tool")
@@ -154,9 +175,9 @@ class DocumentService:
                 validation_error = None
             except ValidationError as exc:
                 validated = copy.deepcopy(args)
+                message, field = self._validation_problem(exc)
                 validation_error = DomainError(
-                    "INVALID_ARGUMENT", "Arguments do not match the tool schema",
-                    self._validation_field(exc),
+                    "INVALID_ARGUMENT", message, field,
                 )
             except (TypeError, ValueError, OverflowError):
                 validated = copy.deepcopy(args)
@@ -239,8 +260,24 @@ class DocumentService:
             async with document.lock:
                 if self.documents.get(handle) is not document:
                     raise DomainError("DOCUMENT_NOT_FOUND", "Document is not open", "document")
-                if args.get("expected_revision", document.revision) != document.revision:
-                    raise DomainError("STALE_REVISION", "Expected revision does not match", "expected_revision")
+                expected_revision = args.get("expected_revision", document.revision)
+                if expected_revision != document.revision:
+                    if name in self.READ_ONLY_TOOLS:
+                        message = (
+                            f"Expected revision {expected_revision} is stale; current revision "
+                            f"is {document.revision}. Retry the read with expected_revision "
+                            f"{document.revision}"
+                        )
+                    else:
+                        message = (
+                            f"Expected revision {expected_revision} is stale; current revision "
+                            f"is {document.revision}. Never run mutations concurrently on the "
+                            "same document; inspect and retry a still-applicable mutation with "
+                            f"expected_revision {document.revision} and a new request_id"
+                        )
+                    raise DomainError(
+                        "STALE_REVISION", message, "expected_revision",
+                    )
                 if name == "document_inspect":
                     data, diagnostics = self._inspect(document, args)
                     return self._complete(name, entry, self._envelope(args, data=data, diagnostics=diagnostics))
@@ -395,7 +432,11 @@ class DocumentService:
                     continue
                 records.append({"document": handle, "revision": document.revision,
                                 "summary": self._summary(document)})
-        data = {"boot_id": self.bootstrap["boot_id"], "documents": records}
+        data = {
+            "boot_id": self.bootstrap["boot_id"],
+            "workspace_path": str(self.workspace.root),
+            "documents": records,
+        }
         return self._complete(name, None, self._envelope(args, data=data))
 
     @classmethod
@@ -416,18 +457,45 @@ class DocumentService:
                 ) from None
             if len(data) > MAX_XML_BYTES:
                 raise DomainError("LIMIT_EXCEEDED", "XML exceeds 10 MiB", "content")
+            expected_sha256 = args.get("expected_sha256")
+            actual_sha256 = hashlib.sha256(data).hexdigest()
+            if expected_sha256 is not None and actual_sha256 != expected_sha256:
+                raise DomainError(
+                    "CONTENT_MISMATCH",
+                    f"Content SHA-256 mismatch: expected {expected_sha256}, received "
+                    f"{actual_sha256} ({len(data)} bytes); delivery is not synchronized. "
+                    "Do not parse this text or fall back to an older workspace file; on a "
+                    "shared filesystem copy the current source bytes under a fresh workspace "
+                    "name and use document_open with expected_sha256",
+                    "content",
+                )
             source_name = args["source_name"]
         else:
             data = self.workspace.read(args["path"])
             source_name = args["path"]
+            expected_sha256 = args.get("expected_sha256")
+            actual_sha256 = hashlib.sha256(data).hexdigest()
+            if expected_sha256 is not None and actual_sha256 != expected_sha256:
+                raise DomainError(
+                    "CONTENT_MISMATCH",
+                    f"Workspace file SHA-256 mismatch: expected {expected_sha256}, received "
+                    f"{actual_sha256} ({len(data)} bytes). This is not the staged source "
+                    "version; copy the current client file to a fresh workspace-relative "
+                    "name and open that exact snapshot",
+                    "path",
+                )
         try:
             project = read_cambam_bytes(data, source_name=source_name, strict=True)
         except CamBamImportLimitError:
             field = "content" if name == "document_import" else "path"
             raise DomainError("LIMIT_EXCEEDED", "Document exceeds import resource limits", field) from None
-        except ValueError:
+        except ValueError as exc:
             field = "content" if name == "document_import" else "path"
-            raise DomainError("IMPORT_FAILED", "Strict XML import failed", field) from None
+            # The strict reader sanitizes source labels/control characters and
+            # bounds its public diagnostic before raising.  Preserve that
+            # actionable context rather than replacing every parse and
+            # reconstruction failure with the same opaque message.
+            raise DomainError("IMPORT_FAILED", str(exc), field) from None
         self._check_limits(project)
         source = {"sha256": hashlib.sha256(data).hexdigest()}
         if name == "document_import":
@@ -477,11 +545,13 @@ class DocumentService:
             await anyio.lowlevel.checkpoint()
             diagnostics = self._diagnostics(document.units, True)
             diagnostics.append({
-                "code": "SERVER_WORKSPACE_ONLY",
+                "code": "SERVER_WORKSPACE_ARTIFACT",
                 "message": (
-                    "The saved path belongs to the MCP server workspace. Do not read or "
-                    "copy absolute_path with client filesystem tools; use document_export "
-                    "for client-local delivery."
+                    "This created only a handoff artifact in the MCP server workspace, not "
+                    "the requested client/project file. For a client-local task, copy it with "
+                    "a deterministic binary operation to the intended destination and verify "
+                    "sha256 before reporting the file as saved. Otherwise use document_export "
+                    "for portable inline delivery."
                 ),
             })
             result = self._envelope(args, data=artifact, diagnostics=diagnostics)
@@ -520,21 +590,38 @@ class DocumentService:
             "sha256": hashlib.sha256(data).hexdigest(),
             "bytes": len(data),
             "content": content,
+            "delivery": "inline_content_only",
+            "file_created": False,
         }
+        diagnostics = self._diagnostics(document.units, True)
+        diagnostics.append({
+            "code": "INLINE_ONLY_NO_FILE",
+            "message": (
+                "This export returned inline XML only. No client or server workspace file "
+                "was created. Write data.content and verify sha256, or use document_save "
+                "for an exact same-host workspace handoff."
+            ),
+        })
         return self._complete(
             name,
             None,
             self._envelope(
                 args,
                 data=artifact,
-                diagnostics=self._diagnostics(document.units, True),
+                diagnostics=diagnostics,
             ),
         )
 
     @staticmethod
     def _identifier_available(project, identifier, field):
-        if project.get_entity(identifier) is not None:
-            raise DomainError("IDENTIFIER_CONFLICT", "Identifier is already in use", field)
+        existing = project.get_entity(identifier)
+        if existing is not None:
+            raise DomainError(
+                "IDENTIFIER_CONFLICT",
+                f"Identifier '{identifier}' is already used by {type(existing).__name__}; "
+                "choose a different project-unique identifier",
+                field,
+            )
 
     @staticmethod
     def _similarity_scale(matrix):
@@ -848,6 +935,44 @@ class DocumentService:
             for point in points
         ]
 
+    def _region_source_contour(self, project, entity_id, field):
+        """Return one supported root contour as an identity-posed world Pline."""
+        entity = project.get_entity(UUID(entity_id))
+        if entity is None:
+            raise DomainError("ENTITY_NOT_FOUND", "Contour source was not found", field)
+        if not self._slice_supported(project, entity):
+            raise DomainError(
+                "UNSUPPORTED_OPERATION",
+                "Region sources must be supported root Rect, Circle or closed-Pline primitives",
+                field,
+            )
+        if isinstance(entity, Rect):
+            points = [Vertex(x, y, z) for x, y, z in self._rect_geometry(entity)["world_xyz"]]
+        elif isinstance(entity, Pline) and entity.closed:
+            geometry = self._pline_geometry(entity)
+            points = [
+                Vertex(x, y, z, bulge=geometry["bulges"][index])
+                for index, (x, y, z) in enumerate(geometry["world_xyz"])
+            ]
+        elif isinstance(entity, Circle):
+            geometry = self._circle_geometry(entity)
+            cx, cy, z = geometry["center"]
+            radius = geometry["diameter"] / 2.0
+            bulge = math.tan(math.pi / 8.0)
+            points = [
+                Vertex(cx + radius, cy, z, bulge=bulge),
+                Vertex(cx, cy + radius, z, bulge=bulge),
+                Vertex(cx - radius, cy, z, bulge=bulge),
+                Vertex(cx, cy - radius, z, bulge=bulge),
+            ]
+        else:
+            raise DomainError(
+                "UNSUPPORTED_OPERATION",
+                "Region sources must be supported root Rect, Circle or closed-Pline primitives",
+                field,
+            )
+        return entity, Pline(vertices=points, closed=True)
+
     def _stage_edit(self, name, args, project):
         staged = project.clone()
         if name == "document_set_layer_properties":
@@ -1015,6 +1140,97 @@ class DocumentService:
             self._region_geometry(region)
             self._check_limits(staged)
             data = {"entity_id": str(region.internal_id), "layer": args["layer"]}
+        elif name == "geometry_replace_with_region":
+            self._identifier_available(staged, args["identifier"], "identifier")
+            source_ids = [args["outer_id"], *args["hole_ids"]]
+            if args["outer_id"] in args["hole_ids"]:
+                raise DomainError(
+                    "INVALID_ARGUMENT", "The outer contour cannot also be a hole", "hole_ids")
+            outer_entity, outer = self._region_source_contour(
+                staged, args["outer_id"], "outer_id")
+            hole_pairs = [
+                self._region_source_contour(staged, entity_id, "hole_ids")
+                for entity_id in args["hole_ids"]
+            ]
+            source_entities = [outer_entity, *(pair[0] for pair in hole_pairs)]
+            layer = staged.get_layer_of_primitive(outer_entity)
+            if layer is None or any(
+                staged.get_layer_of_primitive(entity) is not layer
+                for entity in source_entities[1:]
+            ):
+                raise DomainError(
+                    "INVALID_ARGUMENT", "All Region sources must be on the same layer", "hole_ids")
+
+            source_uuids = {entity.internal_id for entity in source_entities}
+            affected_mops = []
+            for mop in staged.list_mops():
+                selection = frozenset(staged.get_mop_targets(mop))
+                if not source_uuids.intersection(selection):
+                    continue
+                kind = self.MOP_KIND_BY_CLASS.get(type(mop))
+                if kind not in ("profile", "pocket"):
+                    raise DomainError(
+                        "UNSUPPORTED_OPERATION",
+                        "Region sources targeted by Engrave or Drill cannot be replaced",
+                        "outer_id",
+                    )
+                affected_mops.append((mop.internal_id, frozenset(selection)))
+
+            for entity in source_entities:
+                if not staged.remove_primitive(entity.internal_id):
+                    raise DomainError("INTERNAL_ERROR", "Framework rejected contour removal")
+            region = staged.add_region(
+                layer=layer, identifier=args["identifier"], outer_curve=outer,
+                hole_curves=[pair[1] for pair in hole_pairs],
+            )
+            if region is None:
+                try:
+                    Region(outer_curve=outer, hole_curves=[pair[1] for pair in hole_pairs])
+                except (TypeError, ValueError) as exc:
+                    raise DomainError("INVALID_ARGUMENT", str(exc)[:512], "outer_id") from None
+                raise DomainError("INTERNAL_ERROR", "Framework rejected Region replacement")
+            self._region_geometry(region)
+            for mop_id, previous in affected_mops:
+                targets = (previous - source_uuids) | {region.internal_id}
+                staged.set_mop_targets(mop_id, sorted(targets))
+            self._check_limits(staged)
+            data = {
+                "entity_id": str(region.internal_id),
+                "layer": layer.user_identifier,
+                "removed_entity_ids": source_ids,
+            }
+        elif name == "geometry_update_region":
+            entity = self._require_slice_primitive(staged, args["entity_id"])
+            if not isinstance(entity, Region):
+                raise DomainError(
+                    "UNSUPPORTED_OPERATION", "Entity is not a supported root Region", "entity_id")
+            outer = Pline(vertices=self._vertex_records(
+                args["outer"]["points"], allow_bulge=True), closed=True)
+            holes = [Pline(vertices=self._vertex_records(
+                contour["points"], allow_bulge=True), closed=True)
+                for contour in args["holes"]]
+            try:
+                replacement = Region(outer_curve=outer, hole_curves=holes)
+            except (TypeError, ValueError) as exc:
+                raise DomainError("INVALID_ARGUMENT", str(exc)[:512], "outer") from None
+            # Input coordinates are absolute. The supported entity is a root, so
+            # replacing its stored pose with the validated identity-posed contours
+            # preserves exactly those coordinates while retaining its UUID and all
+            # project-owned layer/MOP relationships.
+            entity.outer_curve = replacement.outer_curve
+            entity.hole_curves = replacement.hole_curves
+            entity.effective_transform = replacement.effective_transform
+            entity.local_z_offset = replacement.local_z_offset
+            geometry = self._region_geometry(entity)
+            layer = staged.get_layer_of_primitive(entity)
+            if layer is None:
+                raise DomainError("INTERNAL_ERROR", "Region has no layer assignment")
+            self._check_limits(staged)
+            data = {
+                "entity_id": str(entity.internal_id),
+                "layer": layer.user_identifier,
+                "geometry": geometry,
+            }
         elif name == "geometry_translate":
             entity = self._require_slice_primitive(staged, args["entity_id"])
             if not staged.translate_primitive(entity.internal_id, args["dx"], args["dy"], bake=False):

@@ -565,8 +565,9 @@ bootstrap and, after the first accepted request, a `CAMBAM_MCP_PROTOCOL` record
 containing the actual version and `legacy`/`modern` mode. Restart loses all open
 handles, unsaved edits and retry records.
 
-Thirty-five tools create, open/import, list/inspect, save/export and close documents; add root
-Rect, Circle, Arc, Pline, Points, Text and Region primitives; add explicit
+Thirty-seven tools create, open/import, list/inspect, save/export and close documents; add root
+Rect, Circle, Arc, Pline, Points, Text and Region primitives; atomically replace existing
+same-layer root Rect/Circle/closed-Pline contours with one Region; add explicit
 Profile, Pocket, Engrave and Drill MOPs and replace MOP targets; link/group
 and same-document copy primitives; copy or transfer a subtree between two
 distinct open documents under per-document revisions; and translate, rotate,
@@ -579,19 +580,40 @@ parent directories must already exist. Units are assertions, not conversions
 or a verified CamBam units setting. Read the
 [state and safety contract](MCP_CONTRACT.md) before client use.
 
-For a client-local `.cb` file, the client reads the complete UTF-8 XML and calls
-`document_import` with `source_name`, `units` and `content`; a client path must
-not be passed to `document_open`. After edits, call `document_export` with the
+For a client-local `.cb` file on a shared filesystem, first call `document_list` to
+obtain `workspace_path`. Binary-copy the file under a fresh safe `.cb` name in that
+directory, verify source/copy SHA-256 equality, then call `document_open` with the
+relative staged name and `expected_sha256`. Do not pass a client path to
+`document_open`, reuse an older staged filename, or reconstruct XML in model text.
+Across hosts, read the complete UTF-8 XML and call `document_import` with
+`source_name`, `units`, `content` and (when known) `expected_sha256`. After edits,
+call `document_export` with the
 current revision and a suggested leaf filename, write the returned `content`
 unchanged to the desired client-local path, and verify its SHA-256 when possible.
 Both directions accept up to 10 MiB of XML. Inline results are intentionally the
 compatibility baseline; large results may consume substantial model context.
-This content flow is the default even when client and server run on the same PC.
-`document_open` and `document_save` are only for artifacts explicitly requested in
-the MCP workspace. An agent must not use their server `absolute_path` with client
-filesystem tools or request client access to that directory.
+This content flow is the portable fallback. On a shared filesystem, `document_save`
+can create a non-overwriting exact-byte handoff artifact in the MCP workspace. Copy
+its returned `absolute_path` to the client-local destination with a deterministic
+binary copy and verify bytes and SHA-256. The live handle remains the synchronized
+working copy until the durable file changes. Do not treat the server path as the
+client destination or pass a client path to `document_save`.
 
 ### Human/AI follow-up and session recovery
+
+For consuming project folders, start from the packaged
+[`consumer_AGENTS.template.md`](../cambam_builder/mcp_adapter/consumer_AGENTS.template.md).
+Its one-time bootstrap gathers project preferences and replaces itself with daily
+instructions. Those project-context defaults are intentionally separate from MCP
+protocol guarantees and this repository's development `AGENTS.md`.
+
+The literal `FIRST_RUN_SETUP: PENDING` marker is a gate, not a heading for an agent to
+silently skip. Each unresolved durable policy is a separately displayed onboarding
+question; if the client limits questions per dialog, setup continues in another dialog
+rather than bundling fields. The agent saves the answers into the copied `AGENTS.md`,
+marks setup complete, and only then resumes the preserved first task. Current-file
+names and per-job geometry, stock, material, tool, feed, speed, depth and nesting
+choices belong to that task rather than onboarding.
 
 Treat the client-local `.cb` file as the durable shared artifact and an MCP handle
 as one server-process working snapshot. Keep the last successful file SHA-256,
@@ -600,22 +622,31 @@ Before a later AI edit—most
 importantly after the user has opened and saved the file manually—reread the complete
 file and compare its hash with the last imported or exported-and-written hash.
 
-- If the file changed, call `document_import` with its complete current UTF-8
-  content and leaf `source_name`. Continue from the returned new handle at revision
-  0; do not apply the manual edit to an older handle. If that handle also contains
+- If the file changed on a shared filesystem, binary-copy it under a fresh name in
+  `document_list.workspace_path`, verify the copy hash, and call `document_open`
+  with that hash as `expected_sha256`. Across hosts, call `document_import` with its
+  complete current UTF-8 content, leaf `source_name` and hash. Continue from the
+  returned new handle at revision 0; do not apply the manual edit to an older handle
+  or fall back to a similarly named workspace artifact. If the older handle contains
   MCP mutations newer than the last export actually written to the durable file,
   preserve both versions, export the MCP candidate under a different client-local
   name, and ask the user which changes to keep or merge.
 - If conversational context was lost or the client reconnected, call
   `document_list`. Reuse a handle only when it is listed under the current boot and
   the durable file hash is still the expected one. A server restart normally returns
-  an empty list and requires re-importing client-local content.
+  an empty list and requires staging/opening or importing the durable file again.
 - If a mutation returns `STALE_REVISION`, call `document_inspect` without
   `expected_revision`, review the current contents, and retry only if the requested
   change still applies. Use the reported revision and a new `request_id`; failed
   request IDs replay their original terminal result.
-- After `document_export`, write `content` unchanged, verify `sha256`, and retain
-  that hash as the synchronization point. A valid UUID accidentally supplied to a
+- Never launch multiple mutations concurrently against one document. Every successful
+  mutation advances its revision, so await each result and pass that returned revision
+  to the next mutation with a fresh request ID. Read-only calls and mutations against
+  different documents may still run concurrently.
+- After cross-host `document_export`, write `content` unchanged and verify `sha256`.
+  For a same-host `document_save` handoff, binary-copy rather than reconstructing
+  XML and verify the destination hash. Retain that hash as the synchronization point;
+  if the destination later changes, stage/open it as above. A valid UUID accidentally supplied to a
   read-only list/inspect/export/planning call is ignored and does not create retry
   state.
 
@@ -623,17 +654,22 @@ The source hash shown by `document_list` is the originally imported/opened byte
 snapshot. A revision greater than zero means MCP has mutated that in-memory document;
 export it to obtain the current serialized content and hash. Because the server
 cannot see a client-local path, it cannot detect a manual file save without the
-client rereading and re-importing that content.
+client hashing it and staging/opening or importing that content.
 
 The required identity fields for that flow are:
 
 ```text
-document_list:    {workspace_id}
-document_import:  {workspace_id, new request_id, units, source_name, complete content}
+document_list:    {workspace_id} -> workspace_path plus live snapshots
+document_open:    {workspace_id, new request_id, units, fresh staged path, expected_sha256}
+document_import:  {workspace_id, new request_id, units, source_name, complete content, expected_sha256} (cross-host)
 document_inspect: {workspace_id, document}; add expected_revision only for a pinned page
 mutation:         {workspace_id, document, current expected_revision, new request_id, ...}
 document_export:  {workspace_id, document, current expected_revision, suggested_filename}
 ```
+
+An export result with `delivery=inline_content_only` and `file_created=false` has not
+created `suggested_filename` anywhere. Use `document_save` for a same-host workspace
+artifact, or write the returned inline content and verify its SHA-256.
 
 Use a fresh UUID for each new mutation intent. Reuse a write request UUID only to
 recover the result of the exact same arguments; changed arguments always need a new
@@ -739,18 +775,27 @@ command above, and confirm `opencode mcp list` reports `cambam connected`. Then 
 the OpenCode agent:
 
 ```text
-Use cambam MCP tools for document/CAD/CAM work and your normal local file tools only
-to read or write complete exported .cb content. Do not call document_open or
-document_save, and do not access the MCP server workspace. Report the server
-workspace ID and available tool count. Create a document named slice with asserted
+Use cambam MCP tools for document/CAD/CAM work and normal local file tools only for
+deterministic copies and complete .cb reads. Because this client and server share a
+filesystem, call document_list to get workspace_path. Use document_save with unique
+server-workspace leaf names as an exact-byte handoff, copy each returned absolute_path
+to the requested client-local file, and verify its SHA-256. To reload a client file,
+binary-copy it under a new unique leaf in workspace_path, verify both hashes, and call
+document_open on that relative leaf with expected_sha256. Do not manually reconstruct
+XML, reuse an old staging name, or treat the server path as the final destination.
+Report the server workspace ID and available tool count. Create a document named slice with asserted
 mm units. Add Rect outline on
 layer Geometry at (0,0,0), width 20 and height 10. Add an enabled outside Profile
 named profile in Part targeting outline: target depth -1, depth increment 0.5,
 tool diameter 3, cut/plunge feeds 300/100, spindle 12000, stock surface 0 and
-clearance plane 5. Inspect it, export it, and write the returned content unchanged
-as A.cb in this client project. Read that local A.cb content, import it as a new
-document, translate outline by (5,2), inspect it, export it, and write the returned
-content unchanged as B.cb here. Close both handles. Do not retry failed
+clearance plane 5. Inspect it, save it under a unique server-workspace leaf, copy the
+returned absolute_path exactly to A.cb in this client project, verify its SHA-256,
+stage A.cb back under a fresh workspace leaf, and open it with expected_sha256 as a
+new document. Translate outline
+by (5,2), inspect it, save it under another unique server-workspace leaf, copy it
+exactly to B.cb here, verify its SHA-256, stage B.cb under another fresh leaf, and
+open it with expected_sha256.
+Close all handles. Do not retry failed
 mutations with changed arguments under the same request ID. Report every resulting
 revision, the final world corners, target ID, hashes, errors, and whether any MCP
 argument needed manual correction.

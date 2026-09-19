@@ -673,6 +673,10 @@ class AuthoringTests(unittest.TestCase):
                 "identifier": "Part",
             })
             self.assertEqual(identifier_conflict_across_kinds["error"]["code"], "IDENTIFIER_CONFLICT")
+            self.assertIn("already used by Part",
+                          identifier_conflict_across_kinds["error"]["message"])
+            self.assertIn("project-unique identifier",
+                          identifier_conflict_across_kinds["error"]["message"])
 
             before_translate_failure = await self.inspect(handle, revision=2)
             before_records = copy.deepcopy(before_translate_failure["data"]["entities"])

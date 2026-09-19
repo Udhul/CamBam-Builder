@@ -23,6 +23,56 @@ class StrictImportTests(unittest.TestCase):
         self.assertEqual(loaded.project_name, "strict-input")
         self.assertIsNotNone(loaded.get_primitive("outline"))
 
+    def test_accepts_cambam_saved_rect_with_omitted_origin_position(self):
+        payload = b'''<?xml version="1.0" encoding="utf-8"?>
+<CADFile Version="0.9.8.0" Name="builder-smoke-test">
+  <layers>
+    <layer name="Test" color="0,128,0" pen="1">
+      <objects>
+        <rect id="1" Closed="true" w="40" h="20">
+          <ModificationCount>2</ModificationCount>
+          <Tag>{"user_id":"TestRectangle"}</Tag>
+          <mat m="Identity" />
+          <pts>
+            <p>0,0,0</p><p>40,0,0</p><p>40,20,0</p><p>0,20,0</p>
+          </pts>
+        </rect>
+        <rect id="2" Closed="true" p="20,10,0" w="11" h="4">
+          <ModificationCount>1</ModificationCount>
+          <mat m="Identity" />
+          <pts>
+            <p>20,10,0</p><p>31,10,0</p><p>31,14,0</p><p>20,14,0</p>
+          </pts>
+        </rect>
+      </objects>
+      <ModificationCount>0</ModificationCount>
+    </layer>
+  </layers>
+  <MachiningOptions>
+    <Stock><Material /><PMin>0,0</PMin><PMax>0,0</PMax><Color>255,165,0</Color></Stock>
+    <ToolProfile>Unspecified</ToolProfile>
+  </MachiningOptions>
+  <parts />
+  <ActiveLayer>Test</ActiveLayer>
+</CADFile>'''
+
+        loaded = read_cambam_bytes(payload, source_name="builder-smoke-test.cb")
+
+        layer = loaded.get_layer("Test")
+        self.assertEqual(layer.color, "0,128,0")
+        origin = loaded.get_primitive("TestRectangle")
+        second = loaded.get_primitive("rect_2")
+        self.assertEqual(origin.relative_corner, (0.0, 0.0))
+        self.assertEqual(origin.elevation, 0.0)
+        self.assertEqual((origin.width, origin.height), (40.0, 20.0))
+        self.assertEqual(second.relative_corner, (20.0, 10.0))
+        self.assertEqual(second.elevation, 0.0)
+        self.assertEqual((second.width, second.height), (11.0, 4.0))
+        self.assertEqual(origin.get_absolute_coordinates_xyz(), [
+            (0.0, 0.0, 0.0), (40.0, 0.0, 0.0),
+            (40.0, 20.0, 0.0), (0.0, 20.0, 0.0),
+        ])
+
     def test_rejects_non_bytes_and_oversized_input(self):
         with self.assertRaises(ValueError):
             read_cambam_bytes("<CADFile/>")

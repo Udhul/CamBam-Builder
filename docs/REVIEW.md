@@ -2024,6 +2024,10 @@ client-local delivery. Open/save remain available only for explicitly requested
 server-workspace artifacts, and successful saves now repeat this boundary in a
 `SERVER_WORKSPACE_ONLY` diagnostic. The README and 4e runbook use this workflow.
 
+This 2026-09-11 policy was superseded by the 2026-09-18 audit below: same-host
+clients may use a server-generated save only as an exact-byte intermediate, copy it
+deterministically, verify it and re-import it. Arbitrary client paths remain forbidden.
+
 The same session also found an artificial implementation restriction: the adapter
 allowed Profile only on Rect, despite the public framework accepting primitive targets.
 Profile now accepts the bounded closed-contour set Rect, Circle, closed Pline and Region;
@@ -2294,3 +2298,242 @@ tools. CamBam Plus acceptance also remains pending for asserted millimeters, A/B
 geometry, explicit Profile properties and generated outside toolpaths at depths
 `-0.5` and `-1.0`. 4e and the initial adapter are not complete until the user reports
 those results; preserve their A/B artifacts until the report is recorded.
+# MCP CamBam-save/Region/Pocket transcript correction - 2026-09-17
+
+The supplied OpenCode transcript distinguishes three failure classes. First, the
+adapter successfully created, inspected and serialized the initial document, but
+`document_export` returned content rather than creating `builder-smoke-test.cb`.
+The agent first claimed the suggested filename was ready, then used a client patch
+write that added a newline: the resulting 856 bytes did not match the returned
+855-byte SHA-256. This was a client-delivery failure even though the MCP export call
+itself succeeded. Initialization and export-tool guidance now prohibit claiming
+delivery before the client write and require correcting any byte/hash mismatch.
+
+Second, CamBam's manual save omitted `p` from the Rect at its default origin while
+retaining `w`, `h`, an identity matrix and a redundant `<pts>` cache. Strict import
+previously passed `None` to the coordinate parser and returned opaque
+`IMPORT_FAILED`. Omitted Rect position now resolves to `(0,0,0)`, and the adapter
+preserves the strict reader's already-sanitized, bounded reason. The identity matrix,
+RGB layer color, modification counters, missing Tag on the new Rect, two-coordinate
+project stock and active-layer metadata were not causes.
+
+Third, the Pocket call omitted required `expected_revision`. Its Region target and
+all supplied machining values were valid, and the rejected call was atomic at
+revision 1. The agent incorrectly inferred that Pocket did not support Region even
+though the description and implementation did. Missing required properties now
+produce an actionable value-free message such as
+`Missing required field: expected_revision`; MOP descriptions repeat the current
+revision/fresh request-ID requirement. The transcript's `field:null` came from
+`main`, because OpenCode had not been reloaded onto this branch. Commit `e2fd2c3`
+already contained top-level field extraction; the staged change improves its message
+but does not duplicate that fix. External acceptance must still restart/reconnect the
+MCP process after code changes.
+
+Finally, import plus `geometry_add_region` was insufficient to perform the user's
+requested conversion because it could only leave the source Rects in place or rebuild
+a different document. `geometry_replace_with_region` now performs that replacement
+on a staged clone, accepts supported root Rect/Circle/closed-Pline contours on one
+layer, validates Region topology before publication, removes sources atomically and
+retargets compatible explicit Profile/Pocket selections. Engrave/Drill or unsupported
+relationship cases reject without publication.
+
+Focused evidence: the strict-import, document, MOP and Region-replacement suites ran
+37 tests successfully with the existing Windows symlink-privilege skip. The exact
+missing-revision regression confirms a fresh-ID retry at revision 1 creates a Pocket
+targeting the Region and advances to revision 2. The complete suite ran 223 tests:
+222 passed with the same single skip. A task-owned replay under
+`output/transcript-regression-20260917/` imported the actual CamBam-saved file,
+replaced both Rects, added the Pocket, exported 5,195 bytes and strictly re-imported
+exactly one Region and one MOP; revisions were 0/1/2 and Region bounds remained
+`[0,0,40,20]` with one hole. Named-client evidence remains pending, and no CamBam
+toolpath claim follows from these automated document/contract checks.
+
+## MCP OpenCode local-delivery and existing-Region audit — 2026-09-18
+
+The second supplied session ran against exact commit `e2fd2c3`, without the staged
+changes. It made 37 MCP calls: 36 succeeded and the final strict import correctly
+rejected malformed, manually reconstructed XML. The adapter created six primitives,
+configured stock and 3x2 IsoGrid nesting, added Drill/Pocket/Engrave/Profile MOPs,
+and consistently inspected four MOPs. Its revision-11 export was 13,099 bytes with
+SHA-256 `d8182f...`; the agent instead authored 6,177 different bytes with hash
+`646e31...`. At revision 14, the authoritative export was 15,654 bytes with hash
+`455b94...`; the agent authored 4,768 bytes with hash `f61889...`, omitting every
+MOP, claimed success despite the mismatch, and later copied the stale 6,177-byte
+file. This is an agent/file-transport failure, not lost MCP state or failed export.
+
+The baseline already provided portable import/export, source hashes, document-list
+recovery, optional read-only request IDs, required write revisions, Pocket targets
+on Regions, and OpenAI-compatible schemas. Staged wording strengthens those existing
+contracts; it must not be described as newly implementing them. Genuinely new staged
+work is the omitted-origin Rect import fix, propagation of bounded reader details,
+value-free actionable schema messages, and atomic contour-to-Region conversion.
+
+One transcript request remained uncovered: “change the region shape.” The staged
+conversion tool accepts Rect/Circle/closed-Pline sources, not an existing Region.
+`geometry_update_region` now replaces an existing root Region's absolute contours
+on a staged clone while retaining its UUID and project-owned layer/MOP relationships.
+Invalid topology leaves the revision and original geometry unchanged. Descriptions
+also state that Region holes are excluded islands for Pocket and that a Part without
+MOPs produces no nested work.
+
+For exact local delivery, same-host stdio clients may now call the existing atomic,
+non-overwriting `document_save`, copy the generated server-workspace artifact with a
+deterministic binary operation, and verify byte count/SHA-256. The current handle
+remains authoritative until a manual edit changes the client file; reloading then
+uses a fresh exact workspace staging copy and guarded `document_open`, as recorded
+below. The server still accepts no arbitrary client path;
+inline `document_export` remains the portable cross-host fallback. This consolidates
+delivery around server-generated bytes rather than adding a second serializer or
+trying to make a language model reproduce large XML exactly.
+
+Verification on the repository Python 3.14 environment: the MCP suite ran 70 tests
+successfully with one Windows symlink-privilege skip; the complete suite ran 225
+tests successfully with the same skip. The focused strict-import suite, `compileall`
+and `git diff --check` passed. Named OpenCode and CamBam acceptance remains pending.
+
+## MCP OpenCode mutation sequencing and false-delivery audit — 2026-09-18
+
+The next OpenCode rerun made 34 CamBam calls. It submitted the first six geometry
+mutations concurrently with `expected_revision:0`. The rectangle committed revision
+1; the other five correctly returned `STALE_REVISION` at revision 1 and made no
+changes. OpenCode then retried them sequentially at revisions 1 through 5, and all
+succeeded. This is correct optimistic-concurrency behavior, but the per-tool contract
+did not make the non-parallel requirement salient enough. All same-document mutation
+descriptions now receive one generated sequential-write suffix, while stale errors
+state the current revision and require a still-applicable retry with a fresh request
+ID. Concurrency remains valid for reads and independent documents.
+
+Two later failures were also correct: `PartA_Pocket` collided with a Layer of that
+name, and the deliberately attempted Engrave-on-Region target was unsupported. The
+identifier failure now names the occupying entity type and requests a different
+project-unique name; the Engrave rule was already explicit and was not broadened.
+
+The final call was `document_export`, not `document_save`. It successfully returned
+18,793 inline bytes and SHA-256 `d2aafa...`, created no file, and OpenCode nevertheless
+claimed that `CamBam_Builder_Test.cb` existed in the shared workspace. Export results
+now include `delivery=inline_content_only`, `file_created=false`, and an
+`INLINE_ONLY_NO_FILE` diagnostic. The same-host file-producing path remains the
+atomic, non-overwriting `document_save`; portable export still requires an explicit
+client write and hash verification.
+
+## MCP manual-save reload and stale-workspace audit — 2026-09-18
+
+The latest OpenCode run created and saved the revision-10 document, reopened that
+exact workspace artifact, added a Region and Pocket, then saved a 17,091-byte update
+under the distinct workspace name `cambam_builder_test_region.cb` and copied it to
+the client file. CamBam subsequently rewrote the client file as 18,594 bytes with
+SHA-256 `e27a3983...`. OpenCode's text reconstruction delivered only 16,179 bytes to
+`document_import`, which correctly rejected the mismatch. It then opened the older
+workspace path `cambam_builder_test.cb` (12,911 bytes, SHA-256 `724138d4...`) without
+a hash guard. Inspection of that valid but stale snapshot omitted the Region/Pocket,
+leading the agent to incorrectly blame parser support and ask the user to identify
+the change.
+
+Direct strict reading of the attached CamBam-saved bytes succeeds. It reconstructs
+three layers, five primitives including `Region_Test_PlateA`, two Parts, and five
+MOPs; native `ModificationCount`, identity formatting, nesting items, holding-tab
+containers and reordered MOP fields do not prevent import. The visible intentional
+geometry change is a Region Y translation from bounds `12,8`–`40,30` to
+`12,40.0624390837628`–`40,62.0624390837628`; much of the remaining XML difference
+is CamBam normalization/native state. No reader relaxation is justified by this
+evidence.
+
+The owning failure was same-host ingress. `document_list` now exposes the already
+trusted workspace root as `workspace_path`; guidance requires an exact binary copy
+of the current client file under a fresh workspace-relative name followed by
+`document_open(expected_sha256=...)`. Open checks the bounded byte snapshot before
+strict parsing and returns `CONTENT_MISMATCH` without publishing a handle if an old
+or wrong artifact is selected. Cross-host `document_import` remains available, but
+its mismatch must not be bypassed by falling back to a similarly named workspace
+file. Successful open/import intentionally produces a new revision-0 snapshot;
+same-document mutation revisions remain sequential and unchanged.
+
+Focused automated evidence covers matching and mismatching guarded opens, zero
+publication on mismatch, source-hash reporting and workspace-path discovery. A fresh
+OpenCode/CamBam run remains required to validate that the model follows exact staging,
+compares the new snapshot with the prior live snapshot, applies the analogous change,
+and saves the result back through an exact handoff.
+
+Verification on the repository Python 3.14 environment: all 71 MCP tests pass with
+the existing Windows symlink-privilege skip, and the full suite passes all 226 tests
+with that same skip. `compileall` and `git diff --check` pass.
+
+## MCP consuming-agent workflow audit — 2026-09-19
+
+The next OpenCode run used the exact shared-filesystem staging path successfully:
+after the user changed the client file, it hashed and binary-copied the file under a
+fresh workspace name, opened it with `expected_sha256`, and received the correct new
+revision-0 snapshot. This closes the stale-workspace regression from the prior run.
+
+The reported `INVALID_ARGUMENT` failures were not missing revisions. Engrave/Profile
+calls included `expected_revision` 8 or 9 but changed the opaque document handle from
+`d6e8007c-c263-41ba-9c48-ab81f1ab641f:509263b6-829c-4e5f-9b97-1f6fc6b904df`
+to the malformed `d6e8007c-c263-41ba-9c97-1f6fc6b904df`. Multiple retries repeated
+the same transcription error, including one replay under the same request ID.
+Schema validation correctly rejected every call before publication. The error and
+Handle schema now direct clients to copy the complete opaque handle exactly from the
+latest result or `document_list`.
+
+The revision requirement remains deliberate optimistic concurrency. A mutation says
+which state it was planned against; if another call advances that state, the stale
+mutation is rejected rather than silently applying in a different order or overwriting
+newer intent. The same run again launched three revision-0 geometry mutations in
+parallel; one committed and two safely failed stale before sequential retries. Queueing
+or silently rebasing these calls would hide a planning error and can corrupt dependent
+edits, so the adapter retains the guard and the consumer template explicitly forbids
+same-document mutation concurrency.
+
+File delivery remained misleading. Two successful `document_save` calls created
+verified workspace artifacts, but OpenCode described those internal paths as saved
+files until the user explicitly requested the project directory. Saved artifacts now
+state machine-readably that a workspace handoff exists and a client file does not.
+The reusable project template makes durable project-local delivery part of every
+create/edit task, defaults edits to the source path, and requires a pre-replacement
+source-hash check plus destination-hash verification.
+
+For the manual edit, the prior revision-10 inspection and new revision-0 inspection
+shared stable primitive IDs. Their bounds were: Part A outline `[0,0,80,50]` to
+`[0,50,80,100]`, circle `[15,20,25,30]` to `[15,70,25,80]`, and Region
+`[45,10,72,40]` to `[45,60,72,90]`; Part B remained `[110,0,160,50]`. Thus the
+demonstrated common edit was exactly `(dx=0, dy=+50)` with no rotation. The agent
+instead inferred a 90-degree rotation about `(0,50)`, then translated Part B into an
+unrequested alignment and saved under a new name. General server/template guidance
+now requires baseline/current comparison by stable IDs, separation of CamBam
+serialization noise, the smallest common demonstrated delta, and clarification when
+the evidence is ambiguous.
+
+The consuming project instructions supplied with the transcript also conflicted with
+the adapter: they hard-coded a different workspace ID and prescribed portable
+import/export despite a shared filesystem. The new packaged
+`consumer_AGENTS.template.md` discovers runtime identity, bootstraps durable project
+defaults once, then replaces its setup block with daily instructions. Project units,
+paths, overwrite/Save-As preference and manufacturing sources stay local; handle,
+revision, staging and delivery semantics remain adapter-owned.
+
+An external OpenCode restart needed to load changed MCP schemas is acceptance setup,
+not a reason to start a fresh development-agent conversation. The prior handoff
+conflated those independent lifecycles. The repository development `AGENTS.md`
+already scopes its breakpoint decision to the current work session and is unchanged.
+
+### Consumer template first-run acceptance finding — 2026-09-19
+
+The first test of the copied consumer template did not enter a recognizable onboarding
+flow. Its instruction to ask "one concise, grouped set" was followed literally: the
+agent emitted one overloaded free-text question and mixed durable project conventions
+with the current document's filename, material, stock, tooling and machining values.
+This was a template defect rather than an MCP call failure.
+
+The setup section now uses a literal pending/completed gate. While pending, it requires
+the agent to preserve the initiating task, inspect read-only, present each unresolved
+durable policy as its own answerable prompt (continuing across dialogs if necessary),
+and avoid all document-instance values. After answers, the agent must persist concrete
+durable defaults and then resume the original request. A source-level contract test
+guards the state markers, separate-question requirement, task/setup boundary and
+resumption rule. Live client acceptance remains necessary because compliance with
+repository prose cannot be guaranteed by the adapter runtime.
+
+Verification on the repository Python 3.14 environment: all 71 MCP tests and all
+226 repository tests pass with the existing single Windows symlink-privilege skip.
+The wheel build succeeds and contains both the contract JSON and packaged consumer
+template. Compileall and `git diff --check` pass. External OpenCode behavior remains
+the required user acceptance boundary.

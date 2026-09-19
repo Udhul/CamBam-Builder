@@ -22,7 +22,7 @@ cambam-mcp = "cambam_builder.mcp_adapter.__main__:main"
 packages = ["cambam_builder", "cambam_builder.mcp_adapter", "legacy_cambam_builder"]
 
 [tool.setuptools.package-data]
-"cambam_builder.mcp_adapter" = ["*.json"]
+"cambam_builder.mcp_adapter" = ["*.json", "*.md"]
 
 [tool.setuptools.dynamic]
 version = {attr = "cambam_builder.__version__"} # Read the 'version' from the '__version__' attribute of the 'cambam_builder' module
