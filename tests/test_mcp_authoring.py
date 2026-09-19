@@ -464,7 +464,7 @@ class AuthoringTests(unittest.TestCase):
             self.assertTrue(part["ok"], part)
             self.assertEqual(part["data"]["nest_method"], "Grid")
             self.assertIn(
-                "NESTED_STOCK_ENVELOPE_UNVERIFIED",
+                "NESTED_STOCK_FIT_ADVISORY",
                 {item["code"] for item in part["diagnostics"]},
             )
             inspected = await self.inspect_records(handle, revision=2)
@@ -563,8 +563,13 @@ class AuthoringTests(unittest.TestCase):
         async def test():
             handle = await self.create("part-patch")
             created = await self.call("machining_configure_part", self.args(
-                document=handle, expected_revision=0, part="Part"))
+                document=handle, expected_revision=0, part="Part",
+                nest_method="Grid", nest_rows=2))
             self.assertTrue(created["ok"], created)
+            self.assertNotIn(
+                "NESTED_STOCK_FIT_ADVISORY",
+                {item["code"] for item in created["diagnostics"]},
+            )
             self.assertEqual(0, created["data"]["stock_width"])
             self.assertEqual(0, created["data"]["stock_height"])
             self.assertEqual(0, created["data"]["stock_thickness"])

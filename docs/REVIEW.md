@@ -2673,8 +2673,9 @@ toolpath, not an absolute anchor replacing source geometry: moving source geomet
 behavior rather than attributing the full vector-addition rule to the documentation.
 
 The final hardening closes two remaining misuse paths. Configuring more than one Grid
-or IsoGrid copy returns `NESTED_STOCK_ENVELOPE_UNVERIFIED`, because Part nesting
-repeats toolpaths but does not enlarge the Part stock definition. Fresh direct-core
+or IsoGrid copy with nonzero XY stock returns a non-blocking stock-fit advisory,
+because Part nesting repeats toolpaths but does not enlarge the optional Part stock
+definition. It is good-practice guidance, not a validity requirement. Fresh direct-core
 `ProfileMop(tab_method="Manual")` export now raises before serialization: the previous
 writer could emit scalar Manual settings without the required native position
 collection. Imported native Manual MOP XML still follows the unchanged preserve path,
@@ -2691,3 +2692,31 @@ JSON parsing and `git diff --check` all exit successfully. The expected negative
 writer log confirms that unsupported fresh Manual tab authoring fails before XML is
 returned. No repeat native CamBam check is required because these final changes do
 not alter any accepted automatic-tab or nesting XML syntax.
+
+### Text machining and roughing-clearance contract correction — 2026-09-19
+
+The follow-up identified two adapter restrictions not present in CamBam Plus 1.0.
+Text is a valid direct source for Profile and Pocket as well as Engrave: Pocket clears
+closed letter interiors and Profile offsets letter outlines. These operations retain
+the ordinary limitations of a round cutter at narrow strokes and corners. Profile
+corner overcut intentionally cuts beyond concave corners for fitting applications;
+it is not a general substitute for cutter accessibility.
+
+`RoughingClearance` was already a common core MOP field with reader, writer, native
+state and inspection mappings for Profile, Pocket, Engrave and Drill. The MCP input
+and closed inspection records nevertheless fixed it to zero. Profile, Pocket and
+Engrave now accept any finite signed value. CamBam documents positive values as stock
+left for finishing and negative values as overcut; Engrave at zero follows its source
+line placement and a nonzero value offsets that path. Imported Drill values remain
+inspectable, but fresh MCP Drill authoring stays at zero because this adapter exposes
+only CannedCycle and CamBam's release documentation specifically associates drilling
+roughing-clearance support with spiral drilling.
+
+Regression coverage authors Profile, Pocket and Engrave directly against one Text
+primitive with positive and negative clearances, verifies the exact serialized values,
+strict-reopens the file and compares all three parameter records. A separate native
+core fixture proves that an imported CannedCycle Drill with nonzero clearance remains
+inspectable. Stock diagnostics are absent for unspecified zero stock and advisory for
+defined XY stock with multiple copies. All 77 MCP tests and all 236 repository tests
+pass with the existing single Windows symlink-privilege skip; compileall, strict
+duplicate-key/schema JSON parsing and `git diff --check` pass.

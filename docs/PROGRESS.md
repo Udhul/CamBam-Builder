@@ -33,14 +33,30 @@ automatic tabs, ordinary Text/VCutter Engrave and native metadata preservation. 
 also established that PointList coordinates translate the unnested Part toolpaths:
 source-geometry and point translations compound rather than the point replacing the
 source origin. This operational detail supplements the official documentation's
-PointList-position and nesting-origin description. Part stock does not expand with
-nesting, so multi-copy configurations now return a diagnostic requiring the complete
-nested toolpath envelope to be checked against stock. All automatic tab fields remain
+PointList-position and nesting-origin description. Part stock is optional and does
+not expand with nesting; when nonzero XY stock and multiple copies are both defined,
+configuration returns only a non-blocking good-practice fit advisory. All automatic tab fields remain
 supported. Imported native Manual tabs are preserve-only; fresh direct-core Manual
 authoring now fails explicitly rather than emitting an incomplete point collection.
 Manual placement authoring is separately backlogged below. Final verification passes
 all 75 MCP tests and all 234 repository tests with the single existing Windows
 symlink-privilege skip; compileall, schema JSON parsing and `git diff --check` pass.
+
+**2026-09-19 Text machining and roughing-clearance follow-up implemented.** Native
+CamBam behavior confirms that Text is not Engrave-only: Pocket may clear its closed
+interiors and Profile may offset its outlines, subject to the same round-cutter reach
+limits as other contours; corner overcut deliberately removes extra material at
+concave corners for insertion clearance. MCP Profile and Pocket now accept root Text.
+The core already modeled, serialized and read `RoughingClearance` on all four MOP
+classes, but MCP authoring had pinned it to zero and inspection rejected nonzero
+values. Signed roughing clearance is now authorable and inspectable for Profile,
+Pocket and Engrave; zero keeps the normal boundary/line placement, positive leaves
+stock and negative overcuts. Drill inspection accepts imported native values, while
+the exposed CannedCycle authoring remains zero because CamBam applies drill roughing
+clearance to spiral drilling, which is outside the current MCP slice. Verification
+passes all 77 MCP tests and all 236 repository tests with the single existing Windows
+symlink-privilege skip; compileall, strict duplicate-key/schema JSON parsing and
+`git diff --check` pass.
 
 **2026-09-19 consumer onboarding correction implemented; fresh named-agent rerun
 pending.** The first live use of the reusable template exposed an instruction defect:
@@ -362,9 +378,9 @@ Spiral lead-in/`InsideOutsideOffsets`/Roughing, Engrave pins Roughing and
 DepthFirst with an EndMill, Drill pins the CannedCycle method with a `Drill`
 tool profile and peck/retract/dwell inputs) and `machining_set_mop_targets`
 (public `set_mop_targets`) for explicit target replacement. MOP target rules
-are now per kind: Profile keeps root Rects; Pocket accepts root
-Rect/Circle/closed-Pline/Region shapes; Engrave accepts root
-Rect/Circle/Arc/Pline curves; Drill accepts root Points/Circle primitives.
+are per kind: Profile accepts root Rect/Circle/Pline/Text/Region shapes; Pocket
+accepts root Rect/Circle/closed-Pline/Text/Region shapes; Engrave accepts root
+Rect/Circle/Arc/Pline/Text curves; Drill accepts root Points/Circle primitives.
 Inspection returns closed per-kind parameter records with the same
 explicit-Value XML-state guard as Profile, and out-of-slice/inherited MOPs stay
 diagnostic. Parity fixtures compare adapter payloads, resolved targets and XML
@@ -783,8 +799,7 @@ are authoritative. MOP ownership, supported interchange, curved geometry bounds
 (1a), copy/transfer (1b) and shape parity (2) are recorded above with their
 verification and acceptance state.
 
-This is a good fresh-session breakpoint: the focused CamBam Plus 1.0 alignment
-acceptance, final framework guards, remaining Manual-tab limit and verification are
-persisted. The distinct remaining 4e work is the named OpenCode agent workflow, not a
-repeat of these native encoding checks. Suggested commit for the final uncommitted
-hardening: `fix: finalize CamBam nesting and tab contracts`.
+This is a good fresh-session breakpoint: the Text/roughing-clearance follow-up is
+implemented, verified and recorded. The distinct remaining 4e work is the
+named OpenCode agent workflow, not a repeat of these native encoding checks.
+Suggested commit: `fix: expose Text machining and roughing clearance`.

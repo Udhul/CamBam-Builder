@@ -85,11 +85,11 @@ class DocumentService:
         "relationship_copy_tree_between", "relationship_transfer_tree_between",
     ))
     MOP_TARGET_RULES = {
-        "profile": ("supported root Rect/Circle/Pline/Region shapes",
-                    lambda e: isinstance(e, (Rect, Circle, Region))
+        "profile": ("supported root Rect/Circle/Pline/Text/Region shapes",
+                    lambda e: isinstance(e, (Rect, Circle, Text, Region))
                     or isinstance(e, Pline)),
-        "pocket": ("supported root Rect/Circle/closed-Pline/Region shapes",
-                   lambda e: isinstance(e, (Rect, Circle, Region))
+        "pocket": ("supported root Rect/Circle/closed-Pline/Text/Region shapes",
+                   lambda e: isinstance(e, (Rect, Circle, Text, Region))
                    or (isinstance(e, Pline) and bool(e.closed))),
         "engrave": ("supported root Rect/Circle/Arc/Pline/Text curves",
                     lambda e: isinstance(e, (Rect, Circle, Arc, Pline, Text))),
@@ -1384,7 +1384,7 @@ class DocumentService:
                 part, targets=targets, identifier=args["identifier"], name=args["identifier"],
                 enabled=args["enabled"], target_depth=args["target_depth"],
                 depth_increment=args["depth_increment"], stock_surface=args["stock_surface"],
-                roughing_clearance=0.0, clearance_plane=args["clearance_plane"],
+                roughing_clearance=args["roughing_clearance"], clearance_plane=args["clearance_plane"],
                 spindle_direction="CW", spindle_speed=args["spindle_speed"],
                 velocity_mode="ExactStop", work_plane="XY", optimisation_mode="Standard",
                 tool_diameter=args["tool_diameter"], tool_number=0, tool_profile="EndMill",
@@ -1415,7 +1415,7 @@ class DocumentService:
                 part, targets=targets, identifier=args["identifier"], name=args["identifier"],
                 enabled=args["enabled"], target_depth=args["target_depth"],
                 depth_increment=args["depth_increment"], stock_surface=args["stock_surface"],
-                roughing_clearance=0.0, clearance_plane=args["clearance_plane"],
+                roughing_clearance=args["roughing_clearance"], clearance_plane=args["clearance_plane"],
                 spindle_direction="CW", spindle_speed=args["spindle_speed"],
                 velocity_mode="ExactStop", work_plane="XY", optimisation_mode="Standard",
                 tool_diameter=args["tool_diameter"], tool_number=0, tool_profile="EndMill",
@@ -1439,7 +1439,7 @@ class DocumentService:
                 part, targets=targets, identifier=args["identifier"], name=args["identifier"],
                 enabled=args["enabled"], target_depth=args["target_depth"],
                 depth_increment=args["depth_increment"], stock_surface=args["stock_surface"],
-                roughing_clearance=0.0, clearance_plane=args["clearance_plane"],
+                roughing_clearance=args["roughing_clearance"], clearance_plane=args["clearance_plane"],
                 spindle_direction="CW", spindle_speed=args["spindle_speed"],
                 velocity_mode="ExactStop", work_plane="XY", optimisation_mode="Standard",
                 tool_diameter=args["tool_diameter"], tool_number=0,
@@ -1511,13 +1511,15 @@ class DocumentService:
             })
         if (name == "machining_configure_part"
                 and data.get("nest_method") in ("Grid", "IsoGrid")
-                and data.get("nest_rows", 1) * data.get("nest_columns", 1) > 1):
+                and data.get("nest_rows", 1) * data.get("nest_columns", 1) > 1
+                and data.get("stock_width", 0) > 0
+                and data.get("stock_height", 0) > 0):
             diagnostics.append({
-                "code": "NESTED_STOCK_ENVELOPE_UNVERIFIED",
+                "code": "NESTED_STOCK_FIT_ADVISORY",
                 "message": (
-                    "Part stock is not expanded by nesting. Verify that the outermost "
-                    "toolpaths of every nested copy fit within the configured Part stock; "
-                    "rows, columns, and spacing repeat operations but do not enlarge stock."
+                    "Part stock is optional and is not expanded by nesting. If the configured "
+                    "stock represents the available material, consider checking that every "
+                    "nested outermost toolpath fits it; this advisory does not reject the layout."
                 ),
             })
         if (name == "machining_add_profile"
@@ -1768,7 +1770,7 @@ class DocumentService:
             {
                 "work_plane": "XY", "tool_profile": "EndMill", "spindle_direction": "CW",
                 "velocity_mode": "ExactStop", "milling_direction": "Conventional",
-                "roughing_clearance": 0.0, "stepover": 0.4, "tool_number": 0,
+                "stepover": 0.4, "tool_number": 0,
                 "collision_detection": True,
                 "final_depth_increment": 0.0, "cut_ordering": "DepthFirst",
                 "lead_in_type": "None",
@@ -1819,7 +1821,7 @@ class DocumentService:
             ),
             {
                 "work_plane": "XY", "tool_profile": "EndMill", "spindle_direction": "CW",
-                "velocity_mode": "ExactStop", "roughing_clearance": 0.0,
+                "velocity_mode": "ExactStop",
                 "tool_number": 0, "final_depth_increment": 0.0,
                 "cut_ordering": "DepthFirst", "custom_mop_header": "",
                 "custom_mop_footer": "", "stepover": 0.4,
@@ -1852,7 +1854,7 @@ class DocumentService:
             ),
             {
                 "work_plane": "XY", "spindle_direction": "CW",
-                "velocity_mode": "ExactStop", "roughing_clearance": 0.0,
+                "velocity_mode": "ExactStop",
                 "tool_number": 0, "custom_mop_header": "", "custom_mop_footer": "",
                 "roughing_finishing": "Roughing", "final_depth_increment": 0.0,
                 "cut_ordering": "DepthFirst",
@@ -1888,7 +1890,7 @@ class DocumentService:
             {
                 "drilling_method": "CannedCycle", "tool_profile": "Drill",
                 "work_plane": "XY", "spindle_direction": "CW",
-                "velocity_mode": "ExactStop", "roughing_clearance": 0.0,
+                "velocity_mode": "ExactStop",
                 "tool_number": 0, "custom_mop_header": "", "custom_mop_footer": "",
             },
             {

@@ -277,7 +277,7 @@ class MCPProtocolTests(unittest.TestCase):
         self.assertIn("loose slug", descriptions["machining_add_pocket"])
         self.assertIn("requires expected_revision", descriptions["machining_add_pocket"])
         self.assertIn("before an Outside Profile", descriptions["machining_add_pocket"])
-        self.assertIn("no cutter-radius compensation", descriptions["machining_add_engrave"])
+        self.assertIn("roughing_clearance=0", descriptions["machining_add_engrave"])
         self.assertIn("before cutting that part loose", descriptions["machining_add_engrave"])
         self.assertIn("Circle centers", descriptions["machining_add_drill"])
         self.assertIn("before an Outside Profile", descriptions["machining_add_drill"])

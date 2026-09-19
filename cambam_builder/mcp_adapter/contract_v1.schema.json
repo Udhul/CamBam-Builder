@@ -486,7 +486,8 @@
           "const": "Conventional"
         },
         "roughing_clearance": {
-          "const": 0
+          "$ref": "#/$defs/Number",
+          "description": "Signed horizontal offset from the selected geometry. Positive values leave stock for a later finish pass; negative values overcut."
         },
         "stepover": {
           "const": 0.4
@@ -645,7 +646,8 @@
           "const": "ExactStop"
         },
         "roughing_clearance": {
-          "const": 0
+          "$ref": "#/$defs/Number",
+          "description": "Signed boundary allowance. Positive values leave stock at pocket walls/islands; negative values overcut."
         },
         "tool_number": {
           "const": 0
@@ -775,7 +777,8 @@
           "const": "ExactStop"
         },
         "roughing_clearance": {
-          "const": 0
+          "$ref": "#/$defs/Number",
+          "description": "Signed offset applied to the path-following Engrave toolpath; zero follows the selected lines."
         },
         "tool_number": {
           "const": 0
@@ -883,7 +886,8 @@
           "const": "ExactStop"
         },
         "roughing_clearance": {
-          "const": 0
+          "$ref": "#/$defs/Number",
+          "description": "Imported native value. MCP authoring fixes this to zero because the exposed Drill method is CannedCycle; CamBam applies roughing clearance to spiral drilling."
         },
         "tool_number": {
           "const": 0
@@ -2694,6 +2698,11 @@
     "machining_add_profile_input": {
       "type": "object",
       "properties": {
+        "roughing_clearance": {
+          "$ref": "#/$defs/Number",
+          "default": 0,
+          "description": "Signed horizontal offset from the selected geometry. Positive leaves stock for finishing; negative overcuts."
+        },
         "workspace_id": {
           "$ref": "#/$defs/Workspace"
         },
@@ -2913,6 +2922,11 @@
     "machining_add_pocket_input": {
       "type": "object",
       "properties": {
+        "roughing_clearance": {
+          "$ref": "#/$defs/Number",
+          "default": 0,
+          "description": "Signed boundary allowance. Positive leaves stock at pocket walls and islands; negative overcuts."
+        },
         "workspace_id": {
           "$ref": "#/$defs/Workspace"
         },
@@ -3057,6 +3071,11 @@
     "machining_add_engrave_input": {
       "type": "object",
       "properties": {
+        "roughing_clearance": {
+          "$ref": "#/$defs/Number",
+          "default": 0,
+          "description": "Signed offset applied to the path-following toolpath; zero follows the selected lines."
+        },
         "workspace_id": {
           "$ref": "#/$defs/Workspace"
         },

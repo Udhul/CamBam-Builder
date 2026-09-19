@@ -855,6 +855,83 @@ class MopBreadthTests(unittest.TestCase):
 
         self.run_async(test)
 
+    def test_text_profile_pocket_and_signed_roughing_clearance_round_trip(self):
+        async def test():
+            handle = await self.create("text-machining")
+            text_result = await self.call("geometry_add_text", self.args(
+                document=handle, expected_revision=0, identifier="label",
+                layer="Geometry", text="CAM", x=2, y=3,
+            ))
+            self.assertTrue(text_result["ok"], text_result)
+            text_id = text_result["data"]["entity_id"]
+
+            profile = await self.call("machining_add_profile", self.args(
+                document=handle, expected_revision=1, identifier="text-profile",
+                part="Part", targets=[text_id], side="Inside",
+                roughing_clearance=0.2, **self.mop_arguments(),
+            ))
+            self.assertTrue(profile["ok"], profile)
+            pocket = await self.call("machining_add_pocket", self.args(
+                document=handle, expected_revision=2, identifier="text-pocket",
+                part="Part", targets=[text_id], roughing_clearance=-0.1,
+                **self.mop_arguments(),
+            ))
+            self.assertTrue(pocket["ok"], pocket)
+            engrave = await self.call("machining_add_engrave", self.args(
+                document=handle, expected_revision=3, identifier="text-engrave",
+                part="Part", targets=[text_id], roughing_clearance=0.35,
+                **self.mop_arguments(),
+            ))
+            self.assertTrue(engrave["ok"], engrave)
+
+            records = await self.inspect_records(handle, revision=4)
+            parameters = {
+                record["identifier"]: record["parameters"]
+                for record in records if record["kind"] == "mop"
+            }
+            self.assertEqual(parameters["text-profile"]["roughing_clearance"], 0.2)
+            self.assertEqual(parameters["text-pocket"]["roughing_clearance"], -0.1)
+            self.assertEqual(parameters["text-engrave"]["roughing_clearance"], 0.35)
+
+            saved = await self.call("document_save", self.args(
+                document=handle, expected_revision=4, path="text-machining.cb",
+            ))
+            self.assertTrue(saved["ok"], saved)
+            root = ET.parse(self.root / "text-machining.cb").getroot()
+            self.assertEqual(root.findtext(".//profile[Name='text-profile']/RoughingClearance"), "0.2")
+            self.assertEqual(root.findtext(".//pocket[Name='text-pocket']/RoughingClearance"), "-0.1")
+            self.assertEqual(root.findtext(".//engrave[Name='text-engrave']/RoughingClearance"), "0.35")
+
+            reopened = await self.call("document_open", self.args(
+                path="text-machining.cb", units="mm",
+            ))
+            self.assertTrue(reopened["ok"], reopened)
+            reopened_records = await self.inspect_records(reopened["document"])
+            reopened_parameters = {
+                record["identifier"]: record["parameters"]
+                for record in reopened_records if record["kind"] == "mop"
+            }
+            self.assertEqual(reopened_parameters, parameters)
+
+        self.run_async(test)
+
+    def test_imported_canned_drill_nonzero_roughing_clearance_is_inspectable(self):
+        async def test():
+            source, _, _, drill = self.direct_project()
+            drill.roughing_clearance = 0.25
+            source.save(str(self.root / "native-drill-clearance.cb"))
+
+            opened = await self.call("document_open", self.args(
+                path="native-drill-clearance.cb", units="mm",
+            ))
+            self.assertTrue(opened["ok"], opened)
+            records = await self.inspect_records(opened["document"])
+            drill_record = next(record for record in records
+                                if record.get("identifier") == "drill")
+            self.assertEqual(drill_record["parameters"]["roughing_clearance"], 0.25)
+
+        self.run_async(test)
+
 
 if __name__ == "__main__":
     unittest.main()

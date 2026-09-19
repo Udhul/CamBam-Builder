@@ -852,11 +852,11 @@ sheet width/height/thickness/material, then set `nest_method` to `Grid` (or
 `IsoGrid`) with the requested rows, columns and spacing before adding the MOPs.
 Inspection and exported XML must show the nonzero `<Stock>` bounds and native
 `<Nesting>` settings. This is distinct from geometry copies: CamBam nesting repeats
-the complete Part's MOP sequence at generated positions. The Part stock is not
-expanded for those copies: verify in CamBam that the outermost toolpaths of every
-nested copy remain within the configured stock boundary. The adapter's
-`NESTED_STOCK_ENVELOPE_UNVERIFIED` diagnostic is a required prompt for that check,
-not a claim that the layout is invalid.
+the complete Part's MOP sequence at generated positions. Part stock is optional and
+is not expanded for those copies. When nonzero XY stock is defined, checking in
+CamBam that the nested envelope fits it is good practice; the adapter's
+`NESTED_STOCK_FIT_ADVISORY` is non-blocking and absence of stock or an unchecked fit
+does not make the document invalid.
 
 For the merge-alignment additions, include a Part whose stock starts at a nonzero XY
 offset and whose top surface is nonzero. After a save/reopen cycle, inspection and
@@ -877,8 +877,14 @@ Pline targeted by Profile, and one closed Outside Profile with Automatic holding
 non-contact/plasma behavior). Keep `tab_use_leadins=false` because this MCP slice pins
 the Profile lead-in to None. Pass requires CamBam Plus 1.0 to load the file without repair, show the V-cutter and holding-tab
 properties, retain the Text/open-Pline targets, and generate the expected open offset
-and tabbed closed toolpaths. EndMill must remain available for the same ordinary
-path-following Engrave operation; neither tool profile should fill Text interiors.
+and tabbed closed toolpaths. Also exercise Text directly with Pocket and Profile
+Inside: these clear or offset its outlines with the same round-cutter reach limits as
+other shapes. Corner overcut may intentionally cut beyond concave corners for an
+insertion fit. EndMill must remain available for ordinary path-following Engrave;
+neither Engrave tool profile fills Text interiors. At `roughing_clearance=0`, Engrave
+follows the line placement; test one signed nonzero clearance as an offset. Profile
+and Pocket use the same signed allowance convention: positive leaves stock and
+negative overcuts. CannedCycle Drill remains fixed at zero.
 Manual tab authoring is not part of this check: imported native Manual tabs are
 preserve-only and fresh direct-core/MCP authoring must reject them rather than emit an
 incomplete points collection. Reverse the open Pline in a separate copy and confirm its

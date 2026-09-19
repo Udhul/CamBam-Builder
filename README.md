@@ -31,7 +31,8 @@ The optional local MCP server exposes thirty-seven document, planning and author
 tools for AI clients, including verified geometry authoring (Rect, Circle,
 Arc, Pline, Points, Text, Region), Profile/Pocket/Engrave/Drill MOPs with
 target replacement, open-Pline Profile side diagnostics, automatic Profile holding
-tabs, and Text/VCutter-path engraving, similarity transforms with baking, and parent/group/copy
+tabs, Text-targeted Profile/Pocket/Engrave, signed Profile/Pocket/Engrave roughing
+clearance, and VCutter-path engraving, similarity transforms with baking, and parent/group/copy
 relationships including cross-document subtree copy and transfer between two
 open documents. Part stock coordinates and native Grid/IsoGrid nesting are explicitly
 configurable; imported valid Manual/PointList nesting is inspectable and preserved. Stock
