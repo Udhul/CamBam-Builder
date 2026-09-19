@@ -2650,3 +2650,44 @@ also proves that MOPs in different Parts may reference the same primitive. All 7
 tests and 233 full-suite tests pass with the existing one Windows privilege skip; all
 eight corrected files in `output/1909/` strict-reopen and await the focused native
 recheck described by their manifest.
+
+### Corrected native encoding acceptance and final hardening — 2026-09-19
+
+The user opened all eight corrected files in `output/1909/` with CamBam Plus 1.0.
+Files 01–08 opened successfully. The reported observations accepted the relative
+Part stock/origin placement, exact zero boundaries, shared-geometry Grid nesting,
+all presented PointList variants, left-side open Profile behavior, every automatic
+tab style, Text outline Engrave with `VCutter`, and native metadata preservation.
+The stock check confirms the XY relationship—Part origin `(12,-7)` plus local stock
+offset `(12,-7)` places its origin at `(24,-14)`—while the serialized/reopened source
+retains stock surface `4.5`; no inference is made from the separately reported
+rounded/displayed Z value.
+
+The PointList observation provides behavior more precise than the vendor prose. The
+official nesting documentation says Points define copy positions and identifies the
+drawing or alternate machining origin as the nesting coordinate origin. The native
+check further established that a point is a translation applied to the unnested
+toolpath, not an absolute anchor replacing source geometry: moving source geometry by
+`(3,2)` and the first point from `(12,7)` to `(15,9)` puts that source corner at
+`(18,11)`. The normative contract now records this as user-validated CamBam Plus 1.0
+behavior rather than attributing the full vector-addition rule to the documentation.
+
+The final hardening closes two remaining misuse paths. Configuring more than one Grid
+or IsoGrid copy returns `NESTED_STOCK_ENVELOPE_UNVERIFIED`, because Part nesting
+repeats toolpaths but does not enlarge the Part stock definition. Fresh direct-core
+`ProfileMop(tab_method="Manual")` export now raises before serialization: the previous
+writer could emit scalar Manual settings without the required native position
+collection. Imported native Manual MOP XML still follows the unchanged preserve path,
+and the MCP schema continues to exclude Manual authoring. Exact Manual point
+authoring is deferred pending a native CamBam A/B fixture; all documented automatic
+tab parameters remain supported. `EndMill` and `VCutter` remain valid Engrave tool
+profiles, and neither changes its path-following operation into area fill or V-carve
+topology.
+
+Verification after hardening: all 75 MCP tests pass with the existing Windows
+symlink-privilege skip; all 234 repository tests pass with the same single skip.
+Compileall for `cambam_builder`, `legacy_cambam_builder`, `tests` and `demos`, schema
+JSON parsing and `git diff --check` all exit successfully. The expected negative-path
+writer log confirms that unsupported fresh Manual tab authoring fails before XML is
+returned. No repeat native CamBam check is required because these final changes do
+not alter any accepted automatic-tab or nesting XML syntax.

@@ -2128,7 +2128,7 @@ class ProfileMop(Mop):
     final_depth_increment: Optional[float] = 0.0 # If > 0, amount for final pass
     cut_ordering: str = 'DepthFirst' # 'DepthFirst', 'LevelFirst'
     # Holding Tabs parameters
-    tab_method: str = 'None' # 'None', 'Automatic', 'Manual' (Manual needs points)
+    tab_method: str = 'None' # 'None', 'Automatic'; imported native Manual is preserve-only
     tab_width: float = 6.0
     tab_height: float = 1.5
     tab_min_tabs: int = 3
@@ -2136,12 +2136,17 @@ class ProfileMop(Mop):
     tab_distance: float = 40.0 # Approx distance between auto tabs
     tab_size_threshold: float = 4.0 # Min shape size for tabs
     tab_use_leadins: bool = False
-    tab_style: str = 'Square' # 'Square', 'Triangle', 'Ramp'
+    tab_style: str = 'Square' # 'Square', 'Triangle', 'Skip'
 
     def to_xml_element(self, project: "CamBamProject", resolved_primitive_xml_ids: List[int]) -> ET.Element:
         native = self._native_mop_element(project, resolved_primitive_xml_ids)
         if native is not None:
             return native
+        if self.tab_method == 'Manual':
+            raise ValueError(
+                "Manual holding-tab authoring requires explicit native tab points and "
+                "is not supported; imported native Manual tabs are preserve-only"
+            )
         mop_elem = ET.Element("profile", {"Enabled": str(self.enabled).lower()})
         self._add_common_mop_elements(mop_elem, project, resolved_primitive_xml_ids)
 
@@ -2172,7 +2177,6 @@ class ProfileMop(Mop):
             ET.SubElement(tabs, "SizeThreshold").text = str(self.tab_size_threshold)
             ET.SubElement(tabs, "UseLeadIns").text = str(self.tab_use_leadins).lower()
             ET.SubElement(tabs, "TabStyle").text = self.tab_style
-            # Manual tabs would need a <points> sub-element here if TabMethod='Manual'
 
         self._apply_explicit_parameter_states(mop_elem)
         return mop_elem

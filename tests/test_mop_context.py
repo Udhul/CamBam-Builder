@@ -116,6 +116,18 @@ class MopContextTests(unittest.TestCase):
             ),
         )
 
+    def test_fresh_manual_tabs_fail_instead_of_emitting_incomplete_xml(self):
+        project = CBProject("manual-tabs")
+        layer = project.add_layer("Geometry")
+        outline = project.add_rect(layer, identifier="outline")
+        part = project.add_part("Part")
+        project.add_profile_mop(
+            part, [outline], identifier="profile", tab_method="Manual"
+        )
+
+        with self.assertRaisesRegex(ValueError, "explicit native tab points"):
+            build_xml_tree(project)
+
     def test_add_part_keeps_legacy_ordering_arguments_positional(self):
         project = CBProject("part-ordering")
         first = project.add_part("First")

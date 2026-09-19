@@ -852,7 +852,11 @@ sheet width/height/thickness/material, then set `nest_method` to `Grid` (or
 `IsoGrid`) with the requested rows, columns and spacing before adding the MOPs.
 Inspection and exported XML must show the nonzero `<Stock>` bounds and native
 `<Nesting>` settings. This is distinct from geometry copies: CamBam nesting repeats
-the complete Part's MOP sequence at generated positions.
+the complete Part's MOP sequence at generated positions. The Part stock is not
+expanded for those copies: verify in CamBam that the outermost toolpaths of every
+nested copy remain within the configured stock boundary. The adapter's
+`NESTED_STOCK_ENVELOPE_UNVERIFIED` diagnostic is a required prompt for that check,
+not a claim that the layout is invalid.
 
 For the merge-alignment additions, include a Part whose stock starts at a nonzero XY
 offset and whose top surface is nonzero. After a save/reopen cycle, inspection and
@@ -860,8 +864,12 @@ CamBam must show the same PMin/PMax coordinates. Patch only one nesting field an
 confirm the other modeled values and any native `BasePoint`, `PointListID` or
 `GCodeOrder` child remain unchanged. Imported `Manual`/`PointList` methods must inspect
 without an output-schema error; the MCP tool deliberately does not author their
-placement data. Pen width `0`, Part tool diameter `0`, zero/unspecified stock and all
-eight native grid orders must likewise remain inspectable.
+placement data. For PointList, verify that each point translates the unnested Part
+toolpaths rather than replacing the source geometry origin. With the default drawing
+origin, moving source geometry by `(sx,sy)` and a nesting point by `(px,py)` must move
+the corresponding path by their combined translation. Pen width `0`, Part tool
+diameter `0`, zero/unspecified stock and all eight native grid orders must likewise
+remain inspectable.
 
 Also author one Text targeted by an Engrave MOP with `tool_profile=VCutter`, one open
 Pline targeted by Profile, and one closed Outside Profile with Automatic holding tabs
@@ -869,7 +877,11 @@ Pline targeted by Profile, and one closed Outside Profile with Automatic holding
 non-contact/plasma behavior). Keep `tab_use_leadins=false` because this MCP slice pins
 the Profile lead-in to None. Pass requires CamBam Plus 1.0 to load the file without repair, show the V-cutter and holding-tab
 properties, retain the Text/open-Pline targets, and generate the expected open offset
-and tabbed closed toolpaths. Reverse the open Pline in a separate copy and confirm its
+and tabbed closed toolpaths. EndMill must remain available for the same ordinary
+path-following Engrave operation; neither tool profile should fill Text interiors.
+Manual tab authoring is not part of this check: imported native Manual tabs are
+preserve-only and fresh direct-core/MCP authoring must reject them rather than emit an
+incomplete points collection. Reverse the open Pline in a separate copy and confirm its
 Inside/Outside physical side swaps; this is why the adapter reports
 `VertexOrderRelative`. Do not generate production G-code. Report each property and
 toolpath check separately; automated XML round trips do not replace this native CAM

@@ -7,8 +7,8 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**2026-09-19 MCP/CamBam alignment fixes implemented; corrective native recheck
-pending.** The first CamBam Plus 1.0 review accepted zero boundaries, all Grid order
+**2026-09-19 MCP/CamBam alignment correction accepted in CamBam Plus 1.0.** The
+first CamBam review accepted zero boundaries, all Grid order
 variants, shared-geometry feasibility, open-Pline side behavior and automatic tab
 creation, while exposing four contract errors: stock offset was described without
 its relation to Part machining origin, PointList validation contained invented XML,
@@ -26,16 +26,21 @@ Engrave uses the exact `VCutter` enum and explicitly does not promise skeleton o
 width/depth-varying V-carving. Parent Machining context remains import-preserved but
 not authored/resolved; explicit Part stock overrides it for that Part.
 
-The corrected native-review artifacts are prepared under
-[`output/1909/`](../output/1909/), with eight `.cb` files and a manifest of exact
-expectations and hashes. The prior accepted observations remain evidence only for
-the unchanged behaviors; files 04, 06 and 07 and the corrected stock/Part-scope
-wording require the focused CamBam Plus 1.0 recheck before merge acceptance.
-Automated verification passes all 75 MCP tests and all 233 repository tests with the
-single existing Windows symlink-privilege skip. All eight corrected artifacts
-strict-reopen, compileall, JSON parsing and `git diff --check` pass, and a fresh wheel
-and source distribution build succeeds under
-`output/user-encoding-build-20260919/`.
+The user opened all eight corrected native-review artifacts under
+[`output/1909/`](../output/1909/) in CamBam Plus 1.0. The review accepted stock/origin
+relative placement, zero values, Grid and PointList nesting, open-Pline side,
+automatic tabs, ordinary Text/VCutter Engrave and native metadata preservation. It
+also established that PointList coordinates translate the unnested Part toolpaths:
+source-geometry and point translations compound rather than the point replacing the
+source origin. This operational detail supplements the official documentation's
+PointList-position and nesting-origin description. Part stock does not expand with
+nesting, so multi-copy configurations now return a diagnostic requiring the complete
+nested toolpath envelope to be checked against stock. All automatic tab fields remain
+supported. Imported native Manual tabs are preserve-only; fresh direct-core Manual
+authoring now fails explicitly rather than emitting an incomplete point collection.
+Manual placement authoring is separately backlogged below. Final verification passes
+all 75 MCP tests and all 234 repository tests with the single existing Windows
+symlink-privilege skip; compileall, schema JSON parsing and `git diff --check` pass.
 
 **2026-09-19 consumer onboarding correction implemented; fresh named-agent rerun
 pending.** The first live use of the reusable template exposed an instruction defect:
@@ -717,6 +722,14 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    [Problem, reasoning, support gaps and acceptance plan](REST_MACHINING_PLAN.md).
    Promote for a concrete workflow after higher-priority work; no implementation
    or machining acceptance is claimed by this planning entry.
+7. **Deferred MCP/core capability: author Manual Profile holding-tab positions.**
+   Current automatic authoring covers width, height, minimum/maximum count, distance,
+   size threshold, the constrained lead-in flag and Square/Triangle/Skip style.
+   Imported native Manual tabs remain inspectable and round-trip preserved, while
+   fresh Manual authoring is rejected. Reopen only with a CamBam Plus 1.0 A/B fixture
+   saved before and after moving/adding/removing tabs, so the exact native point
+   collection, coordinate frame, identity/order behavior and generated toolpaths can
+   be modeled and round-trip tested without inventing vendor XML.
 
 This supersedes the former five broad increments; their pending scope is retained
 above. Detailed contracts remain in `docs/structure_spec.md`, and review evidence in
@@ -770,11 +783,8 @@ are authoritative. MOP ownership, supported interchange, curved geometry bounds
 (1a), copy/transfer (1b) and shape parity (2) are recorded above with their
 verification and acceptance state.
 
-This is a good fresh-session breakpoint: 4d's authoring, machining,
-relationship, transform and cross-document copy/transfer contracts, parity and
-negative-case evidence are persisted, and batch 5 needed only the recorded
-contract decision, which is now in [MCP_CONTRACT.md](MCP_CONTRACT.md).
-4e's remaining OpenCode/CamBam user acceptance is the next priority; its exact
-procedure and artifact verifier are now prepared. This is not yet a good
-fresh-session breakpoint because the user's acceptance result must still be recorded.
-Suggested commit after acceptance: `feat: complete local MCP client acceptance`.
+This is a good fresh-session breakpoint: the focused CamBam Plus 1.0 alignment
+acceptance, final framework guards, remaining Manual-tab limit and verification are
+persisted. The distinct remaining 4e work is the named OpenCode agent workflow, not a
+repeat of these native encoding checks. Suggested commit for the final uncommitted
+hardening: `fix: finalize CamBam nesting and tab contracts`.

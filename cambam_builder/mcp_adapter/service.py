@@ -1509,6 +1509,17 @@ class DocumentService:
                     "explicitly on every authored MOP that must survive export/re-import."
                 ),
             })
+        if (name == "machining_configure_part"
+                and data.get("nest_method") in ("Grid", "IsoGrid")
+                and data.get("nest_rows", 1) * data.get("nest_columns", 1) > 1):
+            diagnostics.append({
+                "code": "NESTED_STOCK_ENVELOPE_UNVERIFIED",
+                "message": (
+                    "Part stock is not expanded by nesting. Verify that the outermost "
+                    "toolpaths of every nested copy fit within the configured Part stock; "
+                    "rows, columns, and spacing repeat operations but do not enlarge stock."
+                ),
+            })
         if (name == "machining_add_profile"
                 and data.get("side_semantics") == "VertexOrderRelative"):
             diagnostics.append({

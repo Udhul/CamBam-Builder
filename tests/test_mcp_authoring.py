@@ -463,6 +463,10 @@ class AuthoringTests(unittest.TestCase):
                 nest_spacing=40, grid_order="RightUp", grid_alternate=False))
             self.assertTrue(part["ok"], part)
             self.assertEqual(part["data"]["nest_method"], "Grid")
+            self.assertIn(
+                "NESTED_STOCK_ENVELOPE_UNVERIFIED",
+                {item["code"] for item in part["diagnostics"]},
+            )
             inspected = await self.inspect_records(handle, revision=2)
             layer_record = next(item for item in inspected if item["kind"] == "layer")
             part_record = next(item for item in inspected if item["kind"] == "part")

@@ -452,10 +452,17 @@ encoding. These are not interchangeable coordinate systems:
 - Nesting repeats every MOP in a Part; it does not copy source geometry. Multiple
   MOPs, including MOPs in different Parts, may target the same primitive. Grid
   `spacing` is clearance between the outermost generated toolpaths, so changing an
-  enabled MOP or cutter diameter can change the nested placement. PointList nesting
-  references the XML ID of a real Points primitive and may share that Points object
-  across Parts. New records contain only fields relevant to their method; imported
-  valid Manual/PointList placement data is preserve-only at the MCP boundary.
+  enabled MOP or cutter diameter can change the nested placement. Nesting does not
+  enlarge or replicate the Part stock definition: the complete outermost nested
+  toolpath envelope must fit the configured stock. PointList nesting references the
+  XML ID of a real Points primitive and may share that Points object across Parts.
+  Each point is a translation in CamBam's nesting coordinate system applied to the
+  unnested Part toolpaths, not an absolute replacement for the source geometry's
+  origin. With the default drawing origin, `effective path = unnested path + point
+  vector`; moving both source geometry and the point compounds both translations.
+  An alternate Part/Machining origin changes the nesting coordinate system in which
+  the point is expressed. New records contain only fields relevant to their method;
+  imported valid Manual/PointList placement data is preserve-only at the MCP boundary.
 - On open Plines, Profile `Inside` selects the left side and `Outside` the right side
   relative to stored vertex traversal. Reversing the vertices reverses the physical
   side. Closed contours retain their usual interior/exterior meaning.
@@ -468,11 +475,18 @@ encoding. These are not interchangeable coordinate systems:
   non-contact cutting such as plasma. `UseLeadIns` affects only Square tabs and only
   when the Profile has an active `LeadInMove`; because this MCP operation pins
   `lead_in_type=None`, it requires `tab_use_leadins=false`.
+- All exposed automatic-tab controls are durable: method, width, height, minimum and
+  maximum count, distance, size threshold, lead-in flag (currently constrained false)
+  and Square/Triangle/Skip style. CamBam changes a tab set to Manual when positions
+  are moved or explicitly added/removed. Imported native Manual tabs are preserved,
+  but fresh core and MCP authoring reject Manual until their native point encoding is
+  modeled; incomplete placeholder XML is never emitted.
 - The native enum token is `VCutter` (`ToolProfiles.VCutter`), although CamBam's UI
   displays “V-Cutter” and some prose documentation says “Vcutter”. An Engrave MOP
   still follows the selected curve or Text outlines at its ordinary depth settings;
-  selecting `VCutter` does not create skeleton/width-driven V-carving. That remains
-  the separately planned V-carving capability.
+  both `EndMill` and `VCutter` are supported tool-shape selections, and neither turns
+  that path-following operation into filled-area or skeleton/width-driven V-carving.
+  That remains the separately planned V-carving capability.
 
 These rules follow the CamBam Plus 1.0 documentation for [CAM Parts](https://www.cambam.info/doc/plus/cam/CAMPart.htm),
 [Machining Options](https://www.cambam.info/doc/plus/cam/MachiningOptions.htm),
@@ -500,10 +514,10 @@ CamBam Plus 1.0 native-file checks in `docs/PROGRESS.md`.
 | `geometry_update_region` | `Write + {entity_id: UUID, outer: ContourInput, holes?: ContourInput[0..100] =[]}` | Atomically replace one supported root Region's absolute contours after topology validation. Preserve its UUID, identifier, layer and project-owned Profile/Pocket target relationships; return the UUID, layer and typed Region geometry. |
 | `machining_add_profile` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], side: "Inside" | "Outside", target_depth: Number, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true, corner_overcut?: boolean =false, tab_method?: None\|Automatic =None, tab_width?: Positive =6, tab_height?: Positive =1.5, tab_min_tabs?: integer =3, tab_max_tabs?: integer =3, tab_distance?: NonNegative =40, tab_size_threshold?: NonNegative =4, tab_use_leadins?: false =false, tab_style?: Square\|Triangle\|Skip =Square}` | `add_part` if absent, then `add_profile_mop(...)`; automatic holding tabs map to CamBam's bounded `HoldingTabs` record and require minimum <= maximum. Manual tab point placement is not exposed. `tab_use_leadins` is false because the operation also pins `lead_in_type=None`. Closed boundaries return `side_semantics=ClosedBoundary`; on an open Pline Inside is left and Outside right relative to traversal, with a directional diagnostic because reversing traversal swaps the physical side. `corner_overcut` overcuts inside corners for round tools and may remove extra adjacent-side material. Return MOP UUID, part name, echoed side/semantics and resolved targets. |
 | `machining_add_pocket` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], target_depth, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true}` | `add_pocket_mop(...)` with the pocket settings pinned in the schema record (stepover 0.4, `InsideOutsideOffsets` fill, Spiral lead-in, Roughing); return MOP UUID, part name and resolved targets. |
-| `machining_add_engrave` | Same closed record as Pocket (no side, no pocket-specific inputs) plus `tool_profile?: EndMill\|VCutter =EndMill` | `add_engrave_mop(...)` with Engrave settings pinned in the schema record (Roughing, final increment 0, DepthFirst) and the selected native tool-profile enum. This traces the selected paths at ordinary depths; it is not width/depth-varying V-carving. Return MOP UUID, part name and resolved targets. |
+| `machining_add_engrave` | Same closed record as Pocket (no side, no pocket-specific inputs) plus `tool_profile?: EndMill\|VCutter =EndMill` | `add_engrave_mop(...)` with Engrave settings pinned in the schema record (Roughing, final increment 0, DepthFirst) and the selected native tool-profile enum. EndMill and VCutter both trace the selected paths at ordinary depths; neither fills Text/regions or requests width/depth-varying V-carving. Return MOP UUID, part name and resolved targets. |
 | `machining_add_drill` | Pocket record plus `peck_distance?: NonNegative =0`, `retract_height?: Number =5`, `dwell?: NonNegative =0` | `add_drill_mop(...)` pinned to the CannedCycle method and a `Drill` tool profile; return MOP UUID, part name and resolved targets. |
 | `machining_calculate_depth_increment` | `Read + {units: "mm"|"in", stock_thickness: Positive, cut_through: Positive, exactly one of pass_count: integer 1..10000 or max_depth_increment: Positive, rounding_increment?: Positive}` | Pure planning calculation with no document handle or mutation. Upward rounding defaults to 0.1 mm or 0.001 in. Return the increment, actual clamped depths, nominal overshoot, final-pass depth/stock/cut-through, stock fraction and `recommendation_met`. A valid explicit constraint that misses the one-third recommendation is returned with diagnostics rather than rejected; the supplied maximum must already reflect material/tool safety. |
-| `machining_configure_part` | `Write + {part: Name, enabled?, stock_width/height/thickness?: NonNegative, stock_material?: string <=128, stock_color?: Name, stock_offset_x/y?: Number, stock_surface?: Number, machining_origin_x/y?: Number, default_tool_diameter?: NonNegative|null, default_spindle_speed?: integer|null, nest_method?: None\|Grid\|IsoGrid, nest_rows/columns?: integer, nest_spacing?: NonNegative, grid_order?: eight directional orders, grid_alternate?: boolean}` | Patch an existing Part, preserving every omitted field and valid native placement data when its nesting method is unchanged; a new minimally specified Part starts with zero/unspecified stock and empty material. The result reports both local stock offset and derived `stock_drawing_origin_*`. Grid/IsoGrid repeats the whole Part's MOP sequence over shared source geometry. Imported Manual/PointList nesting and placement metadata is inspectable and survives unrelated patches, but authoring it is outside this tool; switching methods discards placement fields belonging to the old method. `default_spindle_speed`, when supplied, is diagnosed as session-only framework context; durable MOPs carry their own spindle speed. |
+| `machining_configure_part` | `Write + {part: Name, enabled?, stock_width/height/thickness?: NonNegative, stock_material?: string <=128, stock_color?: Name, stock_offset_x/y?: Number, stock_surface?: Number, machining_origin_x/y?: Number, default_tool_diameter?: NonNegative|null, default_spindle_speed?: integer|null, nest_method?: None\|Grid\|IsoGrid, nest_rows/columns?: integer, nest_spacing?: NonNegative, grid_order?: eight directional orders, grid_alternate?: boolean}` | Patch an existing Part, preserving every omitted field and valid native placement data when its nesting method is unchanged; a new minimally specified Part starts with zero/unspecified stock and empty material. The result reports both local stock offset and derived `stock_drawing_origin_*`. Grid/IsoGrid repeats the whole Part's MOP sequence over shared source geometry but does not enlarge stock; multi-copy configurations return `NESTED_STOCK_ENVELOPE_UNVERIFIED`. Imported Manual/PointList nesting and placement metadata is inspectable and survives unrelated patches, but authoring it is outside this tool; switching methods discards placement fields belonging to the old method. `default_spindle_speed`, when supplied, is diagnosed as session-only framework context; durable MOPs carry their own spindle speed. |
 | `machining_set_mop_targets` | `Write + {mop_id: UUID, targets: UUID[1..100]}` | Public `set_mop_targets`; atomically replaces the MOP's explicit target selection after the same per-kind target rules and slice checks; return MOP UUID and the project's UUID-sorted resolved targets. |
 | `document_set_layer_properties` | `Write + {layer: Name, color?: Name, alpha?: 0..1, pen_width?: NonNegative, visible?: boolean, locked?: boolean}` | Create or update layer display properties. CamBam uses pen width zero as its default one-pixel display mode. These are presentation settings and do not affect machining geometry or MOP semantics. |
 | `relationship_set_parent` | `Write + {entity_id: UUID, parent_id: UUID\|null}` | Public `link_primitive_parent`; null detaches. Local transforms are kept, so the world pose follows the new frame; self links and cycles return `INVALID_ARGUMENT`, missing/non-primitive entities `ENTITY_NOT_FOUND`/`UNSUPPORTED_OPERATION`. Return the child UUID and the resulting parent UUID or null. |
