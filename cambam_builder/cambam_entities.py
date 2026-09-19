@@ -2300,9 +2300,12 @@ class DrillMop(Mop):
         ET.SubElement(mop_elem, "DrillingMethod", {"state": state}).text = self.drilling_method
 
         # Canned Cycle Params
-        ET.SubElement(mop_elem, "PeckDistance", {"state": state}).text = str(self.peck_distance)
-        ET.SubElement(mop_elem, "RetractHeight", {"state": state}).text = str(self.retract_height)
-        ET.SubElement(mop_elem, "Dwell", {"state": state}).text = str(self.dwell)
+        # CamBam retains these fields on SpiralMill records, but they only
+        # participate in CannedCycle. Leave them inheritable for spiral MOPs.
+        canned_state = "Value" if self.drilling_method == "CannedCycle" else "Default"
+        ET.SubElement(mop_elem, "PeckDistance", {"state": canned_state}).text = str(self.peck_distance)
+        ET.SubElement(mop_elem, "RetractHeight", {"state": canned_state}).text = str(self.retract_height)
+        ET.SubElement(mop_elem, "Dwell", {"state": canned_state}).text = str(self.dwell)
 
         # Spiral Mill Params (conditionally add based on method)
         if self.drilling_method.startswith("SpiralMill"):

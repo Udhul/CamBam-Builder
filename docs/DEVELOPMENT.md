@@ -885,7 +885,14 @@ slot joints or inlays can enter. EndMill must remain available for ordinary path
 neither Engrave tool profile fills Text interiors. At `roughing_clearance=0`, Engrave
 follows the line placement; test one signed nonzero clearance as an offset. Profile
 and Pocket use the same signed allowance convention: positive leaves stock and
-negative overcuts. CannedCycle Drill remains fixed at zero.
+negative overcuts. CannedCycle Drill remains fixed at zero. For SpiralMill CW and
+CCW, test Point targets with explicit hole diameter and Circle targets with both
+explicit and Auto diameter. Verify `effective diameter = hole diameter - 2 *
+roughing clearance`, that it remains greater than the tool diameter, and that
+HoleDiameter, DrillLeadOut, SpiralFlatBase, LeadOutLength, RoughingClearance and the
+selected method are `state="Value"` when supplied. Auto HoleDiameter and the
+CannedCycle-only PeckDistance/RetractHeight/Dwell fields on SpiralMill must remain
+`state="Default"`.
 Manual tab authoring is not part of this check: imported native Manual tabs are
 preserve-only and fresh direct-core/MCP authoring must reject them rather than emit an
 incomplete points collection. Reverse the open Pline in a separate copy and confirm its

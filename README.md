@@ -32,7 +32,8 @@ tools for AI clients, including verified geometry authoring (Rect, Circle,
 Arc, Pline, Points, Text, Region), Profile/Pocket/Engrave/Drill MOPs with
 target replacement, open-Pline Profile side diagnostics, automatic Profile holding
 tabs, Text-targeted Profile/Pocket/Engrave, signed Profile/Pocket/Engrave roughing
-clearance, and VCutter-path engraving, similarity transforms with baking, and parent/group/copy
+clearance, CannedCycle and SpiralMill CW/CCW Drill authoring, and VCutter-path
+engraving, similarity transforms with baking, and parent/group/copy
 relationships including cross-document subtree copy and transfer between two
 open documents. Part stock coordinates and native Grid/IsoGrid nesting are explicitly
 configurable; imported valid Manual/PointList nesting is inspectable and preserved. Stock

@@ -322,6 +322,8 @@ class MopBreadthTests(unittest.TestCase):
             "drilling_method": "CannedCycle", "tool_profile": "Drill",
             "work_plane": "XY", "spindle_direction": "CW",
             "velocity_mode": "ExactStop", "roughing_clearance": 0,
+            "hole_diameter": None, "drill_lead_out": False,
+            "spiral_flat_base": True, "lead_out_length": 0,
             "tool_number": 0, "custom_mop_header": "", "custom_mop_footer": "",
         }
 
@@ -758,6 +760,121 @@ class MopBreadthTests(unittest.TestCase):
                 set(reopened_profile["targets"]),
                 {circle_id, open_path_id, closed_path_id, region_id},
             )
+
+        self.run_async(test)
+
+    def test_spiral_drill_methods_states_auto_diameter_and_fit_validation(self):
+        async def test():
+            handle = await self.create("spiral-drill")
+            points = await self.call("geometry_add_points", self.args(
+                document=handle, expected_revision=0, identifier="point-hole",
+                layer="Geometry", points=[{"x": 0, "y": 0}],
+            ))
+            self.assertTrue(points["ok"], points)
+            circle = await self.call("geometry_add_circle", self.args(
+                document=handle, expected_revision=1, identifier="circle-hole",
+                layer="Geometry", x=20, y=0, diameter=12,
+            ))
+            self.assertTrue(circle["ok"], circle)
+
+            common = self.mop_arguments(
+                target_depth=-10, depth_increment=2, tool_diameter=6,
+                cut_feedrate=800, plunge_feedrate=300, spindle_speed=1000,
+                clearance_plane=3,
+            )
+            clockwise = await self.call("machining_add_drill", self.args(
+                document=handle, expected_revision=2, identifier="spiral-cw",
+                part="Part", targets=[points["data"]["entity_id"]],
+                drilling_method="SpiralMill_CW", hole_diameter=12,
+                roughing_clearance=0.5, drill_lead_out=True,
+                spiral_flat_base=True, lead_out_length=0,
+                **common,
+            ))
+            self.assertTrue(clockwise["ok"], clockwise)
+            counterclockwise = await self.call("machining_add_drill", self.args(
+                document=handle, expected_revision=3, identifier="spiral-ccw-auto",
+                part="Part", targets=[circle["data"]["entity_id"]],
+                drilling_method="SpiralMill_CCW", roughing_clearance=-0.5,
+                drill_lead_out=False, spiral_flat_base=False,
+                lead_out_length=-1.25, tool_profile="EndMill", **common,
+            ))
+            self.assertTrue(counterclockwise["ok"], counterclockwise)
+
+            records = await self.inspect_records(handle, revision=4)
+            mops = {record["identifier"]: record["parameters"] for record in records
+                    if record["kind"] == "mop"}
+            self.assertEqual(mops["spiral-cw"]["drilling_method"], "SpiralMill_CW")
+            self.assertEqual(mops["spiral-cw"]["hole_diameter"], 12)
+            self.assertEqual(mops["spiral-cw"]["roughing_clearance"], 0.5)
+            self.assertTrue(mops["spiral-cw"]["drill_lead_out"])
+            self.assertEqual(mops["spiral-cw"]["tool_profile"], "Unspecified")
+            self.assertEqual(mops["spiral-ccw-auto"]["drilling_method"],
+                             "SpiralMill_CCW")
+            self.assertIsNone(mops["spiral-ccw-auto"]["hole_diameter"])
+            self.assertFalse(mops["spiral-ccw-auto"]["spiral_flat_base"])
+            self.assertEqual(mops["spiral-ccw-auto"]["lead_out_length"], -1.25)
+            self.assertEqual(mops["spiral-ccw-auto"]["tool_profile"], "EndMill")
+
+            saved = await self.call("document_save", self.args(
+                document=handle, expected_revision=4, path="spiral.cb"))
+            self.assertTrue(saved["ok"], saved)
+            tree = ET.parse(self.root / "spiral.cb")
+            native = {element.findtext("Name"): element
+                      for element in tree.getroot().findall("./parts/part/machineops/drill")}
+            cw = native["spiral-cw"]
+            for tag in ("DrillingMethod", "HoleDiameter", "DrillLeadOut",
+                        "SpiralFlatBase", "LeadOutLength", "RoughingClearance",
+                        "ToolDiameter", "ToolProfile"):
+                self.assertEqual(cw.find(tag).get("state"), "Value", tag)
+            for tag in ("PeckDistance", "RetractHeight", "Dwell"):
+                self.assertEqual(cw.find(tag).get("state"), "Default", tag)
+            auto = native["spiral-ccw-auto"]
+            self.assertEqual(auto.find("HoleDiameter").get("state"), "Default")
+            self.assertIn(auto.findtext("HoleDiameter"), (None, ""))
+
+            reopened = await self.call("document_open", self.args(
+                path="spiral.cb", units="mm"))
+            self.assertTrue(reopened["ok"], reopened)
+            reopened_records = await self.inspect_records(reopened["document"], revision=0)
+            self.assert_records_close(self, reopened_records, records)
+
+            point_auto = await self.call("machining_add_drill", self.args(
+                document=handle, expected_revision=4, identifier="bad-auto",
+                part="Part", targets=[points["data"]["entity_id"]],
+                drilling_method="SpiralMill_CW", **common,
+            ))
+            self.assertEqual(point_auto["error"]["field"], "hole_diameter")
+            impossible = await self.call("machining_add_drill", self.args(
+                document=handle, expected_revision=4, identifier="bad-fit",
+                part="Part", targets=[points["data"]["entity_id"]],
+                drilling_method="SpiralMill_CCW", hole_diameter=7,
+                roughing_clearance=0.5, **common,
+            ))
+            self.assertEqual(impossible["error"]["field"], "hole_diameter")
+            impossible_auto = await self.call("machining_add_drill", self.args(
+                document=handle, expected_revision=4, identifier="bad-auto-fit",
+                part="Part", targets=[circle["data"]["entity_id"]],
+                drilling_method="SpiralMill_CW", tool_diameter=12,
+                roughing_clearance=0.5,
+                **{key: value for key, value in common.items()
+                   if key != "tool_diameter"},
+            ))
+            self.assertEqual(impossible_auto["error"]["field"], "hole_diameter")
+            wrong_family = await self.call("machining_add_drill", self.args(
+                document=handle, expected_revision=4, identifier="bad-peck",
+                part="Part", targets=[points["data"]["entity_id"]],
+                drilling_method="SpiralMill_CW", hole_diameter=12,
+                peck_distance=1, **common,
+            ))
+            self.assertEqual(wrong_family["error"]["field"], "drilling_method")
+            canned_clearance = await self.call("machining_add_drill", self.args(
+                document=handle, expected_revision=4, identifier="bad-canned",
+                part="Part", targets=[points["data"]["entity_id"]],
+                drilling_method="CannedCycle", roughing_clearance=0.1,
+                **common,
+            ))
+            self.assertEqual(canned_clearance["error"]["field"],
+                             "roughing_clearance")
 
         self.run_async(test)
 

@@ -2711,7 +2711,8 @@ left for finishing and negative values as overcut; Engrave at zero follows its s
 line placement and a nonzero value offsets that path. Imported Drill values remain
 inspectable, but fresh MCP Drill authoring stays at zero because this adapter exposes
 only CannedCycle and CamBam's release documentation specifically associates drilling
-roughing-clearance support with spiral drilling.
+roughing-clearance support with spiral drilling. This limitation was subsequently
+removed by the SpiralMill authoring increment below.
 
 The user's spiral-drill observation supplies the exact relationship absent from the
 vendor property table. For explicit hole diameter `H`, signed radial clearance `R`
@@ -2729,3 +2730,23 @@ inspectable. Stock diagnostics are absent for unspecified zero stock and advisor
 defined XY stock with multiple copies. All 77 MCP tests and all 237 repository tests
 pass with the existing single Windows symlink-privilege skip; compileall, strict
 duplicate-key/schema JSON parsing and `git diff --check` pass.
+
+### SpiralMill Drill MCP authoring — 2026-09-19
+
+The user supplied a CamBam Plus 1.0 native SpiralMill CW record and clarified native
+state semantics. MCP Drill now supports both `SpiralMill_CW` and `SpiralMill_CCW` in
+addition to `CannedCycle`. Spiral authoring covers explicit/Auto hole diameter,
+signed roughing clearance, lead-out enable/length, flat-base behavior and native tool
+profile metadata. Auto diameter is bounded to all-Circle target selections because a
+Point carries no diameter; Point targets require an explicit value.
+
+Fresh selected values serialize with `state="Value"`. The CannedCycle-only
+`PeckDistance`, `RetractHeight` and `Dwell` records remain present but use
+`state="Default"` on SpiralMill, matching the supplied native structure and avoiding
+false claims that those values govern spiral motion. Auto `HoleDiameter` likewise
+uses `Default`. Explicit diameters and the known world diameter of each Auto Circle
+enforce the user-validated relationship `H - 2R > T`. Native CamBam toolpath acceptance remains required for the generated
+CW/CCW explicit/Auto fixtures. All 78 MCP tests and all 238 repository tests pass
+with the single existing Windows privilege skip; the three generated files all pass
+strict framework reopen and their inspected native states match the intended
+Value/Default split.

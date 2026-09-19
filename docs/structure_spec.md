@@ -317,6 +317,14 @@ not CAM-style evaluation. The scalar state setter also works for new MOPs and
 allows explicit Default output. An imported untouched MOP never recomputes those
 authoring fallbacks or fills in absent properties.
 
+Fresh Drill encoding is method-aware. CannedCycle makes PeckDistance,
+RetractHeight and Dwell explicit. SpiralMill CW/CCW instead makes HoleDiameter
+(unless Auto), DrillLeadOut, SpiralFlatBase and LeadOutLength explicit while retaining
+the three CannedCycle-only elements as Default-state native fields. Explicit spiral
+diameter `H`, signed radial roughing clearance `R` and effective tool diameter `T`
+must satisfy `H - 2R > T`. Auto diameter is resolved by CamBam from Circle targets;
+the MCP adapter therefore requires explicit diameter whenever a Point target is used.
+
 Imported global MachiningOptions and unmodeled part machining settings are
 retained, including Style/StyleLibrary. Part ToolDiameter retains native state/text
 while its modeled value is unchanged; changing the value exports the edit.

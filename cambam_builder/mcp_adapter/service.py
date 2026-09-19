@@ -1456,20 +1456,85 @@ class DocumentService:
                     "targets": [str(value) for value in staged.get_mop_targets(mop)]}
         elif name == "machining_add_drill":
             part, targets = self._stage_mop_prelude(staged, args, "drill")
+            method = args["drilling_method"]
+            is_spiral = method in ("SpiralMill_CW", "SpiralMill_CCW")
+            hole_diameter = args.get("hole_diameter")
+            if not is_spiral:
+                if args["roughing_clearance"] != 0:
+                    raise DomainError(
+                        "INVALID_ARGUMENT",
+                        "roughing_clearance must be zero for CannedCycle",
+                        "roughing_clearance",
+                    )
+                if hole_diameter is not None:
+                    raise DomainError(
+                        "INVALID_ARGUMENT",
+                        "hole_diameter is only used by SpiralMill",
+                        "hole_diameter",
+                    )
+                if (args["drill_lead_out"] or not args["spiral_flat_base"]
+                        or args["lead_out_length"] != 0):
+                    raise DomainError(
+                        "INVALID_ARGUMENT",
+                        "drill_lead_out, spiral_flat_base and lead_out_length are "
+                        "SpiralMill-only",
+                        "drilling_method",
+                    )
+            else:
+                if (args["peck_distance"] != 0 or args["retract_height"] != 5
+                        or args["dwell"] != 0):
+                    raise DomainError(
+                        "INVALID_ARGUMENT",
+                        "peck_distance, retract_height and dwell are CannedCycle-only",
+                        "drilling_method",
+                    )
+                if hole_diameter is None and any(not isinstance(target, Circle)
+                                                 for target in targets):
+                    raise DomainError(
+                        "INVALID_ARGUMENT",
+                        "SpiralMill Point targets require an explicit hole_diameter; "
+                        "Auto diameter is available only when every target is a Circle",
+                        "hole_diameter",
+                    )
+                if (hole_diameter is None
+                        and any(self._circle_geometry(target)["diameter"]
+                                - 2 * args["roughing_clearance"]
+                                <= args["tool_diameter"] for target in targets)):
+                    raise DomainError(
+                        "INVALID_ARGUMENT",
+                        "Every Auto Circle diameter minus 2 * roughing_clearance "
+                        "must be greater than tool_diameter",
+                        "hole_diameter",
+                    )
+                if (hole_diameter is not None
+                        and hole_diameter - 2 * args["roughing_clearance"]
+                        <= args["tool_diameter"]):
+                    raise DomainError(
+                        "INVALID_ARGUMENT",
+                        "SpiralMill requires hole_diameter - 2 * roughing_clearance "
+                        "to be greater than tool_diameter",
+                        "hole_diameter",
+                    )
             mop = staged.add_drill_mop(
                 part, targets=targets, identifier=args["identifier"], name=args["identifier"],
                 enabled=args["enabled"], target_depth=args["target_depth"],
                 depth_increment=args["depth_increment"], stock_surface=args["stock_surface"],
-                roughing_clearance=0.0, clearance_plane=args["clearance_plane"],
+                roughing_clearance=args["roughing_clearance"],
+                clearance_plane=args["clearance_plane"],
                 spindle_direction="CW", spindle_speed=args["spindle_speed"],
                 velocity_mode="ExactStop", work_plane="XY", optimisation_mode="Standard",
-                tool_diameter=args["tool_diameter"], tool_number=0, tool_profile="Drill",
+                tool_diameter=args["tool_diameter"], tool_number=0,
+                tool_profile=args.get("tool_profile") or (
+                    "Unspecified" if is_spiral else "Drill"),
                 plunge_feedrate=args["plunge_feedrate"], cut_feedrate=args["cut_feedrate"],
                 max_crossover_distance=0.7, custom_mop_header="", custom_mop_footer="",
-                drilling_method="CannedCycle", peck_distance=args["peck_distance"],
+                drilling_method=method, peck_distance=args["peck_distance"],
                 retract_height=args["retract_height"], dwell=args["dwell"],
-                hole_diameter=None, drill_lead_out=False, spiral_flat_base=True,
-                lead_out_length=0.0, custom_script="",
+                hole_diameter=hole_diameter,
+                drill_lead_out=args["drill_lead_out"] if is_spiral else False,
+                spiral_flat_base=args["spiral_flat_base"] if is_spiral else True,
+                lead_out_length=args["lead_out_length"] if is_spiral else 0.0,
+                custom_script="",
             )
             if mop is None:
                 raise DomainError("INTERNAL_ERROR", "Framework rejected Drill creation")
@@ -1691,7 +1756,7 @@ class DocumentService:
         "final_depth_increment": ("FinalDepthIncrement",),
         "cut_ordering": ("CutOrdering",),
     }
-    DRILL_XML_PATHS = {
+    DRILL_COMMON_XML_PATHS = {
         "target_depth": ("TargetDepth",), "depth_increment": ("DepthIncrement",),
         "tool_diameter": ("ToolDiameter",), "cut_feedrate": ("CutFeedrate",),
         "plunge_feedrate": ("PlungeFeedrate",), "spindle_speed": ("SpindleSpeed",),
@@ -1700,8 +1765,17 @@ class DocumentService:
         "spindle_direction": ("SpindleDirection",), "velocity_mode": ("VelocityMode",),
         "roughing_clearance": ("RoughingClearance",), "tool_number": ("ToolNumber",),
         "custom_mop_header": ("CustomMOPHeader",), "custom_mop_footer": ("CustomMOPFooter",),
-        "drilling_method": ("DrillingMethod",), "peck_distance": ("PeckDistance",),
+        "drilling_method": ("DrillingMethod",),
+    }
+    DRILL_CANNED_XML_PATHS = {
+        **DRILL_COMMON_XML_PATHS, "peck_distance": ("PeckDistance",),
         "retract_height": ("RetractHeight",), "dwell": ("Dwell",),
+    }
+    DRILL_SPIRAL_XML_PATHS = {
+        **DRILL_COMMON_XML_PATHS, "hole_diameter": ("HoleDiameter",),
+        "drill_lead_out": ("DrillLeadOut",),
+        "spiral_flat_base": ("SpiralFlatBase",),
+        "lead_out_length": ("LeadOutLength",),
     }
 
     @staticmethod
@@ -1869,11 +1943,36 @@ class DocumentService:
 
     @staticmethod
     def _drill_scalars_ok(values):
-        return (
+        common_ok = (
             all(type(values[key]) in (int, float) and math.isfinite(values[key])
                 and values[key] >= 0 for key in ("peck_distance", "dwell"))
             and type(values["retract_height"]) in (int, float)
             and math.isfinite(values["retract_height"])
+            and type(values["drill_lead_out"]) is bool
+            and type(values["spiral_flat_base"]) is bool
+            and type(values["lead_out_length"]) in (int, float)
+            and math.isfinite(values["lead_out_length"])
+            and values["drilling_method"] in (
+                "CannedCycle", "SpiralMill_CW", "SpiralMill_CCW")
+            and values["tool_profile"] in ("Drill", "EndMill", "Unspecified")
+        )
+        if not common_ok:
+            return False
+        if values["drilling_method"] == "CannedCycle":
+            return (
+                values["hole_diameter"] is None
+                and values["drill_lead_out"] is False
+                and values["spiral_flat_base"] is True
+                and values["lead_out_length"] == 0
+            )
+        hole_diameter = values["hole_diameter"]
+        return (
+            hole_diameter is None
+            or (type(hole_diameter) in (int, float)
+                and math.isfinite(hole_diameter)
+                and hole_diameter > 0
+                and hole_diameter - 2 * values["roughing_clearance"]
+                > values["tool_diameter"])
         )
 
     def _drill_parameters(self, mop):
@@ -1885,23 +1984,30 @@ class DocumentService:
                 "enabled", "peck_distance", "retract_height", "dwell",
                 "drilling_method", "tool_profile", "work_plane", "spindle_direction",
                 "velocity_mode", "roughing_clearance", "tool_number",
-                "custom_mop_header", "custom_mop_footer",
+                "custom_mop_header", "custom_mop_footer", "hole_diameter",
+                "drill_lead_out", "spiral_flat_base", "lead_out_length",
             ),
             {
-                "drilling_method": "CannedCycle", "tool_profile": "Drill",
                 "work_plane": "XY", "spindle_direction": "CW",
                 "velocity_mode": "ExactStop",
                 "tool_number": 0, "custom_mop_header": "", "custom_mop_footer": "",
             },
             {
                 "optimisation_mode": "Standard", "max_crossover_distance": 0.7,
-                "hole_diameter": None, "drill_lead_out": False,
-                "spiral_flat_base": True, "lead_out_length": 0.0,
                 "custom_script": "",
             },
             extra=self._drill_scalars_ok,
         )
-        if values is None or not self._explicit_mop_xml_states(mop, self.DRILL_XML_PATHS):
+        if values is None:
+            return None
+        if values["drilling_method"] == "CannedCycle":
+            paths = self.DRILL_CANNED_XML_PATHS
+        else:
+            paths = self.DRILL_SPIRAL_XML_PATHS
+            if values["hole_diameter"] is None:
+                paths = {key: path for key, path in paths.items()
+                         if key != "hole_diameter"}
+        if not self._explicit_mop_xml_states(mop, paths):
             return None
         return values if _PARAMETER_VALIDATORS["DrillParameters"].is_valid(values) else None
 

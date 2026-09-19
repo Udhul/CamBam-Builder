@@ -871,10 +871,20 @@
           "$ref": "#/$defs/NonNegative"
         },
         "drilling_method": {
-          "const": "CannedCycle"
+          "type": "string",
+          "enum": [
+            "CannedCycle",
+            "SpiralMill_CW",
+            "SpiralMill_CCW"
+          ]
         },
         "tool_profile": {
-          "const": "Drill"
+          "type": "string",
+          "enum": [
+            "Drill",
+            "EndMill",
+            "Unspecified"
+          ]
         },
         "work_plane": {
           "const": "XY"
@@ -887,7 +897,23 @@
         },
         "roughing_clearance": {
           "$ref": "#/$defs/Number",
-          "description": "Imported native value. MCP authoring fixes this to zero because the exposed Drill method is CannedCycle; CamBam applies roughing clearance to spiral drilling."
+          "description": "Signed radial allowance for SpiralMill: positive leaves stock and negative oversizes the hole. CannedCycle authoring requires zero."
+        },
+        "hole_diameter": {
+          "anyOf": [
+            { "$ref": "#/$defs/Positive" },
+            { "type": "null" }
+          ],
+          "description": "Desired boundary diameter for SpiralMill, or null when CamBam derives an Auto diameter from Circle targets."
+        },
+        "drill_lead_out": {
+          "type": "boolean"
+        },
+        "spiral_flat_base": {
+          "type": "boolean"
+        },
+        "lead_out_length": {
+          "$ref": "#/$defs/Number"
         },
         "tool_number": {
           "const": 0
@@ -918,6 +944,10 @@
         "spindle_direction",
         "velocity_mode",
         "roughing_clearance",
+        "hole_diameter",
+        "drill_lead_out",
+        "spiral_flat_base",
+        "lead_out_length",
         "tool_number",
         "custom_mop_header",
         "custom_mop_footer"
@@ -3288,17 +3318,63 @@
           "type": "boolean",
           "default": true
         },
+        "drilling_method": {
+          "type": "string",
+          "enum": [
+            "CannedCycle",
+            "SpiralMill_CW",
+            "SpiralMill_CCW"
+          ],
+          "default": "CannedCycle",
+          "description": "CannedCycle uses peck_distance, retract_height and dwell. SpiralMill_CW/CCW use hole_diameter, roughing_clearance, drill_lead_out, spiral_flat_base and lead_out_length."
+        },
+        "tool_profile": {
+          "type": "string",
+          "enum": [
+            "Drill",
+            "EndMill",
+            "Unspecified"
+          ],
+          "description": "Native cutter-profile metadata. When omitted, CannedCycle uses Drill and SpiralMill uses Unspecified."
+        },
         "peck_distance": {
           "$ref": "#/$defs/NonNegative",
-          "default": 0
+          "default": 0,
+          "description": "CannedCycle-only peck depth; zero disables pecking."
         },
         "retract_height": {
           "$ref": "#/$defs/Number",
-          "default": 5
+          "default": 5,
+          "description": "CannedCycle-only retract plane."
         },
         "dwell": {
           "$ref": "#/$defs/NonNegative",
-          "default": 0
+          "default": 0,
+          "description": "CannedCycle-only dwell time."
+        },
+        "hole_diameter": {
+          "$ref": "#/$defs/Positive",
+          "description": "SpiralMill target boundary diameter. Omit for CamBam Auto only when every target is a Circle; Point targets require this value."
+        },
+        "roughing_clearance": {
+          "$ref": "#/$defs/Number",
+          "default": 0,
+          "description": "SpiralMill signed radial allowance: effective diameter = hole_diameter - 2 * roughing_clearance. Positive leaves stock; negative oversizes. Must remain zero for CannedCycle."
+        },
+        "drill_lead_out": {
+          "type": "boolean",
+          "default": false,
+          "description": "SpiralMill-only lead-out enable flag."
+        },
+        "spiral_flat_base": {
+          "type": "boolean",
+          "default": true,
+          "description": "SpiralMill-only flat-base finishing flag."
+        },
+        "lead_out_length": {
+          "$ref": "#/$defs/Number",
+          "default": 0,
+          "description": "SpiralMill-only lead-out distance; positive moves toward the hole center and negative away from it."
         }
       },
       "required": [
