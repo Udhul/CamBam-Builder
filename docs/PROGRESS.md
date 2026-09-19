@@ -7,7 +7,7 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**2026-09-19 SpiralMill Drill MCP authoring implemented; native acceptance pending.**
+**2026-09-19 SpiralMill Drill MCP authoring implemented and accepted in CamBam Plus 1.0.**
 `machining_add_drill` now authors CannedCycle, SpiralMill CW and SpiralMill CCW.
 Spiral methods expose signed roughing clearance, explicit or Circle-derived Auto
 hole diameter, lead-out enable/length, flat-base behavior and cutter-profile metadata.
@@ -21,8 +21,8 @@ at effective hole radius. All 78 MCP tests and all 239 repository tests pass wit
 single existing Windows symlink-privilege skip. Three strict-reopened CamBam Plus 1.0
 acceptance files and exact criteria are in
 [`output/spiral-drill-190926/`](../output/spiral-drill-190926/); native toolpath
-geometry was accepted for all three original files. A focused reopen of the regenerated
-prompt-free files remains pending.
+geometry was accepted for all three original files, and the user confirmed the
+regenerated files open without any revert/reconciliation prompt.
 
 **2026-09-19 MCP/CamBam alignment correction accepted in CamBam Plus 1.0.** The
 first CamBam review accepted zero boundaries, all Grid order
@@ -780,6 +780,19 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
      record its physical meaning, units, coordinate/reference frame, sign convention,
      valid range, applicability, dependencies, CamBam `Default`/`Value` inheritance
      behavior, when fresh XML should omit it, and preservation behavior after import.
+     Replace scattered encoder decisions with one declarative field-encoding policy
+     (or equivalently centralized reusable logic) that selects exactly one fresh-export
+     disposition per field and applicable MOP mode:
+     `Value` for user-decided or safety/determinism-critical values that CamBam must
+     not replace; `Default` only for evidenced intentional inheritance/Auto semantics
+     where an element must remain present, or when faithfully preserving imported
+     native state (including a user-requested edit that deliberately clears a prior
+     explicit override, if native A/B evidence shows omission is not equivalent); and
+     omission for irrelevant, unset or safely profile-derived fields
+     when absence is CamBam's prompt-free inheritance form. Keep imported-template
+     preservation distinct from fresh authoring. The policy must cover nested
+     containers, method switches and dependencies, prevent cached Default text from
+     causing file-open prompts, and be directly regression tested.
      Compare implementation and tests with the CamBam Plus 1.0 manual, SDK/API
      reference and source-generated native XML. Explicitly examine current fixed or
      derived choices such as feed fallback, depth increment fallback, work plane,

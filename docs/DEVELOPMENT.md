@@ -890,8 +890,8 @@ CCW, test Point targets with explicit hole diameter and Circle targets with both
 explicit and Auto diameter. Verify `effective diameter = hole diameter - 2 *
 roughing clearance`, that it remains greater than the tool diameter, and that
 HoleDiameter, DrillLeadOut, SpiralFlatBase, LeadOutLength, RoughingClearance and the
-selected method are `state="Value"` when supplied. Auto HoleDiameter and the
-Auto HoleDiameter remains `state="Default"`; fresh SpiralMill XML must omit
+selected method are `state="Value"` when supplied. Auto HoleDiameter remains
+`state="Default"`; fresh SpiralMill XML must omit
 CannedCycle-only PeckDistance/RetractHeight/Dwell and unused CustomScript entirely.
 Confirm CamBam opens without asking to revert those irrelevant fields. A nonzero
 LeadOutLength requires DrillLeadOut true, and a positive centerward length must not

@@ -2752,4 +2752,6 @@ accepted the three original files' method, diameter/clearance and generated tool
 behavior; file 02 also confirmed that a
 lead-out length has no effect while DrillLeadOut is false. The contract now rejects
 that inert combination and caps positive centerward length at effective hole radius.
-A focused prompt-free reopen remains pending after regeneration.
+After regeneration, the user reopened all three files and confirmed CamBam no longer
+asked to revert or reconcile the omitted fields. This accepts the fresh SpiralMill
+field-presence/state correction in CamBam Plus 1.0.
