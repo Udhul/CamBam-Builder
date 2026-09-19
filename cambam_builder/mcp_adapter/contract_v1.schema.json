@@ -198,21 +198,24 @@
         "stock_thickness": { "$ref": "#/$defs/NonNegative" },
         "stock_material": { "type": "string", "maxLength": 128 },
         "stock_color": { "$ref": "#/$defs/Name" },
-        "stock_offset_x": { "$ref": "#/$defs/Number" },
-        "stock_offset_y": { "$ref": "#/$defs/Number" },
-        "stock_surface": { "$ref": "#/$defs/Number" },
-        "machining_origin_x": { "$ref": "#/$defs/Number" },
-        "machining_origin_y": { "$ref": "#/$defs/Number" },
+        "stock_offset_x": { "$ref": "#/$defs/Number", "description": "Part-local X displacement of the stock box from the Part machining origin." },
+        "stock_offset_y": { "$ref": "#/$defs/Number", "description": "Part-local Y displacement of the stock box from the Part machining origin." },
+        "stock_surface": { "$ref": "#/$defs/Number", "description": "Z coordinate of the stock top surface; not stock thickness." },
+        "stock_drawing_origin_x": { "$ref": "#/$defs/Number", "description": "Derived drawing X of the stock lower-left top corner: machining_origin_x + stock_offset_x. Not a separate XML field." },
+        "stock_drawing_origin_y": { "$ref": "#/$defs/Number", "description": "Derived drawing Y of the stock lower-left top corner: machining_origin_y + stock_offset_y. Not a separate XML field." },
+        "stock_drawing_origin_z": { "$ref": "#/$defs/Number", "description": "Derived drawing Z of the stock lower-left top corner: stock_surface. Not a separate XML field." },
+        "machining_origin_x": { "$ref": "#/$defs/Number", "description": "Drawing X location treated as machine X=0 for this Part." },
+        "machining_origin_y": { "$ref": "#/$defs/Number", "description": "Drawing Y location treated as machine Y=0 for this Part." },
         "default_tool_diameter": { "anyOf": [{ "$ref": "#/$defs/NonNegative" }, { "type": "null" }] },
         "default_spindle_speed": { "anyOf": [{ "type": "integer", "minimum": 1, "maximum": 1000000 }, { "type": "null" }] },
         "nest_method": { "type": "string", "enum": ["None", "Grid", "IsoGrid", "Manual", "PointList"] },
         "nest_rows": { "type": "integer", "minimum": 1, "maximum": 1000 },
         "nest_columns": { "type": "integer", "minimum": 1, "maximum": 1000 },
-        "nest_spacing": { "$ref": "#/$defs/NonNegative" },
+        "nest_spacing": { "$ref": "#/$defs/NonNegative", "description": "Grid/IsoGrid clearance between outermost generated toolpaths, not geometry centers or bounding boxes." },
         "grid_order": { "type": "string", "enum": ["RightUp", "RightDown", "LeftUp", "LeftDown", "UpRight", "UpLeft", "DownRight", "DownLeft"] },
         "grid_alternate": { "type": "boolean" }
       },
-      "required": ["part", "enabled", "stock_width", "stock_height", "stock_thickness", "stock_material", "stock_color", "stock_offset_x", "stock_offset_y", "stock_surface", "machining_origin_x", "machining_origin_y", "default_tool_diameter", "default_spindle_speed", "nest_method", "nest_rows", "nest_columns", "nest_spacing", "grid_order", "grid_alternate"],
+      "required": ["part", "enabled", "stock_width", "stock_height", "stock_thickness", "stock_material", "stock_color", "stock_offset_x", "stock_offset_y", "stock_surface", "stock_drawing_origin_x", "stock_drawing_origin_y", "stock_drawing_origin_z", "machining_origin_x", "machining_origin_y", "default_tool_diameter", "default_spindle_speed", "nest_method", "nest_rows", "nest_columns", "nest_spacing", "grid_order", "grid_alternate"],
       "additionalProperties": false
     },
     "DocumentSummary": {
@@ -426,10 +429,12 @@
       "type": "object",
       "properties": {
         "target_depth": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Final absolute Z plane, not a positive distance below stock. Material depth is stock_surface - target_depth."
         },
         "depth_increment": {
-          "$ref": "#/$defs/Positive"
+          "$ref": "#/$defs/Positive",
+          "description": "Positive maximum Z step between successive depth levels; relative to the preceding level."
         },
         "tool_diameter": {
           "$ref": "#/$defs/Positive"
@@ -447,10 +452,12 @@
         },
         "stock_surface": {
           "$ref": "#/$defs/Number",
-          "default": 0
+          "default": 0,
+          "description": "Absolute Z plane where cutting starts; not stock thickness or a relative offset."
         },
         "clearance_plane": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Absolute safe-traverse Z plane; it must be above stock_surface."
         },
         "enabled": {
           "type": "boolean",
@@ -508,10 +515,12 @@
           "enum": ["None", "Automatic"]
         },
         "tab_width": {
-          "$ref": "#/$defs/Positive"
+          "$ref": "#/$defs/Positive",
+          "description": "Width at the tab's thinnest retained section. CamBam's displayed rectangle/toolpath gap is wider by cutter compensation."
         },
         "tab_height": {
-          "$ref": "#/$defs/Positive"
+          "$ref": "#/$defs/Positive",
+          "description": "Retained tab height measured upward from target_depth."
         },
         "tab_min_tabs": {
           "type": "integer",
@@ -524,17 +533,21 @@
           "maximum": 1000
         },
         "tab_distance": {
-          "$ref": "#/$defs/NonNegative"
+          "$ref": "#/$defs/NonNegative",
+          "description": "Requested perimeter spacing used to estimate automatic count; zero selects Minimum Tabs. The result is clamped between min and max tabs."
         },
         "tab_size_threshold": {
-          "$ref": "#/$defs/NonNegative"
+          "$ref": "#/$defs/NonNegative",
+          "description": "Contours with perimeter below this value receive no automatic tabs."
         },
         "tab_use_leadins": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Only affects Square tabs when the Profile has an active LeadInMove."
         },
         "tab_style": {
           "type": "string",
-          "enum": ["Square", "Triangle", "Skip"]
+          "enum": ["Square", "Triangle", "Skip"],
+          "description": "Square and Triangle retain material; Skip rapids across the tab and is intended for non-contact cutting such as plasma."
         },
         "custom_mop_header": {
           "const": ""
@@ -585,10 +598,12 @@
       "type": "object",
       "properties": {
         "target_depth": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Final absolute Z plane, not a positive distance below stock. Material depth is stock_surface - target_depth."
         },
         "depth_increment": {
-          "$ref": "#/$defs/Positive"
+          "$ref": "#/$defs/Positive",
+          "description": "Positive maximum Z step between successive depth levels; relative to the preceding level."
         },
         "tool_diameter": {
           "$ref": "#/$defs/Positive"
@@ -606,10 +621,12 @@
         },
         "stock_surface": {
           "$ref": "#/$defs/Number",
-          "default": 0
+          "default": 0,
+          "description": "Absolute Z plane where cutting starts; not stock thickness or a relative offset."
         },
         "clearance_plane": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Absolute safe-traverse Z plane; it must be above stock_surface."
         },
         "enabled": {
           "type": "boolean",
@@ -709,10 +726,12 @@
       "type": "object",
       "properties": {
         "target_depth": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Final absolute Z plane, not a positive distance below stock. Material depth is stock_surface - target_depth."
         },
         "depth_increment": {
-          "$ref": "#/$defs/Positive"
+          "$ref": "#/$defs/Positive",
+          "description": "Positive maximum Z step between successive depth levels; relative to the preceding level."
         },
         "tool_diameter": {
           "$ref": "#/$defs/Positive"
@@ -730,10 +749,12 @@
         },
         "stock_surface": {
           "$ref": "#/$defs/Number",
-          "default": 0
+          "default": 0,
+          "description": "Absolute Z plane where cutting starts; not stock thickness or a relative offset."
         },
         "clearance_plane": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Absolute safe-traverse Z plane; it must be above stock_surface."
         },
         "enabled": {
           "type": "boolean",
@@ -744,7 +765,8 @@
         },
         "tool_profile": {
           "type": "string",
-          "enum": ["EndMill", "Vcutter"]
+          "enum": ["EndMill", "VCutter"],
+          "description": "VCutter is CamBam's exact native enum token (UI: V-Cutter). Engrave still follows the selected paths at ordinary depth levels; this does not request skeleton or width/depth-varying V-carving."
         },
         "spindle_direction": {
           "const": "CW"
@@ -802,10 +824,12 @@
       "type": "object",
       "properties": {
         "target_depth": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Final absolute Z plane, not a positive distance below stock. Material depth is stock_surface - target_depth."
         },
         "depth_increment": {
-          "$ref": "#/$defs/Positive"
+          "$ref": "#/$defs/Positive",
+          "description": "Positive maximum Z step between successive depth levels; relative to the preceding level."
         },
         "tool_diameter": {
           "$ref": "#/$defs/Positive"
@@ -823,10 +847,12 @@
         },
         "stock_surface": {
           "$ref": "#/$defs/Number",
-          "default": 0
+          "default": 0,
+          "description": "Absolute Z plane where cutting starts; not stock thickness or a relative offset."
         },
         "clearance_plane": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Absolute safe-traverse Z plane; it must be above stock_surface."
         },
         "enabled": {
           "type": "boolean",
@@ -943,6 +969,7 @@
             "stock_color": { "$ref": "#/$defs/Name" },
             "stock_offset": { "type": "array", "items": { "$ref": "#/$defs/Number" }, "minItems": 2, "maxItems": 2 },
             "stock_surface": { "$ref": "#/$defs/Number" },
+            "stock_drawing_origin": { "type": "array", "items": { "$ref": "#/$defs/Number" }, "minItems": 3, "maxItems": 3, "description": "Derived lower-left top stock corner in drawing coordinates: machining_origin + stock_offset in XY, stock_surface in Z." },
             "machining_origin": { "type": "array", "items": { "$ref": "#/$defs/Number" }, "minItems": 2, "maxItems": 2 },
             "default_tool_diameter": { "anyOf": [{ "$ref": "#/$defs/NonNegative" }, { "type": "null" }] },
             "default_spindle_speed": { "anyOf": [{ "type": "integer", "minimum": 1, "maximum": 1000000 }, { "type": "null" }] },
@@ -960,7 +987,7 @@
             "stock_width",
             "stock_height",
             "stock_thickness",
-            "stock_material", "stock_color", "stock_offset", "stock_surface", "machining_origin", "default_tool_diameter",
+            "stock_material", "stock_color", "stock_offset", "stock_surface", "stock_drawing_origin", "machining_origin", "default_tool_diameter",
             "default_spindle_speed", "nest_method",
             "nest_rows", "nest_columns", "nest_spacing", "grid_order", "grid_alternate"
           ],
@@ -2702,10 +2729,12 @@
           ]
         },
         "target_depth": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Final absolute Z plane, not a positive distance below stock. Material depth is stock_surface - target_depth."
         },
         "depth_increment": {
-          "$ref": "#/$defs/Positive"
+          "$ref": "#/$defs/Positive",
+          "description": "Positive maximum Z step between successive depth levels; relative to the preceding level."
         },
         "tool_diameter": {
           "$ref": "#/$defs/Positive"
@@ -2723,10 +2752,12 @@
         },
         "stock_surface": {
           "$ref": "#/$defs/Number",
-          "default": 0
+          "default": 0,
+          "description": "Absolute Z plane where cutting starts; not stock thickness or a relative offset."
         },
         "clearance_plane": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Absolute safe-traverse Z plane; it must be above stock_surface."
         },
         "enabled": {
           "type": "boolean",
@@ -2745,11 +2776,13 @@
         },
         "tab_width": {
           "$ref": "#/$defs/Positive",
-          "default": 6
+          "default": 6,
+          "description": "Width at the thinnest retained section; displayed/toolpath gap is wider by cutter compensation."
         },
         "tab_height": {
           "$ref": "#/$defs/Positive",
-          "default": 1.5
+          "default": 1.5,
+          "description": "Retained material height measured upward from target_depth."
         },
         "tab_min_tabs": {
           "type": "integer",
@@ -2765,20 +2798,24 @@
         },
         "tab_distance": {
           "$ref": "#/$defs/NonNegative",
-          "default": 40
+          "default": 40,
+          "description": "Perimeter spacing used to estimate automatic count; zero selects Minimum Tabs, and the result is clamped by min/max."
         },
         "tab_size_threshold": {
           "$ref": "#/$defs/NonNegative",
-          "default": 4
+          "default": 4,
+          "description": "Contours with perimeter below this threshold receive no automatic tabs."
         },
         "tab_use_leadins": {
-          "type": "boolean",
-          "default": false
+          "const": false,
+          "default": false,
+          "description": "Requires Square tabs and an active Profile LeadInMove. This MCP tool pins lead_in_type to None, so true is not accepted."
         },
         "tab_style": {
           "type": "string",
           "enum": ["Square", "Triangle", "Skip"],
-          "default": "Square"
+          "default": "Square",
+          "description": "Square and Triangle retain material; Skip rapids across the tab and is intended for non-contact cutting such as plasma."
         }
       },
       "required": [
@@ -2904,10 +2941,12 @@
           "uniqueItems": true
         },
         "target_depth": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Final absolute Z plane, not a positive distance below stock. Material depth is stock_surface - target_depth."
         },
         "depth_increment": {
-          "$ref": "#/$defs/Positive"
+          "$ref": "#/$defs/Positive",
+          "description": "Positive maximum Z step between successive depth levels; relative to the preceding level."
         },
         "tool_diameter": {
           "$ref": "#/$defs/Positive"
@@ -2925,10 +2964,12 @@
         },
         "stock_surface": {
           "$ref": "#/$defs/Number",
-          "default": 0
+          "default": 0,
+          "description": "Absolute Z plane where cutting starts; not stock thickness or a relative offset."
         },
         "clearance_plane": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Absolute safe-traverse Z plane; it must be above stock_surface."
         },
         "enabled": {
           "type": "boolean",
@@ -3044,10 +3085,12 @@
           "uniqueItems": true
         },
         "target_depth": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Final absolute Z plane, not a positive distance below stock. Material depth is stock_surface - target_depth."
         },
         "depth_increment": {
-          "$ref": "#/$defs/Positive"
+          "$ref": "#/$defs/Positive",
+          "description": "Positive maximum Z step between successive depth levels; relative to the preceding level."
         },
         "tool_diameter": {
           "$ref": "#/$defs/Positive"
@@ -3065,10 +3108,12 @@
         },
         "stock_surface": {
           "$ref": "#/$defs/Number",
-          "default": 0
+          "default": 0,
+          "description": "Absolute Z plane where cutting starts; not stock thickness or a relative offset."
         },
         "clearance_plane": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Absolute safe-traverse Z plane; it must be above stock_surface."
         },
         "enabled": {
           "type": "boolean",
@@ -3076,8 +3121,9 @@
         },
         "tool_profile": {
           "type": "string",
-          "enum": ["EndMill", "Vcutter"],
-          "default": "EndMill"
+          "enum": ["EndMill", "VCutter"],
+          "default": "EndMill",
+          "description": "VCutter is CamBam's exact native enum token (UI: V-Cutter). This declares tool shape but does not turn Engrave into skeleton V-carving."
         }
       },
       "required": [
@@ -3189,10 +3235,12 @@
           "uniqueItems": true
         },
         "target_depth": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Final absolute Z plane, not a positive distance below stock. Material depth is stock_surface - target_depth."
         },
         "depth_increment": {
-          "$ref": "#/$defs/Positive"
+          "$ref": "#/$defs/Positive",
+          "description": "Positive maximum Z step between successive depth levels; relative to the preceding level."
         },
         "tool_diameter": {
           "$ref": "#/$defs/Positive"
@@ -3210,10 +3258,12 @@
         },
         "stock_surface": {
           "$ref": "#/$defs/Number",
-          "default": 0
+          "default": 0,
+          "description": "Absolute Z plane where cutting starts; not stock thickness or a relative offset."
         },
         "clearance_plane": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Absolute safe-traverse Z plane; it must be above stock_surface."
         },
         "enabled": {
           "type": "boolean",
@@ -4753,11 +4803,11 @@
         "stock_thickness": { "$ref": "#/$defs/NonNegative" },
         "stock_material": { "type": "string", "maxLength": 128 },
         "stock_color": { "$ref": "#/$defs/Name" },
-        "stock_offset_x": { "$ref": "#/$defs/Number" },
-        "stock_offset_y": { "$ref": "#/$defs/Number" },
-        "stock_surface": { "$ref": "#/$defs/Number" },
-        "machining_origin_x": { "$ref": "#/$defs/Number" },
-        "machining_origin_y": { "$ref": "#/$defs/Number" },
+        "stock_offset_x": { "$ref": "#/$defs/Number", "description": "Part-local X displacement of the stock box from the Part machining origin." },
+        "stock_offset_y": { "$ref": "#/$defs/Number", "description": "Part-local Y displacement of the stock box from the Part machining origin." },
+        "stock_surface": { "$ref": "#/$defs/Number", "description": "Z coordinate of the stock top surface; not stock thickness." },
+        "machining_origin_x": { "$ref": "#/$defs/Number", "description": "Drawing X location treated as machine X=0 for this Part." },
+        "machining_origin_y": { "$ref": "#/$defs/Number", "description": "Drawing Y location treated as machine Y=0 for this Part." },
         "default_tool_diameter": { "anyOf": [{ "$ref": "#/$defs/NonNegative" }, { "type": "null" }] },
         "default_spindle_speed": {
           "anyOf": [
@@ -4769,7 +4819,7 @@
         "nest_method": { "type": "string", "enum": ["None", "Grid", "IsoGrid"] },
         "nest_rows": { "type": "integer", "minimum": 1, "maximum": 1000 },
         "nest_columns": { "type": "integer", "minimum": 1, "maximum": 1000 },
-        "nest_spacing": { "$ref": "#/$defs/NonNegative" },
+        "nest_spacing": { "$ref": "#/$defs/NonNegative", "description": "Grid/IsoGrid clearance between outermost generated toolpaths, not geometry centers or bounding boxes." },
         "grid_order": { "type": "string", "enum": ["RightUp", "RightDown", "LeftUp", "LeftDown", "UpRight", "UpLeft", "DownRight", "DownLeft"] },
         "grid_alternate": { "type": "boolean" }
       },

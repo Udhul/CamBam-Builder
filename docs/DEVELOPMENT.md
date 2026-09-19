@@ -863,10 +863,11 @@ without an output-schema error; the MCP tool deliberately does not author their
 placement data. Pen width `0`, Part tool diameter `0`, zero/unspecified stock and all
 eight native grid orders must likewise remain inspectable.
 
-Also author one Text targeted by an Engrave MOP with `tool_profile=Vcutter`, one open
+Also author one Text targeted by an Engrave MOP with `tool_profile=VCutter`, one open
 Pline targeted by Profile, and one closed Outside Profile with Automatic holding tabs
-(`tab_distance=0` and `tab_style=Skip` exercise the boundary values). Pass requires
-CamBam Plus 1.0 to load the file without repair, show the V-cutter and holding-tab
+(`tab_distance=0`; test Square and Triangle for retained stock, and Skip only as the
+non-contact/plasma behavior). Keep `tab_use_leadins=false` because this MCP slice pins
+the Profile lead-in to None. Pass requires CamBam Plus 1.0 to load the file without repair, show the V-cutter and holding-tab
 properties, retain the Text/open-Pline targets, and generate the expected open offset
 and tabbed closed toolpaths. Reverse the open Pline in a separate copy and confirm its
 Inside/Outside physical side swaps; this is why the adapter reports

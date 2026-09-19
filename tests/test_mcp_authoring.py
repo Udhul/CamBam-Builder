@@ -326,6 +326,7 @@ class AuthoringTests(unittest.TestCase):
                 "stock_color": "210,180,140",
                 "stock_offset": [0.0, 0.0],
                 "stock_surface": 0.0,
+                "stock_drawing_origin": [0.0, 0.0, 0.0],
                 "machining_origin": [0.0, 0.0],
                 "default_tool_diameter": None,
                 "default_spindle_speed": None,
@@ -480,7 +481,10 @@ class AuthoringTests(unittest.TestCase):
     def test_native_zero_values_stock_coordinates_and_nesting_variants_are_inspectable(self):
         async def test():
             source = CBProject("native-part-settings")
-            source.add_layer("Geometry", pen_width=0)
+            geometry = source.add_layer("Geometry", pen_width=0)
+            source.add_points(
+                geometry, identifier="nest-locations", points=[(1, 2), (10, 20)]
+            )
             orders = (
                 "RightUp", "RightDown", "LeftUp", "LeftDown",
                 "UpRight", "UpLeft", "DownRight", "DownLeft",
@@ -495,10 +499,10 @@ class AuthoringTests(unittest.TestCase):
                     stock_offset=(12.5, -3.0), stock_surface=7.25,
                 )
             tree = build_xml_tree(source)
-            native_nesting = tree.getroot().find("./parts/part/Nesting")
-            native_nesting.find("BasePoint").text = "3,4"
-            ET.SubElement(native_nesting, "PointListID").text = "42"
-            ET.SubElement(native_nesting, "GCodeOrder").text = "2,1,0"
+            point_xml_id = tree.getroot().find(".//points").get("id")
+            point_part = tree.getroot().find("./parts/part[@Name='P1']/Nesting")
+            ET.SubElement(point_part, "PointListID").text = point_xml_id
+            ET.SubElement(point_part, "GCodeOrder").text = "Auto"
             content = ET.tostring(tree.getroot(), encoding="unicode")
 
             imported = await self.call("document_import", self.args(
@@ -509,7 +513,9 @@ class AuthoringTests(unittest.TestCase):
             layer = next(record for record in records if record["kind"] == "layer")
             self.assertEqual(0, layer["pen_width"])
             parts = [record for record in records if record["kind"] == "part"]
-            self.assertEqual(list(orders), [record["grid_order"] for record in parts])
+            # Grid controls are irrelevant to Manual/PointList and are no
+            # longer emitted as misleading placement data.
+            self.assertEqual(["RightUp"] * 8, [record["grid_order"] for record in parts])
             self.assertEqual(
                 ["Manual", "PointList"] * 4,
                 [record["nest_method"] for record in parts],
@@ -518,17 +524,20 @@ class AuthoringTests(unittest.TestCase):
                 self.assertEqual(0, record["default_tool_diameter"])
                 self.assertEqual([12.5, -3.0], record["stock_offset"])
                 self.assertEqual(7.25, record["stock_surface"])
+                self.assertEqual([12.5, -3.0, 7.25], record["stock_drawing_origin"])
 
-            # A nesting-only patch keeps all omitted Part/stock values and the
-            # native settings the core model does not author itself.
+            # A non-nesting patch keeps valid native PointList placement data.
             configured = await self.call("machining_configure_part", self.args(
-                document=handle, expected_revision=0, part="P0", nest_rows=7))
+                document=handle, expected_revision=0, part="P1", stock_material="Birch"))
             self.assertTrue(configured["ok"], configured)
-            self.assertEqual("Manual", configured["data"]["nest_method"])
+            self.assertEqual("PointList", configured["data"]["nest_method"])
             self.assertEqual(0, configured["data"]["default_tool_diameter"])
             self.assertEqual(12.5, configured["data"]["stock_offset_x"])
             self.assertEqual(-3.0, configured["data"]["stock_offset_y"])
             self.assertEqual(7.25, configured["data"]["stock_surface"])
+            self.assertEqual(12.5, configured["data"]["stock_drawing_origin_x"])
+            self.assertEqual(-3.0, configured["data"]["stock_drawing_origin_y"])
+            self.assertEqual(7.25, configured["data"]["stock_drawing_origin_z"])
 
             exported = await self.call("document_export", {
                 "workspace_id": self.service.workspace.id, "document": handle,
@@ -536,14 +545,13 @@ class AuthoringTests(unittest.TestCase):
             })
             self.assertTrue(exported["ok"], exported)
             exported_part = ET.fromstring(exported["data"]["content"]).find(
-                "./parts/part[@Name='P0']"
+                "./parts/part[@Name='P1']"
             )
             self.assertEqual("12.5,-3.0,7.25", exported_part.findtext("Stock/PMin"))
             self.assertEqual("12.5,-3.0,7.25", exported_part.findtext("Stock/PMax"))
-            self.assertEqual("3,4", exported_part.findtext("Nesting/BasePoint"))
-            self.assertEqual("42", exported_part.findtext("Nesting/PointListID"))
-            self.assertEqual("2,1,0", exported_part.findtext("Nesting/GCodeOrder"))
-            self.assertEqual("7", exported_part.findtext("Nesting/Rows"))
+            self.assertIsNone(exported_part.find("Nesting/BasePoint"))
+            self.assertEqual(point_xml_id, exported_part.findtext("Nesting/PointListID"))
+            self.assertEqual("Auto", exported_part.findtext("Nesting/GCodeOrder"))
 
         self.run_async(test)
 

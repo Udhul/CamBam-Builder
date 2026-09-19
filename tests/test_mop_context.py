@@ -18,18 +18,20 @@ def signature(element):
 
 
 class MopContextTests(unittest.TestCase):
-    def test_imported_part_nesting_preserves_native_subtree_until_model_edit(self):
+    def test_point_list_nesting_is_preserved_and_not_mixed_into_grid(self):
         project = CBProject("native-nesting")
         layer = project.add_layer("Geometry")
         square = project.add_rect(layer, identifier="square")
-        part = project.add_part("Part1")
+        project.add_points(layer, identifier="locations", points=[(3, 4), (20, 8)])
+        part = project.add_part("Part1", nesting_method="PointList")
         project.add_profile_mop(part, [square], identifier="profile")
 
         source_tree = build_xml_tree(project)
         source_part = source_tree.getroot().find("./parts/part")
         native_nesting = source_part.find("Nesting")
-        native_nesting.set("vendor-attribute", "preserve-me")
-        ET.SubElement(native_nesting, "VendorSetting").text = "native-value"
+        point_xml_id = source_tree.getroot().find(".//points").get("id")
+        ET.SubElement(native_nesting, "PointListID").text = point_xml_id
+        ET.SubElement(native_nesting, "GCodeOrder").text = "Auto"
         expected_native = signature(native_nesting)
 
         loaded = read_cambam_bytes(
@@ -71,8 +73,8 @@ class MopContextTests(unittest.TestCase):
         self.assertEqual("5.5", changed_nesting.findtext("Spacing"))
         self.assertEqual("LeftDown", changed_nesting.findtext("GridOrder"))
         self.assertEqual("true", changed_nesting.findtext("GridDirectionAlternate"))
-        self.assertEqual("preserve-me", changed_nesting.get("vendor-attribute"))
-        self.assertEqual("native-value", changed_nesting.findtext("VendorSetting"))
+        self.assertIsNone(changed_nesting.find("PointListID"))
+        self.assertIsNone(changed_nesting.find("GCodeOrder"))
 
         reloaded = read_cambam_bytes(
             ET.tostring(changed_tree.getroot(), encoding="utf-8"),
@@ -81,6 +83,38 @@ class MopContextTests(unittest.TestCase):
         self.assertEqual("Grid", reloaded.get_part("Part1").nesting_method)
         self.assertEqual(2, reloaded.get_part("Part1").nesting_rows)
         self.assertEqual(3, reloaded.get_part("Part1").nesting_columns)
+
+    def test_same_primitive_can_be_targeted_by_mops_in_multiple_parts(self):
+        project = CBProject("shared-geometry")
+        layer = project.add_layer("Geometry")
+        outline = project.add_rect(layer, identifier="shared-outline")
+        first = project.add_part("First")
+        second = project.add_part("Second")
+        project.add_profile_mop(first, [outline], identifier="first-profile")
+        project.add_profile_mop(second, [outline], identifier="second-profile")
+
+        tree = build_xml_tree(project)
+        references = tree.getroot().findall("./parts/part/machineops/profile/primitive/prim")
+        self.assertEqual(2, len(references))
+        self.assertEqual(references[0].text, references[1].text)
+        self.assertEqual(tree.getroot().find(".//rect").get("id"), references[0].text)
+
+    def test_direct_api_normalizes_documentation_vcutter_spelling(self):
+        project = CBProject("vcutter-spelling")
+        layer = project.add_layer("Geometry")
+        line = project.add_pline(layer, [(0, 0), (10, 0)], identifier="line")
+        part = project.add_part("Part")
+        mop = project.add_engrave_mop(
+            part, [line], identifier="engrave", tool_profile="Vcutter"
+        )
+
+        self.assertEqual("VCutter", mop.tool_profile)
+        self.assertEqual(
+            "VCutter",
+            build_xml_tree(project).getroot().findtext(
+                "./parts/part/machineops/engrave/ToolProfile"
+            ),
+        )
 
     def test_add_part_keeps_legacy_ordering_arguments_positional(self):
         project = CBProject("part-ordering")

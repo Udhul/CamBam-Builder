@@ -2601,7 +2601,7 @@ The correction expands inspection fidelity without pretending to author unsuppor
 placement data. `machining_configure_part` remains limited to None/Grid/IsoGrid, but
 is now a field patch and preserves imported Manual/PointList records and native-only
 children. Stock offset/surface are modeled and unchanged native Stock XML is retained.
-Open Profiles report `VertexOrderRelative`; Text is a valid Engrave target; Vcutter
+Open Profiles report `VertexOrderRelative`; Text is a valid Engrave target; VCutter
 and bounded Automatic tab properties are explicit closed-schema inputs. Manual tab
 points and Manual/PointList placement authoring remain excluded. A pickle migration
 supplies safe defaults to pre-change Parts.
@@ -2618,3 +2618,35 @@ and 37-tool inventory validation, and `git diff --check`. The fresh wheel/sdist 
 confirmed the service, updated schema and consumer template with no build/output tree
 leakage. CamBam Plus toolpath and property inspection remains a separate pending
 acceptance; no production G-code claim is made.
+
+### Native user-encoding correction after CamBam Plus 1.0 review — 2026-09-19
+
+The user's eight-file CamBam Plus 1.0 review refined and partially rejected the first
+alignment claim. Files 01, 02, 03, 05, 06 and 08 opened, and the observed Grid,
+zero-value, open-side and tab behavior was usable. The review established that Part
+stock offset is relative to Part machining origin: origin `(12,-7)` plus stock offset
+`(12,-7)` places the stock lower-left top corner at drawing coordinate
+`(24,-14,4.5)`. It also confirmed that Profile Inside is left and Outside right for an
+open Pline relative to vertex traversal, and that a requested tab width of 5 displays
+wider because CamBam compensates for cutter diameter.
+
+Three validation assumptions were invalid. File 04 included invented vendor nodes and
+an invalid `GCodeOrder`, so CamBam rejected it; the replacement uses a real Points
+primitive, `NestMethod=PointList`, `PointListID`, and `GCodeOrder=Auto` only. File 06
+set `UseLeadIns=true` while the Profile's lead-in type was None, making it inert. The
+MCP contract now requires false until lead-in authoring exists and documents automatic
+count, perimeter threshold, compensated width, target-depth-relative height and the
+Square/Triangle/Skip distinction. File 07 serialized `Vcutter`, which CamBam displayed
+as Unspecified. The official automation reference names the API enum
+`ToolProfiles.VCutter`; MCP now accepts/emits `VCutter`, and the direct API normalizes
+the common `Vcutter` and `V-Cutter` spellings. This remains ordinary path-following
+Engrave, not skeleton or width/depth-varying V-carving.
+
+Method-aware serialization now emits Grid fields only for Grid/IsoGrid, preserves an
+unchanged valid imported PointList subtree across unrelated Part edits, and discards
+old placement fields when switching methods. Inspection exposes a derived
+`stock_drawing_origin` alongside the local encoded stock values. Regression coverage
+also proves that MOPs in different Parts may reference the same primitive. All 75 MCP
+tests and 233 full-suite tests pass with the existing one Windows privilege skip; all
+eight corrected files in `output/1909/` strict-reopen and await the focused native
+recheck described by their manifest.

@@ -7,33 +7,35 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**2026-09-19 MCP/CamBam alignment fixes implemented and automatically verified;
-native acceptance pending.** Final comparison against `main`, the public
-framework and CamBam Plus 1.0 documentation found output-schema rejection of valid
-native zero values and nesting enums, destructive whole-record Part configuration,
-loss of stock coordinates/native nesting metadata, and unnecessarily narrow common
-CAM exposure. The branch now treats `machining_configure_part` as an omission-preserving
-patch, round-trips stock XY offset/top surface, preserves native-only nesting children,
-inspects Manual/PointList plus all eight grid orders, accepts zero pen/tool/stock
-values, and defaults a newly named Part to unspecified zero stock. Profile supports
-open Plines with explicit vertex-order-relative side semantics and bounded Automatic
-holding tabs; Engrave supports Text and explicit Vcutter. Older pickled Parts receive
-defaults for the newly modeled stock/nesting fields. Focused regressions cover native
-imports, patch preservation, zero stock, pickle migration and CAM save/reopen. The
-tool count remains thirty-seven; Manual/PointList placement authoring and manual tab
-point authoring remain intentionally outside the bounded surface. All 75 MCP tests
-and all 231 repository tests pass with the existing single Windows symlink-privilege
-skip; compileall, JSON Schema/37-tool inventory validation and `git diff --check`
-pass. A fresh wheel/sdist build succeeds, and wheel inspection confirms the MCP
-service, updated contract schema and consumer template are packaged without
-build/output tree leakage. The 4e runbook owns the prepared CamBam property/toolpath
-checks required before the pending native acceptance claim.
+**2026-09-19 MCP/CamBam alignment fixes implemented; corrective native recheck
+pending.** The first CamBam Plus 1.0 review accepted zero boundaries, all Grid order
+variants, shared-geometry feasibility, open-Pline side behavior and automatic tab
+creation, while exposing four contract errors: stock offset was described without
+its relation to Part machining origin, PointList validation contained invented XML,
+`UseLeadIns=true` was inert with `LeadInMove=None`, and `Vcutter` was not CamBam's
+serialized enum token. The contract now defines the derived stock lower-left top
+corner as `(machining_origin + stock_offset, stock_surface)` and returns it as
+`stock_drawing_origin`; the original example therefore resolves to `(24,-14,4.5)`.
+New nesting XML is method-specific, valid imported PointList placement survives
+unrelated Part patches, and switching nesting methods drops old method placement
+fields. A regression proves MOPs in different Parts can target one primitive.
+Automatic-tab descriptions now cover perimeter count/clamping, size threshold,
+tool-compensated visible width, target-depth-relative height and Square/Triangle/Skip
+roles; MCP authoring rejects tab lead-ins while its Profile lead-in remains None.
+Engrave uses the exact `VCutter` enum and explicitly does not promise skeleton or
+width/depth-varying V-carving. Parent Machining context remains import-preserved but
+not authored/resolved; explicit Part stock overrides it for that Part.
 
-The requested native-review artifacts are prepared under
-[`outputs/190926/`](../outputs/190926/), with eight `.cb` files, a manifest of
-expected CamBam properties and hashes, and the repeatable generator used to create
-them. Every file strict-reopens through the repository reader; CamBam Plus validation
-must still record native open/property/toolpath results against that manifest.
+The corrected native-review artifacts are prepared under
+[`output/1909/`](../output/1909/), with eight `.cb` files and a manifest of exact
+expectations and hashes. The prior accepted observations remain evidence only for
+the unchanged behaviors; files 04, 06 and 07 and the corrected stock/Part-scope
+wording require the focused CamBam Plus 1.0 recheck before merge acceptance.
+Automated verification passes all 75 MCP tests and all 233 repository tests with the
+single existing Windows symlink-privilege skip. All eight corrected artifacts
+strict-reopen, compileall, JSON parsing and `git diff --check` pass, and a fresh wheel
+and source distribution build succeeds under
+`output/user-encoding-build-20260919/`.
 
 **2026-09-19 consumer onboarding correction implemented; fresh named-agent rerun
 pending.** The first live use of the reusable template exposed an instruction defect:

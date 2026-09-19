@@ -780,17 +780,26 @@ class MopBreadthTests(unittest.TestCase):
 
             engrave = await self.call("machining_add_engrave", self.args(
                 document=handle, expected_revision=2, identifier="v-label",
-                part="Part", targets=[text_id], tool_profile="Vcutter",
+                part="Part", targets=[text_id], tool_profile="VCutter",
                 **self.mop_arguments(),
             ))
             self.assertTrue(engrave["ok"], engrave)
+
+            inactive_tab_leadin = await self.call("machining_add_profile", self.args(
+                document=handle, expected_revision=3, identifier="inactive-tab-leadin",
+                part="Part", targets=[rectangle_id], side="Outside",
+                tab_method="Automatic", tab_use_leadins=True,
+                **self.mop_arguments(target_depth=-3),
+            ))
+            self.assertEqual(inactive_tab_leadin["error"]["code"], "INVALID_ARGUMENT")
+            self.assertEqual(inactive_tab_leadin["error"]["field"], "tab_use_leadins")
 
             profile = await self.call("machining_add_profile", self.args(
                 document=handle, expected_revision=3, identifier="tabbed-outline",
                 part="Part", targets=[rectangle_id], side="Outside",
                 tab_method="Automatic", tab_width=5, tab_height=1,
                 tab_min_tabs=2, tab_max_tabs=4, tab_distance=0,
-                tab_size_threshold=0, tab_use_leadins=True, tab_style="Skip",
+                tab_size_threshold=0, tab_use_leadins=False, tab_style="Triangle",
                 **self.mop_arguments(target_depth=-3),
             ))
             self.assertTrue(profile["ok"], profile)
@@ -801,13 +810,13 @@ class MopBreadthTests(unittest.TestCase):
                                   if record.get("identifier") == "v-label")
             profile_record = next(record for record in records
                                   if record.get("identifier") == "tabbed-outline")
-            self.assertEqual(engrave_record["parameters"]["tool_profile"], "Vcutter")
+            self.assertEqual(engrave_record["parameters"]["tool_profile"], "VCutter")
             self.assertEqual(engrave_record["targets"], [text_id])
             self.assertEqual(profile_record["parameters"]["tab_method"], "Automatic")
             self.assertEqual(profile_record["parameters"]["tab_distance"], 0)
             self.assertEqual(profile_record["parameters"]["tab_size_threshold"], 0)
-            self.assertEqual(profile_record["parameters"]["tab_style"], "Skip")
-            self.assertTrue(profile_record["parameters"]["tab_use_leadins"])
+            self.assertEqual(profile_record["parameters"]["tab_style"], "Triangle")
+            self.assertFalse(profile_record["parameters"]["tab_use_leadins"])
 
             invalid = await self.call("machining_add_profile", self.args(
                 document=handle, expected_revision=4, identifier="bad-tabs",
@@ -823,13 +832,13 @@ class MopBreadthTests(unittest.TestCase):
             ))
             self.assertTrue(saved["ok"], saved)
             root = ET.parse(self.root / "engrave-tabs.cb").getroot()
-            self.assertEqual(root.findtext(".//engrave[Name='v-label']/ToolProfile"), "Vcutter")
+            self.assertEqual(root.findtext(".//engrave[Name='v-label']/ToolProfile"), "VCutter")
             tabs = root.find(".//profile[Name='tabbed-outline']/HoldingTabs")
             self.assertIsNotNone(tabs)
             self.assertEqual(tabs.findtext("TabMethod"), "Automatic")
             self.assertEqual(tabs.findtext("TabDistance"), "0")
             self.assertEqual(tabs.findtext("SizeThreshold"), "0")
-            self.assertEqual(tabs.findtext("TabStyle"), "Skip")
+            self.assertEqual(tabs.findtext("TabStyle"), "Triangle")
 
             reopened = await self.call("document_open", self.args(
                 path="engrave-tabs.cb", units="mm",
@@ -840,8 +849,8 @@ class MopBreadthTests(unittest.TestCase):
                                     if record.get("identifier") == "v-label")
             reopened_profile = next(record for record in reopened_records
                                     if record.get("identifier") == "tabbed-outline")
-            self.assertEqual(reopened_engrave["parameters"]["tool_profile"], "Vcutter")
-            self.assertEqual(reopened_profile["parameters"]["tab_style"], "Skip")
+            self.assertEqual(reopened_engrave["parameters"]["tool_profile"], "VCutter")
+            self.assertEqual(reopened_profile["parameters"]["tab_style"], "Triangle")
             self.assertEqual(reopened_profile["parameters"]["tab_distance"], 0.0)
 
         self.run_async(test)

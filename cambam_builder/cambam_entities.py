@@ -298,7 +298,14 @@ class Layer(CamBamEntity):
 
 @dataclass
 class Part(CamBamEntity):
-    """Represents a machining part with stock and default parameters."""
+    """Represents a machining part with stock and default parameters.
+
+    ``stock_offset`` is local to the Part's ``machining_origin``.  CamBam
+    therefore draws the stock's lower-left top corner at
+    ``machining_origin + stock_offset`` in XY, with ``stock_surface`` as Z.
+    The XML PMin/PMax coordinates encode the local stock box, not that derived
+    drawing position.
+    """
     enabled: bool = True
     stock_thickness: float = 12.5
     stock_width: float = 1220.0
@@ -330,6 +337,15 @@ class Part(CamBamEntity):
         state.setdefault("stock_surface", 0.0)
         self.__dict__.update(state)
 
+    @property
+    def stock_drawing_origin(self) -> Tuple[float, float, float]:
+        """Return the stock lower-left top corner in drawing coordinates."""
+        return (
+            self.machining_origin[0] + self.stock_offset[0],
+            self.machining_origin[1] + self.stock_offset[1],
+            self.stock_surface,
+        )
+
     def to_xml_element(self) -> ET.Element:
         """Creates the <part> XML element (without the <machineops> container)."""
         part_elem = ET.Element("part", {
@@ -341,9 +357,8 @@ class Part(CamBamEntity):
         # Add stock and other part-level settings directly here
         stock = ET.SubElement(part_elem, "Stock")
         # CamBam stock is defined by PMin(x,y,z) and PMax(x,y,z)
-        # Stock offset and surface are independent CamBam properties.  Keeping
-        # them in the model avoids normalizing imported stock back to XY zero
-        # and a Z-zero surface during export.
+        # PMin/PMax are the Part-local stock box. The effective drawing XY is
+        # machining_origin + stock_offset; stock_surface is the top Z plane.
         offset_x, offset_y = self.stock_offset
         ET.SubElement(stock, "PMin").text = (
             f"{offset_x},{offset_y},{self.stock_surface - self.stock_thickness}"
@@ -367,13 +382,16 @@ class Part(CamBamEntity):
         # Add other common Part elements expected by CamBam
         ET.SubElement(part_elem, "ToolProfile").text = "EndMill" # Default, can be overridden by MOPs
         nesting = ET.SubElement(part_elem, "Nesting")
-        ET.SubElement(nesting, "BasePoint").text = "0,0"
         ET.SubElement(nesting, "NestMethod").text = self.nesting_method
-        ET.SubElement(nesting, "Rows").text = str(self.nesting_rows)
-        ET.SubElement(nesting, "Columns").text = str(self.nesting_columns)
-        ET.SubElement(nesting, "Spacing").text = str(self.nesting_spacing)
-        ET.SubElement(nesting, "GridOrder").text = self.nesting_grid_order
-        ET.SubElement(nesting, "GridDirectionAlternate").text = str(self.nesting_grid_alternate).lower()
+        # CamBam nesting records are method-specific. Grid controls are not
+        # valid placement data for None, Manual, or PointList nesting.
+        if self.nesting_method in ("Grid", "IsoGrid"):
+            ET.SubElement(nesting, "BasePoint").text = "0,0"
+            ET.SubElement(nesting, "Rows").text = str(self.nesting_rows)
+            ET.SubElement(nesting, "Columns").text = str(self.nesting_columns)
+            ET.SubElement(nesting, "Spacing").text = str(self.nesting_spacing)
+            ET.SubElement(nesting, "GridOrder").text = self.nesting_grid_order
+            ET.SubElement(nesting, "GridDirectionAlternate").text = str(self.nesting_grid_alternate).lower()
 
         return part_elem
 
@@ -1812,7 +1830,7 @@ class Mop(CamBamEntity, ABC):
     optimisation_mode: str = 'Standard' # 'Standard', 'Experimental', 'Legacy'
     tool_diameter: Optional[float] = None # If None, uses Part/Project default
     tool_number: int = 0 # If 0, uses current tool
-    tool_profile: str = 'EndMill' # 'EndMill', 'Vcutter', 'BallNose', 'Engrave', 'Drill'
+    tool_profile: str = 'EndMill' # CamBam enum: EndMill, VCutter, BullNose, BallNose, Drill, Lathe
     plunge_feedrate: float = 1000.0
     cut_feedrate: Optional[float] = None # If None, calculated based on TargetDepth or uses default
     max_crossover_distance: float = 0.7 # Multiplier of tool diameter
@@ -1821,6 +1839,10 @@ class Mop(CamBamEntity, ABC):
     # Note: No part_id or _resolved_xml_primitive_ids here. Managed by Project/Writer.
 
     def __setattr__(self, name, value):
+        if name == "tool_profile" and value in {"Vcutter", "V-Cutter"}:
+            # CamBam's API enum is ToolProfiles.VCutter. Its UI and older prose
+            # use other spellings, but those strings deserialize as Unspecified.
+            value = "VCutter"
         # Once imported or explicitly state-edited, an assignment is intentional,
         # even if it repeats a cached Default value or restores an earlier value.
         if name in MOP_XML_FIELD_PATHS and (

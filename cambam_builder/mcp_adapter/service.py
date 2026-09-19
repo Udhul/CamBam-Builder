@@ -1052,6 +1052,9 @@ class DocumentService:
                     "stock_offset_x": part.stock_offset[0],
                     "stock_offset_y": part.stock_offset[1],
                     "stock_surface": part.stock_surface,
+                    "stock_drawing_origin_x": part.stock_drawing_origin[0],
+                    "stock_drawing_origin_y": part.stock_drawing_origin[1],
+                    "stock_drawing_origin_z": part.stock_drawing_origin[2],
                     "machining_origin_x": part.machining_origin[0],
                     "machining_origin_y": part.machining_origin[1],
                     "default_tool_diameter": part.default_tool_diameter,
@@ -1367,6 +1370,13 @@ class DocumentService:
                     "INVALID_ARGUMENT",
                     "tab_min_tabs must be less than or equal to tab_max_tabs",
                     "tab_min_tabs",
+                )
+            if args["tab_use_leadins"]:
+                raise DomainError(
+                    "INVALID_ARGUMENT",
+                    "tab_use_leadins requires a Square tab and an active Profile LeadInMove; "
+                    "this MCP operation fixes lead_in_type to None",
+                    "tab_use_leadins",
                 )
             has_open_pline = any(isinstance(target, Pline) and not target.closed
                                  for target in targets)
@@ -1921,6 +1931,7 @@ class DocumentService:
                         "stock_color": part.stock_color,
                         "stock_offset": list(part.stock_offset),
                         "stock_surface": part.stock_surface,
+                        "stock_drawing_origin": list(part.stock_drawing_origin),
                         "machining_origin": list(part.machining_origin),
                         "default_tool_diameter": part.default_tool_diameter,
                         "default_spindle_speed": part.default_spindle_speed,

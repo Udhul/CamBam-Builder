@@ -57,25 +57,27 @@ def _nesting_matches_model(part: Part, nesting: ET.Element) -> bool:
     edit.  Compare parsed values using the same defaults/conversions as the
     reader, rather than comparing XML text formatting.
     """
-    alternate = nesting.findtext(
-        "GridDirectionAlternate", nesting.findtext("GridAlternate")
-    )
-    native = (
-        nesting.findtext("NestMethod", "None"),
-        _parse_native_int(nesting.findtext("Rows"), 1),
-        _parse_native_int(nesting.findtext("Columns"), 1),
-        _parse_native_float(nesting.findtext("Spacing"), 0.0),
-        nesting.findtext("GridOrder", "RightUp"),
-        _parse_native_bool(alternate, False),
-    )
-    modeled = (
-        part.nesting_method,
-        part.nesting_rows,
-        part.nesting_columns,
-        part.nesting_spacing,
-        part.nesting_grid_order,
-        part.nesting_grid_alternate,
-    )
+    method = nesting.findtext("NestMethod", "None")
+    native = (method,)
+    modeled = (part.nesting_method,)
+    if method in ("Grid", "IsoGrid"):
+        alternate = nesting.findtext(
+            "GridDirectionAlternate", nesting.findtext("GridAlternate")
+        )
+        native += (
+            _parse_native_int(nesting.findtext("Rows"), 1),
+            _parse_native_int(nesting.findtext("Columns"), 1),
+            _parse_native_float(nesting.findtext("Spacing"), 0.0),
+            nesting.findtext("GridOrder", "RightUp"),
+            _parse_native_bool(alternate, False),
+        )
+        modeled += (
+            part.nesting_rows,
+            part.nesting_columns,
+            part.nesting_spacing,
+            part.nesting_grid_order,
+            part.nesting_grid_alternate,
+        )
     return native == modeled
 
 
@@ -96,10 +98,16 @@ def _merge_native_nesting(part: Part, native: ET.Element,
     """Update modeled nesting values without dropping native-only settings."""
     if _nesting_matches_model(part, native):
         return deepcopy(native)
+    if native.findtext("NestMethod", "None") != part.nesting_method:
+        # Placement data belongs to its method. In particular, PointListID and
+        # ManualItems must not leak into a newly selected Grid/None method.
+        return deepcopy(generated)
     merged = deepcopy(native)
     for tag in ("NestMethod", "Rows", "Columns", "Spacing", "GridOrder",
                 "GridDirectionAlternate"):
         source = generated.find(tag)
+        if source is None:
+            continue
         target = merged.find(tag)
         if target is None:
             target = ET.SubElement(merged, tag)
