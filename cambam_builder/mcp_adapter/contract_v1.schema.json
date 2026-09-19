@@ -907,13 +907,15 @@
           "description": "Desired boundary diameter for SpiralMill, or null when CamBam derives an Auto diameter from Circle targets."
         },
         "drill_lead_out": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Whether SpiralMill performs the configured lead-out move before retracting."
         },
         "spiral_flat_base": {
           "type": "boolean"
         },
         "lead_out_length": {
-          "$ref": "#/$defs/Number"
+          "$ref": "#/$defs/Number",
+          "description": "Requires drill_lead_out=true when nonzero. A positive centerward move must not exceed the effective hole radius; negative values move away from center."
         },
         "tool_number": {
           "const": 0
@@ -3364,7 +3366,7 @@
         "drill_lead_out": {
           "type": "boolean",
           "default": false,
-          "description": "SpiralMill-only lead-out enable flag."
+          "description": "SpiralMill-only lead-out enable flag. Must be true when lead_out_length is nonzero."
         },
         "spiral_flat_base": {
           "type": "boolean",
@@ -3374,7 +3376,7 @@
         "lead_out_length": {
           "$ref": "#/$defs/Number",
           "default": 0,
-          "description": "SpiralMill-only lead-out distance; positive moves toward the hole center and negative away from it."
+          "description": "SpiralMill-only lead-out distance; requires drill_lead_out=true when nonzero. Positive moves toward the hole center and must not exceed the effective hole radius; negative moves away from center."
         }
       },
       "required": [

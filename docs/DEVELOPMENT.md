@@ -891,8 +891,11 @@ explicit and Auto diameter. Verify `effective diameter = hole diameter - 2 *
 roughing clearance`, that it remains greater than the tool diameter, and that
 HoleDiameter, DrillLeadOut, SpiralFlatBase, LeadOutLength, RoughingClearance and the
 selected method are `state="Value"` when supplied. Auto HoleDiameter and the
-CannedCycle-only PeckDistance/RetractHeight/Dwell fields on SpiralMill must remain
-`state="Default"`.
+Auto HoleDiameter remains `state="Default"`; fresh SpiralMill XML must omit
+CannedCycle-only PeckDistance/RetractHeight/Dwell and unused CustomScript entirely.
+Confirm CamBam opens without asking to revert those irrelevant fields. A nonzero
+LeadOutLength requires DrillLeadOut true, and a positive centerward length must not
+exceed the effective hole radius.
 Manual tab authoring is not part of this check: imported native Manual tabs are
 preserve-only and fresh direct-core/MCP authoring must reject them rather than emit an
 incomplete points collection. Reverse the open Pline in a separate copy and confirm its

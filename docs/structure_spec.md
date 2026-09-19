@@ -319,11 +319,15 @@ authoring fallbacks or fills in absent properties.
 
 Fresh Drill encoding is method-aware. CannedCycle makes PeckDistance,
 RetractHeight and Dwell explicit. SpiralMill CW/CCW instead makes HoleDiameter
-(unless Auto), DrillLeadOut, SpiralFlatBase and LeadOutLength explicit while retaining
-the three CannedCycle-only elements as Default-state native fields. Explicit spiral
+(unless Auto), DrillLeadOut, SpiralFlatBase and LeadOutLength explicit while omitting
+the three CannedCycle-only elements and an unused CustomScript. This avoids CamBam's
+file-open prompt to reconcile irrelevant cached Default text with local defaults.
+Untouched imported XML preserves its original fields and states. Explicit spiral
 diameter `H`, signed radial roughing clearance `R` and effective tool diameter `T`
 must satisfy `H - 2R > T`. Auto diameter is resolved by CamBam from Circle targets;
 the MCP adapter therefore requires explicit diameter whenever a Point target is used.
+A nonzero lead-out length requires DrillLeadOut, and a positive centerward move must
+not exceed the effective hole radius.
 
 Imported global MachiningOptions and unmodeled part machining settings are
 retained, including Style/StyleLibrary. Part ToolDiameter retains native state/text

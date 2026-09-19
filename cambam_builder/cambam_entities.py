@@ -2293,19 +2293,29 @@ class DrillMop(Mop):
                     "SpiralMill requires hole_diameter - 2 * roughing_clearance "
                     "to be greater than tool_diameter"
                 )
+            if not self.drill_lead_out and self.lead_out_length != 0:
+                raise ValueError(
+                    "SpiralMill lead_out_length must be zero when drill_lead_out is false"
+                )
+            if (self.drill_lead_out and effective_hole_diameter is not None
+                    and self.lead_out_length > effective_hole_diameter / 2.0):
+                raise ValueError(
+                    "SpiralMill positive lead_out_length must not exceed the "
+                    "effective hole radius"
+                )
         mop_elem = ET.Element("drill", {"Enabled": str(self.enabled).lower()})
         self._add_common_mop_elements(mop_elem, project, resolved_primitive_xml_ids)
 
         state = "Value"
         ET.SubElement(mop_elem, "DrillingMethod", {"state": state}).text = self.drilling_method
 
-        # Canned Cycle Params
-        # CamBam retains these fields on SpiralMill records, but they only
-        # participate in CannedCycle. Leave them inheritable for spiral MOPs.
-        canned_state = "Value" if self.drilling_method == "CannedCycle" else "Default"
-        ET.SubElement(mop_elem, "PeckDistance", {"state": canned_state}).text = str(self.peck_distance)
-        ET.SubElement(mop_elem, "RetractHeight", {"state": canned_state}).text = str(self.retract_height)
-        ET.SubElement(mop_elem, "Dwell", {"state": canned_state}).text = str(self.dwell)
+        # Canned-cycle fields are omitted from fresh SpiralMill records. Writing
+        # cached text with state=Default can prompt CamBam to reconcile it with
+        # the user's configured defaults even though the fields are irrelevant.
+        if self.drilling_method == "CannedCycle":
+            ET.SubElement(mop_elem, "PeckDistance", {"state": state}).text = str(self.peck_distance)
+            ET.SubElement(mop_elem, "RetractHeight", {"state": state}).text = str(self.retract_height)
+            ET.SubElement(mop_elem, "Dwell", {"state": state}).text = str(self.dwell)
 
         # Spiral Mill Params (conditionally add based on method)
         if self.drilling_method.startswith("SpiralMill"):
@@ -2322,9 +2332,10 @@ class DrillMop(Mop):
             ET.SubElement(mop_elem, "SpiralFlatBase", {"state": state}).text = str(self.spiral_flat_base).lower()
             ET.SubElement(mop_elem, "LeadOutLength", {"state": state}).text = str(self.lead_out_length)
 
-        # Custom Script Param
-        cs_state = "Value" if self.custom_script else "Default"
-        ET.SubElement(mop_elem, "CustomScript", {"state": cs_state}).text = self.custom_script
+        # Omit unused CustomScript rather than writing a cached Default value
+        # that CamBam may ask to reconcile on file open.
+        if self.custom_script:
+            ET.SubElement(mop_elem, "CustomScript", {"state": state}).text = self.custom_script
 
         # Other common Drill elements
         ET.SubElement(mop_elem, "StartPoint", {"state": "Default"})

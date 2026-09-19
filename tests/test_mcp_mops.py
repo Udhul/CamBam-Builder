@@ -414,6 +414,12 @@ class MopBreadthTests(unittest.TestCase):
             self.assertTrue(saved_a["ok"], saved_a)
             bytes_a = (self.root / "A.cb").read_bytes()
             self.assertEqual(saved_a["data"]["sha256"], hashlib.sha256(bytes_a).hexdigest())
+            canned_xml = ET.parse(self.root / "A.cb").getroot().find(
+                "./parts/part/machineops/drill")
+            self.assertIsNotNone(canned_xml)
+            self.assertIsNone(canned_xml.find("CustomScript"))
+            for tag in ("PeckDistance", "RetractHeight", "Dwell"):
+                self.assertEqual("Value", canned_xml.find(tag).get("state"), tag)
 
             opened = await self.call("document_open", self.args(path="A.cb", units="mm"))
             self.assertTrue(opened["ok"], opened)
@@ -795,7 +801,7 @@ class MopBreadthTests(unittest.TestCase):
                 document=handle, expected_revision=3, identifier="spiral-ccw-auto",
                 part="Part", targets=[circle["data"]["entity_id"]],
                 drilling_method="SpiralMill_CCW", roughing_clearance=-0.5,
-                drill_lead_out=False, spiral_flat_base=False,
+                drill_lead_out=True, spiral_flat_base=False,
                 lead_out_length=-1.25, tool_profile="EndMill", **common,
             ))
             self.assertTrue(counterclockwise["ok"], counterclockwise)
@@ -826,8 +832,8 @@ class MopBreadthTests(unittest.TestCase):
                         "SpiralFlatBase", "LeadOutLength", "RoughingClearance",
                         "ToolDiameter", "ToolProfile"):
                 self.assertEqual(cw.find(tag).get("state"), "Value", tag)
-            for tag in ("PeckDistance", "RetractHeight", "Dwell"):
-                self.assertEqual(cw.find(tag).get("state"), "Default", tag)
+            for tag in ("PeckDistance", "RetractHeight", "Dwell", "CustomScript"):
+                self.assertIsNone(cw.find(tag), tag)
             auto = native["spiral-ccw-auto"]
             self.assertEqual(auto.find("HoleDiameter").get("state"), "Default")
             self.assertIn(auto.findtext("HoleDiameter"), (None, ""))
@@ -860,6 +866,23 @@ class MopBreadthTests(unittest.TestCase):
                    if key != "tool_diameter"},
             ))
             self.assertEqual(impossible_auto["error"]["field"], "hole_diameter")
+            inactive_lead_out = await self.call("machining_add_drill", self.args(
+                document=handle, expected_revision=4, identifier="bad-lead-out",
+                part="Part", targets=[points["data"]["entity_id"]],
+                drilling_method="SpiralMill_CW", hole_diameter=12,
+                drill_lead_out=False, lead_out_length=1, **common,
+            ))
+            self.assertEqual(inactive_lead_out["error"]["field"], "lead_out_length")
+            excessive_lead_out = await self.call("machining_add_drill", self.args(
+                document=handle, expected_revision=4,
+                identifier="bad-lead-out-radius", part="Part",
+                targets=[points["data"]["entity_id"]],
+                drilling_method="SpiralMill_CW", hole_diameter=12,
+                roughing_clearance=0.5, drill_lead_out=True,
+                lead_out_length=5.6, **common,
+            ))
+            self.assertEqual(excessive_lead_out["error"]["field"],
+                             "lead_out_length")
             wrong_family = await self.call("machining_add_drill", self.args(
                 document=handle, expected_revision=4, identifier="bad-peck",
                 part="Part", targets=[points["data"]["entity_id"]],

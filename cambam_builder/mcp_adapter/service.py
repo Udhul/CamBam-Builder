@@ -1496,24 +1496,33 @@ class DocumentService:
                         "Auto diameter is available only when every target is a Circle",
                         "hole_diameter",
                     )
-                if (hole_diameter is None
-                        and any(self._circle_geometry(target)["diameter"]
-                                - 2 * args["roughing_clearance"]
-                                <= args["tool_diameter"] for target in targets)):
+                effective_diameters = (
+                    [self._circle_geometry(target)["diameter"]
+                     - 2 * args["roughing_clearance"] for target in targets]
+                    if hole_diameter is None else
+                    [hole_diameter - 2 * args["roughing_clearance"]]
+                )
+                if any(diameter <= args["tool_diameter"]
+                       for diameter in effective_diameters):
                     raise DomainError(
                         "INVALID_ARGUMENT",
-                        "Every Auto Circle diameter minus 2 * roughing_clearance "
+                        "Every hole diameter minus 2 * roughing_clearance "
                         "must be greater than tool_diameter",
                         "hole_diameter",
                     )
-                if (hole_diameter is not None
-                        and hole_diameter - 2 * args["roughing_clearance"]
-                        <= args["tool_diameter"]):
+                if not args["drill_lead_out"] and args["lead_out_length"] != 0:
                     raise DomainError(
                         "INVALID_ARGUMENT",
-                        "SpiralMill requires hole_diameter - 2 * roughing_clearance "
-                        "to be greater than tool_diameter",
-                        "hole_diameter",
+                        "lead_out_length must be zero when drill_lead_out is false",
+                        "lead_out_length",
+                    )
+                if (args["drill_lead_out"] and args["lead_out_length"]
+                        > min(effective_diameters) / 2.0):
+                    raise DomainError(
+                        "INVALID_ARGUMENT",
+                        "Positive lead_out_length must not exceed the smallest "
+                        "effective hole radius",
+                        "lead_out_length",
                     )
             mop = staged.add_drill_mop(
                 part, targets=targets, identifier=args["identifier"], name=args["identifier"],
@@ -1966,13 +1975,18 @@ class DocumentService:
                 and values["lead_out_length"] == 0
             )
         hole_diameter = values["hole_diameter"]
+        if not values["drill_lead_out"] and values["lead_out_length"] != 0:
+            return False
+        if hole_diameter is None:
+            return True
+        if not (type(hole_diameter) in (int, float)
+                and math.isfinite(hole_diameter) and hole_diameter > 0):
+            return False
+        effective_diameter = hole_diameter - 2 * values["roughing_clearance"]
         return (
-            hole_diameter is None
-            or (type(hole_diameter) in (int, float)
-                and math.isfinite(hole_diameter)
-                and hole_diameter > 0
-                and hole_diameter - 2 * values["roughing_clearance"]
-                > values["tool_diameter"])
+            effective_diameter > values["tool_diameter"]
+            and (not values["drill_lead_out"]
+                 or values["lead_out_length"] <= effective_diameter / 2.0)
         )
 
     def _drill_parameters(self, mop):

@@ -33,7 +33,7 @@ class MopParameterTests(unittest.TestCase):
             project.add_drill_mop(part, targets=[target], identifier="drill",
                                   target_depth=-3.0, drilling_method="SpiralMill_CW",
                                   tool_diameter=1.0, hole_diameter=2.2,
-                                  lead_out_length=1.5),
+                                  drill_lead_out=True, lead_out_length=1.0),
         ]
         return project, mops
 
@@ -130,8 +130,21 @@ class MopParameterTests(unittest.TestCase):
         element = drill.to_xml_element(project, [1])
         self.assertEqual("6", element.findtext("HoleDiameter"))
         self.assertEqual("-1", element.findtext("RoughingClearance"))
+        for tag in ("PeckDistance", "RetractHeight", "Dwell", "CustomScript"):
+            self.assertIsNone(element.find(tag), tag)
+
+        drill.lead_out_length = 1
+        with self.assertRaisesRegex(ValueError, "drill_lead_out is false"):
+            drill.to_xml_element(project, [1])
+        drill.drill_lead_out = True
+        drill.lead_out_length = 4.1
+        with self.assertRaisesRegex(ValueError, "effective hole radius"):
+            drill.to_xml_element(project, [1])
+        drill.lead_out_length = 4
+        drill.to_xml_element(project, [1])
 
         drill.roughing_clearance = 1
+        drill.lead_out_length = 0
         self.assertEqual(4, drill.effective_spiral_hole_diameter())
         with self.assertRaisesRegex(ValueError, "greater than tool_diameter"):
             drill.to_xml_element(project, [1])
@@ -158,6 +171,28 @@ class MopParameterTests(unittest.TestCase):
             self.assertIsNotNone(hole)
             self.assertEqual("Value", hole.get("state"))
             self.assertEqual("3.0", hole.text)
+
+    def test_imported_spiral_irrelevant_default_fields_are_preserved(self):
+        source, _ = self.make_project()
+        with tempfile.TemporaryDirectory(prefix="mop-parameters-", dir=self.output) as directory:
+            first = self.save(source, directory, "first")
+            tree = ET.parse(first)
+            drill = self.mop(tree, "drill")
+            for tag, value in (("PeckDistance", "0"), ("RetractHeight", "3"),
+                               ("Dwell", "0"), ("CustomScript", None)):
+                element = ET.SubElement(drill, tag, {"state": "Default"})
+                element.text = value
+            tree.write(first, encoding="utf-8", xml_declaration=True)
+
+            loaded = read_cambam_file(str(first))
+            second = self.save(loaded, directory, "second")
+            preserved = self.mop(ET.parse(second), "drill")
+            for tag, value in (("PeckDistance", "0"), ("RetractHeight", "3"),
+                               ("Dwell", "0"), ("CustomScript", None)):
+                element = preserved.find(tag)
+                self.assertIsNotNone(element, tag)
+                self.assertEqual("Default", element.get("state"), tag)
+                self.assertEqual(value, element.text, tag)
 
     def test_nested_edits_activate_container_without_changing_plain_scalar_format(self):
         source, _ = self.make_project()

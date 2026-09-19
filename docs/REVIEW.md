@@ -2740,13 +2740,16 @@ signed roughing clearance, lead-out enable/length, flat-base behavior and native
 profile metadata. Auto diameter is bounded to all-Circle target selections because a
 Point carries no diameter; Point targets require an explicit value.
 
-Fresh selected values serialize with `state="Value"`. The CannedCycle-only
-`PeckDistance`, `RetractHeight` and `Dwell` records remain present but use
-`state="Default"` on SpiralMill, matching the supplied native structure and avoiding
-false claims that those values govern spiral motion. Auto `HoleDiameter` likewise
-uses `Default`. Explicit diameters and the known world diameter of each Auto Circle
-enforce the user-validated relationship `H - 2R > T`. Native CamBam toolpath acceptance remains required for the generated
-CW/CCW explicit/Auto fixtures. All 78 MCP tests and all 238 repository tests pass
-with the single existing Windows privilege skip; the three generated files all pass
-strict framework reopen and their inspected native states match the intended
-Value/Default split.
+Fresh selected values serialize with `state="Value"`. Initial acceptance files kept
+the CannedCycle-only `PeckDistance`, `RetractHeight` and `Dwell` records as Default,
+but CamBam prompted to revert the cached RetractHeight 5 to the user's configured
+3 mm default. Empty Default CustomScript caused the same class of prompt. Fresh
+SpiralMill XML now omits all four irrelevant fields; untouched imported native XML
+continues to round-trip exactly. Auto `HoleDiameter` still uses `Default` because it
+is semantically active Auto sizing. Explicit diameters and the known world diameter
+of each Auto Circle enforce the user-validated relationship `H - 2R > T`. The user
+accepted the three original files' method, diameter/clearance and generated toolpath
+behavior; file 02 also confirmed that a
+lead-out length has no effect while DrillLeadOut is false. The contract now rejects
+that inert combination and caps positive centerward length at effective hole radius.
+A focused prompt-free reopen remains pending after regeneration.

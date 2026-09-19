@@ -13,12 +13,16 @@ Spiral methods expose signed roughing clearance, explicit or Circle-derived Auto
 hole diameter, lead-out enable/length, flat-base behavior and cutter-profile metadata.
 Point targets require explicit hole diameter; explicit and Circle-Auto combinations must satisfy
 `hole_diameter - 2*roughing_clearance > tool_diameter`. Selected spiral controls are
-written with native `Value` state; CannedCycle-only peck/retract/dwell fields remain
-`Default` on SpiralMill. All 78 MCP tests and all 238 repository tests pass with the
+written with native `Value` state; fresh SpiralMill XML omits CannedCycle-only
+peck/retract/dwell and unused CustomScript fields. This follows native testing that
+found cached Default text caused risky file-open reconciliation prompts. Nonzero
+lead-out length requires lead-out enabled, and positive centerward length is capped
+at effective hole radius. All 78 MCP tests and all 239 repository tests pass with the
 single existing Windows symlink-privilege skip. Three strict-reopened CamBam Plus 1.0
 acceptance files and exact criteria are in
 [`output/spiral-drill-190926/`](../output/spiral-drill-190926/); native toolpath
-acceptance remains pending.
+geometry was accepted for all three original files. A focused reopen of the regenerated
+prompt-free files remains pending.
 
 **2026-09-19 MCP/CamBam alignment correction accepted in CamBam Plus 1.0.** The
 first CamBam review accepted zero boundaries, all Grid order
