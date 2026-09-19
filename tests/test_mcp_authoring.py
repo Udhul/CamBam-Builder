@@ -26,6 +26,7 @@ else:  # pragma: no cover - exercised only in a base-library environment
     OUTPUTS = {}
 
 from cambam_builder import CBProject
+from cambam_builder.cambam_writer import build_xml_tree
 
 
 UUID_PATTERN = re.compile(
@@ -147,6 +148,14 @@ class AuthoringTests(unittest.TestCase):
             "cut_ordering": "DepthFirst",
             "lead_in_type": "None",
             "tab_method": "None",
+            "tab_width": 6,
+            "tab_height": 1.5,
+            "tab_min_tabs": 3,
+            "tab_max_tabs": 3,
+            "tab_distance": 40,
+            "tab_size_threshold": 4,
+            "tab_use_leadins": False,
+            "tab_style": "Square",
             "custom_mop_header": "",
             "custom_mop_footer": "",
         }
@@ -315,6 +324,8 @@ class AuthoringTests(unittest.TestCase):
                 "stock_thickness": 0,
                 "stock_material": "",
                 "stock_color": "210,180,140",
+                "stock_offset": [0.0, 0.0],
+                "stock_surface": 0.0,
                 "machining_origin": [0.0, 0.0],
                 "default_tool_diameter": None,
                 "default_spindle_speed": None,
@@ -464,6 +475,107 @@ class AuthoringTests(unittest.TestCase):
             self.assertIn('<Rows>3</Rows>', exported["data"]["content"])
             self.assertIn('<GridDirectionAlternate>false</GridDirectionAlternate>', exported["data"]["content"])
             self.assertIn('color="White"', exported["data"]["content"])
+        self.run_async(test)
+
+    def test_native_zero_values_stock_coordinates_and_nesting_variants_are_inspectable(self):
+        async def test():
+            source = CBProject("native-part-settings")
+            source.add_layer("Geometry", pen_width=0)
+            orders = (
+                "RightUp", "RightDown", "LeftUp", "LeftDown",
+                "UpRight", "UpLeft", "DownRight", "DownLeft",
+            )
+            for index, order in enumerate(orders):
+                source.add_part(
+                    f"P{index}", stock_width=0, stock_height=0,
+                    stock_thickness=0, stock_material="",
+                    default_tool_diameter=0,
+                    nesting_method="Manual" if index % 2 == 0 else "PointList",
+                    nesting_grid_order=order,
+                    stock_offset=(12.5, -3.0), stock_surface=7.25,
+                )
+            tree = build_xml_tree(source)
+            native_nesting = tree.getroot().find("./parts/part/Nesting")
+            native_nesting.find("BasePoint").text = "3,4"
+            ET.SubElement(native_nesting, "PointListID").text = "42"
+            ET.SubElement(native_nesting, "GCodeOrder").text = "2,1,0"
+            content = ET.tostring(tree.getroot(), encoding="unicode")
+
+            imported = await self.call("document_import", self.args(
+                units="mm", source_name="native-part-settings.cb", content=content))
+            self.assertTrue(imported["ok"], imported)
+            handle = imported["document"]
+            records = await self.inspect_records(handle, revision=0)
+            layer = next(record for record in records if record["kind"] == "layer")
+            self.assertEqual(0, layer["pen_width"])
+            parts = [record for record in records if record["kind"] == "part"]
+            self.assertEqual(list(orders), [record["grid_order"] for record in parts])
+            self.assertEqual(
+                ["Manual", "PointList"] * 4,
+                [record["nest_method"] for record in parts],
+            )
+            for record in parts:
+                self.assertEqual(0, record["default_tool_diameter"])
+                self.assertEqual([12.5, -3.0], record["stock_offset"])
+                self.assertEqual(7.25, record["stock_surface"])
+
+            # A nesting-only patch keeps all omitted Part/stock values and the
+            # native settings the core model does not author itself.
+            configured = await self.call("machining_configure_part", self.args(
+                document=handle, expected_revision=0, part="P0", nest_rows=7))
+            self.assertTrue(configured["ok"], configured)
+            self.assertEqual("Manual", configured["data"]["nest_method"])
+            self.assertEqual(0, configured["data"]["default_tool_diameter"])
+            self.assertEqual(12.5, configured["data"]["stock_offset_x"])
+            self.assertEqual(-3.0, configured["data"]["stock_offset_y"])
+            self.assertEqual(7.25, configured["data"]["stock_surface"])
+
+            exported = await self.call("document_export", {
+                "workspace_id": self.service.workspace.id, "document": handle,
+                "expected_revision": 1, "suggested_filename": "native-patched.cb",
+            })
+            self.assertTrue(exported["ok"], exported)
+            exported_part = ET.fromstring(exported["data"]["content"]).find(
+                "./parts/part[@Name='P0']"
+            )
+            self.assertEqual("12.5,-3.0,7.25", exported_part.findtext("Stock/PMin"))
+            self.assertEqual("12.5,-3.0,7.25", exported_part.findtext("Stock/PMax"))
+            self.assertEqual("3,4", exported_part.findtext("Nesting/BasePoint"))
+            self.assertEqual("42", exported_part.findtext("Nesting/PointListID"))
+            self.assertEqual("2,1,0", exported_part.findtext("Nesting/GCodeOrder"))
+            self.assertEqual("7", exported_part.findtext("Nesting/Rows"))
+
+        self.run_async(test)
+
+    def test_configure_part_is_a_patch_and_minimal_creation_uses_undefined_stock(self):
+        async def test():
+            handle = await self.create("part-patch")
+            created = await self.call("machining_configure_part", self.args(
+                document=handle, expected_revision=0, part="Part"))
+            self.assertTrue(created["ok"], created)
+            self.assertEqual(0, created["data"]["stock_width"])
+            self.assertEqual(0, created["data"]["stock_height"])
+            self.assertEqual(0, created["data"]["stock_thickness"])
+            self.assertEqual("", created["data"]["stock_material"])
+
+            configured = await self.call("machining_configure_part", self.args(
+                document=handle, expected_revision=1, part="Part",
+                stock_width=100, stock_height=50, stock_thickness=8,
+                stock_material="Aluminum", stock_offset_x=2,
+                stock_offset_y=3, stock_surface=4,
+                default_tool_diameter=0, nest_method="Grid",
+                grid_order="DownLeft"))
+            self.assertTrue(configured["ok"], configured)
+            patched = await self.call("machining_configure_part", self.args(
+                document=handle, expected_revision=2, part="Part", enabled=False))
+            self.assertTrue(patched["ok"], patched)
+            self.assertEqual(100, patched["data"]["stock_width"])
+            self.assertEqual(0, patched["data"]["default_tool_diameter"])
+            self.assertEqual("Grid", patched["data"]["nest_method"])
+            self.assertEqual("DownLeft", patched["data"]["grid_order"])
+            self.assertEqual(2, patched["data"]["stock_offset_x"])
+            self.assertEqual(4, patched["data"]["stock_surface"])
+
         self.run_async(test)
 
     def test_settings_tools_report_cross_entity_identifier_conflicts(self):

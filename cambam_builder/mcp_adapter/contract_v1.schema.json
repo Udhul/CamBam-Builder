@@ -182,7 +182,7 @@
       "properties": {
         "layer": { "$ref": "#/$defs/Name" }, "color": { "$ref": "#/$defs/Name" },
         "alpha": { "type": "number", "minimum": 0, "maximum": 1 },
-        "pen_width": { "$ref": "#/$defs/Positive" },
+        "pen_width": { "$ref": "#/$defs/NonNegative" },
         "visible": { "type": "boolean" }, "locked": { "type": "boolean" }
       },
       "required": ["layer", "color", "alpha", "pen_width", "visible", "locked"],
@@ -193,23 +193,26 @@
       "properties": {
         "part": { "$ref": "#/$defs/Name" },
         "enabled": { "type": "boolean" },
-        "stock_width": { "$ref": "#/$defs/Positive" },
-        "stock_height": { "$ref": "#/$defs/Positive" },
-        "stock_thickness": { "$ref": "#/$defs/Positive" },
-        "stock_material": { "$ref": "#/$defs/Name" },
+        "stock_width": { "$ref": "#/$defs/NonNegative" },
+        "stock_height": { "$ref": "#/$defs/NonNegative" },
+        "stock_thickness": { "$ref": "#/$defs/NonNegative" },
+        "stock_material": { "type": "string", "maxLength": 128 },
         "stock_color": { "$ref": "#/$defs/Name" },
+        "stock_offset_x": { "$ref": "#/$defs/Number" },
+        "stock_offset_y": { "$ref": "#/$defs/Number" },
+        "stock_surface": { "$ref": "#/$defs/Number" },
         "machining_origin_x": { "$ref": "#/$defs/Number" },
         "machining_origin_y": { "$ref": "#/$defs/Number" },
-        "default_tool_diameter": { "anyOf": [{ "$ref": "#/$defs/Positive" }, { "type": "null" }] },
+        "default_tool_diameter": { "anyOf": [{ "$ref": "#/$defs/NonNegative" }, { "type": "null" }] },
         "default_spindle_speed": { "anyOf": [{ "type": "integer", "minimum": 1, "maximum": 1000000 }, { "type": "null" }] },
-        "nest_method": { "type": "string", "enum": ["None", "Grid", "IsoGrid"] },
+        "nest_method": { "type": "string", "enum": ["None", "Grid", "IsoGrid", "Manual", "PointList"] },
         "nest_rows": { "type": "integer", "minimum": 1, "maximum": 1000 },
         "nest_columns": { "type": "integer", "minimum": 1, "maximum": 1000 },
         "nest_spacing": { "$ref": "#/$defs/NonNegative" },
-        "grid_order": { "type": "string", "enum": ["RightUp", "RightDown", "LeftUp", "LeftDown"] },
+        "grid_order": { "type": "string", "enum": ["RightUp", "RightDown", "LeftUp", "LeftDown", "UpRight", "UpLeft", "DownRight", "DownLeft"] },
         "grid_alternate": { "type": "boolean" }
       },
-      "required": ["part", "enabled", "stock_width", "stock_height", "stock_thickness", "stock_material", "stock_color", "machining_origin_x", "machining_origin_y", "default_tool_diameter", "default_spindle_speed", "nest_method", "nest_rows", "nest_columns", "nest_spacing", "grid_order", "grid_alternate"],
+      "required": ["part", "enabled", "stock_width", "stock_height", "stock_thickness", "stock_material", "stock_color", "stock_offset_x", "stock_offset_y", "stock_surface", "machining_origin_x", "machining_origin_y", "default_tool_diameter", "default_spindle_speed", "nest_method", "nest_rows", "nest_columns", "nest_spacing", "grid_order", "grid_alternate"],
       "additionalProperties": false
     },
     "DocumentSummary": {
@@ -501,7 +504,37 @@
           "const": "None"
         },
         "tab_method": {
-          "const": "None"
+          "type": "string",
+          "enum": ["None", "Automatic"]
+        },
+        "tab_width": {
+          "$ref": "#/$defs/Positive"
+        },
+        "tab_height": {
+          "$ref": "#/$defs/Positive"
+        },
+        "tab_min_tabs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "tab_max_tabs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "tab_distance": {
+          "$ref": "#/$defs/NonNegative"
+        },
+        "tab_size_threshold": {
+          "$ref": "#/$defs/NonNegative"
+        },
+        "tab_use_leadins": {
+          "type": "boolean"
+        },
+        "tab_style": {
+          "type": "string",
+          "enum": ["Square", "Triangle", "Skip"]
         },
         "custom_mop_header": {
           "const": ""
@@ -535,6 +568,14 @@
         "cut_ordering",
         "lead_in_type",
         "tab_method",
+        "tab_width",
+        "tab_height",
+        "tab_min_tabs",
+        "tab_max_tabs",
+        "tab_distance",
+        "tab_size_threshold",
+        "tab_use_leadins",
+        "tab_style",
         "custom_mop_header",
         "custom_mop_footer"
       ],
@@ -702,7 +743,8 @@
           "const": "XY"
         },
         "tool_profile": {
-          "const": "EndMill"
+          "type": "string",
+          "enum": ["EndMill", "Vcutter"]
         },
         "spindle_direction": {
           "const": "CW"
@@ -865,7 +907,7 @@
             },
             "color": { "$ref": "#/$defs/Name" },
             "alpha": { "type": "number", "minimum": 0, "maximum": 1 },
-            "pen_width": { "$ref": "#/$defs/Positive" },
+            "pen_width": { "$ref": "#/$defs/NonNegative" },
             "visible": { "type": "boolean" },
             "locked": { "type": "boolean" }
           },
@@ -899,14 +941,16 @@
               "type": "string"
             },
             "stock_color": { "$ref": "#/$defs/Name" },
+            "stock_offset": { "type": "array", "items": { "$ref": "#/$defs/Number" }, "minItems": 2, "maxItems": 2 },
+            "stock_surface": { "$ref": "#/$defs/Number" },
             "machining_origin": { "type": "array", "items": { "$ref": "#/$defs/Number" }, "minItems": 2, "maxItems": 2 },
-            "default_tool_diameter": { "anyOf": [{ "$ref": "#/$defs/Positive" }, { "type": "null" }] },
+            "default_tool_diameter": { "anyOf": [{ "$ref": "#/$defs/NonNegative" }, { "type": "null" }] },
             "default_spindle_speed": { "anyOf": [{ "type": "integer", "minimum": 1, "maximum": 1000000 }, { "type": "null" }] },
-            "nest_method": { "type": "string", "enum": ["None", "Grid", "IsoGrid"] },
+            "nest_method": { "type": "string", "enum": ["None", "Grid", "IsoGrid", "Manual", "PointList"] },
             "nest_rows": { "type": "integer", "minimum": 1, "maximum": 1000 },
             "nest_columns": { "type": "integer", "minimum": 1, "maximum": 1000 },
             "nest_spacing": { "$ref": "#/$defs/NonNegative" },
-            "grid_order": { "type": "string", "enum": ["RightUp", "RightDown", "LeftUp", "LeftDown"] },
+            "grid_order": { "type": "string", "enum": ["RightUp", "RightDown", "LeftUp", "LeftDown", "UpRight", "UpLeft", "DownRight", "DownLeft"] },
             "grid_alternate": { "type": "boolean" }
           },
           "required": [
@@ -916,7 +960,7 @@
             "stock_width",
             "stock_height",
             "stock_thickness",
-            "stock_material", "stock_color", "machining_origin", "default_tool_diameter",
+            "stock_material", "stock_color", "stock_offset", "stock_surface", "machining_origin", "default_tool_diameter",
             "default_spindle_speed", "nest_method",
             "nest_rows", "nest_columns", "nest_spacing", "grid_order", "grid_alternate"
           ],
@@ -2692,6 +2736,49 @@
           "type": "boolean",
           "default": false,
           "description": "Profile-only CamBam option: overcut inside corners for a round tool; may remove extra material along adjacent sides."
+        },
+        "tab_method": {
+          "type": "string",
+          "enum": ["None", "Automatic"],
+          "default": "None",
+          "description": "Automatic distributes holding tabs from the bounded settings; Manual placement is not exposed."
+        },
+        "tab_width": {
+          "$ref": "#/$defs/Positive",
+          "default": 6
+        },
+        "tab_height": {
+          "$ref": "#/$defs/Positive",
+          "default": 1.5
+        },
+        "tab_min_tabs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 3
+        },
+        "tab_max_tabs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 3
+        },
+        "tab_distance": {
+          "$ref": "#/$defs/NonNegative",
+          "default": 40
+        },
+        "tab_size_threshold": {
+          "$ref": "#/$defs/NonNegative",
+          "default": 4
+        },
+        "tab_use_leadins": {
+          "type": "boolean",
+          "default": false
+        },
+        "tab_style": {
+          "type": "string",
+          "enum": ["Square", "Triangle", "Skip"],
+          "default": "Square"
         }
       },
       "required": [
@@ -2740,6 +2827,11 @@
                         "Outside"
                       ]
                     },
+                    "side_semantics": {
+                      "type": "string",
+                      "enum": ["ClosedBoundary", "VertexOrderRelative"],
+                      "description": "VertexOrderRelative means an open Pline offset side depends on vertex traversal order; reversing the vertices swaps the physical side."
+                    },
                     "targets": {
                       "type": "array",
                       "items": {
@@ -2754,6 +2846,7 @@
                     "mop_id",
                     "part",
                     "side",
+                    "side_semantics",
                     "targets"
                   ],
                   "additionalProperties": false
@@ -2980,6 +3073,11 @@
         "enabled": {
           "type": "boolean",
           "default": true
+        },
+        "tool_profile": {
+          "type": "string",
+          "enum": ["EndMill", "Vcutter"],
+          "default": "EndMill"
         }
       },
       "required": [
@@ -4625,7 +4723,7 @@
         "layer": { "$ref": "#/$defs/Name" },
         "color": { "$ref": "#/$defs/Name" },
         "alpha": { "type": "number", "minimum": 0, "maximum": 1 },
-        "pen_width": { "$ref": "#/$defs/Positive" },
+        "pen_width": { "$ref": "#/$defs/NonNegative" },
         "visible": { "type": "boolean" },
         "locked": { "type": "boolean" }
       },
@@ -4649,27 +4747,33 @@
         "expected_revision": { "$ref": "#/$defs/Revision" },
         "request_id": { "$ref": "#/$defs/UUID" },
         "part": { "$ref": "#/$defs/Name" },
-        "enabled": { "type": "boolean", "default": true },
-        "stock_width": { "$ref": "#/$defs/Positive" },
-        "stock_height": { "$ref": "#/$defs/Positive" },
-        "stock_thickness": { "$ref": "#/$defs/Positive" },
-        "stock_material": { "$ref": "#/$defs/Name" },
-        "stock_color": { "$ref": "#/$defs/Name", "default": "210,180,140" },
-        "machining_origin_x": { "$ref": "#/$defs/Number", "default": 0 },
-        "machining_origin_y": { "$ref": "#/$defs/Number", "default": 0 },
-        "default_tool_diameter": { "$ref": "#/$defs/Positive" },
+        "enabled": { "type": "boolean" },
+        "stock_width": { "$ref": "#/$defs/NonNegative" },
+        "stock_height": { "$ref": "#/$defs/NonNegative" },
+        "stock_thickness": { "$ref": "#/$defs/NonNegative" },
+        "stock_material": { "type": "string", "maxLength": 128 },
+        "stock_color": { "$ref": "#/$defs/Name" },
+        "stock_offset_x": { "$ref": "#/$defs/Number" },
+        "stock_offset_y": { "$ref": "#/$defs/Number" },
+        "stock_surface": { "$ref": "#/$defs/Number" },
+        "machining_origin_x": { "$ref": "#/$defs/Number" },
+        "machining_origin_y": { "$ref": "#/$defs/Number" },
+        "default_tool_diameter": { "anyOf": [{ "$ref": "#/$defs/NonNegative" }, { "type": "null" }] },
         "default_spindle_speed": {
-          "type": "integer", "minimum": 1, "maximum": 1000000,
+          "anyOf": [
+            { "type": "integer", "minimum": 1, "maximum": 1000000 },
+            { "type": "null" }
+          ],
           "description": "Optional framework-session context only; not serialized as a supported CamBam Part field. Set spindle speed explicitly on each MOP for durable interchange."
         },
-        "nest_method": { "type": "string", "enum": ["None", "Grid", "IsoGrid"], "default": "None" },
-        "nest_rows": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 1 },
-        "nest_columns": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 1 },
-        "nest_spacing": { "$ref": "#/$defs/NonNegative", "default": 0 },
-        "grid_order": { "type": "string", "enum": ["RightUp", "RightDown", "LeftUp", "LeftDown"], "default": "RightUp" },
-        "grid_alternate": { "type": "boolean", "default": false }
+        "nest_method": { "type": "string", "enum": ["None", "Grid", "IsoGrid"] },
+        "nest_rows": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "nest_columns": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "nest_spacing": { "$ref": "#/$defs/NonNegative" },
+        "grid_order": { "type": "string", "enum": ["RightUp", "RightDown", "LeftUp", "LeftDown", "UpRight", "UpLeft", "DownRight", "DownLeft"] },
+        "grid_alternate": { "type": "boolean" }
       },
-      "required": ["workspace_id", "document", "expected_revision", "request_id", "part", "stock_width", "stock_height", "stock_thickness", "stock_material"],
+      "required": ["workspace_id", "document", "expected_revision", "request_id", "part"],
       "additionalProperties": false
     },
     "machining_configure_part_output": {

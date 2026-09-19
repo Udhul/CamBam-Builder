@@ -85,14 +85,14 @@ class DocumentService:
         "relationship_copy_tree_between", "relationship_transfer_tree_between",
     ))
     MOP_TARGET_RULES = {
-        "profile": ("supported root Rect/Circle/closed-Pline/Region shapes",
+        "profile": ("supported root Rect/Circle/Pline/Region shapes",
                     lambda e: isinstance(e, (Rect, Circle, Region))
-                    or (isinstance(e, Pline) and bool(e.closed))),
+                    or isinstance(e, Pline)),
         "pocket": ("supported root Rect/Circle/closed-Pline/Region shapes",
                    lambda e: isinstance(e, (Rect, Circle, Region))
                    or (isinstance(e, Pline) and bool(e.closed))),
-        "engrave": ("supported root Rect/Circle/Arc/Pline curves",
-                    lambda e: isinstance(e, (Rect, Circle, Arc, Pline))),
+        "engrave": ("supported root Rect/Circle/Arc/Pline/Text curves",
+                    lambda e: isinstance(e, (Rect, Circle, Arc, Pline, Text))),
         "drill": ("supported root Points/Circle primitives",
                   lambda e: isinstance(e, (Points, Circle))),
     }
@@ -1005,29 +1005,53 @@ class DocumentService:
                     "Part name is used by another entity",
                     "part",
                 )
+            existing = staged.get_part(args["part"])
+
+            def patched(key, attribute, default):
+                if key in args:
+                    return args[key]
+                return getattr(existing, attribute) if existing is not None else default
+
+            origin = existing.machining_origin if existing is not None else (0.0, 0.0)
+            stock_offset = existing.stock_offset if existing is not None else (0.0, 0.0)
             part = staged.add_part(
-                args["part"], enabled=args["enabled"],
-                stock_thickness=args["stock_thickness"],
-                stock_width=args["stock_width"], stock_height=args["stock_height"],
-                stock_material=args["stock_material"], stock_color=args["stock_color"],
-                machining_origin=(args["machining_origin_x"], args["machining_origin_y"]),
-                default_tool_diameter=args.get("default_tool_diameter"),
-                default_spindle_speed=args.get("default_spindle_speed"),
-                nesting_method=args["nest_method"], nesting_rows=args["nest_rows"],
-                nesting_columns=args["nest_columns"], nesting_spacing=args["nest_spacing"],
-                nesting_grid_order=args["grid_order"],
-                nesting_grid_alternate=args["grid_alternate"],
+                args["part"], enabled=patched("enabled", "enabled", True),
+                stock_thickness=patched("stock_thickness", "stock_thickness", 0.0),
+                stock_width=patched("stock_width", "stock_width", 0.0),
+                stock_height=patched("stock_height", "stock_height", 0.0),
+                stock_material=patched("stock_material", "stock_material", ""),
+                stock_color=patched("stock_color", "stock_color", "210,180,140"),
+                machining_origin=(args.get("machining_origin_x", origin[0]),
+                                  args.get("machining_origin_y", origin[1])),
+                default_tool_diameter=patched(
+                    "default_tool_diameter", "default_tool_diameter", None
+                ),
+                default_spindle_speed=patched(
+                    "default_spindle_speed", "default_spindle_speed", None
+                ),
+                nesting_method=patched("nest_method", "nesting_method", "None"),
+                nesting_rows=patched("nest_rows", "nesting_rows", 1),
+                nesting_columns=patched("nest_columns", "nesting_columns", 1),
+                nesting_spacing=patched("nest_spacing", "nesting_spacing", 0.0),
+                nesting_grid_order=patched(
+                    "grid_order", "nesting_grid_order", "RightUp"
+                ),
+                nesting_grid_alternate=patched(
+                    "grid_alternate", "nesting_grid_alternate", False
+                ),
+                stock_offset=(args.get("stock_offset_x", stock_offset[0]),
+                              args.get("stock_offset_y", stock_offset[1])),
+                stock_surface=patched("stock_surface", "stock_surface", 0.0),
             )
             if part is None:
                 raise DomainError("INTERNAL_ERROR", "Framework rejected part configuration")
-            # An explicit MCP configuration supersedes any preserved native
-            # nesting subtree imported from the source file.
-            if hasattr(part, "_xml_nesting"):
-                delattr(part, "_xml_nesting")
             data = {"part": part.user_identifier, "enabled": part.enabled,
                     "stock_width": part.stock_width, "stock_height": part.stock_height,
                     "stock_thickness": part.stock_thickness, "stock_material": part.stock_material,
                     "stock_color": part.stock_color,
+                    "stock_offset_x": part.stock_offset[0],
+                    "stock_offset_y": part.stock_offset[1],
+                    "stock_surface": part.stock_surface,
                     "machining_origin_x": part.machining_origin[0],
                     "machining_origin_y": part.machining_origin[1],
                     "default_tool_diameter": part.default_tool_diameter,
@@ -1338,6 +1362,14 @@ class DocumentService:
                                 for source, target in mapping.items()}}
         elif name == "machining_add_profile":
             part, targets = self._stage_mop_prelude(staged, args, "profile")
+            if args["tab_min_tabs"] > args["tab_max_tabs"]:
+                raise DomainError(
+                    "INVALID_ARGUMENT",
+                    "tab_min_tabs must be less than or equal to tab_max_tabs",
+                    "tab_min_tabs",
+                )
+            has_open_pline = any(isinstance(target, Pline) and not target.closed
+                                 for target in targets)
             mop = staged.add_profile_mop(
                 part, targets=targets, identifier=args["identifier"], name=args["identifier"],
                 enabled=args["enabled"], target_depth=args["target_depth"],
@@ -1351,15 +1383,21 @@ class DocumentService:
                 stepover=0.4, profile_side=args["side"], milling_direction="Conventional",
                 collision_detection=True, corner_overcut=args["corner_overcut"], lead_in_type="None",
                 lead_in_spiral_angle=30.0, final_depth_increment=0.0,
-                cut_ordering="DepthFirst", tab_method="None", tab_width=6.0,
-                tab_height=1.5, tab_min_tabs=3, tab_max_tabs=3, tab_distance=40.0,
-                tab_size_threshold=4.0, tab_use_leadins=False, tab_style="Square",
+                cut_ordering="DepthFirst", tab_method=args["tab_method"],
+                tab_width=args["tab_width"], tab_height=args["tab_height"],
+                tab_min_tabs=args["tab_min_tabs"], tab_max_tabs=args["tab_max_tabs"],
+                tab_distance=args["tab_distance"],
+                tab_size_threshold=args["tab_size_threshold"],
+                tab_use_leadins=args["tab_use_leadins"], tab_style=args["tab_style"],
             )
             if mop is None:
                 raise DomainError("INTERNAL_ERROR", "Framework rejected Profile creation")
             self._check_limits(staged)
             data = {"mop_id": str(mop.internal_id), "part": args["part"],
                     "side": args["side"],
+                    "side_semantics": (
+                        "VertexOrderRelative" if has_open_pline else "ClosedBoundary"
+                    ),
                     "targets": [str(value) for value in staged.get_mop_targets(mop)]}
         elif name == "machining_add_pocket":
             part, targets = self._stage_mop_prelude(staged, args, "pocket")
@@ -1394,7 +1432,8 @@ class DocumentService:
                 roughing_clearance=0.0, clearance_plane=args["clearance_plane"],
                 spindle_direction="CW", spindle_speed=args["spindle_speed"],
                 velocity_mode="ExactStop", work_plane="XY", optimisation_mode="Standard",
-                tool_diameter=args["tool_diameter"], tool_number=0, tool_profile="EndMill",
+                tool_diameter=args["tool_diameter"], tool_number=0,
+                tool_profile=args["tool_profile"],
                 plunge_feedrate=args["plunge_feedrate"], cut_feedrate=args["cut_feedrate"],
                 max_crossover_distance=0.7, custom_mop_header="", custom_mop_footer="",
                 roughing_finishing="Roughing", final_depth_increment=0.0,
@@ -1458,6 +1497,16 @@ class DocumentService:
                     "Part default_spindle_speed is framework session context and is not "
                     "serialized by the supported CamBam XML writer. Set spindle_speed "
                     "explicitly on every authored MOP that must survive export/re-import."
+                ),
+            })
+        if (name == "machining_add_profile"
+                and data.get("side_semantics") == "VertexOrderRelative"):
+            diagnostics.append({
+                "code": "OPEN_PROFILE_SIDE_DIRECTIONAL",
+                "message": (
+                    "At least one target is an open Pline. For open paths, Inside/Outside "
+                    "selects the cutter offset relative to vertex traversal order; reversing "
+                    "the vertices swaps the physical side."
                 ),
             })
         result = self._envelope(args, data=data, revision=revision, diagnostics=diagnostics)
@@ -1690,7 +1739,10 @@ class DocumentService:
                 "spindle_direction", "velocity_mode", "milling_direction",
                 "roughing_clearance", "stepover", "tool_number", "collision_detection",
                 "corner_overcut", "final_depth_increment", "cut_ordering", "lead_in_type",
-                "tab_method", "custom_mop_header", "custom_mop_footer",
+                "tab_method", "tab_width", "tab_height", "tab_min_tabs",
+                "tab_max_tabs", "tab_distance", "tab_size_threshold",
+                "tab_use_leadins", "tab_style", "custom_mop_header",
+                "custom_mop_footer",
             ),
             {
                 "work_plane": "XY", "tool_profile": "EndMill", "spindle_direction": "CW",
@@ -1698,20 +1750,37 @@ class DocumentService:
                 "roughing_clearance": 0.0, "stepover": 0.4, "tool_number": 0,
                 "collision_detection": True,
                 "final_depth_increment": 0.0, "cut_ordering": "DepthFirst",
-                "lead_in_type": "None", "tab_method": "None",
+                "lead_in_type": "None",
                 "custom_mop_header": "", "custom_mop_footer": "",
             },
             {
                 "optimisation_mode": "Standard", "max_crossover_distance": 0.7,
-                "lead_in_spiral_angle": 30.0, "tab_width": 6.0, "tab_height": 1.5,
-                "tab_min_tabs": 3, "tab_max_tabs": 3, "tab_distance": 40.0,
-                "tab_size_threshold": 4.0, "tab_use_leadins": False,
-                "tab_style": "Square",
+                "lead_in_spiral_angle": 30.0,
             },
+            self._profile_scalars_ok,
         )
         if values is None or not self._explicit_mop_xml_states(mop, self.PROFILE_XML_PATHS):
             return None
         return values if _PARAMETER_VALIDATORS["ProfileParameters"].is_valid(values) else None
+
+    @staticmethod
+    def _profile_scalars_ok(values):
+        return (
+            values["tab_method"] in ("None", "Automatic")
+            and values["tab_style"] in ("Square", "Triangle", "Skip")
+            and type(values["tab_use_leadins"]) is bool
+            and all(type(values[key]) in (int, float) and math.isfinite(values[key])
+                    and values[key] > 0 for key in ("tab_width", "tab_height"))
+            and type(values["tab_distance"]) in (int, float)
+            and math.isfinite(values["tab_distance"])
+            and values["tab_distance"] >= 0
+            and type(values["tab_size_threshold"]) in (int, float)
+            and math.isfinite(values["tab_size_threshold"])
+            and values["tab_size_threshold"] >= 0
+            and all(type(values[key]) is int and values[key] >= 1
+                    for key in ("tab_min_tabs", "tab_max_tabs"))
+            and values["tab_min_tabs"] <= values["tab_max_tabs"]
+        )
 
     def _pocket_parameters(self, mop):
         values = self._mop_record_values(
@@ -1761,7 +1830,7 @@ class DocumentService:
                 "final_depth_increment", "cut_ordering",
             ),
             {
-                "work_plane": "XY", "tool_profile": "EndMill", "spindle_direction": "CW",
+                "work_plane": "XY", "spindle_direction": "CW",
                 "velocity_mode": "ExactStop", "roughing_clearance": 0.0,
                 "tool_number": 0, "custom_mop_header": "", "custom_mop_footer": "",
                 "roughing_finishing": "Roughing", "final_depth_increment": 0.0,
@@ -1850,6 +1919,8 @@ class DocumentService:
                         "stock_width": part.stock_width, "stock_height": part.stock_height,
                         "stock_thickness": part.stock_thickness, "stock_material": part.stock_material,
                         "stock_color": part.stock_color,
+                        "stock_offset": list(part.stock_offset),
+                        "stock_surface": part.stock_surface,
                         "machining_origin": list(part.machining_origin),
                         "default_tool_diameter": part.default_tool_diameter,
                         "default_spindle_speed": part.default_spindle_speed,

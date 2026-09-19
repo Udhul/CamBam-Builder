@@ -7,6 +7,34 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**2026-09-19 MCP/CamBam alignment fixes implemented and automatically verified;
+native acceptance pending.** Final comparison against `main`, the public
+framework and CamBam Plus 1.0 documentation found output-schema rejection of valid
+native zero values and nesting enums, destructive whole-record Part configuration,
+loss of stock coordinates/native nesting metadata, and unnecessarily narrow common
+CAM exposure. The branch now treats `machining_configure_part` as an omission-preserving
+patch, round-trips stock XY offset/top surface, preserves native-only nesting children,
+inspects Manual/PointList plus all eight grid orders, accepts zero pen/tool/stock
+values, and defaults a newly named Part to unspecified zero stock. Profile supports
+open Plines with explicit vertex-order-relative side semantics and bounded Automatic
+holding tabs; Engrave supports Text and explicit Vcutter. Older pickled Parts receive
+defaults for the newly modeled stock/nesting fields. Focused regressions cover native
+imports, patch preservation, zero stock, pickle migration and CAM save/reopen. The
+tool count remains thirty-seven; Manual/PointList placement authoring and manual tab
+point authoring remain intentionally outside the bounded surface. All 75 MCP tests
+and all 231 repository tests pass with the existing single Windows symlink-privilege
+skip; compileall, JSON Schema/37-tool inventory validation and `git diff --check`
+pass. A fresh wheel/sdist build succeeds, and wheel inspection confirms the MCP
+service, updated contract schema and consumer template are packaged without
+build/output tree leakage. The 4e runbook owns the prepared CamBam property/toolpath
+checks required before the pending native acceptance claim.
+
+The requested native-review artifacts are prepared under
+[`outputs/190926/`](../outputs/190926/), with eight `.cb` files, a manifest of
+expected CamBam properties and hashes, and the repeatable generator used to create
+them. Every file strict-reopens through the repository reader; CamBam Plus validation
+must still record native open/property/toolpath results against that manifest.
+
 **2026-09-19 consumer onboarding correction implemented; fresh named-agent rerun
 pending.** The first live use of the reusable template exposed an instruction defect:
 "ask one concise, grouped set" produced one overloaded prompt mixing durable project

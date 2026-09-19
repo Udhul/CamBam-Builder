@@ -71,8 +71,8 @@ class MopContextTests(unittest.TestCase):
         self.assertEqual("5.5", changed_nesting.findtext("Spacing"))
         self.assertEqual("LeftDown", changed_nesting.findtext("GridOrder"))
         self.assertEqual("true", changed_nesting.findtext("GridDirectionAlternate"))
-        self.assertIsNone(changed_nesting.get("vendor-attribute"))
-        self.assertIsNone(changed_nesting.find("VendorSetting"))
+        self.assertEqual("preserve-me", changed_nesting.get("vendor-attribute"))
+        self.assertEqual("native-value", changed_nesting.findtext("VendorSetting"))
 
         reloaded = read_cambam_bytes(
             ET.tostring(changed_tree.getroot(), encoding="utf-8"),

@@ -30,10 +30,12 @@ see the [development runbook](docs/DEVELOPMENT.md#environment-and-setup).
 The optional local MCP server exposes thirty-seven document, planning and authoring
 tools for AI clients, including verified geometry authoring (Rect, Circle,
 Arc, Pline, Points, Text, Region), Profile/Pocket/Engrave/Drill MOPs with
-target replacement, similarity transforms with baking, and parent/group/copy
+target replacement, open-Pline Profile side diagnostics, automatic Profile holding
+tabs, and Text/V-cutter engraving, similarity transforms with baking, and parent/group/copy
 relationships including cross-document subtree copy and transfer between two
-open documents. Part stock/nesting and layer display settings are explicitly
-configurable. Complete UTF-8 `.cb` XML can be imported across hosts. On the normal
+open documents. Part stock coordinates and native Grid/IsoGrid nesting are explicitly
+configurable; imported Manual/PointList nesting is inspectable and preserved. Layer
+display settings are also configurable. Complete UTF-8 `.cb` XML can be imported across hosts. On the normal
 same-host path, `document_list` exposes the shared staging directory so a client can
 binary-copy an existing or manually edited `.cb` there and hash-guard `document_open`;
 this avoids model-mediated XML. Export returns inline content and explicitly creates

@@ -385,6 +385,7 @@ escaping/envelope overhead). All UUIDs use canonical lowercase hyphenated text.
 | `TextContent` | String 1..1024 characters with at least one non-whitespace character and no forbidden control characters; its regex stays within the portable no-lookaround subset used by OpenAI-backed tool-schema compilers |
 | `Number` | Finite JSON number; geometry/translation magnitude <=1e9 |
 | `Positive` | Finite JSON number >0 and <=1e9 |
+| `NonNegative` | Finite JSON number >=0 and <=1e9 |
 | `Read` | `{workspace_id: Workspace, document: Handle}` |
 | `Write` | `Read` plus `{expected_revision: Revision, request_id: UUID}` |
 | `New` | `{workspace_id: Workspace, request_id: UUID, units: "mm" | "in"}` |
@@ -442,14 +443,14 @@ or demonstrates a practical need to repair an existing sequence.
 | `geometry_add_region` | `Write + {identifier: Name, layer: Name, outer: {points: VertexPoint[2..10000]}, holes?: {points: VertexPoint[2..10000]}[0..100] =[]}` | Contours become closed `Pline` records; `add_region(layer, outer_curve=..., hole_curves=..., identifier=identifier)`; XY topology (closed, simple, nonzero area, contained disjoint holes) is validated by the framework and topology failures return `INVALID_ARGUMENT` with the bounded framework message; return primitive UUID and layer name. |
 | `geometry_replace_with_region` | `Write + {identifier: Name, outer_id: UUID, hole_ids?: UUID[0..100] =[]}` | Atomically convert the world geometry of existing supported root Rect, Circle or closed-Pline contours on one layer into one Region. Validate topology on a staged clone, remove the source primitives only on success, retarget explicit Profile/Pocket selections from any source to the new Region, and reject sources used by Engrave/Drill or carrying unsupported parent/child/group relationships. Return the new UUID, layer and ordered removed UUIDs. |
 | `geometry_update_region` | `Write + {entity_id: UUID, outer: ContourInput, holes?: ContourInput[0..100] =[]}` | Atomically replace one supported root Region's absolute contours after topology validation. Preserve its UUID, identifier, layer and project-owned Profile/Pocket target relationships; return the UUID, layer and typed Region geometry. |
-| `machining_add_profile` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], side: "Inside" | "Outside", target_depth: Number, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true, corner_overcut?: boolean =false}` | `add_part` if absent, then `add_profile_mop(part, targets=..., identifier=identifier, name=identifier, profile_side=side, corner_overcut=corner_overcut, ...)`; `corner_overcut` is a Profile-only CamBam option that overcuts inside corners for round tools and may remove extra adjacent-side material; return MOP UUID, part name, echoed side and resolved target UUIDs. |
+| `machining_add_profile` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], side: "Inside" | "Outside", target_depth: Number, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true, corner_overcut?: boolean =false, tab_method?: None\|Automatic =None, tab_width?: Positive =6, tab_height?: Positive =1.5, tab_min_tabs?: integer =3, tab_max_tabs?: integer =3, tab_distance?: NonNegative =40, tab_size_threshold?: NonNegative =4, tab_use_leadins?: boolean =false, tab_style?: Square\|Triangle\|Skip =Square}` | `add_part` if absent, then `add_profile_mop(...)`; automatic holding tabs map to CamBam's bounded `HoldingTabs` record and require minimum <= maximum. Manual tab point placement is not exposed. Closed boundaries return `side_semantics=ClosedBoundary`; any open Pline returns `VertexOrderRelative` plus a directional diagnostic because reversing traversal swaps the physical side. `corner_overcut` overcuts inside corners for round tools and may remove extra adjacent-side material. Return MOP UUID, part name, echoed side/semantics and resolved targets. |
 | `machining_add_pocket` | `Write + {identifier: Name, part: Name, targets: UUID[1..100], target_depth, depth_increment: Positive, tool_diameter: Positive, cut_feedrate: Positive, plunge_feedrate: Positive, spindle_speed: integer 1..1000000, stock_surface?: Number =0, clearance_plane: Number, enabled?: boolean =true}` | `add_pocket_mop(...)` with the pocket settings pinned in the schema record (stepover 0.4, `InsideOutsideOffsets` fill, Spiral lead-in, Roughing); return MOP UUID, part name and resolved targets. |
-| `machining_add_engrave` | Same closed record as Pocket (no side, no pocket-specific inputs) | `add_engrave_mop(...)` with Engrave settings pinned in the schema record (Roughing, final increment 0, DepthFirst, EndMill); return MOP UUID, part name and resolved targets. |
+| `machining_add_engrave` | Same closed record as Pocket (no side, no pocket-specific inputs) plus `tool_profile?: EndMill\|Vcutter =EndMill` | `add_engrave_mop(...)` with Engrave settings pinned in the schema record (Roughing, final increment 0, DepthFirst) and the selected tool profile; return MOP UUID, part name and resolved targets. |
 | `machining_add_drill` | Pocket record plus `peck_distance?: NonNegative =0`, `retract_height?: Number =5`, `dwell?: NonNegative =0` | `add_drill_mop(...)` pinned to the CannedCycle method and a `Drill` tool profile; return MOP UUID, part name and resolved targets. |
 | `machining_calculate_depth_increment` | `Read + {units: "mm"|"in", stock_thickness: Positive, cut_through: Positive, exactly one of pass_count: integer 1..10000 or max_depth_increment: Positive, rounding_increment?: Positive}` | Pure planning calculation with no document handle or mutation. Upward rounding defaults to 0.1 mm or 0.001 in. Return the increment, actual clamped depths, nominal overshoot, final-pass depth/stock/cut-through, stock fraction and `recommendation_met`. A valid explicit constraint that misses the one-third recommendation is returned with diagnostics rather than rejected; the supplied maximum must already reflect material/tool safety. |
-| `machining_configure_part` | `Write + {part: Name, stock_width/height/thickness: Positive, stock_material: Name, stock_color?: Name, nest_method?: None\|Grid\|IsoGrid, nest_rows/columns?: integer, nest_spacing?: NonNegative, grid_order?, grid_alternate?}` | Create or update the Part's stock definition and native CamBam nesting settings. Grid/IsoGrid repeats the whole Part's MOP sequence; it is distinct from copying geometry. `default_spindle_speed`, when supplied, is diagnosed as session-only framework context; durable MOPs carry their own spindle speed. |
+| `machining_configure_part` | `Write + {part: Name, enabled?, stock_width/height/thickness?: NonNegative, stock_material?: string <=128, stock_color?: Name, stock_offset_x/y?: Number, stock_surface?: Number, machining_origin_x/y?: Number, default_tool_diameter?: NonNegative|null, default_spindle_speed?: integer|null, nest_method?: None\|Grid\|IsoGrid, nest_rows/columns?: integer, nest_spacing?: NonNegative, grid_order?: eight directional orders, grid_alternate?: boolean}` | Patch an existing Part, preserving every omitted field and native-only nesting children; a new minimally specified Part starts with zero/unspecified stock and empty material. Stock offset/surface round-trip independently of dimensions. Grid/IsoGrid repeats the whole Part's MOP sequence. Imported Manual/PointList nesting and placement metadata is inspectable and survives unrelated patches, but authoring it is outside this tool. `default_spindle_speed`, when supplied, is diagnosed as session-only framework context; durable MOPs carry their own spindle speed. |
 | `machining_set_mop_targets` | `Write + {mop_id: UUID, targets: UUID[1..100]}` | Public `set_mop_targets`; atomically replaces the MOP's explicit target selection after the same per-kind target rules and slice checks; return MOP UUID and the project's UUID-sorted resolved targets. |
-| `document_set_layer_properties` | `Write + {layer: Name, color?: Name, alpha?: 0..1, pen_width?: Positive, visible?: boolean, locked?: boolean}` | Create or update layer display properties. These are presentation settings and do not affect machining geometry or MOP semantics. |
+| `document_set_layer_properties` | `Write + {layer: Name, color?: Name, alpha?: 0..1, pen_width?: NonNegative, visible?: boolean, locked?: boolean}` | Create or update layer display properties. CamBam uses pen width zero as its default one-pixel display mode. These are presentation settings and do not affect machining geometry or MOP semantics. |
 | `relationship_set_parent` | `Write + {entity_id: UUID, parent_id: UUID\|null}` | Public `link_primitive_parent`; null detaches. Local transforms are kept, so the world pose follows the new frame; self links and cycles return `INVALID_ARGUMENT`, missing/non-primitive entities `ENTITY_NOT_FOUND`/`UNSUPPORTED_OPERATION`. Return the child UUID and the resulting parent UUID or null. |
 | `relationship_add_to_group` | `Write + {entity_id: UUID, group: Name}` | Public `add_primitive_to_group`; return the entity UUID and its sorted group names. |
 | `relationship_remove_from_group` | `Write + {entity_id: UUID, group: Name}` | Public `remove_primitive_from_group`; return the entity UUID and its sorted remaining group names. |
@@ -485,15 +486,17 @@ get new UUIDs on open; independent opens need not agree in that case.
 
 MOP targets are unique UUIDs resolving to supported root primitives in the same
 document; reject missing, duplicate, wrong-kind or transformed-out-of-scope
-targets before mutation. Per-kind supported target sets: Profile and Pocket accept
-root Rect/Circle/closed-Pline/Region shapes; Engrave
-accepts root Rect/Circle/Arc/Pline curves (open or closed); Drill accepts root
+targets before mutation. Per-kind supported target sets: Pocket accepts root
+Rect/Circle/closed-Pline/Region shapes; Profile accepts those plus open Plines; Engrave
+accepts root Rect/Circle/Arc/Pline/Text curves (Plines may be open or closed); Drill accepts root
 Points/Circle primitives. Profile produces a cutter-radius-compensated contour:
 Outside preserves the selected boundary as the finished exterior part edge and cuts
 in surrounding stock. Inside preserves it as the finished opening edge and cuts on
 the removable interior side. Pocket clears the entire bounded interior into chips;
 for a through-opening that may release a slug, Profile Inside is normally preferred.
-Engrave follows the selected curve as the tool
+For an open Pline, Profile side is relative to stored vertex traversal rather than a
+closed interior/exterior; inspection cannot turn it into an invariant physical side.
+Engrave follows the selected curve or Text outline as the tool
 centerline without inside/outside cutter-radius compensation. Drill operates at
 point-list entries or circle centers rather than tracing circle boundaries. Select
 among them by requested machining intent; never silently replace an unavailable
@@ -521,9 +524,11 @@ to exceed the safe stepdown or infer unknown stock/tool/material data. A valid v
 explicitly requested by the user takes precedence: report any divergence as advisory
 diagnostics, but do not reject or silently substitute it solely because it misses this
 recommendation. Pin other settings to the current
-public defaults: Profile keeps `lead_in_type="None"` for this slice; Pocket
+public defaults: Profile keeps `lead_in_type="None"` for this slice and exposes
+bounded automatic holding-tab parameters; Pocket
 pins Spiral lead-in, stepover 0.4, `InsideOutsideOffsets` fill, Roughing,
-finish stepover 0; Engrave pins Roughing, final increment 0, DepthFirst, EndMill;
+finish stepover 0; Engrave pins Roughing, final increment 0 and DepthFirst while
+allowing EndMill or Vcutter;
 Drill pins the CannedCycle method with a `Drill` tool profile and peck 0,
 retract 5, dwell 0 defaults. All share XY, EndMill (except Drill), CW,
 ExactStop, Conventional, roughing clearance 0, tool number 0, empty custom
@@ -545,7 +550,8 @@ and paginate. Later pages should provide the first page's `expected_revision`.
 `EntityRecord` is a discriminated union: layers `{kind:"layer", name, color, alpha,
 pen_width, visible, locked}`; parts
 `{kind:"part", name, enabled, stock_width, stock_height, stock_thickness,
-stock_material, stock_color, machining_origin, default_tool_diameter,
+stock_material, stock_color, stock_offset: [x,y], stock_surface,
+machining_origin, default_tool_diameter,
 default_spindle_speed, nest_method, nest_rows,
 nest_columns, nest_spacing, grid_order, grid_alternate}`; primitives
 `{kind:"primitive", id, identifier: string|null,
@@ -603,7 +609,7 @@ No partially successful mutation results exist in version 1.
 `ErrorCode` is one of `INVALID_ARGUMENT`, `WORKSPACE_MISMATCH`, `DOCUMENT_NOT_FOUND`,
 `DOCUMENT_EXPIRED`, `STALE_REVISION`, `REQUEST_ID_CONFLICT`, `ENTITY_NOT_FOUND`,
 `IDENTIFIER_CONFLICT`, `UNSUPPORTED_OPERATION`, `PATH_INVALID`, `PATH_EXISTS`,
-`IMPORT_FAILED`, `EXPORT_FAILED`, `LIMIT_EXCEEDED`, `IO_ERROR`, `INTERNAL_ERROR`.
+`IMPORT_FAILED`, `CONTENT_MISMATCH`, `EXPORT_FAILED`, `LIMIT_EXCEEDED`, `IO_ERROR`, `INTERNAL_ERROR`.
 `REQUEST_CANCELLED` is the terminal pre-publication cancellation code.
 Unknown tools and malformed protocol envelopes are JSON-RPC errors. Known-tool
 argument/domain failures use the application envelope, including failures rejected

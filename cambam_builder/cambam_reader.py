@@ -569,6 +569,8 @@ def _reconstruct_part(project: CamBamProject, part_elem: ET.Element, *, strict: 
     stock_height = 100.0   # Default
     stock_material = "Default"
     stock_color = "210,180,140" # Default
+    stock_offset = (0.0, 0.0)
+    stock_surface = 0.0
     stock_node = part_elem.find("Stock")
     if stock_node is not None:
         stock_material = stock_node.findtext("Material", stock_material)
@@ -580,7 +582,9 @@ def _reconstruct_part(project: CamBamProject, part_elem: ET.Element, *, strict: 
         if pmin and pmax:
             stock_width = abs(pmax[0] - pmin[0])
             stock_height = abs(pmax[1] - pmin[1])
-            stock_thickness = abs(pmax[2] - pmin[2]) # Assumes surface at Z=0 or Z=thickness
+            stock_thickness = abs(pmax[2] - pmin[2])
+            stock_offset = (min(pmin[0], pmax[0]), min(pmin[1], pmax[1]))
+            stock_surface = max(pmin[2], pmax[2])
 
     # Parse Machining Origin
     origin_str = part_elem.findtext("MachiningOrigin")
@@ -615,7 +619,8 @@ def _reconstruct_part(project: CamBamProject, part_elem: ET.Element, *, strict: 
         nesting_method=nesting_method, nesting_rows=nesting_rows,
         nesting_columns=nesting_columns, nesting_spacing=nesting_spacing,
         nesting_grid_order=nesting_grid_order,
-        nesting_grid_alternate=nesting_grid_alternate
+        nesting_grid_alternate=nesting_grid_alternate,
+        stock_offset=stock_offset, stock_surface=stock_surface
         # Order handled by XML sequence
     )
     if part is None:
@@ -625,6 +630,7 @@ def _reconstruct_part(project: CamBamProject, part_elem: ET.Element, *, strict: 
     part._xml_tool_diameter = deepcopy(part_elem.find("ToolDiameter"))
     part._xml_tool_diameter_value = part.default_tool_diameter
     part._xml_nesting = deepcopy(nesting)
+    part._xml_stock = deepcopy(stock_node)
     part._xml_machining_parameters = tuple(
         deepcopy(child) for child in part_elem
         if child.tag not in {"Stock", "MachiningOrigin", "ToolDiameter", "machineops"}

@@ -91,6 +91,53 @@ def _nesting_is_default(part: Part) -> bool:
     )
 
 
+def _merge_native_nesting(part: Part, native: ET.Element,
+                          generated: ET.Element) -> ET.Element:
+    """Update modeled nesting values without dropping native-only settings."""
+    if _nesting_matches_model(part, native):
+        return deepcopy(native)
+    merged = deepcopy(native)
+    for tag in ("NestMethod", "Rows", "Columns", "Spacing", "GridOrder",
+                "GridDirectionAlternate"):
+        source = generated.find(tag)
+        target = merged.find(tag)
+        if target is None:
+            target = ET.SubElement(merged, tag)
+        target.text = source.text
+    # The old alias must not override the explicitly updated canonical field.
+    for alias in list(merged.findall("GridAlternate")):
+        merged.remove(alias)
+    return merged
+
+
+def _stock_matches_model(part: Part, stock: ET.Element) -> bool:
+    pmin = stock.findtext("PMin")
+    pmax = stock.findtext("PMax")
+    try:
+        min_values = tuple(float(value.strip()) for value in pmin.split(","))
+        max_values = tuple(float(value.strip()) for value in pmax.split(","))
+    except (AttributeError, TypeError, ValueError):
+        return False
+    if len(min_values) != 3 or len(max_values) != 3:
+        return False
+    native = (
+        abs(max_values[0] - min_values[0]),
+        abs(max_values[1] - min_values[1]),
+        abs(max_values[2] - min_values[2]),
+        min(min_values[0], max_values[0]),
+        min(min_values[1], max_values[1]),
+        max(min_values[2], max_values[2]),
+        stock.findtext("Material", "Default"),
+        stock.findtext("Color", "210,180,140"),
+    )
+    modeled = (
+        part.stock_width, part.stock_height, part.stock_thickness,
+        part.stock_offset[0], part.stock_offset[1], part.stock_surface,
+        part.stock_material, part.stock_color,
+    )
+    return native == modeled
+
+
 def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
     """Construct the XML tree, propagating encoding errors without omitting entities."""
 
@@ -177,6 +224,12 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
 
         # Create the <part> element itself
         part_elem = part.to_xml_element()
+        native_stock = getattr(part, "_xml_stock", None)
+        if native_stock is not None and _stock_matches_model(part, native_stock):
+            generated_stock = part_elem.find("Stock")
+            stock_index = list(part_elem).index(generated_stock)
+            part_elem.remove(generated_stock)
+            part_elem.insert(stock_index, deepcopy(native_stock))
         if hasattr(part, "_xml_machining_parameters"):
             # ``to_xml_element`` creates a fresh, model-backed Nesting node.
             # Keep it available while restoring native children: the native
@@ -193,7 +246,12 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
                     part_elem.remove(child)
             for child in part._xml_machining_parameters:
                 if child.tag == "Nesting":
-                    nesting = native_nesting if preserve_native_nesting else generated_nesting
+                    nesting = (
+                        deepcopy(native_nesting) if preserve_native_nesting
+                        else _merge_native_nesting(part, native_nesting, generated_nesting)
+                        if native_nesting is not None and generated_nesting is not None
+                        else generated_nesting
+                    )
                     if nesting is not None:
                         part_elem.append(deepcopy(nesting))
                     emitted_nesting = True

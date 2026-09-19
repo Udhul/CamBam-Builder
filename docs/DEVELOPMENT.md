@@ -854,6 +854,26 @@ Inspection and exported XML must show the nonzero `<Stock>` bounds and native
 `<Nesting>` settings. This is distinct from geometry copies: CamBam nesting repeats
 the complete Part's MOP sequence at generated positions.
 
+For the merge-alignment additions, include a Part whose stock starts at a nonzero XY
+offset and whose top surface is nonzero. After a save/reopen cycle, inspection and
+CamBam must show the same PMin/PMax coordinates. Patch only one nesting field and
+confirm the other modeled values and any native `BasePoint`, `PointListID` or
+`GCodeOrder` child remain unchanged. Imported `Manual`/`PointList` methods must inspect
+without an output-schema error; the MCP tool deliberately does not author their
+placement data. Pen width `0`, Part tool diameter `0`, zero/unspecified stock and all
+eight native grid orders must likewise remain inspectable.
+
+Also author one Text targeted by an Engrave MOP with `tool_profile=Vcutter`, one open
+Pline targeted by Profile, and one closed Outside Profile with Automatic holding tabs
+(`tab_distance=0` and `tab_style=Skip` exercise the boundary values). Pass requires
+CamBam Plus 1.0 to load the file without repair, show the V-cutter and holding-tab
+properties, retain the Text/open-Pline targets, and generate the expected open offset
+and tabbed closed toolpaths. Reverse the open Pline in a separate copy and confirm its
+Inside/Outside physical side swaps; this is why the adapter reports
+`VertexOrderRelative`. Do not generate production G-code. Report each property and
+toolpath check separately; automated XML round trips do not replace this native CAM
+acceptance.
+
 For required domain acceptance in CamBam Plus 1.0, open A and B separately and
 report the exact CamBam version. Confirm the drawing is using millimeters—the XML
 does not persist a verified unit setting—and reject the case if CamBam interprets

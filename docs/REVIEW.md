@@ -2041,6 +2041,8 @@ and [Drill uses point-list entries or circle centers](https://www.cambam.info/do
 The four machining tool descriptions now state those intent differences and warn that
 Engrave has no cutter-radius compensation. A Profile failure must not be silently
 worked around by inventing compensated Engrave geometry.
+This historical restriction is superseded by the 2026-09-19 alignment correction,
+which exposes open-Pline Profiles with explicit vertex-order-relative semantics.
 
 The transcript also exposed two smaller diagnostics issues. An invalid non-hex request
 UUID had returned a schema error without a field; top-level JSON Schema failures now
@@ -2576,3 +2578,43 @@ Verification on the repository Python 3.14 environment: all 71 MCP tests and all
 The wheel build succeeds and contains both the contract JSON and packaged consumer
 template. Compileall and `git diff --check` pass. External OpenCode behavior remains
 the required user acceptance boundary.
+
+## MCP/CamBam API alignment correction — 2026-09-19
+
+A final branch-to-main and CamBam documentation audit identified four merge blockers.
+Valid native files could contain zero layer pen width, zero Part tool diameter,
+zero/unspecified stock, Manual/PointList nesting, or any of eight grid traversal
+orders that the MCP output schema rejected. Part configuration replaced omitted
+fields and discarded native nesting placement metadata. Stock PMin/PMax offsets and
+nonzero top surfaces were normalized away. Finally, common CamBam workflows exposed by
+the core model were missing at the adapter edge: Text/V-cutter engraving, open-Pline
+Profiles and Automatic holding tabs.
+
+The comparison used CamBam's published [nesting](https://www.cambam.info/doc/1.0/cam/nesting.html),
+[Profile](https://www.cambam.info/doc/1.0/cam/profile.html),
+[holding-tab](https://www.cambam.info/doc/1.0/cam/holding-tabs.html) and
+[text-engraving](https://www.cambam.info/doc/1.0/tutorials/text-engraving.html)
+behavior as the external source of truth, then checked the repository's public API,
+reader/writer and MCP schemas as one end-to-end contract.
+
+The correction expands inspection fidelity without pretending to author unsupported
+placement data. `machining_configure_part` remains limited to None/Grid/IsoGrid, but
+is now a field patch and preserves imported Manual/PointList records and native-only
+children. Stock offset/surface are modeled and unchanged native Stock XML is retained.
+Open Profiles report `VertexOrderRelative`; Text is a valid Engrave target; Vcutter
+and bounded Automatic tab properties are explicit closed-schema inputs. Manual tab
+points and Manual/PointList placement authoring remain excluded. A pickle migration
+supplies safe defaults to pre-change Parts.
+
+Regression coverage exercises native nesting variants and metadata, zero boundary
+values, stock coordinates, minimal Part creation, omission-preserving updates,
+open-Profile diagnostics, Text/V-cutter engraving, automatic tab boundary values,
+invalid tab ranges, XML save/reopen and older Part state loading. The normative MCP
+contract, server/tool guidance, README capability summary and 4e native acceptance
+procedure now describe the same surface. Verification passed 75 MCP tests and 231
+full-suite tests (one pre-existing Windows symlink privilege skip), compileall, schema
+and 37-tool inventory validation, and `git diff --check`. The fresh wheel/sdist is in
+`output/mcp-alignment-fixes-20260919-a/dist/`; wheel inspection found 26 entries and
+confirmed the service, updated schema and consumer template with no build/output tree
+leakage. CamBam Plus toolpath and property inspection remains a separate pending
+acceptance; no production G-code claim is made.
