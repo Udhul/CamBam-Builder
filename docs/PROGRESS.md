@@ -18,6 +18,24 @@ preserved first request only after setup. A static contract test guards those
 distinctions. This supersedes the earlier bootstrap wording; runtime MCP behavior is
 unchanged by this correction.
 
+The first successful onboarding/create-file rerun then exposed two smaller template
+issues. Save-As/version naming and overwrite/backup were redundantly asked as separate
+questions; they are now one file-history policy with versioned Save As recommended.
+Artifact validation is explicitly limited to MCP inspection/results, delivery hashes
+and configured human CamBam/toolpath review—not repository tests or invented Python
+test scripts. Deterministic local helper scripts are encouraged for complex geometry,
+layout, nesting and constraint calculations, while `.cb` authoring remains MCP-owned.
+Transcript inspection confirmed all sixteen CamBam MCP calls succeeded and the final
+file was copied and hash-verified. The unrelated `pytest -q` run failed during
+collection after a recursive project scan discovered a nested source checkout; it was
+not `.cb` validation. The same run also invented enabled-MOP fixture values despite a
+user-provided-per-task policy. Shallow discovery and explicit task-level confirmation
+for any non-production fixture values now close those remaining consumer-policy gaps.
+The review question is now explicitly post-save: agent completion, artifact delivery
+and human acceptance are separate states. The recommended collaboration loop saves and
+self-checks every revision before optional CamBam review and further corrections;
+required human confirmation gates only accepted/production-ready claims, not delivery.
+
 **2026-09-18 transcript corrections implemented; fresh named-agent rerun pending.**
 The 2026-09-19 rerun verified exact same-host staging/open, but exposed three
 remaining consuming-agent gaps. Four MOP failures carried valid revisions but a

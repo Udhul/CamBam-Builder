@@ -615,6 +615,27 @@ marks setup complete, and only then resumes the preserved first task. Current-fi
 names and per-job geometry, stock, material, tool, feed, speed, depth and nesting
 choices belong to that task rather than onboarding.
 
+Overwrite/backup/Save-As behavior and edit-version naming are one file-history policy,
+not separate onboarding questions. The recommended option is versioned Save As unless
+the consuming project establishes another convention. "Validation" in this template
+means MCP result/inspection checks, delivery-hash verification and any configured human
+CamBam/toolpath review. It does not expose or prescribe this repository's development
+test suite. A consuming agent may write a deterministic local helper for difficult
+geometry or planning calculations, but must author through MCP tools rather than use a
+script to generate or patch `.cb` XML.
+
+The review preference is a post-save handoff policy, not a completion gate. The agent
+first performs available MCP checks, saves and hash-verifies a reviewable project-local
+revision, then reports it ready for the configured optional or required human CamBam
+review. Required human confirmation gates only acceptance/production-ready claims;
+feedback begins another edit/save/review cycle. It never prevents initial delivery.
+
+Onboarding discovery is deliberately shallow. A consuming project may contain a
+nested source checkout, but that checkout's tests are not evidence about a generated
+CamBam artifact. Likewise, describing a requested document as a test, demo or example
+does not waive the no-invented-machining-input rule: a non-production fixture set must
+be proposed, labeled and confirmed for that task before enabled MOPs are created.
+
 Treat the client-local `.cb` file as the durable shared artifact and an MCP handle
 as one server-process working snapshot. Keep the last successful file SHA-256,
 handle, boot ID and successfully written export revision when the client can do so.

@@ -37,12 +37,30 @@ class ConsumerAgentTemplateTests(unittest.TestCase):
         template = (
             ROOT / "cambam_builder" / "mcp_adapter" / "consumer_AGENTS.template.md"
         ).read_text(encoding="utf-8")
+        normalized = " ".join(template.split())
 
         self.assertIn("`FIRST_RUN_SETUP: PENDING`", template)
         self.assertIn("Each unresolved\n   item below must be its own", template)
         self.assertIn("Never collapse several items into one free-text question", template)
         self.assertIn("continue with\n   another setup dialog", template)
         self.assertIn("Do not ask for the current document's filename", template)
+        self.assertIn("Keep discovery shallow and relevant", template)
+        self.assertIn("Do not recursively scan\n   nested repositories", template)
+        self.assertIn("one file-history policy covering edits", template)
+        self.assertIn("Recommend versioned Save As", template)
+        self.assertNotIn("- backup policy before replacing a file", template)
+        self.assertIn("After I save and self-check each CAM revision", normalized)
+        self.assertIn("Human review must never be a prerequisite for saving", normalized)
+        self.assertIn("not this repository's development test suite", normalized)
+        self.assertIn("Calling a document a test, demo or example", template)
+        self.assertIn("obtain task-level confirmation", template)
+        self.assertIn("create\n  and run a small deterministic local helper script", template)
+        self.assertIn("Do not use\n  a helper script to generate or patch `.cb` XML", template)
+        self.assertIn(
+            "Agent completion, artifact delivery and human acceptance are separate",
+            normalized,
+        )
+        self.assertIn("subsequent feedback starts another edit/save/review cycle", normalized)
         self.assertIn("resume the preserved original request", template)
         self.assertIn("`FIRST_RUN_SETUP: COMPLETE`", template)
 

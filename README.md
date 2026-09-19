@@ -50,7 +50,8 @@ to the project root as `AGENTS.md`. Its one-time section elicits project default
 then replaces itself with concise daily-work instructions. The explicit pending gate
 uses one separately answerable prompt per durable policy and defers document-specific
 inputs until the held first task resumes; it does not alter this repository's
-development-agent policy.
+development-agent policy. Its daily workflow permits deterministic helper scripts for
+complex calculations while keeping `.cb` authoring and state in the MCP adapter.
 
 ## Add to OpenCode (Windows)
 

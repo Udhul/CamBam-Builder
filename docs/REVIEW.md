@@ -2532,6 +2532,45 @@ guards the state markers, separate-question requirement, task/setup boundary and
 resumption rule. Live client acceptance remains necessary because compliance with
 repository prose cannot be guaranteed by the adapter runtime.
 
+The next live run passed the first-run gate and completed the requested CamBam file,
+but file-history questions overlapped: Save As appeared once against overwrite and
+again against backup. These are one policy because an always-versioned Save As choice
+is itself a preservation strategy and needs its naming convention at the same time.
+The template now recommends versioned Save As and asks that combined decision once.
+
+The final onboarding wording also allowed "validation" to be interpreted as a software
+test-suite preference. Consumer validation now names only evidence available in the
+workflow: MCP operation results and `document_inspect`, exact delivery hashes, and
+optional human CamBam/native-toolpath review. The adapter does not expose this
+repository's development suite or a CamBam toolpath engine. Separately, computational
+scripts are again encouraged when they materially improve advanced geometry or layout
+accuracy, but they may calculate inputs only; they must not bypass the adapter by
+generating or patching `.cb` XML.
+
+The supplied transcript confirms the mechanism. Shallow project context was enough,
+but the agent recursively listed a nested CamBam-Builder checkout, offered repository
+tests as its recommended artifact-validation option, and later ran `pytest -q` there.
+That command failed collection with fourteen imports resolving against a different
+checkout; it neither exercised nor invalidated the delivered `.cb`. In contrast, all
+sixteen CamBam MCP calls succeeded, including inspection and workspace save, and the
+project-local copy's SHA-256 matched the handoff.
+
+The transcript also records the user selecting job-specific inputs as user-provided
+per task. The agent nevertheless inserted an unrequested builder-fixture exception
+into the completed `AGENTS.md` and created enabled MOPs with invented stock, material,
+tool, spindle, feed and depth values. The consumer template now states that “test,”
+“demo” or “example” is not permission to invent these values. A clearly labeled
+non-production fixture proposal requires task-level confirmation and cannot silently
+become durable project policy.
+
+A follow-up found a circular implication in "review required before reporting
+completion": a user cannot inspect a file that has not yet been delivered. The
+consumer contract now separates agent completion, saved artifact handoff and human
+acceptance. Its recommended loop is self-check, save/hash-verify, report ready for
+review, then apply requested corrections. A configured human CamBam/toolpath check can
+gate an accepted or production-ready label, but never gates delivery of the revision
+that must be reviewed.
+
 Verification on the repository Python 3.14 environment: all 71 MCP tests and all
 226 repository tests pass with the existing single Windows symlink-privilege skip.
 The wheel build succeeds and contains both the contract JSON and packaged consumer

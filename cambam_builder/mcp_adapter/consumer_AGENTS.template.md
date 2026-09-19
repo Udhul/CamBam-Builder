@@ -14,15 +14,25 @@ response:
 
 1. Say briefly that the project needs one-time setup before document work.
 2. Inspect the project folder read-only and use evident facts instead of asking for
-   them again.
+   them again. Keep discovery shallow and relevant: check the project instructions,
+   top-level context/configuration and existing `.cb` files. Do not recursively scan
+   nested repositories or treat their source tests as part of CamBam artifact
+   validation unless the user explicitly makes software development the task.
 3. Use the client's interactive question facility when available. Each unresolved
    item below must be its own clearly labeled prompt with its own answer field:
    - default units;
-   - default output directory and naming convention;
-   - update-in-place versus Save As policy for an existing source;
+   - default output directory and naming convention for new files;
+   - one file-history policy covering edits: update in place and any backup rule, or
+     always Save As; for Save As, also establish the versioned filename pattern.
+     Recommend versioned Save As unless evident project conventions favor another
+     choice;
    - source for job-specific material, stock, tool and machining inputs;
-   - backup policy before replacing a file; and
-   - required review or CamBam validation.
+   - preferred post-save review handoff. Phrase this as: "After I save and self-check
+     each CAM revision, how should I hand it off for review?" Recommend saving and
+     reporting the file ready for optional human CamBam/toolpath review, followed by
+     iterative corrections when requested. Alternative policies may require explicit
+     human confirmation before labeling a revision production-ready, or omit a review
+     prompt. Human review must never be a prerequisite for saving the reviewable file.
    Offer a small set of context-based choices and a recommended option where useful.
    Never collapse several items into one free-text question. Present as many separate
    questions in one dialog as the client supports; if some remain, continue with
@@ -70,6 +80,29 @@ and workspace path from the connected server each run.
   stock, material, tool, depth, feed, speed, clearance, cut-through or holding choices.
   Propose context-based options and ask when a missing choice affects geometry,
   machining or safety.
+- Calling a document a test, demo or example does not by itself authorize invented
+  machining values. For a clearly non-production exercise, propose a coherent set of
+  visibly labeled fixture values and obtain task-level confirmation before creating
+  enabled MOPs. Otherwise use established project/job inputs or ask for them. Do not
+  add a fixture-value exception to project defaults unless the user explicitly chooses
+  it as durable policy.
+- For advanced geometry, layout, nesting, repeated features or constraint math, create
+  and run a small deterministic local helper script when that improves reliability.
+  Make units and assumptions explicit, inspect its calculated points/transforms and
+  invariants, then pass the derived values through the MCP authoring tools. Do not use
+  a helper script to generate or patch `.cb` XML or bypass MCP document state.
+- Before delivery, self-check a produced `.cb` using MCP mutation results and
+  `document_inspect` geometry/relationships, then verify the delivered file hash. The
+  MCP exposes these inspection and calculation facilities, not this repository's
+  development test suite or a CamBam toolpath engine. Do not invent Python test scripts
+  merely to validate a produced file; computational helper scripts are for solving the
+  user's geometry or planning problem.
+- Agent completion, artifact delivery and human acceptance are separate. Normally save
+  and self-check each requested revision, report it ready for review, and continue from
+  any user corrections. If project policy requires human CamBam/toolpath confirmation,
+  that confirmation gates only claims such as "accepted" or "production-ready"; it
+  never gates saving or handing off the reviewable file. Do not claim human acceptance
+  merely because the agent completed its requested edit.
 
 ## Understanding and repeating manual edits
 
@@ -100,6 +133,9 @@ and workspace path from the connected server each run.
 - Before replacing an existing client file, verify that its current hash still equals
   the hash opened for this edit. If it changed again, do not overwrite it; preserve the
   generated candidate and ask how to reconcile the versions.
+- Deliver the saved, self-checked revision before requesting any configured human
+  CamBam review. Describe it as ready for review rather than production-ready until the
+  user confirms acceptance; subsequent feedback starts another edit/save/review cycle.
 - Report the final project-local path, hash, document revision and concise verification
   results. Never present an MCP workspace artifact or an inline export suggestion as
   the user's saved project file.
