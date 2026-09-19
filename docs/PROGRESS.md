@@ -770,6 +770,54 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    saved before and after moving/adding/removing tabs, so the exact native point
    collection, coordinate frame, identity/order behavior and generated toolpaths can
    be modeled and round-trip tested without inventing vendor XML.
+8. **Future MOP semantic, native-export and framework/MCP parity audit.** Perform this
+   as three bounded increments after the current SpiralMill prompt-free acceptance;
+   do not treat every CamBam feature found as automatically in scope for
+   implementation.
+   - **8a — field semantics and encoding audit, one MOP family at a time.** Inventory
+     every modeled common and subtype field for Profile, Pocket, Engrave and Drill,
+     including nested lead moves/tabs and method-specific Drill fields. For each,
+     record its physical meaning, units, coordinate/reference frame, sign convention,
+     valid range, applicability, dependencies, CamBam `Default`/`Value` inheritance
+     behavior, when fresh XML should omit it, and preservation behavior after import.
+     Compare implementation and tests with the CamBam Plus 1.0 manual, SDK/API
+     reference and source-generated native XML. Explicitly examine current fixed or
+     derived choices such as feed fallback, depth increment fallback, work plane,
+     optimisation/velocity modes, spindle direction/range, tool profile/number,
+     max crossover distance, roughing/finishing, cut ordering, stepover/fill styles,
+     lead moves, headers/footers, StartPoint and Style inheritance. Classify every
+     assumption as documented, native-observed, deliberate product policy, or
+     unsupported/invented; remove or narrow unsafe assumptions and add regressions.
+   - **8b — framework/MCP parity and capability-gap audit.** Build a checked matrix
+     from CamBam capability to core author/read/edit/preserve support and MCP
+     author/inspect/mutate support. Include target-kind rules, explicit versus Auto
+     values, import-only/preserve-only fields, adapter-pinned values, inspection
+     rejection paths and method-dependent parameters. Identify core capabilities the
+     adapter unnecessarily hides, adapter promises the core cannot faithfully encode,
+     valid native records inspection excludes, and CamBam capabilities intentionally
+     absent from both. Convert only evidenced, useful gaps into separately scoped
+     backlog increments with dependencies and acceptance criteria; document justified
+     exclusions rather than forcing nominal parity.
+   - **8c — native evidence acquisition for unresolved semantics.** Prepare a minimal
+     requested-fixture list for the user to generate in CamBam Plus 1.0. Each A/B pair
+     must change one property or state only and include the source `.cb`, exact UI
+     setting, expected toolpath effect and whether a configured CAM Style/tool library
+     is involved. Prioritize ambiguities that can make a file unsafe or prompt on open:
+     field omission versus cached Default text, Style inheritance, lead-in/out
+     dependencies and coordinate frames, finishing/final-pass controls, Profile and
+     Pocket offset/fill variants, Drill CannedCycle/Spiral/CustomScript variants,
+     tool-profile metadata, mixed target behavior and any native collections not yet
+     modeled. Framework-generated XML is not evidence for an unknown native encoding.
+   **Deliverables/stopping condition:** durable semantics go to `structure_spec.md`,
+   MCP exposure and intentional pins to `MCP_CONTRACT.md`, dated comparisons and
+   rejected interpretations to `REVIEW.md`, and only remaining prioritized work stays
+   here. Stop when every currently modeled/exported MOP field and every MCP MOP field
+   is classified, all dangerous unsupported assumptions found are fixed or explicitly
+   isolated, representative source-native round trips pass, and unresolved questions
+   have concrete fixture requests and reopening criteria. Production G-code safety
+   and exhaustive CamBam feature parity remain outside this audit unless separately
+   authorized.
+
 This supersedes the former five broad increments; their pending scope is retained
 above. Detailed contracts remain in `docs/structure_spec.md`, and review evidence in
 `docs/REVIEW.md`. No repository-linked issue tracker was found.
