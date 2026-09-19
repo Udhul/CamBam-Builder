@@ -879,8 +879,9 @@ the Profile lead-in to None. Pass requires CamBam Plus 1.0 to load the file with
 properties, retain the Text/open-Pline targets, and generate the expected open offset
 and tabbed closed toolpaths. Also exercise Text directly with Pocket and Profile
 Inside: these clear or offset its outlines with the same round-cutter reach limits as
-other shapes. Corner overcut may intentionally cut beyond concave corners for an
-insertion fit. EndMill must remain available for ordinary path-following Engrave;
+other shapes. Corner overcut must add the documented extra move into inside corners
+that otherwise remain uncut, deliberately overcutting stock so fitted parts such as
+slot joints or inlays can enter. EndMill must remain available for ordinary path-following Engrave;
 neither Engrave tool profile fills Text interiors. At `roughing_clearance=0`, Engrave
 follows the line placement; test one signed nonzero clearance as an offset. Profile
 and Pocket use the same signed allowance convention: positive leaves stock and

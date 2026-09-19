@@ -2699,8 +2699,9 @@ The follow-up identified two adapter restrictions not present in CamBam Plus 1.0
 Text is a valid direct source for Profile and Pocket as well as Engrave: Pocket clears
 closed letter interiors and Profile offsets letter outlines. These operations retain
 the ordinary limitations of a round cutter at narrow strokes and corners. Profile
-corner overcut intentionally cuts beyond concave corners for fitting applications;
-it is not a general substitute for cutter accessibility.
+corner overcut wording now follows the vendor definition: it adds an extra machining
+move into inside corners that otherwise remain uncut, deliberately overcutting stock
+for fitted parts such as slot joints or inlays.
 
 `RoughingClearance` was already a common core MOP field with reader, writer, native
 state and inspection mappings for Profile, Pocket, Engrave and Drill. The MCP input
@@ -2712,11 +2713,19 @@ inspectable, but fresh MCP Drill authoring stays at zero because this adapter ex
 only CannedCycle and CamBam's release documentation specifically associates drilling
 roughing-clearance support with spiral drilling.
 
+The user's spiral-drill observation supplies the exact relationship absent from the
+vendor property table. For explicit hole diameter `H`, signed radial clearance `R`
+and effective tool diameter `T`, the cut diameter is `H - 2R` and must satisfy
+`H - 2R > T` (equivalently `H > T + 2R`). With `H=6`, `T=4`, `R=-1`, the result is an
+8 mm hole. Fresh direct-core SpiralMill CW/CCW serialization now enforces this when
+both diameters are resolved. Imported native templates and Auto hole diameters remain
+preserved/deferred to CamBam rather than being rejected from incomplete information.
+
 Regression coverage authors Profile, Pocket and Engrave directly against one Text
 primitive with positive and negative clearances, verifies the exact serialized values,
 strict-reopens the file and compares all three parameter records. A separate native
 core fixture proves that an imported CannedCycle Drill with nonzero clearance remains
 inspectable. Stock diagnostics are absent for unspecified zero stock and advisory for
-defined XY stock with multiple copies. All 77 MCP tests and all 236 repository tests
+defined XY stock with multiple copies. All 77 MCP tests and all 237 repository tests
 pass with the existing single Windows symlink-privilege skip; compileall, strict
 duplicate-key/schema JSON parsing and `git diff --check` pass.

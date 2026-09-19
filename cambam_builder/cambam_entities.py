@@ -2264,17 +2264,35 @@ class DrillMop(Mop):
     retract_height: float = 5.0 # R plane for canned cycles
     dwell: float = 0.0 # Dwell time at bottom (ms)
     # Parameters for SpiralMill
-    hole_diameter: Optional[float] = None # Required for SpiralMill if not using points
+    # Desired hole-boundary diameter. ``None`` writes CamBam's Default/Auto
+    # state, which derives the diameter from supported selected geometry.
+    hole_diameter: Optional[float] = None
     drill_lead_out: bool = False
     spiral_flat_base: bool = True
     lead_out_length: float = 0.0
     # Parameter for CustomScript
     custom_script: str = ""
 
+    def effective_spiral_hole_diameter(self) -> Optional[float]:
+        """Return the cut diameter after applying signed radial clearance."""
+        if self.hole_diameter is None:
+            return None
+        return self.hole_diameter - 2.0 * self.roughing_clearance
+
     def to_xml_element(self, project: "CamBamProject", resolved_primitive_xml_ids: List[int]) -> ET.Element:
         native = self._native_mop_element(project, resolved_primitive_xml_ids)
         if native is not None:
             return native
+        if self.drilling_method in ("SpiralMill_CW", "SpiralMill_CCW"):
+            effective_hole_diameter = self.effective_spiral_hole_diameter()
+            effective_tool_diameter = self._get_effective_param('tool_diameter', project)
+            if (effective_hole_diameter is not None
+                    and effective_tool_diameter is not None
+                    and effective_hole_diameter <= effective_tool_diameter):
+                raise ValueError(
+                    "SpiralMill requires hole_diameter - 2 * roughing_clearance "
+                    "to be greater than tool_diameter"
+                )
         mop_elem = ET.Element("drill", {"Enabled": str(self.enabled).lower()})
         self._add_common_mop_elements(mop_elem, project, resolved_primitive_xml_ids)
 
@@ -2289,10 +2307,12 @@ class DrillMop(Mop):
         # Spiral Mill Params (conditionally add based on method)
         if self.drilling_method.startswith("SpiralMill"):
             hd_state = "Value" if self.hole_diameter is not None else "Default"
-            # HoleDiameter is crucial for spiral milling if source isn't points
             if self.hole_diameter is None:
-                logger.warning(f"Drill MOP '{self.name}' uses SpiralMill but HoleDiameter is not set. ToolDiameter will likely be used by CamBam.")
-            # Write element even if None, CamBam might use ToolDiameter as fallback
+                logger.warning(
+                    f"Drill MOP '{self.name}' uses SpiralMill with Auto HoleDiameter; "
+                    "CamBam must derive it from the selected target geometry."
+                )
+            # Preserve Default/Auto so CamBam can derive a Circle target's size.
             ET.SubElement(mop_elem, "HoleDiameter", {"state": hd_state}).text = str(self.hole_diameter if self.hole_diameter is not None else "")
 
             ET.SubElement(mop_elem, "DrillLeadOut", {"state": state}).text = str(self.drill_lead_out).lower()

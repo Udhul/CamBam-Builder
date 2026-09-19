@@ -45,8 +45,9 @@ symlink-privilege skip; compileall, schema JSON parsing and `git diff --check` p
 **2026-09-19 Text machining and roughing-clearance follow-up implemented.** Native
 CamBam behavior confirms that Text is not Engrave-only: Pocket may clear its closed
 interiors and Profile may offset its outlines, subject to the same round-cutter reach
-limits as other contours; corner overcut deliberately removes extra material at
-concave corners for insertion clearance. MCP Profile and Pocket now accept root Text.
+limits as other contours. In the vendor's terms, corner overcut adds an extra move
+into inside corners that otherwise remain uncut, deliberately overcutting stock for
+fitted parts such as slot joints or inlays. MCP Profile and Pocket now accept root Text.
 The core already modeled, serialized and read `RoughingClearance` on all four MOP
 classes, but MCP authoring had pinned it to zero and inspection rejected nonzero
 values. Signed roughing clearance is now authorable and inspectable for Profile,
@@ -54,9 +55,16 @@ Pocket and Engrave; zero keeps the normal boundary/line placement, positive leav
 stock and negative overcuts. Drill inspection accepts imported native values, while
 the exposed CannedCycle authoring remains zero because CamBam applies drill roughing
 clearance to spiral drilling, which is outside the current MCP slice. Verification
-passes all 77 MCP tests and all 236 repository tests with the single existing Windows
+passes all 77 MCP tests and all 237 repository tests with the single existing Windows
 symlink-privilege skip; compileall, strict duplicate-key/schema JSON parsing and
 `git diff --check` pass.
+
+Direct-core SpiralMill clearance now has an explicit geometry contract from the
+user's CamBam Plus 1.0 observation: effective cut diameter is
+`hole_diameter - 2*roughing_clearance`, and it must be greater than effective tool
+diameter. Equivalently, `hole_diameter > tool_diameter + 2*roughing_clearance`.
+Fresh explicit-diameter SpiralMill export enforces that constraint; a native/Auto
+hole diameter remains CamBam-resolved.
 
 **2026-09-19 consumer onboarding correction implemented; fresh named-agent rerun
 pending.** The first live use of the reusable template exposed an instruction defect:
@@ -746,6 +754,12 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    saved before and after moving/adding/removing tabs, so the exact native point
    collection, coordinate frame, identity/order behavior and generated toolpaths can
    be modeled and round-trip tested without inventing vendor XML.
+8. **Deferred MCP capability: author SpiralMill CW/CCW Drill operations.** The direct
+   core serializes both methods and now validates explicit hole/tool/clearance fit,
+   while MCP Drill remains CannedCycle-only. Reopen with native CamBam Plus 1.0 A/B
+   fixtures covering Point and Circle targets, explicit versus Auto hole diameter,
+   EndMill/tool-profile behavior, CW/CCW, flat base and lead-out parameters. Preserve
+   the signed rule `effective diameter = hole diameter - 2*roughing clearance`.
 
 This supersedes the former five broad increments; their pending scope is retained
 above. Detailed contracts remain in `docs/structure_spec.md`, and review evidence in

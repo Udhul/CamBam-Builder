@@ -500,7 +500,7 @@
         },
         "corner_overcut": {
           "type": "boolean",
-          "description": "Profile-only CamBam option: overcut inside corners for a round tool; may remove extra material along adjacent sides."
+          "description": "Adds an extra machining move into inside corners that otherwise would not be cut. This deliberately overcuts stock and is useful for fitted parts such as slot joints or inlays."
         },
         "final_depth_increment": {
           "const": 0
@@ -2775,7 +2775,7 @@
         "corner_overcut": {
           "type": "boolean",
           "default": false,
-          "description": "Profile-only CamBam option: overcut inside corners for a round tool; may remove extra material along adjacent sides."
+          "description": "Adds an extra machining move into inside corners that otherwise would not be cut. This deliberately overcuts stock and is useful for fitted parts such as slot joints or inlays."
         },
         "tab_method": {
           "type": "string",

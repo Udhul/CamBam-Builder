@@ -32,7 +32,8 @@ class MopParameterTests(unittest.TestCase):
                                     target_depth=-0.4, cut_ordering="LevelFirst"),
             project.add_drill_mop(part, targets=[target], identifier="drill",
                                   target_depth=-3.0, drilling_method="SpiralMill_CW",
-                                  hole_diameter=2.2, lead_out_length=1.5),
+                                  tool_diameter=1.0, hole_diameter=2.2,
+                                  lead_out_length=1.5),
         ]
         return project, mops
 
@@ -113,6 +114,31 @@ class MopParameterTests(unittest.TestCase):
         mop.set_parameter_state("target_depth", "Default")
         element = mop.to_xml_element(project, [1])
         self.assertEqual("Default", element.find("TargetDepth").get("state"))
+
+    def test_spiral_drill_signed_clearance_geometry_and_tool_fit(self):
+        project = CBProject("spiral-clearance")
+        layer = project.add_layer("Geometry")
+        target = project.add_circle(layer, center=(0, 0), identifier="hole", diameter=6)
+        part = project.add_part("Part")
+        drill = project.add_drill_mop(
+            part, targets=[target], identifier="spiral",
+            drilling_method="SpiralMill_CW", tool_diameter=4,
+            hole_diameter=6, roughing_clearance=-1,
+        )
+
+        self.assertEqual(8, drill.effective_spiral_hole_diameter())
+        element = drill.to_xml_element(project, [1])
+        self.assertEqual("6", element.findtext("HoleDiameter"))
+        self.assertEqual("-1", element.findtext("RoughingClearance"))
+
+        drill.roughing_clearance = 1
+        self.assertEqual(4, drill.effective_spiral_hole_diameter())
+        with self.assertRaisesRegex(ValueError, "greater than tool_diameter"):
+            drill.to_xml_element(project, [1])
+
+        drill.roughing_clearance = 0.9
+        self.assertAlmostEqual(4.2, drill.effective_spiral_hole_diameter())
+        drill.to_xml_element(project, [1])
 
     def test_missing_optional_elements_remain_absent_until_edited(self):
         source, _ = self.make_project()
