@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from cambam_builder import CBProject
+from cambam_builder.cambam_entities import MOP_COMMON_FIELD_POLICIES
 from cambam_builder.cambam_reader import read_cambam_file
 from cambam_builder.cambam_writer import save_cambam_file
 
@@ -114,6 +115,57 @@ class MopParameterTests(unittest.TestCase):
         mop.set_parameter_state("target_depth", "Default")
         element = mop.to_xml_element(project, [1])
         self.assertEqual("Default", element.find("TargetDepth").get("state"))
+
+    def test_common_fresh_export_policy_is_shared_by_all_mop_families(self):
+        project = CBProject("common-policy", default_tool_diameter=6.5)
+        layer = project.add_layer("Geometry")
+        target = project.add_rect(layer, identifier="target", width=4, height=2)
+        part = project.add_part("Part", default_spindle_speed=12000)
+        mops = (
+            project.add_profile_mop(part, [target], identifier="profile"),
+            project.add_pocket_mop(part, [target], identifier="pocket"),
+            project.add_engrave_mop(part, [target], identifier="engrave"),
+            project.add_drill_mop(part, [target], identifier="drill"),
+        )
+
+        omitted = {
+            "TargetDepth", "DepthIncrement", "CutFeedrate",
+            "CustomMOPHeader", "CustomMOPFooter",
+        }
+        for mop in mops:
+            with self.subTest(mop=type(mop).__name__):
+                element = mop.to_xml_element(project, [1])
+                for field_name, policy in MOP_COMMON_FIELD_POLICIES.items():
+                    child = element.find(policy.xml_tag)
+                    if policy.xml_tag in omitted:
+                        self.assertIsNone(child, field_name)
+                    else:
+                        self.assertIsNotNone(child, field_name)
+                        self.assertEqual("Value", child.get("state"), field_name)
+                self.assertEqual("6.5", element.findtext("ToolDiameter"))
+                self.assertEqual("12000", element.findtext("SpindleSpeed"))
+                for unmodeled in ("SpindleRange", "StartPoint"):
+                    self.assertIsNone(element.find(unmodeled))
+        self.assertIsNone(mops[-1].to_xml_element(project, [1]).find("RoughingFinishing"))
+
+    def test_common_policy_does_not_invent_depth_or_feed_fallbacks(self):
+        project = CBProject("no-fallbacks")
+        layer = project.add_layer("Geometry")
+        target = project.add_rect(layer, identifier="target", width=4, height=2)
+        part = project.add_part("Part")
+        mop = project.add_profile_mop(
+            part, [target], identifier="profile", target_depth=-2.0,
+            custom_mop_header="G90", custom_mop_footer="M5",
+        )
+        element = mop.to_xml_element(project, [1])
+
+        self.assertEqual("-2.0", element.findtext("TargetDepth"))
+        self.assertIsNone(element.find("DepthIncrement"))
+        self.assertIsNone(element.find("CutFeedrate"))
+        self.assertEqual("G90", element.findtext("CustomMOPHeader"))
+        self.assertEqual("M5", element.findtext("CustomMOPFooter"))
+        for tag in ("TargetDepth", "CustomMOPHeader", "CustomMOPFooter"):
+            self.assertEqual("Value", element.find(tag).get("state"), tag)
 
     def test_spiral_drill_signed_clearance_geometry_and_tool_fit(self):
         project = CBProject("spiral-clearance")

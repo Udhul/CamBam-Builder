@@ -42,7 +42,10 @@ class NativeMopEditTests(unittest.TestCase):
                     else:
                         tag.text = metadata
                 profile.find("primitive/prim").text = second_id
-                profile.find("CutFeedrate").text = "450"
+                cut_feed = profile.find("CutFeedrate")
+                if cut_feed is None:
+                    cut_feed = ET.SubElement(profile, "CutFeedrate", state="Value")
+                cut_feed.text = "450"
                 profile.find("ClearancePlane").set("state", "Default")
                 profile.find("ClearancePlane").text = "8.5"
                 ops.remove(pocket)

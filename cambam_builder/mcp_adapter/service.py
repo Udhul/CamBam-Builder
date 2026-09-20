@@ -1730,8 +1730,6 @@ class DocumentService:
         "cut_ordering": ("CutOrdering",),
         "lead_in_type": ("LeadInMove", "LeadInType"),
         "tab_method": ("HoldingTabs", "TabMethod"),
-        "custom_mop_header": ("CustomMOPHeader",),
-        "custom_mop_footer": ("CustomMOPFooter",),
     }
     POCKET_XML_PATHS = {
         "target_depth": ("TargetDepth",), "depth_increment": ("DepthIncrement",),
@@ -1741,7 +1739,6 @@ class DocumentService:
         "work_plane": ("WorkPlane",), "tool_profile": ("ToolProfile",),
         "spindle_direction": ("SpindleDirection",), "velocity_mode": ("VelocityMode",),
         "roughing_clearance": ("RoughingClearance",), "tool_number": ("ToolNumber",),
-        "custom_mop_header": ("CustomMOPHeader",), "custom_mop_footer": ("CustomMOPFooter",),
         "stepover": ("StepOver",), "stepover_feedrate": ("StepoverFeedrate",),
         "milling_direction": ("MillingDirection",),
         "collision_detection": ("CollisionDetection",),
@@ -1760,7 +1757,6 @@ class DocumentService:
         "work_plane": ("WorkPlane",), "tool_profile": ("ToolProfile",),
         "spindle_direction": ("SpindleDirection",), "velocity_mode": ("VelocityMode",),
         "roughing_clearance": ("RoughingClearance",), "tool_number": ("ToolNumber",),
-        "custom_mop_header": ("CustomMOPHeader",), "custom_mop_footer": ("CustomMOPFooter",),
         "roughing_finishing": ("RoughingFinishing",),
         "final_depth_increment": ("FinalDepthIncrement",),
         "cut_ordering": ("CutOrdering",),
@@ -1773,7 +1769,6 @@ class DocumentService:
         "work_plane": ("WorkPlane",), "tool_profile": ("ToolProfile",),
         "spindle_direction": ("SpindleDirection",), "velocity_mode": ("VelocityMode",),
         "roughing_clearance": ("RoughingClearance",), "tool_number": ("ToolNumber",),
-        "custom_mop_header": ("CustomMOPHeader",), "custom_mop_footer": ("CustomMOPFooter",),
         "drilling_method": ("DrillingMethod",),
     }
     DRILL_CANNED_XML_PATHS = {

@@ -1808,6 +1808,46 @@ MOP_XML_FIELD_PATHS: Dict[str, Tuple[str, ...]] = {
 }
 MOP_XML_PATH_TO_FIELD = {path: field for field, path in MOP_XML_FIELD_PATHS.items()}
 
+
+@dataclass(frozen=True)
+class MopFieldEncodingPolicy:
+    """Fresh-export policy for one modeled common MOP field."""
+
+    xml_tag: str
+    resolution: str = "direct"
+    omit_when_none: bool = False
+    omit_when_empty: bool = False
+
+
+# Ordered to match native CamBam MOP XML.  Fresh authoring emits every retained
+# field as an explicit Value; inheritance is represented by omission unless a
+# caller deliberately requests Default through ``set_parameter_state``.  Imported
+# templates follow the separate preservation path in ``_native_mop_element``.
+MOP_COMMON_FIELD_POLICIES: Dict[str, MopFieldEncodingPolicy] = {
+    'target_depth': MopFieldEncodingPolicy('TargetDepth', omit_when_none=True),
+    'depth_increment': MopFieldEncodingPolicy('DepthIncrement', omit_when_none=True),
+    'stock_surface': MopFieldEncodingPolicy('StockSurface'),
+    'roughing_clearance': MopFieldEncodingPolicy('RoughingClearance'),
+    'clearance_plane': MopFieldEncodingPolicy('ClearancePlane'),
+    'spindle_direction': MopFieldEncodingPolicy('SpindleDirection'),
+    'spindle_speed': MopFieldEncodingPolicy(
+        'SpindleSpeed', resolution='part', omit_when_none=True),
+    'velocity_mode': MopFieldEncodingPolicy('VelocityMode'),
+    'work_plane': MopFieldEncodingPolicy('WorkPlane'),
+    'optimisation_mode': MopFieldEncodingPolicy('OptimisationMode'),
+    'tool_diameter': MopFieldEncodingPolicy(
+        'ToolDiameter', resolution='part_or_project', omit_when_none=True),
+    'tool_number': MopFieldEncodingPolicy('ToolNumber'),
+    'tool_profile': MopFieldEncodingPolicy('ToolProfile'),
+    'plunge_feedrate': MopFieldEncodingPolicy('PlungeFeedrate'),
+    'cut_feedrate': MopFieldEncodingPolicy('CutFeedrate', omit_when_none=True),
+    'max_crossover_distance': MopFieldEncodingPolicy('MaxCrossoverDistance'),
+    'custom_mop_header': MopFieldEncodingPolicy(
+        'CustomMOPHeader', omit_when_empty=True),
+    'custom_mop_footer': MopFieldEncodingPolicy(
+        'CustomMOPFooter', omit_when_empty=True),
+}
+
 @dataclass
 class Mop(CamBamEntity, ABC):
     """
@@ -1818,8 +1858,8 @@ class Mop(CamBamEntity, ABC):
     # Intrinsic Attributes
     name: str = "MOP" # User-visible name in CamBam UI MOP tree
     enabled: bool = True
-    target_depth: Optional[float] = None # If None, uses Part/Project default (or fails if none set)
-    depth_increment: Optional[float] = None # If None, uses TargetDepth (single pass)
+    target_depth: Optional[float] = None # None leaves the field to CamBam inheritance.
+    depth_increment: Optional[float] = None # None leaves the field to CamBam inheritance.
     stock_surface: float = 0.0
     roughing_clearance: float = 0.0
     clearance_plane: float = 15.0
@@ -1832,7 +1872,7 @@ class Mop(CamBamEntity, ABC):
     tool_number: int = 0 # If 0, uses current tool
     tool_profile: str = 'EndMill' # CamBam enum: EndMill, VCutter, BullNose, BallNose, Drill, Lathe
     plunge_feedrate: float = 1000.0
-    cut_feedrate: Optional[float] = None # If None, calculated based on TargetDepth or uses default
+    cut_feedrate: Optional[float] = None # None leaves the field to CamBam inheritance.
     max_crossover_distance: float = 0.7 # Multiplier of tool diameter
     custom_mop_header: str = ""
     custom_mop_footer: str = ""
@@ -2011,26 +2051,6 @@ class Mop(CamBamEntity, ABC):
         # logger.debug(f"Parameter '{param_name}' not resolved for MOP '{self.name}'. Returning None.")
         return None
 
-    def _calculate_effective_cut_feedrate(self, project: "CamBamProject") -> float:
-        """Calculates the cut feedrate to use, applying logic if not explicitly set."""
-        if self.cut_feedrate is not None:
-            return self.cut_feedrate
-
-        # Try simple fallback logic (e.g., based on depth, or just a default)
-        # Original logic: 350 * abs(TargetDepth) + 6500
-        eff_target_depth = self._get_effective_param('target_depth', project)
-        if eff_target_depth is not None and eff_target_depth != 0:
-            # Apply the formula (ensure it makes sense, maybe cap it)
-            calculated_feedrate = round(350 * abs(eff_target_depth) + 6500, 0)
-            feedrate = max(calculated_feedrate, 1000.0) # Ensure minimum feedrate
-            logger.debug(f"MOP '{self.name}': Calculated CutFeedrate={feedrate} based on TargetDepth={eff_target_depth}")
-            return feedrate
-        else:
-            # Fallback if TargetDepth isn't available or zero
-            default_feedrate = 3000.0
-            logger.warning(f"MOP '{self.name}': TargetDepth not set or zero. Using fallback CutFeedrate={default_feedrate}.")
-            return default_feedrate
-
     def _add_common_mop_elements(self, mop_root_elem: ET.Element, project: "CamBamProject", resolved_primitive_xml_ids: List[int]):
         """Adds common XML sub-elements shared by all MOP types."""
         ET.SubElement(mop_root_elem, "Name").text = self.name # Use MOP's intrinsic name
@@ -2038,51 +2058,17 @@ class Mop(CamBamEntity, ABC):
             "user_id": self.user_identifier, "internal_id": str(self.internal_id),
         })
 
-        # Resolve parameters using defaults if needed
-        eff_target_depth = self._get_effective_param('target_depth', project)
-        eff_depth_inc = self.depth_increment if self.depth_increment is not None else abs(eff_target_depth) if eff_target_depth is not None else None
-        eff_spindle_speed = self._get_effective_param('spindle_speed', project)
-        eff_tool_dia = self._get_effective_param('tool_diameter', project)
-        eff_cut_feedrate = self._calculate_effective_cut_feedrate(project)
-
-        # Helper to create elements with state attribute
-        def add_param(parent, tag, value, mop_attr, state=None):
-            if state is None:
-                state = "Value" if getattr(self, mop_attr, None) is not None else "Default"
-            # Handle optional values that might resolve to None
-            text_value = self._format_mop_parameter(value)
-            # A Default parameter must be resolved by CamBam's style system;
-            # do not bake project/part effective values into a new MOP.
-            if state == "Default" and getattr(self, mop_attr, None) is None:
-                text_value = ""
-            # Special case: TargetDepth needs a value even if default? Check CamBam output.
-            # Assuming empty text is okay for unresolved optional defaults.
-            if value is None and tag in ["TargetDepth", "DepthIncrement", "SpindleSpeed", "ToolDiameter"]:
-                logger.warning(f"MOP '{self.name}': Parameter '{tag}' resolved to None. Writing empty element.")
-                # CamBam might require a default value here, e.g., "0" or "-1"
-                # text_value = "0" # Or handle based on specific parameter
-
-            ET.SubElement(parent, tag, {"state": state}).text = text_value
-
-        add_param(mop_root_elem, "TargetDepth", eff_target_depth, 'target_depth', "Value")
-        add_param(mop_root_elem, "DepthIncrement", eff_depth_inc, 'depth_increment', "Value")
-        add_param(mop_root_elem, "StockSurface", self.stock_surface, 'stock_surface', "Value")
-        add_param(mop_root_elem, "RoughingClearance", self.roughing_clearance, 'roughing_clearance', "Value")
-        add_param(mop_root_elem, "ClearancePlane", self.clearance_plane, 'clearance_plane', "Value")
-        add_param(mop_root_elem, "SpindleDirection", self.spindle_direction, 'spindle_direction', "Value")
-        add_param(mop_root_elem, "SpindleSpeed", eff_spindle_speed, 'spindle_speed', "Value")
-        ET.SubElement(mop_root_elem, "SpindleRange", {"state": "Value"}).text = "0" # Default value
-        add_param(mop_root_elem, "VelocityMode", self.velocity_mode, 'velocity_mode', "Value")
-        add_param(mop_root_elem, "WorkPlane", self.work_plane, 'work_plane', "Value")
-        add_param(mop_root_elem, "OptimisationMode", self.optimisation_mode, 'optimisation_mode', "Value")
-        add_param(mop_root_elem, "ToolDiameter", eff_tool_dia, 'tool_diameter', "Value")
-        add_param(mop_root_elem, "ToolNumber", self.tool_number, 'tool_number', "Value")
-        add_param(mop_root_elem, "ToolProfile", self.tool_profile, 'tool_profile', "Value")
-        add_param(mop_root_elem, "PlungeFeedrate", self.plunge_feedrate, 'plunge_feedrate')
-        add_param(mop_root_elem, "CutFeedrate", eff_cut_feedrate, 'cut_feedrate', "Value")
-        add_param(mop_root_elem, "MaxCrossoverDistance", self.max_crossover_distance, 'max_crossover_distance', "Value")
-        add_param(mop_root_elem, "CustomMOPHeader", self.custom_mop_header, 'custom_mop_header', "Value")
-        add_param(mop_root_elem, "CustomMOPFooter", self.custom_mop_footer, 'custom_mop_footer', "Value")
+        for field_name, policy in MOP_COMMON_FIELD_POLICIES.items():
+            value = getattr(self, field_name)
+            if policy.resolution in {'part', 'part_or_project'}:
+                value = self._get_effective_param(field_name, project)
+            if policy.omit_when_none and value is None:
+                continue
+            if policy.omit_when_empty and value == "":
+                continue
+            ET.SubElement(
+                mop_root_elem, policy.xml_tag, {"state": "Value"}
+            ).text = self._format_mop_parameter(value)
 
         # Add primitive references (using the resolved XML IDs passed by the writer)
         primitive_container = ET.SubElement(mop_root_elem, "primitive")
@@ -2221,7 +2207,6 @@ class PocketMop(Mop):
         ET.SubElement(mop_elem, "FinishStepover", {"state": state}).text = str(self.finish_stepover)
         ET.SubElement(mop_elem, "FinishStepoverAtTargetDepth", {"state": state}).text = str(self.finish_stepover_at_target_depth).lower()
         ET.SubElement(mop_elem, "RoughingFinishing", {"state": state}).text = self.roughing_finishing
-        ET.SubElement(mop_elem, "StartPoint", {"state": "Default"}) # Usually calculated unless specified
 
         self._apply_explicit_parameter_states(mop_elem)
         return mop_elem
@@ -2249,7 +2234,6 @@ class EngraveMop(Mop):
         ET.SubElement(mop_elem, "FinalDepthIncrement", {"state": fdi_state}).text = str(self.final_depth_increment if self.final_depth_increment is not None else 0.0)
 
         ET.SubElement(mop_elem, "CutOrdering", {"state": state}).text = self.cut_ordering
-        ET.SubElement(mop_elem, "StartPoint", {"state": "Default"}) # Usually follows shape order
 
         self._apply_explicit_parameter_states(mop_elem)
         return mop_elem
@@ -2336,10 +2320,6 @@ class DrillMop(Mop):
         # that CamBam may ask to reconcile on file open.
         if self.custom_script:
             ET.SubElement(mop_elem, "CustomScript", {"state": state}).text = self.custom_script
-
-        # Other common Drill elements
-        ET.SubElement(mop_elem, "StartPoint", {"state": "Default"})
-        ET.SubElement(mop_elem, "RoughingFinishing", {"state": "Value"}).text = "Roughing" # Drill is typically roughing
 
         self._apply_explicit_parameter_states(mop_elem)
         return mop_elem

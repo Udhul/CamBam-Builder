@@ -311,11 +311,55 @@ supports top-level scalar fields only; nested inheritance belongs to native
 containers and is preserved on import. Editing a nested field activates its
 container as Value, retaining plain scalar formatting where CamBam uses it.
 
-New MOPs retain the existing constructor/encoder authoring defaults and convenience
-fallbacks, including derived depth increment/feedrate when unspecified. These are
-not CAM-style evaluation. The scalar state setter also works for new MOPs and
-allows explicit Default output. An imported untouched MOP never recomputes those
-authoring fallbacks or fills in absent properties.
+Fresh common-field output is owned by the ordered
+`MOP_COMMON_FIELD_POLICIES` inventory. A supplied model value, or the explicitly
+resolved Part/project context described below, is written as `state="Value"`.
+Unset optional fields and empty header/footer strings are omitted. In particular,
+the writer no longer invents a single-pass DepthIncrement or a CutFeedrate from
+TargetDepth. The scalar state setter still lets a caller deliberately emit a
+present `Default` or `Value` field. Imported-template preservation remains a
+separate path and never fills absent properties.
+
+#### Common MOP field inventory and fresh-export policy
+
+Evidence labels are **D** (CamBam manual/API), **N** (accepted native XML or
+CamBam behavior recorded in this repository), and **P** (deliberate framework
+product policy). CamBam's [MOP API](https://www.cambam.info/doc/api/MOPFromGeometry.htm)
+establishes the common property surface; its
+[CAM Styles guide](https://www.cambam.info/doc/1.0/cam/cam-style.html) establishes
+that `Default` inherits through the style hierarchy, `Value` overrides it, and
+cached defaults can cause a conflict alert. Numeric ranges below are domain
+expectations; the permissive direct core constructors do not yet enforce all of
+them, while the MCP authoring boundary enforces its narrower published ranges.
+
+| Model field | Meaning, units/reference, range and dependencies | Fresh XML disposition | Evidence |
+| --- | --- | --- | --- |
+| `target_depth` | Final absolute coordinate along the work-plane normal, drawing units; normally below `stock_surface`. | `Value` when supplied; otherwise omitted for CamBam/style resolution. | D, P |
+| `depth_increment` | Positive maximum depth per pass, drawing units. | `Value` when supplied; otherwise omitted. No derived single-pass value. | D, P |
+| `stock_surface` | Absolute top-of-stock coordinate along the work-plane normal, drawing units. | Always `Value`; constructor default is the explicit framework choice `0`. | D, P |
+| `roughing_clearance` | Signed radial/normal stock offset, drawing units; positive leaves stock, negative overcuts. | Always `Value`, including zero. | D, N, P |
+| `clearance_plane` | Absolute safe rapid coordinate along the work-plane normal, drawing units; should clear stock and fixtures. | Always `Value`. | D, P |
+| `spindle_direction` | `CW`, `CCW`, or `Off`; applicable when spindle output is used. | Always `Value`. | D, P |
+| `spindle_speed` | Spindle revolutions/minute; positive when used. A supplied MOP value wins, then framework Part context is resolved. | Resolved value is `Value`; omitted when neither exists. | D, P |
+| `velocity_mode` | Controller cornering mode (`ExactStop` or `ConstantVelocity`). | Always `Value`. | D, P |
+| `work_plane` | Coordinate plane (`XY`, `XZ`, `YZ`) defining the operation axes and depth normal. | Always `Value`. | D, P |
+| `optimisation_mode` | Toolpath ordering algorithm; supported model values are `Standard`, `Experimental`, and `Legacy`. | Always `Value`. | D, P |
+| `tool_diameter` | Positive cutter diameter, drawing units. A supplied MOP value wins, then Part, then project context. | Resolved value is `Value`; omitted only if no level supplies one. | D, P |
+| `tool_number` | Tool-library/controller number; zero means current/no tool change in the framework contract. | Always `Value`. | D, P |
+| `tool_profile` | Cutter shape metadata such as `EndMill`, `VCutter`, or `Drill`; affects simulation and some paths. | Always `Value`. | D, N, P |
+| `plunge_feedrate` | Positive depth-axis feed, drawing units/minute. | Always `Value`. | D, P |
+| `cut_feedrate` | Positive cutting feed, drawing units/minute. | `Value` when supplied; otherwise omitted. No depth-based fallback. | D, P |
+| `max_crossover_distance` | Maximum cutting crossover as a fraction of tool diameter, conventionally 0..1. | Always `Value`. | D, P |
+| `custom_mop_header` | Literal operation-prefix G-code text; postprocessor/controller semantics apply. | Nonempty text is `Value`; empty text is omitted. | D, P |
+| `custom_mop_footer` | Literal operation-suffix G-code text; postprocessor/controller semantics apply. | Nonempty text is `Value`; empty text is omitted. | D, P |
+
+`Enabled`, `Name`, `Tag`, and primitive targets are identity/relationship records,
+not stateful parameters. `Style`, `StartPoint`, and `SpindleRange` are native
+common properties but are not modeled; fresh files omit them rather than inventing
+values. `RoughingFinishing` is currently modeled only where a concrete MOP class
+exposes it; Drill no longer writes an unmodeled fixed value. Untouched imported
+templates preserve all of these fields, their attributes, cached text, and absence.
+The same preservation rule covers unknown common extensions.
 
 Fresh Drill encoding is method-aware. CannedCycle makes PeckDistance,
 RetractHeight and Dwell explicit. SpiralMill CW/CCW instead makes HoleDiameter

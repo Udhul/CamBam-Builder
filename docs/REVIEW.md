@@ -2755,3 +2755,38 @@ that inert combination and caps positive centerward length at effective hole rad
 After regeneration, the user reopened all three files and confirmed CamBam no longer
 asked to revert or reconcile the omitted fields. This accepts the fresh SpiralMill
 field-presence/state correction in CamBam Plus 1.0.
+
+### Common MOP field semantics and encoding audit — 2026-09-19
+
+The first backlog 8a family slice inventoried all 18 common fields modeled by
+`Mop` and compared them with CamBam's MOP API, CAM Styles documentation, existing
+native round-trip fixtures, and the accepted SpiralMill cache-conflict evidence.
+Fresh-export decisions now live in one ordered `MOP_COMMON_FIELD_POLICIES` table.
+Explicit and framework-context-resolved values serialize as `Value`; unset optional
+depth/feed fields and empty custom header/footer fields are omitted. Imported
+templates remain semantics-preserving for state, cached text, omission, and unknown
+fields, with deliberate state edits handled by the existing setter.
+
+Rejected interpretations: `None` does not authorize the framework to invent a
+single-pass DepthIncrement or the undocumented `350 * abs(TargetDepth) + 6500`
+CutFeedrate; those fallbacks were removed. An unmodeled field is not evidence of
+user intent, so fresh `SpindleRange=0`, empty `StartPoint Default`, and Drill's
+fixed `RoughingFinishing=Roughing` were also removed. This does not claim that
+omission and `Default` are universally equivalent: a caller may deliberately
+request `Default`, and imported native state remains authoritative.
+
+Focused regression coverage applies the common policy to fresh Profile, Pocket,
+Engrave, and Drill records, checks Part/project resolution, exact `Value` states,
+omissions, and absence of unmodeled fixed records, and proves the old depth/feed
+fallbacks are gone. Existing tests continue to cover imported `Default` cache
+preservation, missing optional elements, deliberate state edits, nested containers,
+and method-dependent Drill omission. Subtype fields, lead containers, tabs, and
+method switches remain the next 8a slices; no new native CamBam acceptance is
+claimed for this common-field-only increment.
+
+Verification on 2026-09-19: the focused common-policy suite passed 9 tests; the
+MCP authoring, MOP breadth, and native-edit suites passed 20 tests after their
+inspection/fixture contracts were aligned with canonical empty-field omission.
+The complete repository suite passed 241 tests with the one existing Windows
+symlink-privilege skip. `compileall` for the modern package, legacy package, and
+tests and `git diff --check` both exited successfully.

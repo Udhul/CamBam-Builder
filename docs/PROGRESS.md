@@ -774,6 +774,15 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    as three bounded increments after the current SpiralMill prompt-free acceptance;
    do not treat every CamBam feature found as automatically in scope for
    implementation.
+   **8a common-field slice implemented and automatically verified (2026-09-19).**
+   All 18 modeled fields shared by Profile, Pocket, Engrave and Drill now have a
+   durable semantics inventory and one declarative fresh-export policy. Explicit
+   or deliberately context-resolved values use `Value`; unset optional depth/feed
+   fields and empty headers/footers are omitted; imported template preservation
+   remains separate. Undocumented depth/feed fallbacks and fresh unmodeled
+   SpindleRange, StartPoint and Drill RoughingFinishing records were removed.
+   Focused regressions cover all four families. Remaining 8a work is the subtype,
+   nested lead/tabs and Drill-method inventory plus native evidence requests.
    - **8a — field semantics and encoding audit, one MOP family at a time.** Inventory
      every modeled common and subtype field for Profile, Pocket, Engrave and Drill,
      including nested lead moves/tabs and method-specific Drill fields. For each,
@@ -830,6 +839,70 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    have concrete fixture requests and reopening criteria. Production G-code safety
    and exhaustive CamBam feature parity remain outside this audit unless separately
    authorized.
+9. **Future feeds, speeds and engagement planning helpers** (requested 2026-09-20).
+   Replace ad hoc machine-specific guesses with pure, unit-explicit calculation and
+   recommendation helpers; never restore an implicit MOP export fallback. The removed
+   `round(350 * abs(target_depth) + 6500)` rule is retained only as historical evidence:
+   it was useful for one user's machine/material context but has no general machining
+   basis. Authoritative formula references agree on the stable relationships: table
+   feed is chip load per tooth times RPM times effective flute count; spindle speed is
+   derived from cutting surface speed and effective cutter diameter; engagement,
+   feed and depth determine material-removal rate; and specific cutting force can
+   estimate power and torque. See Sandvik Coromant's
+   [metric milling formulas](https://cdn.sandvik.coromant.com/files/sitecollectiondocuments/services/metal-cutting-e-learning/formulas-and-definitions/formulas-and-deinitions-for-milling-metric-enu.pdf)
+   and Kennametal's
+   [speed/feed formulas](https://www.kennametal.com/us/en/resources/engineering-calculators/miscellaneous/speed-and-feed.html).
+
+   Treat recommended surface speed, chip load, axial/radial engagement and entry
+   limits as sourced starting data, not universal formulas. They depend on the exact
+   work material/condition, tool substrate/coating/geometry and diameter, flute count,
+   operation and engagement, coolant/chip evacuation, stickout/runout, workholding,
+   machine rigidity, spindle power/torque and RPM/feed limits. LMT Onsrud, for example,
+   publishes separate [routing recommendations by material](https://onsrud.com/Forms/Cutting-Data-Recommendations.asp),
+   while Harvey Performance warns that both excessive and insufficient chip load can
+   damage cutting behavior in its
+   [speeds and feeds guidance](https://www.harveyperformance.com/in-the-loupe/speeds-and-feeds-101/).
+   Do not copy a vendor table into a generic material label without compatible usage
+   terms, provenance, applicable tool family and version/date.
+
+   Implement as bounded subincrements:
+
+   - **9a — dimensional formula kernel and constraint solver.** Add deterministic
+     helpers for surface-speed/RPM conversion, chip-load/feed conversion, material
+     removal rate and optional cutting power/torque. Accept `mm` and `in` explicitly,
+     reject dimensionally invalid or conflicting inputs, preserve exact fixed user
+     values, solve only identifiable missing values, and report assumptions,
+     active constraints and capped results. Model axial depth/stepdown and radial
+     engagement separately. Target depth determines total travel/pass planning, not
+     feed directly. Radial chip-thinning or circular-interpolation compensation must
+     be separate evidenced models, not hidden multipliers.
+   - **9b — recommendation profiles and extension API.** Define immutable tool,
+     material and machine capability records plus a pluggable strategy interface.
+     Support fixed user rates, user-supplied chip-load/surface-speed tables and custom
+     pure calculation callables before shipping any curated catalog. Every suggested
+     value must carry provenance, units, applicable input range and whether it is a
+     manufacturer starting point, measured shop policy or user override. Plunge,
+     ramp and helical-entry recommendations require an entry-capable tool and their
+     own sourced rule/profile; do not infer plunge as a universal percentage of cut
+     feed. Define serialization/versioning only after a persistent owner is chosen.
+   - **9c — pass planning and optional MCP exposure.** Integrate the existing
+     `machining_calculate_depth_increment` final-stock/cut-through planner with a
+     caller-supplied safe axial-depth constraint from 9a/9b. If useful to named-client
+     workflows, expose a read-only planner returning candidate RPM, cut/plunge feed,
+     stepdown, stepover, chip load, MRR and power/torque diagnostics; it must not
+     mutate a document or silently author a MOP. User-confirmed/fixed values win, and
+     underdetermined inputs return the missing requirements rather than guessed values.
+
+   Acceptance requires formula inverse/property tests, metric/imperial equivalence,
+   partial-input and overconstraint tests, machine-limit clamping diagnostics,
+   provenance round trips for user profiles, comparison against multiple official
+   worked examples, and explicit unsafe/unknown-data cases. Document that results are
+   starting recommendations requiring tool-manufacturer guidance, machine limits,
+   workholding review and supervised test cuts; production machining safety is not
+   established by the calculator. Keep this after the active 8a serialization audit:
+   it is a distinct planning subsystem and depends on an explicit units/tool/material/
+   machine profile contract. Reopen sooner only for a concrete workflow that supplies
+   those inputs and acceptance data.
 
 This supersedes the former five broad increments; their pending scope is retained
 above. Detailed contracts remain in `docs/structure_spec.md`, and review evidence in

@@ -598,6 +598,12 @@ zero-thickness machining recommendation. Explicit MOP parameters bypass
 framework inferred tool/feed/depth defaults. The agent must not silently invent
 target depth, depth increment, feeds or spindle speed. It may offer a reasoned proposal
 from known stock, material and tool context, but must elicit user confirmation.
+Fresh MCP-authored MOPs supply all required machining scalars explicitly, so their
+common fields serialize as `Value`. Empty `custom_mop_header` and
+`custom_mop_footer` values are intentionally represented by absent XML elements;
+inspection accepts that canonical omission while still rejecting inherited
+`Default` state for MCP-required fields. Imported nonempty/native header and footer
+content remains preserved by the core template path.
 
 For a through-cut, let `D = stock_surface - target_depth` be total requested depth,
 `S` be stock thickness, `n` the pass count and `I` the depth increment. First constrain
