@@ -361,6 +361,57 @@ exposes it; Drill no longer writes an unmodeled fixed value. Untouched imported
 templates preserve all of these fields, their attributes, cached text, and absence.
 The same preservation rule covers unknown common extensions.
 
+#### Profile/Pocket subtype and nested-field inventory
+
+The [Profile manual](https://www.cambam.info/doc/1.0/cam/profile.html),
+[holding-tab manual](https://www.cambam.info/doc/1.0/cam/holding-tabs.html), MOP API,
+and accepted native checks use the same **D**, **N**, and **P** evidence labels as
+the common table. `MOP_PROFILE_FIELD_POLICIES` and
+`MOP_POCKET_FIELD_POLICIES` are the ordered executable fresh-export inventory.
+Every applicable modeled choice is `Value`; an irrelevant dependent is omitted.
+No fresh subtype field uses cached `Default` text.
+
+| Field(s) | Meaning, units/reference, range and dependencies | Fresh XML disposition | Evidence |
+| --- | --- | --- | --- |
+| Profile/Pocket `stepover` | Lateral path spacing as a fraction of effective tool diameter; normally greater than 0 and at most 1. | Always `Value`. | D, P |
+| Profile `profile_side` | Cutter compensation side (`Inside`/`Outside`); for open paths this is left/right relative to traversal. | Always `Value`. | D, N, P |
+| `milling_direction` | Conventional or climb direction relative to tool motion and stock side. | Always `Value`. | D, P |
+| `collision_detection` | Enables CamBam's adjacent-geometry collision avoidance for the operation. | Always `Value`. | D, P |
+| Profile `corner_overcut` | Extends paths into internal corners to remove otherwise unreachable material; deliberately overcuts stock. | Always `Value`. | D, N, P |
+| `final_depth_increment` | Optional positive final-pass depth increment in drawing units; `0` disables the special final increment. | `Value` when supplied, including zero; omitted when `None`. | D, P |
+| `cut_ordering` | Orders multi-level paths (`DepthFirst` or `LevelFirst`). | Always `Value`. | D, P |
+| Pocket `stepover_feedrate` | Selects the feed-rate source for lateral stepover moves; the modeled default is `Plunge Feedrate`. | Always `Value`. | D, P |
+| Pocket `region_fill_style` | Pocket clearing pattern (`InsideOutsideOffsets`, `HorizontalScanline`, or `VerticalScanline`). | Always `Value`. | D, P |
+| Pocket `finish_stepover` | Finishing pass distance in drawing units; zero disables a distinct finish stepover. | Always `Value`, including zero. | D, P |
+| Pocket `finish_stepover_at_target_depth` | Limits the finish stepover behavior to the final depth. | Always `Value`; false is explicit even when the current finish stepover is zero. | D, P |
+| Pocket `roughing_finishing` | Selects roughing, finishing, or combined path behavior. | Always `Value`. | D, P |
+
+`LeadInMove` is a `Value` container because `None` must explicitly disable style
+inheritance. Fresh authoring supports the modeled `None` and `Spiral` modes only.
+`LeadInType` is always a `Value`; `SpiralAngle` is a degree-valued descent angle and
+is `Value` only for Spiral. The writer no longer invents unmodeled
+`TangentRadius`, `LeadInFeedrate`, or a mirrored `LeadOutMove`. Other native lead
+modes and independent lead-out records are import-preserve-only until their full
+parameters and coordinate semantics have native A/B evidence.
+
+Profile `HoldingTabs` is likewise a `Value` container. `TabMethod=None` is the sole
+fresh child when tabs are disabled. `Automatic` additionally writes plain child
+values governed by that container: positive Width and Height in drawing units;
+integer MinimumTabs/MaximumTabs with minimum no greater than maximum; nonnegative
+perimeter TabDistance; nonnegative SizeThreshold below which tabs are suppressed;
+UseLeadIns; and Square/Triangle/Skip TabStyle. Width is tool-compensated in CamBam's
+display, Height is relative to target depth, and Skip is a non-contact/plasma mode.
+`UseLeadIns=true` requires Automatic Square tabs plus an active lead-in. Manual tab
+point placement and transitions to or from imported Manual records remain
+preserve-only because their native point collection is not modeled.
+
+An untouched imported lead/tab subtree retains its container/leaf states, cached
+text, unknown children, and independent lead-out. Editing a modeled nested leaf
+activates its container. Switching `None`/`Spiral` or `None`/`Automatic` rebuilds
+the applicable modeled siblings and removes modeled dependents that became
+irrelevant, while preserving unknown children. This prevents a mode switch from
+combining stale cached children with a new discriminator.
+
 Fresh Drill encoding is method-aware. CannedCycle makes PeckDistance,
 RetractHeight and Dwell explicit. SpiralMill CW/CCW instead makes HoleDiameter
 (unless Auto), DrillLeadOut, SpiralFlatBase and LeadOutLength explicit while omitting

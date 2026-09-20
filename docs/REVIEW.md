@@ -2790,3 +2790,33 @@ inspection/fixture contracts were aligned with canonical empty-field omission.
 The complete repository suite passed 241 tests with the one existing Windows
 symlink-privilege skip. `compileall` for the modern package, legacy package, and
 tests and `git diff --check` both exited successfully.
+
+### Profile/Pocket subtype and nested encoding audit — 2026-09-20
+
+The second backlog 8a slice compared the Profile/Pocket model with CamBam's
+published Profile, holding-tab, MOP and CAM-style semantics, the accepted native
+tab/open-Profile observations, and the repository's source-generated XML. The
+previous imperative encoder had three unsupported interpretations: it mirrored the
+modeled lead-in into an independent unmodeled LeadOutMove, invented TangentRadius
+and LeadInFeedrate values, and serialized an unset final increment as cached
+`Default` text `0.0`. It also left stale or incomplete modeled children when an
+imported lead/tab discriminator changed.
+
+Fresh subtype decisions now live in ordered `MOP_PROFILE_FIELD_POLICIES` and
+`MOP_POCKET_FIELD_POLICIES` tables. Applicable user/product choices are explicit
+`Value`; `FinalDepthIncrement=None` and mode-inapplicable nested children are
+omitted. Explicit None lead/tab discriminators remain present to prevent CAM styles
+from re-enabling them. Fresh leads are limited to the fully modeled None and Spiral
+modes, and fresh output no longer creates a lead-out. Automatic tabs materialize
+their complete modeled record; Manual points and unsupported lead modes remain
+import-preserve-only. On supported imported mode switches, modeled siblings are
+reconciled without deleting unknown native children or independent lead-out data.
+
+Rejected alternatives: omission of the whole disabled lead/tab container would
+cede the disabling decision to a CAM Style; retaining irrelevant Spiral/tab children
+would preserve stale cached data in fresh files; and silently accepting Tangent or
+Manual transitions would claim parameters/collections the model does not own.
+Focused policy coverage passed 13 tests. The MCP MOP/authoring and core round-trip/
+native-edit suites passed 25 tests. The full repository suite passed 245 tests with
+the one existing Windows symlink-privilege skip; compileall and `git diff --check`
+also passed. No new CamBam toolpath or production G-code acceptance is claimed.

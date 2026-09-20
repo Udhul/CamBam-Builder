@@ -781,8 +781,18 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    fields and empty headers/footers are omitted; imported template preservation
    remains separate. Undocumented depth/feed fallbacks and fresh unmodeled
    SpindleRange, StartPoint and Drill RoughingFinishing records were removed.
-   Focused regressions cover all four families. Remaining 8a work is the subtype,
-   nested lead/tabs and Drill-method inventory plus native evidence requests.
+   Focused regressions cover all four families.
+   **8a Profile/Pocket subtype and nested-policy slice implemented and automatically
+   verified (2026-09-20).** All modeled Profile/Pocket subtype fields now have an
+   executable declarative fresh-export policy and durable semantics inventory.
+   Unset final depth increment is omitted; fresh lead records contain only modeled,
+   mode-applicable fields and no invented mirrored lead-out; Automatic-tab children
+   are emitted only in Automatic mode. Supported imported mode switches reconcile
+   modeled siblings while preserving unknown native children. Manual tab transitions
+   and unmodeled lead modes remain preserve-only. Remaining 8a work is Engrave and
+   Drill subtype/method inventory plus the prioritized native evidence requests.
+   Verification: 13 focused policy tests, 25 adjacent MCP/round-trip tests, and all
+   245 repository tests pass (one existing Windows symlink-privilege skip).
    - **8a — field semantics and encoding audit, one MOP family at a time.** Inventory
      every modeled common and subtype field for Profile, Pocket, Engrave and Drill,
      including nested lead moves/tabs and method-specific Drill fields. For each,

@@ -629,6 +629,15 @@ ExactStop, Conventional, roughing clearance 0, tool number 0, empty custom
 header/footer; unexposed parameters remain fixed. Inspect returns these values
 too as closed per-kind parameter records. No unrestricted `**kwargs` input.
 
+These adapter pins use the core's declarative Profile/Pocket encoding policy.
+Profile's pinned `LeadInType=None` is an explicit `Value` but emits no inactive
+SpiralAngle and no invented lead-out fields. Pocket's Spiral lead-in emits only the
+mode and angle. `FinalDepthIncrement=0` remains an explicit choice. Profile
+`HoldingTabs` always explicitly selects None or Automatic; only Automatic carries
+the bounded dependent tab values. The adapter's required `tab_use_leadins=false`
+therefore cannot encode an inert true value. Manual tabs, other lead modes and
+independent lead-out authoring are not part of this MCP surface.
+
 Inspection serializes copies, never mutable entity objects. `DocumentSummary` is
 `{name, units, source: null | {path, sha256} | {name, sha256, bytes}, counts: {layers, parts, primitives,
 mops}}`; counts are nonnegative integers. Source is informational and never means

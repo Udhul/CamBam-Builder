@@ -6,7 +6,11 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from cambam_builder import CBProject
-from cambam_builder.cambam_entities import MOP_COMMON_FIELD_POLICIES
+from cambam_builder.cambam_entities import (
+    MOP_COMMON_FIELD_POLICIES,
+    MOP_POCKET_FIELD_POLICIES,
+    MOP_PROFILE_FIELD_POLICIES,
+)
 from cambam_builder.cambam_reader import read_cambam_file
 from cambam_builder.cambam_writer import save_cambam_file
 
@@ -57,7 +61,8 @@ class MopParameterTests(unittest.TestCase):
             tree = ET.parse(first)
             profile = self.mop(tree, "profile")
             ET.SubElement(profile, "NativeExtension").text = "retained"
-            ET.SubElement(profile.find("LeadOutMove"), "NativeLeadOutField").text = "keep"
+            lead_out = ET.SubElement(profile, "LeadOutMove", {"state": "Default"})
+            ET.SubElement(lead_out, "NativeLeadOutField").text = "keep"
             profile.find("TargetDepth").set("state", "Default")
             profile.find("TargetDepth").text = "-99.5"
             tree.write(first, encoding="utf-8", xml_declaration=True)
@@ -166,6 +171,171 @@ class MopParameterTests(unittest.TestCase):
         self.assertEqual("M5", element.findtext("CustomMOPFooter"))
         for tag in ("TargetDepth", "CustomMOPHeader", "CustomMOPFooter"):
             self.assertEqual("Value", element.find(tag).get("state"), tag)
+
+    def test_profile_and_pocket_fresh_subtype_policies_are_mode_aware(self):
+        project = CBProject("subtype-policy")
+        layer = project.add_layer("Geometry")
+        target = project.add_rect(layer, identifier="target", width=4, height=2)
+        part = project.add_part("Part")
+        profile = project.add_profile_mop(
+            part, [target], identifier="profile", lead_in_type="None",
+            final_depth_increment=None, tab_method="None",
+        )
+        pocket = project.add_pocket_mop(
+            part, [target], identifier="pocket", lead_in_type="None",
+            final_depth_increment=None,
+        )
+
+        for mop, policies in (
+                (profile, MOP_PROFILE_FIELD_POLICIES),
+                (pocket, MOP_POCKET_FIELD_POLICIES)):
+            element = mop.to_xml_element(project, [1])
+            for field_name, policy in policies.items():
+                node = element.find("/".join(policy.xml_path))
+                applicable = mop._policy_applies(policy)
+                omitted = (policy.omit_when_none
+                           and getattr(mop, field_name) is None)
+                if not applicable or omitted:
+                    self.assertIsNone(node, field_name)
+                else:
+                    self.assertIsNotNone(node, field_name)
+                    if policy.leaf_state:
+                        self.assertEqual("Value", node.get("state"), field_name)
+            self.assertEqual("Value", element.find("LeadInMove").get("state"))
+            self.assertEqual("None", element.findtext("LeadInMove/LeadInType"))
+            self.assertIsNone(element.find("LeadInMove/SpiralAngle"))
+            self.assertIsNone(element.find("LeadOutMove"))
+            self.assertIsNone(element.find("LeadInMove/TangentRadius"))
+            self.assertIsNone(element.find("LeadInMove/LeadInFeedrate"))
+
+        tabs = profile.to_xml_element(project, [1]).find("HoldingTabs")
+        self.assertEqual("Value", tabs.get("state"))
+        self.assertEqual(["TabMethod"], [child.tag for child in tabs])
+
+    def test_spiral_lead_and_automatic_tabs_emit_only_mode_dependencies(self):
+        project = CBProject("nested-policy")
+        layer = project.add_layer("Geometry")
+        target = project.add_rect(layer, identifier="target", width=4, height=2)
+        part = project.add_part("Part")
+        profile = project.add_profile_mop(
+            part, [target], identifier="profile", lead_in_type="Spiral",
+            lead_in_spiral_angle=17.5, tab_method="Automatic",
+            tab_width=7, tab_height=2, tab_min_tabs=2, tab_max_tabs=5,
+            tab_distance=0, tab_size_threshold=3, tab_use_leadins=False,
+            tab_style="Triangle",
+        )
+        element = profile.to_xml_element(project, [1])
+
+        lead = element.find("LeadInMove")
+        self.assertEqual("Value", lead.get("state"))
+        self.assertEqual(["LeadInType", "SpiralAngle"],
+                         [child.tag for child in lead])
+        self.assertTrue(all(child.get("state") == "Value" for child in lead))
+        tabs = element.find("HoldingTabs")
+        self.assertEqual("Value", tabs.get("state"))
+        self.assertEqual(
+            ["TabMethod", "Width", "Height", "MinimumTabs", "MaximumTabs",
+             "TabDistance", "SizeThreshold", "UseLeadIns", "TabStyle"],
+            [child.tag for child in tabs],
+        )
+        self.assertTrue(all("state" not in child.attrib for child in tabs))
+
+    def test_imported_nested_mode_switches_reconcile_modeled_children(self):
+        project = CBProject("nested-switch")
+        layer = project.add_layer("Geometry")
+        target = project.add_rect(layer, identifier="target", width=4, height=2)
+        part = project.add_part("Part")
+        project.add_profile_mop(
+            part, [target], identifier="profile", lead_in_type="None",
+            tab_method="None",
+        )
+        project.add_pocket_mop(
+            part, [target], identifier="pocket", lead_in_type="None")
+        with tempfile.TemporaryDirectory(prefix="mop-parameters-", dir=self.output) as directory:
+            first = self.save(project, directory, "none")
+            loaded = read_cambam_file(str(first))
+            mop = loaded.get_mop("profile")
+            mop.lead_in_type = "Spiral"
+            mop.tab_method = "Automatic"
+            enabled = mop.to_xml_element(loaded, [1])
+            self.assertEqual("30.0", enabled.findtext("LeadInMove/SpiralAngle"))
+            self.assertEqual("6.0", enabled.findtext("HoldingTabs/Width"))
+            self.assertEqual("Square", enabled.findtext("HoldingTabs/TabStyle"))
+            pocket = loaded.get_mop("pocket")
+            pocket.lead_in_type = "Spiral"
+            self.assertEqual("30.0", pocket.to_xml_element(
+                loaded, [1]).findtext("LeadInMove/SpiralAngle"))
+
+            second = self.save(loaded, directory, "automatic")
+            tree = ET.parse(second)
+            profile = self.mop(tree, "profile")
+            ET.SubElement(profile.find("LeadInMove"), "NativeLeadField").text = "keep"
+            ET.SubElement(profile.find("HoldingTabs"), "NativeTabField").text = "keep"
+            lead_out = ET.SubElement(profile, "LeadOutMove", {"state": "Default"})
+            ET.SubElement(lead_out, "NativeLeadOutField").text = "keep"
+            tree.write(second, encoding="utf-8", xml_declaration=True)
+
+            loaded = read_cambam_file(str(second))
+            mop = loaded.get_mop("profile")
+            mop.lead_in_type = "None"
+            mop.tab_method = "None"
+            disabled = mop.to_xml_element(loaded, [1])
+            self.assertIsNone(disabled.find("LeadInMove/SpiralAngle"))
+            self.assertEqual("keep", disabled.findtext("LeadInMove/NativeLeadField"))
+            self.assertEqual(["TabMethod", "NativeTabField"],
+                             [child.tag for child in disabled.find("HoldingTabs")])
+            self.assertEqual("keep", disabled.findtext(
+                "LeadOutMove/NativeLeadOutField"))
+
+    def test_unsupported_nested_authoring_is_rejected_but_import_preserves_it(self):
+        project = CBProject("unsupported-nested")
+        layer = project.add_layer("Geometry")
+        target = project.add_rect(layer, identifier="target", width=4, height=2)
+        part = project.add_part("Part")
+        tangent = project.add_profile_mop(
+            part, [target], identifier="tangent", lead_in_type="Tangent")
+        with self.assertRaisesRegex(ValueError, "preserve-only"):
+            tangent.to_xml_element(project, [1])
+        invalid_tabs = project.add_profile_mop(
+            part, [target], identifier="tabs", lead_in_type="None",
+            tab_method="Automatic", tab_style="Square", tab_use_leadins=True)
+        with self.assertRaisesRegex(ValueError, "active lead-in"):
+            invalid_tabs.to_xml_element(project, [1])
+
+        native_project = CBProject("preserve-native-nested")
+        layer = native_project.add_layer("Geometry")
+        target = native_project.add_rect(
+            layer, identifier="target", width=4, height=2)
+        part = native_project.add_part("Part")
+        native_project.add_profile_mop(
+            part, [target], identifier="native", lead_in_type="None",
+            tab_method="None")
+        with tempfile.TemporaryDirectory(prefix="mop-parameters-", dir=self.output) as directory:
+            source = self.save(native_project, directory, "native")
+            tree = ET.parse(source)
+            profile = self.mop(tree, "native")
+            profile.find("LeadInMove/LeadInType").text = "Tangent"
+            profile.find("HoldingTabs/TabMethod").text = "Manual"
+            ET.SubElement(profile.find("HoldingTabs"), "ManualTabPoints").text = "native"
+            tree.write(source, encoding="utf-8", xml_declaration=True)
+
+            loaded = read_cambam_file(str(source))
+            preserved = loaded.get_mop("native").to_xml_element(loaded, [1])
+            self.assertEqual("Tangent", preserved.findtext(
+                "LeadInMove/LeadInType"))
+            self.assertEqual("Manual", preserved.findtext(
+                "HoldingTabs/TabMethod"))
+            self.assertEqual("native", preserved.findtext(
+                "HoldingTabs/ManualTabPoints"))
+
+            lead_switch = read_cambam_file(str(source))
+            lead_switch.get_mop("native").lead_in_type = "None"
+            with self.assertRaisesRegex(ValueError, "unsupported native lead mode"):
+                lead_switch.get_mop("native").to_xml_element(lead_switch, [1])
+            tab_switch = read_cambam_file(str(source))
+            tab_switch.get_mop("native").tab_method = "Automatic"
+            with self.assertRaisesRegex(ValueError, "Manual holding-tab"):
+                tab_switch.get_mop("native").to_xml_element(tab_switch, [1])
 
     def test_spiral_drill_signed_clearance_geometry_and_tool_fit(self):
         project = CBProject("spiral-clearance")

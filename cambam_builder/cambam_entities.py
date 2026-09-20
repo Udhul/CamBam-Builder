@@ -1819,6 +1819,21 @@ class MopFieldEncodingPolicy:
     omit_when_empty: bool = False
 
 
+@dataclass(frozen=True)
+class MopSubtypeFieldEncodingPolicy:
+    """Fresh-export policy for a Profile/Pocket subtype field.
+
+    Nested containers are explicit ``Value`` records.  ``leaf_state`` reflects
+    CamBam's native convention: lead-move children carry their own state while
+    holding-tab children are plain values governed by the container state.
+    """
+
+    xml_path: Tuple[str, ...]
+    omit_when_none: bool = False
+    requirements: Tuple[Tuple[str, Tuple[Any, ...]], ...] = ()
+    leaf_state: bool = True
+
+
 # Ordered to match native CamBam MOP XML.  Fresh authoring emits every retained
 # field as an explicit Value; inheritance is represented by omission unless a
 # caller deliberately requests Default through ``set_parameter_state``.  Imported
@@ -1846,6 +1861,70 @@ MOP_COMMON_FIELD_POLICIES: Dict[str, MopFieldEncodingPolicy] = {
         'CustomMOPHeader', omit_when_empty=True),
     'custom_mop_footer': MopFieldEncodingPolicy(
         'CustomMOPFooter', omit_when_empty=True),
+}
+
+
+MOP_PROFILE_FIELD_POLICIES: Dict[str, MopSubtypeFieldEncodingPolicy] = {
+    'stepover': MopSubtypeFieldEncodingPolicy(('StepOver',)),
+    'profile_side': MopSubtypeFieldEncodingPolicy(('InsideOutside',)),
+    'milling_direction': MopSubtypeFieldEncodingPolicy(('MillingDirection',)),
+    'collision_detection': MopSubtypeFieldEncodingPolicy(('CollisionDetection',)),
+    'corner_overcut': MopSubtypeFieldEncodingPolicy(('CornerOvercut',)),
+    'lead_in_type': MopSubtypeFieldEncodingPolicy(('LeadInMove', 'LeadInType')),
+    'lead_in_spiral_angle': MopSubtypeFieldEncodingPolicy(
+        ('LeadInMove', 'SpiralAngle'),
+        requirements=(('lead_in_type', ('Spiral',)),),
+    ),
+    'final_depth_increment': MopSubtypeFieldEncodingPolicy(
+        ('FinalDepthIncrement',), omit_when_none=True),
+    'cut_ordering': MopSubtypeFieldEncodingPolicy(('CutOrdering',)),
+    'tab_method': MopSubtypeFieldEncodingPolicy(
+        ('HoldingTabs', 'TabMethod'), leaf_state=False),
+    'tab_width': MopSubtypeFieldEncodingPolicy(
+        ('HoldingTabs', 'Width'), requirements=(('tab_method', ('Automatic',)),),
+        leaf_state=False),
+    'tab_height': MopSubtypeFieldEncodingPolicy(
+        ('HoldingTabs', 'Height'), requirements=(('tab_method', ('Automatic',)),),
+        leaf_state=False),
+    'tab_min_tabs': MopSubtypeFieldEncodingPolicy(
+        ('HoldingTabs', 'MinimumTabs'), requirements=(('tab_method', ('Automatic',)),),
+        leaf_state=False),
+    'tab_max_tabs': MopSubtypeFieldEncodingPolicy(
+        ('HoldingTabs', 'MaximumTabs'), requirements=(('tab_method', ('Automatic',)),),
+        leaf_state=False),
+    'tab_distance': MopSubtypeFieldEncodingPolicy(
+        ('HoldingTabs', 'TabDistance'), requirements=(('tab_method', ('Automatic',)),),
+        leaf_state=False),
+    'tab_size_threshold': MopSubtypeFieldEncodingPolicy(
+        ('HoldingTabs', 'SizeThreshold'), requirements=(('tab_method', ('Automatic',)),),
+        leaf_state=False),
+    'tab_use_leadins': MopSubtypeFieldEncodingPolicy(
+        ('HoldingTabs', 'UseLeadIns'), requirements=(('tab_method', ('Automatic',)),),
+        leaf_state=False),
+    'tab_style': MopSubtypeFieldEncodingPolicy(
+        ('HoldingTabs', 'TabStyle'), requirements=(('tab_method', ('Automatic',)),),
+        leaf_state=False),
+}
+
+
+MOP_POCKET_FIELD_POLICIES: Dict[str, MopSubtypeFieldEncodingPolicy] = {
+    'stepover': MopSubtypeFieldEncodingPolicy(('StepOver',)),
+    'stepover_feedrate': MopSubtypeFieldEncodingPolicy(('StepoverFeedrate',)),
+    'milling_direction': MopSubtypeFieldEncodingPolicy(('MillingDirection',)),
+    'collision_detection': MopSubtypeFieldEncodingPolicy(('CollisionDetection',)),
+    'lead_in_type': MopSubtypeFieldEncodingPolicy(('LeadInMove', 'LeadInType')),
+    'lead_in_spiral_angle': MopSubtypeFieldEncodingPolicy(
+        ('LeadInMove', 'SpiralAngle'),
+        requirements=(('lead_in_type', ('Spiral',)),),
+    ),
+    'final_depth_increment': MopSubtypeFieldEncodingPolicy(
+        ('FinalDepthIncrement',), omit_when_none=True),
+    'cut_ordering': MopSubtypeFieldEncodingPolicy(('CutOrdering',)),
+    'region_fill_style': MopSubtypeFieldEncodingPolicy(('RegionFillStyle',)),
+    'finish_stepover': MopSubtypeFieldEncodingPolicy(('FinishStepover',)),
+    'finish_stepover_at_target_depth': MopSubtypeFieldEncodingPolicy(
+        ('FinishStepoverAtTargetDepth',)),
+    'roughing_finishing': MopSubtypeFieldEncodingPolicy(('RoughingFinishing',)),
 }
 
 @dataclass
@@ -2078,23 +2157,89 @@ class Mop(CamBamEntity, ABC):
         # else: # CamBam seems to omit the <primitive> tag entirely if empty
             # pass
 
-    def _add_lead_in_out_elements(self, parent_elem: ET.Element, lead_type: str = "Spiral", spiral_angle: float = 30.0, tangent_radius: float = 0.0, feedrate: float = 0.0):
-        """Adds LeadInMove and LeadOutMove elements (common pattern)."""
-        # Determine state (assume "Value" if explicitly called, could be refined)
-        state = "Value"
+    def _policy_applies(self, policy: MopSubtypeFieldEncodingPolicy) -> bool:
+        return all(getattr(self, field_name) in allowed
+                   for field_name, allowed in policy.requirements)
 
-        lead_in = ET.SubElement(parent_elem, "LeadInMove", {"state": state})
-        ET.SubElement(lead_in, "LeadInType", {"state": state}).text = lead_type
-        ET.SubElement(lead_in, "SpiralAngle", {"state": state}).text = str(spiral_angle)
-        ET.SubElement(lead_in, "TangentRadius", {"state": state}).text = str(tangent_radius)
-        ET.SubElement(lead_in, "LeadInFeedrate", {"state": state}).text = str(feedrate) # 0 usually means use CutFeedrate
+    def _add_subtype_mop_elements(
+        self,
+        parent_elem: ET.Element,
+        policies: Dict[str, MopSubtypeFieldEncodingPolicy],
+    ) -> None:
+        """Emit one declarative fresh Profile/Pocket subtype policy."""
+        for field_name, policy in policies.items():
+            value = getattr(self, field_name)
+            if not self._policy_applies(policy):
+                continue
+            if policy.omit_when_none and value is None:
+                continue
+            parent = parent_elem
+            for tag in policy.xml_path[:-1]:
+                child = parent.find(tag)
+                if child is None:
+                    child = ET.SubElement(parent, tag, {"state": "Value"})
+                else:
+                    child.set("state", "Value")
+                parent = child
+            attributes = {"state": "Value"} if policy.leaf_state else {}
+            ET.SubElement(parent, policy.xml_path[-1], attributes).text = (
+                self._format_mop_parameter(value)
+            )
 
-        # Lead out often mirrors lead in settings in CamBam defaults
-        lead_out = ET.SubElement(parent_elem, "LeadOutMove", {"state": state})
-        ET.SubElement(lead_out, "LeadInType", {"state": state}).text = lead_type # Yes, uses "LeadInType" tag name
-        ET.SubElement(lead_out, "SpiralAngle", {"state": state}).text = str(spiral_angle)
-        ET.SubElement(lead_out, "TangentRadius", {"state": state}).text = str(tangent_radius)
-        ET.SubElement(lead_out, "LeadInFeedrate", {"state": state}).text = str(feedrate)
+    def _reconcile_native_mode_group(
+        self,
+        root: ET.Element,
+        policies: Dict[str, MopSubtypeFieldEncodingPolicy],
+        controller: str,
+    ) -> None:
+        """Make an edited native mode switch internally coherent.
+
+        Only modeled children are added or removed.  Unknown native children and
+        independent lead-out records remain preservation-owned.
+        """
+        if controller not in getattr(self, "_xml_dirty_parameters", set()):
+            return
+        container_tag = policies[controller].xml_path[0]
+        container = root.find(container_tag)
+        if container is None:
+            container = ET.SubElement(root, container_tag)
+        container.set("state", "Value")
+        for field_name, policy in policies.items():
+            if len(policy.xml_path) != 2 or policy.xml_path[0] != container_tag:
+                continue
+            leaf = container.find(policy.xml_path[1])
+            value = getattr(self, field_name)
+            applies = self._policy_applies(policy) and not (
+                policy.omit_when_none and value is None)
+            if not applies:
+                if leaf is not None:
+                    container.remove(leaf)
+                continue
+            if leaf is None:
+                leaf = ET.SubElement(container, policy.xml_path[1])
+            if policy.leaf_state:
+                leaf.set("state", "Value")
+            else:
+                leaf.attrib.pop("state", None)
+            leaf.text = self._format_mop_parameter(value)
+
+    def _validate_lead_encoding(self) -> None:
+        supported = {"None", "Spiral"}
+        dirty = getattr(self, "_xml_dirty_parameters", set())
+        baseline = getattr(self, "_xml_parameter_baseline", {})
+        if self.lead_in_type not in supported and (
+                not hasattr(self, "_xml_template") or "lead_in_type" in dirty):
+            raise ValueError(
+                "Fresh lead-in authoring supports only None and Spiral; other "
+                "native lead modes are preserve-only"
+            )
+        if ("lead_in_type" in dirty
+                and baseline.get("lead_in_type") not in supported):
+            raise ValueError(
+                "Switching an imported unsupported native lead mode is not supported"
+            )
+        if "lead_in_spiral_angle" in dirty and self.lead_in_type != "Spiral":
+            raise ValueError("lead_in_spiral_angle requires lead_in_type='Spiral'")
 
 # --- Concrete MOP Classes ---
 # (Minimal changes: Update to_xml_element signature and call _add_common_mop_elements)
@@ -2109,7 +2254,7 @@ class ProfileMop(Mop):
     # Allow CamBam to overcut inside corners for round tools; may remove
     # additional material along adjacent sides.
     corner_overcut: bool = False
-    lead_in_type: str = 'Spiral' # 'None', 'Spiral', 'Tangent', 'Ramp'
+    lead_in_type: str = 'Spiral' # Fresh authoring: 'None', 'Spiral'; other native modes preserve-only
     lead_in_spiral_angle: float = 30.0
     final_depth_increment: Optional[float] = 0.0 # If > 0, amount for final pass
     cut_ordering: str = 'DepthFirst' # 'DepthFirst', 'LevelFirst'
@@ -2125,45 +2270,39 @@ class ProfileMop(Mop):
     tab_style: str = 'Square' # 'Square', 'Triangle', 'Skip'
 
     def to_xml_element(self, project: "CamBamProject", resolved_primitive_xml_ids: List[int]) -> ET.Element:
-        native = self._native_mop_element(project, resolved_primitive_xml_ids)
-        if native is not None:
-            return native
-        if self.tab_method == 'Manual':
+        self._validate_lead_encoding()
+        dirty = getattr(self, "_xml_dirty_parameters", set())
+        baseline = getattr(self, "_xml_parameter_baseline", {})
+        if self.tab_method == 'Manual' and (
+                not hasattr(self, "_xml_template") or 'tab_method' in dirty):
             raise ValueError(
                 "Manual holding-tab authoring requires explicit native tab points and "
                 "is not supported; imported native Manual tabs are preserve-only"
             )
+        if ('tab_method' in dirty and baseline.get('tab_method') == 'Manual'):
+            raise ValueError(
+                "Switching an imported Manual holding-tab record is not supported"
+            )
+        tab_dependency_edited = not hasattr(self, "_xml_template") or bool(
+            dirty.intersection(
+                {'tab_method', 'tab_use_leadins', 'tab_style', 'lead_in_type'}))
+        if self.tab_use_leadins and tab_dependency_edited and not (
+                self.tab_method == 'Automatic'
+                and self.tab_style == 'Square'
+                and self.lead_in_type != 'None'):
+            raise ValueError(
+                "tab_use_leadins requires Automatic Square tabs and an active lead-in"
+            )
+        native = self._native_mop_element(project, resolved_primitive_xml_ids)
+        if native is not None:
+            self._reconcile_native_mode_group(
+                native, MOP_PROFILE_FIELD_POLICIES, 'lead_in_type')
+            self._reconcile_native_mode_group(
+                native, MOP_PROFILE_FIELD_POLICIES, 'tab_method')
+            return native
         mop_elem = ET.Element("profile", {"Enabled": str(self.enabled).lower()})
         self._add_common_mop_elements(mop_elem, project, resolved_primitive_xml_ids)
-
-        # Add profile-specific elements
-        state = "Value" # Assume explicit value for these for now
-        ET.SubElement(mop_elem, "StepOver", {"state": state}).text = str(self.stepover)
-        ET.SubElement(mop_elem, "InsideOutside", {"state": state}).text = self.profile_side
-        ET.SubElement(mop_elem, "MillingDirection", {"state": state}).text = self.milling_direction
-        ET.SubElement(mop_elem, "CollisionDetection", {"state": state}).text = str(self.collision_detection).lower()
-        ET.SubElement(mop_elem, "CornerOvercut", {"state": state}).text = str(self.corner_overcut).lower()
-
-        self._add_lead_in_out_elements(mop_elem, lead_type=self.lead_in_type, spiral_angle=self.lead_in_spiral_angle)
-
-        fdi_state = "Value" if self.final_depth_increment is not None else "Default" # Can be optional
-        ET.SubElement(mop_elem, "FinalDepthIncrement", {"state": fdi_state}).text = str(self.final_depth_increment if self.final_depth_increment is not None else 0.0)
-
-        ET.SubElement(mop_elem, "CutOrdering", {"state": state}).text = self.cut_ordering
-
-        # Holding Tabs
-        tabs = ET.SubElement(mop_elem, "HoldingTabs", {"state": state})
-        ET.SubElement(tabs, "TabMethod").text = self.tab_method
-        if self.tab_method != 'None':
-            ET.SubElement(tabs, "Width").text = str(self.tab_width)
-            ET.SubElement(tabs, "Height").text = str(self.tab_height)
-            ET.SubElement(tabs, "MinimumTabs").text = str(self.tab_min_tabs)
-            ET.SubElement(tabs, "MaximumTabs").text = str(self.tab_max_tabs)
-            ET.SubElement(tabs, "TabDistance").text = str(self.tab_distance)
-            ET.SubElement(tabs, "SizeThreshold").text = str(self.tab_size_threshold)
-            ET.SubElement(tabs, "UseLeadIns").text = str(self.tab_use_leadins).lower()
-            ET.SubElement(tabs, "TabStyle").text = self.tab_style
-
+        self._add_subtype_mop_elements(mop_elem, MOP_PROFILE_FIELD_POLICIES)
         self._apply_explicit_parameter_states(mop_elem)
         return mop_elem
 
@@ -2185,29 +2324,15 @@ class PocketMop(Mop):
     roughing_finishing: str = 'Roughing' # 'Roughing', 'Finishing', 'RoughFinish'
 
     def to_xml_element(self, project: "CamBamProject", resolved_primitive_xml_ids: List[int]) -> ET.Element:
+        self._validate_lead_encoding()
         native = self._native_mop_element(project, resolved_primitive_xml_ids)
         if native is not None:
+            self._reconcile_native_mode_group(
+                native, MOP_POCKET_FIELD_POLICIES, 'lead_in_type')
             return native
         mop_elem = ET.Element("pocket", {"Enabled": str(self.enabled).lower()})
         self._add_common_mop_elements(mop_elem, project, resolved_primitive_xml_ids)
-
-        state = "Value"
-        ET.SubElement(mop_elem, "StepOver", {"state": state}).text = str(self.stepover)
-        ET.SubElement(mop_elem, "StepoverFeedrate", {"state": state}).text = self.stepover_feedrate
-        ET.SubElement(mop_elem, "MillingDirection", {"state": state}).text = self.milling_direction
-        ET.SubElement(mop_elem, "CollisionDetection", {"state": state}).text = str(self.collision_detection).lower()
-
-        self._add_lead_in_out_elements(mop_elem, lead_type=self.lead_in_type, spiral_angle=self.lead_in_spiral_angle)
-
-        fdi_state = "Value" if self.final_depth_increment is not None else "Default"
-        ET.SubElement(mop_elem, "FinalDepthIncrement", {"state": fdi_state}).text = str(self.final_depth_increment if self.final_depth_increment is not None else 0.0)
-
-        ET.SubElement(mop_elem, "CutOrdering", {"state": state}).text = self.cut_ordering
-        ET.SubElement(mop_elem, "RegionFillStyle", {"state": state}).text = self.region_fill_style
-        ET.SubElement(mop_elem, "FinishStepover", {"state": state}).text = str(self.finish_stepover)
-        ET.SubElement(mop_elem, "FinishStepoverAtTargetDepth", {"state": state}).text = str(self.finish_stepover_at_target_depth).lower()
-        ET.SubElement(mop_elem, "RoughingFinishing", {"state": state}).text = self.roughing_finishing
-
+        self._add_subtype_mop_elements(mop_elem, MOP_POCKET_FIELD_POLICIES)
         self._apply_explicit_parameter_states(mop_elem)
         return mop_elem
 
