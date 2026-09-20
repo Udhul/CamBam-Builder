@@ -1,5 +1,41 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Group-neutral MCP MOP target eligibility - 2026-09-20
+
+Backlog 8e removed group membership from two decisions where it has no coordinate
+meaning: typed primitive inspection and explicit MOP target eligibility. The old
+implementation routed target validation through the geometry-mutation slice, so
+adding an otherwise harmless framework group both blanked typed geometry and rejected
+MOP authoring/retargeting. Intrinsic finite similarity geometry is now checked once,
+while inspection, geometry mutation and MOP targeting own distinct relationship
+policies. Inspection and MOP targeting allow groups but still reject a parent or
+child; geometry mutation retains its narrower no-group rule.
+
+The focused regression covers Rect, Circle, Arc, open and closed Pline, Points, Text
+and Region before grouping, while grouped and after group removal. It authors all four
+MOP families against grouped primitives, retargets them across every supported
+family/kind combination, and compares exact UUID target lists plus the complete
+`parameters`, `parameter_metadata` and `unsupported_fields` records after save/reopen.
+Typed geometry remains byte-for-byte equivalent at the structured-record level.
+Parent and child retarget attempts remain rejected; the existing non-similarity
+regression remains unchanged, and the zero-local-Z gate remains explicit in the
+intrinsic geometry predicate.
+
+Broadening the general geometry-mutation slice was rejected because that would also
+change transform and Region-replacement behavior without need or acceptance evidence.
+Treating groups like parent/child coordinate relationships was rejected because group
+membership changes selection metadata only. Parent/child, non-similarity and nonzero
+local-Z targets were not inferred safe from this result and remain outside the MCP
+machining slice.
+
+Verification: the 9-test MCP MOP suite, 5 relationship/transform tests and 11 MCP
+authoring tests pass; all 86 MCP tests pass with the existing Windows
+symlink-privilege skip; all 256 repository tests pass with that same skip. Compileall
+for the modern package, legacy package, tests and demos and `git diff --check` pass.
+Manual CamBam validation would add no evidence for this metadata-only eligibility
+change because exact exported/reopened native targets and parameter records are
+already compared; production toolpath safety remains out of scope.
+
 ## Preservation-aware structured MOP inspection - 2026-09-20
 
 Backlog 8d replaced the MCP adapter's all-or-nothing MOP inspection gate. The old

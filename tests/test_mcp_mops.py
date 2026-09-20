@@ -580,6 +580,140 @@ class MopBreadthTests(unittest.TestCase):
 
         self.run_async(test)
 
+    def test_group_membership_preserves_geometry_and_mop_target_eligibility(self):
+        async def test():
+            handle = await self.create("grouped-targets")
+            revision = 0
+
+            async def add(tool, **arguments):
+                nonlocal revision
+                result = await self.call(tool, self.args(
+                    document=handle, expected_revision=revision, **arguments))
+                self.assertTrue(result["ok"], result)
+                revision += 1
+                return result
+
+            additions = (
+                ("geometry_add_rectangle", "rect", {
+                    "layer": "Geometry", "x": 0, "y": 0, "width": 10, "height": 8}),
+                ("geometry_add_circle", "circle", {
+                    "layer": "Geometry", "x": 20, "y": 4, "diameter": 6}),
+                ("geometry_add_arc", "arc", {
+                    "layer": "Geometry", "x": 30, "y": 4, "radius": 3,
+                    "start_angle": 0, "extent_angle": 180}),
+                ("geometry_add_pline", "open", {
+                    "layer": "Geometry", "closed": False,
+                    "points": [{"x": 0, "y": 15}, {"x": 10, "y": 15}]}),
+                ("geometry_add_pline", "closed", {
+                    "layer": "Geometry", "closed": True,
+                    "points": [{"x": 15, "y": 12}, {"x": 25, "y": 12},
+                               {"x": 20, "y": 20}]}),
+                ("geometry_add_points", "points", {
+                    "layer": "Geometry", "points": [{"x": 35, "y": 15}]}),
+                ("geometry_add_text", "text", {
+                    "layer": "Geometry", "text": "CUT", "x": 0, "y": 25,
+                    "height": 4}),
+                ("geometry_add_region", "region", {
+                    "layer": "Geometry",
+                    "outer": {"points": [
+                        {"x": 15, "y": 25}, {"x": 25, "y": 25},
+                        {"x": 25, "y": 35}, {"x": 15, "y": 35},
+                    ]}}),
+            )
+            ids = {}
+            for tool, identifier, arguments in additions:
+                result = await add(tool, identifier=identifier, **arguments)
+                ids[identifier] = result["data"]["entity_id"]
+
+            def primitive_geometry(records):
+                return {
+                    record["identifier"]: record["geometry"]
+                    for record in records if record["kind"] == "primitive"
+                }
+
+            baseline_geometry = primitive_geometry(
+                await self.inspect_records(handle, revision=revision))
+            self.assertTrue(all(baseline_geometry.values()))
+
+            for entity_id in ids.values():
+                await add("relationship_add_to_group", entity_id=entity_id,
+                          group="machining-targets")
+            grouped_records = await self.inspect_records(handle, revision=revision)
+            self.assertEqual(primitive_geometry(grouped_records), baseline_geometry)
+            self.assertNotIn(
+                "INSPECTION_UNSUPPORTED", self.diagnostics(await self.inspect(handle)))
+
+            target_sets = {
+                "profile": [ids[name] for name in
+                            ("rect", "circle", "open", "closed", "text", "region")],
+                "pocket": [ids[name] for name in
+                           ("rect", "circle", "closed", "text", "region")],
+                "engrave": [ids[name] for name in
+                            ("rect", "circle", "arc", "open", "closed", "text")],
+                "drill": [ids[name] for name in ("points", "circle")],
+            }
+            mop_ids = {}
+            for family, targets in target_sets.items():
+                arguments = self.mop_arguments(
+                    identifier=family, part="Part", targets=[targets[0]])
+                if family == "profile":
+                    arguments["side"] = "Outside"
+                result = await add(f"machining_add_{family}", **arguments)
+                mop_ids[family] = result["data"]["mop_id"]
+
+            for family, targets in target_sets.items():
+                result = await add(
+                    "machining_set_mop_targets", mop_id=mop_ids[family], targets=targets)
+                self.assertEqual(set(result["data"]["targets"]), set(targets))
+
+            grouped_records = await self.inspect_records(handle, revision=revision)
+
+            def mop_state(records):
+                return {
+                    record["identifier"]: {
+                        "targets": record["targets"],
+                        "parameters": record["parameters"],
+                        "parameter_metadata": record["parameter_metadata"],
+                        "unsupported_fields": record["unsupported_fields"],
+                    }
+                    for record in records if record["kind"] == "mop"
+                }
+
+            grouped_mops = mop_state(grouped_records)
+            self.assertEqual(set(grouped_mops), set(target_sets))
+            for family, targets in target_sets.items():
+                self.assertEqual(set(grouped_mops[family]["targets"]), set(targets))
+
+            saved = await self.call("document_save", self.args(
+                document=handle, expected_revision=revision, path="grouped-targets.cb"))
+            self.assertTrue(saved["ok"], saved)
+            reopened = await self.call("document_open", self.args(
+                path="grouped-targets.cb", units="mm"))
+            self.assertTrue(reopened["ok"], reopened)
+            reopened_records = await self.inspect_records(reopened["document"], revision=0)
+            self.assertEqual(primitive_geometry(reopened_records), baseline_geometry)
+            self.assertEqual(mop_state(reopened_records), grouped_mops)
+
+            for entity_id in ids.values():
+                await add("relationship_remove_from_group", entity_id=entity_id,
+                          group="machining-targets")
+            ungrouped_records = await self.inspect_records(handle, revision=revision)
+            self.assertEqual(primitive_geometry(ungrouped_records), baseline_geometry)
+            self.assertEqual(mop_state(ungrouped_records), grouped_mops)
+
+            await add("relationship_set_parent", entity_id=ids["points"],
+                      parent_id=ids["rect"])
+            for family, target in (("profile", ids["rect"]),
+                                   ("drill", ids["points"])):
+                rejected = await self.call("machining_set_mop_targets", self.args(
+                    document=handle, expected_revision=revision,
+                    mop_id=mop_ids[family], targets=[target]))
+                self.assertEqual(rejected["error"]["code"], "UNSUPPORTED_OPERATION")
+            await add("relationship_set_parent", entity_id=ids["points"],
+                      parent_id=None)
+
+        self.run_async(test)
+
     def test_target_kind_rules_negatives_retries_and_atomic_failure(self):
         async def test():
             handle = await self.create()

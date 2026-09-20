@@ -15,7 +15,7 @@ snapshot for resuming the full object graph; it has no migration promise, and a
 future release-grade state format will be assessed from a robust contract rather
 than inherited pickle history. Old Part/Primitive pickle default-fill shims, their
 synthetic migration regression, two unused `_v2` matrix aliases and positional
-`add_part` ordering compatibility were removed. The current 253-test suite passes
+`add_part` ordering compatibility were removed. The then-current 253-test suite passed
 with the existing Windows symlink-privilege skip; no CamBam behavior changed.
 
 **2026-09-20 backlog 8a modeled MOP field inventory complete.** Engrave and Drill
@@ -28,9 +28,9 @@ slice's completion, the then-current 250-test suite passed with the existing Win
 symlink-privilege skip. The 8b framework/MCP parity matrix is now complete and
 source-checked. Backlog 8c native evidence is now complete: two minimal fixture sets
 establish state/omission behavior and the remaining Engrave/Drill effects. The
-preservation-aware structured inspection gap in 8d is now complete. The independent
-8e group-target geometry/authoring correction is next; no production G-code
-acceptance is claimed.
+preservation-aware structured inspection gap in 8d and the independent 8e
+group-target eligibility correction are now complete. The next prioritized increment
+is 9a's unit-explicit formula kernel; no production G-code acceptance is claimed.
 
 **2026-09-20 backlog 8d preservation-aware MOP inspection complete.** Structured
 inspection now returns every present independently safe modeled value, including
@@ -41,8 +41,16 @@ blanking sibling parameters. Explicit empty targets and live group sources retai
 parameter detail; `target_group` identifies live intent. Literal CustomScript,
 Manual tab points, unsupported lead modes and unknown extensions remain opaque and
 round-trip-preserved. Two focused preservation regressions and all 255 repository
-tests pass with the existing Windows symlink-privilege skip. Backlog 8e is now the
-next MOP increment.
+tests pass with the existing Windows symlink-privilege skip. The follow-on 8e gap is
+also complete.
+
+**2026-09-20 backlog 8e group-neutral target eligibility complete.** Framework group
+membership no longer blanks typed geometry or blocks otherwise eligible MOP
+authoring/retargeting. Target eligibility, typed inspection and geometry mutation now
+own distinct relationship policies; parent/child, non-similarity and nonzero-local-Z
+targets remain excluded. All 256 repository tests pass with the existing Windows
+symlink-privilege skip. Backlog 9a is next because a deterministic dimensional kernel
+is the prerequisite for any safe feeds/speeds recommendation or MCP planning surface.
 
 **2026-09-19 SpiralMill Drill MCP authoring implemented and accepted in CamBam Plus 1.0.**
 `machining_add_drill` now authors CannedCycle, SpiralMill CW and SpiralMill CCW.
@@ -941,16 +949,16 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
      are named without returning their contents, and unchanged save preserves them.
      Verification: 2 focused preservation tests, 43 adjacent MOP/MCP tests and all
      255 repository tests pass with the existing Windows symlink-privilege skip.
-   - **8e - decouple harmless group membership from MCP MOP target eligibility.** A
-     root supported-kind primitive currently loses typed geometry merely because
-     `relationship_add_to_group` adds framework metadata; 8d already decoupled MOP
-     parameter inspection. Split target eligibility from the geometry relationship
-     predicate so group membership alone neither blocks author/retarget nor erases
-     typed geometry.
-     Acceptance covers every evidenced target kind before/after group add/remove,
-     exact save/reopen targets and unchanged parameter records. Parent/child targets,
-     non-similarity transforms and nonzero local Z remain excluded until their
-     machining-coordinate semantics are separately evidenced.
+   - **8e - group-neutral MCP MOP target eligibility (completed 2026-09-20).**
+     Typed inspection and the dedicated MOP target predicate now treat framework
+     group names as harmless selection metadata, while the separate geometry-mutation
+     slice retains its narrower no-group policy. Regression coverage exercises all
+     eight evidenced shape variants and every supported family/kind target pairing
+     before grouping, while grouped and after removal; grouped author/retarget,
+     exact save/reopen UUID targets and unchanged parameter/state records pass.
+     Parent/child, non-similarity and nonzero-local-Z targets remain excluded.
+     Verification: 25 focused/adjacent tests, all 86 MCP tests and all 256 repository
+     tests pass with the existing Windows symlink-privilege skip.
    **Deliverables/stopping condition:** durable semantics go to `structure_spec.md`,
    MCP exposure and intentional pins to `MCP_CONTRACT.md`, dated comparisons and
    rejected interpretations to `REVIEW.md`, and only remaining prioritized work stays
@@ -1020,8 +1028,8 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    worked examples, and explicit unsafe/unknown-data cases. Document that results are
    starting recommendations requiring tool-manufacturer guidance, machine limits,
    workholding review and supervised test cuts; production machining safety is not
-   established by the calculator. Keep this after the active 8a serialization audit:
-   it is a distinct planning subsystem and depends on an explicit units/tool/material/
+   established by the calculator. This follows the completed 8a-8e MOP audit: it is a
+   distinct planning subsystem and depends on an explicit units/tool/material/
    machine profile contract. Reopen sooner only for a concrete workflow that supplies
    those inputs and acceptance data.
 

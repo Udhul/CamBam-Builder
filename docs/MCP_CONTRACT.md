@@ -554,10 +554,10 @@ point collections, unsupported lead modes and unknown extensions remain opaque.
 
 | Target / native capability | Core | MCP author | MCP inspect | MCP mutate | Classification |
 | --- | --- | --- | --- | --- | --- |
-| Explicit targets | Any registered Primitive, including an empty selection; this is syntactic encoding, not per-kind machining validation | 1..100 unique IDs. Profile: Rect/Circle/open-or-closed Pline/Text/Region; Pocket: Rect/Circle/closed Pline/Text/Region; Engrave: Rect/Circle/Arc/open-or-closed Pline/Text; Drill: Points/Circle. Geometry slice checks also apply | IDs and independently safe typed parameters remain visible for populated or empty selections | Atomic nonempty replacement with the same checks | MCP restrictions are deliberate safety policy |
+| Explicit targets | Any registered Primitive, including an empty selection; this is syntactic encoding, not per-kind machining validation | 1..100 unique IDs. Profile: Rect/Circle/open-or-closed Pline/Text/Region; Pocket: Rect/Circle/closed Pline/Text/Region; Engrave: Rect/Circle/Arc/open-or-closed Pline/Text; Drill: Points/Circle. The separate target-slice checks also apply | IDs and independently safe typed parameters remain visible for populated or empty selections | Atomic nonempty replacement with the same checks | MCP restrictions are deliberate safety policy |
 | Live `target_group` source | Author/read/edit in memory and same-version pickle; XML intentionally materializes a target snapshot | No | `target_group` names the live source and `targets` shows its current resolved members; parameters remain inspectable | No | Intent is visible in memory but not durable CamBam XML |
-| Group membership on an explicit target | Metadata does not change the core target or geometry | Rejected indirectly by the shared geometry-slice predicate | MOP parameters remain visible, but typed geometry is still blanked | Rejected | Remaining unnecessary geometry coupling is separately scoped for correction |
-| Supported transforms, parent/child relationships or local Z | Core stores and exports the relationship/transform | Only root, relationship-free, zero-local-Z similarity targets | Outside that slice is identity-only/unsupported | Rejected | Keep bounded until machining-coordinate semantics are evidenced; group membership is the separable exception |
+| Group membership on an explicit target | Metadata does not change the core target or geometry | Accepted for otherwise eligible targets | Typed geometry and MOP parameters remain visible | Accepted for otherwise eligible targets | Group names are selection metadata, not a machining-coordinate relationship |
+| Supported transforms, parent/child relationships or local Z | Core stores and exports the relationship/transform | Only zero-local-Z similarity targets with no parent or children | Outside that slice is identity-only/unsupported | Rejected | Keep bounded until machining-coordinate semantics are evidenced |
 | Native `Default` state | Top-level state author/edit plus read/preserve; nested native state is preserved | Required MCP values are explicit; Spiral Auto diameter is the single active Default | Cached typed value and `native_state=Default` are returned without claiming an effective style value; container state governs nested leaves | No | Effective style values are unknowable without the external style library |
 | `Style`, `StartPoint`, `SpindleRange`, independent lead-out, unsupported lead fields/modes, Manual tab points and unknown extensions | No semantic model; preserved inside an otherwise supported imported MOP template | No | Named in `unsupported_fields`; opaque content is not returned | No | Preserve-only; do not invent nominal parity |
 | Unknown Drill methods | Preserve-only; switching is rejected | No | Common fields and the raw method discriminator remain visible; unknown dependents are named and opaque | No | Preserve-only |
@@ -567,8 +567,8 @@ No MCP authoring promise was found that the core writer cannot faithfully encode
 The checked source-level classification is guarded by
 `tests/test_mcp_mop_parity.py`, which compares every modeled dataclass field with the
 closed author-input and inspection schemas. Preservation-aware typed MOP inspection
-closes the first identified gap; removal of harmless group membership from geometry
-and target eligibility remains in the project backlog. Parameter patching remains dependent on a
+and group-neutral explicit-target eligibility close the identified compositional
+gaps. Parameter patching remains dependent on a
 validated core patch contract and the native evidence requested by backlog 8c;
 CustomScript literals and unmodeled native content remain intentionally opaque.
 
@@ -638,8 +638,8 @@ integer IDs are never tool arguments. Native files lacking framework identity
 get new UUIDs on open; independent opens need not agree in that case.
 
 MOP targets are unique UUIDs resolving to supported root primitives in the same
-document; reject missing, duplicate, wrong-kind or transformed-out-of-scope
-targets before mutation. Per-kind supported target sets: Pocket accepts root
+document. Harmless group membership is allowed; reject missing, duplicate, wrong-kind,
+parent/child, non-similarity or nonzero-local-Z targets before mutation. Per-kind supported target sets: Pocket accepts root
 Rect/Circle/closed-Pline/Text/Region shapes; Profile accepts those plus open Plines; Engrave
 accepts root Rect/Circle/Arc/Pline/Text curves (Plines may be open or closed); Drill accepts root
 Points/Circle primitives. Profile produces a cutter-radius-compensated contour:
@@ -733,7 +733,7 @@ nest_columns, nest_spacing, grid_order, grid_alternate}`; primitives
 type, layer, parent: UUID|null, children: UUID[], groups: string[], geometry:
 Geometry|null}`; MOPs `{kind:"mop", id, identifier: string|null, type, part,
 targets: UUID[], parameters}`. `geometry` is a closed typed record when the
-primitive is inside the similarity slice (root, no relationships, finite
+primitive is inside the inspection geometry slice (no parent or children, finite
 non-degenerate similarity world matrix, zero local Z offset), otherwise `null`
 with `INSPECTION_UNSUPPORTED`: Rect
 `{kind:"rect", world_xyz: four XYZ corners in framework order, bounds}`; Circle
@@ -752,11 +752,11 @@ computed geometry query. Region reports `outer_curve` plus
 `hole_curves` contour payloads (`world_xyz`/`bulges`) and world bounds. MOP
 `parameters` is a closed per-kind record for Profile/Pocket/Engrave/Drill
 containing the named inputs (`side` becomes `profile_side`) and pinned settings
-above, using public dataclass fields. For other out-of-slice primitives/MOPs,
-including MOPs with inherited or out-of-slice settings or targets, return
-type/identity/relationships but null geometry or empty parameters and
-`INSPECTION_UNSUPPORTED`; no invented geometry or calculated effective
-inheritance values. Cross-document copy/transfer between two open documents is
+above, using public dataclass fields. For out-of-slice primitives, return
+type/identity/relationships but null geometry and `INSPECTION_UNSUPPORTED`. MOP
+parameters remain independently inspectable under the preservation-aware rules
+above; no invented geometry or calculated effective inheritance values are returned.
+Cross-document copy/transfer between two open documents is
 specified in [its own section](#cross-document-copy-and-transfer).
 
 ## Results and failures

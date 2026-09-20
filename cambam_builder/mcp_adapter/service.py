@@ -641,13 +641,9 @@ class DocumentService:
         return scale if math.isfinite(scale) else None
 
     @staticmethod
-    def _slice_supported(project, entity):
-        """Return whether a primitive stays inside the root similarity slice."""
+    def _primitive_geometry_supported(entity):
+        """Return whether a primitive has supported finite similarity geometry."""
         if not isinstance(entity, DocumentService.SLICE_TYPES):
-            return False
-        if project.get_parent_of_primitive(entity) is not None:
-            return False
-        if project.get_children_of_primitive(entity) or project.get_groups_of_primitive(entity):
             return False
         matrix = entity.effective_transform
         try:
@@ -659,6 +655,7 @@ class DocumentService:
             )
         except (AttributeError, TypeError, ValueError, OverflowError):
             return False
+
         if not supported:
             return False
         try:
@@ -686,6 +683,23 @@ class DocumentService:
             )
         except (AttributeError, TypeError, ValueError, OverflowError):
             return False
+
+    @classmethod
+    def _inspection_geometry_supported(cls, project, entity):
+        """Return whether typed geometry is safe; group metadata is immaterial."""
+        return (
+            cls._primitive_geometry_supported(entity)
+            and project.get_parent_of_primitive(entity) is None
+            and not project.get_children_of_primitive(entity)
+        )
+
+    @classmethod
+    def _slice_supported(cls, project, entity):
+        """Return whether a primitive is eligible for geometry mutation tools."""
+        return (
+            cls._inspection_geometry_supported(project, entity)
+            and not project.get_groups_of_primitive(entity)
+        )
 
     def _slice_rect(self, project, entity):
         return isinstance(entity, Rect) and self._slice_supported(project, entity)
@@ -884,8 +898,28 @@ class DocumentService:
     def _target_allowed(cls, kind, entity):
         return bool(cls.MOP_TARGET_RULES[kind][1](entity))
 
+    @classmethod
+    def _mop_target_supported(cls, project, entity):
+        """Return whether machining may target this root primitive.
+
+        Group membership is project metadata, not a machining-coordinate
+        relationship.  Keep this predicate separate from geometry mutation
+        eligibility so those contracts can evolve independently.
+        """
+        return (
+            cls._primitive_geometry_supported(entity)
+            and project.get_parent_of_primitive(entity) is None
+            and not project.get_children_of_primitive(entity)
+        )
+
     def _require_mop_target(self, project, entity_id, kind):
-        entity = self._require_slice_primitive(project, entity_id, "targets")
+        entity = project.get_entity(UUID(entity_id))
+        if entity is None:
+            raise DomainError("ENTITY_NOT_FOUND", "Entity was not found", "targets")
+        if not self._mop_target_supported(project, entity):
+            raise DomainError(
+                "UNSUPPORTED_OPERATION", "Entity is not a supported root primitive", "targets")
+        self._geometry_payload(entity)
         message = self.MOP_TARGET_RULES[kind][0]
         if not self._target_allowed(kind, entity):
             raise DomainError("UNSUPPORTED_OPERATION",
@@ -1842,7 +1876,7 @@ class DocumentService:
             parent = project.get_parent_of_primitive(primitive)
             layer = project.get_layer_of_primitive(primitive)
             geometry = None
-            if self._slice_supported(project, primitive):
+            if self._inspection_geometry_supported(project, primitive):
                 try:
                     geometry = self._geometry_payload(primitive)
                 except DomainError:

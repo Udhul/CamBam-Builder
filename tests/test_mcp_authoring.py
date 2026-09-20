@@ -893,12 +893,15 @@ class AuthoringTests(unittest.TestCase):
 
         self.run_async(test)
 
-    def test_profile_rejects_transformed_out_of_scope_target_atomically(self):
+    def test_profile_rejects_transformed_or_local_z_target_atomically(self):
         async def test():
             source = CBProject("transformed")
             layer = source.add_layer("Geometry")
             rectangle = source.add_rect(layer, identifier="stretched", width=20, height=10)
             self.assertTrue(source.scale_primitive(rectangle, 2, 1, bake=False))
+            elevated = source.add_rect(
+                layer, identifier="local-z", corner=(30, 0), width=20, height=10)
+            elevated.local_z_offset = 2
             source_path = self.root / "transformed.cb"
             source.save(str(source_path))
 
@@ -906,16 +909,22 @@ class AuthoringTests(unittest.TestCase):
             self.assertTrue(opened["ok"], opened)
             handle = opened["document"]
             records_before = await self.inspect_records(handle, revision=0)
-            rectangle_id = next(record["id"] for record in records_before if record["kind"] == "primitive")
-            self.assertIsNone(next(record for record in records_before if record["kind"] == "primitive")["geometry"])
+            primitives = {
+                record["identifier"]: record for record in records_before
+                if record["kind"] == "primitive"
+            }
+            self.assertEqual(set(primitives), {"stretched", "local-z"})
+            self.assertTrue(all(record["geometry"] is None
+                                for record in primitives.values()))
 
-            rejected = await self.call("machining_add_profile", self.args(
-                document=handle,
-                expected_revision=0,
-                targets=[rectangle_id],
-                **self.profile_arguments(identifier="stretched-profile"),
-            ))
-            self.assertEqual(rejected["error"]["code"], "UNSUPPORTED_OPERATION")
+            for identifier, record in primitives.items():
+                rejected = await self.call("machining_add_profile", self.args(
+                    document=handle,
+                    expected_revision=0,
+                    targets=[record["id"]],
+                    **self.profile_arguments(identifier=f"{identifier}-profile"),
+                ))
+                self.assertEqual(rejected["error"]["code"], "UNSUPPORTED_OPERATION")
             records_after = await self.inspect_records(handle, revision=0)
             self.assertEqual(records_after, records_before)
 

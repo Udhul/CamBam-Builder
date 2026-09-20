@@ -305,6 +305,15 @@ This preserves live-group construction while keeping the CamBam boundary
 unambiguous. No group-selection metadata or compatibility facade is introduced.
 The old characterization is retained as historical review evidence.
 
+The MCP adapter applies its per-family target-kind rules independently from its
+geometry-mutation eligibility. A supported zero-local-Z root primitive with no
+parent or children remains an eligible explicit MOP target when it belongs to one
+or more framework groups; group names are selection metadata and do not change the
+primitive's coordinates. Structured inspection likewise continues to return its
+typed geometry. Parent/child relationships, non-similarity transforms and nonzero
+local Z remain outside the MCP target slice. Geometry mutation tools retain their
+separate, narrower relationship policy and may still reject grouped primitives.
+
 ### MOP parameter interchange contract
 
 The four supported MOP classes reconstruct their modeled common and subtype fields

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:cambam-builder:mcp-contract:1",
   "title": "MCP adapter v1 tool contracts",
-  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All thirty-seven version 1 document, planning and authoring tools are implemented, including open-document discovery, explicit layer/part settings and native part nesting; typed detail covers the seven supported primitive kinds and the four supported MOP kinds within the similarity slice, while non-similarity transforms and relationships stay diagnostic.",
+  "$comment": "Validate a named tool input/output by reference to its $defs entry. Domain, strict JSON decoding, and filesystem rules also apply. All thirty-seven version 1 document, planning and authoring tools are implemented, including open-document discovery, explicit layer/part settings and native part nesting; typed detail covers the seven supported primitive kinds and the four supported MOP kinds within the similarity slice. Group membership is harmless metadata; non-similarity transforms and parent/child relationships stay diagnostic.",
   "$defs": {
     "UUID": {
       "type": "string",
