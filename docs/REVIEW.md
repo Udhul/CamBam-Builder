@@ -2892,3 +2892,55 @@ Four focused state tests, three matrix tests, five MOP-context tests and the wid
 persistence/geometry tests pass. The complete current suite passes 248 tests with the
 existing Windows symlink-privilege skip. No manual CamBam validation adds evidence
 because XML encoding and reader behavior did not change.
+
+## Framework/MCP MOP parity audit - 2026-09-20
+
+Backlog 8b compared the executable core field-policy inventories, all four MOP
+dataclasses and reader/template preservation path with the closed MCP author-input and
+inspection schemas, service mappings, target rules and negative-path regressions. The
+resulting authoritative exposure matrix is in `MCP_CONTRACT.md`; an executable test
+now requires every modeled dataclass field to have exactly one MCP authoring
+disposition (input, pin or exclusion) and one inspection disposition (typed or
+hidden), and checks those classifications against the schemas.
+
+No MCP authoring promise exceeded the core writer. The bounded add tools intentionally
+pin many direct-core choices, and CustomScript remains excluded because it is literal
+controller/postprocessor-sensitive G-code without native execution acceptance. Live
+target groups remain core-session intent that CamBam XML snapshots to explicit IDs;
+Manual tab points, unsupported lead modes, unknown Drill methods and other unmodeled
+native fields remain preserve-only. Unsupported MOP kinds are different: the core does
+not round-trip them, and strict import rejects them. Arbitrary core target-kind linking
+is only syntactic encoding, so it was not promoted as evidence that CamBam can machine
+every combination.
+
+The audit found two contract wording errors rather than writer defects. A later MCP
+paragraph still described Drill as CannedCycle-only and roughing clearance as
+universally pinned to zero. It now describes the implemented CannedCycle/SpiralMill
+split and limits the zero-clearance rule to fresh MCP CannedCycle authoring; imported
+native CannedCycle clearance remains core-readable, preserved and inspectable.
+
+The largest useful gap is read-only: one alternate but modeled pin, inherited required
+state, live/empty target source or out-of-slice target currently blanks the entire
+structured `parameters` record. Backlog 8d therefore separates preservation-aware
+inspection from the canonical authoring slice after 8c supplies the remaining native
+state evidence. A second compositional defect is independent of native machining:
+adding harmless framework group metadata to an explicit target makes both typed
+geometry and MOP parameters disappear because target eligibility reuses the geometry
+relationship predicate. Backlog 8e isolates that correction while retaining the
+parent/child, transform and local-Z exclusions.
+
+Generic parameter mutation was not promoted. The direct core currently relies on raw
+attribute assignment with important validation deferred to export, so a safe MCP
+patch tool first needs a validated atomic core patch contract and the 8c evidence for
+ambiguous final-pass, retract and CustomScript states. MOP reorder also retains its
+existing named-client reopening condition rather than being duplicated here. Nominal
+parity for live groups, inherited effective values, CustomScript or unknown native
+content was rejected because it would imply durability, style evaluation or execution
+safety the project does not provide.
+
+Verification on 2026-09-20: the five focused parity tests pass; the complete suite
+passes all 253 tests with the existing single Windows symlink-privilege skip. All 83
+MCP tests pass with that same skip. Compileall for the
+modern package, legacy package, tests and demos and `git diff --check` both exit
+successfully. This classification-only increment changes no CamBam XML or toolpath
+behavior, so manual CamBam validation would add no evidence.

@@ -15,7 +15,7 @@ snapshot for resuming the full object graph; it has no migration promise, and a
 future release-grade state format will be assessed from a robust contract rather
 than inherited pickle history. Old Part/Primitive pickle default-fill shims, their
 synthetic migration regression, two unused `_v2` matrix aliases and positional
-`add_part` ordering compatibility were removed. The current 248-test suite passes
+`add_part` ordering compatibility were removed. The current 253-test suite passes
 with the existing Windows symlink-privilege skip; no CamBam behavior changed.
 
 **2026-09-20 backlog 8a modeled MOP field inventory complete.** Engrave and Drill
@@ -25,9 +25,10 @@ reconciles modeled fields on supported imported method switches, and preserves b
 does not switch unknown native methods. Engrave omits an unset final increment and
 classifies its inert RoughingFinishing compatibility property honestly. At that
 slice's completion, the then-current 250-test suite passed with the existing Windows
-symlink-privilege skip. Remaining MOP
-audit work is backlog 8b parity classification and the three prioritized 8c native
-A/B evidence requests; no new CamBam or production G-code acceptance is claimed.
+symlink-privilege skip. The 8b framework/MCP parity matrix is now complete and
+source-checked. Remaining MOP audit work is the three prioritized 8c native A/B
+evidence requests plus the separately bounded 8d/8e gaps found by 8b; no new CamBam
+or production G-code acceptance is claimed.
 
 **2026-09-19 SpiralMill Drill MCP authoring implemented and accepted in CamBam Plus 1.0.**
 `machining_add_drill` now authors CannedCycle, SpiralMill CW and SpiralMill CCW.
@@ -829,6 +830,17 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    is the separately bounded 8b parity matrix and 8c native evidence acquisition.
    Verification: 18 focused policy tests, 14 adjacent MCP/core round-trip tests, and
    all 250 repository tests pass (one existing Windows symlink-privilege skip).
+   **8b framework/MCP parity matrix completed and automatically checked
+   (2026-09-20).** The authoritative matrix in `MCP_CONTRACT.md` classifies all 60
+   common/subtype field-policy slots plus enabled state, target sources and native-only
+   content across core author/read/edit/preserve and MCP author/inspect/mutate. No MCP
+   authoring promise exceeds the core writer. The audit corrected stale CannedCycle-
+   only and universal-zero-clearance prose, retained CustomScript/live-group/unmodeled
+   native exclusions, and identified two useful bounded gaps as 8d/8e below. Five
+   executable parity tests fail if a modeled dataclass field or closed MCP author/
+   inspection schema or target-kind rule drifts out of classification.
+   Verification: 5 focused parity tests and all 253 repository tests pass with the
+   existing Windows symlink-privilege skip; compileall and `git diff --check` pass.
    - **8a — field semantics and encoding audit, one MOP family at a time.** Inventory
      every modeled common and subtype field for Profile, Pocket, Engrave and Drill,
      including nested lead moves/tabs and method-specific Drill fields. For each,
@@ -856,16 +868,15 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
      lead moves, headers/footers, StartPoint and Style inheritance. Classify every
      assumption as documented, native-observed, deliberate product policy, or
      unsupported/invented; remove or narrow unsafe assumptions and add regressions.
-   - **8b — framework/MCP parity and capability-gap audit.** Build a checked matrix
-     from CamBam capability to core author/read/edit/preserve support and MCP
-     author/inspect/mutate support. Include target-kind rules, explicit versus Auto
-     values, import-only/preserve-only fields, adapter-pinned values, inspection
-     rejection paths and method-dependent parameters. Identify core capabilities the
-     adapter unnecessarily hides, adapter promises the core cannot faithfully encode,
-     valid native records inspection excludes, and CamBam capabilities intentionally
-     absent from both. Convert only evidenced, useful gaps into separately scoped
-     backlog increments with dependencies and acceptance criteria; document justified
-     exclusions rather than forcing nominal parity.
+   - **8b - framework/MCP parity and capability-gap audit (completed 2026-09-20).**
+     The checked matrix maps CamBam capability to core author/read/edit/preserve and
+     MCP author/inspect/mutate support. It includes target-kind rules, explicit versus
+     Auto values, import-only/preserve-only fields, adapter-pinned values, inspection
+     rejection paths and method-dependent parameters. The comparison found no MCP
+     promise the core cannot encode; it records hidden core capabilities, valid native
+     records excluded from structured inspection and CamBam capabilities intentionally
+     absent from both. Only the evidenced useful gaps became scoped 8d/8e increments;
+     justified exclusions remain explicit rather than forcing nominal parity.
    - **8c — native evidence acquisition for unresolved semantics.** Prepare a minimal
      requested-fixture list for the user to generate in CamBam Plus 1.0. Each A/B pair
      must change one property or state only and include the source `.cb`, exact UI
@@ -887,6 +898,25 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
      Reopen encoding only if these source-native files disagree with the current
      inventory or trigger a reconciliation prompt; production execution remains out
      of scope.
+   - **8d - preservation-aware structured MOP inspection.** After 8c establishes the
+     remaining native state semantics, separate read fidelity from the canonical MCP
+     authoring pins. Return modeled raw values plus field-scoped native state and
+     applicability for valid imported Profile/Pocket/Engrave/Drill records without
+     treating cached `Default` text as an evaluated CAM-style value. Unknown fields,
+     Manual tab points, unsupported lead modes and literal CustomScript remain opaque.
+     Acceptance requires alternate modeled pin values, inherited common/nested state,
+     supported method dependencies and explicit/empty/group target sources to retain
+     all independently safe typed values and round-trip unchanged; diagnostics must
+     identify only unsupported fields instead of blanking the whole parameter record.
+   - **8e - decouple harmless group membership from MCP MOP target eligibility.** A
+     root supported-kind primitive currently loses typed geometry and its MOP loses
+     structured parameters merely because `relationship_add_to_group` adds framework
+     metadata. Split target eligibility from the geometry relationship predicate so
+     group membership alone neither blocks author/retarget nor erases inspection.
+     Acceptance covers every evidenced target kind before/after group add/remove,
+     exact save/reopen targets and unchanged parameter records. Parent/child targets,
+     non-similarity transforms and nonzero local Z remain excluded until their
+     machining-coordinate semantics are separately evidenced.
    **Deliverables/stopping condition:** durable semantics go to `structure_spec.md`,
    MCP exposure and intentional pins to `MCP_CONTRACT.md`, dated comparisons and
    rejected interpretations to `REVIEW.md`, and only remaining prioritized work stays
