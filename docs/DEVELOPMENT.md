@@ -177,7 +177,7 @@ Canonical Pline/Points vertex records have a focused regression command:
 
 It checks `Vertex` defaults and keyword-only bulge, XY/XYZ tuple shorthand,
 four-tuple and malformed-input rejection, Points bulge rejection, collection
-insertion/reordering, current pickle storage and two XML round trips. The shape
+insertion/reordering, same-code-version pickle snapshots and two XML round trips. The shape
 elevation and Region suites additionally cover varying-Z bulged Pline segments
 and a native-derived varying-Z Region with a hole through two XML round trips.
 The shape-parity fixture uses mixed-Z/bulge geometry while retaining transforms,
@@ -215,7 +215,9 @@ PowerShell can continue after a native command fails.
 that is not supplied by the repository, and logs/returns on some failures. It is
 not a pass/fail check. Select a relevant demo explicitly and inspect its output.
 Generated files belong under `output/`; avoid overwriting existing examples or
-user artifacts. Never load an untrusted pickle: `load_state` uses pickle loading.
+user artifacts. Never load an untrusted pickle or one from another framework code
+version: `load_state` is an unsafe WIP/cache resume convenience, not migration or
+exchange. Use `.cb` XML for the supported external boundary.
 
 For XML changes, compare entity counts, IDs, relationships, geometry and machining
 parameters after writing/reading synthetic fixtures. Opening the result in CamBam
@@ -455,8 +457,9 @@ repeat the accepted A/B or C/D checks unless relevant behavior changes.
   after the temporary XML file closes successfully. Inspect the exception and
   primitive/MOP error context; fix the cause before retrying. If temporary cleanup
   fails, its path is logged. Successful export is not full schema/fidelity validation.
-- State saving accepts `project.pkl` in the current directory. Parent-directory
-  creation failures raise; pickle writes remain non-atomic.
+- Optional same-code-version state snapshots accept `project.pkl` in the current
+  directory. Parent-directory creation failures raise; pickle writes remain
+  non-atomic and no old-field/layout defaults are supplied.
 - Consult [review evidence](REVIEW.md) before retrying a known approach.
 
 ### Export and persistence regression checks
@@ -467,7 +470,8 @@ repeat the accepted A/B or C/D checks unless relevant behavior changes.
 ```
 
 These synthetic tests check exception propagation, destination preservation,
-temporary cleanup, successful XML content/identity/targets and pickle restoration.
+temporary cleanup, successful XML content/identity/targets and current-code pickle
+project-link restoration. They do not test old snapshot compatibility.
 No new manual CamBam acceptance is required for this filesystem/error-boundary
 slice: the successful XML format is unchanged and covered by the round-trip suite.
 

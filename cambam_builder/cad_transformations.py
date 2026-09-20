@@ -328,19 +328,6 @@ def from_cambam_matrix_str(cambam_matrix_str: str, *, return_z: bool = False):
     matrix_3x3[1, 2] = matrix_4x4[1, 3]
     return (matrix_3x3, z_offset) if return_z else matrix_3x3
 
-
-
-
-def to_cambam_matrix_str_v2(matrix_3x3: np.ndarray, *, z_offset: float = 0.0) -> str:
-    """Compatibility alias for the canonical CamBam matrix encoder."""
-    return to_cambam_matrix_str(matrix_3x3, z_offset=z_offset)
-
-
-def from_cambam_matrix_str_v2(cambam_matrix_str: str, *, return_z: bool = False):
-    """Compatibility alias; unsupported spatial/perspective forms fail explicitly."""
-    return from_cambam_matrix_str(cambam_matrix_str, return_z=return_z)
-
-
 if __name__ == "__main__":
     # Test
     a = np.identity(3)
@@ -354,8 +341,5 @@ if __name__ == "__main__":
 
     b1 = to_cambam_matrix_str(a)
     print(b1)
-
-    b2 = to_cambam_matrix_str_v2(a)
-    print(b2)
 
     print(from_cambam_matrix_str(b1))

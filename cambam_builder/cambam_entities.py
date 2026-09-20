@@ -325,18 +325,6 @@ class Part(CamBamEntity):
     stock_surface: float = 0.0
     # Note: No mop_ids or _xml_machineops_element here. Managed by Project.
 
-    def __setstate__(self, state):
-        """Supply defaults for Part fields added after older state files were written."""
-        state.setdefault("nesting_method", "None")
-        state.setdefault("nesting_rows", 1)
-        state.setdefault("nesting_columns", 1)
-        state.setdefault("nesting_spacing", 0.0)
-        state.setdefault("nesting_grid_order", "RightUp")
-        state.setdefault("nesting_grid_alternate", False)
-        state.setdefault("stock_offset", (0.0, 0.0))
-        state.setdefault("stock_surface", 0.0)
-        self.__dict__.update(state)
-
     @property
     def stock_drawing_origin(self) -> Tuple[float, float, float]:
         """Return the stock lower-left top corner in drawing coordinates."""
@@ -431,28 +419,11 @@ class Primitive(CamBamEntity, ABC):
     # --- State Management (for pickling) ---
     def __getstate__(self):
         state = self.__dict__.copy()
-        # Don't pickle weak reference
-        if '_project_ref' in state:
-            del state['_project_ref']
-        # Convert numpy array to list for potentially better pickle compatibility?
-        # Or keep as array if pickle handles it reliably. Let's keep it for now.
-        # state['effective_transform'] = self.effective_transform.tolist()
+        state.pop('_project_ref', None)
         return state
 
     def __setstate__(self, state):
-        # Restore numpy array if it was converted to list
-        # if isinstance(state.get('effective_transform'), list):
-        #     state['effective_transform'] = np.array(state['effective_transform'])
-        fields = getattr(type(self), "__dataclass_fields__", {})
-        state.setdefault('local_z_offset', 0.0)
-        if 'elevation' in fields:
-            state.setdefault('elevation', 0.0)
-        if 'xml_p2_elevation' in fields:
-            state.setdefault('xml_p2_elevation', None)
-        if 'xml_p2_position' in fields:
-            state.setdefault('xml_p2_position', None)
         self.__dict__.update(state)
-        # Re-initialize transient fields
         self._project_ref = None
 
     # --- Project Context ---

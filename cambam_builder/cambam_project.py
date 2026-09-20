@@ -605,7 +605,8 @@ class CamBamProject:
                  machining_origin: Tuple[float, float] = (0.0, 0.0),
                  default_tool_diameter: Optional[float] = None,
                  default_spindle_speed: Optional[int] = None,
-                 target_identifier: Optional[Identifiable] = None, place_last: bool = True, *,
+                 *, target_identifier: Optional[Identifiable] = None,
+                 place_last: bool = True,
                  nesting_method: str = "None", nesting_rows: int = 1,
                  nesting_columns: int = 1, nesting_spacing: float = 0.0,
                  nesting_grid_order: str = "RightUp",
@@ -1542,7 +1543,11 @@ class CamBamProject:
     # --- Persistence ---
 
     def save_state(self, file_path: str) -> None:
-        """Saves the entire project state (including registries) to a pickle file."""
+        """Write a trusted, same-code-version WIP/cache snapshot.
+
+        Pickle is not a stable interchange or migration format. Use CamBam XML
+        for supported external persistence.
+        """
         # Ensure directory exists
         directory = os.path.dirname(os.path.abspath(file_path))
         try:
@@ -1563,7 +1568,7 @@ class CamBamProject:
 
     @staticmethod
     def load_state(file_path: str) -> Optional["CamBamProject"]:
-        """Loads a project state from a pickle file."""
+        """Resume a trusted WIP snapshot from the same framework code version."""
         if not os.path.exists(file_path):
             logger.error(f"Project state file not found: {file_path}")
             return None

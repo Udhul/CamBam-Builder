@@ -2861,3 +2861,34 @@ MCP MOP, core MOP round-trip and native-edit suites passed 14 tests; and all 250
 repository tests passed with the existing Windows symlink-privilege skip. Compileall
 and `git diff --check` also passed. No new CamBam toolpath or production G-code
 acceptance is claimed.
+
+### Unreleased compatibility and WIP-state boundary correction â€” 2026-09-20
+
+The user clarified that regression coverage for “fresh/imported behavior” must not
+freeze files or APIs produced by this unreleased framework. The supported exchange
+boundary is CamBam `.cb` XML: fresh output should use the best current encoding, and
+the reader should accept and preserve supported content from CamBam-saved files.
+Imported-template and method-switch tests exercise that external XML boundary, not
+framework-version compatibility.
+
+The repository already stated this policy, but one later increment had contradicted
+it by adding missing-field defaults for older Part pickles and a synthetic migration
+test. Primitive pickle hooks also supplied defaults for four older geometry fields.
+Those shims and the migration test are removed. Two unused `_v2` matrix aliases and
+a regression preserving positional `add_part` ordering were likewise removed because
+their only purpose was unreleased Python API history; `target_identifier` and
+`place_last` are now keyword-only.
+
+Pickle itself remains useful for one narrower purpose: a trusted same-code-version
+WIP/cache snapshot can resume framework-only object relationships, including live
+group targeting that CamBam XML deliberately materializes as a target snapshot. It
+is unsafe for untrusted input, non-atomic, not used by MCP, and carries no migration
+or exchange promise. A future release-grade state/exchange format may be considered
+after a robust contract exists, without preserving pre-contract pickle layouts. Real
+external compatibility requirements remain separate: CamBam's native file marker
+and evidence-backed MCP protocol versions continue to serve actual applications.
+
+Four focused state tests, three matrix tests, five MOP-context tests and the wider 34
+persistence/geometry tests pass. The complete current suite passes 248 tests with the
+existing Windows symlink-privilege skip. No manual CamBam validation adds evidence
+because XML encoding and reader behavior did not change.

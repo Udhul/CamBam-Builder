@@ -1,4 +1,4 @@
-"""Regression coverage for pickle state persistence paths and project links."""
+"""Current-code pickle snapshot checks; no old-state migration contract."""
 
 import os
 import tempfile
@@ -64,31 +64,6 @@ class StatePersistenceTests(unittest.TestCase):
         self.assertEqual(loaded.get_mop_targets("group"), [])
         self.assertEqual(loaded.get_mop_targets("explicit"), [primitive.internal_id])
         self.assertEqual(project.get_mop_targets("group"), [primitive.internal_id])
-
-    def test_older_part_state_loads_with_nesting_and_stock_coordinate_defaults(self):
-        project, _ = self.make_project()
-        part = project.add_part("Machining")
-        for field in (
-            "nesting_method", "nesting_rows", "nesting_columns",
-            "nesting_spacing", "nesting_grid_order", "nesting_grid_alternate",
-            "stock_offset", "stock_surface",
-        ):
-            delattr(part, field)
-
-        with tempfile.TemporaryDirectory(prefix="state-tests-", dir=self.output) as directory:
-            state_path = str(Path(directory) / "legacy-project.pkl")
-            project.save_state(state_path)
-            loaded = CBProject.load_state(state_path)
-
-        loaded_part = loaded.get_part("Machining")
-        self.assertEqual(loaded_part.nesting_method, "None")
-        self.assertEqual(loaded_part.nesting_rows, 1)
-        self.assertEqual(loaded_part.nesting_columns, 1)
-        self.assertEqual(loaded_part.nesting_spacing, 0.0)
-        self.assertEqual(loaded_part.nesting_grid_order, "RightUp")
-        self.assertFalse(loaded_part.nesting_grid_alternate)
-        self.assertEqual(loaded_part.stock_offset, (0.0, 0.0))
-        self.assertEqual(loaded_part.stock_surface, 0.0)
 
     def test_save_state_raises_when_parent_cannot_be_created(self):
         project, _ = self.make_project()

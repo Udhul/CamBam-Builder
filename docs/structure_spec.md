@@ -44,9 +44,10 @@ packages; `inactive/` and demos are outside that runtime package list.
    Entities encode geometry and metadata; primitives export world matrices. The
    reader constructs entities, then resolves references. See the review for known
    fidelity defects; serialization success alone does not establish equivalence.
-4. `save_state()` / `load_state()` use Python pickle, restoring primitive project
-   links after loading. This is distinct from XML interchange and is not a promised
-   version-stable migration format. Trust requirements live in the runbook.
+4. `save_state()` / `load_state()` provide an optional trusted, same-code-version
+   Python pickle snapshot and restore primitive project links after loading. This is
+   not interchange, durable storage or a versioned migration contract. Trust
+   requirements live in the runbook.
 
 The reader's `PRIMITIVE_TAG_TO_CLASS` and `MOP_TAG_TO_CLASS` are the executable
 supported-tag inventory, not a claim of complete CamBam coverage. Consult those
@@ -141,10 +142,9 @@ while encoder errors propagate under the export contract below.
 
 Subtree copy/transfer carries the detached root's complete world Z offset and
 retains descendant local offsets, geometry elevations and owned contours.
-Current-version pickle round trips retain vertex records and restore project
-links. Old Pline/Points pickle layouts with parallel coordinate/elevation storage
-are not migrated. Text `xml_p2` defaults to absent in older state; this is not a
-general versioned pickle migration.
+Same-code-version pickle snapshots retain vertex records and restore project links.
+Older layouts are not migrated or default-filled; model changes may make an earlier
+snapshot unloadable.
 
 The Region creation API is `add_region(layer, outer_curve, hole_curves=(), ...)`.
 Contours are closed Plines. A registered input Pline's complete world pose is
@@ -203,8 +203,9 @@ Export still assigns project output precision to primitive instances.
 
 `save_state()` accepts bare filenames in the current directory and creates nested
 parent directories. Directory creation and pickle-writing errors propagate;
-successful calls return `None`. Pickle writing remains direct/non-atomic, and
-`load_state()` behavior and trusted-input requirements are unchanged.
+successful calls return `None`. Pickle writing remains direct/non-atomic. Load only
+trusted snapshots created by the same framework code version; no missing-field
+defaults or old-layout migration are provided.
 
 ### XML MOP identity contract
 
@@ -233,6 +234,12 @@ do not add legacy adapters, duplicate storage or old-pickle migration solely to
 preserve unused framework versions. Update repository callers, examples and tests
 together when changing the model. Old pickle files are not a compatibility target.
 
+In tests and documentation, **fresh/imported behavior** means fresh optimal CamBam
+XML output versus input saved by CamBam or another XML producer. It does not mean
+compatibility with XML or pickle emitted by an earlier unreleased framework build.
+Regression coverage should defend the current model and the CamBam XML boundary,
+not freeze accidental framework history.
+
 The external compatibility boundary is CamBam `.cb` interchange: files produced
 by the framework and files created or modified directly in CamBam. Validate
 supported geometry, transforms, operation targets/order and machining parameters
@@ -241,6 +248,15 @@ Framework metadata may supplement native data but must not silently override
 native edits to geometry or operation targets. Missing/malformed metadata and
 unsupported content need explicit handling; full format coverage is not yet
 established. Local self-round trips alone do not prove CamBam interoperability.
+
+Pickle remains only a convenient current-code WIP/cache snapshot for resuming the
+object graph. It can retain framework-only in-memory intent, such as a live group
+target, that native XML materializes as a target snapshot. It is unsafe for untrusted
+input and is neither required by the MCP adapter nor advertised as project exchange.
+Once the framework is release-ready, a stable state/exchange contract may be assessed
+on its own merits; that future decision must not require preserving pre-contract
+pickles or distort the current model. If durable framework state is then justified,
+prefer an explicit safe versioned schema rather than extending pickle compatibility.
 
 The validated application baseline is CamBam Plus 1.0, `CamBam.CAD`
 1.0.7364.41819 and `CamBam` 1.0.7364.41821, build 2020-02-29 23:13:58. CamBam
@@ -621,7 +637,8 @@ The framework is centered on a **Project Manager** (the `CamBamProject` class) t
 - Uses a **relationship registry** to track all associations between primitives and their parents, as well as assignments to layers and MOPs.
 - Provides robust reference resolution so that every entity may be referenced by object, UUID, or user-friendly identifier.
 - Enables operations such as adding, removing, copying, and transferring entities while ensuring that all relationships are updated in a single place.
-- Supports serialization and reconstruction of a complete project via XML (which includes relationship metadata) and via pickle.
+- Supports CamBam XML interchange and an optional same-code-version pickle snapshot;
+  only XML is an external compatibility surface.
 
 ---
 
@@ -737,11 +754,15 @@ The project provides helper methods to add, remove, or update relationships:
 - **MOP Associations:**  
   - The XML writer uses the MOP registry to generate MOP sections. Each MOP element includes a `<primitive>` element listing the XML IDs of the primitives associated with that MOP.
 
-### 4.2 Pickle Serialization
+### 4.2 Optional WIP/cache snapshot
 
-- **Native Serialization:**  
-  - The project object (including its relationship registries) is serialized using pickle.
-  - Custom `__getstate__` and `__setstate__` methods remove transient or non-serializable attributes (such as weak references).
+- The current project object, including relationship registries, may be snapshotted
+  with pickle to resume trusted same-code-version work in progress.
+- Primitive state hooks remove and restore only the transient weak project reference;
+  they do not migrate old fields or layouts.
+- CamBam XML is the supported exchange surface. A future release-grade framework
+  state/exchange format requires a demonstrated need and a robust explicit contract;
+  unreleased pickle history does not constrain that design.
 
 ### 4.3 Reconstruction (Importing a CamBam File)
 
@@ -856,7 +877,9 @@ This specification defines a robust and decoupled architecture for the CamBam CA
 - **Robust Serialization and Reconstruction:**  
   - XML output is generated by querying the project registries, ensuring that primitives are placed in the correct layer and MOP containers and that parent links are recorded in the `<Tag>` metadata.
   - The reconstruction process follows a strict order—starting with parts, then MOPs, layers, primitives, and finally linking primitives to layers, MOPs, and parent relationships—so that a complete project can be rebuilt accurately.
-  - The framework supports reconstructing a project from XML (and optionally from pickle), ensuring that all relationships are correctly reassembled.
+  - The framework reconstructs supported relationships from XML. Trusted
+    same-code-version pickle snapshots are an optional development convenience,
+    not an alternative interchange contract.
 
 - **Inter-Project Transferability:**  
   - Copy and transfer methods operate on the centralized registries, allowing entire linked trees of primitives to be transferred without duplicating relationship data.

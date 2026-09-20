@@ -2,18 +2,30 @@
 
 Baseline reviewed 2026-09-07: package version 0.1.0. The modern package provides
 entity registries, layer/group/parent and part-MOP relationships, transforms,
-XML reader/writer and pickle persistence. These are implemented capabilities,
+XML reader/writer and optional same-code-version pickle snapshots. These are implemented capabilities,
 not a guarantee of complete round-trip fidelity. MOP target selections are project-owned.
 
 ## Active work and next priority
+
+**2026-09-20 unreleased compatibility boundary enforced.** “Fresh/imported” now
+explicitly means optimal fresh CamBam XML and arbitrary supported CamBam-saved XML,
+not files or Python calls from earlier unreleased framework builds. CamBam `.cb` XML
+is the exchange boundary. Pickle remains only a trusted same-code-version WIP/cache
+snapshot for resuming the full object graph; it has no migration promise, and a
+future release-grade state format will be assessed from a robust contract rather
+than inherited pickle history. Old Part/Primitive pickle default-fill shims, their
+synthetic migration regression, two unused `_v2` matrix aliases and positional
+`add_part` ordering compatibility were removed. The current 248-test suite passes
+with the existing Windows symlink-privilege skip; no CamBam behavior changed.
 
 **2026-09-20 backlog 8a modeled MOP field inventory complete.** Engrave and Drill
 now join the common and Profile/Pocket slices with declarative fresh-export policies.
 Drill emits mutually exclusive CannedCycle, SpiralMill or CustomScript method fields,
 reconciles modeled fields on supported imported method switches, and preserves but
 does not switch unknown native methods. Engrave omits an unset final increment and
-classifies its inert RoughingFinishing compatibility property honestly. The full 250-
-test suite passes with the existing Windows symlink-privilege skip. Remaining MOP
+classifies its inert RoughingFinishing compatibility property honestly. At that
+slice's completion, the then-current 250-test suite passed with the existing Windows
+symlink-privilege skip. Remaining MOP
 audit work is backlog 8b parity classification and the three prioritized 8c native
 A/B evidence requests; no new CamBam or production G-code acceptance is claimed.
 

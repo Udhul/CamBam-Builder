@@ -128,16 +128,6 @@ class MopContextTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "explicit native tab points"):
             build_xml_tree(project)
 
-    def test_add_part_keeps_legacy_ordering_arguments_positional(self):
-        project = CBProject("part-ordering")
-        first = project.add_part("First")
-        second = project.add_part(
-            "Second", True, 12.5, 1220.0, 2440.0, "MDF", "210,180,140",
-            (0.0, 0.0), None, None, "First", False,
-        )
-        self.assertIsNotNone(second)
-        self.assertEqual([second.internal_id, first.internal_id], project._part_order)
-
     def test_native_machining_and_part_style_context_survives_two_roundtrips(self):
         project = CBProject("native-context")
         layer = project.add_layer("Geometry")
