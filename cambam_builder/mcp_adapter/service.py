@@ -15,18 +15,16 @@ from jsonschema import ValidationError
 from cambam_builder import CBProject
 from cambam_builder.cambam_entities import (
     Arc, Circle, DrillMop, EngraveMop, Mop, Pline, PocketMop, Points,
-    Primitive, ProfileMop, Rect, Text, Vertex,
+    Primitive, ProfileMop, Rect, Text, Vertex, MOP_COMMON_FIELD_POLICIES,
+    MOP_DRILL_FIELD_POLICIES, MOP_ENGRAVE_FIELD_POLICIES,
+    MOP_POCKET_FIELD_POLICIES, MOP_PROFILE_FIELD_POLICIES,
+    MOP_XML_FIELD_PATHS,
 )
 from cambam_builder.cambam_reader import CamBamImportLimitError, read_cambam_bytes
 from cambam_builder.region import Region
 from .paths import DomainError, MAX_XML_BYTES, Workspace
 from .schema import CONTRACT, OUTPUTS, StrictValidator, TOOLS, validated_arguments
 
-_PARAMETER_VALIDATORS = {
-    name: StrictValidator({"$ref": f"#/$defs/{name}", "$defs": CONTRACT["$defs"]})
-    for name in ("ProfileParameters", "PocketParameters", "EngraveParameters",
-                 "DrillParameters")
-}
 _GEOMETRY_VALIDATORS = {
     kind: StrictValidator({"$ref": f"#/$defs/{definition}", "$defs": CONTRACT["$defs"]})
     for kind, definition in {
@@ -1715,337 +1713,109 @@ class DocumentService:
                 target.revision = target_revision
                 return self._complete(name, entry, result)
 
-    PROFILE_XML_PATHS = {
-        "target_depth": ("TargetDepth",), "depth_increment": ("DepthIncrement",),
-        "tool_diameter": ("ToolDiameter",), "cut_feedrate": ("CutFeedrate",),
-        "plunge_feedrate": ("PlungeFeedrate",), "spindle_speed": ("SpindleSpeed",),
-        "stock_surface": ("StockSurface",), "clearance_plane": ("ClearancePlane",),
-        "profile_side": ("InsideOutside",), "work_plane": ("WorkPlane",),
-        "tool_profile": ("ToolProfile",), "spindle_direction": ("SpindleDirection",),
-        "velocity_mode": ("VelocityMode",), "milling_direction": ("MillingDirection",),
-        "roughing_clearance": ("RoughingClearance",), "stepover": ("StepOver",),
-        "tool_number": ("ToolNumber",), "collision_detection": ("CollisionDetection",),
-        "corner_overcut": ("CornerOvercut",),
-        "final_depth_increment": ("FinalDepthIncrement",),
-        "cut_ordering": ("CutOrdering",),
-        "lead_in_type": ("LeadInMove", "LeadInType"),
-        "tab_method": ("HoldingTabs", "TabMethod"),
-    }
-    POCKET_XML_PATHS = {
-        "target_depth": ("TargetDepth",), "depth_increment": ("DepthIncrement",),
-        "tool_diameter": ("ToolDiameter",), "cut_feedrate": ("CutFeedrate",),
-        "plunge_feedrate": ("PlungeFeedrate",), "spindle_speed": ("SpindleSpeed",),
-        "stock_surface": ("StockSurface",), "clearance_plane": ("ClearancePlane",),
-        "work_plane": ("WorkPlane",), "tool_profile": ("ToolProfile",),
-        "spindle_direction": ("SpindleDirection",), "velocity_mode": ("VelocityMode",),
-        "roughing_clearance": ("RoughingClearance",), "tool_number": ("ToolNumber",),
-        "stepover": ("StepOver",), "stepover_feedrate": ("StepoverFeedrate",),
-        "milling_direction": ("MillingDirection",),
-        "collision_detection": ("CollisionDetection",),
-        "lead_in_type": ("LeadInMove", "LeadInType"),
-        "final_depth_increment": ("FinalDepthIncrement",),
-        "cut_ordering": ("CutOrdering",), "region_fill_style": ("RegionFillStyle",),
-        "finish_stepover": ("FinishStepover",),
-        "finish_stepover_at_target_depth": ("FinishStepoverAtTargetDepth",),
-        "roughing_finishing": ("RoughingFinishing",),
-    }
-    ENGRAVE_XML_PATHS = {
-        "target_depth": ("TargetDepth",), "depth_increment": ("DepthIncrement",),
-        "tool_diameter": ("ToolDiameter",), "cut_feedrate": ("CutFeedrate",),
-        "plunge_feedrate": ("PlungeFeedrate",), "spindle_speed": ("SpindleSpeed",),
-        "stock_surface": ("StockSurface",), "clearance_plane": ("ClearancePlane",),
-        "work_plane": ("WorkPlane",), "tool_profile": ("ToolProfile",),
-        "spindle_direction": ("SpindleDirection",), "velocity_mode": ("VelocityMode",),
-        "roughing_clearance": ("RoughingClearance",), "tool_number": ("ToolNumber",),
-        "roughing_finishing": ("RoughingFinishing",),
-        "final_depth_increment": ("FinalDepthIncrement",),
-        "cut_ordering": ("CutOrdering",),
-    }
-    DRILL_COMMON_XML_PATHS = {
-        "target_depth": ("TargetDepth",), "depth_increment": ("DepthIncrement",),
-        "tool_diameter": ("ToolDiameter",), "cut_feedrate": ("CutFeedrate",),
-        "plunge_feedrate": ("PlungeFeedrate",), "spindle_speed": ("SpindleSpeed",),
-        "stock_surface": ("StockSurface",), "clearance_plane": ("ClearancePlane",),
-        "work_plane": ("WorkPlane",), "tool_profile": ("ToolProfile",),
-        "spindle_direction": ("SpindleDirection",), "velocity_mode": ("VelocityMode",),
-        "roughing_clearance": ("RoughingClearance",), "tool_number": ("ToolNumber",),
-        "drilling_method": ("DrillingMethod",),
-    }
-    DRILL_CANNED_XML_PATHS = {
-        **DRILL_COMMON_XML_PATHS, "peck_distance": ("PeckDistance",),
-        "retract_height": ("RetractHeight",), "dwell": ("Dwell",),
-    }
-    DRILL_SPIRAL_XML_PATHS = {
-        **DRILL_COMMON_XML_PATHS, "hole_diameter": ("HoleDiameter",),
-        "drill_lead_out": ("DrillLeadOut",),
-        "spiral_flat_base": ("SpiralFlatBase",),
-        "lead_out_length": ("LeadOutLength",),
+    MOP_FIELD_POLICIES = {
+        "profile": MOP_PROFILE_FIELD_POLICIES,
+        "pocket": MOP_POCKET_FIELD_POLICIES,
+        "engrave": MOP_ENGRAVE_FIELD_POLICIES,
+        "drill": MOP_DRILL_FIELD_POLICIES,
     }
 
     @staticmethod
-    def _common_mop_scalars_ok(values):
-        return (
-            type(values["enabled"]) is bool
-            and all(type(values[key]) in (int, float) and math.isfinite(values[key])
-                    for key in ("target_depth", "depth_increment", "tool_diameter",
-                                "cut_feedrate", "plunge_feedrate", "stock_surface",
-                                "clearance_plane"))
-            and type(values["spindle_speed"]) is int
-            and values["target_depth"] < values["stock_surface"]
-            and values["clearance_plane"] > values["stock_surface"]
-            and all(values[key] > 0 for key in ("depth_increment", "tool_diameter",
-                                                "cut_feedrate", "plunge_feedrate"))
-            and 1 <= values["spindle_speed"] <= 1_000_000
-        )
+    def _mop_xml_state(root, path):
+        """Return the nearest native state governing a modeled XML path."""
+        current = root
+        governing_states = []
+        for tag in path:
+            current = current.find(tag)
+            if current is None:
+                return "Omitted"
+            if current.get("state") in ("Default", "Value"):
+                governing_states.append(current.get("state"))
+        if "Default" in governing_states:
+            return "Default"
+        return "Value" if governing_states else "Unspecified"
 
     @staticmethod
-    def _explicit_mop_xml_states(mop, paths):
-        template = getattr(mop, "_xml_template", None)
-        if template is None:
-            return True
-        for path in paths.values():
-            current = template
-            saw_value_state = False
-            for tag in path:
-                current = current.find(tag)
-                if current is None or current.get("state") == "Default":
-                    return False
-                saw_value_state = saw_value_state or current.get("state") == "Value"
-            if not saw_value_state:
-                return False
-        return True
+    def _unsupported_native_paths(root, modeled_paths):
+        """Name maximal opaque subtrees and unknown parameter attributes."""
+        result = set()
+        prefixes = {
+            path[:length]
+            for path in modeled_paths
+            for length in range(1, len(path) + 1)
+        }
 
-    @classmethod
-    def _mop_record_values(cls, mop, mop_class, fields, fixed, unexposed_fixed, extra=None):
-        if not isinstance(mop, mop_class):
-            return None
-        values = {field: getattr(mop, field) for field in fields}
-        if (any(values[key] != expected for key, expected in fixed.items())
-                or any(getattr(mop, key) != expected
-                       for key, expected in unexposed_fixed.items())):
-            return None
-        if not cls._common_mop_scalars_ok(values):
-            return None
-        if extra is not None and not extra(values):
-            return None
-        return values
+        def visit(element, prefix=()):
+            for child in element:
+                path = prefix + (child.tag,)
+                if path[:1] in {("Name",), ("Tag",), ("primitive",)}:
+                    continue
+                if path not in prefixes:
+                    result.add("/".join(path))
+                    continue
+                for attribute in child.attrib:
+                    if attribute != "state":
+                        result.add(f"{'/'.join(path)}/@{attribute}")
+                visit(child, path)
 
-    def _profile_parameters(self, mop):
-        values = self._mop_record_values(
-            mop, ProfileMop,
-            (
-                "target_depth", "depth_increment", "tool_diameter", "cut_feedrate",
-                "plunge_feedrate", "spindle_speed", "stock_surface", "clearance_plane",
-                "enabled", "profile_side", "work_plane", "tool_profile",
-                "spindle_direction", "velocity_mode", "milling_direction",
-                "roughing_clearance", "stepover", "tool_number", "collision_detection",
-                "corner_overcut", "final_depth_increment", "cut_ordering", "lead_in_type",
-                "tab_method", "tab_width", "tab_height", "tab_min_tabs",
-                "tab_max_tabs", "tab_distance", "tab_size_threshold",
-                "tab_use_leadins", "tab_style", "custom_mop_header",
-                "custom_mop_footer",
-            ),
-            {
-                "work_plane": "XY", "tool_profile": "EndMill", "spindle_direction": "CW",
-                "velocity_mode": "ExactStop", "milling_direction": "Conventional",
-                "stepover": 0.4, "tool_number": 0,
-                "collision_detection": True,
-                "final_depth_increment": 0.0, "cut_ordering": "DepthFirst",
-                "lead_in_type": "None",
-                "custom_mop_header": "", "custom_mop_footer": "",
-            },
-            {
-                "optimisation_mode": "Standard", "max_crossover_distance": 0.7,
-                "lead_in_spiral_angle": 30.0,
-            },
-            self._profile_scalars_ok,
-        )
-        if values is None or not self._explicit_mop_xml_states(mop, self.PROFILE_XML_PATHS):
-            return None
-        return values if _PARAMETER_VALIDATORS["ProfileParameters"].is_valid(values) else None
-
-    @staticmethod
-    def _profile_scalars_ok(values):
-        return (
-            values["tab_method"] in ("None", "Automatic")
-            and values["tab_style"] in ("Square", "Triangle", "Skip")
-            and type(values["tab_use_leadins"]) is bool
-            and all(type(values[key]) in (int, float) and math.isfinite(values[key])
-                    and values[key] > 0 for key in ("tab_width", "tab_height"))
-            and type(values["tab_distance"]) in (int, float)
-            and math.isfinite(values["tab_distance"])
-            and values["tab_distance"] >= 0
-            and type(values["tab_size_threshold"]) in (int, float)
-            and math.isfinite(values["tab_size_threshold"])
-            and values["tab_size_threshold"] >= 0
-            and all(type(values[key]) is int and values[key] >= 1
-                    for key in ("tab_min_tabs", "tab_max_tabs"))
-            and values["tab_min_tabs"] <= values["tab_max_tabs"]
-        )
-
-    def _pocket_parameters(self, mop):
-        values = self._mop_record_values(
-            mop, PocketMop,
-            (
-                "target_depth", "depth_increment", "tool_diameter", "cut_feedrate",
-                "plunge_feedrate", "spindle_speed", "stock_surface", "clearance_plane",
-                "enabled", "work_plane", "tool_profile", "spindle_direction",
-                "velocity_mode", "roughing_clearance", "tool_number",
-                "final_depth_increment", "cut_ordering", "custom_mop_header",
-                "custom_mop_footer", "stepover", "stepover_feedrate",
-                "milling_direction", "collision_detection", "lead_in_type",
-                "region_fill_style", "finish_stepover",
-                "finish_stepover_at_target_depth", "roughing_finishing",
-            ),
-            {
-                "work_plane": "XY", "tool_profile": "EndMill", "spindle_direction": "CW",
-                "velocity_mode": "ExactStop",
-                "tool_number": 0, "final_depth_increment": 0.0,
-                "cut_ordering": "DepthFirst", "custom_mop_header": "",
-                "custom_mop_footer": "", "stepover": 0.4,
-                "stepover_feedrate": "Plunge Feedrate",
-                "milling_direction": "Conventional", "collision_detection": True,
-                "lead_in_type": "Spiral",
-                "region_fill_style": "InsideOutsideOffsets",
-                "finish_stepover": 0.0, "finish_stepover_at_target_depth": False,
-                "roughing_finishing": "Roughing",
-            },
-            {
-                "optimisation_mode": "Standard", "max_crossover_distance": 0.7,
-                "lead_in_spiral_angle": 30.0,
-            },
-        )
-        if values is None or not self._explicit_mop_xml_states(mop, self.POCKET_XML_PATHS):
-            return None
-        return values if _PARAMETER_VALIDATORS["PocketParameters"].is_valid(values) else None
-
-    def _engrave_parameters(self, mop):
-        values = self._mop_record_values(
-            mop, EngraveMop,
-            (
-                "target_depth", "depth_increment", "tool_diameter", "cut_feedrate",
-                "plunge_feedrate", "spindle_speed", "stock_surface", "clearance_plane",
-                "enabled", "work_plane", "tool_profile", "spindle_direction",
-                "velocity_mode", "roughing_clearance", "tool_number",
-                "custom_mop_header", "custom_mop_footer", "roughing_finishing",
-                "final_depth_increment", "cut_ordering",
-            ),
-            {
-                "work_plane": "XY", "spindle_direction": "CW",
-                "velocity_mode": "ExactStop",
-                "tool_number": 0, "custom_mop_header": "", "custom_mop_footer": "",
-                "roughing_finishing": "Roughing", "final_depth_increment": 0.0,
-                "cut_ordering": "DepthFirst",
-            },
-            {
-                "optimisation_mode": "Standard", "max_crossover_distance": 0.7,
-            },
-        )
-        if values is None or not self._explicit_mop_xml_states(mop, self.ENGRAVE_XML_PATHS):
-            return None
-        return values if _PARAMETER_VALIDATORS["EngraveParameters"].is_valid(values) else None
-
-    @staticmethod
-    def _drill_scalars_ok(values):
-        common_ok = (
-            all(type(values[key]) in (int, float) and math.isfinite(values[key])
-                and values[key] >= 0 for key in ("peck_distance", "dwell"))
-            and type(values["retract_height"]) in (int, float)
-            and math.isfinite(values["retract_height"])
-            and type(values["drill_lead_out"]) is bool
-            and type(values["spiral_flat_base"]) is bool
-            and type(values["lead_out_length"]) in (int, float)
-            and math.isfinite(values["lead_out_length"])
-            and values["drilling_method"] in (
-                "CannedCycle", "SpiralMill_CW", "SpiralMill_CCW")
-            and values["tool_profile"] in ("Drill", "EndMill", "Unspecified")
-        )
-        if not common_ok:
-            return False
-        if values["drilling_method"] == "CannedCycle":
-            return (
-                values["hole_diameter"] is None
-                and values["drill_lead_out"] is False
-                and values["spiral_flat_base"] is True
-                and values["lead_out_length"] == 0
-            )
-        hole_diameter = values["hole_diameter"]
-        if not values["drill_lead_out"] and values["lead_out_length"] != 0:
-            return False
-        if hole_diameter is None:
-            return True
-        if not (type(hole_diameter) in (int, float)
-                and math.isfinite(hole_diameter) and hole_diameter > 0):
-            return False
-        effective_diameter = hole_diameter - 2 * values["roughing_clearance"]
-        return (
-            effective_diameter > values["tool_diameter"]
-            and (not values["drill_lead_out"]
-                 or values["lead_out_length"] <= effective_diameter / 2.0)
-        )
-
-    def _drill_parameters(self, mop):
-        values = self._mop_record_values(
-            mop, DrillMop,
-            (
-                "target_depth", "depth_increment", "tool_diameter", "cut_feedrate",
-                "plunge_feedrate", "spindle_speed", "stock_surface", "clearance_plane",
-                "enabled", "peck_distance", "retract_height", "dwell",
-                "drilling_method", "tool_profile", "work_plane", "spindle_direction",
-                "velocity_mode", "roughing_clearance", "tool_number",
-                "custom_mop_header", "custom_mop_footer", "hole_diameter",
-                "drill_lead_out", "spiral_flat_base", "lead_out_length",
-            ),
-            {
-                "work_plane": "XY", "spindle_direction": "CW",
-                "velocity_mode": "ExactStop",
-                "tool_number": 0, "custom_mop_header": "", "custom_mop_footer": "",
-            },
-            {
-                "optimisation_mode": "Standard", "max_crossover_distance": 0.7,
-                "custom_script": "",
-            },
-            extra=self._drill_scalars_ok,
-        )
-        if values is None:
-            return None
-        if values["drilling_method"] == "CannedCycle":
-            paths = self.DRILL_CANNED_XML_PATHS
-        else:
-            paths = self.DRILL_SPIRAL_XML_PATHS
-            if values["hole_diameter"] is None:
-                paths = {key: path for key, path in paths.items()
-                         if key != "hole_diameter"}
-        if not self._explicit_mop_xml_states(mop, paths):
-            return None
-        return values if _PARAMETER_VALIDATORS["DrillParameters"].is_valid(values) else None
+        visit(root)
+        return result
 
     def _mop_parameters(self, project, mop):
+        """Return independently safe raw values and their native XML semantics."""
         kind = self.MOP_KIND_BY_CLASS.get(type(mop))
-        if kind == "profile":
-            parameters = self._profile_parameters(mop)
-        elif kind == "pocket":
-            parameters = self._pocket_parameters(mop)
-        elif kind == "engrave":
-            parameters = self._engrave_parameters(mop)
-        elif kind == "drill":
-            parameters = self._drill_parameters(mop)
-        else:
-            return None
-        if parameters is None:
-            return None
-        try:
-            targets = project.get_mop_targets(mop)
-            if (project.get_mop_target_group(mop) is not None or not targets
-                    or any(not (entity is not None
-                                and self._slice_supported(project, entity)
-                                and self._target_allowed(kind, entity))
-                           for target in targets
-                           for entity in (project.get_primitive(target),))):
-                return None
-        except (KeyError, TypeError, ValueError):
-            return None
-        return parameters
+        if kind is None:
+            return {}, {}, ["operation"]
+        subtype_policies = self.MOP_FIELD_POLICIES[kind]
+        policies = {**MOP_COMMON_FIELD_POLICIES, **subtype_policies}
+        template = getattr(mop, "_xml_template", None)
+        if template is None:
+            try:
+                template = mop.to_xml_element(project, [])
+            except (KeyError, TypeError, ValueError):
+                return {}, {}, ["operation"]
+
+        modeled_paths = {policy.xml_path for policy in subtype_policies.values()}
+        modeled_paths.update((policy.xml_tag,) for policy in MOP_COMMON_FIELD_POLICIES.values())
+        unsupported = self._unsupported_native_paths(template, modeled_paths)
+
+        # Literal controller-sensitive G-code and unmodeled lead semantics stay
+        # opaque, while all unrelated modeled values remain inspectable.
+        opaque_fields = {"custom_script"}
+        if kind in ("profile", "pocket") and mop.lead_in_type not in ("None", "Spiral"):
+            opaque_fields.update(("lead_in_type", "lead_in_spiral_angle"))
+            unsupported = {
+                path for path in unsupported if not path.startswith("LeadInMove/")
+            }
+            unsupported.add("LeadInMove")
+        if kind == "drill" and mop.drilling_method == "CustomScript":
+            unsupported.add("CustomScript")
+
+        parameters = {"enabled": mop.enabled}
+        metadata = {
+            "enabled": {"native_state": "Attribute", "applicable": True},
+        }
+        for field_name, policy in policies.items():
+            path = MOP_XML_FIELD_PATHS[field_name]
+            state = self._mop_xml_state(template, path)
+            requirements = getattr(policy, "requirements", ())
+            applicable = all(
+                getattr(mop, controller) in accepted
+                for controller, accepted in requirements
+            )
+            if field_name in opaque_fields:
+                continue
+            metadata[field_name] = {
+                "native_state": state,
+                "applicable": applicable,
+            }
+            if state != "Omitted":
+                parameters[field_name] = getattr(mop, field_name)
+
+        if self._mop_xml_state(template, MOP_XML_FIELD_PATHS["custom_script"]) != "Omitted":
+            unsupported.add("CustomScript")
+
+        return parameters, metadata, sorted(unsupported)
 
     def _inspect(self, document, args):
         project = document.project
@@ -2085,17 +1855,31 @@ class DocumentService:
                             "geometry": geometry})
         for mop in project.list_mops():
             part = project.get_part_of_mop(mop)
-            parameters = self._mop_parameters(project, mop)
+            parameters, parameter_metadata, unsupported_fields = self._mop_parameters(
+                project, mop
+            )
             records.append({"kind": "mop", "id": str(mop.internal_id), "identifier": mop.user_identifier,
                             "type": type(mop).__name__, "part": part.user_identifier,
                             "targets": [str(uid) for uid in project.get_mop_targets(mop)],
-                            "parameters": parameters or {}})
+                            "target_group": project.get_mop_target_group(mop),
+                            "parameters": parameters,
+                            "parameter_metadata": parameter_metadata,
+                            "unsupported_fields": unsupported_fields})
         offset, limit = args["offset"], args["limit"]
         page = records[offset:offset + limit]
         diagnostics = []
-        if any((record["kind"] == "primitive" and record["geometry"] is None)
-               or (record["kind"] == "mop" and not record["parameters"])
+        if any(record["kind"] == "primitive" and record["geometry"] is None
                for record in page):
             diagnostics.append({"code": "INSPECTION_UNSUPPORTED", "message": "Some entity details are outside the supported geometry/MOP inspection slice."})
+        for record in page:
+            if record["kind"] == "mop" and record["unsupported_fields"]:
+                fields = ", ".join(record["unsupported_fields"])
+                diagnostics.append({
+                    "code": "INSPECTION_UNSUPPORTED",
+                    "message": (
+                        f"MOP '{record['identifier']}' preserves opaque native fields: "
+                        f"{fields}. Other returned parameters remain independently usable."
+                    )[:1024],
+                })
         return {"summary": self._summary(document), "offset": offset,
                 "next_offset": offset + limit if offset + limit < len(records) else None, "entities": page}, diagnostics

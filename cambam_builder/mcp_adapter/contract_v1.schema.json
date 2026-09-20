@@ -956,6 +956,75 @@
       ],
       "additionalProperties": false
     },
+    "PreservedMopParameters": {
+      "type": "object",
+      "description": "Raw modeled values present in a MOP's native record. Default-state values are cached text parsed to their modeled type, not evaluated CAM-style values; omitted native fields are absent.",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "target_depth": { "anyOf": [{ "$ref": "#/$defs/Number" }, { "type": "null" }] },
+        "depth_increment": { "anyOf": [{ "$ref": "#/$defs/Number" }, { "type": "null" }] },
+        "stock_surface": { "$ref": "#/$defs/Number" },
+        "roughing_clearance": { "$ref": "#/$defs/Number" },
+        "clearance_plane": { "$ref": "#/$defs/Number" },
+        "spindle_direction": { "type": "string" },
+        "spindle_speed": { "anyOf": [{ "type": "integer" }, { "type": "null" }] },
+        "velocity_mode": { "type": "string" },
+        "work_plane": { "type": "string" },
+        "optimisation_mode": { "type": "string" },
+        "tool_diameter": { "anyOf": [{ "$ref": "#/$defs/Number" }, { "type": "null" }] },
+        "tool_number": { "type": "integer" },
+        "tool_profile": { "type": "string" },
+        "plunge_feedrate": { "$ref": "#/$defs/Number" },
+        "cut_feedrate": { "anyOf": [{ "$ref": "#/$defs/Number" }, { "type": "null" }] },
+        "max_crossover_distance": { "$ref": "#/$defs/Number" },
+        "custom_mop_header": { "type": "string" },
+        "custom_mop_footer": { "type": "string" },
+        "stepover": { "$ref": "#/$defs/Number" },
+        "profile_side": { "type": "string" },
+        "milling_direction": { "type": "string" },
+        "collision_detection": { "type": "boolean" },
+        "corner_overcut": { "type": "boolean" },
+        "lead_in_type": { "type": "string" },
+        "lead_in_spiral_angle": { "$ref": "#/$defs/Number" },
+        "final_depth_increment": { "anyOf": [{ "$ref": "#/$defs/Number" }, { "type": "null" }] },
+        "cut_ordering": { "type": "string" },
+        "tab_method": { "type": "string" },
+        "tab_width": { "$ref": "#/$defs/Number" },
+        "tab_height": { "$ref": "#/$defs/Number" },
+        "tab_min_tabs": { "type": "integer" },
+        "tab_max_tabs": { "type": "integer" },
+        "tab_distance": { "$ref": "#/$defs/Number" },
+        "tab_size_threshold": { "$ref": "#/$defs/Number" },
+        "tab_use_leadins": { "type": "boolean" },
+        "tab_style": { "type": "string" },
+        "stepover_feedrate": { "type": "string" },
+        "region_fill_style": { "type": "string" },
+        "finish_stepover": { "$ref": "#/$defs/Number" },
+        "finish_stepover_at_target_depth": { "type": "boolean" },
+        "roughing_finishing": { "type": "string" },
+        "drilling_method": { "type": "string" },
+        "peck_distance": { "$ref": "#/$defs/Number" },
+        "retract_height": { "$ref": "#/$defs/Number" },
+        "dwell": { "$ref": "#/$defs/Number" },
+        "hole_diameter": { "anyOf": [{ "$ref": "#/$defs/Number" }, { "type": "null" }] },
+        "drill_lead_out": { "type": "boolean" },
+        "spiral_flat_base": { "type": "boolean" },
+        "lead_out_length": { "$ref": "#/$defs/Number" }
+      },
+      "additionalProperties": false
+    },
+    "MopParameterMetadata": {
+      "type": "object",
+      "properties": {
+        "native_state": {
+          "type": "string",
+          "enum": ["Value", "Default", "Unspecified", "Omitted", "Attribute"]
+        },
+        "applicable": { "type": "boolean" }
+      },
+      "required": ["native_state", "applicable"],
+      "additionalProperties": false
+    },
     "EntityRecord": {
       "oneOf": [
         {
@@ -1132,8 +1201,15 @@
                 "$ref": "#/$defs/UUID"
               }
             },
+            "target_group": {
+              "anyOf": [
+                { "type": "string", "minLength": 1, "maxLength": 128 },
+                { "type": "null" }
+              ],
+              "description": "Live framework group source, or null for an explicit target selection. XML export materializes group targets as a snapshot."
+            },
             "parameters": {
-              "oneOf": [
+              "anyOf": [
                 {
                   "$ref": "#/$defs/ProfileParameters"
                 },
@@ -1147,12 +1223,24 @@
                   "$ref": "#/$defs/DrillParameters"
                 },
                 {
-                  "type": "object",
-                  "properties": {},
-                  "required": [],
-                  "additionalProperties": false
+                  "$ref": "#/$defs/PreservedMopParameters"
                 }
               ]
+            },
+            "parameter_metadata": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/MopParameterMetadata"
+              }
+            },
+            "unsupported_fields": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "description": "Opaque native XML paths preserved during round trip but not returned as typed parameter values."
             }
           },
           "required": [
@@ -1162,7 +1250,10 @@
             "type",
             "part",
             "targets",
-            "parameters"
+            "target_group",
+            "parameters",
+            "parameter_metadata",
+            "unsupported_fields"
           ],
           "additionalProperties": false
         }

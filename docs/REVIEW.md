@@ -1,5 +1,40 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Preservation-aware structured MOP inspection - 2026-09-20
+
+Backlog 8d replaced the MCP adapter's all-or-nothing MOP inspection gate. The old
+gate coupled read fidelity to canonical authoring pins, required every inspected XML
+path to be explicit `Value`, and also required a nonempty eligible target selection.
+Consequently one alternate pin, inherited container or empty/group target erased the
+whole typed parameter record even though the core safely preserved it.
+
+The accepted contract retains flat `parameters` for direct value access and adds
+field-scoped `parameter_metadata` for native state and policy applicability.
+Presence/state is derived from the native template (or fresh policy XML), never the
+reader's backfilled constructor baseline. A `Default` container governs nested leaves
+even when a cached child says `Value`; omitted nodes have metadata but no reported
+value. Parameter inspection is independent of target eligibility, and `target_group`
+distinguishes a live source from explicit targets. Maximal opaque subtrees and unknown
+parameter attributes are named in `unsupported_fields` and the diagnostic message,
+while their content stays private and round-trip-preserved.
+
+Rejected interpretations were: wrapping every value in a new per-field object, which
+would unnecessarily break the established flat access path; continuing to return
+constructor defaults for omitted imported XML, which would falsely imply style
+resolution; accepting nested child `Value` beneath a `Default` container as active;
+and using geometry/target eligibility as a proxy for parameter readability. Literal
+CustomScript, Manual tab point collections and unsupported lead modes remain opaque
+rather than acquiring nominal typed support.
+
+Evidence: two focused regressions cover all four MOP families, alternate pins,
+top-level and nested inheritance, supported/inapplicable method fields, unknown child
+and attribute paths, literal CustomScript, explicit empty targets, a live group source
+and unchanged opaque XML after save. The 43 adjacent MOP/MCP tests pass, and the full
+255-test suite passes with one existing Windows symlink-privilege skip. No manual
+CamBam validation adds evidence for this inspection-only contract; reopening is
+justified by a malformed modeled value leaking a parser fallback, an unreported
+opaque path, or a native state/applicability contradiction.
+
 ## Delegation routing correction - 2026-09-09
 
 The initial revision mixed project policy, role selection, provider setup and worker

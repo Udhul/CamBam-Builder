@@ -532,43 +532,45 @@ but is an XML attribute rather than one of those 60 policy slots.
 
 | Capability / modeled fields | Core A/R/E/P | MCP author | MCP inspect | MCP mutate | Classification |
 | --- | --- | --- | --- | --- | --- |
-| Common explicit controls: `enabled`, `target_depth`, `depth_increment`, `stock_surface`, `roughing_clearance`, `clearance_plane`, `spindle_speed`, `tool_diameter`, `plunge_feedrate`, `cut_feedrate` | Yes | Explicit for all four families; CannedCycle authoring alone requires zero roughing clearance | Returned only for the canonical explicit authoring slice | No | Supported; required safety/cutting inputs stay explicit |
-| Common pins: `spindle_direction`, `velocity_mode`, `work_plane`, `optimisation_mode`, `tool_number`, `max_crossover_distance`, `custom_mop_header`, `custom_mop_footer` | Yes | `CW`, `ExactStop`, `XY`, `Standard`, `0`, `0.7`, empty, empty | All authoring pins are checked; optimisation and crossover are not returned, while empty header/footer are returned despite canonical XML omission | No | Deliberate bounded-authoring policy, not a core limitation |
-| Common `tool_profile` | Yes | Profile/Pocket `EndMill`; Engrave `EndMill` or `VCutter`; Drill `Drill`, `EndMill` or `Unspecified` with method-aware default | Returned for the same accepted values | No | Evidence-backed family restriction |
-| Profile inputs: `profile_side`, `corner_overcut`, `tab_method`, `tab_width`, `tab_height`, `tab_min_tabs`, `tab_max_tabs`, `tab_distance`, `tab_size_threshold`, `tab_use_leadins`, `tab_style` | Yes | Explicit; method dependencies apply and `tab_use_leadins` is currently constrained false | Returned for None/Automatic canonical records | No | Supported; open-Pline side remains vertex-order-relative |
-| Profile pins: `stepover`, `milling_direction`, `collision_detection`, `lead_in_type`, `lead_in_spiral_angle`, `final_depth_increment`, `cut_ordering` | Yes | `0.4`, Conventional, true, None, inactive `30`, `0`, DepthFirst | All pins are checked; inactive lead angle is not returned | No | Spiral lead-in is core-authorable but intentionally hidden at MCP authoring pending broader lead controls |
-| Pocket subtype: `stepover`, `stepover_feedrate`, `milling_direction`, `collision_detection`, `lead_in_type`, `lead_in_spiral_angle`, `final_depth_increment`, `cut_ordering`, `region_fill_style`, `finish_stepover`, `finish_stepover_at_target_depth`, `roughing_finishing` | Yes | All pinned to the canonical Spiral/InsideOutsideOffsets/Roughing slice described below | All pins are checked; lead angle is not returned | No | Core breadth is intentionally narrowed, not unsupported |
-| Engrave subtype: `roughing_finishing`, `final_depth_increment`, `cut_ordering` | Yes | Roughing, `0`, DepthFirst | Returned only at those pins | No | Compatibility metadata retained; no Engrave path effect is promised for roughing/finishing |
-| Drill method fields: `drilling_method`, `peck_distance`, `retract_height`, `dwell`, `hole_diameter`, `drill_lead_out`, `spiral_flat_base`, `lead_out_length` | Yes | CannedCycle and SpiralMill CW/CCW with method-dependent inputs; Auto diameter only for all-Circle targets | Returned for those three methods when applicable fields have accepted explicit/Auto states | No | Supported, method-aware surface |
+| Common explicit controls: `enabled`, `target_depth`, `depth_increment`, `stock_surface`, `roughing_clearance`, `clearance_plane`, `spindle_speed`, `tool_diameter`, `plunge_feedrate`, `cut_feedrate` | Yes | Explicit for all four families; CannedCycle authoring alone requires zero roughing clearance | Every present modeled raw value is returned with native state and applicability, independently of authoring pins and targets | No | Supported; required safety/cutting inputs stay explicit for authoring |
+| Common pins: `spindle_direction`, `velocity_mode`, `work_plane`, `optimisation_mode`, `tool_number`, `max_crossover_distance`, `custom_mop_header`, `custom_mop_footer` | Yes | `CW`, `ExactStop`, `XY`, `Standard`, `0`, `0.7`, empty, empty | Present alternate values and nonempty header/footer text are returned; omitted fields remain absent rather than becoming constructor defaults | No | Deliberate bounded-authoring policy, not a core limitation |
+| Common `tool_profile` | Yes | Profile/Pocket `EndMill`; Engrave `EndMill` or `VCutter`; Drill `Drill`, `EndMill` or `Unspecified` with method-aware default | Any present modeled raw string is returned; this does not expand authoring support | No | Evidence-backed family authoring restriction |
+| Profile inputs: `profile_side`, `corner_overcut`, `tab_method`, `tab_width`, `tab_height`, `tab_min_tabs`, `tab_max_tabs`, `tab_distance`, `tab_size_threshold`, `tab_use_leadins`, `tab_style` | Yes | Explicit; method dependencies apply and `tab_use_leadins` is currently constrained false | Present modeled values are returned with applicability; Manual point collections remain opaque | No | Supported; open-Pline side remains vertex-order-relative |
+| Profile pins: `stepover`, `milling_direction`, `collision_detection`, `lead_in_type`, `lead_in_spiral_angle`, `final_depth_increment`, `cut_ordering` | Yes | `0.4`, Conventional, true, None, inactive `30`, `0`, DepthFirst | Present modeled values are returned; applicability distinguishes the active lead mode. Unsupported lead modes remain opaque | No | Spiral lead-in is core-authorable but intentionally hidden at MCP authoring pending broader lead controls |
+| Pocket subtype: `stepover`, `stepover_feedrate`, `milling_direction`, `collision_detection`, `lead_in_type`, `lead_in_spiral_angle`, `final_depth_increment`, `cut_ordering`, `region_fill_style`, `finish_stepover`, `finish_stepover_at_target_depth`, `roughing_finishing` | Yes | All pinned to the canonical Spiral/InsideOutsideOffsets/Roughing slice described below | Present modeled values and supported lead dependencies are returned with state/applicability | No | Core breadth is intentionally narrowed, not unsupported |
+| Engrave subtype: `roughing_finishing`, `final_depth_increment`, `cut_ordering` | Yes | Roughing, `0`, DepthFirst | Present alternate modeled values are returned | No | Compatibility metadata retained; no Engrave path effect is promised for roughing/finishing |
+| Drill method fields: `drilling_method`, `peck_distance`, `retract_height`, `dwell`, `hole_diameter`, `drill_lead_out`, `spiral_flat_base`, `lead_out_length` | Yes | CannedCycle and SpiralMill CW/CCW with method-dependent inputs; Auto diameter only for all-Circle targets | Present raw discriminator/dependent values are returned; applicability identifies the active supported method | No | Supported, method-aware surface |
 | Drill `custom_script` | Yes, nonempty CustomScript only | No | No typed parameters | No | Intentional exclusion: literal controller/postprocessor-sensitive G-code lacks native execution acceptance |
 
-Imported values outside an MCP pin are still read and preserved by the core. Today a
-single alternate pin, inherited required field, unsupported nested/method state or
-out-of-slice target makes the adapter return `parameters: {}` for the whole MOP plus
-`INSPECTION_UNSUPPORTED`; it does not discard the operation. In particular, cached
-`Default` text is never presented as an evaluated CAM-style value. This all-or-nothing
-inspection behavior is a documented gap rather than evidence that the native record
-is invalid.
+Imported values outside an MCP authoring pin remain independently inspectable.
+`parameters` contains modeled typed values whose native nodes are present;
+`parameter_metadata` reports `native_state` (`Value`, `Default`, `Unspecified`,
+`Omitted`, or the `Enabled` attribute) and dependency `applicable` for each safe
+modeled field. A `Default` value is cached native text, never an evaluated CAM-style
+value, and an omitted native node does not expose its constructor fallback.
+`unsupported_fields` names maximal opaque native paths; the page diagnostic repeats
+those paths without blanking unrelated parameters. Literal CustomScript, Manual tab
+point collections, unsupported lead modes and unknown extensions remain opaque.
 
 | Target / native capability | Core | MCP author | MCP inspect | MCP mutate | Classification |
 | --- | --- | --- | --- | --- | --- |
-| Explicit targets | Any registered Primitive, including an empty selection; this is syntactic encoding, not per-kind machining validation | 1..100 unique IDs. Profile: Rect/Circle/open-or-closed Pline/Text/Region; Pocket: Rect/Circle/closed Pline/Text/Region; Engrave: Rect/Circle/Arc/open-or-closed Pline/Text; Drill: Points/Circle. Geometry slice checks also apply | IDs always remain visible; typed parameters require the same kind/slice checks | Atomic nonempty replacement with the same checks | MCP restrictions are deliberate safety policy |
-| Live `target_group` source | Author/read/edit in memory and same-version pickle; XML intentionally materializes a target snapshot | No | Identity-only/unsupported | No | Intentional exclusion because the live intent is not durable CamBam XML |
-| Group membership on an explicit target | Metadata does not change the core target or geometry | Rejected indirectly by the shared geometry-slice predicate | Blanks typed geometry and MOP parameters | Rejected | Unnecessary coupling; separately scoped for correction |
+| Explicit targets | Any registered Primitive, including an empty selection; this is syntactic encoding, not per-kind machining validation | 1..100 unique IDs. Profile: Rect/Circle/open-or-closed Pline/Text/Region; Pocket: Rect/Circle/closed Pline/Text/Region; Engrave: Rect/Circle/Arc/open-or-closed Pline/Text; Drill: Points/Circle. Geometry slice checks also apply | IDs and independently safe typed parameters remain visible for populated or empty selections | Atomic nonempty replacement with the same checks | MCP restrictions are deliberate safety policy |
+| Live `target_group` source | Author/read/edit in memory and same-version pickle; XML intentionally materializes a target snapshot | No | `target_group` names the live source and `targets` shows its current resolved members; parameters remain inspectable | No | Intent is visible in memory but not durable CamBam XML |
+| Group membership on an explicit target | Metadata does not change the core target or geometry | Rejected indirectly by the shared geometry-slice predicate | MOP parameters remain visible, but typed geometry is still blanked | Rejected | Remaining unnecessary geometry coupling is separately scoped for correction |
 | Supported transforms, parent/child relationships or local Z | Core stores and exports the relationship/transform | Only root, relationship-free, zero-local-Z similarity targets | Outside that slice is identity-only/unsupported | Rejected | Keep bounded until machining-coordinate semantics are evidenced; group membership is the separable exception |
-| Native `Default` state | Top-level state author/edit plus read/preserve; nested native state is preserved | Required MCP values are explicit; Spiral Auto diameter is the single active Default | Any inherited required path rejects the whole typed parameter record | No | Effective style values are unknowable without the external style library |
-| `Style`, `StartPoint`, `SpindleRange`, independent lead-out, unsupported lead fields/modes, Manual tab points and unknown extensions | No semantic model; preserved inside an otherwise supported imported MOP template | No | No | No | Preserve-only; do not invent nominal parity |
-| Unknown Drill methods | Preserve-only; switching is rejected | No | No typed parameters | No | Preserve-only |
+| Native `Default` state | Top-level state author/edit plus read/preserve; nested native state is preserved | Required MCP values are explicit; Spiral Auto diameter is the single active Default | Cached typed value and `native_state=Default` are returned without claiming an effective style value; container state governs nested leaves | No | Effective style values are unknowable without the external style library |
+| `Style`, `StartPoint`, `SpindleRange`, independent lead-out, unsupported lead fields/modes, Manual tab points and unknown extensions | No semantic model; preserved inside an otherwise supported imported MOP template | No | Named in `unsupported_fields`; opaque content is not returned | No | Preserve-only; do not invent nominal parity |
+| Unknown Drill methods | Preserve-only; switching is rejected | No | Common fields and the raw method discriminator remain visible; unknown dependents are named and opaque | No | Preserve-only |
 | Unsupported MOP kinds such as 3D Profile, Lathe or plugins | Not modeled; permissive import skips them and strict import rejects them | No | No | No | Intentionally absent from both layers; unlike unknown fields, these are not round-trip-preserved |
 
 No MCP authoring promise was found that the core writer cannot faithfully encode.
 The checked source-level classification is guarded by
 `tests/test_mcp_mop_parity.py`, which compares every modeled dataclass field with the
-closed author-input and inspection schemas. Two follow-up increments are retained in
-the project backlog: preservation-aware typed MOP inspection, and removal of harmless
-group membership from target eligibility. Parameter patching remains dependent on a
+closed author-input and inspection schemas. Preservation-aware typed MOP inspection
+closes the first identified gap; removal of harmless group membership from geometry
+and target eligibility remains in the project backlog. Parameter patching remains dependent on a
 validated core patch contract and the native evidence requested by backlog 8c;
-CustomScript, live groups and unmodeled native content remain intentionally excluded.
+CustomScript literals and unmodeled native content remain intentionally opaque.
 
 These rules follow the CamBam Plus 1.0 documentation for [CAM Parts](https://www.cambam.info/doc/plus/cam/CAMPart.htm),
 [Machining Options](https://www.cambam.info/doc/plus/cam/MachiningOptions.htm),

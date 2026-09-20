@@ -287,12 +287,12 @@ class MopBreadthTests(unittest.TestCase):
             "stock_surface": 0, "clearance_plane": 5, "enabled": True,
             "work_plane": "XY", "tool_profile": "EndMill",
             "spindle_direction": "CW", "velocity_mode": "ExactStop",
+            "optimisation_mode": "Standard", "max_crossover_distance": 0.7,
             "roughing_clearance": 0, "tool_number": 0,
             "final_depth_increment": 0, "cut_ordering": "DepthFirst",
-            "custom_mop_header": "", "custom_mop_footer": "",
             "stepover": 0.4, "stepover_feedrate": "Plunge Feedrate",
             "milling_direction": "Conventional", "collision_detection": True,
-            "lead_in_type": "Spiral",
+            "lead_in_type": "Spiral", "lead_in_spiral_angle": 30,
             "region_fill_style": "InsideOutsideOffsets",
             "finish_stepover": 0, "finish_stepover_at_target_depth": False,
             "roughing_finishing": "Roughing",
@@ -306,8 +306,8 @@ class MopBreadthTests(unittest.TestCase):
             "stock_surface": 0, "clearance_plane": 5, "enabled": True,
             "work_plane": "XY", "tool_profile": "EndMill",
             "spindle_direction": "CW", "velocity_mode": "ExactStop",
+            "optimisation_mode": "Standard", "max_crossover_distance": 0.7,
             "roughing_clearance": 0, "tool_number": 0,
-            "custom_mop_header": "", "custom_mop_footer": "",
             "roughing_finishing": "Roughing", "final_depth_increment": 0,
             "cut_ordering": "DepthFirst",
         }
@@ -322,9 +322,8 @@ class MopBreadthTests(unittest.TestCase):
             "drilling_method": "CannedCycle", "tool_profile": "Drill",
             "work_plane": "XY", "spindle_direction": "CW",
             "velocity_mode": "ExactStop", "roughing_clearance": 0,
-            "hole_diameter": None, "drill_lead_out": False,
-            "spiral_flat_base": True, "lead_out_length": 0,
-            "tool_number": 0, "custom_mop_header": "", "custom_mop_footer": "",
+            "optimisation_mode": "Standard", "max_crossover_distance": 0.7,
+            "tool_number": 0,
         }
 
     def test_add_pocket_engrave_drill_targets_roundtrip_and_parity(self):

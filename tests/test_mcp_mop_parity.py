@@ -56,10 +56,7 @@ PARITY = {
             "final_depth_increment", "cut_ordering",
         },
         "excluded": set(),
-        "inspection_hidden": {
-            "optimisation_mode", "max_crossover_distance",
-            "lead_in_spiral_angle",
-        },
+        "inspection_opaque": set(),
     },
     "pocket": {
         "class": PocketMop,
@@ -79,10 +76,7 @@ PARITY = {
             "finish_stepover_at_target_depth", "roughing_finishing",
         },
         "excluded": set(),
-        "inspection_hidden": {
-            "optimisation_mode", "max_crossover_distance",
-            "lead_in_spiral_angle",
-        },
+        "inspection_opaque": set(),
     },
     "engrave": {
         "class": EngraveMop,
@@ -99,9 +93,7 @@ PARITY = {
             "final_depth_increment", "cut_ordering",
         },
         "excluded": set(),
-        "inspection_hidden": {
-            "optimisation_mode", "max_crossover_distance",
-        },
+        "inspection_opaque": set(),
     },
     "drill": {
         "class": DrillMop,
@@ -119,9 +111,7 @@ PARITY = {
             "custom_mop_header", "custom_mop_footer",
         },
         "excluded": {"custom_script"},
-        "inspection_hidden": {
-            "optimisation_mode", "max_crossover_distance", "custom_script",
-        },
+        "inspection_opaque": {"custom_script"},
     },
 }
 
@@ -147,12 +137,17 @@ class McpMopParityTests(unittest.TestCase):
                 self.assertEqual(modeled, set().union(*author_sets))
                 self.assertEqual(sum(map(len, author_sets)), len(modeled))
 
-                inspected = set(
-                    self.definitions[f"{family.capitalize()}Parameters"]
-                    ["properties"]
+                inspected = (
+                    set(self.definitions["PreservedMopParameters"]["properties"])
+                    & modeled
                 )
-                self.assertEqual(modeled, inspected | contract["inspection_hidden"])
-                self.assertFalse(inspected & contract["inspection_hidden"])
+                self.assertEqual(modeled, inspected | contract["inspection_opaque"])
+                self.assertFalse(inspected & contract["inspection_opaque"])
+
+        metadata = self.definitions["MopParameterMetadata"]
+        self.assertEqual(
+            {"native_state", "applicable"}, set(metadata["properties"])
+        )
 
     def test_executable_field_policies_cover_the_documented_sixty_slots(self):
         common = set(MOP_COMMON_FIELD_POLICIES)

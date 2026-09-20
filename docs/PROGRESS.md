@@ -28,9 +28,21 @@ slice's completion, the then-current 250-test suite passed with the existing Win
 symlink-privilege skip. The 8b framework/MCP parity matrix is now complete and
 source-checked. Backlog 8c native evidence is now complete: two minimal fixture sets
 establish state/omission behavior and the remaining Engrave/Drill effects. The
-preservation-aware structured inspection gap in 8d is now the next MOP increment,
-followed by the independent 8e group-target correction; no production G-code
+preservation-aware structured inspection gap in 8d is now complete. The independent
+8e group-target geometry/authoring correction is next; no production G-code
 acceptance is claimed.
+
+**2026-09-20 backlog 8d preservation-aware MOP inspection complete.** Structured
+inspection now returns every present independently safe modeled value, including
+alternate authoring pins, with field-scoped native state and method applicability.
+Omitted native fields remain absent from the value map, cached `Default` text is not
+claimed as an evaluated style value, and maximal opaque paths are diagnosed without
+blanking sibling parameters. Explicit empty targets and live group sources retain
+parameter detail; `target_group` identifies live intent. Literal CustomScript,
+Manual tab points, unsupported lead modes and unknown extensions remain opaque and
+round-trip-preserved. Two focused preservation regressions and all 255 repository
+tests pass with the existing Windows symlink-privilege skip. Backlog 8e is now the
+next MOP increment.
 
 **2026-09-19 SpiralMill Drill MCP authoring implemented and accepted in CamBam Plus 1.0.**
 `machining_add_drill` now authors CannedCycle, SpiralMill CW and SpiralMill CCW.
@@ -918,21 +930,23 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
      prompt status is not inferable from static files. Reopen 8c only for a concrete
      unsupported native encoding, a state-policy contradiction, or a safety-relevant
      MOP ambiguity; production execution remains out of scope.
-   - **8d - preservation-aware structured MOP inspection.** After 8c establishes the
-     remaining native state semantics, separate read fidelity from the canonical MCP
-     authoring pins. Return modeled raw values plus field-scoped native state and
-     applicability for valid imported Profile/Pocket/Engrave/Drill records without
-     treating cached `Default` text as an evaluated CAM-style value. Unknown fields,
-     Manual tab points, unsupported lead modes and literal CustomScript remain opaque.
-     Acceptance requires alternate modeled pin values, inherited common/nested state,
-     supported method dependencies and explicit/empty/group target sources to retain
-     all independently safe typed values and round-trip unchanged; diagnostics must
-     identify only unsupported fields instead of blanking the whole parameter record.
+   - **8d - preservation-aware structured MOP inspection (completed 2026-09-20).**
+     `document_inspect` now separates the flat typed `parameters` map from
+     `parameter_metadata` native state/applicability and record-local
+     `unsupported_fields`. Alternate modeled pins, cached `Default` values,
+     container-governed nested state, supported mode dependencies, explicit empty
+     targets and live group sources retain independently safe detail. Omitted fields
+     are not presented as constructor/style defaults. Opaque CustomScript, Manual tab
+     points, unsupported lead modes, unknown subtrees and unknown parameter attributes
+     are named without returning their contents, and unchanged save preserves them.
+     Verification: 2 focused preservation tests, 43 adjacent MOP/MCP tests and all
+     255 repository tests pass with the existing Windows symlink-privilege skip.
    - **8e - decouple harmless group membership from MCP MOP target eligibility.** A
-     root supported-kind primitive currently loses typed geometry and its MOP loses
-     structured parameters merely because `relationship_add_to_group` adds framework
-     metadata. Split target eligibility from the geometry relationship predicate so
-     group membership alone neither blocks author/retarget nor erases inspection.
+     root supported-kind primitive currently loses typed geometry merely because
+     `relationship_add_to_group` adds framework metadata; 8d already decoupled MOP
+     parameter inspection. Split target eligibility from the geometry relationship
+     predicate so group membership alone neither blocks author/retarget nor erases
+     typed geometry.
      Acceptance covers every evidenced target kind before/after group add/remove,
      exact save/reopen targets and unchanged parameter records. Parent/child targets,
      non-similarity transforms and nonzero local Z remain excluded until their

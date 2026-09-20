@@ -507,6 +507,23 @@ while its modeled value is unchanged; changing the value exports the edit.
 This preserves inheritance context within the file, not the referenced external
 style libraries. Stock/origin still follow the existing part model.
 
+MCP structured inspection reads state and presence from the retained native template,
+not from constructor fallbacks or the authoring pin set. Its flat `parameters` map
+contains each safe modeled value whose XML node is present. Parallel
+`parameter_metadata` reports the governing native state and policy applicability;
+a parent container in `Default` state governs its nested leaves even when a child
+still carries cached `Value` metadata. `Omitted` fields have metadata but no value.
+Fresh in-memory records use their generated policy XML for the same classification.
+`Enabled` is classified as an attribute rather than a stateful parameter.
+
+Inspection is independent of MOP target eligibility: explicit populated or empty
+selections and live group sources retain the same parameter detail, while
+`target_group` distinguishes live intent from explicit targets. Maximal unmodeled
+native subtrees and unknown parameter attributes are named in `unsupported_fields`
+without exposing their contents or blanking sibling modeled values. Manual tab point
+collections, unsupported lead modes and literal CustomScript remain opaque. This
+inspection contract does not authorize parameter mutation or evaluate CAM styles.
+
 This is supported-MOP interchange, not full CamBam format or toolpath coverage.
 Unsupported MOP types are warned and skipped; arbitrary references inside unknown
 extensions are not interpreted or remapped. Native application acceptance is

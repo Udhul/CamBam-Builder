@@ -138,6 +138,8 @@ class AuthoringTests(unittest.TestCase):
             "tool_profile": "EndMill",
             "spindle_direction": "CW",
             "velocity_mode": "ExactStop",
+            "optimisation_mode": "Standard",
+            "max_crossover_distance": 0.7,
             "milling_direction": "Conventional",
             "roughing_clearance": 0,
             "stepover": 0.4,
@@ -148,16 +150,6 @@ class AuthoringTests(unittest.TestCase):
             "cut_ordering": "DepthFirst",
             "lead_in_type": "None",
             "tab_method": "None",
-            "tab_width": 6,
-            "tab_height": 1.5,
-            "tab_min_tabs": 3,
-            "tab_max_tabs": 3,
-            "tab_distance": 40,
-            "tab_size_threshold": 4,
-            "tab_use_leadins": False,
-            "tab_style": "Square",
-            "custom_mop_header": "",
-            "custom_mop_footer": "",
         }
 
     @staticmethod
@@ -929,8 +921,8 @@ class AuthoringTests(unittest.TestCase):
 
         self.run_async(test)
 
-    def test_typed_inspection_is_explicitly_unsupported_for_other_shapes_and_settings(self):
-        """Identity/relationships remain inspectable without invented details."""
+    def test_mop_inspection_is_independent_of_geometry_and_authoring_pins(self):
+        """Safe MOP fields survive unsupported geometry and alternate pin values."""
 
         async def test():
             source = CBProject("unsupported")
@@ -980,7 +972,9 @@ class AuthoringTests(unittest.TestCase):
             self.assertEqual(mop_record["identifier"], "inherited-profile")
             self.assertEqual(mop_record["type"], "ProfileMop")
             self.assertEqual(mop_record["targets"], [primitive["id"]])
-            self.assertEqual(mop_record["parameters"], {})
+            self.assertEqual(mop_record["parameters"]["optimisation_mode"], "Experimental")
+            self.assertEqual(mop_record["parameters"]["target_depth"], -1.0)
+            self.assertFalse(mop_record["unsupported_fields"])
             self.assertIn(
                 "INSPECTION_UNSUPPORTED",
                 {item["code"] for item in (await self.inspect(opened["document"]))[
@@ -1003,12 +997,11 @@ class AuthoringTests(unittest.TestCase):
             inherited_records = await self.inspect_records(
                 inherited["document"], revision=0
             )
-            self.assertEqual(inherited_records[3]["parameters"], {})
-            self.assertIn(
-                "INSPECTION_UNSUPPORTED",
-                {item["code"] for item in (await self.inspect(inherited["document"]))[
-                    "diagnostics"
-                ]},
+            inherited_mop = inherited_records[3]
+            self.assertEqual(inherited_mop["parameters"]["tab_method"], "None")
+            self.assertEqual(
+                inherited_mop["parameter_metadata"]["tab_method"],
+                {"native_state": "Default", "applicable": True},
             )
 
         self.run_async(test)
