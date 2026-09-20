@@ -2944,3 +2944,97 @@ MCP tests pass with that same skip. Compileall for the
 modern package, legacy package, tests and demos and `git diff --check` both exit
 successfully. This classification-only increment changes no CamBam XML or toolpath
 behavior, so manual CamBam validation would add no evidence.
+
+## Native Default, Value and omission evidence - 2026-09-20
+
+The user supplied four CamBam-native Profile files under
+`output/state-fixtures-01/`. `no-mop-values-set.cb` is a fresh operation whose
+stateful properties are present as Default with the local CamBam profile's cached
+text. `one-mop-value-set.cb` changes only TargetDepth to `Value=-10`; all other MOP
+states remain Default. The user confirmed the cross-installation behavior: a present
+Default whose cached text differs from the opening installation's resolved default
+causes CamBam to ask whether it should retain or update the file value, whereas an
+omitted property is populated from the opening installation without that prompt.
+
+`missing-entries.cb` manually removes 21 Profile top-level/container records from the
+second file. It opens successfully. CamBam's native resave adds only the complete
+Default `HoldingTabs` container, continues omitting the other 20 removed records, and
+removes the still-present empty Default `StartPoint`, `CustomMOPHeader` and
+`CustomMOPFooter`. The MOP child counts are 36, 15 and 13 for the complete, edited and
+resaved records respectively (including primitive and Name). Thus omission is a
+prompt-free resolution mechanism but resave materialization is property-specific;
+“CamBam writes all missing defaults on save” is rejected.
+
+All four files pass the framework's strict byte reader. The two omitted variants also
+show why raw model fields cannot stand in for effective style values: absent
+DepthIncrement is represented as `None`, while other absent fields expose constructor
+fallbacks such as Profile side Inside, clearance 15 and ExactStop despite those values
+not occurring in the source XML. The template preserves the absence correctly, but
+8d must expose absence/state separately before returning such values as structured
+inspection.
+
+Fixture hashes (SHA-256): `no-mop-values-set.cb`
+`67402ef03f58fca7fe29b6d2cabdeee13b5e78bc4c2daa9f2dafec28ea47513f`;
+`one-mop-value-set.cb`
+`624804b66106b4b97d3a8290e3baa31afce9c35a701f89cd6f8fa9474aca5ddd`;
+`missing-entries.cb`
+`2801fb865c02116aecd3c62d6cd9b8197916b44e82f5a24e9014e8a2d2e97389`;
+`missing-entries-resaved.cb`
+`847ac67e3e981ccb0d3e7cf482bbba94e7c7a46ce3e8b3b67a8a24dba3ae62e3`.
+
+This evidence removes the need for separate files devoted only to proving the generic
+Default/Value transition. The remaining operation-specific questions were resolved by
+the second set below.
+
+### Engrave and Drill state/effect fixtures
+
+The user supplied one CamBam-native baseline and four variants under
+`output/state-fixtures-02/`, together with CamBam-generated `.nc` for every file.
+CamBam Plus 1.0 is the fixed project validation baseline and need not be requested
+again. The user reported CAM style `standard-mm`; no style record appears in the MOP
+XML. The generated G-code headers say `Post processor: Default`, which is sufficient
+context for interpreting this evidence—no explicit postprocessor selection was made.
+
+Static XML comparison shows that `01` differs in MOP semantics only by
+`FinalDepthIncrement state="Default">0` becoming `state="Value">0`; its G-code body
+after the changing file/date header is byte-for-byte identical to the baseline. Both
+cut target `(0,0)` through depths `-0.5,-1,-1.5,-2`, then target `(70,50)` through the
+same depths. Thus explicit zero disables a distinct final-depth pass just as the
+baseline's cached zero did, while making that choice installation-independent.
+
+`02` changes only Engrave CutOrdering from Default cached `DepthFirst` to Value
+`LevelFirst`, apart from the document name and CamBam-maintained ModificationCount
+values. Its plunge sequence is `(A,-0.5), (B,-0.5), (B,-1), (A,-1), (A,-1.5),
+(B,-1.5), (B,-2), (A,-2)`: levels are traversed across both targets in a serpentine
+order that avoids an unnecessary return between adjacent levels. This contrasts with
+the baseline's four depths on A followed by four depths on B.
+
+`03` changes only Canned_State_Test RetractHeight from Default cached `5` to Value
+`1`, apart from name/counters. The generated cycle line changes from
+`G81 X60.0 Y40.0 Z-2.0 R5.0 F300.0` to
+`G81 X60.0 Y40.0 Z-2.0 R1.0 F300.0`, directly confirming that RetractHeight is the
+work-plane R coordinate. `04` changes only the Value CustomScript text from fixture-a
+to fixture-b, apart from name/counters; its emitted line changes correspondingly from
+`(fixture-a x=60 y=40 z=-5)` to `(fixture-b x=60 y=40 z=-5)`, confirming literal text
+preservation and `$x/$y/$z` expansion for the selected point.
+
+All five `.cb` files pass `read_cambam_bytes(..., strict=True)`. Reopen prompt status
+cannot be recovered from static XML/G-code and is not claimed. It does not block this
+increment: the first fixture set already established prompt semantics, while every
+second-set changed decision is a native explicit Value. No further user observation
+or fixture is required for 8c.
+
+Second-set fixture SHA-256 hashes:
+
+| File | SHA-256 |
+| --- | --- |
+| `00-baseline.cb` | `e1feb5869f9658f7ef4ebc56d91aca09399087a684690601eca219d19a7db699` |
+| `00-baseline.nc` | `018b175933bbfb841a4d3670de8a205d5afaa1bdb56121ce7267673400cb8f10` |
+| `01-engrave-final-zero.cb` | `c270f177e0e3504d32d35a1a6cfbeb6bbd12a633a69db2fd8f34a509a37774ff` |
+| `01-engrave-final-zero.nc` | `0ea487c5607cf0eb23cce9add1a871fb3f640ada507d5b03a141ae68c8550b12` |
+| `02-engrave-level-first.cb` | `5dfb2f3df3cb42a44f8bd55051466c4925b1145a66ccce2587c0c00fc4ec8345` |
+| `02-engrave-level-first.nc` | `08bdfea225986cc926ce72a99a5d0bdd82251017af066c63f42f9ba43438f0b5` |
+| `03-canned-retract-one.cb` | `60c2f9912f08894386fcf8e259a24713ef6fb03c3c80aa4ab56fd4b9b7fae1d7` |
+| `03-canned-retract-one.nc` | `25c22cba1844dbb7a86077862869468b5a75ada0d24f57c6c4b10b53e31546b2` |
+| `04-custom-script-edit.cb` | `1bc3cc7900df2f2ed8f0abd16981c2227811d3753117c4cd745cd659041511b2` |
+| `04-custom-script-edit.nc` | `8f8f8193d528b4cfc9d532a119ce456b48cc31fc151d14f66bc9d73a0a676db5` |

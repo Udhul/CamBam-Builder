@@ -26,9 +26,11 @@ does not switch unknown native methods. Engrave omits an unset final increment a
 classifies its inert RoughingFinishing compatibility property honestly. At that
 slice's completion, the then-current 250-test suite passed with the existing Windows
 symlink-privilege skip. The 8b framework/MCP parity matrix is now complete and
-source-checked. Remaining MOP audit work is the three prioritized 8c native A/B
-evidence requests plus the separately bounded 8d/8e gaps found by 8b; no new CamBam
-or production G-code acceptance is claimed.
+source-checked. Backlog 8c native evidence is now complete: two minimal fixture sets
+establish state/omission behavior and the remaining Engrave/Drill effects. The
+preservation-aware structured inspection gap in 8d is now the next MOP increment,
+followed by the independent 8e group-target correction; no production G-code
+acceptance is claimed.
 
 **2026-09-19 SpiralMill Drill MCP authoring implemented and accepted in CamBam Plus 1.0.**
 `machining_add_drill` now authors CannedCycle, SpiralMill CW and SpiralMill CCW.
@@ -877,7 +879,8 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
      records excluded from structured inspection and CamBam capabilities intentionally
      absent from both. Only the evidenced useful gaps became scoped 8d/8e increments;
      justified exclusions remain explicit rather than forcing nominal parity.
-   - **8c — native evidence acquisition for unresolved semantics.** Prepare a minimal
+   - **8c — native evidence acquisition for unresolved semantics (completed
+     2026-09-20).** Prepare a minimal
      requested-fixture list for the user to generate in CamBam Plus 1.0. Each A/B pair
      must change one property or state only and include the source `.cb`, exact UI
      setting, expected toolpath effect and whether a configured CAM Style/tool library
@@ -887,17 +890,34 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
      Pocket offset/fill variants, Drill CannedCycle/Spiral/CustomScript variants,
      tool-profile metadata, mixed target behavior and any native collections not yet
      modeled. Framework-generated XML is not evidence for an unknown native encoding.
-     The next native requests are intentionally limited to the highest-value gaps:
-     (1) Engrave A/B saves changing only FinalDepthIncrement from Default to explicit
-     zero, then a separate A/B changing only CutOrdering, with property display,
-     prompt behavior and generated depth order reported; (2) CannedCycle A/B saves
-     changing only RetractHeight from Default to an explicit known coordinate, with
-     resulting G81/G82/G83 R-plane behavior and configured postprocessor identified;
-     and (3) a nonempty native CustomScript Drill plus an A/B changing only its script
-     text, with literal XML/state, macro expansion preview and postprocessor named.
-     Reopen encoding only if these source-native files disagree with the current
-     inventory or trigger a reconciliation prompt; production execution remains out
-     of scope.
+     **Initial state evidence accepted 2026-09-20.** Four CamBam-native Profile files
+     in `output/state-fixtures-01/` establish that editing one field changes only that
+     field to `Value`; present Default records carry installation-local cached text
+     and can prompt on a different installation, while omission resolves silently.
+     A CamBam resave restored only the removed `HoldingTabs` container, retained 20
+     other omissions and removed three empty Default records, so materialization is
+     field-specific rather than universal. This confirms the framework policy:
+     relevant decisions use `Value`; irrelevant/unset target-resolved fields are
+     omitted; imported Default is preserved; explicit inheritance and evidenced Auto
+     remain available. It also confirms that a fallback Python attribute for an
+     omitted imported field is not an effective style value.
+
+     The second native set in `output/state-fixtures-02/` completes the prioritized
+     gaps using one baseline and four variants. Except for document name and CamBam's
+     modification counters, each variant changes only its requested property. A
+     Default cached FinalDepthIncrement `0` and explicit Value `0` produce identical
+     motion; LevelFirst changes the two-target depth traversal from target-complete
+     ordering to a level-wise serpentine ordering; CannedCycle Default
+     RetractHeight `5` emits `G81 ... R5.0` while explicit Value `1` emits
+     `G81 ... R1.0`; and the Value CustomScript edit expands literally from
+     `(fixture-a x=60 y=40 z=-5)` to `(fixture-b x=60 y=40 z=-5)`. The generated
+     headers identify CamBam's `Default` postprocessor, and the user identified the
+     CAM style as `standard-mm`; style selection is not serialized in these MOPs.
+     All five `.cb` files pass strict framework import. No further manual report is
+     required: prompt behavior was already established by the first set, and reopen
+     prompt status is not inferable from static files. Reopen 8c only for a concrete
+     unsupported native encoding, a state-policy contradiction, or a safety-relevant
+     MOP ambiguity; production execution remains out of scope.
    - **8d - preservation-aware structured MOP inspection.** After 8c establishes the
      remaining native state semantics, separate read fidelity from the canonical MCP
      authoring pins. Return modeled raw values plus field-scoped native state and

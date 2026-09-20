@@ -255,8 +255,9 @@ outline by its object name; every listed vertex must match within 0.01 drawing u
 
 Pass requires matching outlines without an axis-aligned bounding-box expansion
 and identity transforms after baking. The generator checks zero bulges, metadata
-and the `rotated-child` parent link automatically. Report CamBam version, A/B
-pass or fail, and any displayed outline, vertex or matrix difference.
+and the `rotated-child` parent link automatically. The fixed CamBam baseline above
+applies. Report A/B pass or fail and any displayed outline, vertex or matrix
+difference.
 
 ## Manual parent-transform acceptance
 
@@ -287,10 +288,11 @@ In CamBam:
 | GrandchildLayer | (10, 25) to (10, 30) | 5 |
 
 Pass only if A and B both match all counts/endpoints, with no additional geometry,
-displacement, scaling or rotation. Report CamBam version, A/B pass or fail, and
-any differing layer/observed endpoint. This accepts the synthetic display/XML
-slice only; no MOPs or toolpaths are included. Parent-cycle rejection and registry
-integrity are automated API checks and need no manual reproduction.
+displacement, scaling or rotation. The fixed CamBam baseline above applies. Report
+A/B pass or fail and any differing layer/observed endpoint. This accepts the
+synthetic display/XML slice only; no MOPs or toolpaths are included. Parent-cycle
+rejection and registry integrity are automated API checks and need no manual
+reproduction.
 
 ## Manual full-bake acceptance
 
@@ -317,8 +319,9 @@ A uses separate named layers; B uses one `Geometry` layer. Check endpoints:
 
 Pass tolerance is 0.01 drawing units. Pass requires matching placement and counts
 with no extra geometry, and identity Transform properties on every B polyline
-(resetting to identity must not move them). Report CamBam version, pass/fail and
-any differing endpoint or matrix. No toolpath validation is needed for this case.
+(resetting to identity must not move them). The fixed CamBam baseline above applies.
+Report pass/fail and any differing endpoint or matrix. No toolpath validation is
+needed for this case.
 
 ## Manual global-transform acceptance
 
@@ -345,8 +348,9 @@ Z=0, one on each named layer. Check these world endpoints (tolerance 0.01 units)
 
 Pass requires a stationary root and both descendants moved exactly +5 X / -3 Y,
 with no extra geometry; A and B must coincide. Inspect world coordinates rather
-than B's local point properties. Report CamBam version, pass/fail and the layer
-and observed coordinates for any mismatch. No toolpath checks are needed.
+than B's local point properties. The fixed CamBam baseline above applies. Report
+pass/fail and the layer and observed coordinates for any mismatch. No toolpath
+checks are needed.
 
 ## Manual MOP identity acceptance
 
@@ -374,7 +378,8 @@ Both use Outside, tool diameter 3, depth increment 0.5 and spindle speed 12000.
 Check properties and highlight each operation's referenced primitive. Tolerance:
 0.01 drawing units for geometry/depth/diameter; feed and spindle match exactly.
 Primitive XML IDs are assigned by UUID and need not be 1 then 2.
-Report CamBam version, A/B pass or fail and any differing operation/property.
+The fixed CamBam baseline above applies. Report A/B pass or fail and any differing
+operation/property.
 No machine execution is needed; this accepts load/display/properties only.
 UUID/identifier registry behavior is automated and needs no manual reproduction.
 
@@ -908,8 +913,9 @@ Inside/Outside physical side swaps; this is why the adapter reports
 toolpath check separately; automated XML round trips do not replace this native CAM
 acceptance.
 
-For required domain acceptance in CamBam Plus 1.0, open A and B separately and
-report the exact CamBam version. Confirm the drawing is using millimeters—the XML
+For required domain acceptance in CamBam Plus 1.0, open A and B separately. The fixed
+version baseline above applies and must not be requested again. Confirm the drawing
+is using millimeters—the XML
 does not persist a verified unit setting—and reject the case if CamBam interprets
 the numbers in another unit. Confirm A's outline spans `(0,0)` to `(20,10)`, B's
 spans `(5,2)` to `(25,12)`, and both show `Geometry / outline` and

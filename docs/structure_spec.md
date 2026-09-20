@@ -327,6 +327,26 @@ supports top-level scalar fields only; nested inheritance belongs to native
 containers and is preserved on import. Editing a nested field activates its
 container as Value, retaining plain scalar formatting where CamBam uses it.
 
+CamBam Plus 1.0 source-native Profile evidence further distinguishes present
+`Default` from omission. A present `state="Default"` record carries cached text;
+when another installation resolves a different local/style default, CamBam asks
+whether to retain or update that cached value. An omitted property resolves from the
+opening installation without that reconciliation prompt. Omission is not a promise
+that CamBam will materialize every resolved property on its next save: after 21
+top-level/container records were removed from a native Profile, CamBam restored only
+`HoldingTabs`, continued omitting the other 20, and removed three empty Default
+records (`StartPoint`, header and footer). Resave normalization is therefore
+field/container-specific.
+
+For an imported omitted modeled field, the XML template's absence is authoritative.
+Any Python attribute supplied by a constructor fallback is not an evaluated CamBam
+style value and must not be presented as one. Untouched export preserves the absence;
+an assignment or explicit state selection is a new decision. Fresh framework output
+therefore uses `Value` for relevant user/product decisions, omission for irrelevant or
+deliberately target-resolved fields, and `Default` only for explicit inheritance,
+faithful imported preservation, or evidenced active Auto semantics such as SpiralMill
+`HoleDiameter`.
+
 Fresh common-field output is owned by the ordered
 `MOP_COMMON_FIELD_POLICIES` inventory. A supplied model value, or the explicitly
 resolved Part/project context described below, is written as `state="Value"`.
@@ -438,8 +458,8 @@ optional final increment is omitted rather than exported as cached `Default` tex
 | Field | Meaning, units/reference, range and dependencies | Fresh XML disposition | Evidence |
 | --- | --- | --- | --- |
 | `roughing_finishing` | Published compatibility property with Roughing/Finishing-style values. CamBam documents it as effective only for Lathe and 3D Profile, so this framework does not promise an Engrave toolpath effect. | Always `Value`; retained for API/interchange compatibility and pinned to Roughing by MCP authoring. | D, P |
-| `final_depth_increment` | Optional depth of the final machining pass in drawing units; `0` disables a distinct final increment. | `Value` when supplied, including zero; omitted when `None`. | D, P |
-| `cut_ordering` | Orders multi-level paths `DepthFirst` or `LevelFirst`. | Always `Value`. | D, P |
+| `final_depth_increment` | Optional depth of the final machining pass in drawing units; native G-code confirms that explicit `0` disables a distinct final increment. | `Value` when supplied, including zero; omitted when `None`. | D, N, P |
+| `cut_ordering` | Orders multi-level paths `DepthFirst` or `LevelFirst`; native `LevelFirst` traverses targets per level and may serpentine between targets to avoid redundant returns. | Always `Value`. | D, N, P |
 
 Engrave follows selected geometry, including its Z movement. Tool profile and signed
 roughing clearance are common fields, not a second V-carving subtype: `VCutter`
@@ -457,13 +477,13 @@ always makes the method explicit and emits only that method's applicable fields.
 | --- | --- | --- | --- |
 | `drilling_method` | Selects `CannedCycle` (G81/G82/G83 through the postprocessor), clockwise or counterclockwise `SpiralMill`, or `CustomScript`. | Always `Value`. Unknown native methods are preserve-only. | D, P |
 | CannedCycle `peck_distance` | Nonnegative incremental drilling depth before each retract, in drawing units; zero selects no pecking. | `Value` for CannedCycle; otherwise omitted. | D, P |
-| CannedCycle `retract_height` | Work-plane-normal cycle start/return (R-plane) coordinate in drawing units; it should remain below the clearance plane and clear the stock. | `Value` for CannedCycle; otherwise omitted. | D, P |
+| CannedCycle `retract_height` | Work-plane-normal cycle start/return (R-plane) coordinate in drawing units; native G81 output maps it directly to `R`. It should remain below the clearance plane and clear the stock. | `Value` for CannedCycle; otherwise omitted. | D, N, P |
 | CannedCycle `dwell` | Nonnegative pause at the hole bottom. Time units are controller/interpreter dependent, not fixed by this library. | `Value` for CannedCycle; otherwise omitted. | D, P |
 | SpiralMill `hole_diameter` | Requested hole-boundary diameter in drawing units. Explicit `H`, signed radial roughing clearance `R`, and effective tool diameter `T` must satisfy `H - 2R > T`. Auto derives each diameter from selected Circle geometry; a Point has no derivable size. | Explicit diameter is `Value`. `None` is the evidenced active Auto case and remains present as empty `Default`. Omitted for other methods. | D, N, P |
 | SpiralMill `drill_lead_out` | Enables a bottom-of-spiral radial move before retracting. | `Value` for SpiralMill; otherwise omitted. | D, N, P |
 | SpiralMill `spiral_flat_base` | Adds a complete circle at the spiral base when true; false can be useful for thread milling. | `Value` for SpiralMill; otherwise omitted. | D, N, P |
 | SpiralMill `lead_out_length` | Signed radial distance in drawing units when lead-out is enabled: positive moves centerward, negative outward. A nonzero value requires lead-out; positive values may not exceed the effective hole radius. CamBam documents enabled zero as moving to the center. | `Value` for SpiralMill; otherwise omitted. | D, N, P |
-| CustomScript `custom_script` | Literal drilling G-code template expanded once per point using CamBam's documented `$c/$d/$f/$h/$n/$p/$q/$r/$s/$t/$x/$y/$z` macros and `|` newline marker. Controller/postprocessor semantics apply. | Nonempty text is `Value` only for CustomScript. Fresh empty CustomScript authoring is rejected; other methods omit it. | D, P |
+| CustomScript `custom_script` | Literal drilling G-code template expanded once per point using CamBam's documented `$c/$d/$f/$h/$n/$p/$q/$r/$s/$t/$x/$y/$z` macros and `|` newline marker. Native output confirms literal text preservation and `$x/$y/$z` expansion. Controller/postprocessor semantics apply. | Nonempty text is `Value` only for CustomScript. Fresh empty CustomScript authoring is rejected; other methods omit it. | D, N, P |
 
 The CannedCycle-only trio, SpiralMill quartet and CustomScript text are mutually
 exclusive in fresh XML. This prevents irrelevant cached defaults from triggering

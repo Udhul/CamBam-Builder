@@ -29,7 +29,11 @@ Runtime module ownership and data flow live in
   explicit legacy scope. `inactive/`: historical implementation, not runtime owner.
 - `demos/`: authored examples, not a regression suite. `output/`, `__pycache__/`
   and `*.egg-info` are generated/disposable; do not treat them as source or erase
-  existing contents without authorization. User input files are private data.
+  existing contents without authorization. In particular, `output/` must never own
+  durable project documentation, history, audit results, contracts or backlog state;
+  record those in the tracked topic owner under `docs/` (or reusable tests/source)
+  even when ignored artifacts provide supporting evidence. User input files are
+  private data.
 
 No issue tracker, CI configuration, pre-existing decision log or dedicated test suite
 was found during initial discovery. This documentation now provides a review record.
