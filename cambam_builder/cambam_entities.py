@@ -1821,7 +1821,7 @@ class MopFieldEncodingPolicy:
 
 @dataclass(frozen=True)
 class MopSubtypeFieldEncodingPolicy:
-    """Fresh-export policy for a Profile/Pocket subtype field.
+    """Fresh-export policy for one modeled MOP subtype field.
 
     Nested containers are explicit ``Value`` records.  ``leaf_state`` reflects
     CamBam's native convention: lead-move children carry their own state while
@@ -1830,6 +1830,8 @@ class MopSubtypeFieldEncodingPolicy:
 
     xml_path: Tuple[str, ...]
     omit_when_none: bool = False
+    omit_when_empty: bool = False
+    default_when_none: bool = False
     requirements: Tuple[Tuple[str, Tuple[Any, ...]], ...] = ()
     leaf_state: bool = True
 
@@ -1925,6 +1927,41 @@ MOP_POCKET_FIELD_POLICIES: Dict[str, MopSubtypeFieldEncodingPolicy] = {
     'finish_stepover_at_target_depth': MopSubtypeFieldEncodingPolicy(
         ('FinishStepoverAtTargetDepth',)),
     'roughing_finishing': MopSubtypeFieldEncodingPolicy(('RoughingFinishing',)),
+}
+
+
+MOP_ENGRAVE_FIELD_POLICIES: Dict[str, MopSubtypeFieldEncodingPolicy] = {
+    'roughing_finishing': MopSubtypeFieldEncodingPolicy(('RoughingFinishing',)),
+    'final_depth_increment': MopSubtypeFieldEncodingPolicy(
+        ('FinalDepthIncrement',), omit_when_none=True),
+    'cut_ordering': MopSubtypeFieldEncodingPolicy(('CutOrdering',)),
+}
+
+
+_SPIRAL_DRILL_METHODS = ('SpiralMill_CW', 'SpiralMill_CCW')
+MOP_DRILL_FIELD_POLICIES: Dict[str, MopSubtypeFieldEncodingPolicy] = {
+    'drilling_method': MopSubtypeFieldEncodingPolicy(('DrillingMethod',)),
+    'peck_distance': MopSubtypeFieldEncodingPolicy(
+        ('PeckDistance',), requirements=(('drilling_method', ('CannedCycle',)),)),
+    'retract_height': MopSubtypeFieldEncodingPolicy(
+        ('RetractHeight',), requirements=(('drilling_method', ('CannedCycle',)),)),
+    'dwell': MopSubtypeFieldEncodingPolicy(
+        ('Dwell',), requirements=(('drilling_method', ('CannedCycle',)),)),
+    'hole_diameter': MopSubtypeFieldEncodingPolicy(
+        ('HoleDiameter',), default_when_none=True,
+        requirements=(('drilling_method', _SPIRAL_DRILL_METHODS),)),
+    'drill_lead_out': MopSubtypeFieldEncodingPolicy(
+        ('DrillLeadOut',),
+        requirements=(('drilling_method', _SPIRAL_DRILL_METHODS),)),
+    'spiral_flat_base': MopSubtypeFieldEncodingPolicy(
+        ('SpiralFlatBase',),
+        requirements=(('drilling_method', _SPIRAL_DRILL_METHODS),)),
+    'lead_out_length': MopSubtypeFieldEncodingPolicy(
+        ('LeadOutLength',),
+        requirements=(('drilling_method', _SPIRAL_DRILL_METHODS),)),
+    'custom_script': MopSubtypeFieldEncodingPolicy(
+        ('CustomScript',), omit_when_empty=True,
+        requirements=(('drilling_method', ('CustomScript',)),)),
 }
 
 @dataclass
@@ -2161,6 +2198,17 @@ class Mop(CamBamEntity, ABC):
         return all(getattr(self, field_name) in allowed
                    for field_name, allowed in policy.requirements)
 
+    @staticmethod
+    def _policy_omits(policy: MopSubtypeFieldEncodingPolicy, value: Any) -> bool:
+        return ((policy.omit_when_none and value is None)
+                or (policy.omit_when_empty and value == ""))
+
+    @staticmethod
+    def _policy_state(policy: MopSubtypeFieldEncodingPolicy, value: Any) -> str:
+        if policy.default_when_none and value is None:
+            return "Default"
+        return "Value"
+
     def _add_subtype_mop_elements(
         self,
         parent_elem: ET.Element,
@@ -2171,8 +2219,9 @@ class Mop(CamBamEntity, ABC):
             value = getattr(self, field_name)
             if not self._policy_applies(policy):
                 continue
-            if policy.omit_when_none and value is None:
+            if self._policy_omits(policy, value):
                 continue
+            state = self._policy_state(policy, value)
             parent = parent_elem
             for tag in policy.xml_path[:-1]:
                 child = parent.find(tag)
@@ -2181,7 +2230,7 @@ class Mop(CamBamEntity, ABC):
                 else:
                     child.set("state", "Value")
                 parent = child
-            attributes = {"state": "Value"} if policy.leaf_state else {}
+            attributes = {"state": state} if policy.leaf_state else {}
             ET.SubElement(parent, policy.xml_path[-1], attributes).text = (
                 self._format_mop_parameter(value)
             )
@@ -2209,8 +2258,8 @@ class Mop(CamBamEntity, ABC):
                 continue
             leaf = container.find(policy.xml_path[1])
             value = getattr(self, field_name)
-            applies = self._policy_applies(policy) and not (
-                policy.omit_when_none and value is None)
+            applies = (self._policy_applies(policy)
+                       and not self._policy_omits(policy, value))
             if not applies:
                 if leaf is not None:
                     container.remove(leaf)
@@ -2222,6 +2271,31 @@ class Mop(CamBamEntity, ABC):
             else:
                 leaf.attrib.pop("state", None)
             leaf.text = self._format_mop_parameter(value)
+
+    def _reconcile_native_flat_mode(
+        self,
+        root: ET.Element,
+        policies: Dict[str, MopSubtypeFieldEncodingPolicy],
+        controller: str,
+    ) -> None:
+        """Rebuild modeled top-level dependents after an imported mode switch."""
+        if controller not in getattr(self, "_xml_dirty_parameters", set()):
+            return
+        for field_name, policy in policies.items():
+            if field_name == controller or len(policy.xml_path) != 1:
+                continue
+            element = root.find(policy.xml_path[0])
+            value = getattr(self, field_name)
+            applies = (self._policy_applies(policy)
+                       and not self._policy_omits(policy, value))
+            if not applies:
+                if element is not None:
+                    root.remove(element)
+                continue
+            if element is None:
+                element = ET.SubElement(root, policy.xml_path[0])
+            element.set("state", self._policy_state(policy, value))
+            element.text = self._format_mop_parameter(value)
 
     def _validate_lead_encoding(self) -> None:
         supported = {"None", "Spiral"}
@@ -2339,7 +2413,9 @@ class PocketMop(Mop):
 @dataclass
 class EngraveMop(Mop):
     # Engrave specific parameters
-    roughing_finishing: str = 'Roughing' # Seems less relevant for Engrave? Default='Roughing'
+    # CamBam publishes this property on Engrave but documents it as effective
+    # only for Lathe and 3D Profile. Retained as explicit compatibility metadata.
+    roughing_finishing: str = 'Roughing'
     final_depth_increment: Optional[float] = 0.0 # Depth for final pass
     cut_ordering: str = 'DepthFirst'
 
@@ -2348,18 +2424,8 @@ class EngraveMop(Mop):
         if native is not None:
             return native
         mop_elem = ET.Element("engrave", {"Enabled": str(self.enabled).lower()})
-        # Engrave uses ToolDiameter differently (often for simulation only)
-        # We still add common params, including ToolDiameter resolution
         self._add_common_mop_elements(mop_elem, project, resolved_primitive_xml_ids)
-
-        state = "Value"
-        ET.SubElement(mop_elem, "RoughingFinishing", {"state": state}).text = self.roughing_finishing
-
-        fdi_state = "Value" if self.final_depth_increment is not None else "Default"
-        ET.SubElement(mop_elem, "FinalDepthIncrement", {"state": fdi_state}).text = str(self.final_depth_increment if self.final_depth_increment is not None else 0.0)
-
-        ET.SubElement(mop_elem, "CutOrdering", {"state": state}).text = self.cut_ordering
-
+        self._add_subtype_mop_elements(mop_elem, MOP_ENGRAVE_FIELD_POLICIES)
         self._apply_explicit_parameter_states(mop_elem)
         return mop_elem
 
@@ -2371,7 +2437,7 @@ class DrillMop(Mop):
     # Parameters for CannedCycle
     peck_distance: float = 0.0 # If > 0, enables pecking (G83)
     retract_height: float = 5.0 # R plane for canned cycles
-    dwell: float = 0.0 # Dwell time at bottom (ms)
+    dwell: float = 0.0 # Bottom dwell; controller/postprocessor determines time units.
     # Parameters for SpiralMill
     # Desired hole-boundary diameter. ``None`` writes CamBam's Default/Auto
     # state, which derives the diameter from supported selected geometry.
@@ -2389,10 +2455,32 @@ class DrillMop(Mop):
         return self.hole_diameter - 2.0 * self.roughing_clearance
 
     def to_xml_element(self, project: "CamBamProject", resolved_primitive_xml_ids: List[int]) -> ET.Element:
-        native = self._native_mop_element(project, resolved_primitive_xml_ids)
-        if native is not None:
-            return native
-        if self.drilling_method in ("SpiralMill_CW", "SpiralMill_CCW"):
+        supported_methods = {'CannedCycle', *_SPIRAL_DRILL_METHODS, 'CustomScript'}
+        dirty = getattr(self, "_xml_dirty_parameters", set())
+        baseline = getattr(self, "_xml_parameter_baseline", {})
+        if self.drilling_method not in supported_methods and (
+                not hasattr(self, "_xml_template") or 'drilling_method' in dirty):
+            raise ValueError(
+                "Fresh Drill authoring supports CannedCycle, SpiralMill_CW, "
+                "SpiralMill_CCW and CustomScript; other native methods are preserve-only"
+            )
+        if ('drilling_method' in dirty
+                and baseline.get('drilling_method') not in supported_methods):
+            raise ValueError(
+                "Switching an unsupported imported Drill method is not supported"
+            )
+        if self.drilling_method == 'CustomScript' and not self.custom_script and (
+                not hasattr(self, "_xml_template")
+                or 'drilling_method' in dirty or 'custom_script' in dirty):
+            raise ValueError("CustomScript drilling requires a nonempty custom_script")
+        validate_spiral = (self.drilling_method in _SPIRAL_DRILL_METHODS and (
+            not hasattr(self, "_xml_template")
+            or bool(dirty.intersection({
+                'drilling_method', 'hole_diameter', 'roughing_clearance',
+                'tool_diameter', 'drill_lead_out', 'lead_out_length',
+            }))
+        ))
+        if validate_spiral:
             effective_hole_diameter = self.effective_spiral_hole_diameter()
             effective_tool_diameter = self._get_effective_param('tool_diameter', project)
             if (effective_hole_diameter is not None
@@ -2412,39 +2500,18 @@ class DrillMop(Mop):
                     "SpiralMill positive lead_out_length must not exceed the "
                     "effective hole radius"
                 )
+        native = self._native_mop_element(project, resolved_primitive_xml_ids)
+        if native is not None:
+            self._reconcile_native_flat_mode(
+                native, MOP_DRILL_FIELD_POLICIES, 'drilling_method')
+            return native
         mop_elem = ET.Element("drill", {"Enabled": str(self.enabled).lower()})
         self._add_common_mop_elements(mop_elem, project, resolved_primitive_xml_ids)
-
-        state = "Value"
-        ET.SubElement(mop_elem, "DrillingMethod", {"state": state}).text = self.drilling_method
-
-        # Canned-cycle fields are omitted from fresh SpiralMill records. Writing
-        # cached text with state=Default can prompt CamBam to reconcile it with
-        # the user's configured defaults even though the fields are irrelevant.
-        if self.drilling_method == "CannedCycle":
-            ET.SubElement(mop_elem, "PeckDistance", {"state": state}).text = str(self.peck_distance)
-            ET.SubElement(mop_elem, "RetractHeight", {"state": state}).text = str(self.retract_height)
-            ET.SubElement(mop_elem, "Dwell", {"state": state}).text = str(self.dwell)
-
-        # Spiral Mill Params (conditionally add based on method)
-        if self.drilling_method.startswith("SpiralMill"):
-            hd_state = "Value" if self.hole_diameter is not None else "Default"
-            if self.hole_diameter is None:
-                logger.warning(
-                    f"Drill MOP '{self.name}' uses SpiralMill with Auto HoleDiameter; "
-                    "CamBam must derive it from the selected target geometry."
-                )
-            # Preserve Default/Auto so CamBam can derive a Circle target's size.
-            ET.SubElement(mop_elem, "HoleDiameter", {"state": hd_state}).text = str(self.hole_diameter if self.hole_diameter is not None else "")
-
-            ET.SubElement(mop_elem, "DrillLeadOut", {"state": state}).text = str(self.drill_lead_out).lower()
-            ET.SubElement(mop_elem, "SpiralFlatBase", {"state": state}).text = str(self.spiral_flat_base).lower()
-            ET.SubElement(mop_elem, "LeadOutLength", {"state": state}).text = str(self.lead_out_length)
-
-        # Omit unused CustomScript rather than writing a cached Default value
-        # that CamBam may ask to reconcile on file open.
-        if self.custom_script:
-            ET.SubElement(mop_elem, "CustomScript", {"state": state}).text = self.custom_script
-
+        if self.drilling_method in _SPIRAL_DRILL_METHODS and self.hole_diameter is None:
+            logger.warning(
+                f"Drill MOP '{self.name}' uses SpiralMill with Auto HoleDiameter; "
+                "CamBam must derive it from the selected target geometry."
+            )
+        self._add_subtype_mop_elements(mop_elem, MOP_DRILL_FIELD_POLICIES)
         self._apply_explicit_parameter_states(mop_elem)
         return mop_elem

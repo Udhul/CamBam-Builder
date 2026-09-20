@@ -496,12 +496,22 @@ encoding. These are not interchangeable coordinate systems:
   `R` signed `roughing_clearance`, and `T` effective tool diameter. The resulting cut
   diameter is `H - 2R`; cutter fit requires `H - 2R > T`, equivalently
   `H > T + 2R`. Thus `H=6`, `T=4`, `R=-1` produces diameter `8`. Fresh core export
-  core export enforces this when both diameters resolve explicitly. MCP Point targets
+  enforces this when both diameters resolve explicitly. MCP Point targets
   require explicit `H`; all-Circle selections may omit it for CamBam Auto sizing,
   and the adapter validates the resolved world diameter of every selected Circle. This exact
   relationship is user-validated
   CamBam Plus 1.0 behavior supplementing the vendor's documented signed clearance
   and spiral-drill support.
+- The core model can preserve and directly author a nonempty `CustomScript` Drill,
+  but the MCP boundary intentionally exposes only CannedCycle and the two SpiralMill
+  methods. CustomScript is literal controller/postprocessor-sensitive G-code, has no
+  native execution acceptance in this repository, and is excluded from MCP authoring
+  and structured MOP inspection rather than presented as a safe declarative machining
+  option. Imported CustomScript records still round-trip through core XML.
+- Engrave inspection retains `roughing_finishing` for framework/API parity, and MCP
+  authoring pins it to `Roughing`. CamBam documents this published property as
+  effective only for Lathe and 3D Profile, so neither value implies a different
+  Engrave toolpath through this adapter.
 
 These rules follow the CamBam Plus 1.0 documentation for [CAM Parts](https://www.cambam.info/doc/plus/cam/CAMPart.htm),
 [Machining Options](https://www.cambam.info/doc/plus/cam/MachiningOptions.htm),

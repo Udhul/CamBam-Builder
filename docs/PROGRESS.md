@@ -7,6 +7,16 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**2026-09-20 backlog 8a modeled MOP field inventory complete.** Engrave and Drill
+now join the common and Profile/Pocket slices with declarative fresh-export policies.
+Drill emits mutually exclusive CannedCycle, SpiralMill or CustomScript method fields,
+reconciles modeled fields on supported imported method switches, and preserves but
+does not switch unknown native methods. Engrave omits an unset final increment and
+classifies its inert RoughingFinishing compatibility property honestly. The full 250-
+test suite passes with the existing Windows symlink-privilege skip. Remaining MOP
+audit work is backlog 8b parity classification and the three prioritized 8c native
+A/B evidence requests; no new CamBam or production G-code acceptance is claimed.
+
 **2026-09-19 SpiralMill Drill MCP authoring implemented and accepted in CamBam Plus 1.0.**
 `machining_add_drill` now authors CannedCycle, SpiralMill CW and SpiralMill CCW.
 Spiral methods expose signed roughing clearance, explicit or Circle-derived Auto
@@ -789,10 +799,24 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    mode-applicable fields and no invented mirrored lead-out; Automatic-tab children
    are emitted only in Automatic mode. Supported imported mode switches reconcile
    modeled siblings while preserving unknown native children. Manual tab transitions
-   and unmodeled lead modes remain preserve-only. Remaining 8a work is Engrave and
-   Drill subtype/method inventory plus the prioritized native evidence requests.
+   and unmodeled lead modes remain preserve-only. At that checkpoint, remaining 8a
+   work was the Engrave/Drill subtype and method inventory below.
    Verification: 13 focused policy tests, 25 adjacent MCP/round-trip tests, and all
    245 repository tests pass (one existing Windows symlink-privilege skip).
+   **8a Engrave/Drill subtype and method-policy slice implemented and automatically
+   verified (2026-09-20).** All three Engrave subtype fields and all nine Drill
+   method/subtype fields now have executable declarative fresh-export policies and a
+   durable semantics inventory. Engrave no longer writes cached Default text for an
+   unset final increment; its RoughingFinishing compatibility field is explicitly
+   classified as having no promised Engrave toolpath effect. Drill fresh output is
+   mutually exclusive across CannedCycle, SpiralMill CW/CCW and CustomScript, with
+   Auto HoleDiameter as the sole policy-selected Default state. Supported imported
+   method switches remove stale modeled siblings while retaining unknown extensions;
+   unknown native methods are preserve-only. Empty CustomScript authoring is rejected.
+   This completes the modeled field-encoding inventory in 8a; remaining MOP audit work
+   is the separately bounded 8b parity matrix and 8c native evidence acquisition.
+   Verification: 18 focused policy tests, 14 adjacent MCP/core round-trip tests, and
+   all 250 repository tests pass (one existing Windows symlink-privilege skip).
    - **8a — field semantics and encoding audit, one MOP family at a time.** Inventory
      every modeled common and subtype field for Profile, Pocket, Engrave and Drill,
      including nested lead moves/tabs and method-specific Drill fields. For each,
@@ -840,6 +864,17 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
      Pocket offset/fill variants, Drill CannedCycle/Spiral/CustomScript variants,
      tool-profile metadata, mixed target behavior and any native collections not yet
      modeled. Framework-generated XML is not evidence for an unknown native encoding.
+     The next native requests are intentionally limited to the highest-value gaps:
+     (1) Engrave A/B saves changing only FinalDepthIncrement from Default to explicit
+     zero, then a separate A/B changing only CutOrdering, with property display,
+     prompt behavior and generated depth order reported; (2) CannedCycle A/B saves
+     changing only RetractHeight from Default to an explicit known coordinate, with
+     resulting G81/G82/G83 R-plane behavior and configured postprocessor identified;
+     and (3) a nonempty native CustomScript Drill plus an A/B changing only its script
+     text, with literal XML/state, macro expansion preview and postprocessor named.
+     Reopen encoding only if these source-native files disagree with the current
+     inventory or trigger a reconciliation prompt; production execution remains out
+     of scope.
    **Deliverables/stopping condition:** durable semantics go to `structure_spec.md`,
    MCP exposure and intentional pins to `MCP_CONTRACT.md`, dated comparisons and
    rejected interpretations to `REVIEW.md`, and only remaining prioritized work stays

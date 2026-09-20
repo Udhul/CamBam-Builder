@@ -2820,3 +2820,44 @@ Focused policy coverage passed 13 tests. The MCP MOP/authoring and core round-tr
 native-edit suites passed 25 tests. The full repository suite passed 245 tests with
 the one existing Windows symlink-privilege skip; compileall and `git diff --check`
 also passed. No new CamBam toolpath or production G-code acceptance is claimed.
+
+### Engrave/Drill subtype and method encoding audit â€” 2026-09-20
+
+The final modeled-field slice of backlog 8a compared Engrave and Drill against the
+official operation manuals and MOP API, the accepted SpiralMill source-native/open
+behavior, and existing round-trip evidence. Three gaps remained. Engrave still wrote
+an unset FinalDepthIncrement as cached `Default` text `0.0`; Drill method fields were
+split across imperative branches instead of an auditable inventory; and changing an
+imported Drill method retained stale fields belonging to the old method. A nonempty
+CustomScript could also leak into another fresh method, while a fresh empty
+CustomScript operation silently encoded an incomplete request.
+
+`MOP_ENGRAVE_FIELD_POLICIES` now owns all three Engrave subtype fields and
+`MOP_DRILL_FIELD_POLICIES` owns the method plus its eight dependents. Applicable
+user/product choices are `Value`; Engrave FinalDepthIncrement `None` is omitted;
+SpiralMill Auto HoleDiameter is the sole policy-selected empty `Default`. CannedCycle,
+SpiralMill and CustomScript dependents are mutually exclusive. A supported imported
+method switch rebuilds only modeled dependents and preserves unknown extensions.
+Unknown native methods remain round-trip-preserved but cannot be switched, and fresh
+CustomScript requires nonempty text. Existing SpiralMill diameter and lead-out safety
+checks now also run when relevant fields on an imported operation are edited.
+
+The official Engrave manual says RoughingFinishing is effective only for Lathe and
+3D Profile. Removing the public field would break compatibility without improving
+interchange, so it remains explicit framework/MCP metadata but has no promised
+Engrave path effect. The official Drill manual establishes controller-dependent dwell
+units, the CannedCycle R-plane role, Auto Circle diameter, signed lead-out direction,
+flat-base circle and CustomScript macros. Direct-core CustomScript support is retained,
+but MCP authoring and structured inspection intentionally exclude this literal,
+controller-sensitive G-code surface pending a separately justified capability.
+
+No new vendor behavior is inferred from framework XML. Backlog 8c now requests three
+source-native A/B checks: Engrave final increment/cut ordering, CannedCycle retract
+state and behavior, and a nonempty CustomScript text edit. Reopen this encoding only
+if those files conflict with the inventory or cause a reconciliation prompt.
+
+Verification on 2026-09-20: the focused policy suite passed 18 tests; the adjacent
+MCP MOP, core MOP round-trip and native-edit suites passed 14 tests; and all 250
+repository tests passed with the existing Windows symlink-privilege skip. Compileall
+and `git diff --check` also passed. No new CamBam toolpath or production G-code
+acceptance is claimed.

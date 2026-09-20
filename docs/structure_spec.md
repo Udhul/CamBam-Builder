@@ -412,17 +412,58 @@ the applicable modeled siblings and removes modeled dependents that became
 irrelevant, while preserving unknown children. This prevents a mode switch from
 combining stale cached children with a new discriminator.
 
-Fresh Drill encoding is method-aware. CannedCycle makes PeckDistance,
-RetractHeight and Dwell explicit. SpiralMill CW/CCW instead makes HoleDiameter
-(unless Auto), DrillLeadOut, SpiralFlatBase and LeadOutLength explicit while omitting
-the three CannedCycle-only elements and an unused CustomScript. This avoids CamBam's
-file-open prompt to reconcile irrelevant cached Default text with local defaults.
-Untouched imported XML preserves its original fields and states. Explicit spiral
-diameter `H`, signed radial roughing clearance `R` and effective tool diameter `T`
-must satisfy `H - 2R > T`. Auto diameter is resolved by CamBam from Circle targets;
-the MCP adapter therefore requires explicit diameter whenever a Point target is used.
-A nonzero lead-out length requires DrillLeadOut, and a positive centerward move must
-not exceed the effective hole radius.
+#### Engrave subtype inventory
+
+The [Engrave manual](https://www.cambam.info/doc/plus/cam/Engrave.htm) and MOP API
+use the same evidence labels as the tables above. `MOP_ENGRAVE_FIELD_POLICIES` is
+the executable inventory. An applicable modeled value is explicit `Value`; an unset
+optional final increment is omitted rather than exported as cached `Default` text.
+
+| Field | Meaning, units/reference, range and dependencies | Fresh XML disposition | Evidence |
+| --- | --- | --- | --- |
+| `roughing_finishing` | Published compatibility property with Roughing/Finishing-style values. CamBam documents it as effective only for Lathe and 3D Profile, so this framework does not promise an Engrave toolpath effect. | Always `Value`; retained for API/interchange compatibility and pinned to Roughing by MCP authoring. | D, P |
+| `final_depth_increment` | Optional depth of the final machining pass in drawing units; `0` disables a distinct final increment. | `Value` when supplied, including zero; omitted when `None`. | D, P |
+| `cut_ordering` | Orders multi-level paths `DepthFirst` or `LevelFirst`. | Always `Value`. | D, P |
+
+Engrave follows selected geometry, including its Z movement. Tool profile and signed
+roughing clearance are common fields, not a second V-carving subtype: `VCutter`
+describes the cutter but does not request skeleton or width/depth-varying V-carving.
+Untouched imported subtype fields retain their native states, cached text and absence.
+
+#### Drill method and subtype inventory
+
+The [Drill manual](https://www.cambam.info/doc/plus/cam/Drill.htm), accepted
+SpiralMill native checks and framework constraints use the same evidence labels.
+`MOP_DRILL_FIELD_POLICIES` is the executable method-aware inventory. Fresh output
+always makes the method explicit and emits only that method's applicable fields.
+
+| Field(s) | Meaning, units/reference, range and dependencies | Fresh XML disposition | Evidence |
+| --- | --- | --- | --- |
+| `drilling_method` | Selects `CannedCycle` (G81/G82/G83 through the postprocessor), clockwise or counterclockwise `SpiralMill`, or `CustomScript`. | Always `Value`. Unknown native methods are preserve-only. | D, P |
+| CannedCycle `peck_distance` | Nonnegative incremental drilling depth before each retract, in drawing units; zero selects no pecking. | `Value` for CannedCycle; otherwise omitted. | D, P |
+| CannedCycle `retract_height` | Work-plane-normal cycle start/return (R-plane) coordinate in drawing units; it should remain below the clearance plane and clear the stock. | `Value` for CannedCycle; otherwise omitted. | D, P |
+| CannedCycle `dwell` | Nonnegative pause at the hole bottom. Time units are controller/interpreter dependent, not fixed by this library. | `Value` for CannedCycle; otherwise omitted. | D, P |
+| SpiralMill `hole_diameter` | Requested hole-boundary diameter in drawing units. Explicit `H`, signed radial roughing clearance `R`, and effective tool diameter `T` must satisfy `H - 2R > T`. Auto derives each diameter from selected Circle geometry; a Point has no derivable size. | Explicit diameter is `Value`. `None` is the evidenced active Auto case and remains present as empty `Default`. Omitted for other methods. | D, N, P |
+| SpiralMill `drill_lead_out` | Enables a bottom-of-spiral radial move before retracting. | `Value` for SpiralMill; otherwise omitted. | D, N, P |
+| SpiralMill `spiral_flat_base` | Adds a complete circle at the spiral base when true; false can be useful for thread milling. | `Value` for SpiralMill; otherwise omitted. | D, N, P |
+| SpiralMill `lead_out_length` | Signed radial distance in drawing units when lead-out is enabled: positive moves centerward, negative outward. A nonzero value requires lead-out; positive values may not exceed the effective hole radius. CamBam documents enabled zero as moving to the center. | `Value` for SpiralMill; otherwise omitted. | D, N, P |
+| CustomScript `custom_script` | Literal drilling G-code template expanded once per point using CamBam's documented `$c/$d/$f/$h/$n/$p/$q/$r/$s/$t/$x/$y/$z` macros and `|` newline marker. Controller/postprocessor semantics apply. | Nonempty text is `Value` only for CustomScript. Fresh empty CustomScript authoring is rejected; other methods omit it. | D, P |
+
+The CannedCycle-only trio, SpiralMill quartet and CustomScript text are mutually
+exclusive in fresh XML. This prevents irrelevant cached defaults from triggering
+CamBam file-open reconciliation; the accepted SpiralMill files specifically proved
+that omission is prompt-free. On an imported switch among the four modeled methods,
+the writer removes stale modeled dependents, materializes the new method's complete
+modeled record and preserves unknown extension children. An untouched imported
+record preserves every original field/state, including irrelevant cached values.
+Unknown native methods are preserve-only and cannot be switched because their
+dependent field set is not modeled.
+
+Explicit spiral diameter `H`, signed radial roughing clearance `R` and effective
+tool diameter `T` must satisfy `H - 2R > T`. Auto diameter is resolved by CamBam
+from Circle targets; the MCP adapter therefore requires explicit diameter whenever
+a Point target is used. A nonzero lead-out length requires DrillLeadOut, and a
+positive centerward move must not exceed the effective hole radius.
 
 Imported global MachiningOptions and unmodeled part machining settings are
 retained, including Style/StyleLibrary. Part ToolDiameter retains native state/text

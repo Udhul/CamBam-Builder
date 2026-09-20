@@ -8,6 +8,8 @@ from pathlib import Path
 from cambam_builder import CBProject
 from cambam_builder.cambam_entities import (
     MOP_COMMON_FIELD_POLICIES,
+    MOP_DRILL_FIELD_POLICIES,
+    MOP_ENGRAVE_FIELD_POLICIES,
     MOP_POCKET_FIELD_POLICIES,
     MOP_PROFILE_FIELD_POLICIES,
 )
@@ -239,6 +241,167 @@ class MopParameterTests(unittest.TestCase):
             [child.tag for child in tabs],
         )
         self.assertTrue(all("state" not in child.attrib for child in tabs))
+
+    def test_engrave_fresh_subtype_policy_omits_unset_final_increment(self):
+        project = CBProject("engrave-policy")
+        layer = project.add_layer("Geometry")
+        target = project.add_rect(layer, identifier="target", width=4, height=2)
+        part = project.add_part("Part")
+        engrave = project.add_engrave_mop(
+            part, [target], identifier="engrave",
+            roughing_finishing="Finishing", final_depth_increment=None,
+            cut_ordering="LevelFirst",
+        )
+
+        element = engrave.to_xml_element(project, [1])
+        self.assertEqual(
+            {"roughing_finishing", "final_depth_increment", "cut_ordering"},
+            set(MOP_ENGRAVE_FIELD_POLICIES),
+        )
+        self.assertEqual("Value", element.find("RoughingFinishing").get("state"))
+        self.assertEqual("Finishing", element.findtext("RoughingFinishing"))
+        self.assertIsNone(element.find("FinalDepthIncrement"))
+        self.assertEqual("Value", element.find("CutOrdering").get("state"))
+        self.assertEqual("LevelFirst", element.findtext("CutOrdering"))
+
+    def test_drill_fresh_policy_is_exhaustive_and_method_aware(self):
+        project = CBProject("drill-policy")
+        layer = project.add_layer("Geometry")
+        target = project.add_circle(
+            layer, center=(0, 0), identifier="target", diameter=8)
+        part = project.add_part("Part")
+        drills = (
+            project.add_drill_mop(
+                part, [target], identifier="canned", drilling_method="CannedCycle",
+                peck_distance=1.5, retract_height=3, dwell=25,
+                custom_script="ignored inactive script"),
+            project.add_drill_mop(
+                part, [target], identifier="spiral", drilling_method="SpiralMill_CW",
+                tool_diameter=2, hole_diameter=8, drill_lead_out=True,
+                spiral_flat_base=False, lead_out_length=-0.5),
+            project.add_drill_mop(
+                part, [target], identifier="auto", drilling_method="SpiralMill_CCW",
+                tool_diameter=2, hole_diameter=None),
+            project.add_drill_mop(
+                part, [target], identifier="script", drilling_method="CustomScript",
+                custom_script="$x,$y|G1 Z$z F$f"),
+        )
+
+        method_fields = {policy.xml_path[0]
+                         for policy in MOP_DRILL_FIELD_POLICIES.values()}
+        expected = (
+            {"DrillingMethod", "PeckDistance", "RetractHeight", "Dwell"},
+            {"DrillingMethod", "HoleDiameter", "DrillLeadOut",
+             "SpiralFlatBase", "LeadOutLength"},
+            {"DrillingMethod", "HoleDiameter", "DrillLeadOut",
+             "SpiralFlatBase", "LeadOutLength"},
+            {"DrillingMethod", "CustomScript"},
+        )
+        for drill, expected_fields in zip(drills, expected):
+            element = drill.to_xml_element(project, [1])
+            present = {child.tag for child in element if child.tag in method_fields}
+            self.assertEqual(expected_fields, present, drill.user_identifier)
+            for field_name, policy in MOP_DRILL_FIELD_POLICIES.items():
+                node = element.find(policy.xml_path[0])
+                applicable = drill._policy_applies(policy)
+                omitted = drill._policy_omits(policy, getattr(drill, field_name))
+                self.assertEqual(applicable and not omitted, node is not None,
+                                 field_name)
+                if node is not None:
+                    expected_state = drill._policy_state(
+                        policy, getattr(drill, field_name))
+                    self.assertEqual(expected_state, node.get("state"), field_name)
+        self.assertEqual("Default", drills[2].to_xml_element(
+            project, [1]).find("HoleDiameter").get("state"))
+        self.assertEqual("$x,$y|G1 Z$z F$f", drills[3].to_xml_element(
+            project, [1]).findtext("CustomScript"))
+
+    def test_drill_fresh_unsupported_and_empty_custom_methods_are_rejected(self):
+        project = CBProject("drill-method-validation")
+        layer = project.add_layer("Geometry")
+        target = project.add_circle(
+            layer, center=(0, 0), identifier="target", diameter=8)
+        part = project.add_part("Part")
+        unsupported = project.add_drill_mop(
+            part, [target], identifier="plugin", drilling_method="PluginMethod")
+        with self.assertRaisesRegex(ValueError, "preserve-only"):
+            unsupported.to_xml_element(project, [1])
+        empty_script = project.add_drill_mop(
+            part, [target], identifier="script", drilling_method="CustomScript")
+        with self.assertRaisesRegex(ValueError, "nonempty custom_script"):
+            empty_script.to_xml_element(project, [1])
+
+    def test_imported_drill_method_switch_reconciles_modeled_fields(self):
+        project = CBProject("drill-method-switch")
+        layer = project.add_layer("Geometry")
+        target = project.add_circle(
+            layer, center=(0, 0), identifier="target", diameter=8)
+        part = project.add_part("Part")
+        project.add_drill_mop(
+            part, [target], identifier="drill", drilling_method="CannedCycle",
+            tool_diameter=2, peck_distance=1, retract_height=3, dwell=10)
+        with tempfile.TemporaryDirectory(
+                prefix="mop-parameters-", dir=self.output) as directory:
+            source = self.save(project, directory, "canned")
+            tree = ET.parse(source)
+            ET.SubElement(self.mop(tree, "drill"), "NativeMethodField").text = "keep"
+            tree.write(source, encoding="utf-8", xml_declaration=True)
+
+            invalid = read_cambam_file(str(source))
+            invalid_drill = invalid.get_mop("drill")
+            invalid_drill.drilling_method = "SpiralMill_CW"
+            invalid_drill.hole_diameter = 2
+            with self.assertRaisesRegex(ValueError, "greater than tool_diameter"):
+                invalid_drill.to_xml_element(invalid, [1])
+
+            loaded = read_cambam_file(str(source))
+            drill = loaded.get_mop("drill")
+            drill.drilling_method = "SpiralMill_CW"
+            drill.hole_diameter = None
+            spiral = drill.to_xml_element(loaded, [1])
+            self.assertEqual("keep", spiral.findtext("NativeMethodField"))
+            self.assertIsNone(spiral.find("PeckDistance"))
+            self.assertIsNone(spiral.find("RetractHeight"))
+            self.assertIsNone(spiral.find("Dwell"))
+            self.assertEqual("Default", spiral.find("HoleDiameter").get("state"))
+            for tag in ("DrillLeadOut", "SpiralFlatBase", "LeadOutLength"):
+                self.assertEqual("Value", spiral.find(tag).get("state"), tag)
+
+            spiral_path = self.save(loaded, directory, "spiral")
+            scripted = read_cambam_file(str(spiral_path))
+            drill = scripted.get_mop("drill")
+            drill.drilling_method = "CustomScript"
+            drill.custom_script = "$x,$y|G1 Z$z"
+            custom = drill.to_xml_element(scripted, [1])
+            self.assertEqual("$x,$y|G1 Z$z", custom.findtext("CustomScript"))
+            for tag in ("PeckDistance", "RetractHeight", "Dwell", "HoleDiameter",
+                        "DrillLeadOut", "SpiralFlatBase", "LeadOutLength"):
+                self.assertIsNone(custom.find(tag), tag)
+            self.assertEqual("keep", custom.findtext("NativeMethodField"))
+
+    def test_unknown_imported_drill_method_is_preserved_but_not_switched(self):
+        project = CBProject("unknown-drill-method")
+        layer = project.add_layer("Geometry")
+        target = project.add_circle(
+            layer, center=(0, 0), identifier="target", diameter=8)
+        part = project.add_part("Part")
+        project.add_drill_mop(part, [target], identifier="drill")
+        with tempfile.TemporaryDirectory(
+                prefix="mop-parameters-", dir=self.output) as directory:
+            source = self.save(project, directory, "native")
+            tree = ET.parse(source)
+            native = self.mop(tree, "drill")
+            native.find("DrillingMethod").text = "PluginMethod"
+            ET.SubElement(native, "PluginMethodData").text = "keep"
+            tree.write(source, encoding="utf-8", xml_declaration=True)
+
+            loaded = read_cambam_file(str(source))
+            preserved = loaded.get_mop("drill").to_xml_element(loaded, [1])
+            self.assertEqual("PluginMethod", preserved.findtext("DrillingMethod"))
+            self.assertEqual("keep", preserved.findtext("PluginMethodData"))
+            loaded.get_mop("drill").drilling_method = "CannedCycle"
+            with self.assertRaisesRegex(ValueError, "unsupported imported"):
+                loaded.get_mop("drill").to_xml_element(loaded, [1])
 
     def test_imported_nested_mode_switches_reconcile_modeled_children(self):
         project = CBProject("nested-switch")
