@@ -45,6 +45,11 @@
   and confirm required checks apply to the final tree. `git diff --check` alone does
   not inspect untracked files. After the user or another tool commits, rerun the
   branch-level gates; do not inherit a pre-commit readiness conclusion.
+- When a feature branch is merge-ready, provide commands using `git merge --no-ff`
+  by default so `main` retains a visible merge point and branch topology. Do not
+  recommend fast-forward, squash or rebase integration unless the user explicitly
+  prefers linear history. The user performs the merge unless they explicitly
+  authorize the agent to do it.
 - Separate implementation, automated verification and user/production acceptance.
   End each unit with changed areas, decisions/assumptions, exact checks/results,
   risks, required user validation, next increment and suggested commit message.

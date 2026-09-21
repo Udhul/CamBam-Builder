@@ -104,6 +104,10 @@ Use delivery labels precisely:
   verification, confirm the worktree stayed clean and rerun the branch-level status,
   ancestry, commit-range and diff checks against the final `HEAD`. Never promote an
   earlier implementation-ready conclusion into a merge-ready claim by assumption.
+- For merge-ready feature work, hand off a `git merge --no-ff <feature-branch>`
+  command by default. Its merge commit preserves the branch-and-join topology in the
+  graph even if the feature ref is later deleted. Use fast-forward, squash or rebase
+  integration only when the user explicitly chooses linear history.
 
 ### Completion record / handoff template
 

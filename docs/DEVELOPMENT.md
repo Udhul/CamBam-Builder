@@ -78,6 +78,20 @@ commands must succeed. Review the complete `main...HEAD` diff, not merely its st
 Run required behavior checks after the last material content edit; after a later
 commit, rerun these branch-level gates against the final `HEAD`.
 
+The repository preference is to preserve visible feature-branch topology. Unless the
+user explicitly requests linear history, hand off these merge commands after the
+feature branch passes the gates above:
+
+```powershell
+git switch main
+git merge --no-ff <feature-branch> -m "merge: <feature description>"
+git status --short --branch
+git log --graph --decorate --oneline -12
+```
+
+Do not substitute `--ff-only`, squash or rebase integration by default: each removes
+the explicit branch-and-join merge point the project wants visible in its graph.
+
 Run the authored synthetic XML regressions with:
 
 ```powershell
