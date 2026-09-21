@@ -7,6 +7,23 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**2026-09-21 pre-merge review: 9b/9c corrections precede backlog 10.** Review of
+`main...3cfa1df` reproduced three medium-severity contract defects: order-dependent
+fixed recommendation selection, incomplete propagation of an RPM-only cap across
+non-fixed feed targets, and silent replacement of conflicting fixed strategy values
+by planner inputs. Merge is blocked pending the bounded corrections and focused
+acceptance in [the review record](REVIEW.md#pre-merge-review-of-8a8e-and-9a9c---2026-09-21).
+The previously reported 293-test baseline remains historical evidence; the full
+suite was not rerun. No runtime correction or backlog 10 refactor was made.
+
+**2026-09-21 user-context operating ranges requested.** After R1-R3, implement
+[9d: machine and user operating ranges](#9d-machine-and-user-operating-ranges)
+before backlog 10. Current profiles support upper RPM/feed limits only; minimum
+RPM/feed bounds are not implemented. Recommendations must respect arbitrary
+caller-defined machining constraints. The mentioned RPM ranges were illustrative
+examples only, not special supported ranges, presets or defaults. All review findings and focused repair criteria are saved
+in `REVIEW.md`; the new range requirement below is additional requested scope.
+
 **2026-09-20 unreleased compatibility boundary enforced.** “Fresh/imported” now
 explicitly means optimal fresh CamBam XML and arbitrary supported CamBam-saved XML,
 not files or Python calls from earlier unreleased framework builds. CamBam `.cb` XML
@@ -1089,7 +1106,48 @@ This supersedes the former five broad increments; their pending scope is retaine
 above. Detailed contracts remain in `docs/structure_spec.md`, and review evidence in
 `docs/REVIEW.md`. No repository-linked issue tracker was found.
 
-10. **Framework entity module boundary refactor** (queued after 9c; requested
+### 9d: Machine and user operating ranges
+
+Requested 2026-09-21 for the next implementation session, after review repairs R1-R3
+and before backlog 10. Extend the existing pure calculation/recommendation/planning
+owners so recommendations respect the caller's declared machining constraints for
+the selected machine, setup and job. Support arbitrary valid optional minimum and
+maximum spindle RPM and feed rates without hardcoded ranges, machine-specific
+branches, global defaults or state leaking between contexts. The user's example
+RPM intervals illustrate this general capability; they are not product requirements
+for two particular machines or privileged values in the implementation.
+Feed bounds use the context's explicit mm/min or in/min units; no actual feed
+limits were supplied by the user, so implementation must not invent them.
+
+Acceptance and implementation boundaries:
+
+- Validate finite positive supplied bounds and minimum <= maximum; equal bounds
+  represent a single allowed setting. Omitted bounds impose no invented limit.
+- Respect both machine capability and any narrower user/job operating restrictions.
+  If represented separately, use their intersection and reject an empty feasible
+  range; a user restriction cannot expand the declared machine capability.
+- Explicit fixed RPM/feed outside the effective range must fail clearly, never be
+  silently changed. Non-fixed/derived adjustments must retain the original target,
+  identify the active lower/upper bound, and recalculate achieved surface speed,
+  chip load, MRR, power and torque consistently with R2's ownership correction.
+- Raising RPM/feed to a minimum is not evidence of safe cutting. Recheck coupled
+  bounds, fixed constraints and applicable recommendation requirements after
+  adjustment; return an explicit infeasibility/conflict when they cannot be met.
+  Do not present an out-of-range result as a usable candidate or fill missing
+  cutting inputs merely because a bound exists.
+- Test varied arbitrary ranges, exact endpoints, lower/upper/both-bound cases,
+  conflicting fixed inputs, invalid/empty ranges, independent contexts, metric and
+  imperial feed units, coupled RPM/feed limits and downstream load diagnostics.
+  Entry feeds must also respect applicable declared feed bounds, retaining their
+  separate capability/provenance requirements; never infer an entry rate from cut
+  feed. Power/torque excess remains diagnostic without an invented derating model.
+- Keep pure public API ownership, immutable input/result records, no document
+  mutation, and no new catalog, persistence format or MCP profile schema. Update
+  `structure_spec.md` to describe implemented behavior when complete, and record
+  focused results in `REVIEW.md`. No native CamBam acceptance is needed for this
+  nonserialized arithmetic change.
+
+10. **Framework entity module boundary refactor** (queued after 9d; requested
     2026-09-21). The current `cambam_entities.py` is 2,488 lines and mixes shared
     identity/geometry foundations, Layer and six ordinary CAD primitives, Part,
     four MOP families and their XML policy tables. `region.py` is 838 lines, but about

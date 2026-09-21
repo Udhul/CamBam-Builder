@@ -1,5 +1,112 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Pre-merge review of 8a–8e and 9a–9c - 2026-09-21
+
+Reviewed the twelve-commit sequence and aggregate `main...3cfa1df` change against
+the implemented architecture, MOP preservation/MCP contracts and recorded native
+acceptance. Initial working tree was clean (`git status --short --branch` also
+warned that `.pytest_cache/` could not be opened). This was a focused review, not
+another full verification run. The reported 293-test baseline, existing Windows
+symlink skip, compileall and schema checks were not rerun.
+
+Three P2 (medium) issues block merging the advertised 9b/9c contracts. They are
+framework composition defects, not questions about native CamBam behavior. Runtime
+code was left unchanged; repair must stay in recommendation selection/planning and
+their focused regressions, without starting the entity-module refactor.
+
+### R1: Fixed override selection depends on strategy order
+
+Evidence: `machining_recommendations.py:480-489` raises immediately on two
+conflicting non-fixed recommendations, before a later fixed override is considered.
+With chip-load recommendations 0.03 and 0.04 mm/tooth and a fixed user override of
+0.025, two of the six strategy permutations raise `RecommendationError`; four
+return 0.025. This violates `structure_spec.md`'s recommendation contract that a
+fixed override wins regardless of order. A valid user resolution can therefore be
+rejected solely because of profile ordering.
+
+Correction: validate and collect applicable candidates before resolving conflicts
+per field. Select a compatible fixed candidate when present; reject unresolved
+non-fixed conflicts and incompatible fixed candidates. Keep units, provenance,
+applicability and entry-capability validation; do not bypass validation by sorting
+and short-circuiting. Acceptance: all six permutations return the same fixed
+recommendation/provenance; two conflicting suggestions without an override still
+fail; conflicting fixed values still fail in every order. Existing tests only
+permute one non-fixed strategy with one fixed strategy and miss this case.
+
+### R2: An RPM-only cap creates a false feed conflict
+
+Evidence: `machining_planning.py:239-250` caps a non-fixed spindle recommendation
+and drops only its surface-speed conjugate. It then passes non-fixed chip load and
+feed into the kernel as supplied constraints. For a two-flute tool, the consistent
+targets 8000 RPM, 0.04 mm/tooth and 640 mm/min become 6000 RPM, 0.04 mm/tooth and
+640 mm/min under a 6000 RPM cap and 1000 mm/min feed cap. Planning raises
+`conflicting feed inputs: feed_rate=640.0, expected 480.0`. This violates the 9a/9c
+cap-propagation contract in `structure_spec.md:79-84,130-139`: a valid capped
+starting candidate should produce achieved downstream values and diagnostics.
+
+Correction: preserve whether operational inputs are fixed or suggested when
+composing the solver request. Apply the existing chip-load-to-feed dependency to
+non-fixed feed targets after an RPM cap, rather than treating the old feed as fixed.
+Do not weaken the pure kernel's checks or suppress genuinely inconsistent original
+constraints. Acceptance: this example returns 6000 RPM and 480 mm/min with the
+spindle cap recorded; MRR/power/torque use achieved settings. Cover RPM-only,
+feed-only and simultaneous caps, and a fixed feed variant that remains unchanged
+with achieved chip load recalculated. The existing direct-target test caps both RPM
+and feed, which removes chip load and masks the RPM-only failure.
+
+### R3: Planner silently discards conflicting fixed strategy values
+
+Evidence: `machining_planning.py:235-236` skips any recommendation whose field is
+already in `supplied`, including `fixed=True` recommendations. A fixed strategy
+setting 5000 RPM plus `fixed_values=MillingConstraints('mm', spindle_speed=4000)`
+returns 4000 RPM without a conflict or diagnostic, while retained recommendation
+provenance still says fixed 5000 RPM. The specification at `structure_spec.md:130-132`
+allows explicit constraints to override **non-fixed** recommendations; it does not
+authorize silently resolving contradictory fixed decisions. The same skip also
+affects fixed effective-flute recommendations that conflict with the tool profile.
+
+Correction: before skipping a supplied field, compare a fixed recommendation with
+the explicit/tool-profile fact and reject incompatible values with a field-specific
+error. Preserve ordinary non-fixed override behavior and the intentional safe-axial
+maximum versus actual-stepdown distinction. Acceptance: equal fixed values succeed;
+5000-versus-4000 fixed RPM fails; conflicting fixed effective-flute recommendations
+fail against the tool profile; explicit inputs still override non-fixed values;
+through-cut axial maxima still produce balanced actual stepdown. Existing tests
+cover fixed values above machine caps, not two conflicting fixed sources.
+
+### Review verification and disposition
+
+No additional merge-blocking MOP defect was established. The reviewed policy
+inventories, template preservation, supported method switches, group-neutral target
+eligibility and inspection/schema contracts remain cohesive with recorded native
+evidence. Default cached text is not an evaluated style value, and inactive raw
+fields do not establish toolpath behavior. Two inspection concerns were not promoted
+to findings: effective Part defaults can differ from raw attributes when a fresh
+core project is injected directly into the service, but normal MCP authoring pins
+those inputs and XML import materializes their native values; known inactive fields
+on an unknown Drill method remain raw values marked inapplicable, while unknown
+paths remain opaque. Neither establishes an incorrect supported MCP workflow.
+Native production/toolpath acceptance and external CAM-style resolution remain
+outside the implemented guarantee; this review did not repeat accepted fixtures.
+
+The three failures were reproduced through the public package API using synthetic
+tool/material/provenance data. Retained helper:
+`output/premerge-review-20260921-3cfa1df/reproduce.py`. Exact repeatable command from
+the repository root:
+
+```powershell
+Get-Content output/premerge-review-20260921-3cfa1df/reproduce.py | .venv\Scripts\python.exe -
+```
+
+Exit 0 confirms the helper observed all three defects; it is not a passing product
+regression suite. An earlier equivalent inline probe produced the same failures.
+`git diff --check` passed after recording the review (only Git's LF/CRLF conversion
+warnings); `git check-ignore` confirmed the synthetic helper remains ignored.
+No manual CamBam validation adds evidence for these pure-library repairs. Merge
+recommendation: **blocked** until R1-R3 are corrected and focused acceptance passes.
+Next priority is recorded in `PROGRESS.md`; backlog 10 remains deferred. A fresh
+session can implement the repairs from this record without conversational context.
+
 ## Group-neutral MCP MOP target eligibility - 2026-09-20
 
 Backlog 8e removed group membership from two decisions where it has no coordinate
