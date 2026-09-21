@@ -1,7 +1,6 @@
 """Volatile documents, revision serialization and process-lifetime retry ledger."""
 import copy
 from dataclasses import dataclass, field
-from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR
 import hashlib
 import json
 import math
@@ -13,6 +12,7 @@ import numpy as np
 from jsonschema import ValidationError
 
 from cambam_builder import CBProject
+from cambam_builder.machining_planning import plan_depth_passes
 from cambam_builder.cambam_entities import (
     Arc, Circle, DrillMop, EngraveMop, Mop, Pline, PocketMop, Points,
     Primitive, ProfileMop, Rect, Text, Vertex, MOP_COMMON_FIELD_POLICIES,
@@ -314,104 +314,30 @@ class DocumentService:
 
     @staticmethod
     def _calculate_depth_increment(args):
-        """Return a rounded plan whose final pass still engages stock."""
-        stock = Decimal(str(args["stock_thickness"]))
-        cut_through = Decimal(str(args["cut_through"]))
-        total = stock + cut_through
-        if total > Decimal("1000000000"):
-            raise DomainError(
-                "INVALID_ARGUMENT",
-                "Stock thickness plus cut-through exceeds the supported numeric range",
-                "stock_thickness",
+        """Present the public pure depth planner through the read-only MCP tool."""
+        try:
+            plan = plan_depth_passes(
+                units=args["units"], stock_thickness=args["stock_thickness"],
+                cut_through=args["cut_through"],
+                pass_count=args.get("pass_count"),
+                max_depth_increment=args.get("max_depth_increment"),
+                rounding_increment=args.get("rounding_increment"),
             )
-        quantum = Decimal(str(args.get(
-            "rounding_increment", 0.1 if args["units"] == "mm" else 0.001
-        )))
-        minimum_fraction = Decimal(1) / Decimal(3)
-        required_final_stock = (
-            minimum_fraction * cut_through / (Decimal(1) - minimum_fraction)
-        )
-
-        def rounded_increment(pass_count):
-            equal_increment = total / Decimal(pass_count)
-            steps = (equal_increment / quantum).to_integral_value(rounding=ROUND_CEILING)
-            candidate = steps * quantum
-            if candidate <= equal_increment:
-                candidate += quantum
-            return candidate
-
-        diagnostics = []
-        if "pass_count" in args:
-            mode = "pass_count"
-            pass_count = args["pass_count"]
-            increment = rounded_increment(pass_count)
-        else:
-            mode = "max_depth_increment"
-            maximum = Decimal(str(args["max_depth_increment"]))
-            pass_count = int((total / maximum).to_integral_value(rounding=ROUND_FLOOR)) + 1
-            if pass_count > 10000:
-                raise DomainError(
-                    "INVALID_ARGUMENT",
-                    "Maximum depth increment would require more than 10000 passes",
-                    "max_depth_increment",
-                )
-            increment = rounded_increment(pass_count)
-            while increment > maximum and pass_count < 10000:
-                pass_count += 1
-                increment = rounded_increment(pass_count)
-            if increment > maximum:
-                increment = total / Decimal(pass_count)
-                diagnostics.append({
-                    "code": "DEPTH_ROUNDING_RELAXED",
-                    "message": "No upward-rounded increment fits the requested maximum; the unrounded equal increment is returned to honor that constraint.",
-                })
-
-        if increment > Decimal("1000000000"):
-            raise DomainError(
-                "INVALID_ARGUMENT",
-                "Rounding increment produces an unsupported depth increment",
-                "rounding_increment",
-            )
-
-        penultimate_depth = Decimal(pass_count - 1) * increment
-        if penultimate_depth >= total:
-            increment = total / Decimal(pass_count)
-            penultimate_depth = Decimal(pass_count - 1) * increment
-            diagnostics.append({
-                "code": "DEPTH_ROUNDING_RELAXED",
-                "message": "Upward rounding would complete the cut in fewer than the requested passes; the unrounded equal increment is returned to preserve pass count.",
-            })
-        final_stock = stock - penultimate_depth
-        final_pass = total - penultimate_depth
-        final_stock = max(Decimal(0), final_stock)
-        final_cut_through = final_pass - final_stock
-        final_stock_fraction = final_stock / final_pass
-        recommendation_met = final_stock >= required_final_stock
-        if not recommendation_met:
-            diagnostics.append({
-                "code": "FINAL_STOCK_ENGAGEMENT_LOW",
-                "message": "The requested constraint leaves less than one third of the final pass in stock. The plan is returned unchanged as advisory evidence; review workholding and confirm the user's intent.",
-            })
-
-        depths = [min(Decimal(index) * increment, total)
-                  for index in range(1, pass_count + 1)]
-        return {
-            "units": args["units"],
-            "mode": mode,
-            "stock_thickness": float(stock),
-            "cut_through": float(cut_through),
-            "total_depth": float(total),
-            "pass_count": pass_count,
-            "depth_increment": float(increment),
-            "rounding_increment": float(quantum),
-            "nominal_overshoot": float(max(Decimal(0), Decimal(pass_count) * increment - total)),
-            "pass_depths": [float(value) for value in depths],
-            "final_pass_depth": float(final_pass),
-            "final_pass_stock": float(final_stock),
-            "final_pass_cut_through": float(final_cut_through),
-            "final_stock_fraction": float(final_stock_fraction),
-            "recommendation_met": recommendation_met,
-        }, diagnostics
+        except ValueError as exc:
+            message = str(exc)
+            field = "stock_thickness"
+            for candidate in ("max_depth_increment", "rounding_increment", "pass_count"):
+                if candidate in message:
+                    field = candidate
+                    break
+            raise DomainError("INVALID_ARGUMENT", message[:512], field) from None
+        data = {
+            name: list(value) if name == "pass_depths" else value
+            for name, value in plan.__dict__.items()
+            if name != "diagnostics"
+        }
+        diagnostics = [item.__dict__ for item in plan.diagnostics]
+        return data, diagnostics
 
     @staticmethod
     def _summary(document):

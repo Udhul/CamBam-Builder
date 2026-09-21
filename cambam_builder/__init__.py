@@ -43,6 +43,13 @@ from .machining_recommendations import (
     ToolProfile,
     recommend_milling,
 )
+from .machining_planning import (
+    DepthPassPlan,
+    MillingPlan,
+    PlanningDiagnostic,
+    plan_depth_passes,
+    plan_milling,
+)
 
 # Create a shorter alias for the main project class
 CBProject = CamBamProject

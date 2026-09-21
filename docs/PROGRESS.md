@@ -18,6 +18,18 @@ synthetic migration regression, two unused `_v2` matrix aliases and positional
 `add_part` ordering compatibility were removed. The then-current 253-test suite passed
 with the existing Windows symlink-privilege skip; no CamBam behavior changed.
 
+**2026-09-21 backlog 9c pass planning complete.** A public pure planner now owns
+through-cut balancing and composes 9b provenance-bearing recommendations with the 9a
+solver. It preserves a safe axial maximum separately from the actual balanced
+stepdown, returns physical/fractional stepover, entry feeds, achieved RPM/feed/chip
+load/MRR/power/torque, cap diagnostics and missing requirements, and never mutates a
+document. The existing read-only MCP depth tool delegates to the same core; broader
+MCP profile authoring was not added because caller-owned strategies have no closed
+persistence/catalog contract. Backlog 10 is next. No production machining safety is
+claimed. All 7 focused planning tests and all 293 repository tests pass with the
+existing Windows symlink-privilege skip; compileall, strict schema JSON parsing and
+`git diff --check` pass. This pure/document-free change needs no CamBam validation.
+
 **2026-09-20 backlog 8a modeled MOP field inventory complete.** Engrave and Drill
 now join the common and Profile/Pocket slices with declarative fresh-export policies.
 Drill emits mutually exclusive CannedCycle, SpiralMill or CustomScript method fields,
@@ -1049,13 +1061,18 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
       privilege skip. Compileall and `git diff --check` pass. This pure nonserialized
       slice has no CamBam XML or toolpath behavior, so manual validation adds no
       evidence.
-   - **9c — pass planning and optional MCP exposure.** Integrate the existing
-     `machining_calculate_depth_increment` final-stock/cut-through planner with a
-     caller-supplied safe axial-depth constraint from 9a/9b. If useful to named-client
-     workflows, expose a read-only planner returning candidate RPM, cut/plunge feed,
-     stepdown, stepover, chip load, MRR and power/torque diagnostics; it must not
-     mutate a document or silently author a MOP. User-confirmed/fixed values win, and
-     underdetermined inputs return the missing requirements rather than guessed values.
+   - **9c — pass planning and optional MCP exposure (completed 2026-09-21).**
+     `plan_depth_passes()` now owns the existing final-stock/cut-through calculation,
+     and `plan_milling()` composes it with caller-supplied 9b recommendations and the
+     9a solver. Results retain the safe axial maximum separately from actual balanced
+     stepdown; expose physical/fractional stepover, capability-gated entry feeds and
+     achieved RPM/feed/chip load/MRR/power/torque; report caps, power/torque excess and
+     missing inputs; and carry the safety notice. Explicit fixed values win over
+     related non-fixed targets. The existing read-only MCP depth tool delegates to the
+     public core and does not mutate a document. A full MCP profile schema was not
+     useful without a closed provenance/persistence contract, so arbitrary profile
+     composition remains direct Python API. Verification and safety evidence are in
+     `REVIEW.md`.
 
    Acceptance requires formula inverse/property tests, metric/imperial equivalence,
    partial-input and overconstraint tests, machine-limit clamping diagnostics,

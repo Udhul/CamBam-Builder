@@ -23,8 +23,9 @@ packages; `inactive/` and demos are outside that runtime package list.
 | `cambam_builder/cambam_entities.py` | Entity dataclasses, primitive geometry/bounds, local effective matrices, parent-composed world transforms and entity XML encoding | Geometry or entity fields; inspect reader/writer callers for I/O changes |
 | `cambam_builder/region.py` | Owned Region contours, planar curved topology validation and typed Region XML | Region geometry and interchange; project and reader use this owner |
 | `cambam_builder/cad_transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
-| `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel only; pass planning and MCP exposure remain separate increments |
+| `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
 | `cambam_builder/machining_recommendations.py` | Immutable tool/material/machine contexts, provenance-bearing recommendations, user diameter tables and pluggable pure strategies | Recommendation selection only; contains no curated catalog, persistence, document mutation or safety claim |
+| `cambam_builder/machining_planning.py` | Pure through-cut pass balancing and composition of recommendation profiles with formula/machine diagnostics | Candidate planning only; the existing MCP depth tool delegates here, while full profile construction remains a direct-Python API |
 | `cambam_builder/cambam_writer.py` | XML ID assignment and layer/part traversal; delegates individual encoding to entities | Output structure and reference resolution |
 | `cambam_builder/cambam_reader.py` | XML parsing, entity reconstruction, ID mapping and deferred parent/MOP linking | Import defaults, malformed data and round-trip reconstruction |
 | `cambam_builder/__init__.py` | Public alias and version | Import surface and version metadata |
@@ -113,7 +114,38 @@ nonempty rule, and ordinary provenance/range metadata. The layer validates and
 selects starting values only. It does not serialize profiles, mutate documents,
 infer entry feeds as cut-feed percentages, apply machine power/torque derating, or
 establish safe production settings. Persistence/versioning remains deferred until a
-durable owner is chosen; pass planning and optional MCP exposure remain backlog 9c.
+durable owner is chosen.
+
+### Milling pass and candidate planning
+
+`machining_planning.py` composes the preceding two layers without adding cutting
+data or a document dependency. `plan_depth_passes()` is the public owner of the
+existing through-cut calculation: the caller supplies either an exact pass count or
+a maximum axial increment already judged safe for the exact material, tool, setup
+and machine. It balances cumulative depths, preserves the requested constraint,
+and reports rounding plus low-final-stock engagement as advisory diagnostics. The
+existing read-only `machining_calculate_depth_increment` MCP tool delegates to this
+same function and remains document-free and non-mutating.
+
+`plan_milling()` retains the complete 9b recommendation result and provenance,
+lets explicit `MillingConstraints` values override non-fixed recommendations, and
+uses the tool profile's diameter/flute count plus the machine's 9a RPM/feed limits.
+For a through-cut, recommended or fixed `axial_depth` is the safe maximum; the
+balanced actual `depth_increment` is used for MRR, power and torque diagnostics, so
+the two values are never conflated. Physical radial engagement is also returned as
+`stepover`, with `stepover_fraction` relative to cutter diameter. RPM/feed caps are
+explicit active constraints; declared power/torque excess is diagnosed without an
+unevidenced derating rule. Plunge/ramp/helical values remain separately sourced and
+capability-gated by 9b.
+
+Underdetermined systems return stable missing requirements. No result authors a
+MOP or mutates a document. Full recommendation-profile construction is deliberately
+not exposed as a closed MCP schema because profiles and provenance are caller-owned
+extensibility objects without a persistence or catalog contract; the useful named-
+client pass-arithmetic surface already exists. Every plan is only a starting
+recommendation: exact tool-manufacturer guidance, machine limits, workholding,
+rigidity, chip evacuation and supervised test cuts remain required, and production
+machining safety is not established.
 
 ### Project clone and bounded XML import
 

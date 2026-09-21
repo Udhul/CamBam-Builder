@@ -3193,6 +3193,41 @@ all 286 repository tests pass with the existing Windows symlink-privilege skip.
 Compileall covers the modern package, legacy package, tests and demos, and
 `git diff --check` passes.
 
+## Milling pass planning and bounded MCP exposure - 2026-09-21
+
+Backlog 9c adds a pure public planning layer rather than coupling recommendation
+profiles to CamBam documents. `plan_depth_passes()` now owns the previously
+service-local through-cut arithmetic. Its exact-pass and safe-maximum modes preserve
+the existing upward-rounding, final-stock engagement and advisory behavior. The
+existing `machining_calculate_depth_increment` MCP tool delegates to that owner and
+retains its schema and wire output, so the useful named-client workflow remains
+read-only and document-free.
+
+`plan_milling()` composes immutable 9b strategy output with the 9a constraint solver.
+Explicit caller values supersede related non-fixed surface-speed/chip-load targets;
+fixed settings above machine caps still fail rather than being silently changed.
+Derived RPM/feed caps propagate to achieved surface speed, chip load, MRR, power and
+torque. For through-cuts, sourced `axial_depth` remains visible as the safe maximum,
+while balanced `depth_increment` is the actual axial engagement used in load
+diagnostics. Radial engagement is returned both as a physical stepover and cutter-
+diameter fraction. Declared power/torque excess produces diagnostics instead of an
+invented derating model, and absent safe axial data returns a missing requirement.
+
+A new closed MCP schema for arbitrary profiles was rejected: the strategies are a
+direct-Python extension boundary with caller-owned provenance and no persistence or
+catalog contract, so serializing them now would create a competing weaker profile
+model. No planner accepts a document or authors a MOP. The returned safety notice
+requires exact tool-maker guidance, machine-limit and workholding review, rigidity/
+chip-evacuation checks and supervised test cuts; production safety is not claimed.
+
+Verification: seven focused 9c tests cover immutability, existing pass arithmetic,
+metric/imperial equivalence, invalid and unknown inputs, provenance retention,
+fixed-value precedence, RPM/feed caps, power/torque diagnostics and actual-stepdown
+load propagation. The 46 focused 9a/9b/9c/MCP-MOP tests and all 293 repository tests
+pass with the existing Windows symlink-privilege skip. Compileall, strict schema JSON
+parsing and `git diff --check` pass. No CamBam XML or toolpath behavior changed, so
+manual native validation would add no evidence.
+
 ## Entity module boundary assessment - 2026-09-21
 
 The requested post-9c maintainability review found a real mixed-owner problem but not
