@@ -9,7 +9,7 @@ Main entry point:
 
 # Import the main project class from the cambam_project module
 from .cambam_project import CamBamProject
-from .cambam_entities import Vertex
+from .entity_core import Vertex
 from .machining_calculations import (
     ActiveConstraint,
     MachineLimits,

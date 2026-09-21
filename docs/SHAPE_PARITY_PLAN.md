@@ -90,7 +90,7 @@ different topology contract; do not claim the private sample itself is accepted.
 At planning time Circle/Arc/Rect/Points/Text geometry stored XY, their encoders synthesized
 zero Z, and corresponding reader branches discarded elevation. Pline also discarded
 Z while its third tuple value already means bulge. The relevant owners are the
-shape classes in `cambam_entities.py` and `_reconstruct_primitive` in
+shape classes now owned by `cad_entities.py`/`region.py` and `_reconstruct_primitive` in
 `cambam_reader.py`. Coverage must include all rows, not just the XYZ Pline needed
 by engraving.
 

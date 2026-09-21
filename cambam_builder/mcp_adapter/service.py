@@ -13,9 +13,10 @@ from jsonschema import ValidationError
 
 from cambam_builder import CBProject
 from cambam_builder.machining_planning import plan_depth_passes
-from cambam_builder.cambam_entities import (
-    Arc, Circle, DrillMop, EngraveMop, Mop, Pline, PocketMop, Points,
-    Primitive, ProfileMop, Rect, Text, Vertex, MOP_COMMON_FIELD_POLICIES,
+from cambam_builder.entity_core import Primitive, Vertex
+from cambam_builder.cad_entities import Arc, Circle, Pline, Points, Rect, Text
+from cambam_builder.cam_entities import (
+    DrillMop, EngraveMop, Mop, PocketMop, ProfileMop, MOP_COMMON_FIELD_POLICIES,
     MOP_DRILL_FIELD_POLICIES, MOP_ENGRAVE_FIELD_POLICIES,
     MOP_POCKET_FIELD_POLICIES, MOP_PROFILE_FIELD_POLICIES,
     MOP_XML_FIELD_PATHS,

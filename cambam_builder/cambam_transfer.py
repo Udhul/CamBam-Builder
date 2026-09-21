@@ -6,7 +6,9 @@ from typing import Dict, List, Optional, Set, TYPE_CHECKING
 
 import numpy as np
 
-from .cambam_entities import CamBamEntity, Layer, Mop, Part, Primitive
+from .entity_core import CamBamEntity, Primitive
+from .cad_entities import Layer
+from .cam_entities import Mop, Part
 
 if TYPE_CHECKING:  # pragma: no cover
     from .cambam_project import CamBamProject, Identifiable

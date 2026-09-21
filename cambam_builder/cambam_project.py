@@ -25,11 +25,11 @@ from .cad_transformations import (
     mirror_x_matrix, mirror_y_matrix, skew_matrix, rotation_matrix_rad,
     apply_transform, get_transformed_point, extract_transform_component, remove_transform_component
 )
-# Import entity types
-from .cambam_entities import (
-    CamBamEntity, Layer, Part, Primitive, Mop, MopType, BoundingBox,
-    VertexInput, Pline, Circle, Rect, Arc, Points, Text,
-    ProfileMop, PocketMop, EngraveMop, DrillMop
+# Import entity types from their implementation owners.
+from .entity_core import CamBamEntity, Primitive, BoundingBox, VertexInput
+from .cad_entities import Layer, Pline, Circle, Rect, Arc, Points, Text
+from .cam_entities import (
+    Part, Mop, MopType, ProfileMop, PocketMop, EngraveMop, DrillMop,
 )
 from .region import Region
 

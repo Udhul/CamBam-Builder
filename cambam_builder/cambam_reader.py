@@ -18,9 +18,10 @@ from typing import Optional, Dict, List, Tuple, Union, Any
 import numpy as np # For matrix conversion
 
 from .cambam_project import CamBamProject
-from .cambam_entities import ( # Import concrete entity types
-    Layer, Part, Mop, Primitive,
-    Vertex, Pline, Circle, Rect, Arc, Points, Text,
+from .entity_core import Primitive, Vertex
+from .cad_entities import Layer, Pline, Circle, Rect, Arc, Points, Text
+from .cam_entities import (
+    Part, Mop,
     ProfileMop, PocketMop, EngraveMop, DrillMop,
     MOP_XML_PATH_TO_FIELD,
 )

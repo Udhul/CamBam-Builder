@@ -3491,3 +3491,25 @@ is `logging.basicConfig`, which would mutate application-wide logging if importe
 It should be deleted in the refactor rather than reused as an unowned utility bucket.
 No runtime file is changed by this assessment; priority remains 9b, then 9c, then the
 new module-boundary backlog item.
+
+### Entity module boundary implementation - 2026-09-21
+
+Implemented the assessed coarse split without changing entity behavior. The former
+2,488-line `cambam_entities.py` owner is now a 69-line explicit facade. Canonical
+definitions reside in `entity_core.py` (480 lines), `cad_entities.py` (1,184 lines),
+`region.py` (839 lines), and `cam_entities.py` (850 lines). Project, reader, writer,
+transfer, package and MCP service imports now name those owners directly. Region
+imports `Primitive`/shared values from core and `Pline` from CAD; no implementation
+module imports the facade. `cad_common.py` and its import-time `logging.basicConfig`
+side effect were removed. The similar Region affine/similarity validators were left
+separate because their topology-specific nonsingularity and tolerance rules differ.
+
+`tests/test_entity_module_boundaries.py` starts clean subprocesses with five varied
+module orders, checks facade/owner identity for every entity family, and asserts that
+Region directly inherits the canonical `Primitive`. Focused boundary, Region, MOP,
+copy/transfer and same-code-version pickle checks passed. The full suite passed 305
+tests with one expected Windows symlink-privilege skip in 44.716 seconds;
+`compileall` passed. Existing XML round-trip, transform, reader/writer map, clone,
+copy/transfer and state-snapshot regressions ran within that suite. No serialized
+contract or native CamBam behavior changed, so manual native validation would add no
+evidence.

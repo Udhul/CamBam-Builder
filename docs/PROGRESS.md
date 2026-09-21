@@ -7,23 +7,16 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**2026-09-21 R1-R3 and backlog 9d complete; backlog 10 is next.** Recommendation
-selection is fixed-order independent, RPM-only adjustment now propagates through
-direct or derived non-fixed feed and downstream achieved loads, and planner inputs
-can no longer silently replace conflicting fixed strategy values. Range-adjusted
-solutions are also checked against every explicit fixed input, including coupled
-chip load. Immutable machine capabilities
-and separate setup/job `OperatingConstraints` support arbitrary optional minimum and
-maximum RPM/feed bounds in explicit metric or imperial units. Their effective
-intersection controls cut and entry feeds; fixed out-of-range values fail, while
-non-fixed adjustments retain target/provenance and identify the lower/upper bound.
-No ranges, defaults or machine-specific branches are hardcoded. The merge block is
-resolved; focused evidence and exact semantics are in
-[the review record](REVIEW.md#r1-r3-repair-and-caller-defined-operating-ranges---2026-09-21)
-and [the architecture owner](structure_spec.md#milling-pass-and-candidate-planning).
-All 46 focused planning tests and all 302 repository tests pass with the existing
-Windows symlink-privilege skip; compileall and import/construct smoke pass. This
-pure, nonserialized work needs no CamBam validation. Backlog 10 is the next priority.
+**2026-09-21 backlog 10 entity-module boundary refactor complete.** The former
+2,488-line mixed owner is now a 69-line explicit compatibility facade over canonical
+core (480 lines), ordinary CAD (1,184 lines), specialized Region (839 lines), and CAM
+(850 lines) implementation owners. Runtime modules import those owners directly;
+Region remains a `Primitive`, the obsolete import-time logging placeholder is gone,
+and clean-process varied-order imports prove facade/owner class identity. Focused
+Region/MOP/copy/pickle checks and all 305 repository tests pass with the existing
+Windows symlink-privilege skip; compileall and import/construct smoke pass. No XML
+behavior changed, so manual CamBam validation adds no evidence. The next actionable
+ordered item is the pending named-client/CamBam acceptance in 4e.
 
 **2026-09-20 unreleased compatibility boundary enforced.** “Fresh/imported” now
 explicitly means optimal fresh CamBam XML and arbitrary supported CamBam-saved XML,
@@ -1155,7 +1148,7 @@ R1-R3 and 9d regression coverage plus the 300-test full-suite result are recorde
 the current RPM/feed intervals or for evidenced safe coupling/derating behavior;
 neither catalog/persistence nor MCP profile authoring is implied.
 
-10. **Framework entity module boundary refactor** (queued after 9d; requested
+10. **Completed 2026-09-21: Framework entity module boundary refactor** (requested
     2026-09-21). The current `cambam_entities.py` is 2,488 lines and mixes shared
     identity/geometry foundations, Layer and six ordinary CAD primitives, Part,
     four MOP families and their XML policy tables. `region.py` is 838 lines, but about
@@ -1205,6 +1198,14 @@ neither catalog/persistence nor MCP profile authoring is implied.
     clear and the 2,488-line mixed owner is gone; do not pursue arbitrary line targets,
     per-shape modules or a model/codec split without a measured new problem. Reopen
     before 9c only if concurrent entity work produces a concrete merge/cycle defect.
+
+    Completed within those boundaries: canonical definitions now live in the four
+    named owners, the compatibility facade re-exports those same objects, all runtime
+    imports point directly to owners, and `cad_common.py` was removed. Clean-process
+    varied-order imports and identity/inheritance assertions are permanent regressions.
+    Before/after sizes and the 305-test result are recorded in `REVIEW.md`. Reopen only
+    for a demonstrated dependency cycle or ownership problem; arbitrary further file
+    splitting and old-pickle migration remain outside scope.
 
 ## Blockers and decisions
 

@@ -21,7 +21,8 @@ from .cad_transformations import (
     identity_matrix,
     to_cambam_matrix_str,
 )
-from .cambam_entities import BoundingBox, PLINE_BULGE_TOLERANCE, Pline, Primitive, Vertex
+from .entity_core import BoundingBox, PLINE_BULGE_TOLERANCE, Primitive, Vertex
+from .cad_entities import Pline
 
 
 _TOPOLOGY_REL_TOLERANCE = 1e-10

@@ -16,7 +16,9 @@ from copy import deepcopy
 from typing import Dict, List
 
 from .cambam_project import CamBamProject # Use Type Hinting
-from .cambam_entities import Primitive, Layer, Part, Mop # For type checking if needed
+from .entity_core import Primitive
+from .cad_entities import Layer
+from .cam_entities import Part, Mop
 
 logger = logging.getLogger(__name__)
 
