@@ -3109,3 +3109,47 @@ Second-set fixture SHA-256 hashes:
 | `03-canned-retract-one.nc` | `25c22cba1844dbb7a86077862869468b5a75ada0d24f57c6c4b10b53e31546b2` |
 | `04-custom-script-edit.cb` | `1bc3cc7900df2f2ed8f0abd16981c2227811d3753117c4cd745cd659041511b2` |
 | `04-custom-script-edit.nc` | `8f8f8193d528b4cfc9d532a119ce456b48cc31fc151d14f66bc9d73a0a676db5` |
+
+## Dimensional milling formula kernel - 2026-09-21
+
+Backlog 9a is implemented as a pure library module, separate from CamBam documents,
+MOP defaults and the MCP adapter. The formula conventions follow Sandvik Coromant's
+metric and inch milling references: table feed is chip load times RPM times effective
+cutting edges; cutting speed uses effective cutter diameter; rectangular MRR uses
+axial depth, radial engagement and table feed; specific cutting force estimates net
+cutting power; and power plus RPM estimates cutter torque. The tests independently
+compare Kennametal's published thread-milling examples: 150 m/min with a 20 mm cutter
+rounds to 2387 RPM and 0.1 mm/tooth at one effective edge gives 238.7 mm/min; 500
+ft/min with a 0.79 inch cutter rounds to 2418 RPM and 0.004 in/tooth gives about 9.67
+in/min. Exact calculations use `math.pi`, rather than the example's display rounding.
+
+One generic “drawing units” formula was rejected because it would hide the factor
+between mm and metres or inches and feet. The result therefore names every unit,
+including the source conventions of cm³/min plus kW/N m for metric and in³/min plus
+hp/lbf ft for imperial. A single depth field was also rejected: axial depth and radial
+engagement have different physical roles, while target depth belongs to later pass
+planning. Chip-thinning and circular-interpolation multipliers are absent rather than
+being implicit assumptions.
+
+The solver retains caller inputs exactly in an immutable requested-value record and
+separately returns achieved values. It rejects inconsistent fully specified equations,
+nonfinite/nonpositive values, nonintegral effective flute counts and radial engagement
+beyond a known cutter diameter. Underdetermined groups return stable missing-input
+requirements. RPM and feed caps affect only derived machine settings, record both the
+uncapped and applied value, and propagate through achieved chip load, MRR, power and
+torque. A supplied RPM/feed that exceeds its cap is an explicit conflict; silently
+overwriting a user-fixed machine setting was rejected.
+
+This establishes arithmetic consistency, not a safe cutting recommendation. The
+specific cutting force and every operating target remain caller-supplied. Tool-maker
+guidance, material/tool provenance, machine power/torque behavior, rigidity,
+workholding, chip evacuation and supervised test cuts remain required. Recommendation
+profiles belong to 9b; pass planning and optional read-only MCP exposure belong to 9c.
+
+Verification: all 19 focused formula/solver tests and all 275 repository tests pass
+with the existing Windows symlink-privilege skip. The tests cover every algebraic
+inverse in both unit systems, metric/imperial physical equivalence, near-zero relative
+conflicts, overflow/underflow boundaries, exact fixed-value retention and cap
+propagation. Compileall for the modern package, legacy package, tests and demos and
+`git diff --check` both exit successfully. The code has no XML, document or toolpath
+behavior, so manual CamBam validation would not add evidence.

@@ -169,6 +169,17 @@ input boundaries. Bounds are runtime calculations and are not serialized, so
 these analytic checks provide the relevant acceptance evidence; no separate
 CamBam display check is required for this slice.
 
+The pure milling formula and constraint kernel has a focused regression command:
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -p test_machining_calculations.py -v
+```
+
+It checks formula inverses, official metric/imperial worked examples, unit-system
+equivalence, partial and conflicting inputs, separate axial/radial engagement,
+machine-cap propagation and invalid numeric boundaries. This kernel does not read or
+write CamBam files, so a manual CamBam display/toolpath check adds no evidence.
+
 Canonical Pline/Points vertex records have a focused regression command:
 
 ```powershell

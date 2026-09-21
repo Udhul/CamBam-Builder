@@ -29,8 +29,9 @@ symlink-privilege skip. The 8b framework/MCP parity matrix is now complete and
 source-checked. Backlog 8c native evidence is now complete: two minimal fixture sets
 establish state/omission behavior and the remaining Engrave/Drill effects. The
 preservation-aware structured inspection gap in 8d and the independent 8e
-group-target eligibility correction are now complete. The next prioritized increment
-is 9a's unit-explicit formula kernel; no production G-code acceptance is claimed.
+group-target eligibility correction are now complete. The 9a unit-explicit formula
+kernel is also complete; 9b recommendation profiles and extension API are next. No
+production G-code acceptance is claimed.
 
 **2026-09-20 backlog 8d preservation-aware MOP inspection complete.** Structured
 inspection now returns every present independently safe modeled value, including
@@ -49,8 +50,18 @@ membership no longer blanks typed geometry or blocks otherwise eligible MOP
 authoring/retargeting. Target eligibility, typed inspection and geometry mutation now
 own distinct relationship policies; parent/child, non-similarity and nonzero-local-Z
 targets remain excluded. All 256 repository tests pass with the existing Windows
-symlink-privilege skip. Backlog 9a is next because a deterministic dimensional kernel
-is the prerequisite for any safe feeds/speeds recommendation or MCP planning surface.
+symlink-privilege skip. Backlog 9a is complete; its deterministic dimensional kernel
+is now the prerequisite used by the next-priority 9b recommendation profiles. MCP
+exposure remains deferred.
+
+**2026-09-21 backlog 9a dimensional formula kernel complete.** Public pure helpers
+and an immutable partial-input solver now cover explicit metric/imperial surface
+speed, RPM, chip load, feed, MRR, specific-force power and torque relationships.
+Derived RPM/feed caps retain requested targets and recalculate achieved downstream
+values; fixed machine settings conflict instead of being silently changed. All 19
+focused tests and all 275 repository tests pass with the existing Windows symlink-
+privilege skip. Backlog 9b is next because profiles and provenance must exist before
+the pass planner or an optional MCP planning surface can make recommendations.
 
 **2026-09-19 SpiralMill Drill MCP authoring implemented and accepted in CamBam Plus 1.0.**
 `machining_add_drill` now authors CannedCycle, SpiralMill CW and SpiralMill CCW.
@@ -996,8 +1007,22 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 
    Implement as bounded subincrements:
 
-   - **9a — dimensional formula kernel and constraint solver.** Add deterministic
-     helpers for surface-speed/RPM conversion, chip-load/feed conversion, material
+   - **9a — dimensional formula kernel and constraint solver (completed 2026-09-21).**
+     The public pure-Python kernel now provides explicit
+     metric/imperial formulas and an immutable partial-input solver. It preserves
+     exact supplied values, rejects inconsistent or invalid systems, reports
+     underdetermined requirements and assumptions, separates axial/radial engagement,
+     and records derived RPM/feed caps before recalculating downstream achieved
+     values. Target depth, recommendation tables, chip thinning, circular
+     interpolation, entry rules, document mutation and MCP exposure remain absent.
+     Verification: 19 focused tests cover every inverse in both unit systems,
+     official metric/imperial examples, equivalence, partial/overconstrained inputs,
+     numeric extremes and cap propagation; all 275 repository tests pass with the
+     existing Windows symlink-privilege skip. Compileall and `git diff --check` pass;
+     this pure nonserialized slice needs no manual CamBam validation.
+
+     Implemented contract: deterministic helpers for surface-speed/RPM conversion,
+     chip-load/feed conversion, material
      removal rate and optional cutting power/torque. Accept `mm` and `in` explicitly,
      reject dimensionally invalid or conflicting inputs, preserve exact fixed user
      values, solve only identifiable missing values, and report assumptions,

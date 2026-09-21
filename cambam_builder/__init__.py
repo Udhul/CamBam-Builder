@@ -10,6 +10,21 @@ Main entry point:
 # Import the main project class from the cambam_project module
 from .cambam_project import CamBamProject
 from .cambam_entities import Vertex
+from .machining_calculations import (
+    ActiveConstraint,
+    MachineLimits,
+    MachiningConstraintError,
+    MillingConstraints,
+    MillingSolution,
+    chip_load_from_feed,
+    cutting_power,
+    cutting_torque,
+    feed_from_chip_load,
+    material_removal_rate,
+    rpm_from_surface_speed,
+    solve_milling_constraints,
+    surface_speed_from_rpm,
+)
 
 # Create a shorter alias for the main project class
 CBProject = CamBamProject

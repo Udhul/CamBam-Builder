@@ -23,6 +23,7 @@ packages; `inactive/` and demos are outside that runtime package list.
 | `cambam_builder/cambam_entities.py` | Entity dataclasses, primitive geometry/bounds, local effective matrices, parent-composed world transforms and entity XML encoding | Geometry or entity fields; inspect reader/writer callers for I/O changes |
 | `cambam_builder/region.py` | Owned Region contours, planar curved topology validation and typed Region XML | Region geometry and interchange; project and reader use this owner |
 | `cambam_builder/cad_transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
+| `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Planning math only; recommendation profiles, pass planning and MCP exposure remain separate increments |
 | `cambam_builder/cambam_writer.py` | XML ID assignment and layer/part traversal; delegates individual encoding to entities | Output structure and reference resolution |
 | `cambam_builder/cambam_reader.py` | XML parsing, entity reconstruction, ID mapping and deferred parent/MOP linking | Import defaults, malformed data and round-trip reconstruction |
 | `cambam_builder/__init__.py` | Public alias and version | Import surface and version metadata |
@@ -52,6 +53,36 @@ packages; `inactive/` and demos are outside that runtime package list.
 The reader's `PRIMITIVE_TAG_TO_CLASS` and `MOP_TAG_TO_CLASS` are the executable
 supported-tag inventory, not a claim of complete CamBam coverage. Consult those
 maps and corresponding entity encoders before adding a type.
+
+### Milling formula and constraint kernel
+
+`machining_calculations.py` is a document-independent planning kernel. Its public
+atomic helpers cover surface speed/RPM, chip load/table feed, rectangular-engagement
+material-removal rate, specific-force cutting power and power/RPM torque. The
+`MillingConstraints` solver propagates only equations with one unknown, checks fully
+specified positive values within relative tolerance `1e-9` and no absolute floor,
+and returns unresolved equation requirements instead of inventing missing facts.
+All inputs and immutable results are positive finite values; effective flute count is
+a positive integer. Axial depth and radial engagement remain distinct, radial
+engagement cannot exceed a known cutter diameter, and target depth is deliberately
+absent because it controls travel/pass planning rather than feed.
+
+The selected `units` value is exact: `mm` means diameter/chip/depth/engagement in
+millimetres, surface speed in m/min, feed in mm/min, MRR in cm³/min, specific cutting
+force in N/mm², power in kW and torque in N m. `in` means inches, ft/min, in/min,
+in³/min, lbf/in², horsepower and lbf ft respectively. These conventions match the
+published Sandvik milling equations. Conversion factors are not inferred from the
+magnitudes of supplied numbers.
+
+Every supplied value is retained exactly in `requested_values`; the solver does not
+round it. A supplied RPM or feed is a fixed machine setting and conflicts with a
+lower corresponding `MachineLimits` cap. A derived RPM or feed may be capped, with
+the original and applied values recorded in ordered `ActiveConstraint` diagnostics;
+downstream achieved surface speed, chip load, MRR, power and torque are then
+recalculated. The kernel assumes rectangular engagement and a caller-supplied
+specific cutting force. It includes no material/tool recommendation table, target-
+depth rule, chip-thinning factor, circular-interpolation factor, plunge/ramp policy,
+document mutation or production-safety claim.
 
 ### Project clone and bounded XML import
 
