@@ -165,17 +165,53 @@ class MachineCapabilities:
     max_feed_rate: Optional[float] = None
     max_cutting_power: Optional[float] = None
     max_torque: Optional[float] = None
+    min_spindle_speed: Optional[float] = None
+    min_feed_rate: Optional[float] = None
 
     def __post_init__(self):
         _text(self.identifier, "machine identifier")
         _units(self.units)
         for name in ("max_spindle_speed", "max_feed_rate", "max_cutting_power",
-                     "max_torque"):
+                     "max_torque", "min_spindle_speed", "min_feed_rate"):
             _optional_positive(getattr(self, name), name)
+        _validate_bounds(self.min_spindle_speed, self.max_spindle_speed,
+                         "spindle speed")
+        _validate_bounds(self.min_feed_rate, self.max_feed_rate, "feed rate")
 
     def as_solver_limits(self) -> MachineLimits:
         """Return the subset of capabilities understood by the 9a solver."""
-        return MachineLimits(self.max_spindle_speed, self.max_feed_rate)
+        return MachineLimits(
+            max_spindle_speed=self.max_spindle_speed,
+            max_feed_rate=self.max_feed_rate,
+            min_spindle_speed=self.min_spindle_speed,
+            min_feed_rate=self.min_feed_rate,
+        )
+
+
+def _validate_bounds(minimum: Optional[float], maximum: Optional[float],
+                     name: str) -> None:
+    if minimum is not None and maximum is not None and minimum > maximum:
+        raise RecommendationError(f"minimum {name} cannot exceed maximum {name}")
+
+
+@dataclass(frozen=True)
+class OperatingConstraints:
+    """Optional setup/job restrictions intersected with machine capabilities."""
+
+    units: str
+    min_spindle_speed: Optional[float] = None
+    max_spindle_speed: Optional[float] = None
+    min_feed_rate: Optional[float] = None
+    max_feed_rate: Optional[float] = None
+
+    def __post_init__(self):
+        _units(self.units)
+        for name in ("min_spindle_speed", "max_spindle_speed",
+                     "min_feed_rate", "max_feed_rate"):
+            _optional_positive(getattr(self, name), name)
+        _validate_bounds(self.min_spindle_speed, self.max_spindle_speed,
+                         "spindle speed")
+        _validate_bounds(self.min_feed_rate, self.max_feed_rate, "feed rate")
 
 
 @dataclass(frozen=True)
@@ -184,6 +220,7 @@ class RecommendationContext:
     material: MaterialProfile
     machine: MachineCapabilities
     operation: str = "milling"
+    operating_constraints: Optional[OperatingConstraints] = None
 
     def __post_init__(self):
         if not isinstance(self.tool, ToolProfile):
@@ -194,11 +231,53 @@ class RecommendationContext:
             raise TypeError("machine must be MachineCapabilities")
         if self.tool.units != self.machine.units:
             raise RecommendationError("tool and machine units must match")
+        if (self.operating_constraints is not None
+                and not isinstance(self.operating_constraints, OperatingConstraints)):
+            raise TypeError("operating_constraints must be OperatingConstraints")
+        if (self.operating_constraints is not None
+                and self.operating_constraints.units != self.tool.units):
+            raise RecommendationError(
+                "operating constraints and tool units must match")
         _text(self.operation, "operation")
+        self.effective_limits()
 
     @property
     def units(self) -> str:
         return self.tool.units
+
+    def effective_limits(self) -> MachineLimits:
+        """Intersect machine capability with narrower setup/job restrictions."""
+        job = self.operating_constraints
+
+        def lower(machine_value, job_value):
+            values = [value for value in (machine_value, job_value)
+                      if value is not None]
+            return max(values) if values else None
+
+        def upper(machine_value, job_value):
+            values = [value for value in (machine_value, job_value)
+                      if value is not None]
+            return min(values) if values else None
+
+        limits = MachineLimits(
+            max_spindle_speed=upper(
+                self.machine.max_spindle_speed,
+                job.max_spindle_speed if job else None),
+            max_feed_rate=upper(
+                self.machine.max_feed_rate,
+                job.max_feed_rate if job else None),
+            min_spindle_speed=lower(
+                self.machine.min_spindle_speed,
+                job.min_spindle_speed if job else None),
+            min_feed_rate=lower(
+                self.machine.min_feed_rate,
+                job.min_feed_rate if job else None),
+        )
+        _validate_bounds(limits.min_spindle_speed, limits.max_spindle_speed,
+                         "spindle speed after intersecting machine and job ranges")
+        _validate_bounds(limits.min_feed_rate, limits.max_feed_rate,
+                         "feed rate after intersecting machine and job ranges")
+        return limits
 
 
 @dataclass(frozen=True)
@@ -445,7 +524,7 @@ def recommend_milling(
     """
     if not isinstance(context, RecommendationContext):
         raise TypeError("context must be RecommendationContext")
-    selected = {}
+    candidates = {}
     missing = []
     applied = []
     for strategy in strategies:
@@ -477,15 +556,18 @@ def recommend_milling(
                 raise RecommendationError(
                     f"tool {context.tool.identifier!r} is not {item.entry_mode}-capable"
                 )
-            current = selected.get(item.field)
-            if current is None or (item.fixed and not current.fixed):
-                selected[item.field] = item
-            elif current.fixed and not item.fixed:
-                continue
-            elif current != item:
-                raise RecommendationError(
-                    f"conflicting recommendations for {item.field!r}; provide a fixed "
-                    "user override to resolve them"
-                )
+            candidates.setdefault(item.field, []).append(item)
+    selected = {}
+    for field, values in candidates.items():
+        fixed = [item for item in values if item.fixed]
+        pool = fixed or values
+        chosen = pool[0]
+        if any(item != chosen for item in pool[1:]):
+            qualifier = "fixed " if fixed else ""
+            raise RecommendationError(
+                f"conflicting {qualifier}recommendations for {field!r}; "
+                "provide one compatible fixed user override"
+            )
+        selected[field] = chosen
     return RecommendationResult(
         tuple(selected.values()), tuple(dict.fromkeys(missing)), tuple(applied))

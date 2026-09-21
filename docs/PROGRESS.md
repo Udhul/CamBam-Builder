@@ -7,22 +7,21 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**2026-09-21 pre-merge review: 9b/9c corrections precede backlog 10.** Review of
-`main...3cfa1df` reproduced three medium-severity contract defects: order-dependent
-fixed recommendation selection, incomplete propagation of an RPM-only cap across
-non-fixed feed targets, and silent replacement of conflicting fixed strategy values
-by planner inputs. Merge is blocked pending the bounded corrections and focused
-acceptance in [the review record](REVIEW.md#pre-merge-review-of-8a8e-and-9a9c---2026-09-21).
-The previously reported 293-test baseline remains historical evidence; the full
-suite was not rerun. No runtime correction or backlog 10 refactor was made.
-
-**2026-09-21 user-context operating ranges requested.** After R1-R3, implement
-[9d: machine and user operating ranges](#9d-machine-and-user-operating-ranges)
-before backlog 10. Current profiles support upper RPM/feed limits only; minimum
-RPM/feed bounds are not implemented. Recommendations must respect arbitrary
-caller-defined machining constraints. The mentioned RPM ranges were illustrative
-examples only, not special supported ranges, presets or defaults. All review findings and focused repair criteria are saved
-in `REVIEW.md`; the new range requirement below is additional requested scope.
+**2026-09-21 R1-R3 and backlog 9d complete; backlog 10 is next.** Recommendation
+selection is fixed-order independent, RPM-only adjustment now propagates through
+non-fixed feed and downstream achieved loads, and planner inputs can no longer
+silently replace conflicting fixed strategy values. Immutable machine capabilities
+and separate setup/job `OperatingConstraints` support arbitrary optional minimum and
+maximum RPM/feed bounds in explicit metric or imperial units. Their effective
+intersection controls cut and entry feeds; fixed out-of-range values fail, while
+non-fixed adjustments retain target/provenance and identify the lower/upper bound.
+No ranges, defaults or machine-specific branches are hardcoded. The merge block is
+resolved; focused evidence and exact semantics are in
+[the review record](REVIEW.md#r1-r3-repair-and-caller-defined-operating-ranges---2026-09-21)
+and [the architecture owner](structure_spec.md#milling-pass-and-candidate-planning).
+All 44 focused planning tests and all 300 repository tests pass with the existing
+Windows symlink-privilege skip; compileall and import/construct smoke pass. This
+pure, nonserialized work needs no CamBam validation. Backlog 10 is the next priority.
 
 **2026-09-20 unreleased compatibility boundary enforced.** “Fresh/imported” now
 explicitly means optimal fresh CamBam XML and arbitrary supported CamBam-saved XML,
@@ -1106,7 +1105,7 @@ This supersedes the former five broad increments; their pending scope is retaine
 above. Detailed contracts remain in `docs/structure_spec.md`, and review evidence in
 `docs/REVIEW.md`. No repository-linked issue tracker was found.
 
-### 9d: Machine and user operating ranges
+### 9d: Machine and user operating ranges (completed 2026-09-21)
 
 Requested 2026-09-21 for the next implementation session, after review repairs R1-R3
 and before backlog 10. Extend the existing pure calculation/recommendation/planning
@@ -1146,6 +1145,13 @@ Acceptance and implementation boundaries:
   `structure_spec.md` to describe implemented behavior when complete, and record
   focused results in `REVIEW.md`. No native CamBam acceptance is needed for this
   nonserialized arithmetic change.
+
+Completed within those boundaries: machine and setup/job ranges remain separate
+immutable records and are intersected per context; no example range became a preset.
+R1-R3 and 9d regression coverage plus the 300-test full-suite result are recorded in
+`REVIEW.md`. Reopen only for a concrete constraint type that cannot be expressed by
+the current RPM/feed intervals or for evidenced safe coupling/derating behavior;
+neither catalog/persistence nor MCP profile authoring is implied.
 
 10. **Framework entity module boundary refactor** (queued after 9d; requested
     2026-09-21). The current `cambam_entities.py` is 2,488 lines and mixes shared
@@ -1246,7 +1252,7 @@ are authoritative. MOP ownership, supported interchange, curved geometry bounds
 (1a), copy/transfer (1b) and shape parity (2) are recorded above with their
 verification and acceptance state.
 
-This is a good fresh-session breakpoint: the Text/roughing-clearance follow-up is
-implemented, verified and recorded. The distinct remaining 4e work is the
-named OpenCode agent workflow, not a repeat of these native encoding checks.
-Suggested commit: `fix: expose Text machining and roughing clearance`.
+This is a good fresh-session breakpoint: R1-R3 and 9d form one implemented, verified
+and documented pure-planning outcome, while backlog 10 is a distinct entity-module
+refactor with its own acceptance contract and no unresolved decision from this work.
+Suggested commit: `feat: support caller-defined machining ranges`.

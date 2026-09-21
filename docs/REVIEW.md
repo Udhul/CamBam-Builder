@@ -107,6 +107,40 @@ recommendation: **blocked** until R1-R3 are corrected and focused acceptance pas
 Next priority is recorded in `PROGRESS.md`; backlog 10 remains deferred. A fresh
 session can implement the repairs from this record without conversational context.
 
+## R1-R3 repair and caller-defined operating ranges - 2026-09-21
+
+The three pre-merge planning findings above are corrected, and backlog 9d is
+implemented in the same pure public calculation/recommendation/planning owners.
+R1 now collects and validates every applicable candidate before resolving a field:
+all six permutations of two conflicting suggestions plus one fixed override select
+the same fixed value and provenance, while unresolved suggestions and incompatible
+fixed values still fail. R2 validates the original coupled candidate, then lets an
+adjusted non-fixed RPM own achieved feed: the reproduced 8000 RPM, 0.04 mm/tooth,
+640 mm/min target under a 6000 RPM-only cap returns 6000 RPM and 480 mm/min; a fixed
+640 mm/min feed remains exact and recalculates achieved chip load. R3 compares fixed
+strategy values with explicit inputs and tool facts before skipping them; equal
+values succeed while conflicting RPM and effective-flute values fail by field.
+
+`MachineCapabilities` now accepts optional minimum as well as maximum RPM/feed
+bounds. The new immutable `OperatingConstraints` record carries optional setup/job
+bounds in explicit metric or imperial units. `RecommendationContext.effective_limits()`
+intersects the two records, rejects empty intervals and retains independent context
+state. Omitted bounds add no limit; equal endpoints are valid. Non-fixed direct or
+derived RPM, cut-feed and entry-feed targets move to an effective lower/upper bound
+with ordered direction-bearing `ActiveConstraint` evidence. Fixed values outside
+the range fail. The final coupled solution recalculates surface speed, chip load,
+MRR, power and torque; power/torque overage remains diagnostic without derating.
+No range creates a missing cutting recommendation, changes capability/provenance
+requirements, or establishes that a raised minimum is safe.
+
+Verification from the repository-managed interpreter: 44 focused 9a-9d tests pass;
+all 300 repository tests pass with the existing Windows symlink-privilege skip;
+compileall and the public import/construct smoke check pass. `git diff --check`
+passes with only the repository's LF/CRLF conversion warnings. This pure,
+nonserialized arithmetic change needs no native CamBam validation. No catalog,
+persistence format, MCP profile schema or document mutation was added. The merge
+block recorded above is resolved. Backlog 10 is now the next coherent increment.
+
 ## Group-neutral MCP MOP target eligibility - 2026-09-20
 
 Backlog 8e removed group membership from two decisions where it has no coordinate

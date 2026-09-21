@@ -32,6 +32,7 @@ from .machining_recommendations import (
     FixedRecommendationStrategy,
     MachineCapabilities,
     MaterialProfile,
+    OperatingConstraints,
     ProfileRecommendationStrategy,
     Recommendation,
     RecommendationContext,

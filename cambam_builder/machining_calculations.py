@@ -40,6 +40,8 @@ class MillingConstraints:
 class MachineLimits:
     max_spindle_speed: Optional[float] = None
     max_feed_rate: Optional[float] = None
+    min_spindle_speed: Optional[float] = None
+    min_feed_rate: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -48,7 +50,7 @@ class ActiveConstraint:
     requested: float
     applied: float
     limit: float
-    code: str = "MACHINE_LIMIT_CAPPED"
+    code: str = "MAXIMUM_BOUND_APPLIED"
 
 
 @dataclass(frozen=True)
@@ -269,6 +271,15 @@ def solve_milling_constraints(
         limits.max_spindle_speed, "max_spindle_speed")
     max_feed = None if limits.max_feed_rate is None else _positive(
         limits.max_feed_rate, "max_feed_rate")
+    min_rpm = None if limits.min_spindle_speed is None else _positive(
+        limits.min_spindle_speed, "min_spindle_speed")
+    min_feed = None if limits.min_feed_rate is None else _positive(
+        limits.min_feed_rate, "min_feed_rate")
+    if min_rpm is not None and max_rpm is not None and min_rpm > max_rpm:
+        raise MachiningConstraintError(
+            "min_spindle_speed cannot exceed max_spindle_speed")
+    if min_feed is not None and max_feed is not None and min_feed > max_feed:
+        raise MachiningConstraintError("min_feed_rate cannot exceed max_feed_rate")
     if (values.get("cutter_diameter") is not None
             and values.get("radial_engagement") is not None
             and values["radial_engagement"] > values["cutter_diameter"]):
@@ -392,6 +403,14 @@ def solve_milling_constraints(
 
     active = []
     fixed_names = {name for name, unused in requested}
+    if min_rpm is not None and values.get("spindle_speed", float("inf")) < min_rpm:
+        if "spindle_speed" in fixed_names:
+            raise MachiningConstraintError(
+                "fixed spindle_speed is below min_spindle_speed")
+        old = values["spindle_speed"]
+        values["spindle_speed"] = min_rpm
+        active.append(ActiveConstraint(
+            "spindle_speed", old, min_rpm, min_rpm, "MINIMUM_BOUND_APPLIED"))
     if max_rpm is not None and values.get("spindle_speed", 0.0) > max_rpm:
         if "spindle_speed" in fixed_names:
             raise MachiningConstraintError(
@@ -399,7 +418,8 @@ def solve_milling_constraints(
             )
         old = values["spindle_speed"]
         values["spindle_speed"] = max_rpm
-        active.append(ActiveConstraint("spindle_speed", old, max_rpm, max_rpm))
+        active.append(ActiveConstraint(
+            "spindle_speed", old, max_rpm, max_rpm, "MAXIMUM_BOUND_APPLIED"))
 
     # Recalculate feed at an achieved capped RPM unless feed itself was fixed.
     if ("feed_rate" not in fixed_names and values.get("chip_load") is not None
@@ -408,12 +428,20 @@ def solve_milling_constraints(
         values["feed_rate"] = feed_from_chip_load(
             values["chip_load"], values["spindle_speed"],
             values["effective_flutes"], units=unit)
+    if min_feed is not None and values.get("feed_rate", float("inf")) < min_feed:
+        if "feed_rate" in fixed_names:
+            raise MachiningConstraintError("fixed feed_rate is below min_feed_rate")
+        old = values["feed_rate"]
+        values["feed_rate"] = min_feed
+        active.append(ActiveConstraint(
+            "feed_rate", old, min_feed, min_feed, "MINIMUM_BOUND_APPLIED"))
     if max_feed is not None and values.get("feed_rate", 0.0) > max_feed:
         if "feed_rate" in fixed_names:
             raise MachiningConstraintError("fixed feed_rate exceeds max_feed_rate")
         old = values["feed_rate"]
         values["feed_rate"] = max_feed
-        active.append(ActiveConstraint("feed_rate", old, max_feed, max_feed))
+        active.append(ActiveConstraint(
+            "feed_rate", old, max_feed, max_feed, "MAXIMUM_BOUND_APPLIED"))
 
     # Recalculate achieved values only when a cap actually changed the solution.
     # Without an active cap, every supplied consistent value remains exact.

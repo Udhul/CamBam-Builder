@@ -180,6 +180,18 @@ equivalence, partial and conflicting inputs, separate axial/radial engagement,
 machine-cap propagation and invalid numeric boundaries. This kernel does not read or
 write CamBam files, so a manual CamBam display/toolpath check adds no evidence.
 
+Recommendation selection, operating-range composition and integrated candidate
+planning have adjacent focused regressions:
+
+```powershell
+& $ProjectPython -m unittest tests.test_machining_recommendations tests.test_machining_planning tests.test_machining_calculations -v
+```
+
+These tests cover fixed-value precedence, strategy permutations, machine/job range
+intersection, RPM/feed coupling, metric/imperial feed units, entry-feed bounds and
+downstream achieved-load diagnostics. They are pure, nonserialized calculations;
+manual CamBam validation adds no evidence.
+
 Canonical Pline/Points vertex records have a focused regression command:
 
 ```powershell

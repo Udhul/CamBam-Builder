@@ -247,6 +247,28 @@ class ConstraintSolverTests(unittest.TestCase):
                     MachiningConstraintError, message):
                 solve_milling_constraints(request, limits)
 
+    def test_minimum_operating_limits_adjust_derived_values_and_reject_fixed(self):
+        request = MillingConstraints(
+            "mm", cutter_diameter=10, surface_speed=100, chip_load=0.02,
+            effective_flutes=2, axial_depth=2, radial_engagement=3,
+            specific_cutting_force=1000)
+        result = solve_milling_constraints(
+            request, MachineLimits(min_spindle_speed=4000, min_feed_rate=200))
+        self.assertEqual(result.spindle_speed, 4000)
+        self.assertEqual(result.feed_rate, 200)
+        self.assertAlmostEqual(result.chip_load, 0.025)
+        self.assertAlmostEqual(result.material_removal_rate, 1.2)
+        self.assertEqual([item.code for item in result.active_constraints],
+                         ["MINIMUM_BOUND_APPLIED", "MINIMUM_BOUND_APPLIED"])
+        with self.assertRaisesRegex(MachiningConstraintError, "below min"):
+            solve_milling_constraints(
+                MillingConstraints("mm", spindle_speed=3000),
+                MachineLimits(min_spindle_speed=4000))
+        with self.assertRaisesRegex(MachiningConstraintError, "cannot exceed"):
+            solve_milling_constraints(
+                MillingConstraints("mm"),
+                MachineLimits(max_feed_rate=100, min_feed_rate=200))
+
     def test_exact_fixed_value_is_retained_and_results_are_frozen(self):
         exact = 123.45678901234567
         result = solve_milling_constraints(MillingConstraints(

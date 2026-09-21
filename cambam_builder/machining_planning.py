@@ -7,6 +7,7 @@ that a candidate is safe for production machining.
 
 from dataclasses import dataclass, fields
 from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR
+import math
 from typing import Optional, Sequence, Tuple
 
 from .machining_calculations import (
@@ -216,6 +217,7 @@ def plan_milling(
 
     supplied = {name: getattr(fixed_values, name) for name in _SOLVER_FIELDS
                 if getattr(fixed_values, name) is not None}
+    explicit_fields = set(supplied)
     for name, expected in (("cutter_diameter", context.tool.cutter_diameter),
                            ("effective_flutes", context.tool.effective_flutes)):
         if name in supplied and supplied[name] != expected:
@@ -232,23 +234,68 @@ def plan_milling(
     }
     for name in _SOLVER_FIELDS:
         item = by_field.get(name)
-        if item is None or name in supplied:
+        if item is None:
+            continue
+        if name in supplied:
+            if item.fixed and not math.isclose(
+                    float(item.value), float(supplied[name]),
+                    rel_tol=1e-9, abs_tol=0.0):
+                raise ValueError(
+                    f"fixed recommendation for {name} conflicts with the "
+                    "explicit value or tool profile")
             continue
         if not item.fixed and superseded_pairs.get(name) in fixed_fields:
             continue
-        value = item.value
-        limit = (context.machine.max_spindle_speed if name == "spindle_speed"
-                 else context.machine.max_feed_rate if name == "feed_rate" else None)
-        if limit is not None and value > limit and not item.fixed:
-            planning_constraints.append(ActiveConstraint(name, value, limit, limit))
-            value = limit
-            # The capped operational setting is authoritative for achieved values;
-            # do not leave its non-fixed, uncapped conjugate as an overconstraint.
-            conjugate = superseded_pairs[name]
-            if conjugate not in fixed_fields:
-                supplied.pop(conjugate, None)
-        supplied[name] = value
+        supplied[name] = item.value
 
+    limits = context.effective_limits()
+    # Check the original coupled candidate before applying ranges, so a bound
+    # cannot hide contradictory feed/chip-load inputs. A directly recommended
+    # operating RPM already supersedes its non-fixed surface-speed target.
+    validation_supplied = dict(supplied)
+    rpm_item = by_field.get("spindle_speed")
+    if (rpm_item is not None and not rpm_item.fixed
+            and "surface_speed" not in fixed_fields):
+        validation_supplied.pop("surface_speed", None)
+    solve_milling_constraints(
+        MillingConstraints(context.units, **validation_supplied))
+
+    adjusted_operating = set()
+    for name, minimum, maximum in (
+        ("spindle_speed", limits.min_spindle_speed, limits.max_spindle_speed),
+        ("feed_rate", limits.min_feed_rate, limits.max_feed_rate),
+    ):
+        if name not in supplied:
+            continue
+        item = by_field.get(name)
+        is_fixed = name in explicit_fields or (item is not None and item.fixed)
+        value = supplied[name]
+        applied = None
+        code = None
+        if minimum is not None and value < minimum:
+            applied, code = minimum, "MINIMUM_BOUND_APPLIED"
+        elif maximum is not None and value > maximum:
+            applied, code = maximum, "MAXIMUM_BOUND_APPLIED"
+        if applied is None:
+            continue
+        if is_fixed:
+            relation = "below minimum" if code.startswith("MINIMUM") else "above maximum"
+            raise ValueError(f"fixed {name} is {relation} operating bound")
+        planning_constraints.append(
+            ActiveConstraint(name, value, applied, applied, code))
+        supplied[name] = applied
+        adjusted_operating.add(name)
+        conjugate = superseded_pairs[name]
+        if conjugate not in fixed_fields:
+            supplied.pop(conjugate, None)
+
+    # R2: a changed RPM owns achieved feed when chip load is available. A stale
+    # non-fixed direct feed target must not be reintroduced as a fixed solver fact.
+    feed_item = by_field.get("feed_rate")
+    if ("spindle_speed" in adjusted_operating and "chip_load" in supplied
+            and feed_item is not None and not feed_item.fixed
+            and "feed_rate" not in explicit_fields):
+        supplied.pop("feed_rate", None)
     safe_axial = supplied.get("axial_depth")
     depth_plan = None
     if stock_thickness is not None:
@@ -269,12 +316,43 @@ def plan_milling(
 
     solution = solve_milling_constraints(
         MillingConstraints(context.units, **supplied),
-        context.machine.as_solver_limits(),
+        limits,
     )
+    for item in selected.recommendations:
+        if (not item.fixed or item.field not in _SOLVER_FIELDS
+                or (item.field == "axial_depth" and depth_plan is not None)):
+            continue
+        achieved = getattr(solution, item.field)
+        if (achieved is not None and not math.isclose(
+                float(achieved), float(item.value),
+                rel_tol=1e-9, abs_tol=0.0)):
+            raise ValueError(
+                f"fixed recommendation for {item.field} conflicts with the "
+                "range-adjusted coupled solution")
     radial = solution.radial_engagement
     fraction = (None if radial is None else
                 radial / context.tool.cutter_diameter)
-    entry = {name: by_field.get(name) for name in _ENTRY_FIELDS}
+    entry = {}
+    for name in _ENTRY_FIELDS:
+        item = by_field.get(name)
+        value = item.value if item else None
+        if value is not None:
+            applied = None
+            code = None
+            if limits.min_feed_rate is not None and value < limits.min_feed_rate:
+                applied, code = limits.min_feed_rate, "MINIMUM_BOUND_APPLIED"
+            elif limits.max_feed_rate is not None and value > limits.max_feed_rate:
+                applied, code = limits.max_feed_rate, "MAXIMUM_BOUND_APPLIED"
+            if applied is not None:
+                if item.fixed:
+                    relation = ("below minimum" if code.startswith("MINIMUM")
+                                else "above maximum")
+                    raise ValueError(
+                        f"fixed {name} is {relation} operating feed bound")
+                planning_constraints.append(
+                    ActiveConstraint(name, value, applied, applied, code))
+                value = applied
+        entry[name] = value
     missing = tuple(dict.fromkeys(
         selected.missing_requirements + missing_depth + solution.missing_requirements))
     active = tuple(planning_constraints) + solution.active_constraints
@@ -293,12 +371,9 @@ def plan_milling(
     return MillingPlan(
         context=context, recommendations=selected, solution=solution,
         depth_plan=depth_plan, safe_axial_depth=safe_axial,
-        plunge_feed_rate=entry["plunge_feed_rate"].value
-        if entry["plunge_feed_rate"] else None,
-        ramp_feed_rate=entry["ramp_feed_rate"].value
-        if entry["ramp_feed_rate"] else None,
-        helical_feed_rate=entry["helical_feed_rate"].value
-        if entry["helical_feed_rate"] else None,
+        plunge_feed_rate=entry["plunge_feed_rate"],
+        ramp_feed_rate=entry["ramp_feed_rate"],
+        helical_feed_rate=entry["helical_feed_rate"],
         stepover=radial, stepover_fraction=fraction,
         missing_requirements=missing, active_constraints=active,
         diagnostics=tuple(diagnostics),

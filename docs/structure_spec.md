@@ -77,11 +77,13 @@ published Sandvik milling equations. Conversion factors are not inferred from th
 magnitudes of supplied numbers.
 
 Every supplied value is retained exactly in `requested_values`; the solver does not
-round it. A supplied RPM or feed is a fixed machine setting and conflicts with a
-lower corresponding `MachineLimits` cap. A derived RPM or feed may be capped, with
-the original and applied values recorded in ordered `ActiveConstraint` diagnostics;
-downstream achieved surface speed, chip load, MRR, power and torque are then
-recalculated. The kernel assumes rectangular engagement and a caller-supplied
+round it. `MachineLimits` accepts arbitrary optional positive minimum and maximum
+RPM/feed bounds, including equal endpoints, and rejects an inverted interval. A
+supplied RPM or feed is a fixed machine setting and conflicts outside the interval.
+A derived RPM or feed may be raised or lowered to a bound, with the original and
+applied values plus the lower/upper direction recorded in ordered
+`ActiveConstraint` diagnostics; downstream achieved surface speed, chip load, MRR,
+power and torque are then recalculated. The kernel assumes rectangular engagement and a caller-supplied
 specific cutting force. It includes no material/tool recommendation table, target-
 depth rule, chip-thinning factor, circular-interpolation factor, plunge/ramp policy,
 document mutation or production-safety claim.
@@ -90,8 +92,12 @@ document mutation or production-safety claim.
 
 `machining_recommendations.py` is the separate, public recommendation-selection
 layer. `ToolProfile`, `MaterialProfile` and `MachineCapabilities` are immutable and
-form a unit-consistent `RecommendationContext`; the machine record can expose its
-RPM/feed subset as 9a `MachineLimits`. The API intentionally ships no material or
+form a unit-consistent `RecommendationContext`. Machine capabilities can declare
+minimum and maximum RPM/feed bounds. An optional immutable `OperatingConstraints`
+record declares narrower setup/job bounds in the context's exact `mm` or `in` unit
+system. The context exposes their intersection as 9a `MachineLimits`, rejects an
+empty intersection, and never lets job bounds expand machine capability. Omitted
+bounds add no default or limit. The API intentionally ships no material or
 tool catalog. A caller supplies `Recommendation` values through a static profile,
 explicit fixed-user-value profile, diameter table, or
 `CallableRecommendationStrategy`. Custom callables are contractually pure: they
@@ -105,9 +111,10 @@ identifier, material identifier and operation, accept only chip load or surface
 speed, interpolate linearly inside their stated diameter range, and report an
 unmet requirement outside it; they never extrapolate or convert units implicitly.
 
-`recommend_milling()` composes strategies in caller order but does not use ordering
-to hide conflicts. A fixed user override wins regardless of order; distinct
-non-fixed values for the same field fail explicitly. Missing capabilities and
+`recommend_milling()` validates all applicable candidates before resolving each
+field, so strategy order cannot hide or manufacture a conflict. One compatible
+fixed user override wins regardless of order; distinct fixed values and unresolved
+distinct non-fixed values for the same field fail explicitly. Missing capabilities and
 out-of-range data remain diagnostics rather than guessed values. Plunge, ramp and
 helical feed suggestions each require the matching tool entry capability, their own
 nonempty rule, and ordinary provenance/range metadata. The layer validates and
@@ -128,15 +135,21 @@ existing read-only `machining_calculate_depth_increment` MCP tool delegates to t
 same function and remains document-free and non-mutating.
 
 `plan_milling()` retains the complete 9b recommendation result and provenance,
-lets explicit `MillingConstraints` values override non-fixed recommendations, and
-uses the tool profile's diameter/flute count plus the machine's 9a RPM/feed limits.
+lets explicit `MillingConstraints` values override non-fixed recommendations, rejects
+a fixed strategy value that conflicts with an explicit value or tool fact, and uses
+the tool profile's diameter/flute count plus the context's effective RPM/feed range.
 For a through-cut, recommended or fixed `axial_depth` is the safe maximum; the
 balanced actual `depth_increment` is used for MRR, power and torque diagnostics, so
 the two values are never conflated. Physical radial engagement is also returned as
-`stepover`, with `stepover_fraction` relative to cutter diameter. RPM/feed caps are
-explicit active constraints; declared power/torque excess is diagnosed without an
-unevidenced derating rule. Plunge/ramp/helical values remain separately sourced and
-capability-gated by 9b.
+`stepover`, with `stepover_fraction` relative to cutter diameter. Non-fixed RPM/feed
+targets are adjusted to lower or upper bounds while their recommendation retains the
+original target and provenance. RPM adjustment recalculates a non-fixed feed target
+from chip load; fixed feed instead remains exact and produces achieved chip load.
+The final coupled system and downstream MRR/power/torque are recalculated after every
+adjustment. Plunge/ramp/helical values remain separately sourced and capability-gated
+by 9b; each is independently adjusted to the effective feed range, never inferred
+from cut feed. Fixed cut or entry feeds outside the range fail. Declared power/torque
+excess remains diagnostic without an unevidenced derating rule.
 
 Underdetermined systems return stable missing requirements. No result authors a
 MOP or mutates a document. Full recommendation-profile construction is deliberately

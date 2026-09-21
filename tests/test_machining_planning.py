@@ -6,6 +6,8 @@ from cambam_builder import (
     ApplicableRange,
     MachineCapabilities,
     MaterialProfile,
+    FixedRecommendationStrategy,
+    OperatingConstraints,
     MillingConstraints,
     ProfileRecommendationStrategy,
     Recommendation,
@@ -158,6 +160,120 @@ class MillingPlanningTests(unittest.TestCase):
         self.assertAlmostEqual(plan.solution.chip_load, 400 / 12000)
         self.assertEqual([item.field for item in plan.active_constraints],
                          ["spindle_speed", "feed_rate"])
+
+    def test_rpm_only_cap_recalculates_nonfixed_feed_but_retains_fixed_feed(self):
+        context = RecommendationContext(
+            self.context.tool, self.context.material,
+            MachineCapabilities("router", "mm", max_spindle_speed=6000,
+                                max_feed_rate=1000), "slotting")
+        recommendations = (
+            self.recommendation("spindle_speed", 8000, "rpm"),
+            self.recommendation("chip_load", 0.04, "mm/tooth"),
+            self.recommendation("feed_rate", 640, "mm/min"),
+            self.recommendation("axial_depth", 2, "mm"),
+            self.recommendation("radial_engagement", 2, "mm"),
+            self.recommendation("specific_cutting_force", 1800, "N/mm^2"),
+        )
+        plan = plan_milling(
+            context, (ProfileRecommendationStrategy("targets", recommendations),))
+        self.assertEqual(plan.solution.spindle_speed, 6000)
+        self.assertEqual(plan.solution.feed_rate, 480)
+        self.assertEqual(plan.solution.chip_load, 0.04)
+        self.assertAlmostEqual(plan.solution.material_removal_rate, 1.92)
+        self.assertAlmostEqual(plan.solution.cutting_power, 0.0576)
+        self.assertAlmostEqual(
+            plan.solution.torque, 0.0576 * 30000 / (math.pi * 6000))
+        self.assertEqual([item.field for item in plan.active_constraints],
+                         ["spindle_speed"])
+
+        fixed_feed = self.recommendation(
+            "feed_rate", 640, "mm/min", fixed=True)
+        plan = plan_milling(context, (
+            ProfileRecommendationStrategy("targets", recommendations[:-4]),
+            FixedRecommendationStrategy("fixed feed", (fixed_feed,)),
+        ))
+        self.assertEqual(plan.solution.spindle_speed, 6000)
+        self.assertEqual(plan.solution.feed_rate, 640)
+        self.assertAlmostEqual(plan.solution.chip_load, 640 / 12000)
+
+    def test_fixed_strategy_values_must_agree_with_explicit_and_tool_facts(self):
+        fixed_rpm = FixedRecommendationStrategy("fixed rpm", (
+            self.recommendation("spindle_speed", 5000, "rpm", fixed=True),))
+        plan = plan_milling(
+            self.context, (fixed_rpm,),
+            fixed_values=MillingConstraints("mm", spindle_speed=5000))
+        self.assertEqual(plan.solution.spindle_speed, 5000)
+        with self.assertRaisesRegex(ValueError, "fixed recommendation.*conflicts"):
+            plan_milling(
+                self.context, (fixed_rpm,),
+                fixed_values=MillingConstraints("mm", spindle_speed=4000))
+
+        fixed_flutes = FixedRecommendationStrategy("fixed flutes", (
+            self.recommendation("effective_flutes", 3, "count", fixed=True),))
+        with self.assertRaisesRegex(ValueError, "effective_flutes.*conflicts"):
+            plan_milling(self.context, (fixed_flutes,))
+
+    def test_minimum_ranges_adjust_nonfixed_cut_and_entry_feeds(self):
+        context = RecommendationContext(
+            self.context.tool, self.context.material,
+            MachineCapabilities("router", "mm", min_spindle_speed=5000,
+                                max_spindle_speed=20000, min_feed_rate=300,
+                                max_feed_rate=1000),
+            "slotting", OperatingConstraints(
+                "mm", min_spindle_speed=7000, max_spindle_speed=18000,
+                min_feed_rate=350, max_feed_rate=900))
+        strategy = ProfileRecommendationStrategy("low targets", (
+            self.recommendation("spindle_speed", 6000, "rpm"),
+            self.recommendation("chip_load", 0.02, "mm/tooth"),
+            self.recommendation("feed_rate", 240, "mm/min"),
+            self.recommendation("ramp_feed_rate", 200, "mm/min",
+                                entry_mode="ramp", rule="tested ramp"),
+        ))
+        plan = plan_milling(context, (strategy,))
+        self.assertEqual(plan.solution.spindle_speed, 7000)
+        self.assertEqual(plan.solution.feed_rate, 350)
+        self.assertAlmostEqual(plan.solution.chip_load, 350 / 14000)
+        self.assertEqual(plan.ramp_feed_rate, 350)
+        self.assertEqual(
+            [(item.field, item.code) for item in plan.active_constraints],
+            [("spindle_speed", "MINIMUM_BOUND_APPLIED"),
+             ("feed_rate", "MINIMUM_BOUND_APPLIED"),
+             ("ramp_feed_rate", "MINIMUM_BOUND_APPLIED")])
+        self.assertEqual(plan.recommendations.get("feed_rate").value, 240)
+
+        endpoint = plan_milling(context, (ProfileRecommendationStrategy(
+            "endpoints", (
+                self.recommendation("spindle_speed", 7000, "rpm"),
+                self.recommendation("feed_rate", 350, "mm/min"),)),))
+        self.assertFalse(endpoint.active_constraints)
+
+    def test_fixed_and_imperial_operating_ranges(self):
+        fixed = FixedRecommendationStrategy("fixed low rpm", (
+            self.recommendation("spindle_speed", 6000, "rpm", fixed=True),))
+        context = RecommendationContext(
+            self.context.tool, self.context.material,
+            MachineCapabilities("router", "mm", min_spindle_speed=7000),
+            "slotting")
+        with self.assertRaisesRegex(ValueError, "fixed spindle_speed.*below minimum"):
+            plan_milling(context, (fixed,))
+
+        imperial_tool = ToolProfile(
+            "quarter-inch", "in", 0.25, 2, "flat end mill",
+            entry_modes=("ramp",))
+        imperial = RecommendationContext(
+            imperial_tool, self.context.material,
+            MachineCapabilities("mill", "in", min_feed_rate=12,
+                                max_feed_rate=30),
+            "slotting", OperatingConstraints("in", min_feed_rate=15,
+                                              max_feed_rate=25))
+        recommendation = Recommendation(
+            "feed_rate", 10, "in/min", self.source,
+            (ApplicableRange("cutter_diameter", "in", 0.1, 0.5),))
+        plan = plan_milling(
+            imperial, (ProfileRecommendationStrategy("imperial", (recommendation,)),))
+        self.assertEqual(plan.solution.feed_rate, 15)
+        self.assertEqual(plan.active_constraints[0].code,
+                         "MINIMUM_BOUND_APPLIED")
 
 
 if __name__ == "__main__":

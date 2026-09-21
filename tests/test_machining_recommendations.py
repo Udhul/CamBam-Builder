@@ -1,4 +1,5 @@
 import math
+import itertools
 import unittest
 from dataclasses import FrozenInstanceError
 
@@ -8,7 +9,9 @@ from cambam_builder import (
     DiameterRecommendationTable,
     FixedRecommendationStrategy,
     MachineCapabilities,
+    MachineLimits,
     MaterialProfile,
+    OperatingConstraints,
     MillingConstraints,
     ProfileRecommendationStrategy,
     Recommendation,
@@ -111,6 +114,68 @@ class RecommendationProfileTests(unittest.TestCase):
                 result = recommend_milling(self.context, strategies)
                 self.assertEqual(result.get("chip_load").value, 0.025)
                 self.assertTrue(result.get("chip_load").fixed)
+
+    def test_fixed_override_resolves_all_permutations_of_conflicting_suggestions(self):
+        suggestions = tuple(ProfileRecommendationStrategy(
+            name, (Recommendation(
+                "chip_load", value, "mm/tooth", self.shop_source,
+                (ApplicableRange("cutter_diameter", "mm", 3, 8),)),))
+            for name, value in (("first", 0.03), ("second", 0.04)))
+        fixed = FixedRecommendationStrategy(
+            "operator values",
+            (self.recommendation("chip_load", 0.025, "mm/tooth", fixed=True),),
+        )
+        for strategies in itertools.permutations(suggestions + (fixed,)):
+            with self.subTest(strategies=tuple(item.name for item in strategies)):
+                result = recommend_milling(self.context, strategies)
+                self.assertEqual(result.get("chip_load"), fixed.recommendations[0])
+
+        other_fixed = FixedRecommendationStrategy(
+            "other operator values",
+            (self.recommendation("chip_load", 0.026, "mm/tooth", fixed=True),),
+        )
+        for strategies in ((fixed, other_fixed), (other_fixed, fixed)):
+            with self.assertRaisesRegex(RecommendationError, "conflicting fixed"):
+                recommend_milling(self.context, strategies)
+
+    def test_machine_and_job_ranges_intersect_without_shared_state(self):
+        machine = MachineCapabilities(
+            "router", "mm", max_spindle_speed=24000, max_feed_rate=3000,
+            min_spindle_speed=5000, min_feed_rate=100)
+        first = RecommendationContext(
+            self.context.tool, self.context.material, machine, "slotting",
+            OperatingConstraints("mm", 8000, 18000, 200, 1200))
+        second = RecommendationContext(
+            self.context.tool, self.context.material, machine, "slotting",
+            OperatingConstraints("mm", 6000, 22000, 150, 2500))
+        self.assertEqual(first.effective_limits().min_spindle_speed, 8000)
+        self.assertEqual(first.effective_limits().max_feed_rate, 1200)
+        self.assertEqual(second.effective_limits().min_spindle_speed, 6000)
+        self.assertEqual(second.effective_limits().max_feed_rate, 2500)
+        self.assertEqual(machine.max_feed_rate, 3000)
+        single = OperatingConstraints(
+            "mm", min_spindle_speed=12000, max_spindle_speed=12000)
+        self.assertEqual(single.min_spindle_speed, single.max_spindle_speed)
+        self.assertEqual(
+            RecommendationContext(
+                self.context.tool, self.context.material,
+                MachineCapabilities("unbounded", "mm"), "slotting"
+            ).effective_limits(),
+            MachineLimits(),
+        )
+
+        with self.assertRaisesRegex(ValueError, "positive finite"):
+            OperatingConstraints("mm", min_spindle_speed=0)
+        with self.assertRaisesRegex(RecommendationError, "cannot exceed"):
+            OperatingConstraints("mm", min_feed_rate=200, max_feed_rate=100)
+        with self.assertRaisesRegex(RecommendationError, "after intersecting"):
+            RecommendationContext(
+                self.context.tool, self.context.material, machine, "slotting",
+                OperatingConstraints("mm", min_spindle_speed=25000))
+        with self.assertRaisesRegex(RecommendationError, "units must match"):
+            RecommendationContext(
+                self.context.tool, self.context.material, machine, "slotting",
+                OperatingConstraints("in", min_feed_rate=1))
 
     def test_unresolved_nonfixed_conflict_is_rejected(self):
         first = ProfileRecommendationStrategy(
