@@ -7,25 +7,26 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**2026-09-21 backlog 4e native acceptance complete; capable named-agent rerun
-pending.** OpenCode 1.18.31 connects from an isolated task-owned configuration
-to the real 37-tool local stdio adapter. The project-preferred GLM route and the
-stronger Sol route were blocked before any tool call by the configured OpenRouter
-workspace guardrails. The permitted Luna route called `document_list` successfully
-but stopped after that first call; one ordinary continuation then incorrectly asked
-for pre-existing A/B files despite the creation instructions. It created no document
-or artifact, so named-agent usability is not accepted. Independently, the maintained
-4c slice generated fresh A/B files with the expected revisions and geometry; the
-strict acceptance verifier passed, as did all 86 focused MCP tests with the existing
-Windows symlink-privilege skip. The user then accepted both files in CamBam Plus 1.0:
+**2026-09-21 backlog 4e local stdio acceptance complete.** OpenCode 1.18.31,
+running GLM-5.3-Flash from an isolated task-owned configuration, completed the real
+37-tool local stdio A/B workflow without coaching, failed calls, retries, permission
+denials or MCP argument correction. It created/inspected/saved/hash-copied/reopened
+the Rect/Outside-Profile document, translated the stable primitive, verified the
+expected revisions and geometry, and closed all three handles. The maintained strict
+verifier independently accepted its client-local A/B files and hashes. Earlier
+apparent failures from the three intentionally enabled OpenRouter models are void:
+the Windows CLI harness had delivered only the first 705-character paragraph, not
+the task. The corrected single-argument prompt delivered the complete task. The
+agent's sole reporting error was counting 42 total visible tools as CamBam tools;
+the adapter exposes 37, and the runbook now disambiguates that request. Separately,
+all 86 focused MCP tests passed with the existing Windows symlink-privilege skip.
+The user accepted both reference files in CamBam Plus 1.0:
 millimetre interpretation, A/B geometry, explicit Profile properties and outside
 two-level toolpaths all passed. They also confirmed CamBam displays primitives by
 native type/ID (for example `PolyRectangle (1)`), while the framework identifier
 `outline` is correctly retained in `Tag` metadata; layer, Part and MOP names are
-native. Reopen only the remaining named-agent gate
-when a capable tool-using model is permitted. A subsequent explicit Luna Pro attempt
-was also blocked before inference by the same workspace guardrails; do not treat a
-connection or the base Luna partial call as workflow acceptance.
+native. Same-machine stdio is accepted; remote transport and broader production
+machining remain separate future scope.
 
 **2026-09-21 backlog 10 entity-module boundary refactor complete.** The former
 2,488-line mixed owner is now a 69-line explicit compatibility facade over canonical
@@ -274,8 +275,7 @@ suite pass with the existing Windows symlink-privilege skip; strict-import and
 compile checks plus `git diff --check` also pass. A fresh OpenCode/CamBam acceptance
 run remains pending.
 
-**4e local stdio acceptance: implementation and automated evidence complete;
-named-agent and CamBam acceptance pending** (2026-09-11). The user accepted a
+**4e local stdio acceptance: completed 2026-09-21.** The user accepted a
 same-machine external client launching its own server subprocess as the initial
 deployment boundary; unavailable second-PC hardware no longer blocks this increment.
 The Windows wheel matrix passes for the base library on Python 3.9 and the MCP extra
@@ -285,9 +285,10 @@ real adapter from an isolated configuration without changing user configuration.
 The server now emits one content-free negotiated-protocol record, covered for modern
 2026-07-28 and legacy 2025-11-25 subprocesses. A maintained artifact verifier and
 exact OpenCode/CamBam acceptance procedure are in the
-[development runbook](DEVELOPMENT.md#4e-opencode-and-cambam-acceptance). Completion
-still requires the user's OpenCode 4c workflow plus CamBam mm/geometry/Profile/toolpath
-report. Streamable HTTP/remote-PC hosting is non-urgent future scope and must add
+[development runbook](DEVELOPMENT.md#4e-opencode-and-cambam-acceptance). The final
+GLM-5.3-Flash OpenCode workflow and independent verifier passed; the user separately
+accepted millimetres, A/B geometry, Profile properties and two-level outside
+toolpaths in CamBam Plus 1.0. Streamable HTTP/remote-PC hosting is non-urgent future scope and must add
 origin validation, authentication and an explicit exposure policy before any LAN bind.
 The first real agentic OpenCode attempt exposed two release-blocking usability defects:
 the agent treated server-workspace save paths as client-local delivery, and the adapter
@@ -296,8 +297,9 @@ make import/export plus client-local read/write the default, reserve open/save f
 explicit server-workspace use, and explain Profile/Pocket/Engrave/Drill by machining
 intent. Profile now accepts root Circle, closed-Pline and Region boundaries as well as
 Rect; schema errors identify their top-level field. The 63-test MCP suite and
-217-test full suite pass with the existing Windows symlink-privilege skip. Repeat
-OpenCode plus CamBam acceptance remains required before 4e completes.
+217-test full suite pass with the existing Windows symlink-privilege skip. At that
+checkpoint, repeat OpenCode plus CamBam acceptance was still required; the final
+2026-09-21 evidence above supersedes that pending state.
 The next OpenCode attempt accepted the portable export/client-write workflow, closing
 that usability defect. It exposed a separate geometry-planning failure: one Pline
 vertex and the derived hole center were arithmetically wrong, the agent changed only
@@ -837,10 +839,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
       tools, and the parenting/group/copy relationship tools; batch 5 added
       cross-document copy/transfer under the recorded two-document contract.
       Sol/high, with Terra/xhigh suitable for settled coverage batches.
-   - **4e — automated/local connection evidence complete; user acceptance pending:**
-     validate installation, named local-client interoperability and CamBam user
-     acceptance. Same-machine stdio is the accepted initial boundary because
-     second-PC hardware is unavailable.
+   - **4e — completed 2026-09-21:** installation, named OpenCode interoperability
+     and bounded CamBam Plus 1.0 user acceptance. Same-machine stdio is the accepted
+     initial boundary because second-PC hardware is unavailable.
    Each increment must persist its decisions, evidence and remaining limits before
    handoff; later breadth must not leak into earlier scopes. Full acceptance and
    maintenance details: [MCP delivery plan](MCP_PLAN.md#delivery-increments-and-session-boundaries).
@@ -1232,10 +1233,9 @@ neither catalog/persistence nor MCP profile authoring is implied.
 No blocker for the completed MOP ownership/interchange scope. Production
 toolpaths and complete `.cb` format coverage remain outside that acceptance.
 The old framework API and pickle format did not constrain the redesign.
-MCP 4e still requires the named OpenCode agent workflow and CamBam acceptance. The adapter
-retains 2026-07-28 as its target and also supports 2025-06-18 and 2025-11-25;
-reprobe the clients during 4e and retire an older version only after deployed
-clients no longer need it. No blocker prevents 4d implementation; keep broader
+MCP 4e is complete for same-machine stdio. The adapter retains 2026-07-28 as its
+target and also supports 2025-06-18 and 2025-11-25; retire an older version only
+after deployed clients no longer need it. Keep broader
 CAD/CAM coverage explicit and test each advertised family before discovery.
 
 The second OpenCode run also created the final outside cutout before its enclosed

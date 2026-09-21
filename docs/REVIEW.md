@@ -3537,7 +3537,7 @@ when end-of-line whitespace is ignored. Compileall, import/construct smoke and a
 three entity-boundary tests pass. The immediately preceding committed-tree run passed
 all 305 tests with the expected single skip; the correction changed no Python tokens.
 
-## MCP 4e acceptance start - 2026-09-21
+## MCP 4e acceptance completion - 2026-09-21
 
 OpenCode 1.18.31 was run from the isolated ignored directory
 `output/mcp-4e-acceptance-20260921/`, with project configuration, default plugins and
@@ -3546,24 +3546,49 @@ against a separate task-owned server workspace. `opencode mcp list --pure` repor
 `cambam connected`, proving the current named client can launch and negotiate with the
 real adapter without changing normal OpenCode configuration.
 
-The agentic result is not accepted. The project-preferred OpenRouter GLM endpoint and
-the stronger Sol endpoint were rejected before inference because the configured
-workspace guardrails allowed no matching endpoint. The permitted Luna endpoint made
-one successful `document_list` call and then ended its first turn. A single ordinary
-request to continue caused it to search for A/B inputs and request pre-existing files,
-although the original task explicitly required creating them. It made no mutation,
-created no `.cb` file and reported no MCP schema or server error. This is useful
-model/client usability failure evidence, not an adapter or protocol failure. Reopen
-with a capable tool-using model allowed by the existing OpenRouter policy; require the
-full uncoached create/inspect/save/copy/hash/reopen/translate/close sequence before
-calling named-agent behavior accepted.
+The user clarified that the intentionally enabled OpenRouter model set is
+GLM-5.3-Flash, DeepSeek V4.1 Flash and GPT-5.6 Luna; `glm-latest`, Sol and Luna Pro
+are intentionally outside that workspace policy. Initial runs appeared to show all
+three enabled models stopping or losing the task after `document_list`. Exporting
+only those task-owned sessions found that each stored user message was exactly 705
+characters and contained only the file-delivery paragraph: the PowerShell/native-CLI
+harness had split the multiline argument, so the creation, geometry, Profile and
+completion instructions never reached any model. Those runs are invalid acceptance
+evidence and do not establish model or adapter failures.
 
-After native acceptance, a fresh attempt with the explicit higher-capability
-`openrouter/openai/gpt-5.6-luna-pro` route was likewise rejected before inference:
-the `local-cam` OpenRouter guardrails excluded every matching endpoint by model and
-provider policy. It made no MCP call and created no artifact. Further model guessing
-would bypass the user's external policy rather than add acceptance evidence, so the
-named-agent gate now waits for an intentionally permitted capable route.
+The corrected harness joined the complete prompt into one native-process argument
+and reran GLM-5.3-Flash in a fresh client/server workspace. Without a follow-up prompt
+or manual MCP repair, it called `document_list`, created revision 0, added the Rect at
+revision 1, added and inspected the Outside Profile at revision 2, saved and
+hash-copied A, staged/hash-guarded/reopened A at revision 0, translated and inspected
+B at revision 1, saved and hash-copied B, staged/hash-guarded/reopened B at revision
+0, then closed all three handles. There were no failed calls, retries, permission
+denials or argument corrections. It reported the expected final corners and stable
+target UUID. Its one non-operational report error was calling 42 the CamBam MCP tool
+count; deterministic `tool_definitions()` returns 37, so it apparently counted local
+client tools too. The runbook now asks explicitly for the CamBam count excluding
+ordinary client-local tools.
+
+Exporting the successful task-owned session independently confirmed one 2,111-character
+user message containing the create, Profile-value and complete-before-reply clauses.
+
+The GLM-created client artifacts are
+`output/mcp-4e-acceptance-20260921/client-glm53-complete/A.cb` (3,131 bytes,
+SHA-256 `673cd5446ea3938d2288ef4e577b15884f6605e8b23439eff33b4dd0df5c11a2`)
+and `B.cb` (3,136 bytes,
+SHA-256 `40a1f6237cf7ca1a4ed1cabec551d7d21f1a263049c9472a556ccb6980794eca`).
+The maintained acceptance verifier independently passed strict import, identities,
+targets, explicit Profile values and exact A/B world geometry. This completes the
+named-agent gate.
+
+The reusable development choice is now owned by the OpenCode setup section of the
+development runbook: task-owned config/state/cache and client/server directories,
+existing provider authentication reused without copying it, a model selected from
+the current workspace policy rather than a universal alias, a single native-process
+prompt argument on the observed Windows/OpenCode 1.18.31 path, no broad `--auto`, and
+task-scoped transcript export when prompt delivery is in doubt. These are bounded
+operational safeguards, not requirements for other shells, clients, providers or
+future OpenCode versions; retain them only while they prevent a reproduced failure.
 
 Manual native acceptance was prepared independently so it does not depend on that
 agent failure. `demos/mcp_authoring_slice.py` generated fresh ignored fixtures under
@@ -3583,5 +3608,6 @@ primitives and displays a native type plus primitive ID such as
 `PolyRectangle (1)`. The framework's stable `outline` identifier is present in the
 primitive `Tag` metadata as designed. Layers, Parts and MOPs do support native names.
 The 4e runbook now states that distinction instead of requiring a nonexistent native
-primitive name. This acceptance completes the native A/B gate and does not accept the
-separate failed named-agent workflow above.
+primitive name. Together with the independently verified named-agent run above, this
+completes same-machine local-stdio 4e acceptance. It does not establish remote
+transport or broader production machining acceptance.

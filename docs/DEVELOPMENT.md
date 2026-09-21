@@ -830,6 +830,94 @@ stops it. This server has no localhost port.
 }
 ```
 
+#### Reusable isolated OpenCode agent run on Windows
+
+For a development or acceptance run that must not change normal OpenCode project
+configuration, use a unique ignored `output/<task>-<unique>/` root with separate
+client and MCP-workspace directories. Point `XDG_CONFIG_HOME`, `XDG_STATE_HOME`,
+`XDG_CACHE_HOME` and `OPENCODE_CONFIG_DIR` into that root, provide only the task MCP
+entry through `OPENCODE_CONFIG_CONTENT`, and disable project configuration, default
+plugins and auto-update. Do not set `XDG_DATA_HOME` when the run is intentionally
+reusing the user's existing OpenCode provider authentication; this avoids copying or
+printing credentials. Set it to another task-owned directory only for a fully
+credential-isolated probe that does not invoke a hosted model.
+
+The model is an environment choice, not a repository default. Confirm what the
+current provider workspace intentionally permits rather than assuming a `latest`
+alias or a model used on another machine. `opencode models openrouter` shows the
+provider catalog, not necessarily the API key's effective workspace policy. For the
+2026-09-21 `local-cam` acceptance environment, the user confirmed GLM-5.3-Flash,
+DeepSeek V4.1 Flash and GPT-5.6 Luna; GLM-5.3-Flash completed the final run. Other
+development environments may use different providers, model identifiers or policy.
+
+This is the reusable shape; replace every example path and select a model confirmed
+for the current provider workspace:
+
+```powershell
+$taskRoot = Join-Path (Resolve-Path "output").Path "mcp-client-<unique>"
+$client = Join-Path $taskRoot "client"
+$serverWorkspace = Join-Path $taskRoot "server-workspace"
+$python = (Resolve-Path ".venv/Scripts/python.exe").Path
+New-Item -ItemType Directory -Path $client,$serverWorkspace -Force | Out-Null
+
+$config = @{
+    mcp = @{
+        cambam = @{
+            type = "local"
+            command = @($python, "-m", "cambam_builder.mcp_adapter",
+                        "--workspace", $serverWorkspace)
+            enabled = $true
+            timeout = 15000
+        }
+    }
+} | ConvertTo-Json -Depth 8 -Compress
+
+$env:XDG_CONFIG_HOME = Join-Path $taskRoot "config"
+$env:XDG_STATE_HOME = Join-Path $taskRoot "state"
+$env:XDG_CACHE_HOME = Join-Path $taskRoot "cache"
+$env:OPENCODE_CONFIG_DIR = Join-Path $taskRoot "config"
+$env:OPENCODE_CONFIG_CONTENT = $config
+$env:OPENCODE_DISABLE_PROJECT_CONFIG = "true"
+$env:OPENCODE_DISABLE_DEFAULT_PLUGINS = "true"
+$env:OPENCODE_DISABLE_AUTOUPDATE = "true"
+
+opencode.cmd mcp list --pure
+
+$model = "openrouter/<provider>/<model-confirmed-for-this-workspace>"
+$title = "CamBam MCP <task> <unique>"
+$prompt = @(
+    "First complete task paragraph."
+    "Second complete task paragraph."
+    "Final reporting and stopping criteria."
+) -join " "
+opencode.cmd run --pure --model $model --title $title --dir $client $prompt
+```
+
+Keep the prompt in one native-process argument for non-interactive Windows runs. In
+the OpenCode 1.18.31 acceptance harness, passing a multiline PowerShell string caused
+the stored user message to stop at the first paragraph (705 characters), even though
+the terminal command appeared to contain the full prompt. This is an observed
+CLI/harness boundary, not a general claim about interactive OpenCode, other shells or
+future releases. Joining paragraphs with spaces, as above, preserved the complete
+2,111-character prompt. Do not use `--auto` for acceptance: permission denials are
+part of the evidence and broad automatic approval would weaken the test.
+
+If behavior suggests lost instructions, inspect only the task-owned session rather
+than blaming the model or server. Use `opencode session list --pure --format json` to
+find the session by its unique title/directory, then
+`opencode export <session-id> --pure`; check the user-message length and a few
+required phrases without publishing credentials or unrelated sessions. A model
+stopping after `document_list` is not valid usability evidence if the creation/task
+paragraphs never reached it.
+
+For this adapter, success still requires more than a connected status: inspect the
+tool transcript, verify client/server copy hashes, run
+`demos/mcp_client_acceptance_verify.py` on the delivered A/B files, and separate that
+automated evidence from CamBam acceptance. Ask for the **CamBam MCP** tool count
+excluding ordinary client-local tools; otherwise a model may report the combined
+tool inventory. Keep private/user CAD and secrets out of hosted-model prompts unless
+the task explicitly authorizes them.
+
 ### Clean wheel installation and rollback
 
 Use a dedicated environment so client removal cannot disturb another Python
@@ -876,7 +964,8 @@ to the requested client-local file, and verify its SHA-256. To reload a client f
 binary-copy it under a new unique leaf in workspace_path, verify both hashes, and call
 document_open on that relative leaf with expected_sha256. Do not manually reconstruct
 XML, reuse an old staging name, or treat the server path as the final destination.
-Report the server workspace ID and available tool count. Create a document named slice with asserted
+Report the server workspace ID and the CamBam MCP tool count, excluding ordinary
+client-local file and shell tools. Create a document named slice with asserted
 mm units. Add Rect outline on
 layer Geometry at (0,0,0), width 20 and height 10. Add an enabled outside Profile
 named profile in Part targeting outline: target depth -1, depth increment 0.5,

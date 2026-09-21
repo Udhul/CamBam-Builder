@@ -46,8 +46,8 @@ no file; same-host clients can instead copy an exact server-generated `document_
 handoff artifact and verify its SHA-256. Install
 with `uv sync --extra mcp` on Python 3.10+;
 see [MCP setup and client configuration](docs/DEVELOPMENT.md#local-mcp-setup-and-verification).
-Clean Windows installation and an OpenCode stdio connection are verified;
-agentic OpenCode and CamBam domain acceptance remain pending.
+Clean Windows installation, an agentic OpenCode stdio workflow and CamBam Plus 1.0
+domain acceptance are verified for the bounded Rect/Outside-Profile A/B slice.
 
 For a new AI-assisted CamBam project, copy the packaged
 [`consumer_AGENTS.template.md`](cambam_builder/mcp_adapter/consumer_AGENTS.template.md)
