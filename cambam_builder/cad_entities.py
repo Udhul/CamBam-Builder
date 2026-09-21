@@ -215,7 +215,7 @@ class Pline(Primitive):
     def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
         """
         Applies a transformation matrix to vertices.
-        
+
         If transform_to_bake is None, uses and resets the effective_transform.
         """
         # Determine which transformation to apply
@@ -248,11 +248,11 @@ class Pline(Primitive):
                 "Bulged Pline geometry can only bake XY similarity transforms"
             )
         reflected = np.linalg.det(transform_to_apply[0:2, 0:2]) < 0.0
-            
+
         # Skip if identity matrix (nothing to bake)
         if np.array_equal(transform_to_apply, identity_matrix()):
             return
-            
+
         try:
             # Transform XY coordinates
             rel_pts_xy = [(vertex.x, vertex.y) for vertex in vertices]
@@ -270,11 +270,11 @@ class Pline(Primitive):
                     logger.warning(f"Point mismatch during baking for Pline {self.user_identifier}. Skipping point.")
 
             self.vertices = new_vertices
-            
+
             # Reset effective transform if using it
             if reset_transform:
                 self.effective_transform = identity_matrix()
-                
+
         except Exception as e:
             logger.error(f"Failed to bake Pline {self.user_identifier}: {e}")
 
@@ -295,7 +295,7 @@ class Pline(Primitive):
             z = round(z, self.output_decimals) if self.output_decimals is not None else z
             bulge = vertex.bulge
             bulge = round(bulge, self.output_decimals) if self.output_decimals is not None else bulge
-            
+
             ET.SubElement(pts_elem, "p", {"b": str(bulge)}).text = f"{x},{y},{z}"
 
         # Add common ID, Tag (with parent), and Matrix
@@ -362,7 +362,7 @@ class Circle(Primitive):
     def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
         """
         Applies a transformation matrix to center and diameter.
-        
+
         If transform_to_bake is None, uses and resets the effective_transform.
         """
         # Determine which transformation to apply
@@ -378,22 +378,22 @@ class Circle(Primitive):
         similarity_scale = _xy_similarity_scale(transform_to_apply)
         if similarity_scale is None:
             raise ValueError("Circle geometry can only bake XY similarity transforms")
-            
+
         # Skip if identity matrix (nothing to bake)
         if np.array_equal(transform_to_apply, identity_matrix()):
             return
-            
+
         try:
             # Bake center position
             self.relative_center = get_transformed_point(self.relative_center, transform_to_apply)
 
             # Bake diameter (using average scale factor)
             self.diameter *= similarity_scale
-            
+
             # Reset effective transform if using it
             if reset_transform:
                 self.effective_transform = identity_matrix()
-                
+
         except Exception as e:
             logger.error(f"Failed to bake Circle {self.user_identifier}: {e}")
 
@@ -404,7 +404,7 @@ class Circle(Primitive):
         cz = _finite_float(self.elevation, "elevation")
         cz = round(cz, self.output_decimals) if self.output_decimals is not None else cz
         c_diam = round(self.diameter, self.output_decimals) if self.output_decimals is not None else self.diameter
-        
+
         circle_elem = ET.Element("circle", {
             "c": f"{cx},{cy},{cz}", # Center (x,y,z)
             "d": str(c_diam) # Diameter
@@ -470,62 +470,62 @@ class Rect(Primitive):
         """
         Determines if the rectangle's geometry is still rectangular after applying
         the effective transformation.
-        
+
         Returns:
             True if the transformed corners still form a rectangle, False otherwise
         """
         if np.allclose(self.effective_transform, identity_matrix()):
             return True  # With identity transform, it's definitely rectangular
-        
+
         # Get the rectangle corners
         corners = self._get_relative_corners()
-        
+
         # Transform the corners
         transformed_corners = apply_transform(corners, self.effective_transform)
-        
+
         # Check if the transformed corners still form a rectangle
         # This requires adjacent sides to be perpendicular
         if len(transformed_corners) == 4:
             # Calculate vectors for adjacent sides
-            v1 = (transformed_corners[1][0] - transformed_corners[0][0], 
+            v1 = (transformed_corners[1][0] - transformed_corners[0][0],
                   transformed_corners[1][1] - transformed_corners[0][1])
-            v2 = (transformed_corners[3][0] - transformed_corners[0][0], 
+            v2 = (transformed_corners[3][0] - transformed_corners[0][0],
                   transformed_corners[3][1] - transformed_corners[0][1])
             v3 = (transformed_corners[2][0] - transformed_corners[1][0],
                   transformed_corners[2][1] - transformed_corners[1][1])
             v4 = (transformed_corners[2][0] - transformed_corners[3][0],
                   transformed_corners[2][1] - transformed_corners[3][1])
-            
+
             # Calculate dot products to check perpendicularity
             dot1 = v1[0]*v2[0] + v1[1]*v2[1]
             dot2 = v2[0]*v4[0] + v2[1]*v4[1]
             dot3 = v4[0]*v3[0] + v4[1]*v3[1]
             dot4 = v3[0]*v1[0] + v3[1]*v1[1]
-            
+
             # All dot products should be close to 0 for a rectangle
             return (math.isclose(dot1, 0, abs_tol=1e-10) and
                     math.isclose(dot2, 0, abs_tol=1e-10) and
                     math.isclose(dot3, 0, abs_tol=1e-10) and
                     math.isclose(dot4, 0, abs_tol=1e-10))
-        
+
         return False
-    
+
     def to_pline_representation(self) -> Pline:
         """
         Creates a Pline representation of this rectangle, applying any transformations.
-        
+
         Returns:
             A new Pline object representing the same geometry with the transformation applied
         """
         # Get the rectangle corners
         corners = self._get_relative_corners()
-        
+
         # Transform the corners
         transformed_corners = apply_transform(corners, self.effective_transform)
-        
+
         # Create points for Pline (adding the first point again to close the loop if needed)
         pline_points = [Vertex(p[0], p[1], self.elevation) for p in transformed_corners]
-        
+
         # Create a new Pline
         pline = Pline(
             user_identifier=f"{self.user_identifier}_as_pline",
@@ -536,7 +536,7 @@ class Rect(Primitive):
             closed=True,
             local_z_offset=self.local_z_offset,
         )
-        
+
         return pline
 
     def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
@@ -604,10 +604,10 @@ class Rect(Primitive):
                     self._get_relative_corners(), self.get_total_transform())],
                 closed=True,
             )
-            
+
             # Get the Pline's XML element, but with our metadata
             pline_elem = pline_repr.to_xml_element(xml_primitive_id, parent_uuid)
-            
+
             # Update the Tag element to maintain our identity (but no rect-specific data)
             tag_data = {
                 "user_id": self.user_identifier,
@@ -615,11 +615,11 @@ class Rect(Primitive):
                 "groups": self.groups,
                 "description": self.description
             }
-            
+
             # Add parent reference if provided
             if parent_uuid:
                 tag_data["parent"] = str(parent_uuid)
-            
+
             # Update or add the Tag element
             tag_node = pline_elem.find("Tag")
             if tag_node is None:
@@ -630,7 +630,7 @@ class Rect(Primitive):
             logger.info(f"Rect '{self.user_identifier}' converted to Pline for XML output due to non-rectangular geometry.")
 
             return pline_elem
-        
+
         # Otherwise, create a normal Rect XML element
         x = round(self.relative_corner[0], self.output_decimals) if self.output_decimals is not None else self.relative_corner[0]
         y = round(self.relative_corner[1], self.output_decimals) if self.output_decimals is not None else self.relative_corner[1]
@@ -638,17 +638,17 @@ class Rect(Primitive):
         z = round(z, self.output_decimals) if self.output_decimals is not None else z
         w = round(self.width, self.output_decimals) if self.output_decimals is not None else self.width
         h = round(self.height, self.output_decimals) if self.output_decimals is not None else self.height
-        
+
         rect_elem = ET.Element("rect", {
             "Closed": "true", # Rectangles are implicitly closed
             "p": f"{x},{y},{z}", # Corner (x,y,z)
             "w": str(w),
             "h": str(h)
         })
-        
+
         # Add common ID, Tag (with parent), and Matrix
         self._add_common_xml_attributes(rect_elem, xml_primitive_id, parent_uuid)
-        
+
         return rect_elem
 
 
@@ -755,7 +755,7 @@ class Arc(Primitive):
     def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
         """
         Applies a transformation matrix to center, radius, and angles.
-        
+
         If transform_to_bake is None, uses and resets the effective_transform.
         """
         # Determine which transformation to apply
@@ -773,15 +773,15 @@ class Arc(Primitive):
             raise ValueError("Arc geometry can only bake XY similarity transforms")
         transform_to_apply = _affine_matrix_or_none(transform_to_apply)
         assert transform_to_apply is not None
-            
+
         # Skip if identity matrix (nothing to bake)
         if np.array_equal(transform_to_apply, identity_matrix()):
             return
-            
+
         try:
             # Bake center position
             self.relative_center = get_transformed_point(self.relative_center, transform_to_apply)
-            
+
             self.radius *= similarity_scale
 
             # Transform the actual start direction. This also handles a
@@ -796,11 +796,11 @@ class Arc(Primitive):
             )) % 360
             if np.linalg.det(transform_to_apply[0:2, 0:2]) < 0:
                 self.extent_angle = -self.extent_angle
-            
+
             # Reset effective transform if using it
             if reset_transform:
                 self.effective_transform = identity_matrix()
-                
+
         except Exception as e:
             logger.error(f"Failed to bake Arc {self.user_identifier}: {e}")
 
@@ -813,7 +813,7 @@ class Arc(Primitive):
         radius = round(self.radius, self.output_decimals) if self.output_decimals is not None else self.radius
         start_angle = round(self.start_angle % 360, self.output_decimals) if self.output_decimals is not None else self.start_angle % 360
         extent_angle = round(self.extent_angle, self.output_decimals) if self.output_decimals is not None else self.extent_angle
-        
+
         arc_elem = ET.Element("arc", {
             "p": f"{cx},{cy},{cz}", # Center (x,y,z)
             "r": str(radius),       # Radius
@@ -882,7 +882,7 @@ class Points(Primitive):
     def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
         """
         Applies a transformation matrix to vertices.
-        
+
         If transform_to_bake is None, uses and resets the effective_transform.
         """
         # Determine which transformation to apply
@@ -899,11 +899,11 @@ class Points(Primitive):
         if affine is None:
             raise ValueError("Expected a finite affine 3x3 matrix")
         transform_to_apply = affine
-            
+
         # Skip if identity matrix (nothing to bake)
         if np.array_equal(transform_to_apply, identity_matrix()):
             return
-            
+
         try:
             # Transform the points
             vertices = self._validated_vertices()
@@ -914,11 +914,11 @@ class Points(Primitive):
                 Vertex(x, y, vertices[index].z)
                 for index, (x, y) in enumerate(transformed)
             ]
-            
+
             # Reset effective transform if using it
             if reset_transform:
                 self.effective_transform = identity_matrix()
-                
+
         except Exception as e:
             logger.error(f"Failed to bake Points {self.user_identifier}: {e}")
 
@@ -1079,7 +1079,7 @@ class Text(Primitive):
     def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
         """
         Applies a transformation matrix to position and height.
-        
+
         If transform_to_bake is None, uses and resets the effective_transform.
         """
         # Determine which transformation to apply
@@ -1103,11 +1103,11 @@ class Text(Primitive):
                 "Text geometry can only bake XY translation and positive uniform scale"
             )
         transform_to_apply = affine
-            
+
         # Skip if identity matrix (nothing to bake)
         if np.array_equal(transform_to_apply, identity_matrix()):
             return
-            
+
         try:
             # Bake position
             self.relative_position = get_transformed_point(self.relative_position, transform_to_apply)
@@ -1115,35 +1115,35 @@ class Text(Primitive):
                 self.xml_p2_position = get_transformed_point(
                     self.xml_p2_position, transform_to_apply
                 )
-            
+
             # Bake height (using average scale factor)
             self.height *= scale
-            
+
             # Handle text mirroring - affects alignment
             det = np.linalg.det(transform_to_apply[0:2, 0:2])
             if det < 0:  # Mirroring detected
                 # Determine axis of mirroring
-                sx_sign = np.sign(transform_to_apply[0, 0]) 
+                sx_sign = np.sign(transform_to_apply[0, 0])
                 sy_sign = np.sign(transform_to_apply[1, 1])
-                
+
                 # For x-mirroring (negative x scale)
                 if sx_sign < 0:
                     if self.align_horizontal == 'left':
                         self.align_horizontal = 'right'
                     elif self.align_horizontal == 'right':
                         self.align_horizontal = 'left'
-                
+
                 # For y-mirroring (negative y scale)
                 if sy_sign < 0:
                     if self.align_vertical == 'top':
                         self.align_vertical = 'bottom'
                     elif self.align_vertical == 'bottom':
                         self.align_vertical = 'top'
-            
+
             # Reset effective transform if using it
             if reset_transform:
                 self.effective_transform = identity_matrix()
-                
+
         except Exception as e:
             logger.error(f"Failed to bake Text {self.user_identifier}: {e}")
 

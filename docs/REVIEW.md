@@ -3513,3 +3513,26 @@ tests with one expected Windows symlink-privilege skip in 44.716 seconds;
 copy/transfer and state-snapshot regressions ran within that suite. No serialized
 contract or native CamBam behavior changed, so manual native validation would add no
 evidence.
+
+### Merge-readiness verification correction - 2026-09-21
+
+The first post-commit merge review found 60 trailing-whitespace errors in the exact
+`main...HEAD` diff: 57 in the newly extracted `cad_entities.py` and three in
+`entity_core.py`. Earlier `git diff --check` evidence had inspected only tracked
+working-tree changes while those new modules were still untracked, so it could not
+see their whitespace. Behavior remained sound: the committed tree compiled, passed
+the import/construct smoke, and passed all 305 tests with the expected Windows
+symlink-privilege skip.
+
+The whitespace was removed without semantic edits. `AGENTS.md`, `WORKFLOW.md`, and
+the development runbook now distinguish ready-to-commit from merge-ready, require
+explicit inspection of intended untracked text, and require clean committed-branch
+checks against the named base before any merge-ready declaration. Reopen this process
+issue if another readiness claim omits final-tree evidence or if the documented Git
+commands miss another concrete change state.
+
+Post-correction verification: `git diff --check main` passed for the combined
+committed-plus-working-tree result; the Python cleanup has an empty diff from `HEAD`
+when end-of-line whitespace is ignored. Compileall, import/construct smoke and all
+three entity-boundary tests pass. The immediately preceding committed-tree run passed
+all 305 tests with the expected single skip; the correction changed no Python tokens.

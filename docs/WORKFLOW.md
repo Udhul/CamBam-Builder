@@ -90,6 +90,21 @@ Result form: findings with file/symbol evidence, patch, or tests; no transcript
 - Identify user/domain validation, next increment and suggested commit message.
 - Do not conflate passing synthetic checks with CamBam or machining acceptance.
 
+Use delivery labels precisely:
+
+- **Ready to commit** means the bounded implementation and required checks are
+  complete, but changes are still uncommitted. Inspect tracked changes with
+  `git diff --check` and explicitly inspect intended untracked text files because
+  Git's working-tree diff does not include them.
+- **Merge-ready** means the target base is named, the worktree is clean, the branch
+  contains the intended commit(s), `git diff --check <base>...HEAD` passes, the
+  complete branch diff was reviewed, and every required automated and user/domain
+  acceptance gate is satisfied or correctly declared not required.
+- Run behavior checks after the last material content edit. If someone commits after
+  verification, confirm the worktree stayed clean and rerun the branch-level status,
+  ancestry, commit-range and diff checks against the final `HEAD`. Never promote an
+  earlier implementation-ready conclusion into a merge-ready claim by assumption.
+
 ### Completion record / handoff template
 
 ```text
@@ -101,6 +116,7 @@ Automated verification: exact commands, exit/results, reproducible fixtures/arti
 User/production acceptance: pending / accepted / not required (reason)
 Acceptance authority/evidence: user or domain reviewer; never infer acceptance
 Remaining risks, blockers and reopening criteria:
+Delivery state: working / ready to commit / merge-ready (target base and HEAD)
 Recommended next increment:
 Suggested commit message:
 ```

@@ -465,15 +465,15 @@ class Primitive(CamBamEntity, ABC):
     def bake_geometry(self, transform_to_bake: Optional[np.ndarray] = None) -> None:
         """
         Applies a transformation matrix directly to the primitive's relative geometry.
-        
+
         Args:
             transform_to_bake: The transformation matrix to bake into the geometry.
                             If None, the primitive's current effective_transform is used
                             and then reset to identity.
-        
+
         When a specific matrix is provided, that transformation is baked into the actual
         geometry points without modifying the primitive's effective_transform.
-        
+
         When no matrix is provided, the primitive's effective_transform is applied to
         its geometry and then reset to identity.
         """

@@ -38,6 +38,13 @@
 - Use the declared toolchain and commands in `docs/DEVELOPMENT.md`. Run focused
   checks, broadening for shared-contract changes. Inspect artifacts where exit
   status alone is insufficient. Never claim unperformed checks passed.
+- Distinguish implementation closure from delivery state. Uncommitted work may be
+  called **ready to commit**, never **merge-ready**. Before a merge-ready claim,
+  identify the target base, require a clean worktree and at least one branch commit,
+  inspect the exact `base...HEAD` diff (including `git diff --check base...HEAD`),
+  and confirm required checks apply to the final tree. `git diff --check` alone does
+  not inspect untracked files. After the user or another tool commits, rerun the
+  branch-level gates; do not inherit a pre-commit readiness conclusion.
 - Separate implementation, automated verification and user/production acceptance.
   End each unit with changed areas, decisions/assumptions, exact checks/results,
   risks, required user validation, next increment and suggested commit message.

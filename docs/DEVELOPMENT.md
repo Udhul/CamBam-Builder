@@ -52,7 +52,33 @@ Run from the repository root, using the interpreter selected above:
 git diff --check
 ```
 
-These are syntax/import checks. Run the authored synthetic XML regressions with:
+These are syntax/import and tracked-working-diff checks. `git diff --check` does not
+inspect untracked files. Before calling uncommitted work ready to commit, also inspect
+the intended untracked text files; this PowerShell check covers the repository's
+normal source and documentation formats:
+
+```powershell
+$UntrackedText = git ls-files --others --exclude-standard -- '*.py' '*.md' '*.toml' '*.json'
+if ($UntrackedText) { Select-String -Path $UntrackedText -Pattern '[ \t]+$' }
+```
+
+Before calling a committed branch merge-ready, replace `main` if another target base
+was requested and run:
+
+```powershell
+git status --short --branch
+git log --oneline main..HEAD
+git merge-base --is-ancestor main HEAD
+git diff --check main...HEAD
+git diff --stat main...HEAD
+```
+
+The worktree must be clean, the commit range must contain the intended work, and all
+commands must succeed. Review the complete `main...HEAD` diff, not merely its stat.
+Run required behavior checks after the last material content edit; after a later
+commit, rerun these branch-level gates against the final `HEAD`.
+
+Run the authored synthetic XML regressions with:
 
 ```powershell
 & $ProjectPython -m unittest discover -s tests -v
