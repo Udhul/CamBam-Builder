@@ -1030,15 +1030,25 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
      engagement separately. Target depth determines total travel/pass planning, not
      feed directly. Radial chip-thinning or circular-interpolation compensation must
      be separate evidenced models, not hidden multipliers.
-   - **9b — recommendation profiles and extension API.** Define immutable tool,
-     material and machine capability records plus a pluggable strategy interface.
-     Support fixed user rates, user-supplied chip-load/surface-speed tables and custom
-     pure calculation callables before shipping any curated catalog. Every suggested
-     value must carry provenance, units, applicable input range and whether it is a
-     manufacturer starting point, measured shop policy or user override. Plunge,
-     ramp and helical-entry recommendations require an entry-capable tool and their
-     own sourced rule/profile; do not infer plunge as a universal percentage of cut
-     feed. Define serialization/versioning only after a persistent owner is chosen.
+    - **9b — recommendation profiles and extension API (completed 2026-09-21).**
+      The public, document-independent recommendation layer now defines immutable
+      tool, material and machine capability contexts plus a runtime-checkable strategy
+      interface. It composes explicit fixed user values, tool/material/operation-bound
+      chip-load and surface-speed diameter tables, static profiles and validated custom
+      pure callables. Every result carries exact units, a numeric applicable range and
+      source/reference/version provenance classified as a manufacturer starting point,
+      measured shop policy or user override. Tables interpolate only within their
+      stated range and never convert or extrapolate implicitly; fixed user values win
+      independent of strategy order, while unresolved non-fixed conflicts fail.
+      Plunge, ramp and helical rates require the matching declared tool capability and
+      their own sourced rule. No curated catalog, implicit cut-feed percentage,
+      persistence format, document mutation or MCP surface was added. The durable API
+      contract is in `structure_spec.md`; 9c owns pass planning and any MCP exposure.
+      Verification: all 11 focused recommendation tests, all 30 recommendation/formula
+      tests and all 286 repository tests pass with the existing Windows symlink-
+      privilege skip. Compileall and `git diff --check` pass. This pure nonserialized
+      slice has no CamBam XML or toolpath behavior, so manual validation adds no
+      evidence.
    - **9c — pass planning and optional MCP exposure.** Integrate the existing
      `machining_calculate_depth_increment` final-stock/cut-through planner with a
      caller-supplied safe axial-depth constraint from 9a/9b. If useful to named-client

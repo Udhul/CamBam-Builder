@@ -25,6 +25,24 @@ from .machining_calculations import (
     solve_milling_constraints,
     surface_speed_from_rpm,
 )
+from .machining_recommendations import (
+    ApplicableRange,
+    CallableRecommendationStrategy,
+    DiameterRecommendationTable,
+    FixedRecommendationStrategy,
+    MachineCapabilities,
+    MaterialProfile,
+    ProfileRecommendationStrategy,
+    Recommendation,
+    RecommendationContext,
+    RecommendationError,
+    RecommendationProvenance,
+    RecommendationResult,
+    RecommendationStrategy,
+    StrategyResult,
+    ToolProfile,
+    recommend_milling,
+)
 
 # Create a shorter alias for the main project class
 CBProject = CamBamProject

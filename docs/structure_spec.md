@@ -23,7 +23,8 @@ packages; `inactive/` and demos are outside that runtime package list.
 | `cambam_builder/cambam_entities.py` | Entity dataclasses, primitive geometry/bounds, local effective matrices, parent-composed world transforms and entity XML encoding | Geometry or entity fields; inspect reader/writer callers for I/O changes |
 | `cambam_builder/region.py` | Owned Region contours, planar curved topology validation and typed Region XML | Region geometry and interchange; project and reader use this owner |
 | `cambam_builder/cad_transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
-| `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Planning math only; recommendation profiles, pass planning and MCP exposure remain separate increments |
+| `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel only; pass planning and MCP exposure remain separate increments |
+| `cambam_builder/machining_recommendations.py` | Immutable tool/material/machine contexts, provenance-bearing recommendations, user diameter tables and pluggable pure strategies | Recommendation selection only; contains no curated catalog, persistence, document mutation or safety claim |
 | `cambam_builder/cambam_writer.py` | XML ID assignment and layer/part traversal; delegates individual encoding to entities | Output structure and reference resolution |
 | `cambam_builder/cambam_reader.py` | XML parsing, entity reconstruction, ID mapping and deferred parent/MOP linking | Import defaults, malformed data and round-trip reconstruction |
 | `cambam_builder/__init__.py` | Public alias and version | Import surface and version metadata |
@@ -83,6 +84,36 @@ recalculated. The kernel assumes rectangular engagement and a caller-supplied
 specific cutting force. It includes no material/tool recommendation table, target-
 depth rule, chip-thinning factor, circular-interpolation factor, plunge/ramp policy,
 document mutation or production-safety claim.
+
+### Milling recommendation profiles and extension API
+
+`machining_recommendations.py` is the separate, public recommendation-selection
+layer. `ToolProfile`, `MaterialProfile` and `MachineCapabilities` are immutable and
+form a unit-consistent `RecommendationContext`; the machine record can expose its
+RPM/feed subset as 9a `MachineLimits`. The API intentionally ships no material or
+tool catalog. A caller supplies `Recommendation` values through a static profile,
+explicit fixed-user-value profile, diameter table, or
+`CallableRecommendationStrategy`. Custom callables are contractually pure: they
+receive only the immutable context and return an immutable `StrategyResult`.
+
+Every recommendation carries a positive value, exact unit label, nonempty numeric
+`ApplicableRange`, and `RecommendationProvenance` classified as a manufacturer
+starting point, measured shop policy, or user override. Provenance also identifies
+the source, reference, and version/date. Diameter tables are bound to an exact tool
+identifier, material identifier and operation, accept only chip load or surface
+speed, interpolate linearly inside their stated diameter range, and report an
+unmet requirement outside it; they never extrapolate or convert units implicitly.
+
+`recommend_milling()` composes strategies in caller order but does not use ordering
+to hide conflicts. A fixed user override wins regardless of order; distinct
+non-fixed values for the same field fail explicitly. Missing capabilities and
+out-of-range data remain diagnostics rather than guessed values. Plunge, ramp and
+helical feed suggestions each require the matching tool entry capability, their own
+nonempty rule, and ordinary provenance/range metadata. The layer validates and
+selects starting values only. It does not serialize profiles, mutate documents,
+infer entry feeds as cut-feed percentages, apply machine power/torque derating, or
+establish safe production settings. Persistence/versioning remains deferred until a
+durable owner is chosen; pass planning and optional MCP exposure remain backlog 9c.
 
 ### Project clone and bounded XML import
 

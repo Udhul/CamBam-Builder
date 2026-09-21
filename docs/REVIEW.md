@@ -3154,6 +3154,45 @@ propagation. Compileall for the modern package, legacy package, tests and demos 
 `git diff --check` both exit successfully. The code has no XML, document or toolpath
 behavior, so manual CamBam validation would not add evidence.
 
+## Milling recommendation profiles and extension API - 2026-09-21
+
+Backlog 9b is implemented as a pure public library layer over the 9a arithmetic
+kernel. The selected boundary uses immutable tool, material and machine capability
+records to identify one recommendation context, but keeps source cutting data in
+caller-owned strategies. No generic material label or bundled vendor table was added:
+compatibility depends on the exact tool family, material condition, operation and
+diameter, and this repository has no licensed, versioned catalog owner.
+
+Every emitted recommendation retains its exact units, a numeric applicable input
+range, and provenance type, source, reference and version/date. User-supplied chip-
+load and surface-speed tables bind to explicit tool/material/operation identifiers,
+linearly interpolate only within their cutter-diameter range and report missing data
+rather than extrapolating. Static profiles and pure callable adapters cover shop rules
+and custom formulas. Strategy order does not silently settle disagreement: a fixed
+user override wins in either order, identical values coalesce, and differing
+non-fixed or fixed values fail as conflicts.
+
+Entry feeds deliberately did not gain a universal cut-feed multiplier. Plunge, ramp
+and helical suggestions require a matching capability on the tool plus their own
+rule, provenance and range. The extension boundary can validate a callable's result
+type and metadata, while purity itself remains a caller obligation; the immutable
+context/result contract gives the callable no document handle to mutate. Machine
+power and torque are recorded capabilities but are not silently converted into a
+derating model. Profile serialization was also rejected for this increment because
+no persistent owner or migration policy exists.
+
+The focused tests cover immutability and unit consistency, provenance/range
+requirements, table matching/interpolation/out-of-range behavior, fixed precedence,
+conflicts, custom-callable validation, entry gating, solver composition, invalid
+profiles and unsupported units. This pure nonserialized layer has no CamBam XML or
+toolpath effect, so manual CamBam validation adds no evidence. Pass planning and any
+read-only MCP presentation remain separate 9c work.
+
+Verification: all 11 focused recommendation tests, all 30 combined 9a/9b tests and
+all 286 repository tests pass with the existing Windows symlink-privilege skip.
+Compileall covers the modern package, legacy package, tests and demos, and
+`git diff --check` passes.
+
 ## Entity module boundary assessment - 2026-09-21
 
 The requested post-9c maintainability review found a real mixed-owner problem but not
