@@ -257,8 +257,20 @@ def plan_milling(
     if (rpm_item is not None and not rpm_item.fixed
             and "surface_speed" not in fixed_fields):
         validation_supplied.pop("surface_speed", None)
-    solve_milling_constraints(
+    validation_solution = solve_milling_constraints(
         MillingConstraints(context.units, **validation_supplied))
+
+    derived_rpm_adjustment = (
+        "spindle_speed" not in supplied
+        and "surface_speed" in supplied
+        and validation_solution.spindle_speed is not None
+        and (
+            (limits.min_spindle_speed is not None
+             and validation_solution.spindle_speed < limits.min_spindle_speed)
+            or (limits.max_spindle_speed is not None
+                and validation_solution.spindle_speed > limits.max_spindle_speed)
+        )
+    )
 
     adjusted_operating = set()
     for name, minimum, maximum in (
@@ -269,6 +281,15 @@ def plan_milling(
             continue
         item = by_field.get(name)
         is_fixed = name in explicit_fields or (item is not None and item.fixed)
+        if (name == "feed_rate"
+                and ("spindle_speed" in adjusted_operating
+                     or derived_rpm_adjustment)
+                and "chip_load" in supplied
+                and item is not None and not item.fixed
+                and name not in explicit_fields):
+            # The achieved feed must first follow the achieved RPM. Let the
+            # solver apply any feed range to that recalculated value.
+            continue
         value = supplied[name]
         applied = None
         code = None
@@ -289,10 +310,12 @@ def plan_milling(
         if conjugate not in fixed_fields:
             supplied.pop(conjugate, None)
 
-    # R2: a changed RPM owns achieved feed when chip load is available. A stale
-    # non-fixed direct feed target must not be reintroduced as a fixed solver fact.
+    # A changed RPM owns achieved feed when chip load is available. Detect both a
+    # directly adjusted RPM and one that the solver derived from surface speed; a
+    # stale non-fixed feed target must not become a fixed solver fact in either case.
     feed_item = by_field.get("feed_rate")
-    if ("spindle_speed" in adjusted_operating and "chip_load" in supplied
+    if (("spindle_speed" in adjusted_operating or derived_rpm_adjustment)
+            and "chip_load" in supplied
             and feed_item is not None and not feed_item.fixed
             and "feed_rate" not in explicit_fields):
         supplied.pop("feed_rate", None)
@@ -318,21 +341,28 @@ def plan_milling(
         MillingConstraints(context.units, **supplied),
         limits,
     )
-    for item in selected.recommendations:
-        if (not item.fixed or item.field not in _SOLVER_FIELDS
-                or (item.field == "axial_depth" and depth_plan is not None)):
+    fixed_expectations = {
+        name: getattr(fixed_values, name) for name in explicit_fields
+    }
+    fixed_expectations.update(
+        (item.field, item.value) for item in selected.recommendations
+        if item.fixed and item.field in _SOLVER_FIELDS
+    )
+    for name, expected in fixed_expectations.items():
+        if name == "axial_depth" and depth_plan is not None:
             continue
-        achieved = getattr(solution, item.field)
+        achieved = getattr(solution, name)
         if (achieved is not None and not math.isclose(
-                float(achieved), float(item.value),
+                float(achieved), float(expected),
                 rel_tol=1e-9, abs_tol=0.0)):
             raise ValueError(
-                f"fixed recommendation for {item.field} conflicts with the "
+                f"fixed {name} conflicts with the "
                 "range-adjusted coupled solution")
     radial = solution.radial_engagement
     fraction = (None if radial is None else
                 radial / context.tool.cutter_diameter)
     entry = {}
+    entry_constraints = []
     for name in _ENTRY_FIELDS:
         item = by_field.get(name)
         value = item.value if item else None
@@ -349,13 +379,14 @@ def plan_milling(
                                 else "above maximum")
                     raise ValueError(
                         f"fixed {name} is {relation} operating feed bound")
-                planning_constraints.append(
+                entry_constraints.append(
                     ActiveConstraint(name, value, applied, applied, code))
                 value = applied
         entry[name] = value
     missing = tuple(dict.fromkeys(
         selected.missing_requirements + missing_depth + solution.missing_requirements))
-    active = tuple(planning_constraints) + solution.active_constraints
+    active = (tuple(planning_constraints) + solution.active_constraints
+              + tuple(entry_constraints))
     diagnostics = list(depth_plan.diagnostics if depth_plan else ())
     for field, value, limit in (
         ("cutting_power", solution.cutting_power,

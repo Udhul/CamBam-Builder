@@ -9,8 +9,10 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 **2026-09-21 R1-R3 and backlog 9d complete; backlog 10 is next.** Recommendation
 selection is fixed-order independent, RPM-only adjustment now propagates through
-non-fixed feed and downstream achieved loads, and planner inputs can no longer
-silently replace conflicting fixed strategy values. Immutable machine capabilities
+direct or derived non-fixed feed and downstream achieved loads, and planner inputs
+can no longer silently replace conflicting fixed strategy values. Range-adjusted
+solutions are also checked against every explicit fixed input, including coupled
+chip load. Immutable machine capabilities
 and separate setup/job `OperatingConstraints` support arbitrary optional minimum and
 maximum RPM/feed bounds in explicit metric or imperial units. Their effective
 intersection controls cut and entry feeds; fixed out-of-range values fail, while
@@ -19,7 +21,7 @@ No ranges, defaults or machine-specific branches are hardcoded. The merge block 
 resolved; focused evidence and exact semantics are in
 [the review record](REVIEW.md#r1-r3-repair-and-caller-defined-operating-ranges---2026-09-21)
 and [the architecture owner](structure_spec.md#milling-pass-and-candidate-planning).
-All 44 focused planning tests and all 300 repository tests pass with the existing
+All 46 focused planning tests and all 302 repository tests pass with the existing
 Windows symlink-privilege skip; compileall and import/construct smoke pass. This
 pure, nonserialized work needs no CamBam validation. Backlog 10 is the next priority.
 

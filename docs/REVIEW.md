@@ -107,6 +107,80 @@ recommendation: **blocked** until R1-R3 are corrected and focused acceptance pas
 Next priority is recorded in `PROGRESS.md`; backlog 10 remains deferred. A fresh
 session can implement the repairs from this record without conversational context.
 
+## Staged R1-R3 and 9d review - 2026-09-21
+
+Reviewed all eleven staged files; initially there were no unstaged changes. R1's
+collect-before-select repair, R3's same-field comparison, immutable arbitrary
+machine/job interval intersection and the original direct-RPM R2 reproduction are
+covered by appropriate focused tests. Two P2 issues still block merge; no runtime
+edits were made. This supersedes the completion/merge-ready claim below.
+
+1. **Explicit fixed inputs can change after range adjustment.** At
+   `machining_planning.py:321-331`, the post-solve fixed-value check visits only
+   fixed strategy recommendations, not explicit `fixed_values`. With a 6 mm,
+   two-flute tool, machine `max_feed_rate=300`, no strategies, and
+   `fixed_values=MillingConstraints('mm', spindle_speed=5000, chip_load=0.04)`,
+   the plan returns chip load 0.03 and feed 300 without rejecting the changed fixed
+   chip load. An equivalent fixed strategy is checked and rejected. This violates
+   the requirement to recheck fixed constraints after adjustment and gives two
+   public ways of supplying a fixed decision different meanings. Check all
+   explicit fixed inputs as well as fixed recommendations against the achieved
+   solution, retaining the documented through-cut axial maximum exception. Reject
+   infeasible fixed combinations with field-specific errors; do not weaken the
+   kernel's separate requested-versus-achieved contract. Acceptance: this example
+   must fail for chip_load; equivalent fixed-strategy input must behave identically;
+   non-fixed chip load may adjust; fixed RPM/feed and balanced depth regressions
+   must continue to pass. Include lower as well as upper feed bounds.
+
+2. **Derived RPM adjustment still treats a suggested feed as fixed.** At
+   `machining_planning.py:263-298`, stale feed removal depends on the spindle
+   recommendation being explicitly present and adjusted in the planner. When RPM
+   is derived inside the kernel, that path is skipped. For the same 6 mm/two-flute
+   tool, non-fixed surface speed `8000*pi*6/1000` m/min, chip load 0.04 mm/tooth,
+   feed 640 mm/min, and machine bounds `max_spindle_speed=6000,
+   max_feed_rate=1000`, the plan returns 6000 RPM, feed 640 and chip load
+   0.05333333333333334. The equivalent direct RPM recommendation returns feed 480
+   and chip load 0.04. This violates the documented RPM-adjustment propagation
+   contract (`structure_spec.md`, Milling pass and candidate planning). Preserve
+   fixed-versus-suggested ownership across both direct and derived RPM adjustment;
+   do not pass a stale non-fixed feed target as a fixed kernel setting. Acceptance:
+   direct RPM and equivalent surface-speed inputs produce 6000 RPM/480 mm/min,
+   matching achieved MRR/power/torque and retained provenance; explicitly fixed
+   feed remains 640 with achieved chip load recalculated. Exercise minimum RPM
+   adjustment and coupled feed bounds too.
+
+Both cases were reproduced using an inline synthetic script through public package
+imports with `.venv\Scripts\python.exe -`. Each recommendation used shop provenance
+and `ApplicableRange('cutter_diameter', 'mm', 1, 10)`; no native/user assets were used.
+The script printed the actual values listed above. Verification:
+`.venv\Scripts\python.exe -m unittest discover -s tests -p 'test_machining_*.py' -q`
+ran 44 tests, all passing. `git diff --cached --check` passed. Full-suite,
+compileall and native CamBam checks were not repeated; native validation adds no
+evidence for these pure composition defects. Only review/status documentation was
+edited, left unstaged; the user's staged implementation was preserved. A fresh
+session can repair these two cases from this record; backlog 10 remains deferred.
+
+### Resolution - 2026-09-21
+
+Both composition defects are corrected in the planning owner. The planner now
+retains the unbounded validated solution long enough to detect direct or derived
+RPM range adjustment, removes a stale suggested feed before the final solve, and
+lets a coupled feed bound apply to the feed recalculated from achieved RPM. Fixed
+feed remains exact and recalculates achieved chip load. After solving, every
+explicit `fixed_values` field and every fixed strategy field is compared with the
+achieved value; only the documented balanced through-cut axial maximum differs by
+design. Upper and lower feed-bound regressions cover changed fixed chip load, and
+derived upper/lower RPM regressions cover feed, MRR, power, torque, provenance and
+constraint ordering.
+
+Verification from the repository-managed interpreter: all 46 focused machining
+tests and all 302 repository tests pass, with the existing Windows symlink-privilege
+skip in the full suite. Compileall, public import/construct smoke, `git diff --check`
+and `git diff --cached --check` pass; the diff checks report only the existing
+LF/CRLF conversion warnings. Native CamBam validation would add no evidence for
+this pure, nonserialized composition change. The staged-review merge block is
+resolved; backlog 10 remains the next distinct increment.
+
 ## R1-R3 repair and caller-defined operating ranges - 2026-09-21
 
 The three pre-merge planning findings above are corrected, and backlog 9d is
@@ -133,8 +207,8 @@ MRR, power and torque; power/torque overage remains diagnostic without derating.
 No range creates a missing cutting recommendation, changes capability/provenance
 requirements, or establishes that a raised minimum is safe.
 
-Verification from the repository-managed interpreter: 44 focused 9a-9d tests pass;
-all 300 repository tests pass with the existing Windows symlink-privilege skip;
+Verification from the repository-managed interpreter: 46 focused 9a-9d tests pass;
+all 302 repository tests pass with the existing Windows symlink-privilege skip;
 compileall and the public import/construct smoke check pass. `git diff --check`
 passes with only the repository's LF/CRLF conversion warnings. This pure,
 nonserialized arithmetic change needs no native CamBam validation. No catalog,

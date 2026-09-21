@@ -196,6 +196,104 @@ class MillingPlanningTests(unittest.TestCase):
         self.assertEqual(plan.solution.feed_rate, 640)
         self.assertAlmostEqual(plan.solution.chip_load, 640 / 12000)
 
+    def test_derived_rpm_ranges_recalculate_nonfixed_feed_and_downstream_values(self):
+        recommendations = (
+            self.recommendation(
+                "surface_speed", 8000 * math.pi * 6 / 1000, "m/min"),
+            self.recommendation("chip_load", 0.04, "mm/tooth"),
+            self.recommendation("feed_rate", 640, "mm/min"),
+            self.recommendation("axial_depth", 2, "mm"),
+            self.recommendation("radial_engagement", 2, "mm"),
+            self.recommendation("specific_cutting_force", 1800, "N/mm^2"),
+        )
+        strategy = ProfileRecommendationStrategy("derived targets", recommendations)
+        upper_context = RecommendationContext(
+            self.context.tool, self.context.material,
+            MachineCapabilities("router", "mm", max_spindle_speed=6000,
+                                max_feed_rate=1000), "slotting")
+        plan = plan_milling(upper_context, (strategy,))
+        self.assertEqual(plan.solution.spindle_speed, 6000)
+        self.assertEqual(plan.solution.feed_rate, 480)
+        self.assertEqual(plan.solution.chip_load, 0.04)
+        self.assertAlmostEqual(plan.solution.material_removal_rate, 1.92)
+        self.assertAlmostEqual(plan.solution.cutting_power, 0.0576)
+        self.assertAlmostEqual(
+            plan.solution.torque, 0.0576 * 30000 / (math.pi * 6000))
+        self.assertEqual(
+            plan.recommendations.get("feed_rate"), recommendations[2])
+        self.assertEqual([item.field for item in plan.active_constraints],
+                         ["spindle_speed"])
+
+        fixed_feed = self.recommendation(
+            "feed_rate", 640, "mm/min", fixed=True)
+        fixed_plan = plan_milling(upper_context, (
+            ProfileRecommendationStrategy("derived targets", recommendations[:2]),
+            FixedRecommendationStrategy("fixed feed", (fixed_feed,)),
+        ))
+        self.assertEqual(fixed_plan.solution.spindle_speed, 6000)
+        self.assertEqual(fixed_plan.solution.feed_rate, 640)
+        self.assertAlmostEqual(fixed_plan.solution.chip_load, 640 / 12000)
+
+        lower_recommendations = (
+            self.recommendation(
+                "surface_speed", 4000 * math.pi * 6 / 1000, "m/min"),
+            self.recommendation("chip_load", 0.04, "mm/tooth"),
+            self.recommendation("feed_rate", 320, "mm/min"),
+        )
+        lower_context = RecommendationContext(
+            self.context.tool, self.context.material,
+            MachineCapabilities("router", "mm", min_spindle_speed=6000,
+                                min_feed_rate=500, max_feed_rate=1000), "slotting")
+        lower_plan = plan_milling(lower_context, (
+            ProfileRecommendationStrategy("low derived targets",
+                                          lower_recommendations),))
+        self.assertEqual(lower_plan.solution.spindle_speed, 6000)
+        self.assertEqual(lower_plan.solution.feed_rate, 500)
+        self.assertAlmostEqual(lower_plan.solution.chip_load, 500 / 12000)
+        self.assertEqual(
+            [(item.field, item.code) for item in lower_plan.active_constraints],
+            [("spindle_speed", "MINIMUM_BOUND_APPLIED"),
+             ("feed_rate", "MINIMUM_BOUND_APPLIED")])
+
+    def test_range_adjustment_rejects_changed_explicit_fixed_chip_load(self):
+        upper_context = RecommendationContext(
+            self.context.tool, self.context.material,
+            MachineCapabilities("router", "mm", max_feed_rate=300),
+            "slotting")
+        with self.assertRaisesRegex(
+                ValueError, "fixed chip_load.*range-adjusted"):
+            plan_milling(
+                upper_context, (),
+                fixed_values=MillingConstraints(
+                    "mm", spindle_speed=5000, chip_load=0.04))
+
+        fixed_chip = FixedRecommendationStrategy("fixed chip load", (
+            self.recommendation("chip_load", 0.04, "mm/tooth", fixed=True),))
+        with self.assertRaisesRegex(
+                ValueError, "fixed chip_load.*range-adjusted"):
+            plan_milling(
+                upper_context, (fixed_chip,),
+                fixed_values=MillingConstraints("mm", spindle_speed=5000))
+
+        lower_context = RecommendationContext(
+            self.context.tool, self.context.material,
+            MachineCapabilities("router", "mm", min_feed_rate=500),
+            "slotting")
+        with self.assertRaisesRegex(
+                ValueError, "fixed chip_load.*range-adjusted"):
+            plan_milling(
+                lower_context, (),
+                fixed_values=MillingConstraints(
+                    "mm", spindle_speed=5000, chip_load=0.04))
+
+        suggested_chip = ProfileRecommendationStrategy("suggested chip load", (
+            self.recommendation("chip_load", 0.04, "mm/tooth"),))
+        plan = plan_milling(
+            upper_context, (suggested_chip,),
+            fixed_values=MillingConstraints("mm", spindle_speed=5000))
+        self.assertEqual(plan.solution.feed_rate, 300)
+        self.assertEqual(plan.solution.chip_load, 0.03)
+
     def test_fixed_strategy_values_must_agree_with_explicit_and_tool_facts(self):
         fixed_rpm = FixedRecommendationStrategy("fixed rpm", (
             self.recommendation("spindle_speed", 5000, "rpm", fixed=True),))
