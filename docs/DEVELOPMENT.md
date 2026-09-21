@@ -980,10 +980,13 @@ For required domain acceptance in CamBam Plus 1.0, open A and B separately. The 
 version baseline above applies and must not be requested again. Confirm the drawing
 is using millimeters—the XML
 does not persist a verified unit setting—and reject the case if CamBam interprets
-the numbers in another unit. Confirm A's outline spans `(0,0)` to `(20,10)`, B's
-spans `(5,2)` to `(25,12)`, and both show `Geometry / outline` and
-`Part / profile`. In the advanced Profile properties confirm Outside, TargetDepth
-`-1`, DepthIncrement `0.5`, ToolDiameter `3`, CutFeedrate `300`, PlungeFeedrate
+the numbers in another unit. Confirm A's outline spans `(0,0)` to `(20,10)` and B's
+spans `(5,2)` to `(25,12)`. CamBam displays the primitive by its native type and
+primitive ID, such as `PolyRectangle (1)`; it does not natively name primitives.
+Confirm `outline` is preserved in that primitive's `Tag` metadata instead. The layer
+must display the native name `Geometry`, while the Part and MOP must display their
+native names `Part` and `profile`. In the advanced Profile properties confirm
+Outside, TargetDepth `-1`, DepthIncrement `0.5`, ToolDiameter `3`, CutFeedrate `300`, PlungeFeedrate
 `100`, SpindleSpeed `12000`, StockSurface `0` and ClearancePlane `5`.
 
 Generate the Profile toolpath (select the operation and use **Generate Toolpath**,

@@ -3558,6 +3558,13 @@ with a capable tool-using model allowed by the existing OpenRouter policy; requi
 full uncoached create/inspect/save/copy/hash/reopen/translate/close sequence before
 calling named-agent behavior accepted.
 
+After native acceptance, a fresh attempt with the explicit higher-capability
+`openrouter/openai/gpt-5.6-luna-pro` route was likewise rejected before inference:
+the `local-cam` OpenRouter guardrails excluded every matching endpoint by model and
+provider policy. It made no MCP call and created no artifact. Further model guessing
+would bypass the user's external policy rather than add acceptance evidence, so the
+named-agent gate now waits for an intentionally permitted capable route.
+
 Manual native acceptance was prepared independently so it does not depend on that
 agent failure. `demos/mcp_authoring_slice.py` generated fresh ignored fixtures under
 `output/mcp-authoring-demo-1015e836bb20/`. The maintained verifier accepted strict
@@ -3566,6 +3573,15 @@ import, stable identities and targets, every explicit Profile value, A corners
 SHA-256 is `36ba98ba60a2fac96d27c65195b775015f311c86960a61d67e18c6be170f8eb3`
 for A and `f6457b0a8216f1f79db453f2a7fd83a7691efe9aba2d0f0d4afed5e797eaf79f`
 for B. All 86 focused MCP tests passed with the existing single Windows
-symlink-privilege skip. CamBam Plus 1.0 acceptance remains pending for interpreted
-millimetres, A/B display geometry, the explicit Profile properties, and an outside
-two-level toolpath at `-0.5` and `-1.0`; no G-code is needed.
+symlink-privilege skip.
+
+The user accepted both files in CamBam Plus 1.0 on 2026-09-21. Interpreted
+millimetres, A/B display geometry, the explicit Profile properties and outside
+two-level toolpaths at `-0.5` and `-1.0` all passed; no G-code was generated. They
+also clarified the native display contract: CamBam does not support user names for
+primitives and displays a native type plus primitive ID such as
+`PolyRectangle (1)`. The framework's stable `outline` identifier is present in the
+primitive `Tag` metadata as designed. Layers, Parts and MOPs do support native names.
+The 4e runbook now states that distinction instead of requiring a nonexistent native
+primitive name. This acceptance completes the native A/B gate and does not accept the
+separate failed named-agent workflow above.

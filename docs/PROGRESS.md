@@ -7,8 +7,8 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**2026-09-21 backlog 4e acceptance started; CamBam report and capable named-agent
-rerun pending.** OpenCode 1.18.31 connects from an isolated task-owned configuration
+**2026-09-21 backlog 4e native acceptance complete; capable named-agent rerun
+pending.** OpenCode 1.18.31 connects from an isolated task-owned configuration
 to the real 37-tool local stdio adapter. The project-preferred GLM route and the
 stronger Sol route were blocked before any tool call by the configured OpenRouter
 workspace guardrails. The permitted Luna route called `document_list` successfully
@@ -17,10 +17,15 @@ for pre-existing A/B files despite the creation instructions. It created no docu
 or artifact, so named-agent usability is not accepted. Independently, the maintained
 4c slice generated fresh A/B files with the expected revisions and geometry; the
 strict acceptance verifier passed, as did all 86 focused MCP tests with the existing
-Windows symlink-privilege skip. Those fresh files are prepared for the minimum
-CamBam Plus 1.0 units/geometry/Profile/toolpath check. Reopen the named-agent gate
-when a capable tool-using model is permitted; do not treat a connection or the Luna
-partial call as workflow acceptance.
+Windows symlink-privilege skip. The user then accepted both files in CamBam Plus 1.0:
+millimetre interpretation, A/B geometry, explicit Profile properties and outside
+two-level toolpaths all passed. They also confirmed CamBam displays primitives by
+native type/ID (for example `PolyRectangle (1)`), while the framework identifier
+`outline` is correctly retained in `Tag` metadata; layer, Part and MOP names are
+native. Reopen only the remaining named-agent gate
+when a capable tool-using model is permitted. A subsequent explicit Luna Pro attempt
+was also blocked before inference by the same workspace guardrails; do not treat a
+connection or the base Luna partial call as workflow acceptance.
 
 **2026-09-21 backlog 10 entity-module boundary refactor complete.** The former
 2,488-line mixed owner is now a 69-line explicit compatibility facade over canonical
