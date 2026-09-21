@@ -1055,12 +1055,63 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    workholding review and supervised test cuts; production machining safety is not
    established by the calculator. This follows the completed 8a-8e MOP audit: it is a
    distinct planning subsystem and depends on an explicit units/tool/material/
-   machine profile contract. Reopen sooner only for a concrete workflow that supplies
-   those inputs and acceptance data.
+    machine profile contract. Reopen sooner only for a concrete workflow that supplies
+    those inputs and acceptance data.
 
 This supersedes the former five broad increments; their pending scope is retained
 above. Detailed contracts remain in `docs/structure_spec.md`, and review evidence in
 `docs/REVIEW.md`. No repository-linked issue tracker was found.
+
+10. **Framework entity module boundary refactor** (queued after 9c; requested
+    2026-09-21). The current `cambam_entities.py` is 2,488 lines and mixes shared
+    identity/geometry foundations, Layer and six ordinary CAD primitives, Part,
+    four MOP families and their XML policy tables. `region.py` is 838 lines, but about
+    580 lines are one cohesive curved-contour topology/intersection engine; physically
+    merging it into the ordinary CAD module would recreate a roughly 2,000-line file
+    and would not address the mixed CAD/CAM ownership problem. `cad_common.py` is an
+    unused 15-line placeholder whose only behavior is an undesirable import-time
+    `logging.basicConfig` call.
+
+    Use a coarse dependency-directed split, not one module per class:
+
+    - `entity_core.py` owns `Vertex`/`VertexInput`, `BoundingBox`, finite/affine/
+      similarity and curved-bound foundations, `CamBamEntity` and `Primitive`. Keeping
+      both base classes here makes the inheritance contract inspectable in one place.
+    - `cad_entities.py` owns `Layer` and the ordinary `Pline`, `Circle`, `Rect`, `Arc`,
+      `Points` and `Text` primitives plus their shape-specific XML/geometry behavior.
+    - `region.py` remains the specialized CAD Region/topology/parser owner, but imports
+      directly from core/CAD implementation modules rather than the facade. Region is
+      re-exported beside the other entities so its separate implementation is not a
+      separate conceptual API.
+    - `cam_entities.py` owns `Part`, MOP XML path/policy inventories, `Mop` and the
+      `ProfileMop`, `PocketMop`, `EngraveMop` and `DrillMop` implementations.
+    - `cambam_entities.py` becomes a small explicit compatibility/discovery facade that
+      re-exports the one canonical class objects. Internal modules import the owning
+      implementation module so dependency direction remains visible. Remove
+      `cad_common.py`; do not repurpose a vague common-module name.
+
+    Implement after 9c in bounded steps: first freeze the facade/import and class-
+    identity contract with clean-process import-order tests; extract core and ordinary
+    CAD ownership without behavior changes; migrate Region imports only after that
+    lower layer exists; then extract CAM ownership, remove `cad_common.py`, update all
+    internal imports and record before/after module sizes. Consolidate only genuinely
+    identical helpers: the duplicate finite-float validator is a candidate, while
+    Region's nonsingular-affine rule and tolerance-specific similarity test must not be
+    weakened merely to remove similar-looking code.
+
+    **Acceptance/stopping condition:** one definition exists for every exported entity
+    and every helper deliberately consolidated by this refactor;
+    facade and owner imports resolve to identical class objects; `Region` remains a
+    `Primitive`; the dependency graph has no cycle and clean subprocesses can import
+    facade, core, CAD, Region and CAM modules in varied orders; direct and facade
+    construction, reader/writer maps, clone/copy/transfer, transforms, XML round trips
+    and same-code-version pickle snapshots retain behavior; the full suite and focused
+    Region/MOP/entity tests pass. Preserve the current public facade during this
+    unreleased refactor, but do not add old-pickle migration beyond the documented
+    same-code-version contract. Stop when responsibilities and dependency direction are
+    clear and the 2,488-line mixed owner is gone; do not pursue arbitrary line targets,
+    per-shape modules or a model/codec split without a measured new problem. Reopen
+    before 9c only if concurrent entity work produces a concrete merge/cycle defect.
 
 ## Blockers and decisions
 

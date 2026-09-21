@@ -28,7 +28,7 @@ packages; `inactive/` and demos are outside that runtime package list.
 | `cambam_builder/cambam_reader.py` | XML parsing, entity reconstruction, ID mapping and deferred parent/MOP linking | Import defaults, malformed data and round-trip reconstruction |
 | `cambam_builder/__init__.py` | Public alias and version | Import surface and version metadata |
 | `cambam_builder/mcp_adapter/` | Optional local stdio launcher, SDK protocol boundary, volatile documents, retry ledger, schema validation and workspace I/O | [MCP contract](MCP_CONTRACT.md); `server.py` owns wire behavior, `service.py` owns application state, `paths.py` owns filesystem policy |
-| `cambam_builder/cad_common.py` | Logging configuration with placeholder type/constant sections | Check callers before treating it as an established shared utility layer |
+| `cambam_builder/cad_common.py` | Unused 15-line placeholder; no runtime caller imports it, and importing it would configure global logging | Do not add shared code here; backlog 10 removes it after the entity-module split |
 
 ### Data flow and relationship boundaries
 

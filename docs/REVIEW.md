@@ -3153,3 +3153,52 @@ conflicts, overflow/underflow boundaries, exact fixed-value retention and cap
 propagation. Compileall for the modern package, legacy package, tests and demos and
 `git diff --check` both exit successfully. The code has no XML, document or toolpath
 behavior, so manual CamBam validation would not add evidence.
+
+## Entity module boundary assessment - 2026-09-21
+
+The requested post-9c maintainability review found a real mixed-owner problem but not
+a reason to fold Region into the existing entity file. `cambam_entities.py` is 2,488
+lines: shared numeric/vertex/bounds helpers occupy roughly lines 44-257; the common
+entity and Layer/Part/Primitive bases lines 262-604; six ordinary concrete primitives
+lines 609-1740; and MOP policy/model code lines 1745-2488. `region.py` is 838 lines,
+with topology, intersections and contour handling occupying roughly lines 35-580,
+the `Region(Primitive)` implementation lines 584-763 and typed XML parsing through
+line 838. Region therefore has a coherent specialist reason to be separate even
+though it belongs to the same inheritance tree.
+
+The preferred design is a stable `cambam_entities.py` re-export facade over three
+coarse implementation owners: `entity_core.py` for shared values and the
+`CamBamEntity`/`Primitive` bases, `cad_entities.py` for Layer and ordinary primitives,
+and `cam_entities.py` for Part and MOP models/policies. `region.py` remains a fourth,
+specialized CAD owner and imports downward from core/CAD rather than through the
+facade. This keeps the base inheritance chain together, gives callers one discovery
+surface, preserves canonical class identity and yields a simple dependency direction:
+transformations to core to CAD to Region, with CAM depending separately on core.
+
+Three alternatives were compared. A strict shared/CAD/CAM split that physically
+merges Region ranks second: its taxonomy is simple, but the CAD file would immediately
+approach 2,000 lines and mix routine shape behavior with a large topology engine and
+Region parser. Per-shape modules were rejected as needless navigation and import
+surface. Separating data models, geometry algorithms and XML codecs ranks last for
+now because each entity's behavior would span several files and Region parsing would
+create callback or circular-dependency pressure. The specialist Region module plus a
+facade provides the logical grouping without the physical merge.
+
+Fourteen test modules, one demo and the project/reader/writer/transfer/MCP runtime
+currently import `cambam_entities`; the project, reader, MCP service and two tests also
+import Region directly. Region currently depends on `BoundingBox`, `Pline`,
+`Primitive`, `Vertex` and the bulge tolerance from `cambam_entities`, with no reverse
+import. A facade must therefore be introduced only after Region imports the extracted
+implementation modules; importing Region back from the current monolith first would
+create a cycle. Import-order and class-identity regressions are required before moves.
+
+There is limited real DRY cleanup. Both entity files duplicate the same finite-float
+validation and should converge on one core implementation. Their affine and similarity
+helpers only look duplicated: Region requires a nonsingular transform and uses
+topology-specific tolerances, while ordinary primitive bounds accept a broader affine
+contract. Those semantics need characterization before any consolidation.
+`cad_common.py` has no callers, types, constants or tests. Its sole executable behavior
+is `logging.basicConfig`, which would mutate application-wide logging if imported.
+It should be deleted in the refactor rather than reused as an unowned utility bucket.
+No runtime file is changed by this assessment; priority remains 9b, then 9c, then the
+new module-boundary backlog item.
