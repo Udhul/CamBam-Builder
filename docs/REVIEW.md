@@ -3536,3 +3536,36 @@ committed-plus-working-tree result; the Python cleanup has an empty diff from `H
 when end-of-line whitespace is ignored. Compileall, import/construct smoke and all
 three entity-boundary tests pass. The immediately preceding committed-tree run passed
 all 305 tests with the expected single skip; the correction changed no Python tokens.
+
+## MCP 4e acceptance start - 2026-09-21
+
+OpenCode 1.18.31 was run from the isolated ignored directory
+`output/mcp-4e-acceptance-20260921/`, with project configuration, default plugins and
+auto-update disabled. Its local MCP definition launched the repository environment
+against a separate task-owned server workspace. `opencode mcp list --pure` reported
+`cambam connected`, proving the current named client can launch and negotiate with the
+real adapter without changing normal OpenCode configuration.
+
+The agentic result is not accepted. The project-preferred OpenRouter GLM endpoint and
+the stronger Sol endpoint were rejected before inference because the configured
+workspace guardrails allowed no matching endpoint. The permitted Luna endpoint made
+one successful `document_list` call and then ended its first turn. A single ordinary
+request to continue caused it to search for A/B inputs and request pre-existing files,
+although the original task explicitly required creating them. It made no mutation,
+created no `.cb` file and reported no MCP schema or server error. This is useful
+model/client usability failure evidence, not an adapter or protocol failure. Reopen
+with a capable tool-using model allowed by the existing OpenRouter policy; require the
+full uncoached create/inspect/save/copy/hash/reopen/translate/close sequence before
+calling named-agent behavior accepted.
+
+Manual native acceptance was prepared independently so it does not depend on that
+agent failure. `demos/mcp_authoring_slice.py` generated fresh ignored fixtures under
+`output/mcp-authoring-demo-1015e836bb20/`. The maintained verifier accepted strict
+import, stable identities and targets, every explicit Profile value, A corners
+`(0,0,0)` through `(20,10,0)`, and B corners `(5,2,0)` through `(25,12,0)`.
+SHA-256 is `36ba98ba60a2fac96d27c65195b775015f311c86960a61d67e18c6be170f8eb3`
+for A and `f6457b0a8216f1f79db453f2a7fd83a7691efe9aba2d0f0d4afed5e797eaf79f`
+for B. All 86 focused MCP tests passed with the existing single Windows
+symlink-privilege skip. CamBam Plus 1.0 acceptance remains pending for interpreted
+millimetres, A/B display geometry, the explicit Profile properties, and an outside
+two-level toolpath at `-0.5` and `-1.0`; no G-code is needed.

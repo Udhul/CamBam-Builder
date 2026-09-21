@@ -7,6 +7,21 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**2026-09-21 backlog 4e acceptance started; CamBam report and capable named-agent
+rerun pending.** OpenCode 1.18.31 connects from an isolated task-owned configuration
+to the real 37-tool local stdio adapter. The project-preferred GLM route and the
+stronger Sol route were blocked before any tool call by the configured OpenRouter
+workspace guardrails. The permitted Luna route called `document_list` successfully
+but stopped after that first call; one ordinary continuation then incorrectly asked
+for pre-existing A/B files despite the creation instructions. It created no document
+or artifact, so named-agent usability is not accepted. Independently, the maintained
+4c slice generated fresh A/B files with the expected revisions and geometry; the
+strict acceptance verifier passed, as did all 86 focused MCP tests with the existing
+Windows symlink-privilege skip. Those fresh files are prepared for the minimum
+CamBam Plus 1.0 units/geometry/Profile/toolpath check. Reopen the named-agent gate
+when a capable tool-using model is permitted; do not treat a connection or the Luna
+partial call as workflow acceptance.
+
 **2026-09-21 backlog 10 entity-module boundary refactor complete.** The former
 2,488-line mixed owner is now a 69-line explicit compatibility facade over canonical
 core (480 lines), ordinary CAD (1,184 lines), specialized Region (839 lines), and CAM
