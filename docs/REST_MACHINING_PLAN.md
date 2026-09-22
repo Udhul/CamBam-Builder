@@ -1047,3 +1047,50 @@ arc-heavy/organic contours and transformation invariants, continuous multi-depth
 stock and protected-volume checks, capped wide-area path coverage, motion ordering
 and entry, then application-level paired-inlay assembly. These are explicit remaining
 gates; fourteen reference cases are not a claim of general engine acceptance.
+
+### Shapely/GEOS evaluation decision - 2026-09-22
+
+Select Shapely/GEOS as the planar primitive candidate for the detached-core design.
+The bounded corpus supports continuing with its overlay and disk-offset operations;
+it does not justify a replacement polygon kernel or a second package comparison.
+This is a design selection, not runtime dependency adoption or general machining
+acceptance. The [evaluation evidence](REVIEW.md#shapelygeos-planar-evaluation---2026-09-22)
+records measured errors, the Windows matrix and the exact-fit limitation.
+The reusable [development runner](../tools/evaluate_shapely.py) stays outside the
+runtime package and normal backend-independent reference tests.
+
+The proposed internal boundary must own these requirements:
+
+- Pass finite, valid, explicitly filled XY regions to GEOS. Preserve component/hole
+  meaning in owned values; do not expose Shapely objects in the public model or
+  silently repair invalid topology. Z/depth, stock evidence and cutter semantics
+  remain the detached core's responsibility.
+- Set curve approximation from a dimensional error budget and check both area and
+  boundary error. The experiment's `quad_segs=256` is sufficient for this corpus,
+  not a universal resolution. Analytic arcs require bounded conversion. Offset
+  approximation does not establish conservative protected-stock containment.
+- Preserve nominal feasible sets with dimensions 0, 1 and 2. Polygon erosion alone
+  cannot implement exact-fit centers. Bounded analytic rectangle/circle handling
+  is the first local support to prove; general collapsed sets remain unsupported
+  until a declared algorithm and uncertainty policy cover them.
+- Do not apply an implicit precision grid. Snapping can merge the corpus's 0.004 mm
+  gap. A future grid policy must account for construction error and topology loss
+  separately and reject unresolved features rather than infer infeasibility.
+- Restrict the first implementation to the common tested 2.0/2.1 API. The tested
+  version policy is `shapely==2.0.7; python_version < '3.10'` and
+  `shapely==2.1.2; python_version >= '3.10'` on CPython Windows x64 3.9-3.13.
+  Keep the existing Python minimum. Re-run this runner and platform checks before
+  widening versions; 32-bit Windows, ARM64 and source builds are not verified.
+  Add an optional machining dependency only when a runtime slice needs it;
+  `pyproject.toml` remains the sole dependency declaration owner.
+
+The next bounded design increment closes the adversarial input/approximation
+contract: invalid topology rejection, arc-heavy and organic contours, large-coordinate
+and similarity/unit/order invariants, and explicit exact-fit dimension support.
+It matters before the endmill-rest implementation because these define which
+inputs can be accepted without silently losing detail or misclassifying access.
+Stop when these gates have measured results and an owned internal value/error
+contract; continuous multi-depth stock, motion ordering and paired inlays remain
+later work. Reopen backend selection if supported-input topology or the declared
+error budget cannot be met, the supported wheel matrix fails, or representative
+work shows a material performance bottleneck.

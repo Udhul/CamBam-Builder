@@ -26,13 +26,27 @@ primitives first, retaining ownership of machining semantics and bounded gaps.
 The [acceptance corpus v1](REST_MACHINING_PLAN.md#acceptance-corpus-v1) now contains
 14 reusable cases with numerical references and topology expectations; 13 focused
 reference tests pass. These verify the corpus, not a backend or CAM engine.
-Next: evaluate Shapely/GEOS against the planar cases, record errors and unsupported
-capabilities, and verify Python/Windows packaging before choosing a dependency.
-No candidate package was installed or selected in this increment. Inlay order is
-not a core-design blocker. Region/Z support is already complete;
-variable-Z Engrave motion acceptance remains separate. No runtime change or machining
-acceptance is claimed. This corpus is a useful fresh-session breakpoint: the next
-backend evaluation has persisted inputs, numerical limits and an explicit scope.
+The [Shapely/GEOS evaluation decision](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
+selects the package for planar primitives in the design, with explicit approximation
+and lower-dimensional adapter requirements. Binary-only installs and isolated project
+wheel coexistence pass on Windows x64 Python 3.9-3.13 using Shapely 2.0.7 on 3.9 and
+2.1.2 on 3.10-3.13. The [dated evidence](REVIEW.md#shapelygeos-planar-evaluation---2026-09-22)
+records case errors, default-buffer/precision failures and exact-fit dimensional loss.
+All five geometry runs pass 11 planar cases, retain T01 as an expected limitation
+and mark C01/C02 outside planar scope; the 13 backend-independent reference tests pass.
+The reusable runner is development-only; runtime dependencies remain unchanged.
+
+Next: close the adversarial planar acceptance and internal value/error contract:
+invalid topology rejection, arc-heavy/organic contours, coordinate and similarity/
+unit/order invariants, and bounded analytic exact-fit segment/point support. This
+matters before implementation because it determines which general inputs can be
+accepted without losing detail or misclassifying access. Stop with measured gates
+and a concrete detached-boundary contract; do not expand into a path planner yet.
+Reopen backend selection only for a demonstrated correctness, compatibility or
+performance gap under that contract. Inlay order is not a core-design blocker.
+Region/Z support is complete; variable-Z Engrave acceptance remains separate.
+No runtime change or machining acceptance is claimed. This is a useful fresh-session
+breakpoint: the backend decision and next acceptance scope are persisted.
 
 **2026-09-21 backlog 4e local stdio acceptance complete.** OpenCode 1.18.31,
 running GLM-5.3-Flash from an isolated task-owned configuration, completed the real
@@ -889,8 +903,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    [Problem, reasoning, support gaps and acceptance plan](REST_MACHINING_PLAN.md).
    The current user request promotes design for the combined-tool letter/region
    and paired-inlay workflows, with caller-supplied tools/catalog integration.
-   Resolve [remaining preferences and first acceptance slice](REST_MACHINING_PLAN.md#acceptance-additions-and-next-decision)
-   before implementation; no implementation or machining acceptance is claimed.
+   The [planar backend decision](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
+   selects Shapely/GEOS for the design. Close the adversarial acceptance and internal
+   value/error contract before implementation; no machining acceptance is claimed.
 7. **Deferred MCP/core capability: author Manual Profile holding-tab positions.**
    Current automatic authoring covers width, height, minimum/maximum count, distance,
    size threshold, the constrained lead-in flag and Square/Triangle/Skip style.

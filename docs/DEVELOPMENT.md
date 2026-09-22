@@ -172,6 +172,44 @@ tests to a directory outside the repository, and run discovery there with that
 environment's interpreter. This prevents the repository root from satisfying
 imports accidentally.
 
+### Isolated planar backend evaluation
+
+The Shapely experiment is development-only. It does not change `uv sync` or the
+runtime dependency set. Use [the corpus/decision owner](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
+for acceptance meaning and [the dated evidence](REVIEW.md#shapelygeos-planar-evaluation---2026-09-22)
+for the tested Windows x64 versions and limits. From the repository root:
+
+```powershell
+$taskDir = Join-Path 'output' ('shapely-evaluation-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+New-Item -ItemType Directory -Path $taskDir | Out-Null
+foreach ($version in @('3.9', '3.10', '3.11', '3.12', '3.13')) {
+    $tag = 'py' + $version.Replace('.', '')
+    $candidate = if ($version -eq '3.9') { 'shapely==2.0.7' } else { 'shapely==2.1.2' }
+    uv --cache-dir "$taskDir/cache" venv --python $version "$taskDir/$tag"
+    if ($LASTEXITCODE -ne 0) { throw "Environment failed: $version" }
+    uv --cache-dir "$taskDir/cache" pip install --python "$taskDir/$tag/Scripts/python.exe" --only-binary :all: $candidate 'numpy>=1.23.5'
+    if ($LASTEXITCODE -ne 0) { throw "Install failed: $version" }
+    & "$taskDir/$tag/Scripts/python.exe" tools/evaluate_shapely.py --output "$taskDir/$tag-geometry.json"
+    if ($LASTEXITCODE -ne 0) { throw "Evaluation failed: $version" }
+}
+```
+
+Expected per interpreter: 11 planar cases pass, T01 is `expected_limitation`, and
+C01/C02 are `out_of_planar_scope`; `unexpected_failures` is zero. Exit zero means
+the bounded experiment behaved as recorded, not that every desired operation is
+supported. Reports retain individual scalar errors, topology, boundary bounds,
+evidence classes and corpus/runner hashes. Keep the reports in that task directory.
+The dense bidirectional distance check intentionally costs more than the geometry
+operations; do not interpret total runner time as backend throughput.
+
+For packaging/coexistence verification, also build with the declared `uv build`
+command, install the resulting project wheel into each candidate environment with
+`uv pip install --python <candidate-python> --no-deps <wheel>`, and run an isolated
+`-I` import/construct probe checking that modern/legacy imports resolve inside
+`sys.prefix`. Inspect Shapely's `WHEEL`, bundled native-library versions and license
+files. This is a bounded dependency compatibility check, not the full packaging
+regression matrix above. Do not add Shapely to project metadata merely to run it.
+
 ### Required checks by change
 
 | Change | Minimum evidence before technical closure |

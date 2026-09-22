@@ -1,5 +1,153 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Shapely/GEOS planar evaluation - 2026-09-22
+
+The bounded evaluation supports selecting Shapely/GEOS for planar primitives in
+the detached-core design. It does not adopt a runtime dependency or accept an
+endmill-rest engine. The [decision and internal-boundary requirements](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
+own the contract; [PROGRESS](PROGRESS.md#active-work-and-next-priority) owns priority.
+No changes were made to runtime modules, project dependencies or the user's CAD
+files. Work began from a clean tracked worktree; Git reported an inaccessible
+ignored `.pytest_cache`, which was not touched.
+
+The reusable [runner](../tools/evaluate_shapely.py) consumes corpus v1. Candidate
+buffers use 256 segments per quadrant; independent circular references use direct
+trigonometric coordinates with at least 512 segments per quadrant. S02's reference
+uses analytic common-tangent endpoints and exposed arcs, not a second convex-hull
+call. R01 remains ideal reachability; R02 distinguishes an explicit closed Profile
+trajectory from ideal Pocket coverage. V01/V02 integrate desired target sections
+with Simpson's rule, exact for their analytic quadratic section-area functions.
+They do not establish a motion sweep or manufactured result.
+
+Each applicable case checks analytic area, symmetric-difference area and topology.
+Both directed boundary distances are sampled with spacing <=0.001 mm; adding
+0.0005 mm bounds the unsampled part by the 1-Lipschitz distance property. Reference
+arc sagitta is also charged to the 0.001 mm boundary budget. This bounds continuous
+polygon/reference approximation subject to floating-point distance arithmetic;
+it is not interval arithmetic or a conservative stock-occupancy proof. The runner
+retains the discrete Hausdorff observation separately. T03 has only input area and
+inset topology references; A01 accepts input composition only. Neither is promoted
+to an independently checked general offset/path case.
+
+Case metrics below are maxima across applicable operations/sections, rounded for
+display (mm2 for area, mm for boundary). A dash means no such oracle is claimed,
+not zero error. Scalar limits are 0.01 mm2, 0.001 mm and 0.01 mm3 respectively.
+The boundary column includes the 0.0005 mm sampling remainder, so it intentionally
+overestimates error even for exactly matching rectangles.
+
+| Case | Absolute area error | Symmetric difference | Boundary upper bound | Topology / disposition |
+| --- | ---: | ---: | ---: | --- |
+| G01 | 0 | 0 | 0.000500000 | one component, no holes per operation |
+| R01 | 0.000078853 | 0.000059140 | 0.000511766 | four rest components at both radii |
+| R02 | 0.000078853 | 0.000059140 | 0.000511766 | Profile has one hole; profile rest has two components/one hole; ideal Pocket is solid |
+| G02 | 0.000372088 | 0.000428763 | 0.000528826 | one component, one hole |
+| V01 | 0 | <3e-15 | 0.000500001 | one solid section; volume error 0 mm3 |
+| V02 | 0.000492831 | 0.000369623 | 0.000529414 | one solid section; volume error 0.000860811 mm3 |
+| S01 | 0.000078853 | 0.000059140 | 0.000511766 | solid capsule, midpoint contained |
+| S02 | 0.000061144 | 0.000049851 | 0.000510538 | solid affine-radius hull, midpoint contained |
+| T01 | - | - | - | nominal line/point lost; expected limitation |
+| T02 | <3e-14 | 0 | 0.000500000 | overlap/contact/gap preserve 1/1/2 components |
+| T03 | <8e-15 (input) | - | - | one input component becomes two after inset; no holes |
+| A01 | 0 | 0 | 0.000500000 | one component and triangular hole; input-only evidence |
+| C01/C02 | - | - | - | outside planar scope; reference checks remain separate |
+
+R01's smaller-tool gain differs from its analytic reference by 0.000059140 mm2.
+All volume, area and topology comparisons retain full precision in JSON. The
+reference construction is independent of candidate buffering, but Shapely still
+measures polygon distance and symmetric difference; this is corroborated numerical
+evidence, not an independent exact-arithmetic geometry implementation.
+
+### Windows packaging and throughput
+
+Fresh `uv venv` environments used installed CPython interpreters and binary-only
+Shapely/NumPy installs. Each imported a separately built CamBam Builder wheel with
+`-I`, asserted both modern and legacy modules resolve under that environment's
+`sys.prefix`, and constructed `CBProject`. No compiler or separately installed GEOS
+was required. Actual wheel tags are `cp39-cp39-win_amd64` through
+`cp313-cp313-win_amd64`. This is CPython Windows x64 evidence; no claim extends to
+32-bit Windows, Windows ARM64, source builds or the full optional MCP dependency set.
+
+| Python | Shapely | Bundled GEOS | NumPy | Binary install and project coexistence |
+| --- | --- | --- | --- | --- |
+| 3.9.13 | 2.0.7 | 3.11.4 | 2.0.2 | pass |
+| 3.10.11 | 2.1.2 | 3.13.1 | 2.2.6 | pass |
+| 3.11.9 | 2.1.2 | 3.13.1 | 2.4.6 | pass |
+| 3.12.10 | 2.1.2 | 3.13.1 | 2.5.3 | pass |
+| 3.13.5 | 2.1.2 | 3.13.1 | 2.5.3 | pass |
+
+The split is deliberate: [Shapely's release requirements](https://shapely.readthedocs.io/en/stable/release/2.x.html#packaging)
+raise the 2.1 line to Python 3.10, while the installed 2.0.7 metadata supports 3.9.
+No project Python minimum change is needed. Dependency upgrades require repeating
+the matrix because this policy carries two GEOS lines; it is not a maintenance
+guarantee for either upstream series. The project sdist and wheel were built using
+`uv --cache-dir <task>/cache build --out-dir <task>/dist`; the generated source
+manifest had no `output`/cache entries despite uv's cache-location warning.
+
+A deterministic 4,096-vertex radial contour (`r=20+2*sin(17*t)`, uniformly sampled)
+was inset by 0.5 mm, expanded by 0.5 mm and differenced from its opening. Ten runs
+after one warmup had medians 0.294, 0.297, 0.300, 0.294 and 0.296 seconds respectively
+in matrix order; the largest individual run was 0.369 seconds. Outputs were valid
+and the inset stayed covered by the opening. This checks synthetic throughput,
+not organic-shape accuracy, production latency, memory scaling or a planner budget.
+There is no measured need for another backend or acceleration infrastructure yet.
+
+### Failures, representation gaps and distribution obligations
+
+- The default geometry-method disk buffer at radius 5 mm has area error
+  0.1261040761 mm2 and sagitta 0.0060227190 mm, exceeding both corpus limits.
+  Explicit refinement is necessary; the experiment does not bless the defaults.
+- T01 is an expected limitation, never a passed nominal-feasibility case. Exact
+  rectangle erosion returns `POLYGON EMPTY` on both GEOS lines instead of the
+  required segment `(2,2)-(8,2)`. For the circle, GEOS 3.11.4 returns a tiny polygon
+  of area `2.9222580301e-9 mm2`; GEOS 3.13.1 returns empty. Neither is the required
+  point `(0,0)`. The initial runner incorrectly expected emptiness on both versions;
+  that failed observation is retained as `py39-initial-erosion-finding.json`.
+  The corrected report records actual type, extent and nominal dimension mismatch.
+  The package's [polygonal buffer contract](https://shapely.readthedocs.io/en/stable/reference/shapely.buffer.html)
+  makes dimensional recovery an adapter responsibility, not a reason to replace
+  its general polygon kernel. Treating a tiny positive area as valid access would
+  be an adapter error.
+- A 0.01 mm precision grid changes T02's two regions separated by 0.004 mm into
+  one component on both GEOS lines. Unsnapped union preserves the gap. This is
+  consistent with [documented precision collapse](https://shapely.readthedocs.io/en/stable/reference/shapely.set_precision.html);
+  an implicit grid would violate this project's topology contract.
+- C01/C02 cutter-profile inversion/joins are outside planar scope. Analytic arcs,
+  general lower-dimensional feasible sets, full XYZ occupancy, segment medial axes,
+  stock evolution, entry/link motion and inlay assembly are not supplied or accepted
+  by this experiment. Shapely's [manual](https://shapely.readthedocs.io/en/stable/manual.html#geometric-objects)
+  explicitly describes planar analysis; carrying Z coordinates does not add a 3D
+  engine. No unsupported capability was replaced by a claimed area-only success.
+
+Installed wheels were inspected: Shapely has BSD-3-Clause `LICENSE.txt`, bundled
+GEOS has `LICENSE_GEOS` identifying LGPLv2.1, and `LICENSE_win32` covers bundled
+Microsoft runtime files. Native DLL/PYD paths and SHA-256 values are retained in
+platform reports. Keep copyright/license notices with redistributed binaries;
+bundling GEOS also requires an appropriate LGPL source/relinking-compliance route,
+and bundled Microsoft runtime terms must be preserved. See the
+[Shapely license](https://github.com/shapely/shapely/blob/main/LICENSE.txt) and
+[GEOS license information](https://libgeos.org/usage/faq/). This experiment uses
+upstream wheels locally and does not establish a redistributed/frozen application
+compliance package. The future packaging owner must handle that if binaries are
+bundled; declaring a dependency does not make those binaries MIT-licensed.
+
+Supporting artifacts and the one-off platform/throughput probe are under
+`output/shapely-evaluation-20260922-175502/`; durable results remain here.
+Reproduction commands live in the [runbook](DEVELOPMENT.md#isolated-planar-backend-evaluation).
+All five final geometry runs exited zero with 160 checks each: 11 planar cases
+pass, T01 remains `expected_limitation`, and C01/C02 remain `out_of_planar_scope`.
+The table above summarizes the final matrix; all reports match the final runner
+and corpus hashes. A synthetic negative control changing G01's expected union
+area from 150 to 151 mm2 correctly produced one failure and exit status 1.
+The declared `.venv/Scripts/python.exe -m unittest discover -s tests -p
+test_rest_vcarve_acceptance_fixtures.py -v` command passed all 13 reference tests
+on the existing Python 3.14.5 project environment. `py_compile` passed for the
+runner; 107 local documentation file links resolved, the untracked runner passed
+explicit whitespace inspection, and `git diff --check` passed. The runtime suite
+was not rerun because runtime code and dependency declarations did not change.
+Manual CamBam validation adds no evidence to a detached planar experiment and is
+not requested. The next adversarial acceptance/value-contract increment has a
+distinct scope and persisted inputs, so this is a useful fresh-session breakpoint.
+
 ## Rest and V-carving design refinement - 2026-09-22
 
 Acceptance-corpus increment: the user explicitly accepted proven packages and
