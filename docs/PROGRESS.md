@@ -36,17 +36,30 @@ All five geometry runs pass 11 planar cases, retain T01 as an expected limitatio
 and mark C01/C02 outside planar scope; the 13 backend-independent reference tests pass.
 The reusable runner is development-only; runtime dependencies remain unchanged.
 
-Next: close the adversarial planar acceptance and internal value/error contract:
-invalid topology rejection, arc-heavy/organic contours, coordinate and similarity/
-unit/order invariants, and bounded analytic exact-fit segment/point support. This
-matters before implementation because it determines which general inputs can be
-accepted without losing detail or misclassifying access. Stop with measured gates
-and a concrete detached-boundary contract; do not expand into a path planner yet.
-Reopen backend selection only for a demonstrated correctness, compatibility or
-performance gap under that contract. Inlay order is not a core-design blocker.
-Region/Z support is complete; variable-Z Engrave acceptance remains separate.
+**Adversarial planar acceptance and the internal contract are now closed for the
+bounded design slice.** The [owned value/error contract](REST_MACHINING_PLAN.md#internal-planar-value-and-error-contract)
+defines frames/units, strict topology admission, regularized filled-area operations,
+error accounting and certification, explicit failure states, and analytic
+rectangle/circle feasible sets retaining segments and points. The development-only
+[adversarial runner](../tools/evaluate_planar_adversarial.py) checks invalid input,
+arc-heavy/organic references, coordinate/similarity/unit/order invariants and
+exact-fit versus near-fit classification; [dated results and limits](REVIEW.md#adversarial-planar-acceptance-and-internal-contract---2026-09-22)
+own the numerical evidence. General collapsed center sets and arbitrary organic
+offset accuracy remain unsupported/unproved, not inferred from polygon area.
+
+Next: implement the first detached nominal planar slice under that contract:
+immutable owned values, validation/normalization, a private optional Shapely adapter,
+union/difference and nominal area erosion, plus analytic rectangle/circle feasible
+centers. Prove one programmatic end-to-end slice with source/error provenance and
+explicit unsupported results before broadening. This matters now because the
+backend and boundary have evidence but no runtime consumer enforces them yet.
+Stop before conservative stock/rest certification or path planning; those need
+separate directional occupancy bounds. This next runtime increment is proposed,
+not authorized by the completed design-only request. Reopen backend selection
+only for a demonstrated contract, compatibility or performance gap. Inlay order
+is not a core-design blocker; variable-Z Engrave acceptance remains separate.
 No runtime change or machining acceptance is claimed. This is a useful fresh-session
-breakpoint: the backend decision and next acceptance scope are persisted.
+breakpoint: the contract, evidence, limits and distinct next scope are persisted.
 
 **2026-09-21 backlog 4e local stdio acceptance complete.** OpenCode 1.18.31,
 running GLM-5.3-Flash from an isolated task-owned configuration, completed the real
@@ -904,8 +917,11 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    The current user request promotes design for the combined-tool letter/region
    and paired-inlay workflows, with caller-supplied tools/catalog integration.
    The [planar backend decision](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
-   selects Shapely/GEOS for the design. Close the adversarial acceptance and internal
-   value/error contract before implementation; no machining acceptance is claimed.
+   selects Shapely/GEOS for the design. Adversarial acceptance and the
+   [internal value/error contract](REST_MACHINING_PLAN.md#internal-planar-value-and-error-contract)
+   are closed for the bounded nominal planar slice. Next is its first detached
+   implementation, scoped in [active priority](#active-work-and-next-priority);
+   conservative stock/rest, paths and machining acceptance remain later gates.
 7. **Deferred MCP/core capability: author Manual Profile holding-tab positions.**
    Current automatic authoring covers width, height, minimum/maximum count, distance,
    size threshold, the constrained lead-in flag and Square/Triangle/Skip style.

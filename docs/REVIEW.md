@@ -1,5 +1,108 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Adversarial planar acceptance and internal contract - 2026-09-22
+
+The bounded design increment closes adversarial planar acceptance with a concrete
+[owned value/error contract](REST_MACHINING_PLAN.md#internal-planar-value-and-error-contract).
+The new [development runner](../tools/evaluate_planar_adversarial.py) prototypes
+admission and analytic exact-fit handling without changing runtime modules,
+dependencies, corpus v1 or user CAD files. This accepts the measured nominal
+planar scope, not a complete geometry adapter, stock engine or machining result.
+
+The contract separates regularized filled-area Boolean results from complete
+closed-set feasible centers; explicit frames/units and source mappings from CAD
+entities; error observations from certified bounds; and invalid, unsupported,
+unresolved and backend-failure outcomes. A nominal result can expose unknown error
+terms only with `budget_certified=false`. General polygon erosion cannot establish
+the absence of collapsed branches, even alongside nonempty area. Complete nominal
+feasible-center results are initially limited to analytic rectangles and circles.
+No tolerance-sized polygon stands in for a segment or point.
+
+Independent contract review identified and resolved four implementation ambiguities:
+regularized versus literal set semantics, valid backend outputs outside the strict
+shell/hole representation, frame/section compatibility, and explicit error metrics
+and certification status. The polygon vertex-count rule also explicitly excludes
+valid authored analytic circle/two-arc rings. A square minus an interior triangle
+touching its shell at a point produces a valid GEOS polygon but fails our strict
+owned topology: the probe reports unsupported output topology. Shared-edge square
+intersection is a raw line and an empty regularized **area**, not an empty literal set.
+
+The runner enforces 0.001 mm boundary and 0.01 mm2 area gates independently:
+
+| Gate | Construction and accepted evidence |
+| --- | --- |
+| Invalid input | NaN/infinities, XYZ tuples and coordinates at 1e15 mm rejected before GEOS; self-crossing/degenerate rings, duplicate edges, outside/touching holes and overlapping/nested/touching holes rejected. Valid strict holes and optional terminal ring closure pass. |
+| Organic contour | `r(t)=20+2*sin(17*t)` has exact area `402*pi` mm2. Analytic derivative bounds control chord interpolation; the input approximation has one component and no holes. No arbitrary organic inset oracle is claimed. |
+| Arc-heavy contour | Radius-20 mm shell with six radius-2 mm holes on a radius-10 mm circle, before and after 0.5 mm inset. Independent trigonometric reference has shell radius `20-d`, hole radius `2+d`, and area `pi*((20-d)^2-6*(2+d)^2)`. One component/six holes survive. |
+| Invariants | Union, intersection, difference and inset of a concave shell with two holes: ring start/winding/hole order, 37-degree rotation, reflection, scale 3.7, translation `(1e9,-1e9)` mm and mm/inch conversion. Union/intersection also check operand order. Results mapped back to mm pass area, symmetric difference, bidirectional boundary and topology checks. This is metamorphic consistency, not an independent arbitrary-offset oracle. |
+| Exact fit | Analytic rectangle segment/point and circle point; tool radius one ULP and 1e-6 mm below/above exact fit gives area/empty respectively. Zero tool radius retains area. Exact rational predicates preserve dimensions and endpoint/point locations under a rigid reflected placement and rational mm/inch conversion. Invalid primitive parameters fail; general collapse is explicitly unsupported. |
+
+For the radial curve `p(t)`, `||p''|| <= R+abs(A)*(1+2*n+n*n)` gives linear
+interpolation deviation `M*h*h/8`. Candidate bound is <=0.000004 mm and reference
+bound <=0.000001 mm. The derived area allowance uses the boundary tube bound
+`2*L*epsilon+pi*epsilon^2`, summed over separate curves; the separated circular
+offset construction has a bounded chord/offset contribution <=0.000008 mm.
+These analytic approximation bounds exclude floating-point computation error.
+The reference area integral is independent of GEOS. Symmetric difference and
+distance measurements still use GEOS and are numerical observations.
+
+Both directed boundary checks sample at <=0.001 mm spacing and charge 0.0005 mm
+for unsampled positions plus reference interpolation error. For the dense curves,
+an STRtree of target segments accelerates nearest-segment distance without changing
+the metric. An initial unindexed dense run exceeded three minutes and was stopped;
+this is a validation-cost observation, not a backend throughput failure. The
+original invariant helper retains the earlier unindexed metric. Input admission
+reserves four coordinate ULPs within one tenth of the boundary budget; that is a
+resolution filter, not an end-to-end error proof or a universal world-coordinate
+range. Local recentering remains a runtime contract to implement.
+
+Maximum curved-case metrics across the tested matrix (rounded):
+
+| Case | Absolute analytic area error (mm2) | Symmetric difference (mm2) | Boundary upper estimate (mm) | Derived approximation area allowance (mm2) |
+| --- | ---: | ---: | ---: | ---: |
+| Organic input | 0.000053574 | 0.000148095 | 0.000504592 | 0.002035505 |
+| Six-hole circular input | 0.000133999 | 0.000410703 | 0.000504999 | 0.003216993 |
+| Six-hole circular inset | 0.000103184 | 0.000434676 | 0.000504999 | 0.003468320 |
+
+The small scalar area errors alone would understate actual geometric differences;
+all four gates and topology are required. The boundary upper estimate includes
+the sampling remainder, but is not an interval-arithmetic certificate.
+Across all invariant operations/transforms, maximum area difference was
+`1.86775e-8` mm2, symmetric difference `1.63600e-7` mm2 and bidirectional boundary
+estimate `0.000500065` mm, all from the inset translation check. Every expected
+component/hole count was preserved on both GEOS lines.
+
+Final matrix: Windows x64 CPython 3.9.13 with Shapely 2.0.7/GEOS 3.11.4 and
+CPython 3.10.11, 3.11.9, 3.12.10 and 3.13.5 with Shapely 2.1.2/GEOS 3.13.1;
+each passes all 233 checks with zero unexpected failures. These reuse the prior
+isolated wheel environments; packaging was not repeated or newly claimed.
+Reports and task-owned validation helpers remain under
+`output/planar-adversarial-20260922-193000/`, with runner hashes checked against
+the final source. The first completed attempts failed JSON serialization of a
+NumPy dimension scalar; converting it to a Python integer fixed reporting, and
+all final runs started after the correction. No geometry thresholds were loosened.
+A disposable runner copy changed the organic reference from `402*pi` to `403*pi`:
+exactly `organic.analytic_area_mm2` failed and the runner exited 1.
+
+Verification commands are in the [runbook](DEVELOPMENT.md#isolated-planar-backend-evaluation).
+The declared project interpreter passed all 13 backend-independent corpus reference
+tests and `py_compile` for the new runner. All 118 local documentation file links
+resolved; changed headings were reviewed, new-runner whitespace was inspected explicitly, and
+`git diff --check` passed. No runtime suite rerun was needed because runtime code
+and dependency declarations are unchanged. Manual CamBam validation adds no evidence
+to this design-only slice and is not required.
+
+Source Arc/Pline-bulge detachment, general curve topology normalization, full
+immutable values/results, canonical fingerprints and end-to-end error propagation
+remain implementation work, not capabilities of these prototypes. Conservative
+containment, stock/rest certification, motion/entry, general collapsed center sets
+and inlay assembly remain unaccepted. Reopen kernel selection for a demonstrated
+gap under the bounded contract; do not infer a need for another package from an
+explicitly deferred capability. The first detached nominal runtime slice is the
+next coherent project outcome in [PROGRESS](PROGRESS.md#active-work-and-next-priority).
+The design/evidence/limits are persisted, making this a good fresh-session
+breakpoint. Work is uncommitted; this record is not a merge-readiness claim.
+
 ## Shapely/GEOS planar evaluation - 2026-09-22
 
 The bounded evaluation supports selecting Shapely/GEOS for planar primitives in

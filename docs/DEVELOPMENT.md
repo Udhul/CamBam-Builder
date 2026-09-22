@@ -210,6 +210,29 @@ command, install the resulting project wheel into each candidate environment wit
 files. This is a bounded dependency compatibility check, not the full packaging
 regression matrix above. Do not add Shapely to project metadata merely to run it.
 
+For the subsequent adversarial and internal-contract gates, reuse those isolated
+interpreters and create a new task directory for reports:
+
+```powershell
+$acceptanceDir = Join-Path 'output' ('planar-adversarial-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+New-Item -ItemType Directory -Path $acceptanceDir | Out-Null
+foreach ($tag in @('py39', 'py310', 'py311', 'py312', 'py313')) {
+    & "$taskDir/$tag/Scripts/python.exe" tools/evaluate_planar_adversarial.py --output "$acceptanceDir/$tag.json"
+    if ($LASTEXITCODE -ne 0) { throw "Adversarial acceptance failed: $tag" }
+}
+```
+
+Here `$taskDir` is the environment directory created above; when reusing an
+existing evaluation, set it to that directory first. Expect zero
+`unexpected_failures`. The report includes all checked values/limits, actual
+Python/Shapely/GEOS versions and both runner hashes. Its helpers prototype strict
+polygon admission and analytic rectangle/circle center classification, not a
+runtime API. The [internal contract](REST_MACHINING_PLAN.md#internal-planar-value-and-error-contract)
+owns result/error semantics; the [adversarial review](REVIEW.md#adversarial-planar-acceptance-and-internal-contract---2026-09-22)
+owns measured evidence and unsupported cases. Run the backend-independent corpus
+reference tests too. No CamBam manual check adds evidence to this detached design
+increment, and no runtime or packaging changes are implied by these commands.
+
 ### Required checks by change
 
 | Change | Minimum evidence before technical closure |

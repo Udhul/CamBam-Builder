@@ -1042,11 +1042,12 @@ Reference validation command, from the repository root:
 .\.venv\Scripts\python.exe -m unittest discover -s tests -p test_rest_vcarve_acceptance_fixtures.py -v
 ```
 
-Next coverage after the planar backend decision: invalid topology rejection,
-arc-heavy/organic contours and transformation invariants, continuous multi-depth
-stock and protected-volume checks, capped wide-area path coverage, motion ordering
-and entry, then application-level paired-inlay assembly. These are explicit remaining
-gates; fourteen reference cases are not a claim of general engine acceptance.
+The [adversarial supplement](REVIEW.md#adversarial-planar-acceptance-and-internal-contract---2026-09-22)
+adds bounded invalid-input, arc-heavy/organic and transformation evidence without
+changing corpus v1. Continuous multi-depth stock and protected-volume checks,
+capped wide-area path coverage, motion ordering and entry, then application-level
+paired-inlay assembly remain later gates. These fourteen reference cases and the
+supplement are not a claim of general engine acceptance.
 
 ### Shapely/GEOS evaluation decision - 2026-09-22
 
@@ -1084,13 +1085,170 @@ The proposed internal boundary must own these requirements:
   Add an optional machining dependency only when a runtime slice needs it;
   `pyproject.toml` remains the sole dependency declaration owner.
 
-The next bounded design increment closes the adversarial input/approximation
-contract: invalid topology rejection, arc-heavy and organic contours, large-coordinate
-and similarity/unit/order invariants, and explicit exact-fit dimension support.
-It matters before the endmill-rest implementation because these define which
-inputs can be accepted without silently losing detail or misclassifying access.
-Stop when these gates have measured results and an owned internal value/error
-contract; continuous multi-depth stock, motion ordering and paired inlays remain
-later work. Reopen backend selection if supported-input topology or the declared
-error budget cannot be met, the supported wheel matrix fails, or representative
-work shows a material performance bottleneck.
+The [internal planar contract](#internal-planar-value-and-error-contract) below
+closes the next design boundary. Its adversarial evidence supplements corpus v1;
+continuous multi-depth stock, motion ordering and paired inlays remain later work.
+Reopen backend selection if supported-input topology or the declared error budget
+cannot be met, the supported wheel matrix fails, or representative work shows a
+material performance bottleneck.
+
+### Internal planar value and error contract
+
+This is the design boundary for the first detached implementation, not an
+implemented public API. Development probes demonstrate bounded cases; they must
+not be imported by runtime code. Geometry/error ownership belongs to the detached
+core, with one private Shapely adapter. Existing CAD `Region` validation and XML
+rounding remain separate contracts: passing CAD validation is not a machining
+accuracy certificate. No runtime dependency or path planner is introduced here.
+
+**Owned inputs and values.** Use immutable tuples/scalars and explicit tagged
+variants, rather than backend objects or a general options dictionary:
+
+| Value | Required fields and meaning |
+| --- | --- |
+| `PlanarFrame` | Source units (`mm` or `inch`), explicit XY frame identity and origin, and section Z when applicable. Convert to local millimetres once; retain the inverse mapping and conversion provenance. Never infer a frame from coordinates. |
+| `RegionSet` | Tuple of filled components, each with one closed shell and its explicitly assigned holes. Segments are lines or directed circular arcs with finite endpoints, center/radius/sweep and source references. Empty sets are explicit. Analytic circle and rectangle identity is retained when supplied; it is not inferred from an approximate polygon. |
+| `PlanarApproximation` | Valid polygonal coordinates, source-segment/parameter mapping, measured or bounded error contributions, frame mapping and original analytic input fingerprint. Authored contours remain intact. |
+| `FeasibleSet` | Separate area components, segment chains and isolated points, with dimension set drawn from `{0,1,2}`; the empty set has no dimensions. An analytic disk/rectangle area can remain analytic until polygon conversion is requested. Dimensions are never classified by an area threshold. |
+| `ErrorBudget` | Positive finite boundary distance and area limits, optional volume limit only when an owning evaluator exists, and work limits for refinement. Numeric units are explicit. Physical clearance, runout, tool uncertainty and desired finish allowance are separate inputs. |
+| `PlanarResult` | Status, operation/evidence class, optional owned value, requested budget, error ledger, topology events, diagnostics and provenance. Partial/unresolved geometry is diagnostic only and cannot be consumed as accepted stock or access. |
+
+The native adapter must resolve effective transforms and section elevation before
+detachment. A varying-Z contour is not silently projected into a planar opening;
+return `unsupported` unless an explicit section/projection operation supplies that
+meaning. Similarity-transformed circles/rectangles retain analytic provenance;
+arbitrary transformed contours do not gain it from bounding boxes or curve fitting.
+Binary operations require the same explicit XY frame and applicable section Z
+after unit conversion, or an explicitly supplied mapping into a common frame.
+Coincident numeric coordinates do not establish alignment. Differing sections are
+not combined by a planar operation.
+
+Source references identify component/ring/segment and parameter interval; they
+do not require project IDs, layers, XML or mutable entity references. Provenance
+records normalized input and policy fingerprints, operation parameters, adapter
+revision and actual Shapely/GEOS versions. Fingerprints canonicalize ring start,
+winding and component/hole order without quantizing coordinates; they include
+frame/units, analytic segment meaning and error policy. Source mapping is kept
+separately so reordered sources can share a geometric cache key without returning
+stale source labels. Hash identity means identical canonical inputs/policy, not
+approximate geometric equivalence or proof of accuracy.
+
+**Admission and topology.** Validate finite numbers, positive primitive sizes,
+arc consistency and explicit closure before handing coordinates to GEOS. Reject
+zero-length edges, fewer than three distinct vertices in polygonal rings or
+approximations, zero-area rings,
+self-crossings/overlaps, outside or nested/overlapping holes and any hole touching
+its shell or another hole. Ring winding and cyclic start are representation
+choices; shell/hole role comes from ownership, never winding alone. Independent
+components must have disjoint interiors; boundary contacts are allowed and must
+remain explicit. Combining overlapping filled inputs is an explicit union
+operation, not a silent normalization repair. Union may coalesce shared edges;
+point contact must not be credited as a traversable positive-width passage.
+
+Validate both the analytic source and its approximation. A valid chord polygon
+does not prove that the original arcs are valid. If source topology or preservation
+through approximation cannot be established within the work/error limits, return
+`unresolved` (or `unsupported` for an unimplemented predicate). Do not call
+`make_valid`, `buffer(0)`, apply a precision grid, remove small areas or merge close
+vertices implicitly. Diagnostics identify the offending sources and reason;
+repair proposals require a separate explicit operation and a topology/error diff.
+An offset can legitimately split or remove an area component; record before/after
+component and hole counts, while keeping feasible-set dimension claims separate.
+The polygon vertex-count rule does not apply to authored analytic arc rings:
+a circle or two-semicircle boundary is allowed when its analytic topology is valid.
+
+Region operations use regularized filled-area semantics: the closure of the
+interior of the set result. Thus polygon difference can retain its cut boundary,
+and boundary-only intersection is an empty **area** result, not proof that the
+literal intersection has no points. Exact closed-set erosion for `FeasibleSet`
+is a different operation. Do not use regularized area difference to prove that
+protected boundaries are untouched. Validate output representability as well as
+backend validity: a valid Boolean output with a shell/hole contact, touching holes
+or a pinched ring outside the strict owned representation returns `unsupported`
+with the contact diagnostic. Never report it as empty or as a backend defect.
+Independent components touching at points remain representable, with contact
+locations recorded; first-slice output closure is therefore explicitly bounded,
+not a promise to encode every GEOS polygon as an accepted `RegionSet`.
+
+**Dimensional error ledger.** For an arc of radius `R` and per-chord angle `a`,
+the chord deviation is `R*(1-cos(a/2))`, and its enclosed area deficit is
+`R*R*(a-sin(a))/2`. Sum absolute segment deficits for an area budget; do not allow
+shell/hole cancellation to hide error. Subdivide adaptively using both limits,
+with stable small-angle evaluation and a bounded segment count. A smooth curve
+needs its own derivative/interpolation bound; merely doubling sample density is
+an observation, not a continuous error bound. Preserve corners and arc endpoints.
+
+Track input approximation, operation approximation, numeric/coordinate effects
+and output conversion separately. A certified operation must establish how these
+contributions propagate and sum within the requested budget; an input chord bound
+alone does not bound an offset near a topology event. Record observed metrics as
+observations and proven bounds as bounds. In particular, the GEOS acceptance
+measurements are not a universal floating-point or conservative containment proof.
+An unavailable contribution is `unknown`, never zero. A result may pass nominal
+synthetic gates while remaining ineligible for safety/stock certification.
+The boundary metric is the continuous bidirectional maximum distance between
+boundaries; the area metric is symmetric-difference area against the intended
+region. Scalar area difference is an additional diagnostic, not a substitute.
+Empty/nonempty mismatches and changed connectivity cannot pass by having small
+area error. `nominal_geometry` may carry unknown operation/numeric bounds only
+with `budget_certified=false` and the unknown terms exposed; any known limit
+violation returns `unresolved`. A request requiring certified bounds cannot be
+satisfied by nominal success. Even a certified geometric approximation needs a
+separate directional containment proof before it is used as guaranteed removal.
+
+Normalize near a deterministic local origin before backend operations and account
+for source-coordinate quantization and reconstruction. Recentering cannot restore
+detail already lost at a large world origin. Reject nonfinite conversion, overflow,
+underflow that loses a feature, or numeric resolution that exhausts the budget;
+otherwise retain the resolution allowance in the ledger. The coordinate probe
+tests a 1e9 mm translation and rejects 1e15 mm for a 0.001 mm boundary budget;
+these are evidence points, not a universal coordinate-range promise. Similarity
+scale `s` scales distances by `abs(s)`, areas by `s*s`, and volumes by `abs(s)**3`.
+Apply the same scaling to budgets, tools and section depths. Inch conversion uses
+25.4 mm/inch. Reflections reverse arc direction and winding without changing fill.
+Anisotropic transforms turn circles into ellipses: reject them for this bounded
+analytic adapter rather than silently preserving circular metadata.
+
+**Exact-fit support.** The first local analytic support is a closed disk eroded by
+a disk and a filled rectangle eroded by a disk, at one depth, without holes. Use
+the supplied analytic parameters in its local frame, not a GEOS erosion or fitted
+polygon. Classify using authoritative parameters before rounded placement/unit
+conversion; exact rational conversion (`127/5` mm/inch) preserves equalities when
+combining units. For rectangle width `w`, height `h`, radius `r >= 0`, compare `w-2*r` and
+`h-2*r` exactly for the supplied binary64 parameters (exact rational comparison
+is sufficient). Negative extent is nominal empty; two positive extents give area;
+one zero gives a closed segment; two zeros give a point. For circle radius `R`,
+compare `R-r`: positive is a disk, zero is its center point, negative is empty.
+Conversion to output coordinates still consumes the numerical error budget.
+
+Never promote a nearly fitting case to exact fit using the boundary tolerance.
+Uncertain dimensions/tool sizes that straddle equality give `unresolved`, with
+the nominal result optionally attached for diagnosis. Exact equality is an ideal
+geometric result for declared inputs, not proof of practical clearance or entry.
+Rigid/reflected placement retains the analytic result and dimensions. General
+collapsed feasible sets, and collapsed branches alongside positive-area erosion,
+remain `unsupported` until a declared recovery algorithm is verified. A polygon
+buffer alone cannot prove absence of these strata, even when it returns some area.
+General polygon erosion may therefore be returned only as **nominal area erosion**,
+not as a complete `FeasibleSet` or a proof of infeasibility. No tolerance-sized
+polygon is substituted for a point or line.
+
+**Result and failure semantics.** Successful results declare `nominal_geometry`
+or a specifically established bounded evidence class; neither means executable
+motion or machining acceptance. Empty is a successful mathematical value only
+where the operation's declared semantics establish it. Other statuses are
+`invalid_input` (with source diagnostics), `unsupported` (missing capability),
+`unresolved` (budget, conditioning, topology ambiguity or work limit), and
+`backend_failure` (caught backend exception or invalid/nonfinite result).
+These statuses are distinct from a later planner's `infeasible`. Validate backend
+outputs, reject unexpected dimensions, and return no accepted value on failure.
+Operations are pure and atomic: errors cannot mutate inputs, a project, cached
+stock or an earlier accepted result. No automatic retry with looser tolerances.
+
+The first runtime slice should prove normalization, explicit union/difference,
+nominal area erosion and the bounded analytic `FeasibleSet` end to end on detached
+values. Keep conservative swept-stock and rest certification gated on their own
+bounds, followed by motion/entry verification. This is more useful now than more
+standalone kernel comparisons: the selected backend has evidence, while consumers
+still need an owned boundary that prevents nominal geometry becoming a false
+machining guarantee.
