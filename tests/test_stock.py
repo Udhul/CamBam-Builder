@@ -8,8 +8,9 @@ import unittest
 from cambam_builder.planar import Rectangle
 from cambam_builder.stock import (
     Capsule, CapsuleUnion, HorizontalSweep, RemainingSection, SectionRectangle,
-    SectionTarget, TargetRestSection, bound_horizontal_sweep, compose_sweep_bounds,
-    compose_target_rest_bounds,
+    SectionTarget, TargetRestSection, SectionMotionPath, SectionMotionSegment,
+    bound_horizontal_sweep, compose_sweep_bounds, compose_target_rest_bounds,
+    verify_section_motion,
 )
 
 
@@ -328,6 +329,105 @@ class HoledTargetStockTests(unittest.TestCase):
                 self.stock, (Capsule(HorizontalSweep(14, 16, 9), 0),)))
         TargetRestSection(self.target, CapsuleUnion(
             self.stock, (Capsule(HorizontalSweep(14, 16, 7), 0),)))
+
+
+class SectionMotionTests(unittest.TestCase):
+    stock = SectionRectangle(0, 0, 30, 20)
+    target = SectionTarget(stock, SectionRectangle(2, 2, 28, 18),
+                           SectionRectangle(13, 7, 17, 13))
+
+    @staticmethod
+    def move(kind, start, end, y=5, cover=None):
+        return SectionMotionSegment(kind, start, end, y, cover)
+
+    def path(self, entry, radius, *segments, error=0, maximum=None, cover=None):
+        return SectionMotionPath(entry, radius, radius if maximum is None else maximum,
+                                 error, segments, cover)
+
+    def verify(self, paths):
+        return verify_section_motion(self.target, paths, frame_id="fixture",
+                                     section_z_mm=-2, grid_size=32)
+
+    def test_cut_entry_travel_and_smaller_tool_cleanup(self):
+        large = self.path("cutting", 2, self.move("cut", 6, 24),
+                          self.move("travel", 24, 10, cover=0))
+        small = self.path("cleared", 1, self.move("cut", 10, 3), cover=0)
+        result = self.verify((large, small))
+        self.assertEqual(result.evidence_class, "conditional_analytic_section_motion")
+        self.assertEqual(result.paths, (large, small))
+        self.assertEqual(len(result.target_bounds.stock_bounds.sources), 2)
+        self.assertFalse(result.target_bounds.rest_upper.contains(3, 5))
+        self.assertTrue(result.target_bounds.rest_upper.contains(3, 8))
+        self.assertTrue(result.target_bounds.stock_bounds.remaining_lower.contains(15, 10))
+        self.assertFalse(result.target_bounds.rest_upper.contains(15, 10))
+        # Independent constant-radius capsule reference on an exact rational grid.
+        for ix in range(121):
+            for iy in range(81):
+                x, y = Q(ix, 4), Q(iy, 4)
+                removed = any(
+                    (x - min(max(x, lo), hi)) ** 2 + (y - 5) ** 2 <= r ** 2
+                    for lo, hi, r in ((6, 24, 2), (3, 10, 1)))
+                self.assertEqual(result.target_bounds.rest_upper.contains(x, y),
+                                 self.target.contains(x, y) and not removed)
+
+    def test_uncleared_connector_and_island_crossing_rejected(self):
+        initial = self.move("cut", 6, 24)
+        for unsafe in (self.move("travel", 24, 3, cover=0),
+                       self.move("travel", 24, 10),
+                       self.move("travel", 24, 10, cover=1)):
+            with self.subTest(unsafe=unsafe), self.assertRaises(ValueError):
+                self.verify((self.path("cutting", 2, initial, unsafe),))
+        side = self.path("cutting", 1, self.move("cut", 8, 12, y=10),
+                         self.move("travel", 12, 18, y=10, cover=0))
+        with self.assertRaisesRegex(ValueError, "guaranteed free"):
+            self.verify((side,))
+
+    def test_uncertainty_and_collapsed_guarantee_control_access(self):
+        prior = self.path("cutting", Q(2), self.move("cut", 6, 24, y=Q(9, 2)),
+                          error=Q(1, 4), maximum=Q(9, 4))
+        # Guaranteed radius is 1.75; inflated travel radius is also 1.75.
+        entry = self.path("cleared", Q(3, 2),
+                          self.move("travel", 10, 12, y=Q(9, 2), cover=0),
+                          self.move("cut", 12, 11, y=Q(9, 2)),
+                          error=Q(1, 4), cover=0)
+        self.verify((prior, entry))
+        too_wide = self.path("cleared", Q(3, 2),
+                             self.move("travel", 10, 12, y=Q(9, 2), cover=0),
+                             error=Q(1, 4) + Q(1, 10**30), cover=0)
+        with self.assertRaisesRegex(ValueError, "entry"):
+            self.verify((prior, too_wide))
+        no_guarantee = self.path("cutting", 1,
+                                 self.move("cut", 6, 24, y=Q(9, 2)),
+                                 error=Q(5, 4))
+        with self.assertRaisesRegex(ValueError, "entry"):
+            self.verify((no_guarantee, entry))
+
+    def test_explicit_outside_stock_motion_and_contact(self):
+        outside = self.path("outside_stock", 1,
+                            self.move("travel", -4, -2, y=10))
+        self.verify((outside,))
+        touching = self.path("outside_stock", 1,
+                             self.move("travel", -4, -1, y=10))
+        with self.assertRaisesRegex(ValueError, "stock"):
+            self.verify((touching,))
+
+    def test_disconnected_motion_and_invalid_entry_rejected(self):
+        with self.assertRaisesRegex(ValueError, "contiguous"):
+            self.path("cutting", 1, self.move("cut", 6, 10),
+                      self.move("cut", 11, 12))
+        with self.assertRaisesRegex(ValueError, "begin with a cut"):
+            self.path("cutting", 1, self.move("travel", 6, 10, cover=0))
+        with self.assertRaisesRegex(ValueError, "prior source"):
+            self.path("cleared", 1, self.move("cut", 6, 10))
+        with self.assertRaisesRegex(ValueError, "entry"):
+            self.verify((self.path("cleared", 1, self.move("cut", 6, 10), cover=0),))
+        with self.assertRaisesRegex(ValueError, "protected"):
+            self.verify((self.path("cutting", 1, self.move("cut", 12, 18, y=10)),))
+        segment = self.move("cut", 6, 10)
+        forged = self.path("cutting", 1, segment)
+        object.__setattr__(segment, "kind", "rapid")
+        with self.assertRaisesRegex(ValueError, "kind"):
+            self.verify((forged,))
 
 
 if __name__ == "__main__":

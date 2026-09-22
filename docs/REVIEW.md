@@ -1,5 +1,54 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Bounded section-motion verification - 2026-09-22
+
+`verify_section_motion` accepts ordered, supplied horizontal cutting and travel
+segments for the exact 30 x 20 mm stock, 26 x 16 mm target and 4 x 6 mm island
+scenario. It recomputes cutting bounds before updating stock, checks every cut's
+outer occupancy against the original protected target, and allows non-cutting
+motion only inside one cited earlier cut's guaranteed inner capsule or strictly
+outside initial stock. Cutting, prior-cleared and outside-stock entry disks are
+explicit. Travel contributes no removal. Paths retain the caller's radius and
+position uncertainty; a separate path represents a new section entry or tool.
+
+The accepted two-tool case cuts `(6,5)` to `(24,5)` with radius 2 mm, travels
+back to `(10,5)` inside that pass's guarantee, then enters with a radius-1 mm
+tool in the cleared region and cuts to `(3,5)`. An independent quarter-millimetre
+grid uses direct point-to-segment squared distances for both cutting sweeps and
+compares the resulting required-rest membership at all 9,801 points. The
+protected island interior at `(15,10)` remains stock but is not required rest;
+`(3,5)` is removed by cleanup and `(3,8)` remains required rest. A connector to
+`(3,5)` before cleanup, travel without a prior cover, a future-source citation,
+and a segment through the island all fail. A separate uncertain case accepts
+equal 1.75 mm guaranteed and inflated travel radii, then rejects an exact
+`1e-30` mm overrun and a prior cut whose lower removal is empty. Outside-stock
+travel passes with positive clearance and fails at boundary contact. Broken
+segment continuity, invalid entries and an altered segment kind fail before any
+result is returned.
+
+Exactness rests on the [section-motion contract](structure_spec.md#directional-analytic-stock-section-bounds):
+outer cutting containment, complete-traversal lower removal, endpoint/convexity
+containment of parallel travel capsules, and strict minimum distance for an
+outside-stock approach. Finite point checks corroborate residual membership;
+they do not replace those analytic proofs. Requiring one cited capsule per
+travel piece is intentionally conservative. Reopen union-cover or non-horizontal
+motion only for a concrete consumer that cannot split or supply the needed path.
+
+Verification on existing `.venv/Scripts/python.exe` (Python 3.14.5; this does
+not renew the supported 3.9-3.13 version matrix):
+
+- `-m unittest discover -s tests -p test_stock.py -v`: 20 passed.
+- `-m unittest discover -s tests -q`: 356 tests, OK with 12 skips for optional
+  capabilities.
+- `-m compileall -q cambam_builder tests` and `git diff --check`: passed.
+
+No CamBam manual validation adds evidence: this is a detached, nonserialized
+section calculation. Entry disks and connectors are checked at one Z only;
+descent, retracts, tool changes, holder occupancy, stock at other heights and
+execution remain unverified. There is no production-machining claim. The bounded
+increment is ready to commit, not merge-ready. The next input and reopening
+criterion are in [PROGRESS](PROGRESS.md#next-detached-stockrest-increment).
+
 ## Holed target stock/rest bounds - 2026-09-22
 
 `SectionTarget` and `compose_target_rest_bounds` separate original required

@@ -379,3 +379,171 @@ def compose_target_rest_bounds(target, sources, *, frame_id, section_z_mm,
         target, stock_bounds,
         TargetRestSection(target, stock_bounds.removal_upper),
         TargetRestSection(target, stock_bounds.removal_lower))
+
+
+@dataclass(frozen=True)
+class SectionMotionSegment:
+    """Directed horizontal cut or non-cutting travel at the declared section."""
+
+    kind: str
+    x_start: Fraction
+    x_end: Fraction
+    y: Fraction
+    cover_source_index: Optional[int] = None
+
+    def __post_init__(self):
+        if self.kind not in ("cut", "travel"):
+            raise ValueError("motion kind must be cut or travel")
+        for name in ("x_start", "x_end", "y"):
+            object.__setattr__(self, name, _number(getattr(self, name)))
+        if self.kind == "cut" and self.cover_source_index is not None:
+            raise ValueError("cut motion cannot claim prior clearance")
+        if self.kind == "travel" and self.cover_source_index is not None and (
+                type(self.cover_source_index) is not int or self.cover_source_index < 0):
+            raise ValueError("cover_source_index must be a nonnegative integer")
+
+    @property
+    def sweep(self):
+        return HorizontalSweep(min(self.x_start, self.x_end),
+                               max(self.x_start, self.x_end), self.y)
+
+
+@dataclass(frozen=True)
+class SectionMotionPath:
+    """One tool envelope and one explicit section entry followed by contiguous moves."""
+
+    entry_kind: str
+    radius_min_mm: Fraction
+    radius_max_mm: Fraction
+    position_error_mm: Fraction
+    segments: Tuple[SectionMotionSegment, ...]
+    entry_cover_source_index: Optional[int] = None
+
+    def __post_init__(self):
+        if self.entry_kind not in ("cutting", "cleared", "outside_stock"):
+            raise ValueError("entry_kind must be cutting, cleared or outside_stock")
+        for name in ("radius_min_mm", "radius_max_mm", "position_error_mm"):
+            object.__setattr__(self, name, _number(getattr(self, name)))
+        if (self.radius_min_mm <= 0 or self.radius_max_mm < self.radius_min_mm
+                or self.position_error_mm < 0):
+            raise ValueError("require 0 < radius_min <= radius_max and position_error >= 0")
+        try:
+            segments = tuple(self.segments)
+        except TypeError as exc:
+            raise ValueError("expected a finite motion segment iterable") from exc
+        if not segments or any(type(s) is not SectionMotionSegment for s in segments):
+            raise ValueError("path requires analytic motion segments")
+        if any((a.x_end, a.y) != (b.x_start, b.y)
+               for a, b in zip(segments, segments[1:])):
+            raise ValueError("path motion must be contiguous at this section")
+        if self.entry_kind == "cutting":
+            if segments[0].kind != "cut" or self.entry_cover_source_index is not None:
+                raise ValueError("cutting entry must begin with a cut")
+        elif self.entry_kind == "cleared":
+            if (type(self.entry_cover_source_index) is not int
+                    or self.entry_cover_source_index < 0):
+                raise ValueError("cleared entry requires a prior source index")
+        elif self.entry_cover_source_index is not None:
+            raise ValueError("outside-stock entry cannot claim prior clearance")
+        object.__setattr__(self, "segments", segments)
+
+
+def _capsule_inside_capsule(inner, outer):
+    """Exact sufficient and necessary test for parallel horizontal capsules."""
+    available = outer.radius - inner.radius
+    if available < 0:
+        return False
+    s, p = inner.sweep, outer.sweep
+    return all((max(p.xmin - x, 0, x - p.xmax) ** 2 +
+                (s.y - p.y) ** 2 <= available ** 2)
+               for x in (s.xmin, s.xmax))
+
+
+def _capsule_outside_stock(capsule, stock):
+    s = capsule.sweep
+    dx = max(stock.xmin - s.xmax, s.xmin - stock.xmax, 0)
+    dy = max(stock.ymin - s.y, s.y - stock.ymax, 0)
+    return dx * dx + dy * dy > capsule.radius * capsule.radius
+
+
+@dataclass(frozen=True)
+class VerifiedSectionMotion:
+    """Ordered conditional section proof; no higher-Z entry or tool-change proof."""
+
+    paths: Tuple[SectionMotionPath, ...]
+    target_bounds: TargetStockBounds
+    evidence_class: str = "conditional_analytic_section_motion"
+
+
+def verify_section_motion(target, paths, *, frame_id, section_z_mm, grid_size=32):
+    """Verify supplied cuts and explicit non-cutting motion against prior stock.
+
+    A travel/cleared-entry capsule must fit one cited earlier guaranteed-removal
+    capsule, or be wholly disjoint from initial stock. Splitting a connector lets
+    different pieces cite different sources. Cutting entries are checked at the
+    section, but arrival from another height and tool changes are not modeled.
+    """
+    if type(target) is not SectionTarget:
+        raise ValueError("expected an exact rectangular section target")
+    if not isinstance(frame_id, str) or not frame_id.strip():
+        raise ValueError("a nonempty caller-owned frame identity is required")
+    z = _number(section_z_mm)
+    try:
+        paths = tuple(paths)
+    except TypeError as exc:
+        raise ValueError("expected a finite motion path iterable") from exc
+    sources = []
+    for path in paths:
+        if type(path) is not SectionMotionPath:
+            raise ValueError("expected analytic section motion paths")
+        try:
+            segments = tuple(path.segments)
+        except TypeError as exc:
+            raise ValueError("expected a finite motion segment iterable") from exc
+        if any(type(segment) is not SectionMotionSegment for segment in segments):
+            raise ValueError("expected analytic motion segments")
+        checked = SectionMotionPath(
+            path.entry_kind, path.radius_min_mm, path.radius_max_mm,
+            path.position_error_mm,
+            tuple(SectionMotionSegment(segment.kind, segment.x_start,
+                                       segment.x_end, segment.y,
+                                       segment.cover_source_index)
+                  for segment in segments), path.entry_cover_source_index)
+        if checked != path:
+            raise ValueError("motion path differs from validated analytic input")
+        first = path.segments[0]
+        entry = Capsule(HorizontalSweep(first.x_start, first.x_start, first.y),
+                        path.radius_max_mm + path.position_error_mm)
+        if path.entry_kind == "cutting":
+            if not _capsule_within_target(target, entry):
+                raise ValueError("cutting entry enters protected target material")
+        elif path.entry_kind == "cleared":
+            index = path.entry_cover_source_index
+            if index >= len(sources) or sources[index].removal_lower is None or not (
+                    _capsule_inside_capsule(entry, sources[index].removal_lower)):
+                raise ValueError("entry is not inside cited prior guaranteed free space")
+        elif not _capsule_outside_stock(entry, target.stock):
+            raise ValueError("outside-stock entry touches initial stock")
+        for segment in path.segments:
+            occupancy = Capsule(segment.sweep,
+                                path.radius_max_mm + path.position_error_mm)
+            if segment.kind == "travel":
+                index = segment.cover_source_index
+                if index is None:
+                    if not _capsule_outside_stock(occupancy, target.stock):
+                        raise ValueError("travel touches stock without prior clearance")
+                elif index >= len(sources) or sources[index].removal_lower is None or not (
+                        _capsule_inside_capsule(occupancy, sources[index].removal_lower)):
+                    raise ValueError("travel leaves cited prior guaranteed free space")
+            else:
+                source = bound_horizontal_sweep(
+                    target.stock, segment.sweep, frame_id=frame_id,
+                    section_z_mm=z, radius_min_mm=path.radius_min_mm,
+                    radius_max_mm=path.radius_max_mm,
+                    position_error_mm=path.position_error_mm)
+                if not _capsule_within_target(target, source.removal_upper):
+                    raise ValueError("cutting occupancy enters protected target material")
+                sources.append(source)
+    bounds = compose_target_rest_bounds(
+        target, sources, frame_id=frame_id, section_z_mm=z, grid_size=grid_size)
+    return VerifiedSectionMotion(paths, bounds)

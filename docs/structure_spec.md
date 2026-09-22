@@ -26,7 +26,7 @@ packages; `inactive/` and demos are outside that runtime package list.
 | `cambam_builder/cam_entities.py` | `Part`, MOP classes, and MOP XML path/encoding policy inventories | Part stock/nesting or MOP parameters and XML policy |
 | `cambam_builder/cambam_entities.py` | Explicit compatibility/discovery facade re-exporting canonical objects from the four entity owners | Preserve public entity imports; implementation modules must import owners directly |
 | `cambam_builder/cad_transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
-| `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy and remaining-section bounds | Finite supplied horizontal sweeps inside rectangular stock/target; no path or native integration |
+| `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy, remaining-section bounds and supplied section-motion verification | Horizontal cuts and explicit travel inside rectangular stock/target; no generated or native path integration |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
 | `cambam_builder/machining_recommendations.py` | Immutable tool/material/machine contexts, provenance-bearing recommendations, user diameter tables and pluggable pure strategies | Recommendation selection only; contains no curated catalog, persistence, document mutation or safety claim |
@@ -170,9 +170,54 @@ removal union. Both use exact analytic membership and the same closed-removal
 boundary convention as `RemainingSection`. Their area intervals subtract the
 union's conservative grid interval from exact target area, clamping the lower
 endpoint to zero. Empty sources leave stock and target intact. Directly
-constructed result records are data, not validated evidence. This remains one
-fixed-Z horizontal section with supplied sweeps only: it does not verify
-connections, entry, motion at other heights, generated paths or execution.
+constructed result records are data, not validated evidence. Stock/rest
+composition alone does not infer connecting travel or entry.
+
+`verify_section_motion(target, paths, frame_id=..., section_z_mm=...,
+grid_size=32)` validates ordered, caller-supplied `SectionMotionPath` records.
+Each path has one fixed radius interval and position-error envelope, one explicit
+`entry_kind`, and contiguous, directed horizontal `SectionMotionSegment` cuts or
+travels. Consecutive segments in a path must meet at the same exact XY point;
+different paths may represent different tools or separate entries. Every cut
+reuses `bound_horizontal_sweep` and requires its outer capsule inside the original
+target, regardless of earlier removal. Accepted cuts are appended in traversal
+order and the final `TargetStockBounds` is derived from exactly those cuts. Travel
+adds no removal. The function is atomic and returns a
+`conditional_analytic_section_motion` result only if all entries and segments pass.
+The verifier reconstructs supplied motion records before use, rejecting altered
+fields or segment kinds rather than trusting a constructed record.
+
+An entry is the first segment's start point and its inflated disk. `cutting`
+entry requires a cut first and verifies that disk inside the original target.
+`cleared` entry cites a zero-based *earlier cut* index and requires the disk inside
+that cut's guaranteed inner capsule. `outside_stock` entry requires the disk to
+be strictly disjoint from the exact closed initial stock. Each travel segment
+either cites one earlier cut via `cover_source_index`, or, with no index, is an
+explicit outside-stock approach strictly disjoint from the initial stock.
+Indices refer to cuts across all paths, never to travels, and cannot refer to
+the current or later cut. A connector crossing several guaranteed capsules may
+be split into contiguous pieces and cite one cover per piece. This conservative
+single-cover rule may reject travel safely covered only by a union; it cannot
+turn unverified space into clearance.
+
+For a cited cover, travel occupancy uses radius `rmax + e`; guaranteed prior
+clearance uses `rmin - e`, or no clearance when `e > rmin`. For parallel
+horizontal capsules, inclusion holds exactly when both travel endpoints have
+squared distance to the cited center segment at most
+`(prior_guaranteed_radius - travel_occupancy_radius)^2`, with a nonnegative
+radius difference. Convexity covers every intermediate center. A travel capsule
+with no cover is outside stock only when its exact squared minimum distance to
+the stock rectangle is **strictly greater** than its squared radius. Touching
+stock is rejected. These checks use rational arithmetic and the same declared
+physical uncertainty as the cuts; they do not infer additional process margins.
+
+The certificate covers only occupancy at the stated fixed Z for complete
+horizontal traversals. A `cutting` entry proves its disk is allowed at that
+section, not that descent to that section is safe. A `cleared` entry proves
+section clearance, not a vertical access corridor. Path changes, tool changes,
+retracts, holders, stock at other heights, Z uncertainty, generated paths and
+machine execution remain unverified. Callers must retain those limits when using
+the result; directly constructed result records are not proof.
 
 ### Detached nominal planar core
 

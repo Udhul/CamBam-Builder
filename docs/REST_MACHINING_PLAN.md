@@ -1273,6 +1273,10 @@ in the specification. A separate exact rectangular target with one protected
 rectangular island now gives required rest against the original target while the
 same composition retains whole-stock state. Exact island/exterior containment and
 independent residual membership are checked; supplied sweeps may cross the
-artificial rest/cleared-space interface. This does not add connections, entry,
-generated paths or general target topology.
+artificial rest/cleared-space interface. The subsequent bounded section-motion
+verifier checks caller-supplied horizontal cutting and explicit entry/connection
+motion against original target protection and prior guaranteed free space, with
+independent residual membership. It does not establish vertical access, stock at
+other Z heights, generated paths or general target topology. Its contract remains
+in the specification and verification evidence in the review.
 Next priority stays in [PROGRESS](PROGRESS.md#next-detached-stockrest-increment).

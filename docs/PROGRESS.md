@@ -7,25 +7,28 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**2026-09-22 protected target and cumulative stock slice complete (backlog 6).**
-An exact rectangular required-removal target with one protected rectangular island
-is now separate from exact initial stock. Validated supplied sweeps retain whole-stock
-evolution while rest is measured against the original target. Exact containment
-rejects outer occupancy in protected material, admits wall tangency and allows a
-later sweep to cross the artificial rest/cleared-space interface. The
+**2026-09-22 bounded section-motion verification complete (backlog 6).**
+Ordered supplied cuts now update guaranteed removal in an exact rectangular
+stock/target with one protected island. Explicit cutting, cleared-space and
+outside-stock entries are checked at the fixed section. Each non-cutting travel
+piece must fit one cited prior guaranteed removal capsule or remain strictly
+outside initial stock. A large pass, connector and smaller cleanup pass preserve
+the original target and yield independently checked residual membership. Uncleared
+connectors, island crossing and uncertainty overrun are rejected. The
 [implemented contract](structure_spec.md#directional-analytic-stock-section-bounds)
-owns assumptions and boundary membership; [review evidence](REVIEW.md#holed-target-stockrest-bounds---2026-09-22)
+owns assumptions and boundary membership; [review evidence](REVIEW.md#bounded-section-motion-verification---2026-09-22)
 owns acceptance. General planar results remain uncertified.
 
-Next: [verify bounded cleanup motion against evolving stock](#next-detached-stockrest-increment).
-Supplied section sweeps establish removal bounds but do not establish safe entry,
-connections or complete XYZ motion. A motion verifier is the next prerequisite for
-generated cleanup paths; another primitive or area refinement alone would not
-close that gap. Native/MCP expansion and remote transport have no new blocking input;
-backlog 6 remains the active priority. No manual CamBam acceptance is required for
-this nonserialized geometry slice. This is a good fresh-session breakpoint: the
-contract, evidence, limits and next scope are persisted. Changes are uncommitted;
-no production-machining claim is made.
+Next: [supply a concrete multi-height cleanup entry and access fixture](#next-detached-stockrest-increment).
+The section verifier now closes the immediate entry/connection gate at one Z,
+but descent, retracts, tool changes and stock at other heights remain unknown.
+Obtain an actual consumer's tool, stock-height and motion requirements before
+expanding to XYZ or generated cleanup paths; another area refinement has lower
+value without that input. Native/MCP expansion and remote transport have no new
+blocking input. No manual CamBam acceptance adds evidence for this nonserialized
+geometry slice. This is a good fresh-session breakpoint after automated checks:
+the contract, evidence, limits and reopening criterion are persisted. Changes are
+uncommitted; no production-machining claim is made.
 
 **2026-09-21 backlog 4e local stdio acceptance complete.** OpenCode 1.18.31,
 running GLM-5.3-Flash from an isolated task-owned configuration, completed the real
@@ -914,16 +917,23 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    cleanup or connecting/entry motion is implied. Reopen broader target geometry
    only for a demonstrated blocking input.
 
-   **Next: verify bounded cleanup motion against evolving stock.** For one
-   rectangular target/island scenario, specify supplied cutting segments and
-   explicit entry/connection motion, then prove each section's cutting occupancy
-   stays in the original allowed target and non-cutting occupancy uses only prior
-   guaranteed free space or an explicit outside-stock approach. Independently
-   verify residual membership and reject a connector that crosses uncleared stock
-   or the island. Preserve the existing uncertainty assumptions and report limits
-   at heights not modeled. Stop before automatic path generation, native/MCP
-   attachment, inlays or general curved topology; reopen those only when this
-   verifier has a demonstrated consumer that needs them.
+   **Completed 2026-09-22: verify bounded cleanup motion against evolving stock.**
+   For the rectangular target/island scenario, ordered horizontal cuts and
+   explicit section entries/connectors now prove cutting occupancy stays in the
+   original target and non-cutting occupancy stays in one cited prior guaranteed
+   free capsule or strictly outside initial stock. Independent residual membership
+   and rejected uncleared/island connectors are checked under the declared
+   uncertainty. This does not establish descent, retracts, tool changes or stock
+   at other heights. Generated paths, native/MCP attachment, inlays and curved
+   topology remain deferred.
+
+   **Next: supply a concrete multi-height cleanup entry and access fixture.**
+   Obtain caller-supplied tool geometry, stock height, intended cut section,
+   entry/retract/connection coordinates and permissible outside-stock approach
+   for one real cleanup consumer. Use it to decide the smallest XYZ occupancy
+   contract that can certify descent and tool transitions. Reopen automatic path
+   generation or wider topology only when that consumer shows a bounded need;
+   do not infer safe access from this fixed-Z result.
 
 7. **Deferred MCP/core capability: author Manual Profile holding-tab positions.**
    Current automatic authoring covers width, height, minimum/maximum count, distance,

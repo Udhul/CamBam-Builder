@@ -199,7 +199,7 @@ No manual CamBam validation is needed for this nonserialized geometry slice.
 & $ProjectPython -m unittest discover -s tests -p test_stock.py -v
 ```
 
-Fifteen backend-independent analytic tests exercise exact sweep/rest areas, directional
+Twenty backend-independent analytic tests exercise exact sweep/rest areas, directional
 containment under radius/position uncertainty, boundary contact and exact overrun
 rejection, collapsed/empty guarantees, large translations and unsupported inputs.
 Composition checks add independent overlapping capsule/disk-lens and disjoint area
@@ -209,6 +209,12 @@ The target-aware checks independently compare required rest and whole-stock stat
 against a rectangular target with one island and supplied large/small-tool sweeps.
 They check crossing into uncleared target, protected-area preservation under
 uncertainty, exact wall tangency and rational overrun rejection.
+Section-motion checks add ordered cutting and explicit entry/travel verification
+against prior guaranteed removal or strictly outside-stock space. The independent
+cleanup reference checks pointwise residual membership; rejected cases include
+uncleared connectors, an island crossing, forged future clearance, and a tiny
+uncertainty overrun. This remains a fixed-Z section certificate: vertical access,
+tool changes and other heights are unverified.
 No CamBam manual validation adds evidence: this slice has no serialization, path
 generation or execution claim. Physical uncertainty limits remain caller inputs.
 
