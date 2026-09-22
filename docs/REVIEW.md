@@ -2,6 +2,26 @@
 
 ## Rest and V-carving design refinement - 2026-09-22
 
+Acceptance-corpus increment: the user explicitly accepted proven packages and
+requested concrete acceptance cases. Established geometry primitives are now the
+first evaluation route; an independently built general kernel is not a prerequisite.
+The [corpus](../tests/fixtures/rest_vcarve_acceptance.json) supplies 14 reusable cases,
+with 13 [reference checks](../tests/test_rest_vcarve_acceptance_fixtures.py) covering
+analytic areas/volumes, cutter profiles, sweeps and existing Region input validity.
+They pass using the declared interpreter and focused unittest discovery command
+in the [acceptance owner](REST_MACHINING_PLAN.md#acceptance-corpus-v1). The affine-radius
+sweep reference was checked with a separate support-function integral; capped-target
+volumes use section integration. No candidate backend, stock engine or path planner
+was executed, so no backend/machining acceptance follows from these results.
+Runtime source and dependencies remain unchanged. Manual CamBam validation adds no
+evidence for this reference-corpus increment. The first dependency evaluation now
+has stable inputs and quantitative gates; later motion/stock/inlay gates remain
+explicitly pending in the design owner.
+Focused unittest discovery passed all 13 tests; `py_compile` passed for the new
+reference checker. All 92 checked local documentation links resolved, both new
+files passed whitespace inspection, and `git diff --check` passed. The broader
+runtime suite was not rerun because runtime source/contracts were not changed.
+
 Follow-up scope clarification: the A is one fixture and inlay is one application;
 neither defines the core. The user requested consideration of locally owned maths
 and geometry algorithms. The design now compares a bounded in-repository kernel

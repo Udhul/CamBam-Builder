@@ -21,12 +21,18 @@ now defines target/permission/free-space separation, ideal V target sections,
 bounded stock uncertainty, topology edge cases and paired inlay assembly semantics.
 The user clarified that artistic/technical shapes are general inputs, the A is only
 a fixture, and inlay is one application. The [kernel ownership policy](REST_MACHINING_PLAN.md#algorithm-ownership-and-dependency-policy)
-now includes an in-repository implementation as a first-class option; no external
-backend is selected or mandated. Next: complete the numerical general-shape
-acceptance matrix and compare owned versus established geometry primitives before
-implementation. Inlay order is not a core-design blocker. Region/Z support is already complete;
+now records their subsequent approval to use proven packages: evaluate established
+primitives first, retaining ownership of machining semantics and bounded gaps.
+The [acceptance corpus v1](REST_MACHINING_PLAN.md#acceptance-corpus-v1) now contains
+14 reusable cases with numerical references and topology expectations; 13 focused
+reference tests pass. These verify the corpus, not a backend or CAM engine.
+Next: evaluate Shapely/GEOS against the planar cases, record errors and unsupported
+capabilities, and verify Python/Windows packaging before choosing a dependency.
+No candidate package was installed or selected in this increment. Inlay order is
+not a core-design blocker. Region/Z support is already complete;
 variable-Z Engrave motion acceptance remains separate. No runtime change or machining
-acceptance is claimed. Continue the design conversation in this session.
+acceptance is claimed. This corpus is a useful fresh-session breakpoint: the next
+backend evaluation has persisted inputs, numerical limits and an explicit scope.
 
 **2026-09-21 backlog 4e local stdio acceptance complete.** OpenCode 1.18.31,
 running GLM-5.3-Flash from an isolated task-owned configuration, completed the real

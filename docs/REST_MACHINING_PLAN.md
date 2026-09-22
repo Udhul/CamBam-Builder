@@ -404,7 +404,9 @@ User decisions accepted 2026-09-22:
 4. The engine is for general artistic and technical regions. The A is an example
    fixture, not a domain restriction; inlay is one application, not the organizing
    model for the core. Consider owning the geometry algorithms in this repository
-   as well as using established low-level libraries; no external backend is mandated.
+   as well as using established low-level libraries. The user subsequently confirmed
+   that proven packages are welcome: prefer established geometry primitives when
+   they pass our contract, keeping machining semantics and verification owned here.
 
 Still settle the first acceptance target (outline, floor/through
 depth, wall shape, tools), allowed residual boundary/thickness/volume tolerances,
@@ -869,9 +871,10 @@ design synthesis, with formulas derived under the stated assumptions.
   offers exact or guaranteed-approximation offsets and lists GPL licensing for this
   package. Distribution and binding implications must be evaluated before adoption.
 
-No backend is preferred solely because it offers a short Python API. Compare a
-bounded in-repository kernel with established planar backends under the ownership
-criteria below. Shapely/GEOS and Clipper2 remain candidates, not dependencies or
+No backend is preferred solely because it offers a short Python API. With the
+user's clarification, evaluate established planar packages first under the ownership
+criteria below; a full competing local kernel is not a prerequisite. Shapely/GEOS
+and Clipper2 remain candidates, not dependencies or
 selected architecture. Choose one production implementation per primitive rather
 than maintaining equivalent competing kernels. Separately evaluate segment Voronoi
 when required by V-finishing; avoid raster skeletonization as an unbounded
@@ -879,17 +882,18 @@ substitute. A general mesh/solid kernel is not required for the current fixed-ax
 
 ### Algorithm ownership and dependency policy
 
-The user explicitly raised an in-repository implementation using NumPy and other
-appropriate foundational libraries. This is a valid option, not a fallback to
-discard without evaluation. Own the domain semantics and algorithms regardless
-of whether low-level planar operations are delegated:
+The user considered an in-repository implementation and then explicitly accepted
+proven packages. Prefer established low-level geometry where acceptance demonstrates
+fitness; implement bounded gaps locally when justified. There is no requirement
+to build a second general polygon kernel to make that decision. Own the domain
+semantics and algorithms regardless of how low-level operations are provided:
 
 | Responsibility | Proposed ownership |
 | --- | --- |
 | Cutter profiles, target evaluators, rest/stock semantics and error budgets | Implement and maintain here. |
 | Feasible-pose constraints, tool combinations, strategies, entry/link policies | Implement and maintain here; no opaque third-party CAM engine. |
 | Analytic line/arc distances, profile inversion, simple sweeps and adaptive subdivision | Prefer small in-repository implementations with analytic checks. |
-| General polygon overlay/offset topology and segment Voronoi construction | Make a bounded build-versus-adopt decision using adversarial acceptance and maintenance evidence. |
+| General polygon overlay/offset topology and segment Voronoi construction | Evaluate established packages first using adversarial acceptance and maintenance evidence; own bounded gaps if needed. |
 | Numeric arrays and acceleration | NumPy or justified low-level support; not a substitute for robust geometric predicates. |
 | CamBam registration/XML and client catalogs | Existing adapters/owners; no backend objects or catalog dependencies in the public machining model. |
 
@@ -916,12 +920,12 @@ kernel and regression burden, not only wrapper lines. A local implementation rem
 upstream-change risk but transfers algorithmic defects and maintenance to us; neither
 local ownership nor library popularity establishes correctness.
 
-The first decision experiment should cover union/difference, disk offsets, holes,
-coincident/near-tangent boundaries and narrow-feature preservation, using the same
-acceptance contract for both approaches. Estimate the in-house algorithm and test
-scope before implementing a full alternative. Use a bounded prototype only if
-inspection cannot settle the comparison. If a local kernel wins, keep it local;
-if an established primitive wins, isolate it behind a small internal function
+The first decision experiment covers union/difference, disk offsets, holes,
+coincident/near-tangent boundaries and narrow-feature preservation using the
+[acceptance corpus](#acceptance-corpus-v1). Evaluate Shapely/GEOS first; examine
+Clipper2 or a bounded local primitive if a demonstrated gap justifies it. Record
+why a failure belongs to the package, our adapter, or an unsupported representation
+before replacing a backend. Isolate established primitives behind a small internal function
 boundary with owned value types. No backend plugin framework is needed. External
 libraries may also serve as development-only comparison oracles without becoming
 runtime dependencies; agreement is corroboration, not proof.
@@ -978,3 +982,68 @@ target and sweep checks alongside it. Inlay order can be chosen later without
 blocking that foundation. Design closure needs numerical tolerances and expected
 results for the general-shape matrix plus the kernel ownership decision; choosing
 a showcase application is not a prerequisite or a substitute.
+
+### Acceptance corpus v1
+
+The reusable [JSON corpus](../tests/fixtures/rest_vcarve_acceptance.json) owns exact
+synthetic inputs and numerical reference values. This section owns their meaning,
+acceptance rules and limits. The [reference checks](../tests/test_rest_vcarve_acceptance_fixtures.py)
+validate analytic expectations and the existing CAD input representation without
+installing a candidate geometry package. Passing them does **not** accept a backend,
+stock engine, path planner, Engrave adapter or manufactured result.
+
+All inputs use millimetres. `reference_numeric_tolerance=1e-9` checks scalar oracle
+consistency only; it is not a machining accuracy claim. For the future backend
+runner, require maximum boundary distance <= 0.001 mm, area error <= 0.01 mm2 and
+volume error <= 0.01 mm3 when applicable. These are independently enforced synthetic
+limits: satisfying boundary distance alone does not imply the area/volume limits.
+Refine curves/integration as necessary; never loosen the expected reference to
+match the candidate. Units/scaling tests must scale each limit dimensionally.
+
+For regions with an independent reference construction, check symmetric-difference
+area as well as signed area error; equal area alone does not prove equal geometry.
+Check boundary distance in both directions and exact expected component/hole counts.
+For line/point feasible sets, compare dimension and locations, not area. Geometric
+approximation limits do not authorize cutting outside protected stock: the future
+planner must bound occupancy conservatively and report unresolved uncertainty.
+
+| Case | Required outcome and evidence class |
+| --- | --- |
+| G01 rectangle overlay | Union, intersection and difference have analytic areas; shared boundaries do not create spurious holes/components. |
+| R01 square reachability | Four ideal inaccessible corner pieces for each radius; smaller-tool gain is the difference in ideal rest. Not generated-path coverage. |
+| R02 profile versus pocket | Explicit closed square-center trajectory sweeps 236.5663706144 mm2; ideal pocket coverage is 357.5663706144 mm2. The profile retains an 11 mm square center. |
+| G02 annulus inset | Outer radius shrinks and hole radius grows; one component and one hole survive. |
+| V01 square V target | At depth 2, floor area is 36 mm2; volume to the cap is 130.6666666667 mm3. This is a desired volume, not proof a path cuts it. |
+| V02 circular V target | Sections remain concentric circles; analytic volume and floor extent match numerical integration. |
+| C01 pointed/flat cones | Depth inversion and finite cone extent use the physical tip datum; clearance below flat-tip radius is unreachable. |
+| C02 spherical/conical tip | Radius and slope meet continuously; maximum diameter uses the joined-profile height, not the pointed-cone formula. |
+| S01 constant-radius sweep | A 6 mm segment with radius 2 sweeps a capsule, including the space between endpoint disks. |
+| S02 affine-radius sweep | The disk convex hull has area 20.2309724380 mm2; a separate support-function integral checks the reference. Endpoint union is insufficient. |
+| T01 exact-fit centers | Rectangle yields a segment; circle yields one point. Zero center area is not nominal infeasibility. Entry/physical clearance remains separate. |
+| T02 near contact | Overlap and shared-edge contact form one interior component; the 0.004 mm gap preserves two. Do not close it through precision reduction. |
+| T03 narrow bridge | Connected input area 32.04 mm2; an inset larger than the bridge half-width leaves two components without holes. |
+| A01 general composition | Valid concave outer contour and triangular hole, opening area 1532 mm2. Combined-tool path acceptance deliberately remains pending. |
+
+S01/S02 describe continuous XY sweeps at one depth. They do not establish complete
+XYZ motion: the runner must later split at profile joins and slice entry/exit and
+prove between-depth bounds. R02's pocket value assumes exhaustive ideal reachable
+coverage, whereas its profile value comes from the explicit supplied trajectory.
+Keep these evidence classes visible in any machine-readable evaluation report.
+
+The first backend evaluation should consume the planar cases and target sections,
+report actual errors/topology by case ID, and identify lower-dimensional operations
+needing local support. Do not require a polygon-only package to encode a centerline
+as a positive-area polygon. Acceptance is of the package plus its bounded adapter
+contract, with unsupported capabilities explicit, not of the package in isolation.
+
+Reference validation command, from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -p test_rest_vcarve_acceptance_fixtures.py -v
+```
+
+Next coverage after the planar backend decision: invalid topology rejection,
+arc-heavy/organic contours and transformation invariants, continuous multi-depth
+stock and protected-volume checks, capped wide-area path coverage, motion ordering
+and entry, then application-level paired-inlay assembly. These are explicit remaining
+gates; fourteen reference cases are not a claim of general engine acceptance.

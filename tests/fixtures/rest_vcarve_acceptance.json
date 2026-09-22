@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "scope": "Backend-neutral synthetic acceptance inputs and analytic references; not planner acceptance",
+  "units": "mm",
+  "reference_numeric_tolerance": 1e-9,
+  "backend_limits": {
+    "boundary_distance_mm": 0.001,
+    "area_error_mm2": 0.01,
+    "volume_error_mm3": 0.01
+  },
+  "cases": [
+    {
+      "id": "G01_rectangle_overlay",
+      "kind": "rectangle_overlay",
+      "input": {"a": [0, 0, 10, 10], "b": [5, 0, 15, 10]},
+      "expected": {"union_area": 150, "intersection_area": 50, "difference_area": 50, "union_components": 1}
+    },
+    {
+      "id": "R01_square_reachability",
+      "kind": "square_reachability",
+      "input": {"side": 10, "tool_radii": [2, 1], "allowance": 0},
+      "expected": {"rest_areas": [3.4336293856408275, 0.8584073464102069], "rest_components": 4, "second_tool_gain": 2.5752220392306206}
+    },
+    {
+      "id": "R02_profile_versus_pocket",
+      "kind": "profile_versus_pocket",
+      "input": {"side": 20, "radius": 2, "allowance": 0.5, "profile_centers": [[2.5, 2.5], [17.5, 2.5], [17.5, 17.5], [2.5, 17.5]], "closed": true},
+      "expected": {"profile_sweep_area": 236.5663706143592, "profile_rest_area": 163.4336293856408, "profile_unswept_center_side": 11, "ideal_pocket_sweep_area": 357.5663706143592, "ideal_pocket_rest_area": 42.43362938564081, "intentional_allowance_area": 39}
+    },
+    {
+      "id": "G02_annulus_inset",
+      "kind": "annulus_inset",
+      "input": {"outer_radius": 5, "inner_radius": 2, "inset": 0.5},
+      "expected": {"outer_radius": 4.5, "inner_radius": 2.5, "area": 43.982297150257104, "components": 1, "holes": 1}
+    },
+    {
+      "id": "V01_square_capped_target",
+      "kind": "square_v_target",
+      "input": {"side": 10, "included_angle_degrees": 90, "cap_depth": 2, "section_depths": [0, 1, 2]},
+      "expected": {"section_areas": [100, 64, 36], "volume": 130.66666666666666, "flat_floor_area": 36}
+    },
+    {
+      "id": "V02_circle_capped_target",
+      "kind": "circle_v_target",
+      "input": {"radius": 5, "included_angle_degrees": 90, "cap_depth": 2, "section_depths": [0, 1, 2]},
+      "expected": {"section_radii": [5, 4, 3], "volume": 102.62536001726657, "flat_floor_area": 28.274333882308138}
+    },
+    {
+      "id": "C01_cone_profiles",
+      "kind": "cone_profiles",
+      "input": {"included_angle_degrees": 90, "flat_radii": [0, 0.5], "available_radius": 2, "maximum_radius": 3},
+      "expected": {"penetrations": [2, 1.5], "cone_end_heights": [3, 2.5], "flat_tip_unreachable_clearance": 0.4}
+    },
+    {
+      "id": "C02_spherical_cone_join",
+      "kind": "spherical_cone_join",
+      "input": {"included_angle_degrees": 60, "ball_radius": 0.5, "maximum_radius": 3},
+      "expected": {"join_height": 0.25, "join_radius": 0.4330127018922193, "join_slope": 0.5773502691896257, "cone_end_height": 4.696152422706632}
+    },
+    {
+      "id": "S01_constant_radius_sweep",
+      "kind": "capsule_sweep",
+      "input": {"start": [0, 0], "end": [6, 0], "radius": 2},
+      "expected": {"area": 36.56637061435917, "bounds": [-2, -2, 8, 2], "contains_midpoint": true}
+    },
+    {
+      "id": "S02_affine_radius_sweep",
+      "kind": "affine_radius_sweep",
+      "input": {"start": [0, 0], "end": [4, 0], "start_radius": 1, "end_radius": 2},
+      "expected": {"area": 20.23097243802297, "bounds": [-1, -2, 6, 2], "contains_midpoint": true}
+    },
+    {
+      "id": "T01_exact_fit_centers",
+      "kind": "exact_fit_centers",
+      "input": {"rectangle": [0, 0, 10, 4], "circle_center": [0, 0], "circle_radius": 2, "tool_radius": 2},
+      "expected": {"rectangle_center_segment": [[2, 2], [8, 2]], "circle_center_point": [0, 0], "center_area": 0, "nominal_feasible": true}
+    },
+    {
+      "id": "T02_near_contact_overlay",
+      "kind": "near_contact_overlay",
+      "input": {"side": 10, "horizontal_gaps": [-0.004, 0, 0.004]},
+      "expected": {"union_areas": [199.96, 200, 200], "interior_components": [1, 1, 2]}
+    },
+    {
+      "id": "T03_narrow_bridge",
+      "kind": "narrow_bridge",
+      "input": {"left_box": [0, 0, 4, 4], "right_box": [6, 0, 10, 4], "bridge": [4, 1.99, 6, 2.01], "inset": 0.02},
+      "expected": {"initial_area": 32.04, "initial_components": 1, "inset_components": 2, "inset_holes": 0}
+    },
+    {
+      "id": "A01_general_region_composition",
+      "kind": "region_composition",
+      "input": {"outer": [[-24, 0], [-8, 60], [8, 60], [24, 0], [12, 0], [6, 18], [-6, 18], [-12, 0]], "holes": [[[-4, 28], [4, 28], [0, 44]]], "stock_thickness": 8, "included_angle_degrees": 90, "cap_depth": 3, "endmill_diameter": 5, "v_cutter_maximum_diameter": 12, "roughing_allowance": 0.5},
+      "expected": {"opening_area": 1532, "components": 1, "holes": 1, "path_acceptance": "pending independent swept-stock verification; input validation alone is not acceptance"}
+    }
+  ]
+}
