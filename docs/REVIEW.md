@@ -2,6 +2,17 @@
 
 ## Rest and V-carving design refinement - 2026-09-22
 
+Follow-up scope clarification: the A is one fixture and inlay is one application;
+neither defines the core. The user requested consideration of locally owned maths
+and geometry algorithms. The design now compares a bounded in-repository kernel
+with established primitives, records robust-predicate/construction obligations,
+and requires a general-shape acceptance matrix. GEOS adoption evidence and
+Shewchuk's predicate research were checked in primary sources. No backend was
+installed, benchmarked or selected in this clarification round; build-versus-adopt
+remains an engineering decision requiring evidence, not a user permission blocker.
+This follow-up passed 85 local documentation-link checks and `git diff --check`;
+no runtime tests or manual machining validation were needed for documentation.
+
 The user accepted segmented finish modes, caller-owned tool catalogs and future
 paired inlays, and moved the work to `feat/rest-machining-and-vcarving`. This round
 changed design documentation only. The [design owner](REST_MACHINING_PLAN.md#shared-core-and-paired-inlay-design)

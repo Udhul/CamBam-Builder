@@ -19,8 +19,12 @@ inlays to the design scope, and committed the first round on
 `feat/rest-machining-and-vcarving`. The [shared-core refinement](REST_MACHINING_PLAN.md#shared-core-and-paired-inlay-design)
 now defines target/permission/free-space separation, ideal V target sections,
 bounded stock uncertainty, topology edge cases and paired inlay assembly semantics.
-Next: settle first-demonstration/inlay priorities and the numerical fixture contract
-before choosing a geometry backend or implementing the engine. Region/Z support is already complete;
+The user clarified that artistic/technical shapes are general inputs, the A is only
+a fixture, and inlay is one application. The [kernel ownership policy](REST_MACHINING_PLAN.md#algorithm-ownership-and-dependency-policy)
+now includes an in-repository implementation as a first-class option; no external
+backend is selected or mandated. Next: complete the numerical general-shape
+acceptance matrix and compare owned versus established geometry primitives before
+implementation. Inlay order is not a core-design blocker. Region/Z support is already complete;
 variable-Z Engrave motion acceptance remains separate. No runtime change or machining
 acceptance is claimed. Continue the design conversation in this session.
 

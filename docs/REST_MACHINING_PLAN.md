@@ -401,6 +401,10 @@ User decisions accepted 2026-09-22:
 3. Continue this work on `feat/rest-machining-and-vcarving`; the user committed
    the first documentation round. This authorizes design work, not agent commits
    or merge. No branch delivery/readiness claim is made by this design record.
+4. The engine is for general artistic and technical regions. The A is an example
+   fixture, not a domain restriction; inlay is one application, not the organizing
+   model for the core. Consider owning the geometry algorithms in this repository
+   as well as using established low-level libraries; no external backend is mandated.
 
 Still settle the first acceptance target (outline, floor/through
 depth, wall shape, tools), allowed residual boundary/thickness/volume tolerances,
@@ -634,9 +638,9 @@ needs it and the existing target/stock representation is shown insufficient.
 Design refinement stops at a reviewed proposal and recorded open decisions. No machine
 validation is needed for documentation. Before later manual acceptance, generate
 and inspect A/B files and exact expected motions as required by the development
-runbook. Continue this design conversation while first-demonstration and inlay
-priorities are pending; a fresh implementation session becomes appropriate after
-their answers and the first fixture contract are recorded here.
+runbook. The A is suitable as one example; inlay implementation order is not a
+core-design blocker. Complete the general geometry acceptance matrix and kernel
+ownership evaluation before declaring the design ready for implementation.
 
 ## Shared core and paired inlay design
 
@@ -865,18 +869,73 @@ design synthesis, with formulas derived under the stated assumptions.
   offers exact or guaranteed-approximation offsets and lists GPL licensing for this
   package. Distribution and binding implications must be evaluated before adoption.
 
-Recommendation: evaluate Shapely/GEOS first for planar Boolean/offset work because
-of its direct Python surface; retain Clipper2 as the focused alternative. Neither
-is accepted until deterministic fixtures, topology/error bounds, Windows/Python
-installation and distribution requirements pass. Choose one production planar
-backend, not two parallel implementations. Separately evaluate segment Voronoi
-only when required by V-finishing; avoid raster skeletonization as an unbounded
-substitute. Use CGAL/OpenCAMLib as references or justified later capabilities rather
-than introducing a general mesh/solid kernel for the current fixed-axis scope.
+No backend is preferred solely because it offers a short Python API. Compare a
+bounded in-repository kernel with established planar backends under the ownership
+criteria below. Shapely/GEOS and Clipper2 remain candidates, not dependencies or
+selected architecture. Choose one production implementation per primitive rather
+than maintaining equivalent competing kernels. Separately evaluate segment Voronoi
+when required by V-finishing; avoid raster skeletonization as an unbounded
+substitute. A general mesh/solid kernel is not required for the current fixed-axis scope.
+
+### Algorithm ownership and dependency policy
+
+The user explicitly raised an in-repository implementation using NumPy and other
+appropriate foundational libraries. This is a valid option, not a fallback to
+discard without evaluation. Own the domain semantics and algorithms regardless
+of whether low-level planar operations are delegated:
+
+| Responsibility | Proposed ownership |
+| --- | --- |
+| Cutter profiles, target evaluators, rest/stock semantics and error budgets | Implement and maintain here. |
+| Feasible-pose constraints, tool combinations, strategies, entry/link policies | Implement and maintain here; no opaque third-party CAM engine. |
+| Analytic line/arc distances, profile inversion, simple sweeps and adaptive subdivision | Prefer small in-repository implementations with analytic checks. |
+| General polygon overlay/offset topology and segment Voronoi construction | Make a bounded build-versus-adopt decision using adversarial acceptance and maintenance evidence. |
+| Numeric arrays and acceleration | NumPy or justified low-level support; not a substitute for robust geometric predicates. |
+| CamBam registration/XML and client catalogs | Existing adapters/owners; no backend objects or catalog dependencies in the public machining model. |
+
+Implementing general Booleans means owning intersection classification, splitting
+edges, consistent vertex identity, coincident-edge handling, ring/hole reconstruction
+and valid set topology. Offsetting additionally needs self-intersection resolution
+and component split/merge/collapse handling. Robust orientation/incircle predicates
+alone do not guarantee robust constructed intersections or assembled topology.
+NumPy floating-point operations and a single global epsilon do not solve these
+problems. Exact predicates also do not make irrational arc/offset coordinates exact.
+
+For an in-repository candidate, declare the coordinate model and supported inputs
+first: bounded polygonal approximation versus analytic arcs; scaled integers/exact
+rationals where appropriate versus filtered floating-point predicates with exact
+fallbacks. Track snapping and construction error separately. Reuse existing Region
+validation only where its contract fits; its CAD topology checks do not establish
+a Boolean or medial-axis kernel. Do not grow new general CAM algorithms inside the
+Region XML/entity owner.
+
+Evaluate implementation ownership by correctness evidence, auditable failure modes,
+supported platforms, dependency/binding burden, license/distribution requirements,
+performance on representative contours, and long-term maintenance. Count the robust
+kernel and regression burden, not only wrapper lines. A local implementation removes
+upstream-change risk but transfers algorithmic defects and maintenance to us; neither
+local ownership nor library popularity establishes correctness.
+
+The first decision experiment should cover union/difference, disk offsets, holes,
+coincident/near-tangent boundaries and narrow-feature preservation, using the same
+acceptance contract for both approaches. Estimate the in-house algorithm and test
+scope before implementing a full alternative. Use a bounded prototype only if
+inspection cannot settle the comparison. If a local kernel wins, keep it local;
+if an established primitive wins, isolate it behind a small internal function
+boundary with owned value types. No backend plugin framework is needed. External
+libraries may also serve as development-only comparison oracles without becoming
+runtime dependencies; agreement is corroboration, not proof.
+
+Evidence: [GEOS](https://libgeos.org/) identifies PostGIS, QGIS, GDAL and Shapely
+as consumers, so it should not be classified as an unproven niche CAM library.
+[Shewchuk's robust-predicate research](https://www.cs.cmu.edu/~quake/robust.html)
+explains why floating-point sign errors matter and supplies adaptive-precision
+orientation/incircle algorithms. These are reasons to evaluate maturity and numeric
+contracts explicitly, not blanket endorsements or commitments to vendor code.
 
 ### Acceptance additions and next decision
 
-Proposed first combined-tool fixture, pending the user's demonstration preference:
+One proposed combined-tool fixture (the user accepts the A as an example):
 millimetres, stock top at Z=0, stock thickness 8; outer A-shaped contour
 `(-24,0), (-8,60), (8,60), (24,0), (12,0), (6,18), (-6,18), (-12,0)`;
 triangular hole `(-4,28), (4,28), (0,44)`. Use the ideal 90-degree included-angle
@@ -894,11 +953,28 @@ precision limit, and assembled tapered-wall fit. Inlay verification must test a
 correct pair, wrong flip, premature bottom/backing contact, excessive visible side
 gap and a narrow feature without a flat bottom. Prove geometry before optimizing.
 
-Pending user preferences: model both straight-wall and tapered inlays with tapered
-first (recommended); use a flat-depth V-carved letter with endmill roughing as the
-first combined-tool demonstration (recommended). These choices select the first
-recipe/acceptance target, not separate engine architectures. The standalone
-endmill-rest slice remains the internal foundation, with pointed-cone target and
-sweep checks alongside it. No runtime implementation is authorized by a claim of
-completed design; design closure still needs the numerical first-fixture contract
-and reviewed backend evaluation criteria.
+The A cannot stand in for general-shape acceptance. Organize the fixture matrix by
+geometric difficulty and machining outcome rather than application names:
+
+| Family | What it must establish |
+| --- | --- |
+| Rectangles, circles, annuli, exact-width slots | Analytic coverage, offsets, isolated/curve center sets and dimensional limits. |
+| Concave technical pockets, fillets, multiple islands | Arc handling, topology, disconnected rest and safe overlap. |
+| Organic/artistic contours, fine strokes, acute wedges | Curvature, varying width, detail retention and bounded approximation. |
+| Disconnected regions and nested ring hierarchies | Explicit fill semantics, component ownership and independent routing. |
+| Near-tangencies, coincident edges, tiny bridges, large coordinate ranges | Robust predicates/constructions, explicit uncertainty and no silent topology damage. |
+| Wide/depth-capped areas, multiple floors, tabs | Tool limits, full-height occupancy and stock evolution. |
+| Paired mating parts, including inlays | Composition of ordinary jobs and assembly constraints; no core specialization for lettering or inlays. |
+
+Use analytic cases, adversarial constructions and deterministic generated shapes.
+Add unit/translation/rotation invariance, valid similarity scaling with scaled tool
+and tolerance inputs, contour-order independence and stock-removal monotonicity.
+Nonuniform scaling of a design does not scale a physical round cutter into an ellipse.
+Use set identities and independent bounds, not merely pictures or agreement between
+two calls to the same algorithm.
+
+The standalone endmill-rest slice remains the internal foundation, with pointed-cone
+target and sweep checks alongside it. Inlay order can be chosen later without
+blocking that foundation. Design closure needs numerical tolerances and expected
+results for the general-shape matrix plus the kernel ownership decision; choosing
+a showcase application is not a prerequisite or a substitute.
