@@ -14,6 +14,7 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 mcp = ["mcp==2.2.0; python_version >= '3.10'"]
+planar = ["shapely==2.0.7; python_version < '3.10'", "shapely==2.1.2; python_version >= '3.10'"]
 
 [project.scripts]
 cambam-mcp = "cambam_builder.mcp_adapter.__main__:main"

@@ -1094,12 +1094,15 @@ material performance bottleneck.
 
 ### Internal planar value and error contract
 
-This is the design boundary for the first detached implementation, not an
-implemented public API. Development probes demonstrate bounded cases; they must
+This is the design boundary for detached implementation. The first nominal
+runtime subset is now implemented; its API and explicit exclusions live in
+[the implemented specification](structure_spec.md#detached-nominal-planar-core).
+Development probes demonstrate bounded cases; they must
 not be imported by runtime code. Geometry/error ownership belongs to the detached
 core, with one private Shapely adapter. Existing CAD `Region` validation and XML
 rounding remain separate contracts: passing CAD validation is not a machining
-accuracy certificate. No runtime dependency or path planner is introduced here.
+accuracy certificate. The implementation adds an optional `planar` dependency
+extra, while this design contract introduces no path planner.
 
 **Owned inputs and values.** Use immutable tuples/scalars and explicit tagged
 variants, rather than backend objects or a general options dictionary:

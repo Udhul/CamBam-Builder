@@ -1,5 +1,75 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Detached nominal planar runtime - 2026-09-22
+
+The first runtime increment is implemented in `cambam_builder/planar.py` and its
+private `_planar_shapely.py` adapter. The user explicitly authorized implementation
+after the design-only rounds. The [implemented contract](structure_spec.md#detached-nominal-planar-core)
+owns supported types, frame mapping, nominal error policy and exclusions; the
+[status owner](PROGRESS.md#next-detached-stockrest-increment) owns the next priority.
+No development evaluation helper was imported into runtime.
+
+The end-to-end regression normalizes two 10x10 mm overlapping squares, unions to
+150 mm2, subtracts the second square to 50 mm2, then erodes by a 1 mm disk to 24 mm2.
+It checks source lineage, operation fingerprints, actual backend versions, unchanged
+inputs and explicit unknown bounds. Other gates cover strict holes, splits, point
+contacts, source winding/start invariance, numeric-key equivalence, mm/inch and
+1e9 mm origin normalization, rejection at 1e15 mm under the 0.001 mm boundary budget,
+work limits, circle chord-error/area references, rounded-hole erosion and empty area
+versus exact-fit feasible segments. The default area budget is 0.01 mm2.
+
+Analytic predicates classify exact-fit rectangle lines/points and circle points,
+plus both adjacent binary64 values without tolerance snapping. A 10x20 inch
+rectangle with a 127 mm tool radius remains exactly a segment after unit conversion
+and rotated placement. A fresh process with Shapely blocked still imports the API
+and computes analytic centers; backend operations return `unsupported`.
+
+Independent review repaired three concrete boundary defects before final checks:
+integer/float and signed-zero spellings now share canonical exact numeric keys;
+sequence-bearing owned results copy to immutable tuples; and distinct source
+vertices that collapse during conversion return `unresolved`, not `invalid_input`.
+The thin inch fixture X=[1.5000000000000002, 1.5000000000000004], Y=[0,1] permanently
+covers conversion loss. Malformed normalized component types fail explicitly.
+Source spans now include chord endpoints so canonical ring ordering cannot obscure
+their original component/ring/segment and parameter attribution.
+
+Verification from the repository root:
+
+- `output/shapely-evaluation-20260922-175502/<py39|py310|py311|py312|py313>/Scripts/python.exe
+  -m unittest discover -s tests -p test_planar.py -v`: **18 tests pass on each of
+  Python 3.9, 3.10, 3.11, 3.12 and 3.13**. These reuse the evaluated environments,
+  with Shapely 2.0.7/GEOS 3.11.4 on 3.9 and Shapely 2.1.2/GEOS 3.13.1 on 3.10-3.13.
+- `.venv/Scripts/python.exe -m unittest discover -s tests -v`: **336 tests run,
+  324 pass, 12 skip**. This existing base environment is Python 3.14.5 and lacks
+  Shapely: 11 backend tests skip explicitly, as does the existing Windows symlink
+  privilege check. Backend acceptance comes from the five focused runs above.
+- Python 3.13 `-m compileall -q cambam_builder legacy_cambam_builder`: pass.
+- `uv build --wheel --out-dir output/nominal-planar-20260922-runtime/dist
+  --cache-dir output/nominal-planar-20260922-runtime/cache`: pass after sandbox
+  networking blocked the first build-dependency fetch. The approved retry succeeds.
+  Wheel inspection confirms both modules, correct Python-version/extra markers,
+  NumPy-only unconditional requirements and absence of output/tools/tests payload.
+  Import and nominal erosion directly from the wheel pass on Python 3.13 with its
+  existing backend; this is a packaged-runtime smoke, not a new clean-install matrix.
+- `git diff --check` and whitespace inspection of all intended new Python files:
+  pass. No staging or commit performed.
+
+Verbose run logs and disposable build artifacts are in
+`output/nominal-planar-20260922-runtime/`. The setuptools-generated root `build/`
+was moved into that task directory after verifying both absolute paths; no
+pre-existing/user inputs were removed. Package-build permission differences required
+an approved read-only wheel check outside the sandbox.
+
+Manual CamBam validation adds no evidence: no entity, XML, MOP, MCP or toolpath
+behavior changed. Automated geometry acceptance is complete for this subset;
+production machining and conservative stock/rest certification are not claimed.
+General arcs/compound analytic-circle topology and general collapsed center sets
+remain explicitly unsupported. Reopen those capabilities for a concrete blocking
+consumer and independent topology/error references, not merely another nearby
+edge case. The next useful scope establishes directional removal bounds for one
+analytic endmill/rest case before any nominal result can feed guaranteed stock.
+
+
 ## Adversarial planar acceptance and internal contract - 2026-09-22
 
 The bounded design increment closes adversarial planar acceptance with a concrete

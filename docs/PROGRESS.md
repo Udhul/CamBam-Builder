@@ -7,59 +7,33 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**2026-09-22 rest machining and V-carving design refinement active (backlog 6).**
-The user promoted the standalone/native multi-tool region workflow for design,
-not implementation. The expanded proposal separates target finish, stock/rest,
-tool occupancy, safe overlap, path planning, verification and CamBam attachment;
-it covers capped/wide carving, flat/rounded tips and native-path evidence limits.
-Primary-source research and proposed acceptance fixtures are recorded in the
-[design owner](REST_MACHINING_PLAN.md#design-refinement---2026-09-22).
-The user accepted multiple finish modes and caller-owned tool catalogs, added paired
-inlays to the design scope, and committed the first round on
-`feat/rest-machining-and-vcarving`. The [shared-core refinement](REST_MACHINING_PLAN.md#shared-core-and-paired-inlay-design)
-now defines target/permission/free-space separation, ideal V target sections,
-bounded stock uncertainty, topology edge cases and paired inlay assembly semantics.
-The user clarified that artistic/technical shapes are general inputs, the A is only
-a fixture, and inlay is one application. The [kernel ownership policy](REST_MACHINING_PLAN.md#algorithm-ownership-and-dependency-policy)
-now records their subsequent approval to use proven packages: evaluate established
-primitives first, retaining ownership of machining semantics and bounded gaps.
-The [acceptance corpus v1](REST_MACHINING_PLAN.md#acceptance-corpus-v1) now contains
-14 reusable cases with numerical references and topology expectations; 13 focused
-reference tests pass. These verify the corpus, not a backend or CAM engine.
-The [Shapely/GEOS evaluation decision](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
-selects the package for planar primitives in the design, with explicit approximation
-and lower-dimensional adapter requirements. Binary-only installs and isolated project
-wheel coexistence pass on Windows x64 Python 3.9-3.13 using Shapely 2.0.7 on 3.9 and
-2.1.2 on 3.10-3.13. The [dated evidence](REVIEW.md#shapelygeos-planar-evaluation---2026-09-22)
-records case errors, default-buffer/precision failures and exact-fit dimensional loss.
-All five geometry runs pass 11 planar cases, retain T01 as an expected limitation
-and mark C01/C02 outside planar scope; the 13 backend-independent reference tests pass.
-The reusable runner is development-only; runtime dependencies remain unchanged.
+**2026-09-22 first detached nominal planar runtime slice complete (backlog 6).**
+The user authorized the previously proposed implementation. Immutable detached
+values now enforce explicit frames/units, strict polygon ownership, normalization,
+source mapping, error ledgers and classified failures. A private optional Shapely
+adapter provides union/difference and nominal area erosion; analytic rectangle/disk
+feasible centers retain exact rational area/segment/point/empty classifications.
+The [implemented contract](structure_spec.md#detached-nominal-planar-core) owns the
+API and bounded limitations. The optional `planar` extra pins the already evaluated
+Shapely versions; base imports and analytic centers do not require it.
 
-**Adversarial planar acceptance and the internal contract are now closed for the
-bounded design slice.** The [owned value/error contract](REST_MACHINING_PLAN.md#internal-planar-value-and-error-contract)
-defines frames/units, strict topology admission, regularized filled-area operations,
-error accounting and certification, explicit failure states, and analytic
-rectangle/circle feasible sets retaining segments and points. The development-only
-[adversarial runner](../tools/evaluate_planar_adversarial.py) checks invalid input,
-arc-heavy/organic references, coordinate/similarity/unit/order invariants and
-exact-fit versus near-fit classification; [dated results and limits](REVIEW.md#adversarial-planar-acceptance-and-internal-contract---2026-09-22)
-own the numerical evidence. General collapsed center sets and arbitrary organic
-offset accuracy remain unsupported/unproved, not inferred from polygon area.
+The programmatic slice composes union -> difference -> erosion with source/error
+provenance. Nominal results always report `budget_certified=False`; unknown numeric,
+offset propagation and output bounds remain unknown. General arcs, compound analytic
+circle topology, general collapsed center sets, native detachment and conservative
+stock/rest/path planning remain outside this increment. No CamBam files or machining
+acceptance changed. [Dated checks and review repairs](REVIEW.md#detached-nominal-planar-runtime---2026-09-22)
+record the implementation evidence; earlier backend/corpus evaluations remain
+historical evidence, not universal accuracy certificates.
 
-Next: implement the first detached nominal planar slice under that contract:
-immutable owned values, validation/normalization, a private optional Shapely adapter,
-union/difference and nominal area erosion, plus analytic rectangle/circle feasible
-centers. Prove one programmatic end-to-end slice with source/error provenance and
-explicit unsupported results before broadening. This matters now because the
-backend and boundary have evidence but no runtime consumer enforces them yet.
-Stop before conservative stock/rest certification or path planning; those need
-separate directional occupancy bounds. This next runtime increment is proposed,
-not authorized by the completed design-only request. Reopen backend selection
-only for a demonstrated contract, compatibility or performance gap. Inlay order
-is not a core-design blocker; variable-Z Engrave acceptance remains separate.
-No runtime change or machining acceptance is claimed. This is a useful fresh-session
-breakpoint: the contract, evidence, limits and distinct next scope are persisted.
+Next: [establish directional occupancy bounds for one analytic endmill/rest case](#next-detached-stockrest-increment).
+This matters now because nominal operations have a runtime consumer, but cannot yet
+justify guaranteed removal or protected-material safety. Compared with additional
+curve variants, this closes the dependency that blocks a useful rest result.
+Stop at a bounded, independently checked stock/rest result before path generation.
+This is a good fresh-session breakpoint: the completed API, evidence, unsupported
+cases and next acceptance scope are persisted. Implementation is uncommitted;
+no merge-ready or production-machining claim is made.
 
 **2026-09-21 backlog 4e local stdio acceptance complete.** OpenCode 1.18.31,
 running GLM-5.3-Flash from an isolated task-owned configuration, completed the real
@@ -904,7 +878,7 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    bind/origin/authentication/TLS policy, document-handle lifecycle and cancellation
    before implementation; never expose the current write-capable service by merely
    binding to a LAN interface.
-6. **Active design refinement, 2026-09-22:** rest-area calculation and rest
+6. **Nominal planar foundation implemented, 2026-09-22:** rest-area calculation and rest
    machining helpers for pocket and inside/outside profile MOPs. Five outcomes:
    pure rest regions; safe expansion for a smaller endmill; pointed/flat-tip
    V-cutter preparation; a general bounded XYZ V-carving path calculator; and
@@ -914,14 +888,28 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    Calculations must run programmatically in this framework without CamBam;
    `.cb` files provide interchange, not access to a headless CAM engine.
    [Problem, reasoning, support gaps and acceptance plan](REST_MACHINING_PLAN.md).
-   The current user request promotes design for the combined-tool letter/region
-   and paired-inlay workflows, with caller-supplied tools/catalog integration.
+   The broader design covers general combined-tool region and paired-inlay
+   workflows, with caller-supplied tools/catalog integration. The first detached
+   nominal planar runtime increment is now implemented.
    The [planar backend decision](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
    selects Shapely/GEOS for the design. Adversarial acceptance and the
    [internal value/error contract](REST_MACHINING_PLAN.md#internal-planar-value-and-error-contract)
-   are closed for the bounded nominal planar slice. Next is its first detached
-   implementation, scoped in [active priority](#active-work-and-next-priority);
-   conservative stock/rest, paths and machining acceptance remain later gates.
+   are enforced for the [implemented bounded subset](structure_spec.md#detached-nominal-planar-core).
+   Conservative stock/rest, paths and machining acceptance remain later gates.
+
+   #### Next detached stock/rest increment
+
+   Establish directional occupancy bounds for one analytic rectangle and disk-tool
+   case at a fixed depth, then derive bounded guaranteed removal and remaining stock
+   with independent analytic references. Define the accepted input uncertainty,
+   containment direction, error propagation and failure rules before implementing
+   that consumer. Acceptance must distinguish nominal feasible centers from actual
+   swept removal, preserve protected boundaries, and reject uncertified/general
+   inputs rather than reusing nominal Boolean success as a safety certificate.
+   Stop before entry/link/path generation, native attachment, inlays or general
+   curved topology. This is the next useful dependency for the requested rest
+   workflow; broaden curves only when this slice demonstrates a blocking need.
+
 7. **Deferred MCP/core capability: author Manual Profile holding-tab positions.**
    Current automatic authoring covers width, height, minimum/maximum count, distance,
    size threshold, the constrained lead-in flag and Square/Triangle/Skip style.

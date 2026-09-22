@@ -26,6 +26,7 @@ packages; `inactive/` and demos are outside that runtime package list.
 | `cambam_builder/cam_entities.py` | `Part`, MOP classes, and MOP XML path/encoding policy inventories | Part stock/nesting or MOP parameters and XML policy |
 | `cambam_builder/cambam_entities.py` | Explicit compatibility/discovery facade re-exporting canonical objects from the four entity owners | Preserve public entity imports; implementation modules must import owners directly |
 | `cambam_builder/cad_transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
+| `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
 | `cambam_builder/machining_recommendations.py` | Immutable tool/material/machine contexts, provenance-bearing recommendations, user diameter tables and pluggable pure strategies | Recommendation selection only; contains no curated catalog, persistence, document mutation or safety claim |
 | `cambam_builder/machining_planning.py` | Pure through-cut pass balancing and composition of recommendation profiles with formula/machine diagnostics | Candidate planning only; the existing MCP depth tool delegates here, while full profile construction remains a direct-Python API |
@@ -57,6 +58,96 @@ packages; `inactive/` and demos are outside that runtime package list.
 The reader's `PRIMITIVE_TAG_TO_CLASS` and `MOP_TAG_TO_CLASS` are the executable
 supported-tag inventory, not a claim of complete CamBam coverage. Consult those
 maps and corresponding entity encoders before adding a type.
+
+### Detached nominal planar core
+
+`cambam_builder.planar` is the public, document-independent owner of immutable
+`PlanarFrame`, `RegionSet`, `Polygon`, `Rectangle`, `Circle`, `ErrorBudget`,
+`PlanarApproximation`, `FeasibleSet` and `PlanarResult` records. It imports no CAD
+entities, development probes or backend geometry classes. `_planar_shapely.py`
+privately owns lazy Shapely/GEOS admission and regularized area operations.
+The `planar` optional extra selects Shapely 2.0.7 on Python 3.9 and 2.1.2 on
+Python 3.10+; ordinary imports and analytic centers need no backend.
+
+Inputs declare `mm` or `inch`, a nonempty XY frame identity, a numerical origin in
+that frame and optional section Z. Coordinates normalize as `(source-origin)*scale`
+into local millimetres; inverse placement is `local/scale+origin`, with exact
+`127/5` inch conversion. Binary operands must match frame identity, physical origin
+and section after conversion; different anchors require caller-owned explicit
+remapping. No native transform, Z projection or frame alignment is inferred.
+
+`normalize(region, budget)` admits explicitly closed line-ring polygons with
+assigned holes, rigidly placed analytic rectangles and a single analytic circle.
+Finite positive primitive sizes, finite XY coordinates, closure, distinct vertices,
+nonzero edges/area, simple rings, strictly contained non-touching/disjoint holes,
+and disjoint component interiors are required. Independent component boundary
+contacts remain explicit; overlap requires `union`. No repair, snapping or area
+pruning occurs. General authored arcs and multiple components containing circles
+return `unsupported`: chord polygons do not establish analytic source topology.
+This deliberately bounded first subset does not claim the design's full curved
+`RegionSet` vocabulary. Authored inputs remain unchanged and available to callers;
+analytic identity is retained in source fingerprints, never fitted from polygons.
+
+Circle subdivision checks stable sagitta and summed area-deficit expressions
+against both budgets and `max_segments`. Source spans carry component/ring/segment,
+parameter interval, source label and the chord's local-mm endpoints, independent of
+canonical output winding/start/order. Derived operations retain those spans as
+**input lineage**, not exact output-edge attribution. Fingerprints canonicalize
+polygon ring start/winding and component/hole order, use exact numeric values with
+no quantization, and include frame, units, analytic meaning and requested policy.
+Source labels are excluded from the geometric key and retained separately.
+Provenance records input fingerprints, policy, operation parameters, adapter revision
+and actual Shapely/GEOS versions. Keys express identity, not approximate equality.
+
+`union(left, right, budget)` and `difference(left, right, budget)` consume normalized
+approximations. `nominal_area_erosion(value, radius_mm, budget)` exposes only
+regularized filled area. A valid backend result outside strict shell/hole topology
+returns `unsupported`, including shell/hole point contact. Component/hole counts
+and contact locations are recorded. Empty area never proves a complete feasible
+center set is empty. Segment limits gate input/output sizes and circle refinement;
+they are not a hard memory/time interrupt inside GEOS.
+
+`feasible_centers(primitive, frame, tool_radius, tool_units, budget)` is backend-free
+closed-set disk erosion of one supplied analytic rectangle or circle. Exact rational
+predicates on supplied numbers precede placement and unit conversion; one-ULP near
+fits never become exact fits. `FeasibleSet` separates tagged analytic areas, closed
+segments and points in primitive-centered local-mm axes, plus rational `center_mm`,
+rectangle rotation and the original frame. Empty has no dimensions. Rational
+coordinates preserve sub-ULP distinctions; no tiny polygon substitutes for a line
+or point. Reflection of these symmetric primitives is expressible by the same
+center/axis placement; arbitrary affine/native transforms are not an API here.
+General polygons, size uncertainty and mixed collapsed branches are unsupported.
+
+Results distinguish `ok`, `invalid_input`, `unsupported`, `unresolved` and
+`backend_failure`. Failures return no accepted value. Known error contributions
+that exceed a budget, unresolved conversion loss or work limits return `unresolved`.
+Coordinate ULP allowances are not numeric proofs. Input approximation, coordinate
+resolution, operation approximation/numerics and output conversion remain separate;
+unavailable contributions are `None`/`unknown`, never zero. All successful results
+are `nominal_geometry` with `budget_certified=False`; requesting certification fails
+explicitly. There is no guaranteed removal, stock/rest certificate, executable
+motion, XML/MCP exposure or production machining acceptance in this API.
+
+A minimal programmatic slice (after installing the optional extra):
+
+```python
+from cambam_builder.planar import (
+    PlanarFrame, ErrorBudget, RegionSet, Rectangle,
+    normalize, union, difference, nominal_area_erosion,
+)
+frame = PlanarFrame("mm", "drawing", (0, 0), section_z=0)
+budget = ErrorBudget(boundary_mm=0.001, area_mm2=0.01)
+a = normalize(RegionSet(frame, (Rectangle((5, 5), 10, 10),)), budget)
+b = normalize(RegionSet(frame, (Rectangle((10, 5), 10, 10),)), budget)
+assert a.status == b.status == "ok"
+joined = union(a.value, b.value, budget)
+assert joined.status == "ok"  # area 150 mm2
+cut = difference(joined.value, b.value, budget)
+assert cut.status == "ok"     # area 50 mm2
+result = nominal_area_erosion(cut.value, 1, budget)
+assert result.status == "ok"  # area 24 mm2, still uncertified
+assert not result.budget_certified
+```
 
 ### Milling formula and constraint kernel
 

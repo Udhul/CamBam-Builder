@@ -172,10 +172,32 @@ tests to a directory outside the repository, and run discovery there with that
 environment's interpreter. This prevents the repository root from satisfying
 imports accidentally.
 
+### Detached nominal planar runtime checks
+
+Install the optional runtime backend with `uv sync --extra planar --python 3.13`
+(add `--extra mcp` when also exercising MCP). The base dependency set remains
+NumPy-only; `cambam_builder.planar` imports lazily and analytic feasible centers
+work without Shapely. Metadata pins the evaluated Windows-compatible releases:
+Shapely 2.0.7 for Python 3.9 and 2.1.2 for Python 3.10+.
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -p test_planar.py -v
+& $ProjectPython -m unittest discover -s tests -v
+```
+
+The focused suite verifies the detached API end to end and its explicit failure
+states. Without the extra, backend tests skip explicitly while analytic/optional-
+import tests still run; those skips are not backend acceptance. The runtime suite
+can also run from the repository root with the previously isolated evaluation
+interpreters below, without changing their installed dependencies. Nominal evidence
+and API exclusions are in the [specification](structure_spec.md#detached-nominal-planar-core).
+No manual CamBam validation is needed for this nonserialized geometry slice.
+
 ### Isolated planar backend evaluation
 
-The Shapely experiment is development-only. It does not change `uv sync` or the
-runtime dependency set. Use [the corpus/decision owner](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
+The original Shapely experiment remains development-only. Its runners do not
+change runtime dependencies; the later runtime slice above separately owns the
+optional `planar` extra. Use [the corpus/decision owner](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
 for acceptance meaning and [the dated evidence](REVIEW.md#shapelygeos-planar-evaluation---2026-09-22)
 for the tested Windows x64 versions and limits. From the repository root:
 
