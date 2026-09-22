@@ -7,33 +7,24 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**2026-09-22 first detached nominal planar runtime slice complete (backlog 6).**
-The user authorized the previously proposed implementation. Immutable detached
-values now enforce explicit frames/units, strict polygon ownership, normalization,
-source mapping, error ledgers and classified failures. A private optional Shapely
-adapter provides union/difference and nominal area erosion; analytic rectangle/disk
-feasible centers retain exact rational area/segment/point/empty classifications.
-The [implemented contract](structure_spec.md#detached-nominal-planar-core) owns the
-API and bounded limitations. The optional `planar` extra pins the already evaluated
-Shapely versions; base imports and analytic centers do not require it.
+**2026-09-22 directional analytic stock/rest slice complete (backlog 6).**
+The detached nominal planar foundation now has a separate bounded stock consumer:
+one supplied horizontal disk sweep in exact rectangular stock/target at fixed Z.
+Exact rational capsule membership establishes inner/outer removal bounds under
+explicit radius and position uncertainty, rejects protected-boundary overruns,
+and reverses removal bounds for remaining stock/rest. It does not credit nominal
+feasible-center area as swept removal. No optional backend is needed.
+The [implemented contract](structure_spec.md#directional-analytic-stock-section-bounds)
+owns assumptions, proof and failure rules; [review evidence](REVIEW.md#directional-analytic-stockrest-bounds---2026-09-22)
+owns automated acceptance. General planar results remain uncertified.
 
-The programmatic slice composes union -> difference -> erosion with source/error
-provenance. Nominal results always report `budget_certified=False`; unknown numeric,
-offset propagation and output bounds remain unknown. General arcs, compound analytic
-circle topology, general collapsed center sets, native detachment and conservative
-stock/rest/path planning remain outside this increment. No CamBam files or machining
-acceptance changed. [Dated checks and review repairs](REVIEW.md#detached-nominal-planar-runtime---2026-09-22)
-record the implementation evidence; earlier backend/corpus evaluations remain
-historical evidence, not universal accuracy certificates.
-
-Next: [establish directional occupancy bounds for one analytic endmill/rest case](#next-detached-stockrest-increment).
-This matters now because nominal operations have a runtime consumer, but cannot yet
-justify guaranteed removal or protected-material safety. Compared with additional
-curve variants, this closes the dependency that blocks a useful rest result.
-Stop at a bounded, independently checked stock/rest result before path generation.
-This is a good fresh-session breakpoint: the completed API, evidence, unsupported
-cases and next acceptance scope are persisted. Implementation is uncommitted;
-no merge-ready or production-machining claim is made.
+Next: [compose bounded removal from multiple supplied sweeps](#next-detached-stockrest-increment).
+This matters now because a useful rest operation needs cumulative removal;
+expanding primitive/curve breadth would not close that dependency. Stop before
+path generation or native attachment. No manual CamBam acceptance is required for
+this nonserialized conditional geometry slice. This is a good fresh-session
+breakpoint: contracts, limits and next priority are persisted. Changes are
+uncommitted; no merge-ready or production-machining claim is made.
 
 **2026-09-21 backlog 4e local stdio acceptance complete.** OpenCode 1.18.31,
 running GLM-5.3-Flash from an isolated task-owned configuration, completed the real
@@ -899,16 +890,21 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 
    #### Next detached stock/rest increment
 
-   Establish directional occupancy bounds for one analytic rectangle and disk-tool
-   case at a fixed depth, then derive bounded guaranteed removal and remaining stock
-   with independent analytic references. Define the accepted input uncertainty,
-   containment direction, error propagation and failure rules before implementing
-   that consumer. Acceptance must distinguish nominal feasible centers from actual
-   swept removal, preserve protected boundaries, and reject uncertified/general
-   inputs rather than reusing nominal Boolean success as a safety certificate.
+   **Completed 2026-09-22:** directional occupancy and remaining-stock/rest bounds
+   for one analytic rectangular stock/target and supplied horizontal disk sweep.
+   The [contract](structure_spec.md#directional-analytic-stock-section-bounds)
+   distinguishes complete swept coverage from nominal feasible centers, declares
+   input uncertainty and rejects unsupported geometry or protected-boundary overrun.
+   Independent analytic acceptance needs no native/CamBam validation.
+
+   **Next: compose bounded removal from multiple supplied sweeps.** Retain exact
+   directional membership and stock subtraction for a finite supplied sweep set;
+   establish overlap-safe aggregate area bounds and monotonic stock evolution with
+   independent overlapping/disjoint references. Keep uncertainty and provenance
+   explicit and do not count overlapping removal twice. This turns the single-pass
+   proof into useful cumulative rest evidence without inventing toolpaths.
    Stop before entry/link/path generation, native attachment, inlays or general
-   curved topology. This is the next useful dependency for the requested rest
-   workflow; broaden curves only when this slice demonstrates a blocking need.
+   curved topology. Reopen curve breadth only for a demonstrated blocking input.
 
 7. **Deferred MCP/core capability: author Manual Profile holding-tab positions.**
    Current automatic authoring covers width, height, minimum/maximum count, distance,

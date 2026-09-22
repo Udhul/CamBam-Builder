@@ -1,5 +1,56 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Directional analytic stock/rest bounds - 2026-09-22
+
+Implemented `cambam_builder.stock` for exact rectangular stock equal to required
+target and one supplied horizontal disk sweep at fixed Z. The
+[contract and proof](structure_spec.md#directional-analytic-stock-section-bounds)
+separate feasible centers, supplied sweep coverage and actual execution evidence.
+Radius/position uncertainty gives inner/outer capsules; remaining-stock direction
+reverses removal direction. Protected exterior crossing fails without a result.
+General nominal polygons, curves and Boolean outputs are deliberately not admitted.
+
+Independent acceptance: a 12 mm segment with radius 2 mm removes
+`48 + 4*pi` mm2 from a 200 mm2 rectangle, leaving `152 - 4*pi` mm2.
+Rational area intervals enclose both references with width below 0.00034 mm2.
+The uncertainty case uses radius `[1.75, 2.25]` mm and position error 0.25 mm,
+producing radii 1.5 and 2.5 mm. Independent disk/strip membership over 81x41
+points, four allowed displacement vectors and three radii verifies removal and
+rest inclusion. These samples supplement the parameter-wise triangle-inequality
+proof; they are not its basis. Varying errors along a sweep are covered by the
+proof, not claimed as independently sampled execution evidence.
+
+Other regressions preserve exact boundary contact, reject an additional
+`1e-30` mm occupancy beyond it, retain zero-radius line/point guarantees,
+represent empty lower guarantees explicitly, and preserve results after a
+`10**30` mm exact translation. Unsupported/nonfinite inputs fail explicitly.
+Independent review found no factory containment defect; its direct-construction
+finding led to validating capsule containment in `RemainingSection` as well.
+
+Verification from the repository root with `.venv/Scripts/python.exe` (Python
+3.14.5; this run does not renew the documented Python 3.9-3.13 matrix):
+
+- `-m unittest discover -s tests -p test_stock.py -v`: 6 passed, repeated after
+  the review repair.
+- `-m unittest discover -s tests -v`: 342 ran, OK, 11 optional-planar-backend skips and one Windows symlink-privilege skip.
+  Full run overlapped the review repair; the final focused rerun covers the
+  changed stock module. Skips do not constitute optional-backend acceptance.
+- `-m compileall -q cambam_builder legacy_cambam_builder`: passed.
+- `CBProject('smoke')` import/construction assertion: passed.
+- `git diff --check`, untracked Python whitespace inspection and changed local
+  Markdown target/anchor checks: passed.
+
+The verbose suite log is local in
+`output/directional-stock-20260922-202751/tests.log`; durable evidence is above.
+No manual CamBam validation adds evidence because no serialization or machining
+path changed. Caller-declared physical envelopes and complete traversal remain
+assumptions, not measured production acceptance. Implementation is ready to
+commit, not merge-ready. This closes the single-sweep dependency; cumulative
+removal with overlap-safe area bounds is the next useful outcome in
+[the backlog](PROGRESS.md#next-detached-stockrest-increment). Reopen general curves,
+rotated sweeps or separate stock/target topology only for a blocking consumer need.
+A fresh session is appropriate: no pending manual acceptance or decisions remain.
+
 ## Detached nominal planar runtime - 2026-09-22
 
 The first runtime increment is implemented in `cambam_builder/planar.py` and its

@@ -26,6 +26,7 @@ packages; `inactive/` and demos are outside that runtime package list.
 | `cambam_builder/cam_entities.py` | `Part`, MOP classes, and MOP XML path/encoding policy inventories | Part stock/nesting or MOP parameters and XML policy |
 | `cambam_builder/cambam_entities.py` | Explicit compatibility/discovery facade re-exporting canonical objects from the four entity owners | Preserve public entity imports; implementation modules must import owners directly |
 | `cambam_builder/cad_transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
+| `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy and remaining-section bounds | One supplied horizontal sweep inside rectangular stock/target; no path or native integration |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
 | `cambam_builder/machining_recommendations.py` | Immutable tool/material/machine contexts, provenance-bearing recommendations, user diameter tables and pluggable pure strategies | Recommendation selection only; contains no curated catalog, persistence, document mutation or safety claim |
@@ -58,6 +59,60 @@ packages; `inactive/` and demos are outside that runtime package list.
 The reader's `PRIMITIVE_TAG_TO_CLASS` and `MOP_TAG_TO_CLASS` are the executable
 supported-tag inventory, not a claim of complete CamBam coverage. Consult those
 maps and corresponding entity encoders before adding a type.
+
+### Directional analytic stock section bounds
+
+`cambam_builder.stock` owns a detached, backend-independent consumer:
+`bound_horizontal_sweep(SectionRectangle, HorizontalSweep, frame_id=...,
+section_z_mm=..., radius_min_mm=..., radius_max_mm=..., position_error_mm=...)`.
+It accepts one axis-aligned exact rectangular initial stock **equal to the required
+removal target**, and one explicitly supplied horizontal center segment (including
+a zero-length disk placement). All coordinates, radii and errors are millimetres
+in one caller-named Cartesian frame at an explicit fixed Z. No native geometry,
+unit conversion, frame inference, nominal planar result or general topology is
+accepted. Invalid, unsupported or boundary-violating inputs raise `ValueError`
+without returning partial bounds. No new dependency or MCP/native API is added.
+
+The physical model requires complete parameter-wise traversal: at each nominal
+segment position the actual cutting disk center lies within Euclidean distance
+`e`, and its radius lies in `[rmin, rmax]`, with `0 < rmin <= rmax` and `e >= 0`.
+There is no additional cutting motion in this section. Initial stock and its
+placement are exact; stock/setup uncertainty must not be silently inferred from
+`e`. Radius variation and center error may vary along the sweep. Z uncertainty,
+entry, links, holders and machine/process feasibility are outside this model.
+
+For nominal segment `P`, the returned capsules are
+`C_lo = P + disk(rmin-e)` and `C_hi = P + disk(rmax+e)`.
+When `e > rmin`, `C_lo` is empty (`None`); equality retains the line/point set.
+For every parameter, the triangle inequality places the smaller nominal disk
+inside every allowed actual disk and every actual disk inside the larger nominal
+disk. Taking unions proves `C_lo subset C_true subset C_hi` even for varying
+errors/radii. The complete traversal assumption is essential to the lower bound.
+
+The outer capsule's four exact extrema must lie in the rectangle; otherwise the
+whole operation fails. Rectangle boundary contact is allowed, and the exterior
+is protected. Stock/required rest bounds reverse removal direction:
+`remaining_lower = S0 \ C_hi`, `remaining_upper = S0 \ C_lo`.
+These are immutable analytic set expressions, not tessellated polygons. Removal
+uses closed-set membership; subtraction excludes the removed boundary. Only the
+lower removal bound represents conditionally guaranteed removal. Feasible-center
+area is never substituted for a supplied swept segment.
+
+Arithmetic converts finite int/float/Fraction inputs to exact rational values
+(float means its exact binary value, not an inferred decimal). Membership and
+containment use squared distances and rational comparisons without tolerance,
+rounding, polygon offsets or backend numeric error. Capsule area is
+`2*r*segment_length + pi*r*r`; `area_interval` encloses it with rational
+`333/106 < pi < 355/113`, and subtraction reverses those bounds. The lower rest
+area limit is clamped to zero. These scalar intervals are deliberately coarse
+rigorous enclosures, not an error-budget claim. No computed square root or pi
+approximation participates in containment.
+
+`SweepBounds` retains the frame, section, input stock/sweep, radius interval and
+position error with evidence class `conditional_analytic_section_bounds`.
+It is a programmatic geometric result, not an authenticated certificate, actual
+machine execution evidence, or authorization for known-free travel. Callers must
+use the validating function; manually constructed records establish no proof.
 
 ### Detached nominal planar core
 

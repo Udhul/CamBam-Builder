@@ -1255,3 +1255,15 @@ bounds, followed by motion/entry verification. This is more useful now than more
 standalone kernel comparisons: the selected backend has evidence, while consumers
 still need an owned boundary that prevents nominal geometry becoming a false
 machining guarantee.
+
+### First directional stock consumer - 2026-09-22
+
+The [implemented analytic section contract](structure_spec.md#directional-analytic-stock-section-bounds)
+now establishes the directional occupancy gate for one supplied horizontal disk
+sweep in exact rectangular stock/target. The input uncertainty model, triangle-
+inequality propagation, protected boundary check, reversed remaining-stock bounds
+and rejection rules live there. This is conditional section evidence, not the
+full rectangular feasible-center opening or an executed pocket operation.
+Independent scalar area references and translated actual-sweep membership checks
+are in `tests/test_stock.py`. General Boolean success remains nominal and cannot
+feed this consumer. Next priority stays in [PROGRESS](PROGRESS.md#next-detached-stockrest-increment).

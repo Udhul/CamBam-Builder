@@ -193,6 +193,18 @@ interpreters below, without changing their installed dependencies. Nominal evide
 and API exclusions are in the [specification](structure_spec.md#detached-nominal-planar-core).
 No manual CamBam validation is needed for this nonserialized geometry slice.
 
+### Directional stock section checks
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -p test_stock.py -v
+```
+
+Six backend-independent analytic tests exercise exact sweep/rest areas, directional
+containment under radius/position uncertainty, boundary contact and exact overrun
+rejection, collapsed/empty guarantees, large translations and unsupported inputs.
+No CamBam manual validation adds evidence: this slice has no serialization, path
+generation or execution claim. Physical uncertainty limits remain caller inputs.
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not
