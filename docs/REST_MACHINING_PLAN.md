@@ -1,10 +1,11 @@
 # Future rest machining and V-cutter paths
 
-Status: **backlog, low priority; optional future capability, not foundation work**.
-Requested 2026-09-08. Priority belongs only to [PROGRESS.md](PROGRESS.md#remaining-backlog-in-order).
+Status: **active design refinement, 2026-09-22; implementation not started**.
+Requested 2026-09-08 and expanded 2026-09-22. Priority belongs only to [PROGRESS.md](PROGRESS.md#remaining-backlog-in-order).
 This document owns the problem, proposed outcomes, technical reasoning and future
 acceptance criteria. It does not claim implementation or authorize machine execution.
-The request names three tiers but enumerates five outcomes; all five are retained.
+The five original outcomes below are retained. The current design proposal and
+unresolved product decisions are in [Design refinement](#design-refinement---2026-09-22).
 
 ## Programmatic execution requirement
 
@@ -281,11 +282,10 @@ stable; coordinate with the higher-priority MOP source-compatibility work.
 ### Upstream dependencies
 
 Region topology and Z-coordinate parity across shape types are owned by the
-separate [shape parity plan](SHAPE_PARITY_PLAN.md), with higher priority in the
-backlog. This plan consumes its public geometry and XML contracts; it does not
-implement Region storage, adders, Z migration or schema handling. Pure planar
-rest prototypes can use existing supported contours, but Region inputs and XYZ
-path export must wait for the applicable parity acceptance.
+separate [shape parity plan](SHAPE_PARITY_PLAN.md); backlog 2 records their
+completion. Consume those public geometry and XML contracts rather than reopening
+Region storage, adders or Z migration. XYZ file fidelity is available, while
+varying-Z Engrave motion still needs separate target-version acceptance.
 
 The existing curved-bounds correctness item also supplies arc-aware bounds (or
 rest analysis must use independently bounded arc normalization). Never derive
@@ -366,17 +366,268 @@ documentation itself needs no manual machining validation.
 
 ## Promotion and stopping conditions
 
-This remains below the existing correctness, compatibility, packaging and MCP
-backlog items. Promote only for a concrete rest-machining workflow with approved
-input semantics and a bounded first outcome. Region/Z parity has its own higher
-backlog priority and plan; it is an upstream dependency, not optional rest scope. A separately
-reported data-loss bug can be prioritized independently on its own evidence.
+The 2026-09-22 request promotes design refinement for the concrete multi-tool
+letter/region workflow. Implementation follows agreement on target semantics and
+the bounded first outcome below. Region/Z parity is a completed upstream
+dependency, not new rest scope. A separately reported data-loss bug can still be
+prioritized independently on its own evidence.
 
-Planning is complete when all five outcomes, repository gaps, source distinctions,
-support requirements and executable acceptance directions are recorded and linked.
+The original proposal recorded all five outcomes. Refined design closure additionally
+requires resolution of the product decisions below and numerical acceptance for
+the selected first slice; those decisions are not yet accepted.
 Future execution acceptance must demonstrate load, analyze, calculate and save
 on a machine without CamBam installed. Manual CamBam compatibility checks remain
 separate from this standalone execution requirement.
-The next implementation priority remains MOP group-source compatibility. Do not
-implement a full stock simulator, routing engine or CamBam integration during this
-documentation task.
+Do not implement a stock simulator, routing engine or CamBam integration during
+this design task.
+
+## Design refinement - 2026-09-22
+
+### Intended product and decisions awaiting user input
+
+Build a deterministic, standalone engine that combines caller-supplied tools to
+remove an explicitly defined target volume while preserving protected material.
+Expose region-only analysis, path-only planning, verified removal and optional
+CamBam project attachment as independently useful operations. All calculations
+run without CamBam installed. This is a proposed contract, not an implemented API.
+
+Two questions have been presented to the user; their answers are pending:
+
+1. Should the product support both decorative V-shaped carving and vertical-wall
+   pocket/through-cut targets as explicit modes? Recommended: yes. A pointed tip
+   alone does not make a sharp vertical corner column removable by a widening cone.
+2. Should the first planner compare a supplied tool set, or also discover tools
+   in a catalog? Recommended: supplied tools, composing existing caller-owned
+   recommendation profiles; a catalog is a separate maintenance commitment.
+
+After these answers, settle the first acceptance target (outline, floor/through
+depth, wall shape, tools), allowed residual boundary/thickness/volume tolerances,
+and whether the first workflow requires native Profile/Pocket execution or accepts
+framework-generated explicit paths. No numerical production defaults or implicit
+permission to change wall shape, floor depth or allowance are established here.
+
+### Target geometry precedes tool strategy
+
+| Finish mode | Target and meaning of completion |
+| --- | --- |
+| V-shaped recess | Opening plus nominal design angle/tip convention define a depth envelope; narrow corners rise to the surface. Completion means matching that envelope within stated tolerances. |
+| Flat-depth V-carve | The same design envelope truncated at an explicit floor. Wide interiors can be cleared by endmills; the sloped boundary remains protected from roughing. |
+| Vertical-wall pocket | Region extruded to a floor. A smaller endmill may reduce rest; a V-cutter cannot generally finish sharp vertical corners while preserving the whole wall. |
+| Through-cut/profile separation | Explicit kerf/removal band, stock thickness, breakthrough and retained bodies/tabs. A separated central slug is released material, not material swept away by a cutter. |
+| Edge finish/chamfer | Explicit contact surface and width/depth, not an implicit conversion of a pocket into a V-shaped recess. |
+
+Keep the design envelope fixed when comparing tools. Do not define success as
+whatever the selected tool happened to remove. An ideal unlimited cone may define
+the requested V-shaped surface; the real cutter's finite diameter, rounded/flat
+tip and flute length can make that surface infeasible. A depth cap is an intentional
+design choice only when the caller selects a capped finish. A machine/tool limit
+instead produces a limitation report and alternatives.
+
+For the user's 5 mm endmill with 0.5 mm radial stock-to-leave, a locally straight
+inside edge requires the center 3.0 mm from the design boundary; 0.5 mm remains
+after the 2.5 mm radius sweep. In corners, calculate the sweep rather than assuming
+a uniform strip. A Profile leaves the center material unless its passes actually
+cover it. A Pocket must demonstrate interior coverage. If the final finish has
+sloped V walls, derive roughing bounds at each depth from that target: a pocket
+following the full top opening down to the floor may already destroy the slope.
+
+### Mathematical contract
+
+Use fixed vertical tool orientation (3-axis), explicit length units and positive
+downward depth `d`; convert only at the adapter boundary to `Z = surface_z - d`.
+Each depth slice owns desired removal `I(z)`, actual remaining stock `S_k(z)`,
+protected stock/fixtures and independently established free space. With cutting
+sweep `W_k`, update `S_(k+1) = S_k \\ W_k`; pure rest is `S_k intersect I`.
+Report unintended removal separately and never let a subsequent operation hide it.
+
+Represent an axisymmetric cutter by cutting radius `rho_cut(h)` and occupied
+radius `rho_body(h)` at height `h` above its physical lowest point. The body includes
+non-cutting neck/shank/holder where modeled. Missing body data limits collision
+claims; a maximum cutting diameter is not permission to extend the cone forever.
+
+- Ideal pointed/truncated cone: `rho_cut(h) = a + h*tan(alpha)`, where `alpha` is
+  half the included angle, `a` is flat-tip radius, and `h` is within its declared
+  cutting segment. The conical segment ends at `(Rmax-a)/tan(alpha)` or earlier
+  at the specified cutting-length limit. Do not clamp the radius and pretend the
+  resulting cylinder is cutting unless the tool specification actually says so.
+- Optional spherical tip tangent to the cone: with ball radius `b`, use
+  `sqrt(2*b*h-h*h)` for `0 <= h <= b*(1-sin(alpha))`; above the join, use
+  `b*cos(alpha) + (h-b*(1-sin(alpha)))*tan(alpha)` up to the declared cone end.
+  Validate tangency, continuity, diameter and segment domains. A generic rounded
+  tool must supply its profile; a vague tip-radius value does not establish shape.
+- At slice depth `z` and tip depth `d`, evaluate the tool section at `h=d-z`
+  only where that section exists. Union the moving disks along the complete path,
+  including changing radii, not just endpoint disks. Check non-cutting occupancy
+  against current stock and fixtures separately from cutting removal.
+
+For a flat endmill in allowed footprint domain `A`, valid centers are
+`A eroded by disk(r)`. Restrict useful cutting candidates to centers whose sweep
+intersects rest, as in outcome 2. For a V-cutter at depth `d`, intersect the
+corresponding center constraints across all affected heights. Thus an empty floor
+slice does not license the wider upper cone to cross a protected upper wall.
+
+For a simple uncut planar opening, Euclidean clearance `q(x,y)` gives the candidate
+cone depth `(q-a)/tan(alpha)` where `q >= a`. The medial axis supplies maximal-disc
+candidates and branches; it is not the complete stock-aware solution. In a rest
+operation, compute clearance against protected geometry, not every edge of the
+rest polygon. A raster distance field may seed candidates, but thin-feature loss
+and its error must be bounded before it can support a clearance claim.
+
+Prefer depth-indexed planar sets with adaptive slice refinement for this fixed-axis
+scope. The public stock contract must not require a particular grid resolution.
+Slice checks need conservative between-slice bounds; an arbitrary stack of sampled
+planes is not proof of volumetric clearance. Also bound error along XYZ segments.
+For a cone, an XY clearance uncertainty `epsilon` implies depth uncertainty
+`epsilon/tan(alpha)`; narrow-angle tools amplify error. Rounded tips require local
+profile-aware bounds near zero radius. Separate geometric approximation, path
+fitting, stock slicing and physical process allowances in reports.
+
+### Wide areas, rest access and smoothing
+
+The default strategy proposal is to derive feasible poses first, then cover target
+rest using boundary/medial-axis candidates plus interior passes where needed.
+Simply clipping the depth of a medial-axis path can leave wide side bands uncut.
+Use a caller-selected flat-depth finish and clearance tools, or additional verified
+passes with the V-cutter where feasible. If the requested uncapped target extends
+beyond tool capability, return residual/infeasibility and suggest a larger/different
+tool or an explicit target change. Never silently lower the floor or widen edges.
+
+For a pointed cone clearing a nominal flat floor with parallel tracks at equal tip
+depth, finite spacing leaves ridges: the ideal cross-section cusp is
+`s/(2*tan(alpha))` for spacing `s`. Thus a pointed tip does not guarantee a perfectly
+flat floor with finitely many passes. A flat-tip cutter has a finite floor footprint;
+a rounded tip needs its own scallop calculation. Select passes using cusp/remaining
+thickness and coverage criteria, not a fixed fraction of maximum cone diameter.
+
+Keep original design, pure rest, allowed overlap domain, feasible centers and export
+boundaries separate. Smoothing is an optional path/access operation, not permission
+to fillet the desired corner. At interfaces with verified cleared space, extend
+access and fit arcs only within the allowed domain. Protect holes and tabs at their
+actual heights. Fit within a declared deviation and recheck the swept tool after
+fitting, including added/removed coverage and topology changes. Reject a fit that
+violates containment; straight segments are an acceptable result.
+
+Minimize redundant cutting only after coverage and containment hold. Stepover
+controls spacing between passes; overlap into cleared space is a separate access
+and cost policy, and radial engagement depends on the current stock. Allow necessary
+overlap by default in the proposal, report its amount, and honor an explicit hard
+limit by reporting the coverage it prevents. Do not equate overlap with stepover.
+
+### Detached core and native integration
+
+Proposed boundaries (names are illustrative and not a committed public API):
+
+| Layer | Contract |
+| --- | --- |
+| Geometry and cutter values | Immutable region sets, explicit frame/units, tolerance budget and piecewise tool profiles; no project IDs or XML requirement. |
+| Target and stock | Fixed finish specification, stock snapshots, protected volumes, prior removal and evidence mode. |
+| Analysis | Reachability, pure rest, safe access regions and infeasibility diagnostics; callable without planning paths. |
+| Strategy and routing | Supported pocket/profile/V-carve strategies yield ordered motions, tool assignment, pass/entry/link roles and predicted residuals. |
+| Verification | Independent or conservatively bounded sweep evaluator checks final interpolated motions and stock updates. |
+| Composition | Compare supplied tools/operation sequences; preserve constraints, update stock in order and return tradeoffs and provenance. |
+| CamBam adapter | Snapshot resolved world geometry/MOP values; map pure results to registered Region/Pline entities and explicitly selected MOPs. |
+
+Use simple stable value types before inventing a plugin hierarchy. The existing
+`Region` owns CAD topology/XML, not general Booleans or CAM stock simulation.
+`cam_entities.py` owns MOP parameters and `cambam_project.py` registration. Compose
+existing `machining_planning.py` process constraints where applicable; its endmill
+diameter-based stepover/MRR model does not automatically model varying V engagement.
+Keep these domain differences explicit instead of overloading its formulas.
+
+Results must expose requested/achieved target, rest by depth, uncertainty, unreachable
+features and causes, overcut, violated/missing constraints, operation order and source
+fingerprints. Distinguish complete-within-tolerance, partial, infeasible, unsupported
+and invalid input. An optimization timeout returns the best verified partial plan,
+never a false completeness result. Ranking should first enforce hard constraints,
+then residual quality, then caller-weighted time/tool changes/redundant travel.
+Do not promise a globally optimal tool sequence or time without a machine model.
+
+Keep two adapter modes explicit: native Profile/Pocket instructions delegate path
+generation to CamBam; explicit path export delegates only path following. Native MOP
+metadata alone cannot certify prior cleared space. Prefer framework-generated paths
+for the first deterministic combined workflow. Until native equivalence is established,
+native-source rest is an estimate with uncertainty, not guaranteed air for linking.
+Engrave's `VCutter` enum describes the tool; it is not a V-carve calculation request.
+Verify tool-tip Z, zero offsets, order/direction, depth passes, retracts and emitted
+G-code before claiming the XYZ/Engrave adapter follows the computed trajectories.
+Do not interpolate across disconnected paths by joining them into one polyline.
+
+### Research basis and backend decision
+
+Primary sources checked 2026-09-22; the architecture and formulas above are our
+proposed synthesis/derivations, not claims that these products implement it identically.
+
+- [Vectric V12 documentation](https://docs.vectric.com/docs/V12.0/VCarveDesktop/ENU/Help/page/single-page/)
+  describes flat-depth carving, ordered clearance tools and subsequent tools handling
+  areas earlier tools could not fit. This supports combined clearance/finish strategies.
+- [Autodesk 3D Adaptive reference](https://help.autodesk.com/view/fusion360/ENU/?contextId=MFG-REF-3D-ADAPTIVE-CMD)
+  distinguishes tool containment and stock sources for rest machining, and explicitly
+  combines machining and geometry approximation tolerances. These motivate separate
+  target, stock provenance, footprint constraints and error budgets.
+- [CGAL straight-skeleton manual](https://doc.cgal.org/Manual/3.4/doc_html/cgal_manual/Straight_skeleton_2/Chapter_main.html)
+  explains why straight skeletons differ from Euclidean medial axes at reflex vertices.
+  Do not use skeleton event time unverified as circular cutter clearance.
+- [OpenVoronoi author's medial-axis pocketing work](https://www.anderswallin.net/2012/02/medial-axis-pocketing/)
+  supplies an established candidate approach worth evaluating, not proof that its
+  implementation meets this project's packaging or machining requirements.
+- [Clipper2 overview](https://www.angusj.com/clipper2/Docs/Overview.htm) and
+  [arc tolerance](https://www.angusj.com/clipper2/Docs/Units/Clipper.Offset/Classes/ClipperOffset/Properties/ArcTolerance.htm)
+  document integer-scaled clipping and polygonal arc approximation. Evaluate coordinate
+  scaling and approximation explicitly if selecting this backend.
+- [Shapely manual](https://shapely.readthedocs.io/en/stable/manual.html) provides planar
+  set operations and buffering. It is a candidate planar backend, not a 3D sweep engine.
+- [OpenCAMLib documentation](https://opencamlib.readthedocs.io/en/latest/)
+  describes drop/push cutter operations and cylindrical, ball, cone and composite
+  models. It is a candidate for later surface work, not automatically a rest planner.
+
+No dependency is selected. Compare a small backend shortlist on analytic offset
+accuracy, holes/near-tangencies, deterministic topology, supported Python 3.9-3.13
+and Windows installation, license/distribution obligations and measured performance.
+Start with planar Booleans/offsets; add a medial-axis backend only if the first
+V-carve slice demonstrates a need. A package's existence does not justify a new
+dependency or replacing the already accepted CAD representation.
+
+### First useful increment and acceptance
+
+After product decisions, implement one standalone end-to-end slice: explicit flat
+endmill paths on a synthetic letter-like region with a hole, a 0.5 mm allowance,
+stock/rest analysis, safe smaller-endmill access and generated cleanup paths with
+independent verification. This establishes the same target/stock/clearance contract
+that V-carving needs and directly addresses the user's artificial-rest-corner defect.
+Pair it with an analytic cone feasibility fixture so the contracts do not accidentally
+assume a cylindrical tool. It does not require reproducing every native MOP strategy.
+Next deliver pointed-cone V-shaped and flat-depth carving with wide-area coverage;
+then rounded/flat tips and combined-tool execution, followed by native adapter motion
+acceptance. Optimize routing only after correctness. These are capability boundaries,
+not a claim that all general engineering cases can be implemented in one increment.
+
+Retain the earlier square-pocket references and add these executable acceptance
+cases before implementation. Synthetic metric geometry may use 0.001 mm geometric
+error for backend evaluation; this is a proposed fixture tolerance, not a machining
+default. Area/volume and between-sample error thresholds must be derived separately.
+
+| Case | Required evidence |
+| --- | --- |
+| Letter-like opening with hole, 5 mm endmill, 0.5 mm allowance | Straight-edge rest 0.5 mm; hole preserved; profile center remains unless actually swept; pocket interior coverage checked. |
+| Smaller tool on resulting rest | No new wall at the rest/cleared-space interface; full target protected boundary preserved; residual compared with smaller-tool reachability. |
+| Pointed 90-degree cone, 4 mm straight slot | Candidate tip penetration 2 mm; finite-length paths and end/corner behavior independently checked. |
+| Same cone, 1 mm design depth cap | Effective top diameter 2 mm; additional paths/clearance required for a wider target; no centerline-only completeness claim. |
+| 90-degree cone, 0.5 mm flat-tip radius, local clearance 2 mm | Candidate depth 1.5 mm; features narrower than the tip are reported unreachable. |
+| Tangent spherical/conical tip | Radius and derivative continuous at analytic join; inverse profile and sweep agree with independent section values. |
+| Vertical-wall sharp corner to fixed floor | V-cutter failure or residual reported; no surface-silhouette-only completeness. |
+| Multiple depths, island, narrow neck, capped diameter, flute/shank | All-height containment and actual stock-aware links; partial results explain infeasibility. |
+| Arc fitting and route simplification | Reverified between-point clearance, deviation and coverage; acute corners not silently deleted. |
+| Units, translated/mirrored input and reordered operations | Equivalent physical result under unit/frame changes; stock evolution follows operation order. |
+
+Broad scope explicitly excluded initially: tilted/multi-axis cutters, undercuts,
+arbitrary mesh stock, automatic slug removal/workholding dynamics, inferred tool
+catalogs and replication of undocumented native strategies. Report unsupported
+cases rather than approximating them silently. Reopen each when a concrete job
+needs it and the existing target/stock representation is shown insufficient.
+
+This round stops at a reviewed proposal and recorded open decisions. No machine
+validation is needed for documentation. Before later manual acceptance, generate
+and inspect A/B files and exact expected motions as required by the development
+runbook. Continue this design conversation while product decisions are pending;
+a fresh implementation session becomes appropriate after their answers and the
+first fixture contract are recorded here.

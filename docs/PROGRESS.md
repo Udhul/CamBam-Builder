@@ -7,6 +7,19 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**2026-09-22 rest machining and V-carving design refinement active (backlog 6).**
+The user promoted the standalone/native multi-tool region workflow for design,
+not implementation. The expanded proposal separates target finish, stock/rest,
+tool occupancy, safe overlap, path planning, verification and CamBam attachment;
+it covers capped/wide carving, flat/rounded tips and native-path evidence limits.
+Primary-source research and proposed acceptance fixtures are recorded in the
+[design owner](REST_MACHINING_PLAN.md#design-refinement---2026-09-22).
+User decisions on finish modes and supplied tools versus a catalog are pending.
+Next: settle those decisions and the first target/fixture contract before selecting
+a geometry backend or implementing the engine. Region/Z support is already complete;
+variable-Z Engrave motion acceptance remains separate. No runtime change or machining
+acceptance is claimed. Continue the design conversation in this session.
+
 **2026-09-21 backlog 4e local stdio acceptance complete.** OpenCode 1.18.31,
 running GLM-5.3-Flash from an isolated task-owned configuration, completed the real
 37-tool local stdio A/B workflow without coaching, failed calls, retries, permission
@@ -850,18 +863,19 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    bind/origin/authentication/TLS policy, document-handle lifecycle and cancellation
    before implementation; never expose the current write-capable service by merely
    binding to a LAN interface.
-6. **Planned future feature:** rest-area calculation and rest
+6. **Active design refinement, 2026-09-22:** rest-area calculation and rest
    machining helpers for pocket and inside/outside profile MOPs. Five outcomes:
    pure rest regions; safe expansion for a smaller endmill; pointed/flat-tip
    V-cutter preparation; a general bounded XYZ V-carving path calculator; and
    V-cutter edge tracing with corner cleanup. Region topology and shape Z fidelity
-   are independently prioritized upstream dependencies owned by the
+   are completed upstream dependencies owned by the
    [shape parity plan](SHAPE_PARITY_PLAN.md), not part of rest implementation.
    Calculations must run programmatically in this framework without CamBam;
    `.cb` files provide interchange, not access to a headless CAM engine.
    [Problem, reasoning, support gaps and acceptance plan](REST_MACHINING_PLAN.md).
-   Promote for a concrete workflow after higher-priority work; no implementation
-   or machining acceptance is claimed by this planning entry.
+   The current user request promotes design for the combined-tool letter/region
+   workflow. Resolve [open decisions and first acceptance slice](REST_MACHINING_PLAN.md#design-refinement---2026-09-22)
+   before implementation; no implementation or machining acceptance is claimed.
 7. **Deferred MCP/core capability: author Manual Profile holding-tab positions.**
    Current automatic authoring covers width, height, minimum/maximum count, distance,
    size threshold, the constrained lead-in flag and Square/Triangle/Skip style.
