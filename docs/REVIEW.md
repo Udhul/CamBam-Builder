@@ -1,5 +1,49 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Holed target stock/rest bounds - 2026-09-22
+
+`SectionTarget` and `compose_target_rest_bounds` separate original required
+removal from initial stock for one exact outer rectangle and one strictly interior
+rectangular island. The target includes both walls but excludes the island's open
+interior. Every validated source's outer capsule must remain inside the outer
+target and have exact segment-to-island distance at least its radius. Wall
+tangency passes; any rational penetration fails the whole composition. The
+existing ordered whole-stock bounds and uncertainty provenance remain available,
+while lower/upper rest subtract outer/inner removal from the original target.
+This permits a later supplied sweep to overlap cleared space and extend into
+still-required material without treating their interface as a protected wall.
+
+Independent exact point-membership checks use a 30 x 20 mm stock, a 26 x 16 mm
+outer target and a 4 x 6 mm island (required area 392 mm2). A large radius-2
+sweep, a smaller radius-1 sweep crossing its cleared interface, and a second
+small sweep tangent to the island preserve all protected sample points on a
+quarter-millimetre grid. Rest at `(3, 5)` changes from present to removed;
+stock at `(15, 10)` remains while that island-interior point is never required
+rest. An independent `320 - 4*pi` mm2 reference lies within the one-pass rest
+area interval. A two-pass uncertain example compares allowed actual displaced
+disks against both removal/rest bounds. Exact wall contacts pass and `1e-30` mm
+island or outer-wall overrun is rejected. These finite samples support, but do
+not replace, the exact containment and triangle-inequality argument in the
+[contract](structure_spec.md#directional-analytic-stock-section-bounds).
+
+Verification on the existing `.venv/Scripts/python.exe` (Python 3.14.5; this
+does not renew the supported 3.9-3.13 version matrix):
+
+- `-m unittest discover -s tests -p test_stock.py -v`: 15 passed.
+- `-m unittest discover -s tests`: 351 tests, OK with 12 skips for optional
+  capabilities.
+- `-m compileall -q cambam_builder tests` and `git diff --check`: passed.
+
+No manual CamBam acceptance adds evidence for this detached, nonserialized
+section model. The result is conditional on caller-supplied radius/position
+envelopes and complete segment traversal. It does not establish safe entry,
+connecting motion, other Z sections or production machining. No new geometry
+backend or dependency was added. This bounded increment is ready to commit;
+the next priority and reopening criteria are in
+[PROGRESS](PROGRESS.md#next-detached-stockrest-increment). A fresh session is
+appropriate after the final gates because the remaining motion-verification
+scope is distinct and its contract/limits are persisted here and in the spec.
+
 ## Directional analytic stock/rest bounds - 2026-09-22
 
 Implemented `cambam_builder.stock` for exact rectangular stock equal to required

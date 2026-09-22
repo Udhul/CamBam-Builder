@@ -41,6 +41,53 @@ class SectionRectangle:
 
 
 @dataclass(frozen=True)
+class SectionTarget:
+    """Exact required removal inside stock, with one protected island."""
+
+    stock: SectionRectangle
+    outer: SectionRectangle
+    island: SectionRectangle
+
+    def __post_init__(self):
+        if any(type(rect) is not SectionRectangle for rect in
+               (self.stock, self.outer, self.island)):
+            raise ValueError("target requires exact section rectangles")
+        s, o, i = self.stock, self.outer, self.island
+        if (o.xmin < s.xmin or o.xmax > s.xmax or
+                o.ymin < s.ymin or o.ymax > s.ymax):
+            raise ValueError("target outer rectangle must lie inside stock")
+        if not (o.xmin < i.xmin < i.xmax < o.xmax and
+                o.ymin < i.ymin < i.ymax < o.ymax):
+            raise ValueError("protected island must lie strictly inside target")
+
+    def contains(self, x, y):
+        """Outer and island boundary are in the target; island interior is not."""
+        x, y = _number(x), _number(y)
+        i = self.island
+        return self.outer.contains(x, y) and not (
+            i.xmin < x < i.xmax and i.ymin < y < i.ymax)
+
+    @property
+    def area(self):
+        return self.outer.area - self.island.area
+
+
+def _capsule_within_target(target, capsule):
+    """Closed disk sweep may touch target walls but cannot enter protected area."""
+    s, r, o, i = capsule.sweep, capsule.radius, target.outer, target.island
+    if (s.xmin - r < o.xmin or s.xmax + r > o.xmax or
+            s.y - r < o.ymin or s.y + r > o.ymax):
+        return False
+    dx = max(i.xmin - s.xmax, s.xmin - i.xmax, 0)
+    dy = max(i.ymin - s.y, s.y - i.ymax, 0)
+    if r == 0:
+        return not (s.xmin < i.xmax and s.xmax > i.xmin and
+                    i.ymin < s.y < i.ymax)
+    # Equality is wall tangency. The open island interior remains untouched.
+    return dx * dx + dy * dy >= r * r
+
+
+@dataclass(frozen=True)
 class HorizontalSweep:
     """Entire segment is traversed; xmin == xmax denotes one disk placement."""
 
@@ -132,14 +179,16 @@ class SweepBounds:
 
 def bound_horizontal_sweep(stock, sweep, *, frame_id, section_z_mm,
                            radius_min_mm, radius_max_mm, position_error_mm=0):
-    """Bound removal/rest within an exact rectangular stock == required target.
+    """Bound removal and remaining stock inside an exact rectangle.
 
     At every nominal segment parameter, actual center error has Euclidean norm
     <= position_error_mm and the cutting disk radius lies in [min, max]. The
     entire segment is covered, with no extra cutting motion in this section.
     Exterior stock is protected: the outer capsule must stay in the rectangle.
     Boundary contact is allowed. Invalid/unsupported/unsafe input raises ValueError
-    and returns no partial certificate. Nominal planar values are not admitted.
+    and returns no partial certificate. The standalone rest target is this stock;
+    compose_target_rest_bounds validates a separate target. Nominal planar values
+    are not admitted.
     """
     if type(stock) is not SectionRectangle or type(sweep) is not HorizontalSweep:
         raise ValueError("only exact section rectangles and horizontal sweeps are supported")
@@ -272,3 +321,61 @@ def compose_sweep_bounds(stock, sources, *, frame_id, section_z_mm, grid_size=32
     return ComposedSweepBounds(frame_id, z, stock, sources, lower, upper,
                                RemainingSection(stock, upper),
                                RemainingSection(stock, lower))
+
+
+@dataclass(frozen=True)
+class TargetRestSection:
+    """Required target material still present after a bounded removal union."""
+
+    target: SectionTarget
+    removed: CapsuleUnion
+
+    def __post_init__(self):
+        if type(self.target) is not SectionTarget or type(self.removed) is not CapsuleUnion:
+            raise ValueError("expected exact target and analytic capsule union")
+        if self.removed.stock != self.target.stock or any(
+                not _capsule_within_target(self.target, c)
+                for c in self.removed.capsules):
+            raise ValueError("removal enters protected target material")
+
+    def contains(self, x, y):
+        return self.target.contains(x, y) and not self.removed.contains(x, y)
+
+    @property
+    def area_interval(self):
+        lo, hi = self.removed.area_interval
+        return max(Fraction(0), self.target.area - hi), self.target.area - lo
+
+
+@dataclass(frozen=True)
+class TargetStockBounds:
+    """Original target rest and cumulative whole-stock state at one section."""
+
+    target: SectionTarget
+    stock_bounds: ComposedSweepBounds
+    rest_lower: TargetRestSection
+    rest_upper: TargetRestSection
+    evidence_class: str = "conditional_analytic_section_bounds"
+
+
+def compose_target_rest_bounds(target, sources, *, frame_id, section_z_mm,
+                               grid_size=32):
+    """Bound cumulative rest in an original holed target, preserving stock state.
+
+    Every supplied source is revalidated by compose_sweep_bounds. Its outer
+    occupancy must fit the target, regardless of earlier clearing; the original
+    exterior and island remain protected. Passes may cross the artificial
+    rest/cleared-space interface. No connecting travel is inferred.
+    """
+    if type(target) is not SectionTarget:
+        raise ValueError("expected an exact rectangular section target")
+    stock_bounds = compose_sweep_bounds(
+        target.stock, sources, frame_id=frame_id, section_z_mm=section_z_mm,
+        grid_size=grid_size)
+    if any(not _capsule_within_target(target, c)
+           for c in stock_bounds.removal_upper.capsules):
+        raise ValueError("outer occupancy enters protected target material")
+    return TargetStockBounds(
+        target, stock_bounds,
+        TargetRestSection(target, stock_bounds.removal_upper),
+        TargetRestSection(target, stock_bounds.removal_lower))

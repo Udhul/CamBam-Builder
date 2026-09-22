@@ -1269,5 +1269,10 @@ are in `tests/test_stock.py`. General Boolean success remains nominal and cannot
 feed this consumer. Finite supplied sweep composition now preserves exact union
 membership and reversed stock subtraction, with conservative overlap-safe rational
 grid area intervals and per-pass provenance. The implementation contract remains
-in the specification; this does not add paths or general target topology.
+in the specification. A separate exact rectangular target with one protected
+rectangular island now gives required rest against the original target while the
+same composition retains whole-stock state. Exact island/exterior containment and
+independent residual membership are checked; supplied sweeps may cross the
+artificial rest/cleared-space interface. This does not add connections, entry,
+generated paths or general target topology.
 Next priority stays in [PROGRESS](PROGRESS.md#next-detached-stockrest-increment).

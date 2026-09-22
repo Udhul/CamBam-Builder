@@ -65,10 +65,12 @@ maps and corresponding entity encoders before adding a type.
 `cambam_builder.stock` owns a detached, backend-independent consumer:
 `bound_horizontal_sweep(SectionRectangle, HorizontalSweep, frame_id=...,
 section_z_mm=..., radius_min_mm=..., radius_max_mm=..., position_error_mm=...)`.
-It accepts one axis-aligned exact rectangular initial stock **equal to the required
-removal target**, and one explicitly supplied horizontal center segment (including
-a zero-length disk placement). All coordinates, radii and errors are millimetres
-in one caller-named Cartesian frame at an explicit fixed Z. No native geometry,
+It accepts one axis-aligned exact rectangular initial stock and one explicitly
+supplied horizontal center segment (including a zero-length disk placement).
+Used alone, that stock is also the required removal target; the target-aware
+composition below validates a distinct required target. All coordinates, radii
+and errors are millimetres in one caller-named Cartesian frame at an explicit
+fixed Z. No native geometry,
 unit conversion, frame inference, nominal planar result or general topology is
 accepted. Invalid, unsupported or boundary-violating inputs raise `ValueError`
 without returning partial bounds. No new dependency or MCP/native API is added.
@@ -91,7 +93,8 @@ errors/radii. The complete traversal assumption is essential to the lower bound.
 
 The outer capsule's four exact extrema must lie in the rectangle; otherwise the
 whole operation fails. Rectangle boundary contact is allowed, and the exterior
-is protected. Stock/required rest bounds reverse removal direction:
+is protected. Stock bounds (also required rest when stock equals target) reverse
+removal direction:
 `remaining_lower = S0 \ C_hi`, `remaining_upper = S0 \ C_lo`.
 These are immutable analytic set expressions, not tessellated polygons. Removal
 uses closed-set membership; subtraction excludes the removed boundary. Only the
@@ -140,6 +143,36 @@ remaining-area endpoints nonincreasing, as well as shrinking remaining membershi
 Changing grid size between prefixes does not guarantee endpoint monotonicity.
 Use finer grids only when a consumer needs tighter area evidence; polygon output,
 area-driven stopping tolerances and general topology remain outside this slice.
+
+`SectionTarget(stock, outer, island)` separates initial exact rectangular stock
+from an exact required removal rectangle with one strictly interior rectangular
+island. `outer` must lie within stock; the island must have positive clearance
+from every outer edge. Target membership includes the outer and island boundaries
+but excludes the island's open interior. This permits exact wall tangency, while
+any cutter occupancy in the island interior or outside the outer rectangle is
+protected-material overrun. The area is `outer.area - island.area`; boundary
+membership has zero effect on area but does affect pointwise rest membership.
+
+`compose_target_rest_bounds(target, sources, frame_id=..., section_z_mm=...,
+grid_size=32)` first revalidates and composes the same ordered `SweepBounds`
+sources against `target.stock`. It then requires every outer capsule to fit in
+`target.outer` and have squared segment-to-island distance at least its squared
+radius. Equality is allowed tangency; a rational amount of penetration fails the
+whole call. Since each true sweep lies inside its outer capsule, this protects
+the original target exterior and island for every allowed error/radius, regardless
+of stock already cleared. A later sweep can cross a rest/cleared-space interface:
+that interface is not a protected design boundary.
+
+`TargetStockBounds.stock_bounds` retains whole-stock cumulative removal and
+remaining-stock bounds with source provenance. Its `rest_lower` is the original
+target minus outer removal union; `rest_upper` is the original target minus inner
+removal union. Both use exact analytic membership and the same closed-removal
+boundary convention as `RemainingSection`. Their area intervals subtract the
+union's conservative grid interval from exact target area, clamping the lower
+endpoint to zero. Empty sources leave stock and target intact. Directly
+constructed result records are data, not validated evidence. This remains one
+fixed-Z horizontal section with supplied sweeps only: it does not verify
+connections, entry, motion at other heights, generated paths or execution.
 
 ### Detached nominal planar core
 

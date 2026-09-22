@@ -7,8 +7,9 @@ import unittest
 
 from cambam_builder.planar import Rectangle
 from cambam_builder.stock import (
-    Capsule, HorizontalSweep, RemainingSection, SectionRectangle, bound_horizontal_sweep,
-    compose_sweep_bounds,
+    Capsule, CapsuleUnion, HorizontalSweep, RemainingSection, SectionRectangle,
+    SectionTarget, TargetRestSection, bound_horizontal_sweep, compose_sweep_bounds,
+    compose_target_rest_bounds,
 )
 
 
@@ -211,6 +212,122 @@ class ComposedStockTests(unittest.TestCase):
                        dict(frame_id=""), dict(section_z_mm=math.nan)):
             with self.subTest(change=change), self.assertRaises(ValueError):
                 self.compose([], **change)
+
+
+class HoledTargetStockTests(unittest.TestCase):
+    stock = SectionRectangle(0, 0, 30, 20)
+    target = SectionTarget(stock, SectionRectangle(2, 2, 28, 18),
+                           SectionRectangle(13, 7, 17, 13))
+
+    def source(self, xmin, xmax, y, radius, error=0, radius_max=None):
+        return bound_horizontal_sweep(
+            self.stock, HorizontalSweep(xmin, xmax, y), frame_id="fixture",
+            section_z_mm=-2, radius_min_mm=radius,
+            radius_max_mm=radius if radius_max is None else radius_max,
+            position_error_mm=error)
+
+    def compose(self, sources, **kwargs):
+        return compose_target_rest_bounds(
+            self.target, sources, frame_id="fixture", section_z_mm=-2,
+            grid_size=32, **kwargs)
+
+    @staticmethod
+    def actual_contains(sweep, radius, x, y, dx=0, dy=0):
+        left, right, center_y = sweep.xmin + dx, sweep.xmax + dx, sweep.y + dy
+        nearest_x = min(max(x, left), right)
+        return (x - nearest_x) ** 2 + (y - center_y) ** 2 <= radius ** 2
+
+    @staticmethod
+    def target_contains(x, y):
+        return (2 <= x <= 28 and 2 <= y <= 18 and
+                not (13 < x < 17 and 7 < y < 13))
+
+    def test_original_target_rest_and_safe_crossing_of_cleared_interface(self):
+        large = self.source(6, 24, 5, 2)
+        small = self.source(3, 10, 5, 1)
+        near_island = self.source(8, 12, 8, 1)
+        initial = self.compose([])
+        self.assertEqual(initial.rest_lower.area_interval, (392, 392))
+        self.assertEqual(initial.stock_bounds.remaining_lower.area_interval, (600, 600))
+        self.assertTrue(initial.rest_upper.contains(13, 10))
+        self.assertFalse(initial.rest_upper.contains(15, 10))
+        before = self.compose([large])
+        after = self.compose([large, small, near_island])
+        self.assertTrue(before.rest_lower.contains(3, 5))
+        self.assertFalse(after.rest_upper.contains(3, 5))
+        self.assertTrue(large.removal_upper.contains(8, 5))
+        self.assertTrue(small.removal_upper.contains(8, 5))
+        self.assertFalse(after.rest_lower.contains(15, 10))
+        self.assertTrue(after.stock_bounds.remaining_lower.contains(15, 10))
+        self.assertTrue(after.rest_upper.contains(12, 10))
+        self.assertFalse(after.rest_upper.contains(12, 8))
+        self.assertEqual(after.stock_bounds.sources, (large, small, near_island))
+        reference = 320 - 4 * math.pi
+        lo, hi = before.rest_lower.area_interval
+        self.assertLessEqual(float(lo), reference)
+        self.assertGreaterEqual(float(hi), reference)
+        for ix in range(121):
+            for iy in range(81):
+                x, y = Q(ix, 4), Q(iy, 4)
+                removed = any(self.actual_contains(s.sweep, s.radius_min_mm, x, y)
+                              for s in (large, small, near_island))
+                expected_rest = self.target_contains(x, y) and not removed
+                self.assertEqual(after.rest_lower.contains(x, y), expected_rest)
+                self.assertEqual(after.rest_upper.contains(x, y), expected_rest)
+                self.assertEqual(after.stock_bounds.remaining_lower.contains(x, y),
+                                 not removed)
+                self.assertFalse(removed and not self.target_contains(x, y))
+
+    def test_uncertain_sources_bound_independent_actual_removal(self):
+        sources = (
+            self.source(6, 24, Q(9, 2), Q(7, 4), Q(1, 4), 2),
+            self.source(8, 11, 8, Q(3, 4), Q(1, 4), 1),
+        )
+        result = self.compose(sources)
+        actual = ((sources[0].sweep, 2, Q(1, 4), 0),
+                  (sources[1].sweep, Q(3, 4), 0, Q(-1, 4)))
+        for ix in range(121):
+            for iy in range(81):
+                x, y = Q(ix, 4), Q(iy, 4)
+                removed = any(self.actual_contains(s, r, x, y, dx, dy)
+                              for s, r, dx, dy in actual)
+                required = self.target_contains(x, y)
+                self.assertFalse(result.stock_bounds.removal_lower.contains(x, y)
+                                 and not removed)
+                self.assertFalse(removed and not result.stock_bounds.removal_upper.contains(x, y))
+                self.assertFalse(result.rest_lower.contains(x, y) and
+                                 (not required or removed))
+                self.assertFalse(required and not removed and
+                                 not result.rest_upper.contains(x, y))
+                self.assertFalse(removed and not required)
+
+    def test_protected_walls_tangency_and_overrun(self):
+        self.compose([self.source(6, 24, 5, 2)])  # island top tangent
+        self.compose([self.source(4, 10, 4, 2)])  # target exterior tangent
+        epsilon = Q(1, 10**30)
+        for unsafe in (self.source(6, 24, 5, 2 + epsilon),
+                       self.source(4, 10, 4 - epsilon, 2)):
+            with self.subTest(unsafe=unsafe), self.assertRaisesRegex(ValueError, "protected"):
+                self.compose([unsafe])
+
+    def test_invalid_target_forged_source_and_direct_rest(self):
+        for args in ((self.stock, SectionRectangle(0, 0, 31, 18),
+                      SectionRectangle(13, 7, 17, 13)),
+                     (self.stock, SectionRectangle(2, 2, 28, 18),
+                      SectionRectangle(2, 7, 17, 13)),
+                     (self.stock, SectionRectangle(2, 2, 28, 18), object())):
+            with self.subTest(args=args), self.assertRaises(ValueError):
+                SectionTarget(*args)
+        with self.assertRaises(ValueError):
+            self.compose([replace(self.source(6, 24, 5, 2), removal_upper=None)])
+        with self.assertRaisesRegex(ValueError, "protected"):
+            TargetRestSection(self.target, CapsuleUnion(
+                self.stock, (Capsule(HorizontalSweep(10, 15, 9), 1),)))
+        with self.assertRaisesRegex(ValueError, "protected"):
+            TargetRestSection(self.target, CapsuleUnion(
+                self.stock, (Capsule(HorizontalSweep(14, 16, 9), 0),)))
+        TargetRestSection(self.target, CapsuleUnion(
+            self.stock, (Capsule(HorizontalSweep(14, 16, 7), 0),)))
 
 
 if __name__ == "__main__":

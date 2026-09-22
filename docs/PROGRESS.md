@@ -7,23 +7,25 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**2026-09-22 cumulative directional stock/rest slice complete (backlog 6).**
-Finite supplied horizontal sweeps now compose exact inner/outer membership and
-stock subtraction, preserving per-pass uncertainty and ordered provenance.
-A rational stock grid provides conservative aggregate area intervals without
-counting overlaps twice; fixed-grid prefixes establish monotonic stock evolution.
-The [implemented contract](structure_spec.md#directional-analytic-stock-section-bounds)
-owns assumptions and precision limits; [review evidence](REVIEW.md#cumulative-directional-stockrest-bounds---2026-09-22)
+**2026-09-22 protected target and cumulative stock slice complete (backlog 6).**
+An exact rectangular required-removal target with one protected rectangular island
+is now separate from exact initial stock. Validated supplied sweeps retain whole-stock
+evolution while rest is measured against the original target. Exact containment
+rejects outer occupancy in protected material, admits wall tangency and allows a
+later sweep to cross the artificial rest/cleared-space interface. The
+[implemented contract](structure_spec.md#directional-analytic-stock-section-bounds)
+owns assumptions and boundary membership; [review evidence](REVIEW.md#holed-target-stockrest-bounds---2026-09-22)
 owns acceptance. General planar results remain uncertified.
 
-Next: [separate protected target geometry from cumulative stock](#next-detached-stockrest-increment).
-This is the next product gap: safe cleanup must preserve original target boundaries
-and islands while crossing the rest/cleared-space interface. More area precision
-or curve breadth alone would not establish that behavior. Native/MCP expansion and
-remote transport have no new blocking input; backlog 6 remains the active priority.
-No manual CamBam acceptance is required for this nonserialized geometry slice.
-This is a good fresh-session breakpoint: contracts, evidence, limits and next scope
-are persisted. Changes are uncommitted; no production-machining claim is made.
+Next: [verify bounded cleanup motion against evolving stock](#next-detached-stockrest-increment).
+Supplied section sweeps establish removal bounds but do not establish safe entry,
+connections or complete XYZ motion. A motion verifier is the next prerequisite for
+generated cleanup paths; another primitive or area refinement alone would not
+close that gap. Native/MCP expansion and remote transport have no new blocking input;
+backlog 6 remains the active priority. No manual CamBam acceptance is required for
+this nonserialized geometry slice. This is a good fresh-session breakpoint: the
+contract, evidence, limits and next scope are persisted. Changes are uncommitted;
+no production-machining claim is made.
 
 **2026-09-21 backlog 4e local stdio acceptance complete.** OpenCode 1.18.31,
 running GLM-5.3-Flash from an isolated task-owned configuration, completed the real
@@ -903,17 +905,25 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    bounds are coarse enclosures; reopen precision/performance only when a concrete
    consumer's accuracy or workload blocks progress.
 
-   **Next: separate protected target geometry from cumulative stock.** Establish
-   a bounded exact rectangular removal target with one protected rectangular island
-   inside exact rectangular initial stock. Use supplied large/small-tool sweeps to
-   prove cumulative rest against the original target, rejection of island/exterior
-   contact that removes protected material, and safe crossing of the artificial
-   rest/cleared-space interface. Define target boundary membership explicitly and
-   independently check protected-material preservation and residual membership.
-   This advances the planned hole-preserving smaller-tool cleanup slice; another
-   primitive or area refinement alone does not. Stop before generated cleanup,
-   entry/link/path planning, native attachment, inlays or general curved topology.
-   Reopen broader target geometry only for a demonstrated blocking input.
+   **Completed 2026-09-22: separate protected target geometry from cumulative
+   stock.** An exact rectangular outer target and strictly interior rectangular
+   island now constrain supplied large/small-tool sweeps inside exact initial
+   stock. Required rest uses the original target; whole-stock bounds retain
+   cumulative removal and provenance. Independent membership checks, uncertainty
+   examples, exact wall tangency and rational overrun rejection pass. No generated
+   cleanup or connecting/entry motion is implied. Reopen broader target geometry
+   only for a demonstrated blocking input.
+
+   **Next: verify bounded cleanup motion against evolving stock.** For one
+   rectangular target/island scenario, specify supplied cutting segments and
+   explicit entry/connection motion, then prove each section's cutting occupancy
+   stays in the original allowed target and non-cutting occupancy uses only prior
+   guaranteed free space or an explicit outside-stock approach. Independently
+   verify residual membership and reject a connector that crosses uncleared stock
+   or the island. Preserve the existing uncertainty assumptions and report limits
+   at heights not modeled. Stop before automatic path generation, native/MCP
+   attachment, inlays or general curved topology; reopen those only when this
+   verifier has a demonstrated consumer that needs them.
 
 7. **Deferred MCP/core capability: author Manual Profile holding-tab positions.**
    Current automatic authoring covers width, height, minimum/maximum count, distance,
