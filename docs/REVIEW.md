@@ -1,5 +1,45 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Rest and V-carving design refinement - 2026-09-22
+
+The user accepted segmented finish modes, caller-owned tool catalogs and future
+paired inlays, and moved the work to `feat/rest-machining-and-vcarving`. This round
+changed design documentation only. The [design owner](REST_MACHINING_PLAN.md#shared-core-and-paired-inlay-design)
+contains the mathematical contracts, primary research, backend shortlist and
+remaining first-demonstration decisions; no runtime API or dependency was added.
+
+Fifteen scalar analytic checks passed using `.venv/Scripts/python.exe`: pointed
+and flat-tip cone inversion, spherical/conical join radius and slope at three
+angles, ideal V target sections, and nominal inlay gap/fit relationships. These
+check design identities, not an implemented sweep/planner or manufacturing behavior.
+The local [inlay cross-section](../output/rest-vcarve-design-20260922-164431/inlay-gaps.svg)
+illustrates a 4 mm pocket, 3.7 mm insertion, 0.3 mm bottom glue gap and 1 mm surface
+clearance with nominal side contact. SVG XML parsing and coordinate identities
+were checked; no browser-render or machine acceptance is claimed. The companion
+`analytic-checks.json` records the checked identities in the same ignored directory.
+The proposed A contour and triangular hole also passed the existing `Region`
+topology validator; analytic shoelace areas are 1596 and 64 square millimetres,
+giving 1532 square millimetres net opening area. This checks the proposed input,
+not the unimplemented V-target or toolpath output.
+
+Rejected design shortcuts: define success from the actual tool's own sweep; treat
+an estimated native MOP as known-clear stock; use a uniform expansion of rest as
+the finished boundary; equate stepover with engagement; or implement inlays as a
+second path engine. Reopen only with an explicit alternative contract and evidence
+that required geometry, topology and motion constraints remain satisfied.
+
+Manual CamBam validation adds no evidence for this documentation round. Native
+varying-Z motion and manufactured inlay fit remain separate future acceptance.
+
+A bounded independent mathematical review confirmed the ideal distance-field
+target, affine-radius sweep direction, stock-bound ordering and separate inlay
+assembly model. It prompted explicit spherical-tip versus rounded-flat distinction,
+the spherical/conical profile's finite-height formula, and the statement that a
+capped V-carve has a flat floor only where the opening is wide enough. This is
+design review, not independent implementation verification. All 84 checked local
+documentation links resolved (ignored output artifacts excluded); `git diff --check`
+passed. No runtime regression suite was run for these documentation-only changes.
+
 ## Pre-merge review of 8a–8e and 9a–9c - 2026-09-21
 
 Reviewed the twelve-commit sequence and aggregate `main...3cfa1df` change against

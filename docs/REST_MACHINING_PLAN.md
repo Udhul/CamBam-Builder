@@ -383,7 +383,7 @@ this design task.
 
 ## Design refinement - 2026-09-22
 
-### Intended product and decisions awaiting user input
+### Intended product and accepted scope
 
 Build a deterministic, standalone engine that combines caller-supplied tools to
 remove an explicitly defined target volume while preserving protected material.
@@ -391,16 +391,18 @@ Expose region-only analysis, path-only planning, verified removal and optional
 CamBam project attachment as independently useful operations. All calculations
 run without CamBam installed. This is a proposed contract, not an implemented API.
 
-Two questions have been presented to the user; their answers are pending:
+User decisions accepted 2026-09-22:
 
-1. Should the product support both decorative V-shaped carving and vertical-wall
-   pocket/through-cut targets as explicit modes? Recommended: yes. A pointed tip
-   alone does not make a sharp vertical corner column removable by a widening cone.
-2. Should the first planner compare a supplied tool set, or also discover tools
-   in a catalog? Recommended: supplied tools, composing existing caller-owned
-   recommendation profiles; a catalog is a separate maintenance commitment.
+1. Support the finish modes through a segmented, reusable model; include paired
+   pocket/plug inlays with assembly gaps and constraints in the design scope.
+2. Tools/catalogs belong to the caller or future CamBam client library. The engine
+   consumes supplied tool specifications and restrictions, and can recommend
+   combinations from that set. No hardcoded catalog belongs in the engine.
+3. Continue this work on `feat/rest-machining-and-vcarving`; the user committed
+   the first documentation round. This authorizes design work, not agent commits
+   or merge. No branch delivery/readiness claim is made by this design record.
 
-After these answers, settle the first acceptance target (outline, floor/through
+Still settle the first acceptance target (outline, floor/through
 depth, wall shape, tools), allowed residual boundary/thickness/volume tolerances,
 and whether the first workflow requires native Profile/Pocket execution or accepts
 framework-generated explicit paths. No numerical production defaults or implicit
@@ -455,6 +457,10 @@ claims; a maximum cutting diameter is not permission to extend the cone forever.
   `b*cos(alpha) + (h-b*(1-sin(alpha)))*tan(alpha)` up to the declared cone end.
   Validate tangency, continuity, diameter and segment domains. A generic rounded
   tool must supply its profile; a vague tip-radius value does not establish shape.
+  This is a spherical lowest-point tip, not a rounded edge around a nonzero flat.
+  Its cone-end height is `h_join + (Rmax-rho_join)/tan(alpha)`, not the flat-tip
+  cone-end formula. Require `0 < alpha < pi/2` and a maximum radius compatible
+  with the declared join; otherwise use a different explicit profile.
 - At slice depth `z` and tip depth `d`, evaluate the tool section at `h=d-z`
   only where that section exists. Union the moving disks along the complete path,
   including changing radii, not just endpoint disks. Check non-cutting occupancy
@@ -625,9 +631,274 @@ catalogs and replication of undocumented native strategies. Report unsupported
 cases rather than approximating them silently. Reopen each when a concrete job
 needs it and the existing target/stock representation is shown insufficient.
 
-This round stops at a reviewed proposal and recorded open decisions. No machine
+Design refinement stops at a reviewed proposal and recorded open decisions. No machine
 validation is needed for documentation. Before later manual acceptance, generate
 and inspect A/B files and exact expected motions as required by the development
-runbook. Continue this design conversation while product decisions are pending;
-a fresh implementation session becomes appropriate after their answers and the
-first fixture contract are recorded here.
+runbook. Continue this design conversation while first-demonstration and inlay
+priorities are pending; a fresh implementation session becomes appropriate after
+their answers and the first fixture contract are recorded here.
+
+## Shared core and paired inlay design
+
+This section refines the preceding proposal after the user's scope decisions.
+It is still design, not a declaration of implemented or production-accepted APIs.
+
+### Small shared model
+
+Use immutable values and pure functions; reserve extensibility for geometry
+backends, target evaluation and path strategies where actual alternatives exist.
+Do not build a generic workflow/plugin framework or a public class per machining
+method. Proposed value groups:
+
+| Value | Minimum responsibility |
+| --- | --- |
+| `RegionSet` | Multiple components, explicit outer/hole nesting, frame and units; bounded normalization from lines/arcs; stable geometry fingerprint. |
+| `JobGeometry` | Required removal, permitted removal, initial stock, fixtures and setup; depth sections with conservative interval bounds. |
+| `ToolSpec` | Cutting/non-cutting meridian profiles, physical tip datum, reach and capability facts; caller ID plus immutable geometry revision. |
+| `PlanRequest` | Job, supplied tools, known prior motions/stock evidence, hard limits and optional optimization preferences. |
+| `MotionPlan` / `AnalysisResult` | Ordered typed motion blocks and tool references, or areas alone; residual and clearance bounds, diagnostics and provenance. |
+
+An inlay recipe produces two `JobGeometry` values and an assembly relation. It uses
+the same analysis/planning functions as ordinary jobs. A future catalog adapts its
+records into `ToolSpec`; neither catalog access nor CamBam entity creation occurs
+inside the engine. Keep process/material recommendations separate from measured
+cutter geometry. A catalog rename must not alter a cached result, while a cutter
+geometry change must invalidate it even if the catalog ID is unchanged.
+
+Keep constraints typed and scoped rather than an unrestricted options dictionary:
+tool facts (profile, reach, center-cutting/ramp capability); job limits (floor,
+breakthrough, allowance, fixtures, permitted relief); pass limits (axial increment,
+radial engagement, ramp slope, feeds); finish/error limits (cusp, residual thickness,
+boundary deviation); and preferences (tool-change cost, path length, overlap).
+Distinguish unknown from zero, and hard limits from recommendations. A missing
+process limit can still allow region analysis, but prevents claiming an executable
+plan has passed that limit. Add new fields only with defined units and an owning
+evaluator; "all relevant parameters" is not permission to accept inert options.
+For a V-cutter, contact radius and engaged axial range vary along the path; a
+single maximum diameter is insufficient for local cutting-speed or chip-load
+claims. Keep geometric feasibility available without inventing a cutting-force
+model, and report unassessed process constraints separately from geometric success.
+
+The shared mathematical operations are section, offset/set operations, feasible
+pose evaluation and motion sweep. Specific strategies propose paths using them.
+Verification evaluates the actual proposed/exported motion, not the strategy's
+claim of what it intended to cover. Independent analytic references and conservative
+bounds are required; a second wrapper around the same offset call is not independence.
+
+### Canonical target construction and uncertainty
+
+Keep three different spatial permissions:
+
+- `I`: material required to be removed for the final finish.
+- `L`: material allowed to be removed, including explicitly authorized relief;
+  ordinarily `I` is contained in `L`. Extra removal within `L` but outside `I` is
+  reported as relief, not credited as required coverage.
+- `E_k`: space known empty before motion `k`, including verified prior removal.
+  Free space is not an instruction to remove material elsewhere.
+
+Cutting occupancy may enter `L union E_k`, excluding fixtures/protected volumes.
+Non-cutting occupancy must avoid remaining stock as well as fixtures. A rapid may
+not cut even when its path lies in `L`. Check entry/ramp/exit motion against evolving
+stock; do not use the final operation's removed volume to justify its own entry.
+These are geometric conditions; engagement and machine/process limits also apply.
+
+A useful exact design definition for an ideal pointed V recess is particularly
+small. Let `Omega` be the top opening, `q(x)` its internal Euclidean distance to
+all boundaries including islands, `alpha` the design half-angle and `D` an optional
+design depth cap. Then, in positive downward coordinates:
+
+`H(x) = min(D, q(x)/tan(alpha))`
+
+`I(z) = Omega eroded by disk(z*tan(alpha)),  0 <= z <= D`
+
+Here `H` is desired depth, not a tool-center trajectory. The second equation
+follows directly from `H(x) >= z`. With no cap, use the first expression without
+`min`. A vertical-wall pocket instead has `I(z)=Omega` through its floor depth.
+The capped V-carve's flat floor exists only on `Omega eroded by disk(D*tan(alpha))`;
+narrow features may never reach that floor. A cap does not give the whole opening
+a flat bottom.
+Design-flat/rounded-tip recesses need an explicit alternative target definition;
+an actual flat/rounded cutter does not silently change this ideal pointed target.
+Allow custom bounded section evaluators later rather than forcing every job into
+one angle formula. These definitions use nominal ideal geometry; finite tools,
+access and tolerances determine whether it can be manufactured.
+
+This makes roughing simple to specify: at depth `z`, a cylindrical endmill of
+radius `r` needs centers inside `I(z) eroded by disk(r)` when preserving the exact
+target. For this nested ideal target that floor slice also bounds the upper
+cutting cylinder. This shortcut does not apply to arbitrary non-nested stock,
+holder occupancy or other target evaluators; those need all-height checks.
+
+Prefer analytic primitives and adaptive depth slabs, not a universal voxel grid.
+Initial target slices may be nested, but residual slices need not be. Preserve
+per-slab bounds and mandatory events at floors, stock surfaces, tool-profile joins,
+tab heights and offset topology changes. Refine other intervals until the error
+budget is met or return unresolved uncertainty.
+
+Use inner/outer removal bounds `C_lo subset C_true subset C_hi`. For exact initial
+stock `S0`, remaining stock is bounded by `S0 \\ C_hi` and `S0 \\ C_lo`; intersect
+both with `I` to bound rest. Only guaranteed removal can justify known-free travel.
+Do not replace nominal geometry by a single rounded approximation and label it
+exact. Tool/setup uncertainty is a separately declared physical envelope.
+
+One compact sweep primitive can support many strategies: at a fixed depth plane,
+a straight XY segment with a linearly varying nonnegative cutter-section radius
+sweeps the convex hull of its two endpoint disks. Constant radius is the capsule
+special case. Split an XYZ segment at tool section entry/exit and profile joins
+before applying this result; conical segments then admit affine-radius treatment.
+Rounded sections need analytic treatment or conservative adaptive radius bounds.
+This avoids relying on densely sampled endpoint disks that can leave false gaps.
+
+### Topology is part of the contract
+
+Keep authored CAD contours intact; normalize a bounded approximation for the
+backend and retain its error/source mapping. Closed polylines alone are not enough:
+explicitly represent holes, separate components, boundary contacts and collapsed
+features. Do not silently repair self-intersections or join nearly touching islands.
+Return a proposed repair and its geometric/topological change when repair is needed.
+
+Offsets can split, merge or eliminate components legitimately. Record these events
+and their depth. A small area is not automatically insignificant: a long thin strip
+can violate a wall requirement, and a tiny lost bridge can disconnect an inlay.
+Use boundary deviation, remaining thickness, component connectivity and volume/area
+together. Report features below representable resolution rather than dropping them.
+
+Feasible centers can be curves or isolated points: a slot exactly one tool diameter
+wide has a centerline, not a positive-area center region. A circle exactly matching
+the cutter has a single feasible center. Preserve these strata or explicitly report
+them unsupported; an empty polygon erosion alone must not mean "unreachable".
+Practical clearance/entry constraints can still rule out an exact-fit nominal case.
+
+Geometry fitting must preserve containment and required sharp features within its
+error budget. Medial-axis branches can be sensitive to small contour perturbations;
+prune only after demonstrating negligible effect on required coverage. Offset
+loops need component-aware routing; merging them is not permission to cross an island.
+
+### Inlays as paired targets
+
+Use an assembly coordinate frame plus separate pocket and plug machining frames.
+Define the retained plug solid and receiving cavity first, then derive the removal
+volumes from their respective stock. The plug is a bounded exterior-clearing job,
+not the unbounded complement of an outline. Preserve backing stock and required
+connections until an explicitly ordered release/face-off operation.
+
+| Parameter | Meaning in the engine |
+| --- | --- |
+| Seating/engagement depth | Intended insertion relative to the finished receiver surface. |
+| Bottom glue gap | Axial separation at designated bottom-facing surfaces; report where narrow features have no common flat floor. |
+| Surface clearance | Separation between designated opposing stock faces at the seated pose; provides room for assembly and later backing removal. |
+| Side-fit allowance | Signed lateral or surface-normal allowance with its measurement convention explicit; separate from bottom glue gap. |
+| Backing thickness / facing allowance | Material retained for handling and the later removal needed to expose the finished inlay. |
+| Assembly transform | Physical flip/rotation, registration and insertion; derive any mirrored 2D machining projection from it. |
+
+Nominal side contact with a bottom gap is a useful geometric baseline. A rigid-body
+model can detect intended interference but cannot predict compression fit in wood,
+glue flow, shrinkage or required assembly force. Such process allowances are supplied,
+not invented. Side clearance may expose a visible seam and must not be conflated with
+hidden bottom glue space. Negative allowance is a deliberate interference request.
+
+For a local straight tapered wall `x(z)=b-z*tan(alpha)`, changing seating by axial
+amount `delta_z` changes lateral fit magnitude by `abs(delta_z)*tan(alpha)`;
+normal separation magnitude is `abs(delta_z)*sin(alpha)`. Thus seating, visible
+seam and side-fit allowance are coupled. This local relation is not a universal
+offset recipe at corners, rounded tips or capped floors; check assembled solids.
+Do not copy another CAM product's Start Depth formulas into the engine's semantics.
+A reference depth does not prove the stock above it was already removed.
+
+Verify pocket and plug after applying their assembly transform: no unintended solid
+intersection, requested gap/contact at designated surfaces, sufficient insertion,
+no premature backing/shoulder contact and the expected visible outline after
+face-off. Check the insertion motion as well as the final pose. Two tools with
+different shapes are permitted only if their achievable surfaces satisfy these
+tests; "same nominal angle" alone is insufficient. First support flips preserving
+parallel depth planes; tilted assemblies/undercuts require a separate representation.
+
+### Machining methods and extension points
+
+| Scenario or method | Shared capability and design implication |
+| --- | --- |
+| Contour-parallel pocketing | Successive offsets and component routing; straightforward first strategy, but check residual strips and corner engagement. |
+| Raster/zigzag clearing | Clip parallel passes to feasible centers; explicit turns/retracts, islands and boundary finish. Useful alternative for wide flat areas. |
+| Medial-axis V finishing | Clearance controls depth; branch traversal and variable-Z motion; limited diameter/depth requires additional coverage. |
+| Adaptive/trochoidal/spiral roughing | Reuse stock and occupancy but add engagement/curvature control; constant stepover does not imply constant tool load. Defer until measured need. |
+| Rest with a smaller endmill | Reuse target and updated stock; cut only useful portions but allow access through known-clear regions. |
+| Flat/rounded-tip cleanup | Same swept-profile model; different reachability and floor-cusp limits. |
+| Profile separation and tabs | Finite cut band, retained/released bodies and ordering; do not treat a loose slug as known empty. |
+| Chamfer after pocketing | Separate desired contact surface; interior free space helps access but upper-wall occupancy still constrains the cone. |
+| Tapered or straight-wall inlays | Two targets plus fit/assembly checks; shared planners and stock verification. |
+| Rest from an imported/native job | Require resolved parameters and evidence mode; estimates cannot authorize assumed-air rapids. |
+
+The first strategy should be deterministic and easy to verify, not the most elaborate
+high-speed path. Choose among supplied tool sequences with hard constraints first.
+Support caller-fixed order and bounded automatic search. A greedy largest-first
+plan is a useful candidate, not a universal optimum: it can add a tool change for
+little gain or constrain entry. Report quality/time/tool-change tradeoffs; label
+time as an estimate when acceleration, feeds or tool-change times are unknown.
+Reuse stock snapshots across candidates; stop on bounded search budget, tolerance
+satisfaction or no verified progress. Never prune a tool solely because it has a
+larger nominal diameter: tip shape, reach and engagement capabilities also matter.
+
+### Engineering sources and library direction
+
+The following primary references inform this refinement; the model above is our
+design synthesis, with formulas derived under the stated assumptions.
+
+- [LaValle, configuration-space planning](https://lavalle.pl/planning/node161.html)
+  gives the obstacle/shape translation framework behind cutter-center constraints.
+  Machining additionally changes stock; static collision-free poses are only one layer.
+- [Held and Spielberger, spiral pocket machining](https://www.cad-journal.net/files/vol_11/CAD_11%283%29_2014_346-357.pdf)
+  studies Voronoi-based pocket decomposition, stepover, curvature and engagement.
+  This supports keeping stock correctness independent of later route optimization.
+- [Vectric V12.5 inlay documentation](https://docs.vectric.com/docs/V12.5/Aspire/ENU/Help/form/VCarve%20Inlay%20Toolpath/)
+  distinguishes glue gap and surface clearance and generates paired operations.
+  Its same-V-bit rule is product behavior, not our proof of arbitrary-tool compatibility.
+- [Boost.Polygon Voronoi](https://www.boost.org/doc/libs/1_63_0/libs/polygon/doc/voronoi_main.htm)
+  handles point/segment sites with integral inputs and nonintersection preconditions.
+  It is a candidate for true segment-clearance graphs, not a full machining engine.
+- [Shapely precision model](https://shapely.readthedocs.io/en/2.1.0/reference/shapely.set_precision.html)
+  explicitly documents collapse/removal of narrow features under precision reduction.
+  Backend validity therefore does not prove preservation of manufacturing intent.
+- [Shapely 2.1 release requirements](https://shapely.readthedocs.io/en/2.1.0/release/2.x.html)
+  require Python 3.10+, whereas this project supports 3.9-3.13. A compatible version
+  strategy must be tested; do not silently increase the project's minimum Python.
+- [CGAL Minkowski sums](https://doc.cgal.org/latest/Minkowski_sum_2/group__PkgMinkowskiSum2Ref.html)
+  offers exact or guaranteed-approximation offsets and lists GPL licensing for this
+  package. Distribution and binding implications must be evaluated before adoption.
+
+Recommendation: evaluate Shapely/GEOS first for planar Boolean/offset work because
+of its direct Python surface; retain Clipper2 as the focused alternative. Neither
+is accepted until deterministic fixtures, topology/error bounds, Windows/Python
+installation and distribution requirements pass. Choose one production planar
+backend, not two parallel implementations. Separately evaluate segment Voronoi
+only when required by V-finishing; avoid raster skeletonization as an unbounded
+substitute. Use CGAL/OpenCAMLib as references or justified later capabilities rather
+than introducing a general mesh/solid kernel for the current fixed-axis scope.
+
+### Acceptance additions and next decision
+
+Proposed first combined-tool fixture, pending the user's demonstration preference:
+millimetres, stock top at Z=0, stock thickness 8; outer A-shaped contour
+`(-24,0), (-8,60), (8,60), (24,0), (12,0), (6,18), (-6,18), (-12,0)`;
+triangular hole `(-4,28), (4,28), (0,44)`. Use the ideal 90-degree included-angle
+target capped at 3 mm depth. Supply a 5 mm flat endmill and a pointed 90-degree
+V-cutter with 12 mm maximum cutting diameter and at least 6 mm conical cutting
+height. Roughing retains a 0.5 mm planar allowance against each target section;
+finishing removes that allowance within the final target. These are synthetic
+geometry inputs, not manufacturer/process recommendations or approved feeds.
+Keep the earlier square and straight-slot cases as independent analytic references;
+this A fixture exercises composition, holes and varying local width.
+
+Add analytic checks for ideal V target sections, affine-radius segment sweeps,
+uncertainty ordering, exact-width slot/point-center cases, a narrow bridge near the
+precision limit, and assembled tapered-wall fit. Inlay verification must test a
+correct pair, wrong flip, premature bottom/backing contact, excessive visible side
+gap and a narrow feature without a flat bottom. Prove geometry before optimizing.
+
+Pending user preferences: model both straight-wall and tapered inlays with tapered
+first (recommended); use a flat-depth V-carved letter with endmill roughing as the
+first combined-tool demonstration (recommended). These choices select the first
+recipe/acceptance target, not separate engine architectures. The standalone
+endmill-rest slice remains the internal foundation, with pointed-cone target and
+sweep checks alongside it. No runtime implementation is authorized by a claim of
+completed design; design closure still needs the numerical first-fixture contract
+and reviewed backend evaluation criteria.

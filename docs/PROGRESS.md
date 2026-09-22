@@ -14,9 +14,13 @@ tool occupancy, safe overlap, path planning, verification and CamBam attachment;
 it covers capped/wide carving, flat/rounded tips and native-path evidence limits.
 Primary-source research and proposed acceptance fixtures are recorded in the
 [design owner](REST_MACHINING_PLAN.md#design-refinement---2026-09-22).
-User decisions on finish modes and supplied tools versus a catalog are pending.
-Next: settle those decisions and the first target/fixture contract before selecting
-a geometry backend or implementing the engine. Region/Z support is already complete;
+The user accepted multiple finish modes and caller-owned tool catalogs, added paired
+inlays to the design scope, and committed the first round on
+`feat/rest-machining-and-vcarving`. The [shared-core refinement](REST_MACHINING_PLAN.md#shared-core-and-paired-inlay-design)
+now defines target/permission/free-space separation, ideal V target sections,
+bounded stock uncertainty, topology edge cases and paired inlay assembly semantics.
+Next: settle first-demonstration/inlay priorities and the numerical fixture contract
+before choosing a geometry backend or implementing the engine. Region/Z support is already complete;
 variable-Z Engrave motion acceptance remains separate. No runtime change or machining
 acceptance is claimed. Continue the design conversation in this session.
 
@@ -874,7 +878,8 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    `.cb` files provide interchange, not access to a headless CAM engine.
    [Problem, reasoning, support gaps and acceptance plan](REST_MACHINING_PLAN.md).
    The current user request promotes design for the combined-tool letter/region
-   workflow. Resolve [open decisions and first acceptance slice](REST_MACHINING_PLAN.md#design-refinement---2026-09-22)
+   and paired-inlay workflows, with caller-supplied tools/catalog integration.
+   Resolve [remaining preferences and first acceptance slice](REST_MACHINING_PLAN.md#acceptance-additions-and-next-decision)
    before implementation; no implementation or machining acceptance is claimed.
 7. **Deferred MCP/core capability: author Manual Profile holding-tab positions.**
    Current automatic authoring covers width, height, minimum/maximum count, distance,
