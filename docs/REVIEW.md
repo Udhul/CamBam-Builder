@@ -4054,3 +4054,46 @@ The 4e runbook now states that distinction instead of requiring a nonexistent na
 primitive name. Together with the independently verified named-agent run above, this
 completes same-machine local-stdio 4e acceptance. It does not establish remote
 transport or broader production machining acceptance.
+
+
+## Cumulative directional stock/rest bounds - 2026-09-22
+
+`compose_sweep_bounds` extends the detached analytic consumer to finite supplied
+horizontal passes in one exact rectangular stock/target. Each pass is revalidated;
+stock/frame/Z mismatches and altered certificates fail before returning a result.
+Ordered sources retain individual radius and position uncertainty, including
+repeated passes. Exact union membership and opposite-direction stock subtraction
+preserve the existing conditional evidence level without inventing connecting paths.
+
+Aggregate areas use rational stock-grid cell classification, not sums of capsule
+areas. Convex-corner coverage proves lower cells; exact minimum segment-to-cell
+distance admits upper cells. Each cell is counted once, giving overlap-safe bounds
+and monotonic endpoints for stock prefixes on the same grid. The tradeoff is coarse
+area enclosures and O(grid_size squared times pass count) arithmetic. Reopen area
+precision/performance only for a concrete consumer tolerance or blocking workload;
+this increment claims neither exact union areas nor production machining acceptance.
+
+Verification on the existing `.venv\Scripts\python.exe` (Python 3.14.5):
+
+- `-m unittest discover -s tests -p test_stock.py -v`: 11 tests passed.
+- `-m unittest discover -s tests -v`: 347 tests, OK with 12 skips for optional
+  capabilities (including absent planar backend and Windows symlink privilege).
+  This is not new optional-backend acceptance or a supported-version matrix run.
+- Runtime import succeeded; `git diff --check` passed.
+
+Independent scalar references cover collinear capsule overlap, disjoint disks,
+identical passes and an overlapping disk lens. Regression checks also cover
+prefix monotonicity, order/duplicate invariance, empty composition, nested grid
+refinement, per-pass uncertain actual unions, zero-dimensional guarantees,
+protected-boundary contact and invalid/altered source rejection. The first focused
+run exposed test methods accidentally moved into the new class; restoring their
+original class fixed the test-layout error. The first broad run reported OK but
+PowerShell stderr redirection returned status 1; explicit subprocess log/exit
+capture was used to resolve the wrapper ambiguity. Verbose output remains under
+`output/stock-composition-20260922-a/`, not a second status document.
+
+No manual CamBam acceptance adds evidence for these detached, nonserialized set
+expressions. Physical uncertainty and complete supplied-pass coverage remain caller
+assumptions. Implementation is uncommitted; target islands and generated cleanup
+remain outside this completed scope. Next priority and reopening criteria are in
+[PROGRESS](PROGRESS.md#next-detached-stockrest-increment).

@@ -26,7 +26,7 @@ packages; `inactive/` and demos are outside that runtime package list.
 | `cambam_builder/cam_entities.py` | `Part`, MOP classes, and MOP XML path/encoding policy inventories | Part stock/nesting or MOP parameters and XML policy |
 | `cambam_builder/cambam_entities.py` | Explicit compatibility/discovery facade re-exporting canonical objects from the four entity owners | Preserve public entity imports; implementation modules must import owners directly |
 | `cambam_builder/cad_transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
-| `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy and remaining-section bounds | One supplied horizontal sweep inside rectangular stock/target; no path or native integration |
+| `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy and remaining-section bounds | Finite supplied horizontal sweeps inside rectangular stock/target; no path or native integration |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
 | `cambam_builder/machining_recommendations.py` | Immutable tool/material/machine contexts, provenance-bearing recommendations, user diameter tables and pluggable pure strategies | Recommendation selection only; contains no curated catalog, persistence, document mutation or safety claim |
@@ -113,6 +113,33 @@ position error with evidence class `conditional_analytic_section_bounds`.
 It is a programmatic geometric result, not an authenticated certificate, actual
 machine execution evidence, or authorization for known-free travel. Callers must
 use the validating function; manually constructed records establish no proof.
+
+`compose_sweep_bounds(stock, sources, frame_id=..., section_z_mm=...,
+grid_size=32)` accepts a finite iterable of validated `SweepBounds` with the same
+exact stock, frame identity and Z. It reconstructs each source to reject altered
+bounds, preserves the ordered source tuple (including duplicates) and retains each
+pass's radius/position uncertainty. Empty input removes nothing. For every prefix,
+`removal_lower = union(C_lo)` and `removal_upper = union(C_hi)`; `RemainingSection`
+subtracts the opposite union. No independence of errors between passes is assumed.
+Membership remains exact, including zero-area line/point guarantees and excluded
+removal boundaries. Composition does not imply cutting travel between segments.
+
+`CapsuleUnion.area_interval` partitions the exact stock rectangle into
+`grid_size ** 2` equal rational cells (positive integer, default 32 per axis).
+A cell contributes to the lower area if one positive-radius capsule contains all
+four corners (convexity); it contributes to the upper area if its exact minimum
+distance from any positive-radius center segment is at most that capsule radius.
+Each cell counts at most once per bound, regardless of overlap or duplicate passes.
+Zero-radius components have zero area but retain membership. Thus aggregate area
+is conservatively enclosed without summing overlapping removal. These intervals
+can be much wider than single-capsule analytic intervals; they are not exact union
+areas or a requested accuracy guarantee. Increasing the grid costs O(n*n*passes)
+exact arithmetic and constant auxiliary cell storage. Integer-multiple refinement
+can only tighten intervals. For a fixed stock/grid, adding passes makes both
+remaining-area endpoints nonincreasing, as well as shrinking remaining membership.
+Changing grid size between prefixes does not guarantee endpoint monotonicity.
+Use finer grids only when a consumer needs tighter area evidence; polygon output,
+area-driven stopping tolerances and general topology remain outside this slice.
 
 ### Detached nominal planar core
 

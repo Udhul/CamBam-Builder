@@ -1266,4 +1266,8 @@ and rejection rules live there. This is conditional section evidence, not the
 full rectangular feasible-center opening or an executed pocket operation.
 Independent scalar area references and translated actual-sweep membership checks
 are in `tests/test_stock.py`. General Boolean success remains nominal and cannot
-feed this consumer. Next priority stays in [PROGRESS](PROGRESS.md#next-detached-stockrest-increment).
+feed this consumer. Finite supplied sweep composition now preserves exact union
+membership and reversed stock subtraction, with conservative overlap-safe rational
+grid area intervals and per-pass provenance. The implementation contract remains
+in the specification; this does not add paths or general target topology.
+Next priority stays in [PROGRESS](PROGRESS.md#next-detached-stockrest-increment).

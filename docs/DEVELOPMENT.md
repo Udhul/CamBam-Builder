@@ -199,9 +199,12 @@ No manual CamBam validation is needed for this nonserialized geometry slice.
 & $ProjectPython -m unittest discover -s tests -p test_stock.py -v
 ```
 
-Six backend-independent analytic tests exercise exact sweep/rest areas, directional
+Eleven backend-independent analytic tests exercise exact sweep/rest areas, directional
 containment under radius/position uncertainty, boundary contact and exact overrun
 rejection, collapsed/empty guarantees, large translations and unsupported inputs.
+Composition checks add independent overlapping capsule/disk-lens and disjoint area
+references, duplicate/order invariance, empty input, uncertain actual unions,
+monotonic stock prefixes, grid refinement and mismatched/altered-source rejection.
 No CamBam manual validation adds evidence: this slice has no serialization, path
 generation or execution claim. Physical uncertainty limits remain caller inputs.
 

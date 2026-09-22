@@ -7,7 +7,7 @@ All inputs use one caller-named Cartesian frame, millimetres, and fixed Z.
 from dataclasses import dataclass
 from fractions import Fraction
 import math
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 
 def _number(value):
@@ -87,12 +87,16 @@ class RemainingSection:
     """Exact set difference, including its boundary membership convention."""
 
     stock: SectionRectangle
-    removed: Optional[Capsule]
+    removed: Optional[Union[Capsule, "CapsuleUnion"]]
 
     def __post_init__(self):
         if type(self.stock) is not SectionRectangle:
             raise ValueError("expected an exact section rectangle")
         if self.removed is not None:
+            if type(self.removed) is CapsuleUnion:
+                if self.removed.stock != self.stock:
+                    raise ValueError("union must use the same stock")
+                return
             if type(self.removed) is not Capsule:
                 raise ValueError("expected an analytic capsule or None")
             s, r = self.removed.sweep, self.removed.radius
@@ -154,3 +158,117 @@ def bound_horizontal_sweep(stock, sweep, *, frame_id, section_z_mm,
     return SweepBounds(frame_id, z, stock, sweep, rmin, rmax, error,
                        inner, outer, RemainingSection(stock, outer),
                        RemainingSection(stock, inner))
+
+
+@dataclass(frozen=True)
+class CapsuleUnion:
+    """Exact membership; conservative area on a fixed rational stock grid.
+
+    Fully covered cells contribute to the lower area; possibly touched cells
+    contribute to the upper area. A cell is counted at most once in each bound.
+    Grid size controls cost/precision, not membership or physical uncertainty.
+    """
+
+    stock: SectionRectangle
+    capsules: Tuple[Capsule, ...]
+    grid_size: int = 32
+
+    def __post_init__(self):
+        if type(self.stock) is not SectionRectangle:
+            raise ValueError("expected an exact section rectangle")
+        if type(self.grid_size) is not int or self.grid_size <= 0:
+            raise ValueError("grid_size must be a positive integer")
+        try:
+            capsules = tuple(self.capsules)
+        except TypeError as exc:
+            raise ValueError("expected a finite capsule iterable") from exc
+        for capsule in capsules:
+            if type(capsule) is not Capsule:
+                raise ValueError("expected analytic capsules")
+            RemainingSection(self.stock, capsule)
+        object.__setattr__(self, "capsules", capsules)
+
+    def contains(self, x, y):
+        x, y = _number(x), _number(y)
+        return any(c.contains(x, y) for c in self.capsules)
+
+    @property
+    def area_interval(self):
+        stock, n = self.stock, self.grid_size
+        dx = (stock.xmax - stock.xmin) / n
+        dy = (stock.ymax - stock.ymin) / n
+        lower = upper = 0
+        # Zero-radius segments affect membership but have zero planar area.
+        capsules = tuple(c for c in self.capsules if c.radius > 0)
+        if not capsules:
+            return Fraction(0), Fraction(0)
+        for i in range(n):
+            x0, x1 = stock.xmin + i * dx, stock.xmin + (i + 1) * dx
+            for j in range(n):
+                y0, y1 = stock.ymin + j * dy, stock.ymin + (j + 1) * dy
+                touched = covered = False
+                for c in capsules:
+                    s = c.sweep
+                    near_x = max(s.xmin - x1, x0 - s.xmax, 0)
+                    near_y = max(y0 - s.y, s.y - y1, 0)
+                    touched |= near_x ** 2 + near_y ** 2 <= c.radius ** 2
+                    # Convexity: all four corners inside implies whole cell inside.
+                    far_x = max(s.xmin - x0, x1 - s.xmax, 0)
+                    far_y = max(abs(y0 - s.y), abs(y1 - s.y))
+                    if far_x ** 2 + far_y ** 2 <= c.radius ** 2:
+                        covered = True
+                        break
+                lower += covered
+                upper += touched
+        return lower * dx * dy, upper * dx * dy
+
+
+@dataclass(frozen=True)
+class ComposedSweepBounds:
+    frame_id: str
+    section_z_mm: Fraction
+    stock: SectionRectangle
+    sources: Tuple[SweepBounds, ...]
+    removal_lower: CapsuleUnion
+    removal_upper: CapsuleUnion
+    remaining_lower: RemainingSection
+    remaining_upper: RemainingSection
+    evidence_class: str = "conditional_analytic_section_bounds"
+
+
+def compose_sweep_bounds(stock, sources, *, frame_id, section_z_mm, grid_size=32):
+    """Compose a finite ordered collection of complete supplied sweep bounds.
+
+    Sources must share stock, frame and section. Revalidate their certificates;
+    retain order, duplicates and uncertainty as provenance. Empty input removes
+    nothing. Prefixes on the same grid give monotonic remaining-area intervals.
+    No independence assumption about errors between passes is required.
+    """
+    if type(stock) is not SectionRectangle:
+        raise ValueError("expected an exact section rectangle")
+    if not isinstance(frame_id, str) or not frame_id.strip():
+        raise ValueError("a nonempty caller-owned frame identity is required")
+    z = _number(section_z_mm)
+    try:
+        sources = tuple(sources)
+    except TypeError as exc:
+        raise ValueError("expected a finite sweep bounds iterable") from exc
+    for source in sources:
+        if type(source) is not SweepBounds:
+            raise ValueError("expected analytic SweepBounds sources")
+        if (source.stock != stock or source.frame_id != frame_id
+                or source.section_z_mm != z):
+            raise ValueError("sources must share stock, frame and section Z")
+        checked = bound_horizontal_sweep(
+            stock, source.sweep, frame_id=frame_id, section_z_mm=z,
+            radius_min_mm=source.radius_min_mm,
+            radius_max_mm=source.radius_max_mm,
+            position_error_mm=source.position_error_mm)
+        if checked != source:
+            raise ValueError("source differs from validated analytic bounds")
+    lower = CapsuleUnion(stock, tuple(s.removal_lower for s in sources
+                                     if s.removal_lower is not None), grid_size)
+    upper = CapsuleUnion(stock, tuple(s.removal_upper for s in sources), grid_size)
+    return ComposedSweepBounds(frame_id, z, stock, sources, lower, upper,
+                               RemainingSection(stock, upper),
+                               RemainingSection(stock, lower))
