@@ -499,12 +499,20 @@ acceptance, and caller applications can invoke each capability independently.
 now constructs and strict-reimports the source `.cb`, normalizes its Region,
 stock and disabled source MOPs with explicit supplemental setup, and rejects
 unsupported/inherited edits. The A/B/C `.cb` files and independent standalone
-comparison manifest are reproducible. This is automated input/attachment
-evidence; CamBam reopen/export and actual E/N emitted-motion acceptance have not
-been recorded. The candidate Engraves currently carry only level-cut
+comparison manifest are reproducible. This was automated input/attachment
+evidence; CamBam output had not yet been checked at that point. The candidate
+Engraves carry only level-cut
 centerlines, so the E probe must inspect CamBam-added entries, links and events
 before any output pass. The [runbook](DEVELOPMENT.md#rc01-native-input-and-abc-comparison-preparation)
 owns the exact generation and comparison commands.
+
+**2026-09-23 first output trial:** the user posted A/B/C with CamBam Plus 1.0;
+the [review](REVIEW.md#rc01-first-cambam-output-trial---2026-09-23) records
+floor overcut, path reordering and invalid T2 tool-change sequencing. E and N
+failed. The first additive-depth/order repair is prepared but not natively
+posted. The existing N gate still requires a verified T1 prefix; a future
+fully native Pocket roughing variant may supply one only after its actual
+motion independently passes the same stock, access and residual checks.
 
 For N, configure tool 2/diameter 2, stock surface 0, target depth -3, depth increment
 1, stepover 0.4 of diameter, roughing clearance 0, clearance plane +5 and the supplied

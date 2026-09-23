@@ -379,6 +379,12 @@ enabled T1 Engrave candidate MOPs, B also has three T2 Engrave candidates, and C
 has the same T1 candidates plus four T2 Pocket window MOPs. The Engrave MOPs
 target only the generated level-cut centerlines (79 per T1 depth, 248 per T2
 depth); they do **not** encode the generator's entry, link, retract or event roles.
+After the first native output trial showed additive depth and path reordering,
+the candidate Plines are flattened to Z=0, each level MOP has `StockSurface`
+one millimetre above `TargetDepth`, and `OptimisationMode=None` requests generated
+target order. This is an unposted adapter repair, not an
+accepted explicit-motion carrier. It does not encode the required feed approach,
+setup-position tool change or spindle-stop event.
 Those complete ordered roles, source and motion fingerprints, and independent
 rough/final residual intervals live in `comparison.json`. The four C windows are
 design-neutral machining boundaries. Every candidate preserves the original
@@ -389,7 +395,10 @@ subset: absolute millimetre G0/G1 XYZ motion, explicit G17/G21/G90, F/S/T,
 G40/G61/G64 and M3/M5/M6/M30. Unsupported commands fail closed. It checks
 ordered A/B motion or C's T1 prefix against the manifest within 0.001 mm and
 checks candidate `.cb` SHA-256 before a file comparison. It flags G64 blending as
-unverified trajectory geometry. A clean C prefix does not verify native T2
+unverified trajectory geometry. A Default-post Z-only startup retract before
+G17/T1 is parsed with an unverified initial-machine-position warning; a tool
+change while the spindle is running is also unverified, with the emitted event
+position retained for comparison. A clean C prefix does not verify native T2
 Pocket motion. E/N acceptance requires actual regenerated and posted motion,
 including added entries/links/events, stock replay and CamBam application review.
 

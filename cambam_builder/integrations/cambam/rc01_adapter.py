@@ -160,8 +160,10 @@ def _candidate_mop(project, part, layer, moves, tool, depth, label):
     for index, move in enumerate(moves):
         if not isinstance(move, Move) or move.role != "cut" or move.tool != tool or move.end[2] != depth:
             continue
-        path = project.add_pline(layer, [tuple(map(float, move.start)),
-                                         tuple(map(float, move.end))],
+        # Engrave adds its target depth to the source geometry's Z. Keep the
+        # centerline at Z=0 and let this single-depth MOP supply the level.
+        path = project.add_pline(layer, [(float(move.start[0]), float(move.start[1]), 0.0),
+                                         (float(move.end[0]), float(move.end[1]), 0.0)],
                                  identifier=f"{label}-path-{index}")
         if path is None:
             raise RuntimeError("could not attach RC01 candidate path")
@@ -171,10 +173,10 @@ def _candidate_mop(project, part, layer, moves, tool, depth, label):
         identifier=f"{label}-z{abs(depth)}", enabled=True,
         tool_number=1 if tool == "T1" else 2,
         tool_diameter=6 if tool == "T1" else 2,
-        target_depth=depth, depth_increment=1, stock_surface=0,
+        target_depth=depth, depth_increment=1, stock_surface=depth + 1,
         roughing_clearance=0, clearance_plane=5, spindle_direction="CW",
         spindle_speed=12000, plunge_feedrate=60, cut_feedrate=300,
-        work_plane="XY")
+        work_plane="XY", optimisation_mode="None")
     if mop is None:
         raise RuntimeError("could not attach RC01 candidate Engrave")
     return len(paths)

@@ -68,6 +68,18 @@ class NativeRC01Tests(unittest.TestCase):
                                  source_mop_ids)
                 self.assertEqual([len(project.get_mop_targets(m)) for m in project.list_mops()[:2]],
                                  [1, 1])
+                candidates = [m for m in project.list_mops() if m.enabled
+                              and m.name.startswith("CANDIDATE")]
+                for mop in candidates:
+                    self.assertEqual(mop.stock_surface, mop.target_depth + 1)
+                    self.assertEqual(mop.depth_increment, 1)
+                    self.assertEqual(mop.optimisation_mode, "None")
+                    targets = set(project.get_mop_targets(mop))
+                    paths = [p for p in project.list_primitives()
+                             if p.internal_id in targets]
+                    self.assertTrue(paths)
+                    self.assertTrue(all(vertex.z == 0 for path in paths
+                                        for vertex in path.vertices))
             self.assertEqual(json.loads((Path(directory) / "rc01" / "comparison.json").read_text())
                              ["motion_fingerprint"], manifest["motion_fingerprint"])
             candidate = Path(directory) / "rc01" / manifest["variants"]["A"]["file"]
@@ -106,6 +118,18 @@ class NativeRC01Tests(unittest.TestCase):
         self.assertEqual(compare_posted(manifest, "A", good)["status"], "sequence_matches")
         self.assertEqual(compare_posted(manifest, "A", good.replace("G61", "G64"))
                          ["status"], "unverified")
+        native_preamble = "G21 G90 G61 G40\nG0 Z5.0\nT1 M6\nG17\nM3 S12000\n"
+        first = compare_posted(manifest, "A", native_preamble + "G0 X6 Y5\n" + end)
+        self.assertEqual((first["status"], first["field"]), ("deviation", "end"))
+        actual, warnings = read_default_post(native_preamble + "G0 X5 Y5\n" + end)
+        self.assertIn("initial machine position", warnings[0])
+        displaced_change = (native_preamble + "G0 X5 Y5\nT2 M6\nM3 S12000\n"
+                            + end)
+        displaced, warnings = read_default_post(displaced_change)
+        self.assertEqual(displaced[3]["position"], [5, 5, 5])
+        self.assertEqual(displaced[3]["rpm"], 12000)
+        self.assertTrue(any("without explicit spindle stop" in warning
+                            for warning in warnings))
 
 
 if __name__ == "__main__":

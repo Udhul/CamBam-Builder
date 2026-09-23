@@ -25,6 +25,7 @@ def read_default_post(data):
     units, absolute, plane = False, False, False
     items, warnings = [], []
     stopped = False
+    spindle_running = False
     for number, raw in enumerate(data.splitlines(), 1):
         line = _COMMENT.sub("", raw).strip()
         if not line or line == "%":
@@ -63,12 +64,19 @@ def read_default_post(data):
                 warnings.append(f"line {number}: G64 blending needs trajectory evidence")
         values = {a: v for a, v in codes if a in "XYZFST"}
         if any(a in values for a in "XYZ"):
-            if not (units and absolute and plane and motion is not None):
-                raise ValueError(f"line {number}: motion before explicit G21/G90/G17")
+            if not (units and absolute and motion is not None):
+                raise ValueError(f"line {number}: motion before explicit G21/G90")
+            if not plane and any(a in values for a in "XY"):
+                raise ValueError(f"line {number}: XY motion before explicit G17")
+            if tool is None:
+                # Default posts a Z-only retract before T1/G17. Its endpoint is
+                # known, but the incoming machine position is not in the file.
+                if motion != 0 or set(values) != {"Z"} or values["Z"] != at[2]:
+                    raise ValueError(f"line {number}: unsupported pre-tool motion")
+                warnings.append(f"line {number}: initial machine position is not encoded")
+                continue
             end = tuple(values.get(axis, at[i]) for i, axis in enumerate("XYZ"))
             if end != at:
-                if tool is None:
-                    raise ValueError(f"line {number}: motion before tool event")
                 if motion == 1 and "F" not in values and feed is None:
                     raise ValueError(f"line {number}: feed move without feed")
                 items.append({"type": "move", "tool": f"T{tool}",
@@ -86,24 +94,33 @@ def read_default_post(data):
             tool = int(values["T"])
         for m in ms:
             if m == 6:
-                if "T" not in values or at != (-10.0, -10.0, 5.0):
-                    raise ValueError(f"line {number}: tool change state")
+                if "T" not in values:
+                    raise ValueError(f"line {number}: tool change without T word")
+                if spindle_running:
+                    warnings.append(f"line {number}: tool change without explicit spindle stop")
                 items.append({"type": "event", "kind": "tool_change",
                               "tool": f"T{tool}", "position": list(at),
-                              "rpm": 0, "line": number})
+                              "rpm": rpm if spindle_running else 0,
+                              "line": number})
             elif m == 3:
-                if tool is None or rpm is None or at != (-10.0, -10.0, 5.0):
+                if tool is None or rpm is None:
                     raise ValueError(f"line {number}: spindle start state")
+                if spindle_running:
+                    warnings.append(f"line {number}: spindle start while already running")
+                spindle_running = True
                 items.append({"type": "event", "kind": "spindle_start",
                               "tool": f"T{tool}", "position": list(at),
                               "rpm": rpm, "line": number})
             elif m == 5:
                 if tool is None:
                     raise ValueError(f"line {number}: spindle stop without tool")
+                spindle_running = False
                 items.append({"type": "event", "kind": "spindle_stop",
                               "tool": f"T{tool}", "position": list(at),
                               "rpm": 0, "line": number})
             else:
+                if spindle_running:
+                    warnings.append(f"line {number}: M30 without explicit spindle stop")
                 stopped = True
     if not stopped:
         raise ValueError("posted file lacks M30 end")

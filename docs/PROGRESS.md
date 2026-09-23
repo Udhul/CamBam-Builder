@@ -60,11 +60,22 @@ Part stock and disabled T1/T2 Pocket intent; a separate explicit setup supplies
 tool components and non-native process values. Normalization reaches the same
 `Job()` as S and rejects unsupported/inherited edits. A/B/C candidate files,
 their SHA-256 guarded comparison manifest and a fail-closed Default-post reader
-are prepared under `integrations/cambam/`. A/B candidate Engraves contain level-cut centerlines; CamBam's
-added motion and C's native T2 Pocket still need emitted-motion verification.
+are prepared under `integrations/cambam/`. A/B candidate Engraves contain level-cut
+centerlines; these are comparison probes, not a proposed rest-machining workflow.
 See the [contract](structure_spec.md#rc01-native-input-and-comparison-candidates),
 [runbook](DEVELOPMENT.md#rc01-native-input-and-abc-comparison-preparation) and
 [dated evidence](REVIEW.md#rc01-native-input-and-comparison-preparation---2026-09-23).
+
+**2026-09-23 RC01 first CamBam output trial (backlog 6, E/N fail).** The user
+opened and posted A/B/C with CamBam Plus 1.0, `Default` postprocessor and Default
+mm profile. All three original posts reach Z=-6 although the target floor is
+Z=-3. The first A path starts at (27,18.5) rather than required (5,5); B and C
+also reorder the T1 prefix. B/C change to T2 away from the setup point without
+an explicit spindle stop. The first adapter repair puts Engrave geometry at Z=0,
+uses one depth interval per MOP and disables CamBam path optimisation. A corrected
+A/B/C candidate set has passed strict reimport and hash checks, but has **not**
+been posted in CamBam. No E/N motion or rest-coverage acceptance is recorded.
+See the [trial evidence](REVIEW.md#rc01-first-cambam-output-trial---2026-09-23).
 
 **2026-09-23 package organization preference recorded.** New behavior belongs
 to explicit [native, reusable CAM core, extended CAM, or integration owners](structure_spec.md#package-organization-decision-and-migration-plan).
@@ -75,11 +86,15 @@ generic/extended extraction follows a concrete second consumer or output
 finding. This keeps future sessions from adding more ambiguous root modules
 while limiting the present change to the active slice.
 
-**Next:** run the RC01 CamBam Plus 1.0 A/B/C output trial, inspect returned
-posted motion and repair the candidate adapter where its roles/order diverge.
-This is now the shortest route to deciding whether the accepted `.cb` workflow
-can execute the generated sequence. General area precision and optimizer work
-stay deferred unless that output gate or residual uncertainty requires them.
+**Next:** establish a useful native-MOP-backed RC01 roughing and corner-cleanup
+execution variant, then replay its posted motion against stock, access and rest
+criteria. Keep the explicit-motion E route separate: Engrave's added entries,
+links and tool events remain an output-carrier blocker despite the first adapter
+repair. Do not request another full A/B/C export until a candidate can test
+those roles meaningfully; the corrected files are available for a focused depth/
+ordering check if needed. The native package consolidation follows the motion
+contract decision; moving imports now would obscure the active output defect.
+General area precision and optimizer work remain deferred.
 Direct posting remains subsequent delivery. The user selected the proposed synthetic
 case, including its test-only plunge/feed limits, on 2026-09-23. These are accepted
 test inputs, not production parameters or acceptance of generated/native motion.
@@ -1034,8 +1049,8 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    cleanup and explicit framework paths each require evidence from actual emitted
    motion. Synthetic job acceptance is separate from real-machine constraints.
 
-   **Standalone S and automated native I preparation implemented 2026-09-23; E/N
-   output gates next.**
+   **Standalone S and automated native I preparation implemented 2026-09-23;
+   first E/N output trial failed.**
    `cambam_builder.cam_core.rc01` and `tests/test_rc01.py` now own the accepted nominal
    generated motion, whole-height stock/access replay, rational per-slab rest
    intervals and negative variants. New detached CAM features use the
@@ -1045,18 +1060,20 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    GEOS residual-location topology still lacks formal numeric interval proof;
    reopen that precision only if a strict S certificate or native comparison
    requires it. Native input normalization and A/B/C comparison candidates are
-   implemented, with source MOPs disabled and post comparison pending. Next run
-   actual CamBam E/N output checks and repair the candidate representation if
-   native entries, links, order or events diverge. Consolidate native ownership
-   after that trial, then follow with the cone/V-carve slice through the same
-   contracts. Caller-owned orchestration and subsequent
+   implemented, with source MOPs disabled. The first posted A/B/C trial exceeded
+   the -3 floor to -6, reordered T1, and changed to T2 without the required
+   setup/spindle sequence. A corrected Engrave depth/ordering probe is prepared
+   but not natively posted. Next prove a native-MOP-backed roughing/cleanup
+   variant from actual posted motion and independent stock replay; revisit the
+   explicit-motion carrier separately before claiming E. Caller-owned
+   orchestration and subsequent
    direct posting remain accepted; never infer vertical clearance from fixed-Z evidence.
 
    **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
    owns native/extended/core naming and migration criteria. The current RC01
    integration package is the proved bridge. Consolidate root native modules
-   after the first E/N output trial so import restructuring does not obscure
-   native-motion defects; promote root detached/policy modules only when an
+   after the RC01 output semantics are settled so import restructuring does not
+   obscure native-motion defects; promote root detached/policy modules only when an
    output finding or second consumer fixes the shared abstraction boundary.
 
    **Implementation stopping condition:** RC01 passes its independent continuous

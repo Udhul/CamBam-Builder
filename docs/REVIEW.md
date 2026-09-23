@@ -4290,3 +4290,67 @@ three artifacts, with returned posted motion and first deviations recorded
 under the [E/N gates](REST_MACHINING_PLAN.md#rc01-standalone-and-cambam-output-gates).
 Then move the existing native owners as one reviewed package-layout slice;
 the current trial should first identify the adapter contracts worth preserving.
+
+## RC01 first CamBam output trial - 2026-09-23
+
+The user opened the prepared A/B/C candidates in CamBam Plus 1.0 and exported
+`A-rough.nc`, `B-explicit.nc`, and `C-native-cleanup.nc` under the ignored
+`output/rc01-output-20260923-130450/` directory. The user reported the
+`Default` postprocessor and Default mm profile; the G-code headers independently
+name `Default`. The unchanged original posts have SHA-256 values:
+
+| Post | SHA-256 |
+| --- | --- |
+| `A-rough.nc` | `2cf5b21cb853a87351fb4c5a3b94fc306254c0bba73590b01fc38fe0b5eeadf3` |
+| `B-explicit.nc` | `d4804ad441e7a4087ece8d6ca3a25981cbc2656570908e4da2aa8ca0ac061099` |
+| `C-native-cleanup.nc` | `3ace6c9373f31e070d153792adc43acc69b807203de54b069fe94a2da0fd9f15` |
+
+The original comparison reader stopped at each post's startup `G0 Z5.0` before
+`G17` and T1. The Default post uses `G21 G90 G61 G40`, then that Z-only retract,
+then `T1 M6`, `G17` and `M3 S12000`; requiring G17/T1 for the startup retract
+was a reader defect. The reader now parses it but reports that the initial
+machine position is not encoded. It retains emitted tool-event positions and
+flags tool changes without an explicit spindle stop.
+
+With the reader corrected, A's first ordered deviation is line 12: its rapid
+ends at `(27,18.5,5)` instead of the framework's `(5,5,5)`. B and C similarly
+start T1 at `(3,24,5)` and `(26.958,10.5,5)` on line 13. The first A plunge
+at line 14 reaches Z=-2 although its MOP is named Z=-1. All three posts reach
+Z=-6, violating the Z=-3 target floor and tool travel bound. This comes from
+putting the same negative level in the Pline vertex and Engrave target depth;
+CamBam adds them. The Z=-2 and Z=-3 MOPs also generate multiple incremental
+levels from stock surface 0, adding redundant and deeper cuts. No residual
+coverage result can rescue this protected-floor overcut.
+
+B changes to T2 at `(5,5,5)` on line 987; C changes at `(3,8.5,5)` on line 996.
+Both are away from the declared `(-10,-10,5)` setup position, and neither post
+contains an `M5` before `T2 M6`. C's four native Pocket operations do produce
+motion, but their cleanup is downstream of the invalid T1 prefix. There is no
+E or N acceptance and no physical machining claim. The user raised concern
+that these A/B/C probes should not be treated as the final rest strategy.
+
+The first adapter repair puts candidate Plines at Z=0, uses stock surfaces
+0/-1/-2 for the -1/-2/-3 single-depth MOPs, and sets CamBam's documented
+`OptimisationMode=None` to request generated target order. The reader handles
+the observed Default-post preamble and records unsafe event-state warnings.
+Fresh candidate files and a hash-guarded manifest were generated and strict-
+reimported under `output/rc01-repair-20260923-132551/`; their motion fingerprint
+remains `39fde4a4c04295d50c7e53875478445cd5881eb9784f0c00d8ef676c4d89ffbd`.
+These files have **not** been posted through CamBam, so corrected depth and
+order are not native-verified. The Engrave representation still cannot encode
+the required feed approach, retract, setup-position tool change and explicit
+spindle stop. Reopen explicit-motion delivery only with a carrier that can
+express and preserve those roles. For a first useful `.cb` workflow, prioritize
+native MOP roughing and corner cleanup with independent replay of the actual
+posted motion; the current C cleanup cannot be certified from its MOP settings.
+
+Verification with `.venv/Scripts/python.exe`: `test_rc01_native.py` 3 tests,
+`test_rc01.py` 6 tests and `test_mop_parameters.py` 18 tests passed;
+`compileall -q cambam_builder` and `git diff --check` passed. The original
+source/candidate hashes still match their comparison manifest after the user
+exported G-code. The corrected A/B/C candidate hashes match their new manifest;
+the files were strict-reimported during generation. Automated checks verify
+the adapter's changed XML fields and reader behavior, not CamBam's motion for
+the corrected candidates. A focused repaired-A export is the remaining native
+check for the first depth/order repair; full E/N requires a suitable carrier
+and actual-motion replay.
