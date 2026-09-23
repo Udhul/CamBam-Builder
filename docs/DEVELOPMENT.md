@@ -463,54 +463,37 @@ the incoming machine position, so RC01 retains the declared test setup
 
 ### Native optimiser shape/MOP mapping corpus
 
-Generate a **new empty** ignored output directory from the repository root:
+The portable corpus lives in
+`tests/fixtures/optimizer_corpus/`: four exact `.cb` inputs, four user-posted
+Default `.nc` outputs, the original input `manifest.json`, and derived
+`observations.json`. It no longer depends on ignored `output/`. The user
+confirmed the Legacy (0.9.7) and New (0.9.8) MOP selections in CamBam Plus
+1.0. The posted headers establish Default and G21/G90 for these files;
+the manifest pins source XML and the expected installed system-file hashes.
+The [dated review](REVIEW.md#native-optimiser-corpus-posted-output---2026-09-23)
+owns the accepted observations and limits.
+`manifest.json` is the unchanged generation snapshot, so its
+`pending_native_post` labels are historical; the current output state is in
+`observations.json` and the review.
+
+Recheck exact source/post hashes, MOP sections, parsed modal motion, and the
+checked-in observation map from the repository root:
 
 ```powershell
-& $ProjectPython -m cambam_builder.integrations.cambam.optimizer_corpus output/optimizer-corpus-NEW
 & $ProjectPython -m unittest tests.test_optimizer_corpus -v
+$taskDir = Join-Path 'output' ('optimizer-corpus-audit-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+New-Item -ItemType Directory -Path $taskDir | Out-Null
+& $ProjectPython -m cambam_builder.integrations.cambam.optimizer_corpus tests/fixtures/optimizer_corpus --observe --record "$taskDir/observations.json"
 ```
 
-The prepared 2026-09-23 candidate set is under
-`output/optimizer-corpus-20260923-04/`; its `manifest.json` records exact
-candidate hashes, CamBam Plus 1.0 build, explicit `Standard`/`Experimental`
-mode, modeled MOP properties, target IDs and expected Default post/
-`Standard-mm` style/`Default-mm` tool library hashes. The atlas pair is the
-first output gate. Its two files are `atlas-legacy.cb` and `atlas-new.cb`.
-Earlier `-01` through `-03` draft directories are superseded; post only `-04`.
-The held `links-legacy.cb` and `links-new.cb` cover interactions after the
-atlas method has been accepted. All use synthetic 185 x 45 x 8 mm stock,
-Z=0 surface, +5 clearance and -2 or -3 target depth. These inputs are for
-toolpath observation only, not production machining.
-
-For the first gate, open each atlas `.cb` in the established CamBam Plus 1.0
-installation. Confirm the document is millimeters; `Machining Options` shows
-the Default postprocessor, `Standard-mm` style library and `Default-mm` tool
-library; and a MOP's Optimisation Mode displays **Legacy (0.9.7)** for
-`atlas-legacy.cb`, **New (0.9.8)** for `atlas-new.cb`. Generate toolpaths
-(`Ctrl+T`), then produce G-code (`Ctrl+W`) to a same-basename `.nc` beside
-each unchanged `.cb`. Return the two `.nc` files and report either the mode/
-settings confirmation or the first opening/toolpath/post error. Do not save
-edits into the hash-guarded `.cb` files. The first gate passes only when both
-posts can be tied to their exact source hashes and their MOP sections can be
-reviewed; merely opening the files does not establish mapping acceptance.
-
-After posts arrive, run one intake per candidate and retain the exact JSON
-locally beside it:
-
-```powershell
-& $ProjectPython -m cambam_builder.integrations.cambam.optimizer_corpus output/optimizer-corpus-20260923-04 --post atlas-legacy output/optimizer-corpus-20260923-04/atlas-legacy.nc > output/optimizer-corpus-20260923-04/atlas-legacy-audit.json
-& $ProjectPython -m cambam_builder.integrations.cambam.optimizer_corpus output/optimizer-corpus-20260923-04 --post atlas-new output/optimizer-corpus-20260923-04/atlas-new.nc > output/optimizer-corpus-20260923-04/atlas-new-audit.json
-```
-
-Inspect the exit status and audit contents. Intake status is
-`posted_unreviewed`, never native-motion or stock acceptance. Review each
-native target-to-path section, path order/direction and depth, exact posted
-coordinates/arcs, entry/links/retracts, feed, spindle and tool events. A
-CannedCycle `G81`/`G83` remains raw/unresolved in this reader; the incoming
-machine position and controller trajectory are not encoded. Record actual
-output hashes, version/profile provenance, specific unsupported words and
-accepted limits in the review owner. Then request the held interaction pair
-if the first method has proved adequate.
+The test compares a freshly computed map with the tracked observation JSON;
+the optional audit copy belongs only in its unique ignored task directory.
+The original `output/optimizer-corpus-20260923-04/` remains local trial
+history. Regenerating via `build()` makes new UUIDs and candidate hashes, so
+new exports require their own posts and provenance; do not overwrite this
+accepted fixture set. `G98`/`G81` CannedCycle words remain raw/unresolved in
+the modal parser. Incoming machine position, controller execution and stock
+removal are not certified by this mapping.
 
 ### Isolated planar backend evaluation
 

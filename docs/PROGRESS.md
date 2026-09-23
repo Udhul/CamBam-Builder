@@ -146,26 +146,29 @@ to that timing is needed for this CamBam `.cb` route. Defer package-layout,
 general area precision and optimizer implementation work until a named
 finding reopens them.
 
-**2026-09-23 native optimiser corpus prepared (backlog 6 foundation; posts
-pending).** The installed CamBam Plus 1.0 shape/MOP classes and exact
-`Standard`/`Experimental` XML mode values are inventoried. Four complete,
-strict-reimported synthetic `.cb` candidates cover the seven authorable shape
-families, four authorable MOP classes and a bounded interaction set in matched
-Legacy/New pairs. A hash-guarded manifest, conservative posted-motion intake
-and regressions are in place. Native-only Line, Spline, Surface, Script,
-Bitmap, 3D Surface, NCFile and installed Lathe are explicitly blocked with
-reopening criteria; historical Bas Relief is out of current 1.0 UI scope.
-No candidate has been posted or accepted, so there is no native mapping or
-stock authority yet. The prepared files and exact first-gate steps are in
-the [runbook](DEVELOPMENT.md#native-optimiser-shapemop-mapping-corpus), with
-the [inventory and stopping rule](REST_MACHINING_PLAN.md#native-cambam-optimizer-and-output-mapping-foundation)
-and [preparation evidence](REVIEW.md#native-optimiser-corpus-preparation---2026-09-23).
-**Next priority:** obtain the two atlas Default posts from the user, verify
-their mode/settings display and actual path/event mapping, then use the held
-interaction pair only if the first corpus method passes. This matters now
-because native motion needs a consistent evidence source before it can be
-offered beside framework motion for stock/rest calculation. Defer another
-Pocket/Default repair and a generic optimiser until that evidence exists.
+**2026-09-23 native optimiser output corpus completed for the bounded
+inventory (backlog 6 foundation).** The user posted all four synthetic
+Legacy/New `.cb` candidates in CamBam Plus 1.0 and confirmed the MOP mode
+labels. Exact input/post bytes, the original hash manifest and a derived
+motion observation map now live in tracked `tests/fixtures/optimizer_corpus/`.
+All seven authorable shape families and four authorable MOP classes have
+native Default-output observations in both modes. The Region Pocket and
+Text/Arc Engrave sections differ between modes; the three interaction
+sections emit identical motion in this one fixture. Drill G98/G81 cycle
+travel remains unresolved by the modal reader. Native-only Line, Spline,
+Surface, Script, Bitmap, 3D Surface, NCFile and installed Lathe have explicit
+blocked/reopening results; historical Bas Relief is out of current 1.0 UI
+scope. No native stock authority or physical acceptance follows from this
+mapping. See the [runbook](DEVELOPMENT.md#native-optimiser-shapemop-mapping-corpus),
+[inventory and stop rule](REST_MACHINING_PLAN.md#native-cambam-optimizer-and-output-mapping-foundation)
+and [posted evidence](REVIEW.md#native-optimiser-corpus-posted-output---2026-09-23).
+**Next priority:** prove one caller-selectable native posted-motion stock/rest
+authority slice on a controlled Region/Pocket case, with separate source/post
+fingerprints and edit invalidation; then revisit RC01 native N using actual
+posted motion. This turns the bounded corpus into a usable native workflow
+while keeping framework-generated motion independent. Broad optimiser
+implementation and native-only class breadth remain deferred until a named
+consumer requires them.
 The user selected the proposed synthetic case, including its test-only
 plunge/feed limits, on 2026-09-23. These are accepted
 test inputs, not production parameters; that selection alone did not accept

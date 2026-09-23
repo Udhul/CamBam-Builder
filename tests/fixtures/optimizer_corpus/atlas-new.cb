@@ -1,0 +1,305 @@
+<?xml version='1.0' encoding='utf-8'?>
+<CADFile units="Millimeters" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="0.9.8.0" Name="Native atlas new">
+  <MachiningOptions>
+    <PostProcessor>Default</PostProcessor>
+    <StyleLibrary>Standard-mm</StyleLibrary>
+    <ToolLibrary>Default-mm</ToolLibrary>
+    <Stock>
+      <Material></Material>
+      <PMin>0,0,0</PMin>
+      <PMax>0,0,0</PMax>
+      <Color>255,165,0</Color>
+    </Stock>
+  </MachiningOptions>
+  <layers>
+    <layer name="Mapping shapes" color="Green" alpha="1.0" pen="1.0" visible="true" locked="false">
+      <objects>
+        <points id="1">
+          <pts>
+            <p>94.0,8.0,0.0</p>
+            <p>102.0,8.0,0.0</p>
+          </pts>
+          <Tag>{"user_id":"points","internal_id":"214584aa-e886-4b96-99cb-f4448edf83f9","groups":[],"description":""}</Tag>
+          <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+        </points>
+        <text Height="8" Font="Arial" linespace="1.0" align="center,center" style="" p1="113,6,0.0" id="2">A<Tag>{"user_id":"text","internal_id":"2bed499d-e606-4071-9ad0-398bf3732804","groups":[],"description":""}</Tag>
+          <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+        </text>
+        <pline Closed="true" id="3">
+          <pts>
+            <p b="0.0">71.0,5.0,0.0</p>
+            <p b="0.0">83.0,5.0,0.0</p>
+            <p b="0.0">83.0,15.0,0.0</p>
+            <p b="0.0">71.0,15.0,0.0</p>
+          </pts>
+          <Tag>{"user_id":"closed-pline","internal_id":"4324a462-a7a7-4a20-a271-de7cbc0a4ff3","groups":[],"description":""}</Tag>
+          <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+        </pline>
+        <rect Closed="true" p="5,5,0.0" w="10" h="8" id="4">
+          <Tag>{"user_id":"rect","internal_id":"52d1db5e-2947-440b-ae14-93ec730d66fe","groups":[],"description":""}</Tag>
+          <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+        </rect>
+        <pline Closed="false" id="5">
+          <pts>
+            <p b="0.0">48.0,5.0,0.0</p>
+            <p b="0.0">56.0,12.0,0.0</p>
+            <p b="0.0">64.0,5.0,0.0</p>
+          </pts>
+          <Tag>{"user_id":"open-pline","internal_id":"586337d6-6530-41d7-a0d4-e592a4021c43","groups":[],"description":""}</Tag>
+          <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+        </pline>
+        <arc p="139,11,0.0" r="5" s="25" w="220" id="6">
+          <Tag>{"user_id":"arc","internal_id":"92708018-0d76-418e-bbde-2a577a20dd5d","groups":[],"description":""}</Tag>
+          <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+        </arc>
+        <entity xsi:type="Region" id="7">
+          <ModificationCount>0</ModificationCount>
+          <Tag>{"user_id":"region-island","internal_id":"be7a762a-3377-49c0-b710-bebfacd13cb5","groups":[],"description":""}</Tag>
+          <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+          <OuterCurve Closed="true">
+            <ModificationCount>0</ModificationCount>
+            <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+            <pts>
+              <p b="0.0">153.0,5.0,0.0</p>
+              <p b="0.0">177.0,5.0,0.0</p>
+              <p b="0.0">177.0,27.0,0.0</p>
+              <p b="0.0">153.0,27.0,0.0</p>
+            </pts>
+          </OuterCurve>
+          <HoleCurves>
+            <Polyline Closed="true">
+              <ModificationCount>0</ModificationCount>
+              <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+              <pts>
+                <p b="0.0">161.0,13.0,0.0</p>
+                <p b="0.0">169.0,13.0,0.0</p>
+                <p b="0.0">169.0,20.0,0.0</p>
+                <p b="0.0">161.0,20.0,0.0</p>
+              </pts>
+            </Polyline>
+          </HoleCurves>
+        </entity>
+        <circle c="30,10,0.0" d="8" id="8">
+          <Tag>{"user_id":"circle","internal_id":"d8510367-1489-4f2e-bab7-7491fb5ef79e","groups":[],"description":""}</Tag>
+          <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+        </circle>
+      </objects>
+    </layer>
+  </layers>
+  <parts>
+    <part Name="Mapping part" Enabled="true">
+      <Stock>
+        <PMin>0,0,-8</PMin>
+        <PMax>185,45,0</PMax>
+        <Material>MDF</Material>
+        <Color>210,180,140</Color>
+      </Stock>
+      <MachiningOrigin>0.0,0.0</MachiningOrigin>
+      <ToolProfile>EndMill</ToolProfile>
+      <Nesting>
+        <NestMethod>None</NestMethod>
+      </Nesting>
+      <machineops>
+        <profile Enabled="true">
+          <Name>ATLAS_PROFILE_RECT_CIRCLE</Name>
+          <Tag>{"user_id": "atlas_profile_rect_circle", "internal_id": "57653eee-e0a8-473d-92ed-961957aa630d"}</Tag>
+          <TargetDepth state="Value">-2</TargetDepth>
+          <DepthIncrement state="Value">1</DepthIncrement>
+          <StockSurface state="Value">0</StockSurface>
+          <RoughingClearance state="Value">0</RoughingClearance>
+          <ClearancePlane state="Value">5</ClearancePlane>
+          <SpindleDirection state="Value">CW</SpindleDirection>
+          <SpindleSpeed state="Value">12000</SpindleSpeed>
+          <VelocityMode state="Value">ExactStop</VelocityMode>
+          <WorkPlane state="Value">XY</WorkPlane>
+          <OptimisationMode state="Value">Experimental</OptimisationMode>
+          <ToolDiameter state="Value">2</ToolDiameter>
+          <ToolNumber state="Value">1</ToolNumber>
+          <ToolProfile state="Value">EndMill</ToolProfile>
+          <PlungeFeedrate state="Value">60</PlungeFeedrate>
+          <CutFeedrate state="Value">240</CutFeedrate>
+          <MaxCrossoverDistance state="Value">0.7</MaxCrossoverDistance>
+          <primitive>
+            <prim>4</prim>
+            <prim>8</prim>
+          </primitive>
+          <StepOver state="Value">0.4</StepOver>
+          <InsideOutside state="Value">Outside</InsideOutside>
+          <MillingDirection state="Value">Conventional</MillingDirection>
+          <CollisionDetection state="Value">true</CollisionDetection>
+          <CornerOvercut state="Value">false</CornerOvercut>
+          <LeadInMove state="Value">
+            <LeadInType state="Value">None</LeadInType>
+          </LeadInMove>
+          <FinalDepthIncrement state="Value">0.0</FinalDepthIncrement>
+          <CutOrdering state="Value">DepthFirst</CutOrdering>
+          <HoldingTabs state="Value">
+            <TabMethod>None</TabMethod>
+          </HoldingTabs>
+        </profile>
+        <profile Enabled="true">
+          <Name>ATLAS_PROFILE_OPEN_PLINE</Name>
+          <Tag>{"user_id": "atlas_profile_open_pline", "internal_id": "15822813-c90b-4784-ae38-68509c83311e"}</Tag>
+          <TargetDepth state="Value">-2</TargetDepth>
+          <DepthIncrement state="Value">1</DepthIncrement>
+          <StockSurface state="Value">0</StockSurface>
+          <RoughingClearance state="Value">0</RoughingClearance>
+          <ClearancePlane state="Value">5</ClearancePlane>
+          <SpindleDirection state="Value">CW</SpindleDirection>
+          <SpindleSpeed state="Value">12000</SpindleSpeed>
+          <VelocityMode state="Value">ExactStop</VelocityMode>
+          <WorkPlane state="Value">XY</WorkPlane>
+          <OptimisationMode state="Value">Experimental</OptimisationMode>
+          <ToolDiameter state="Value">2</ToolDiameter>
+          <ToolNumber state="Value">1</ToolNumber>
+          <ToolProfile state="Value">EndMill</ToolProfile>
+          <PlungeFeedrate state="Value">60</PlungeFeedrate>
+          <CutFeedrate state="Value">240</CutFeedrate>
+          <MaxCrossoverDistance state="Value">0.7</MaxCrossoverDistance>
+          <primitive>
+            <prim>5</prim>
+          </primitive>
+          <StepOver state="Value">0.4</StepOver>
+          <InsideOutside state="Value">Outside</InsideOutside>
+          <MillingDirection state="Value">Conventional</MillingDirection>
+          <CollisionDetection state="Value">true</CollisionDetection>
+          <CornerOvercut state="Value">false</CornerOvercut>
+          <LeadInMove state="Value">
+            <LeadInType state="Value">None</LeadInType>
+          </LeadInMove>
+          <FinalDepthIncrement state="Value">0.0</FinalDepthIncrement>
+          <CutOrdering state="Value">DepthFirst</CutOrdering>
+          <HoldingTabs state="Value">
+            <TabMethod>None</TabMethod>
+          </HoldingTabs>
+        </profile>
+        <pocket Enabled="true">
+          <Name>ATLAS_POCKET_CLOSED_PLINE</Name>
+          <Tag>{"user_id": "atlas_pocket_closed_pline", "internal_id": "63c0337d-4b2c-475b-837d-f5569cc44293"}</Tag>
+          <TargetDepth state="Value">-2</TargetDepth>
+          <DepthIncrement state="Value">1</DepthIncrement>
+          <StockSurface state="Value">0</StockSurface>
+          <RoughingClearance state="Value">0</RoughingClearance>
+          <ClearancePlane state="Value">5</ClearancePlane>
+          <SpindleDirection state="Value">CW</SpindleDirection>
+          <SpindleSpeed state="Value">12000</SpindleSpeed>
+          <VelocityMode state="Value">ExactStop</VelocityMode>
+          <WorkPlane state="Value">XY</WorkPlane>
+          <OptimisationMode state="Value">Experimental</OptimisationMode>
+          <ToolDiameter state="Value">2</ToolDiameter>
+          <ToolNumber state="Value">1</ToolNumber>
+          <ToolProfile state="Value">EndMill</ToolProfile>
+          <PlungeFeedrate state="Value">60</PlungeFeedrate>
+          <CutFeedrate state="Value">240</CutFeedrate>
+          <MaxCrossoverDistance state="Value">0.7</MaxCrossoverDistance>
+          <primitive>
+            <prim>3</prim>
+          </primitive>
+          <StepOver state="Value">0.4</StepOver>
+          <StepoverFeedrate state="Value">Plunge Feedrate</StepoverFeedrate>
+          <MillingDirection state="Value">Conventional</MillingDirection>
+          <CollisionDetection state="Value">true</CollisionDetection>
+          <LeadInMove state="Value">
+            <LeadInType state="Value">None</LeadInType>
+          </LeadInMove>
+          <FinalDepthIncrement state="Value">0.0</FinalDepthIncrement>
+          <CutOrdering state="Value">DepthFirst</CutOrdering>
+          <RegionFillStyle state="Value">InsideOutsideOffsets</RegionFillStyle>
+          <FinishStepover state="Value">0.0</FinishStepover>
+          <FinishStepoverAtTargetDepth state="Value">false</FinishStepoverAtTargetDepth>
+          <RoughingFinishing state="Value">Roughing</RoughingFinishing>
+        </pocket>
+        <pocket Enabled="true">
+          <Name>ATLAS_POCKET_REGION_ISLAND</Name>
+          <Tag>{"user_id": "atlas_pocket_region_island", "internal_id": "85b16a1e-fa29-4d67-a955-0691d3bd8908"}</Tag>
+          <TargetDepth state="Value">-2</TargetDepth>
+          <DepthIncrement state="Value">1</DepthIncrement>
+          <StockSurface state="Value">0</StockSurface>
+          <RoughingClearance state="Value">0</RoughingClearance>
+          <ClearancePlane state="Value">5</ClearancePlane>
+          <SpindleDirection state="Value">CW</SpindleDirection>
+          <SpindleSpeed state="Value">12000</SpindleSpeed>
+          <VelocityMode state="Value">ExactStop</VelocityMode>
+          <WorkPlane state="Value">XY</WorkPlane>
+          <OptimisationMode state="Value">Experimental</OptimisationMode>
+          <ToolDiameter state="Value">2</ToolDiameter>
+          <ToolNumber state="Value">1</ToolNumber>
+          <ToolProfile state="Value">EndMill</ToolProfile>
+          <PlungeFeedrate state="Value">60</PlungeFeedrate>
+          <CutFeedrate state="Value">240</CutFeedrate>
+          <MaxCrossoverDistance state="Value">0.7</MaxCrossoverDistance>
+          <primitive>
+            <prim>7</prim>
+          </primitive>
+          <StepOver state="Value">0.4</StepOver>
+          <StepoverFeedrate state="Value">Plunge Feedrate</StepoverFeedrate>
+          <MillingDirection state="Value">Conventional</MillingDirection>
+          <CollisionDetection state="Value">true</CollisionDetection>
+          <LeadInMove state="Value">
+            <LeadInType state="Value">None</LeadInType>
+          </LeadInMove>
+          <FinalDepthIncrement state="Value">0.0</FinalDepthIncrement>
+          <CutOrdering state="Value">DepthFirst</CutOrdering>
+          <RegionFillStyle state="Value">InsideOutsideOffsets</RegionFillStyle>
+          <FinishStepover state="Value">0.0</FinishStepover>
+          <FinishStepoverAtTargetDepth state="Value">false</FinishStepoverAtTargetDepth>
+          <RoughingFinishing state="Value">Roughing</RoughingFinishing>
+        </pocket>
+        <engrave Enabled="true">
+          <Name>ATLAS_ENGRAVE_ARC_TEXT</Name>
+          <Tag>{"user_id": "atlas_engrave_arc_text", "internal_id": "d96b88f0-da51-45e4-bb8c-da7389a4ef54"}</Tag>
+          <TargetDepth state="Value">-2</TargetDepth>
+          <DepthIncrement state="Value">1</DepthIncrement>
+          <StockSurface state="Value">0</StockSurface>
+          <RoughingClearance state="Value">0</RoughingClearance>
+          <ClearancePlane state="Value">5</ClearancePlane>
+          <SpindleDirection state="Value">CW</SpindleDirection>
+          <SpindleSpeed state="Value">12000</SpindleSpeed>
+          <VelocityMode state="Value">ExactStop</VelocityMode>
+          <WorkPlane state="Value">XY</WorkPlane>
+          <OptimisationMode state="Value">Experimental</OptimisationMode>
+          <ToolDiameter state="Value">2</ToolDiameter>
+          <ToolNumber state="Value">1</ToolNumber>
+          <ToolProfile state="Value">EndMill</ToolProfile>
+          <PlungeFeedrate state="Value">60</PlungeFeedrate>
+          <CutFeedrate state="Value">240</CutFeedrate>
+          <MaxCrossoverDistance state="Value">0.7</MaxCrossoverDistance>
+          <primitive>
+            <prim>2</prim>
+            <prim>6</prim>
+          </primitive>
+          <RoughingFinishing state="Value">Roughing</RoughingFinishing>
+          <FinalDepthIncrement state="Value">0.0</FinalDepthIncrement>
+          <CutOrdering state="Value">DepthFirst</CutOrdering>
+        </engrave>
+        <drill Enabled="true">
+          <Name>ATLAS_DRILL_POINTS</Name>
+          <Tag>{"user_id": "atlas_drill_points", "internal_id": "0a4d93a7-f060-40b7-82bd-edff845e7736"}</Tag>
+          <TargetDepth state="Value">-2</TargetDepth>
+          <DepthIncrement state="Value">1</DepthIncrement>
+          <StockSurface state="Value">0</StockSurface>
+          <RoughingClearance state="Value">0</RoughingClearance>
+          <ClearancePlane state="Value">5</ClearancePlane>
+          <SpindleDirection state="Value">CW</SpindleDirection>
+          <SpindleSpeed state="Value">12000</SpindleSpeed>
+          <VelocityMode state="Value">ExactStop</VelocityMode>
+          <WorkPlane state="Value">XY</WorkPlane>
+          <OptimisationMode state="Value">Experimental</OptimisationMode>
+          <ToolDiameter state="Value">2</ToolDiameter>
+          <ToolNumber state="Value">2</ToolNumber>
+          <ToolProfile state="Value">Drill</ToolProfile>
+          <PlungeFeedrate state="Value">60</PlungeFeedrate>
+          <CutFeedrate state="Value">240</CutFeedrate>
+          <MaxCrossoverDistance state="Value">0.7</MaxCrossoverDistance>
+          <primitive>
+            <prim>1</prim>
+          </primitive>
+          <DrillingMethod state="Value">CannedCycle</DrillingMethod>
+          <PeckDistance state="Value">0</PeckDistance>
+          <RetractHeight state="Value">2</RetractHeight>
+          <Dwell state="Value">0</Dwell>
+        </drill>
+      </machineops>
+    </part>
+  </parts>
+</CADFile>

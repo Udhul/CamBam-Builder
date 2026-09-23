@@ -4759,3 +4759,80 @@ Until their exact `.nc` hashes, path/event sections and limitations are
 reviewed, all mapping cases remain pending and no native stock/rest
 authority is available. Native-only class reopening criteria remain in the
 inventory; the interaction posts wait for the atlas method verdict.
+
+## Native optimiser corpus posted output - 2026-09-23
+
+The user exported all four prepared `.cb` files in CamBam Plus 1.0 and
+confirmed the displayed Legacy (0.9.7) and New (0.9.8) MOP settings in the
+corresponding documents. That report confirms the mode labels only; no
+physical cut or stock result was reported. Exact copies of the four candidate
+`.cb` files, four returned Default `.nc` files and the original
+`manifest.json` are now tracked under `tests/fixtures/optimizer_corpus/`.
+The derived `observations.json` in the same directory contains source/post
+hashes, ordered section/path summaries, events, unresolved words and separate
+program/section motion fingerprints. Its source manifest SHA-256 is
+`2608d86faa4aa11cd199559707e751a8ca64cfe0322cb6e1a9880efe938fc400`.
+The manifest's `pending_native_post` fields are preserved as input-time
+provenance; the generated observation status remains `unreviewed` by design,
+and this section owns the later bounded semantic acceptance.
+The three installed Default post/style/tool file hashes still match the
+preparation record above. Each post has its matching candidate title,
+`Post processor: Default`, `G21 G90 G61 G40`, all expected MOP comments and
+`M30`; each `.cb` retains its preparation hash.
+
+| Native program | Exact `.nc` SHA-256 | Parsed G0/G1/G2/G3 words / M events / unresolved words |
+| --- | --- | --- |
+| `atlas-legacy.nc` | `f8ded8ff8e3934205a78aa1866aec72fe7e802e748b8d61dd0e43d98388e2470` | 362 / 6 / 3 |
+| `atlas-new.nc` | `ff886629f486058118901aa42f65e2dfb5ce5a8d4f57ebc6f5f72dcfdeecc568` | 385 / 6 / 3 |
+| `links-legacy.nc` | `08a20cbc0d91c885b8a86c796827d946175c91bf9138b1af957dc90738b86a8d` | 93 / 8 / 0 |
+| `links-new.nc` | `5e959f11685fba2a35d528d657fdfae01edfa6a2a60bb3efbf5d2ff484768622` | 93 / 8 / 0 |
+
+The following are **accepted native posted-output observations** for these
+exact source/profile hashes. Each MOP comment names a spatially distinct
+synthetic target; the retained NC records every direction, decimal endpoint,
+arc center, entry, link and retract. Counts below are posted motion words,
+not independent toolpath counts or stock certificates.
+
+| MOP section and source target(s) | Legacy vs New observed mapping |
+| --- | --- |
+| `ATLAS_PROFILE_RECT_CIRCLE`: rect, circle | 33 vs 33 identical motion words; first +5 XY approaches `(5,4)`, then `(25.1381,8.8331)`; cutting endpoints reach Z=-1 and -2. |
+| `ATLAS_PROFILE_OPEN_PLINE`: open-pline | 12 vs 12 identical; first approach `(48.6585,4.2474)`; Z=-1 and -2. |
+| `ATLAS_POCKET_CLOSED_PLINE`: closed-pline | 70 vs 70 identical; first approach `(76,10)`; Z=-1 and -2. |
+| `ATLAS_POCKET_REGION_ISLAND`: region-island | 200 vs 222, different motion. Legacy first approach `(157.6,9.904)` and has 52 G3/zero G2 words; New starts `(157.6,9.6)` and has 34 G3/20 G2 words, with more rapid links. Both reach Z=-1 and -2. This is a bounded mode effect inferred from paired inputs that differ only in document name and optimiser token. |
+| `ATLAS_ENGRAVE_ARC_TEXT`: text, arc | 43 vs 44, different text-stroke order/entry. Legacy first approaches `(111.9707,4.3516)`; New first approaches `(110.3184,2)` and inserts a separate text-stroke rapid. Both later approach the Arc at `(136.8869,6.4685)` and reach Z=-1 and -2. |
+| `ATLAS_DRILL_POINTS`: points | Both posts emit `G98` then `G81 X94 Y8 Z-2 R2 F60` and a second `G81 X102 Z-2`, with `G80` cancellation. The reader records these exact words but does not expand controller cycle motion; the decoded three words in this section are rapids only. |
+| `LINKS_MULTI_TARGET_DEPTH_LEAD`: link-circle-3, -1, -2 in XML target order | Both modes emit the same 71 words, including G3 helical lead moves and Z=-1/-2/-3. Posted +5 XY approaches are right-to-left: circle 3 `(66.2639,7.3887)`, circle 2 `(42.2639,7.3887)`, circle 1 `(19.2639,7.3887)`. This differs from XML target order. |
+| `LINKS_ARC_SECOND_TOOL`: link-arc; `LINKS_RETURN_FIRST_TOOL`: finish-rect with `cutout` style | Both modes emit identical 7-word Arc and 14-word return Profile sections, with Z=-1/-2. The Arc section uses G2/G3 and T3; the final Profile uses T1. All modeled fields on the styled MOP are explicit, so this pair does not isolate a style-inheritance effect. |
+
+All decoded arcs have endpoint-radius mismatch below 0.000087 mm at posted
+decimal precision. Program fingerprints exclude timestamp headers and line
+numbers: the atlas pair differs in only the Region Pocket and Text/Arc
+Engrave sections; the complete links pair has equal normalized motion.
+All four posts use F60 and F240 for the modeled entry/cut feeds. Each initial
+`G0 Z5` leaves the incoming machine position unknown. The atlas changes T1
+to T2, and links changes T1 to T3 to T1, without an explicit `M5` before
+those `M6` commands; each program has a final `M5`. These are recorded
+output events, not physical/controller acceptance.
+
+`G98`/`G81` remain explicit unsupported words for stock replay; post-added
+versus CamBam-generated path moves are not separable from the `.nc` alone.
+The native-only class results in the inventory retain their reopening
+criteria. No one of these observations certifies region-island clearance,
+tool/holder access, entire stock removal, rest area, controller execution or
+production machining. A later caller may select native posted motion only
+after a separate verified stock authority contract and source/post freshness
+check; framework motion keeps its own fingerprint. The bounded corpus
+stopping condition is satisfied by these accepted observations plus the
+explicit blocked/historical inventory results. No additional user validation
+is needed for this output-mapping finding.
+
+The final focused command,
+`.venv\Scripts\python.exe -m unittest tests.test_optimizer_corpus -v`,
+passed four tests against the tracked input/output fixtures. The test
+recomputes `observations.json`, checks all source/post hashes and locks the
+mode comparison, posted target order, raw Drill cycle and tool-event
+sequences. Package `compileall`, corpus import and `git diff --check` passed;
+untracked fixture text was checked separately for trailing whitespace. The
+earlier broad-suite limitation from optional missing `anyio` is unchanged;
+no MCP or shared XML behavior was edited in this increment. No physical
+CamBam revalidation is requested after the supplied posts.

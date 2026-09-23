@@ -723,12 +723,12 @@ provide the documented class boundary. The installed optimiser enum is
 [1.0 Profile documentation](https://www.cambam.info/doc/1.0/cam/profile.html)
 calls the first two Legacy (0.9.7) and New (0.9.8). These are mode names
 within the installed 1.0 application, not evidence of running older builds.
-The writer emits `Standard` and `Experimental`, and the first native post must
-confirm the displayed selection.
+The writer emits `Standard` and `Experimental`; the user confirmed the
+corresponding displayed Legacy/New selections in the posted candidates.
 
 | Native shape class / XML | Corpus state and reopening criterion |
 | --- | --- |
-| PolyRectangle `rect`, Circle `circle`, Arc `arc`, Polyline `pline` (open and closed), PointList `points`, MText `text`, Region `entity xsi:type="Region"` | Authorable here; atlas pair prepared in both modes. Native toolpaths and output remain pending. |
+| PolyRectangle `rect`, Circle `circle`, Arc `arc`, Polyline `pline` (open and closed), PointList `points`, MText `text`, Region `entity xsi:type="Region"` | Authorable here; atlas pair has a hash-bound native Default post in both modes. Path mapping is observed; stock removal is not certified. |
 | Line `line`, Spline `spline` | Native only; the strict framework reader rejects these. Reopen with a small native-saved source and verified authoring/import round trip. |
 | Surface `surface` | Native only; pair with a bounded 3D Surface MOP after a controlled mesh and native-saved XML are available. |
 | ScriptEntity `script` | Native only; reopen with a self-contained deterministic script and a reviewed execution boundary. |
@@ -736,25 +736,32 @@ confirm the displayed selection.
 
 | Native MOP class / XML | Corpus state and reopening criterion |
 | --- | --- |
-| Profile `profile`, Pocket `pocket`, Engrave `engrave`, Drill `drill` | Authorable here; atlas and interaction pairs prepared in both modes. Drill CannedCycle remains raw posted words until a cycle-aware reader is justified. |
+| Profile `profile`, Pocket `pocket`, Engrave `engrave`, Drill `drill` | Authorable here; atlas and interaction pairs have hash-bound native Default posts in both modes. Drill G98/G81 CannedCycle remains raw posted words until a cycle-aware reader is justified. |
 | 3D Surface `surface3d` | Native only; blocked with Surface pending the controlled mesh/XML source and 3D post semantics. |
 | NCFile `ncfile` | Native only; blocked pending a colocated synthetic NC source and its exact inclusion/provenance policy. Optimiser mode may be inapplicable to passthrough output; establish that from a native post. |
 | Lathe plugin `mop xsi:type="MOPLathe"` | Installed, native only; blocked pending a native-saved minimal turned profile, machine axis/post settings and safe interpretation. |
 | Bas Relief `MOPBasRelief` | Historical assembly type, not a current 1.0 UI class; [3D Profile replaced it](https://cambam.info/doc/1.0/cam/3d.html). Reopen only for an actual legacy file or present UI entry. |
 
 The current reader does not preserve unsupported native classes, so none of
-the native-only rows is mislabeled import/preserve-only. The first post request
-is the two atlas candidates. They cover the seven authorable shape families
-and four MOP classes in a common synthetic document; the two held interaction
-candidates cover target order, depth, lead/crossover, return tool change and
-explicit `cutout` style selection. Grouping limits attribution of effects
-between adjacent MOPs, so accepted claims remain per observed section and
-program. Every candidate pins millimeter units, Default postprocessor,
+the native-only rows is mislabeled import/preserve-only. All four candidates
+were posted and preserved in the tracked
+`tests/fixtures/optimizer_corpus/` directory with their original input
+manifest and derived observations. The atlas pair covers the seven authorable
+shape families and four MOP classes in a common synthetic document; the
+interaction pair covers target order, depth, lead/crossover, return tool
+change and explicit `cutout` style selection. Grouping limits attribution
+of effects between adjacent MOPs, so accepted claims remain per observed
+section and program. Every candidate pins millimeter units, Default postprocessor,
 installed `Standard-mm` style and `Default-mm` tool libraries, stock and
 explicit modeled MOP fields. The manifest records the three system-file
 fingerprints; changed local files require new profile provenance. The native
 reader records exact posted words and modal motion but leaves controller
-cycles, incoming machine position and stock removal unresolved.
+cycles, incoming machine position and stock removal unresolved. The bounded
+corpus stopping condition is met for the authorable classes and listed
+blocked/historical classes. This is a versioned output observation corpus,
+not a general native path optimizer or a native stock certificate. Reopen a
+blocked class when its stated source/semantics evidence exists, or expand a
+supported combination when a consumer exposes a concrete missing case.
 
 ## Problem and machining intent
 

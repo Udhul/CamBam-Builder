@@ -7,6 +7,7 @@ Only an unchanged candidate and a native Default post can enter the corpus.
 import argparse
 import hashlib
 import json
+import math
 import re
 from pathlib import Path
 from xml.etree import ElementTree as ET
@@ -295,8 +296,9 @@ def parse_default_motion(content, names):
         if not any(a in value_map for a in "XYZ"):
             continue
         if not (units and absolute and motion in (0, 1, 2, 3)):
-            unsupported.append({"line": number, "words": line,
-                                "reason": "motion_state_unknown"})
+            if not any(item["line"] == number for item in unsupported):
+                unsupported.append({"line": number, "words": line,
+                                    "reason": "motion_state_unknown"})
             continue
         if motion in (2, 3) and not plane:
             unsupported.append({"line": number, "words": line,
@@ -318,6 +320,14 @@ def parse_default_motion(content, names):
             else:
                 move["center"] = [start[0] + value_map["I"],
                                   start[1] + value_map["J"]]
+                r0 = math.hypot(start[0] - move["center"][0],
+                                start[1] - move["center"][1])
+                r1 = math.hypot(position[0] - move["center"][0],
+                                position[1] - move["center"][1])
+                move["radius_mismatch_mm"] = abs(r0 - r1)
+                if r0 <= 0 or move["radius_mismatch_mm"] > 0.001:
+                    unsupported.append({"line": number, "words": line,
+                                        "reason": "inconsistent_arc_radius"})
         moves.append(move)
     return {"sections": sections, "moves": moves, "events": events,
             "unsupported": unsupported,
@@ -360,11 +370,124 @@ def inspect_post(manifest_path, key, post_path):
             "status": "posted_unreviewed", "stock_authority": "none"}
 
 
+def _stable_fingerprint(items):
+    stable = [{key: value for key, value in item.items() if key != "line"}
+              for item in items]
+    data = json.dumps(stable, sort_keys=True, separators=(",", ":"),
+                      ensure_ascii=True).encode("ascii")
+    return hashlib.sha256(data).hexdigest()
+
+
+def observe_corpus(manifest_path, *, post_directory=None):
+    """Summarize four exact native posts without accepting stock removal.
+
+    Fingerprints exclude line numbers/timestamp headers and retain ordered
+    posted moves, events and unresolved words. Raw .nc remains the authority.
+    """
+    manifest_path = Path(manifest_path)
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if manifest.get("format") != "cambam-optimizer-corpus-v1":
+        raise ValueError("unknown mapping manifest")
+    post_directory = (Path(post_directory) if post_directory is not None
+                      else manifest_path.parent)
+    cases = {}
+    for key, case in manifest["cases"].items():
+        audit = inspect_post(manifest_path, key,
+                             post_directory / case["post_file"])
+        sections = []
+        for index, marker in enumerate(audit["sections"]):
+            name = marker["name"]
+            last_line = (audit["sections"][index + 1]["line"]
+                         if index + 1 < len(audit["sections"]) else float("inf"))
+            op = next(op for op in case["operations"] if op["name"] == name)
+            moves = [move for move in audit["moves"]
+                     if move["operation"] == name]
+            cuts = [move for move in moves if move["g"] in (1, 2, 3)]
+            approaches = []
+            for move in moves:
+                if (move["g"] == 0 and move["end"][2] == 5.0
+                        and move["end"][:2] != move["start"][:2]
+                        and None not in move["end"][:2]):
+                    xy = move["end"][:2]
+                    if not approaches or approaches[-1] != xy:
+                        approaches.append(xy)
+            depths = []
+            for move in cuts:
+                z = move["end"][2]
+                if z is not None and z < 0 and z not in depths:
+                    depths.append(z)
+            unresolved = [item for item in audit["unsupported"]
+                          if marker["line"] < item["line"] < last_line]
+            sections.append({
+                "name": name, "kind": op["kind"],
+                "targets_xml_order": op["targets_xml_order"],
+                "style": op["style"], "tool": op["tool"],
+                "motion_sha256": _stable_fingerprint(moves),
+                "motion_word_count": len(moves),
+                "g_counts": {f"G{g}": sum(move["g"] == g for move in moves)
+                             for g in (0, 1, 2, 3)},
+                "feed_values": sorted({move["feed"] for move in cuts
+                                       if move["feed"] is not None}),
+                "cut_depth_endpoints_ordered_mm": depths,
+                "approach_xy_at_z5_ordered_mm": approaches,
+                "first_cut_move": ({field: cuts[0].get(field) for field in
+                                    ("g", "start", "end", "center", "feed")}
+                                   if cuts else None),
+                "last_cut_end": cuts[-1]["end"] if cuts else None,
+                "max_arc_radius_mismatch_mm": max(
+                    (move.get("radius_mismatch_mm", 0.0) for move in moves),
+                    default=0.0),
+                "unresolved_words": unresolved,
+            })
+        cases[key] = {
+            "candidate_sha256": case["sha256"],
+            "post_sha256": audit["post_sha256"],
+            "program_motion_sha256": _stable_fingerprint(
+                audit["moves"] + audit["events"] + audit["unsupported"]),
+            "observed_mop_order": audit["observed_mop_order"],
+            "sections": sections, "events": audit["events"],
+            "unsupported": audit["unsupported"],
+            "status": "posted_observation_unreviewed",
+            "stock_authority": "none",
+        }
+    comparisons = {}
+    for family in ("atlas", "links"):
+        legacy, new = (cases[f"{family}-{mode}"] for mode in MODES)
+        new_sections = {section["name"]: section for section in new["sections"]}
+        comparisons[family] = {
+            "same_program_motion": (legacy["program_motion_sha256"] ==
+                                    new["program_motion_sha256"]),
+            "same_section_motion": {
+                left["name"]: (left["motion_sha256"] ==
+                               new_sections[left["name"]]["motion_sha256"])
+                for left in legacy["sections"]
+            },
+        }
+    return {"format": "cambam-optimizer-observations-v1",
+            "manifest_sha256": _digest(manifest_path),
+            "cases": cases, "mode_comparisons": comparisons}
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory")
     parser.add_argument("--post", nargs=2, metavar=("CASE", "NC_FILE"))
+    parser.add_argument("--observe", action="store_true",
+                        help="summarize all native posts beside the manifest")
+    parser.add_argument("--record", help="write UTF-8 JSON to a new file")
     args = parser.parse_args()
+    if args.post and args.observe:
+        parser.error("--post and --observe are mutually exclusive")
     result = (inspect_post(Path(args.directory) / "manifest.json", *args.post)
-              if args.post else build(args.directory))
-    print(json.dumps(result, indent=2))
+              if args.post else
+              observe_corpus(Path(args.directory) / "manifest.json")
+              if args.observe else build(args.directory))
+    rendered = json.dumps(result, indent=2) + "\n"
+    if args.record:
+        target = Path(args.record)
+        if target.exists():
+            parser.error("--record target must be new")
+        target.write_text(rendered, encoding="utf-8")
+        print(f"wrote {target}")
+    else:
+        print(rendered, end="")

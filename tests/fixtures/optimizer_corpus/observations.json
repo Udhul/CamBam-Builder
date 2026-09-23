@@ -1,0 +1,1517 @@
+{
+  "format": "cambam-optimizer-observations-v1",
+  "manifest_sha256": "2608d86faa4aa11cd199559707e751a8ca64cfe0322cb6e1a9880efe938fc400",
+  "cases": {
+    "atlas-legacy": {
+      "candidate_sha256": "972348f5122fc933368f9410d597b4596b59101bcc874d4d637b34c48de9acc3",
+      "post_sha256": "f8ded8ff8e3934205a78aa1866aec72fe7e802e748b8d61dd0e43d98388e2470",
+      "program_motion_sha256": "989cf433efd347fe508ab5677b2e800aa2d8aaf88a949063c6c31571d779315b",
+      "observed_mop_order": [
+        "ATLAS_PROFILE_RECT_CIRCLE",
+        "ATLAS_PROFILE_OPEN_PLINE",
+        "ATLAS_POCKET_CLOSED_PLINE",
+        "ATLAS_POCKET_REGION_ISLAND",
+        "ATLAS_ENGRAVE_ARC_TEXT",
+        "ATLAS_DRILL_POINTS"
+      ],
+      "sections": [
+        {
+          "name": "ATLAS_PROFILE_RECT_CIRCLE",
+          "kind": "ProfileMop",
+          "targets_xml_order": [
+            "rect",
+            "circle"
+          ],
+          "style": "library_default",
+          "tool": 1,
+          "motion_sha256": "9c2f70d80d6f6fa7b18e7f239efb2430ea52c314c11257cd6dc7e157a541d4dd",
+          "motion_word_count": 33,
+          "g_counts": {
+            "G0": 5,
+            "G1": 12,
+            "G2": 0,
+            "G3": 16
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              5.0,
+              4.0
+            ],
+            [
+              25.1381,
+              8.8331
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              5.0,
+              4.0,
+              1.0
+            ],
+            "end": [
+              5.0,
+              4.0,
+              -1.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            25.1381,
+            8.8331,
+            -2.0
+          ],
+          "max_arc_radius_mismatch_mm": 2.339905475157167e-05,
+          "unresolved_words": []
+        },
+        {
+          "name": "ATLAS_PROFILE_OPEN_PLINE",
+          "kind": "ProfileMop",
+          "targets_xml_order": [
+            "open-pline"
+          ],
+          "style": "library_default",
+          "tool": 1,
+          "motion_sha256": "6450dc848c560335d5ec2991448b610424268c2b4aa35c2092536d54206b7400",
+          "motion_word_count": 12,
+          "g_counts": {
+            "G0": 6,
+            "G1": 6,
+            "G2": 0,
+            "G3": 0
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              48.6585,
+              4.2474
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              48.6585,
+              4.2474,
+              1.0
+            ],
+            "end": [
+              48.6585,
+              4.2474,
+              -1.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            63.3415,
+            4.2474,
+            -2.0
+          ],
+          "max_arc_radius_mismatch_mm": 0.0,
+          "unresolved_words": []
+        },
+        {
+          "name": "ATLAS_POCKET_CLOSED_PLINE",
+          "kind": "PocketMop",
+          "targets_xml_order": [
+            "closed-pline"
+          ],
+          "style": "library_default",
+          "tool": 1,
+          "motion_sha256": "7bfa2f22c03a9ff7c7195c18e8a066fbf84468cc78b4a8744cbe3e38a37a8759",
+          "motion_word_count": 70,
+          "g_counts": {
+            "G0": 6,
+            "G1": 64,
+            "G2": 0,
+            "G3": 0
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              76.0,
+              10.0
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              76.0,
+              10.0,
+              1.0
+            ],
+            "end": [
+              76.0,
+              10.0,
+              -1.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            78.0,
+            6.0,
+            -2.0
+          ],
+          "max_arc_radius_mismatch_mm": 0.0,
+          "unresolved_words": []
+        },
+        {
+          "name": "ATLAS_POCKET_REGION_ISLAND",
+          "kind": "PocketMop",
+          "targets_xml_order": [
+            "region-island"
+          ],
+          "style": "library_default",
+          "tool": 1,
+          "motion_sha256": "fb0d318f41d79b481cee7a22baca65a658ffbdd769970059e4689138e7ea83af",
+          "motion_word_count": 200,
+          "g_counts": {
+            "G0": 18,
+            "G1": 130,
+            "G2": 0,
+            "G3": 52
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              157.6,
+              9.904
+            ],
+            [
+              172.096,
+              9.6
+            ],
+            [
+              172.8,
+              21.7851
+            ],
+            [
+              157.8717,
+              22.8
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              157.6,
+              9.904,
+              1.0
+            ],
+            "end": [
+              157.6,
+              9.904,
+              -1.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            157.8717,
+            26.0,
+            -2.0
+          ],
+          "max_arc_radius_mismatch_mm": 3.8243293336570616e-05,
+          "unresolved_words": []
+        },
+        {
+          "name": "ATLAS_ENGRAVE_ARC_TEXT",
+          "kind": "EngraveMop",
+          "targets_xml_order": [
+            "text",
+            "arc"
+          ],
+          "style": "library_default",
+          "tool": 1,
+          "motion_sha256": "9aae2d97ac086a2696a7ebcd0526d7c14ac53a62828516b47d7409c913f3bbd1",
+          "motion_word_count": 43,
+          "g_counts": {
+            "G0": 6,
+            "G1": 31,
+            "G2": 5,
+            "G3": 1
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              111.9707,
+              4.3516
+            ],
+            [
+              136.8869,
+              6.4685
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              111.9707,
+              4.3516,
+              1.0
+            ],
+            "end": [
+              111.9707,
+              4.3516,
+              -1.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            136.8869,
+            6.4685,
+            -2.0
+          ],
+          "max_arc_radius_mismatch_mm": 4.659233426096421e-05,
+          "unresolved_words": []
+        },
+        {
+          "name": "ATLAS_DRILL_POINTS",
+          "kind": "DrillMop",
+          "targets_xml_order": [
+            "points"
+          ],
+          "style": "library_default",
+          "tool": 2,
+          "motion_sha256": "edaa71589541d38f1c25ecd029396ccb0ed6a8bcc7892b383d56e86117f74c9e",
+          "motion_word_count": 3,
+          "g_counts": {
+            "G0": 3,
+            "G1": 0,
+            "G2": 0,
+            "G3": 0
+          },
+          "feed_values": [],
+          "cut_depth_endpoints_ordered_mm": [],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              94.0,
+              8.0
+            ]
+          ],
+          "first_cut_move": null,
+          "last_cut_end": null,
+          "max_arc_radius_mismatch_mm": 0.0,
+          "unresolved_words": [
+            {
+              "line": 385,
+              "words": "G98",
+              "reason": "unsupported_G98"
+            },
+            {
+              "line": 386,
+              "words": "G81 X94.0 Y8.0 Z-2.0 R2.0 F60.0",
+              "reason": "unsupported_G81"
+            },
+            {
+              "line": 387,
+              "words": "G81 X102.0 Z-2.0",
+              "reason": "unsupported_G81"
+            }
+          ]
+        }
+      ],
+      "events": [
+        {
+          "line": 9,
+          "m": 6,
+          "tool": 1,
+          "operation_at_line": null,
+          "words": "T1 M6",
+          "position": [
+            null,
+            null,
+            5.0
+          ]
+        },
+        {
+          "line": 12,
+          "m": 3,
+          "tool": 1,
+          "operation_at_line": "ATLAS_PROFILE_RECT_CIRCLE",
+          "words": "M3 S12000",
+          "position": [
+            null,
+            null,
+            5.0
+          ]
+        },
+        {
+          "line": 382,
+          "m": 6,
+          "tool": 2,
+          "operation_at_line": "ATLAS_DRILL_POINTS",
+          "words": "T2 M6",
+          "position": [
+            136.8869,
+            6.4685,
+            5.0
+          ]
+        },
+        {
+          "line": 383,
+          "m": 3,
+          "tool": 2,
+          "operation_at_line": "ATLAS_DRILL_POINTS",
+          "words": "M3 S12000",
+          "position": [
+            136.8869,
+            6.4685,
+            5.0
+          ]
+        },
+        {
+          "line": 390,
+          "m": 5,
+          "tool": 2,
+          "operation_at_line": "ATLAS_DRILL_POINTS",
+          "words": "M5",
+          "position": [
+            94.0,
+            8.0,
+            5.0
+          ]
+        },
+        {
+          "line": 391,
+          "m": 30,
+          "tool": 2,
+          "operation_at_line": "ATLAS_DRILL_POINTS",
+          "words": "M30",
+          "position": [
+            94.0,
+            8.0,
+            5.0
+          ]
+        }
+      ],
+      "unsupported": [
+        {
+          "line": 385,
+          "words": "G98",
+          "reason": "unsupported_G98"
+        },
+        {
+          "line": 386,
+          "words": "G81 X94.0 Y8.0 Z-2.0 R2.0 F60.0",
+          "reason": "unsupported_G81"
+        },
+        {
+          "line": 387,
+          "words": "G81 X102.0 Z-2.0",
+          "reason": "unsupported_G81"
+        }
+      ],
+      "status": "posted_observation_unreviewed",
+      "stock_authority": "none"
+    },
+    "atlas-new": {
+      "candidate_sha256": "ba7457271fbbbed186e5c322cd94df351940c8520fef99d18e1308ca18f5c910",
+      "post_sha256": "ff886629f486058118901aa42f65e2dfb5ce5a8d4f57ebc6f5f72dcfdeecc568",
+      "program_motion_sha256": "d71fff1e752daab208cb9bc45bfd70f587b7f10e96fead12b3f95197c0713087",
+      "observed_mop_order": [
+        "ATLAS_PROFILE_RECT_CIRCLE",
+        "ATLAS_PROFILE_OPEN_PLINE",
+        "ATLAS_POCKET_CLOSED_PLINE",
+        "ATLAS_POCKET_REGION_ISLAND",
+        "ATLAS_ENGRAVE_ARC_TEXT",
+        "ATLAS_DRILL_POINTS"
+      ],
+      "sections": [
+        {
+          "name": "ATLAS_PROFILE_RECT_CIRCLE",
+          "kind": "ProfileMop",
+          "targets_xml_order": [
+            "rect",
+            "circle"
+          ],
+          "style": "library_default",
+          "tool": 1,
+          "motion_sha256": "9c2f70d80d6f6fa7b18e7f239efb2430ea52c314c11257cd6dc7e157a541d4dd",
+          "motion_word_count": 33,
+          "g_counts": {
+            "G0": 5,
+            "G1": 12,
+            "G2": 0,
+            "G3": 16
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              5.0,
+              4.0
+            ],
+            [
+              25.1381,
+              8.8331
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              5.0,
+              4.0,
+              1.0
+            ],
+            "end": [
+              5.0,
+              4.0,
+              -1.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            25.1381,
+            8.8331,
+            -2.0
+          ],
+          "max_arc_radius_mismatch_mm": 2.339905475157167e-05,
+          "unresolved_words": []
+        },
+        {
+          "name": "ATLAS_PROFILE_OPEN_PLINE",
+          "kind": "ProfileMop",
+          "targets_xml_order": [
+            "open-pline"
+          ],
+          "style": "library_default",
+          "tool": 1,
+          "motion_sha256": "6450dc848c560335d5ec2991448b610424268c2b4aa35c2092536d54206b7400",
+          "motion_word_count": 12,
+          "g_counts": {
+            "G0": 6,
+            "G1": 6,
+            "G2": 0,
+            "G3": 0
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              48.6585,
+              4.2474
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              48.6585,
+              4.2474,
+              1.0
+            ],
+            "end": [
+              48.6585,
+              4.2474,
+              -1.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            63.3415,
+            4.2474,
+            -2.0
+          ],
+          "max_arc_radius_mismatch_mm": 0.0,
+          "unresolved_words": []
+        },
+        {
+          "name": "ATLAS_POCKET_CLOSED_PLINE",
+          "kind": "PocketMop",
+          "targets_xml_order": [
+            "closed-pline"
+          ],
+          "style": "library_default",
+          "tool": 1,
+          "motion_sha256": "7bfa2f22c03a9ff7c7195c18e8a066fbf84468cc78b4a8744cbe3e38a37a8759",
+          "motion_word_count": 70,
+          "g_counts": {
+            "G0": 6,
+            "G1": 64,
+            "G2": 0,
+            "G3": 0
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              76.0,
+              10.0
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              76.0,
+              10.0,
+              1.0
+            ],
+            "end": [
+              76.0,
+              10.0,
+              -1.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            78.0,
+            6.0,
+            -2.0
+          ],
+          "max_arc_radius_mismatch_mm": 0.0,
+          "unresolved_words": []
+        },
+        {
+          "name": "ATLAS_POCKET_REGION_ISLAND",
+          "kind": "PocketMop",
+          "targets_xml_order": [
+            "region-island"
+          ],
+          "style": "library_default",
+          "tool": 1,
+          "motion_sha256": "3ab4d59dc55926ce005662820475659c1aa8cd46e51001c52c146d698f407952",
+          "motion_word_count": 222,
+          "g_counts": {
+            "G0": 42,
+            "G1": 126,
+            "G2": 20,
+            "G3": 34
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              157.6,
+              9.6
+            ],
+            [
+              157.2,
+              21.7851
+            ],
+            [
+              172.1283,
+              22.8
+            ],
+            [
+              172.4,
+              9.904
+            ],
+            [
+              170.3297,
+              11.7892
+            ],
+            [
+              170.9212,
+              11.2505
+            ],
+            [
+              173.6,
+              10.7119
+            ],
+            [
+              172.4,
+              9.904
+            ],
+            [
+              172.8,
+              21.7851
+            ],
+            [
+              157.8717,
+              22.8
+            ],
+            [
+              157.6,
+              9.904
+            ],
+            [
+              159.6058,
+              11.8641
+            ],
+            [
+              158.9856,
+              11.3588
+            ],
+            [
+              156.4,
+              10.8534
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              157.6,
+              9.6,
+              1.0
+            ],
+            "end": [
+              157.6,
+              9.6,
+              -1.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            154.0,
+            10.8534,
+            -2.0
+          ],
+          "max_arc_radius_mismatch_mm": 6.499465523512882e-05,
+          "unresolved_words": []
+        },
+        {
+          "name": "ATLAS_ENGRAVE_ARC_TEXT",
+          "kind": "EngraveMop",
+          "targets_xml_order": [
+            "text",
+            "arc"
+          ],
+          "style": "library_default",
+          "tool": 1,
+          "motion_sha256": "f9c155c20da4612866c8133f913a04b23ff0c5f533cf6563c1e1bfa60f5c9f41",
+          "motion_word_count": 44,
+          "g_counts": {
+            "G0": 9,
+            "G1": 29,
+            "G2": 5,
+            "G3": 1
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              110.3184,
+              2.0
+            ],
+            [
+              111.9707,
+              4.3516
+            ],
+            [
+              136.8869,
+              6.4685
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              110.3184,
+              2.0,
+              1.0
+            ],
+            "end": [
+              110.3184,
+              2.0,
+              -1.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            136.8869,
+            6.4685,
+            -2.0
+          ],
+          "max_arc_radius_mismatch_mm": 4.659233426096421e-05,
+          "unresolved_words": []
+        },
+        {
+          "name": "ATLAS_DRILL_POINTS",
+          "kind": "DrillMop",
+          "targets_xml_order": [
+            "points"
+          ],
+          "style": "library_default",
+          "tool": 2,
+          "motion_sha256": "edaa71589541d38f1c25ecd029396ccb0ed6a8bcc7892b383d56e86117f74c9e",
+          "motion_word_count": 3,
+          "g_counts": {
+            "G0": 3,
+            "G1": 0,
+            "G2": 0,
+            "G3": 0
+          },
+          "feed_values": [],
+          "cut_depth_endpoints_ordered_mm": [],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              94.0,
+              8.0
+            ]
+          ],
+          "first_cut_move": null,
+          "last_cut_end": null,
+          "max_arc_radius_mismatch_mm": 0.0,
+          "unresolved_words": [
+            {
+              "line": 408,
+              "words": "G98",
+              "reason": "unsupported_G98"
+            },
+            {
+              "line": 409,
+              "words": "G81 X94.0 Y8.0 Z-2.0 R2.0 F60.0",
+              "reason": "unsupported_G81"
+            },
+            {
+              "line": 410,
+              "words": "G81 X102.0 Z-2.0",
+              "reason": "unsupported_G81"
+            }
+          ]
+        }
+      ],
+      "events": [
+        {
+          "line": 9,
+          "m": 6,
+          "tool": 1,
+          "operation_at_line": null,
+          "words": "T1 M6",
+          "position": [
+            null,
+            null,
+            5.0
+          ]
+        },
+        {
+          "line": 12,
+          "m": 3,
+          "tool": 1,
+          "operation_at_line": "ATLAS_PROFILE_RECT_CIRCLE",
+          "words": "M3 S12000",
+          "position": [
+            null,
+            null,
+            5.0
+          ]
+        },
+        {
+          "line": 405,
+          "m": 6,
+          "tool": 2,
+          "operation_at_line": "ATLAS_DRILL_POINTS",
+          "words": "T2 M6",
+          "position": [
+            136.8869,
+            6.4685,
+            5.0
+          ]
+        },
+        {
+          "line": 406,
+          "m": 3,
+          "tool": 2,
+          "operation_at_line": "ATLAS_DRILL_POINTS",
+          "words": "M3 S12000",
+          "position": [
+            136.8869,
+            6.4685,
+            5.0
+          ]
+        },
+        {
+          "line": 413,
+          "m": 5,
+          "tool": 2,
+          "operation_at_line": "ATLAS_DRILL_POINTS",
+          "words": "M5",
+          "position": [
+            94.0,
+            8.0,
+            5.0
+          ]
+        },
+        {
+          "line": 414,
+          "m": 30,
+          "tool": 2,
+          "operation_at_line": "ATLAS_DRILL_POINTS",
+          "words": "M30",
+          "position": [
+            94.0,
+            8.0,
+            5.0
+          ]
+        }
+      ],
+      "unsupported": [
+        {
+          "line": 408,
+          "words": "G98",
+          "reason": "unsupported_G98"
+        },
+        {
+          "line": 409,
+          "words": "G81 X94.0 Y8.0 Z-2.0 R2.0 F60.0",
+          "reason": "unsupported_G81"
+        },
+        {
+          "line": 410,
+          "words": "G81 X102.0 Z-2.0",
+          "reason": "unsupported_G81"
+        }
+      ],
+      "status": "posted_observation_unreviewed",
+      "stock_authority": "none"
+    },
+    "links-legacy": {
+      "candidate_sha256": "8faf51989dc149cd8a70de419c7a6297e67553a910774430763afb4c9fc797de",
+      "post_sha256": "08a20cbc0d91c885b8a86c796827d946175c91bf9138b1af957dc90738b86a8d",
+      "program_motion_sha256": "ef6b3861bc7d121d477c6b11cd9b5e962a1ed63a544dc8c8006d74657db34b47",
+      "observed_mop_order": [
+        "LINKS_MULTI_TARGET_DEPTH_LEAD",
+        "LINKS_ARC_SECOND_TOOL",
+        "LINKS_RETURN_FIRST_TOOL"
+      ],
+      "sections": [
+        {
+          "name": "LINKS_MULTI_TARGET_DEPTH_LEAD",
+          "kind": "ProfileMop",
+          "targets_xml_order": [
+            "link-circle-3",
+            "link-circle-1",
+            "link-circle-2"
+          ],
+          "style": "library_default",
+          "tool": 1,
+          "motion_sha256": "317cc43bda2042126bc01cb98b7c1b5ca94521b71a72e9b1d4ba670536d21107",
+          "motion_word_count": 71,
+          "g_counts": {
+            "G0": 26,
+            "G1": 9,
+            "G2": 0,
+            "G3": 36
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0,
+            -3.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              66.2639,
+              7.3887
+            ],
+            [
+              42.2639,
+              7.3887
+            ],
+            [
+              19.2639,
+              7.3887
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              66.2639,
+              7.3887,
+              1.0
+            ],
+            "end": [
+              66.2639,
+              7.3887,
+              0.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            20.0,
+            10.0,
+            -3.0
+          ],
+          "max_arc_radius_mismatch_mm": 2.691007241573118e-05,
+          "unresolved_words": []
+        },
+        {
+          "name": "LINKS_ARC_SECOND_TOOL",
+          "kind": "EngraveMop",
+          "targets_xml_order": [
+            "link-arc"
+          ],
+          "style": "library_default",
+          "tool": 3,
+          "motion_sha256": "b00d683abbf8112a594f5fdb05b27e5ce299654f91665c83e018c403a73c0d79",
+          "motion_word_count": 7,
+          "g_counts": {
+            "G0": 3,
+            "G1": 2,
+            "G2": 1,
+            "G3": 1
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              97.9497,
+              15.9497
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              97.9497,
+              15.9497,
+              1.0
+            ],
+            "end": [
+              97.9497,
+              15.9497,
+              -1.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            97.9497,
+            15.9497,
+            -2.0
+          ],
+          "max_arc_radius_mismatch_mm": 8.633315268991026e-05,
+          "unresolved_words": []
+        },
+        {
+          "name": "LINKS_RETURN_FIRST_TOOL",
+          "kind": "ProfileMop",
+          "targets_xml_order": [
+            "finish-rect"
+          ],
+          "style": "cutout",
+          "tool": 1,
+          "motion_sha256": "bcb06e31be91a145aab74666a5d7c049dd464b5097d40450f3c7bf7258772bb2",
+          "motion_word_count": 14,
+          "g_counts": {
+            "G0": 4,
+            "G1": 10,
+            "G2": 0,
+            "G3": 0
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              123.0,
+              7.0
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              123.0,
+              7.0,
+              1.0
+            ],
+            "end": [
+              123.0,
+              7.0,
+              -1.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            123.0,
+            7.0,
+            -2.0
+          ],
+          "max_arc_radius_mismatch_mm": 0.0,
+          "unresolved_words": []
+        }
+      ],
+      "events": [
+        {
+          "line": 9,
+          "m": 6,
+          "tool": 1,
+          "operation_at_line": null,
+          "words": "T1 M6",
+          "position": [
+            null,
+            null,
+            5.0
+          ]
+        },
+        {
+          "line": 12,
+          "m": 3,
+          "tool": 1,
+          "operation_at_line": "LINKS_MULTI_TARGET_DEPTH_LEAD",
+          "words": "M3 S12000",
+          "position": [
+            null,
+            null,
+            5.0
+          ]
+        },
+        {
+          "line": 87,
+          "m": 6,
+          "tool": 3,
+          "operation_at_line": "LINKS_ARC_SECOND_TOOL",
+          "words": "T3 M6",
+          "position": [
+            20.0,
+            10.0,
+            5.0
+          ]
+        },
+        {
+          "line": 88,
+          "m": 3,
+          "tool": 3,
+          "operation_at_line": "LINKS_ARC_SECOND_TOOL",
+          "words": "M3 S12000",
+          "position": [
+            20.0,
+            10.0,
+            5.0
+          ]
+        },
+        {
+          "line": 98,
+          "m": 6,
+          "tool": 1,
+          "operation_at_line": "LINKS_RETURN_FIRST_TOOL",
+          "words": "T1 M6",
+          "position": [
+            97.9497,
+            15.9497,
+            5.0
+          ]
+        },
+        {
+          "line": 99,
+          "m": 3,
+          "tool": 1,
+          "operation_at_line": "LINKS_RETURN_FIRST_TOOL",
+          "words": "M3 S12000",
+          "position": [
+            97.9497,
+            15.9497,
+            5.0
+          ]
+        },
+        {
+          "line": 113,
+          "m": 5,
+          "tool": 1,
+          "operation_at_line": "LINKS_RETURN_FIRST_TOOL",
+          "words": "M5",
+          "position": [
+            123.0,
+            7.0,
+            5.0
+          ]
+        },
+        {
+          "line": 114,
+          "m": 30,
+          "tool": 1,
+          "operation_at_line": "LINKS_RETURN_FIRST_TOOL",
+          "words": "M30",
+          "position": [
+            123.0,
+            7.0,
+            5.0
+          ]
+        }
+      ],
+      "unsupported": [],
+      "status": "posted_observation_unreviewed",
+      "stock_authority": "none"
+    },
+    "links-new": {
+      "candidate_sha256": "957fa0ad7eff19a9ed57487763bac285180cb8168d8d6529c84f88e7c534bd02",
+      "post_sha256": "5e959f11685fba2a35d528d657fdfae01edfa6a2a60bb3efbf5d2ff484768622",
+      "program_motion_sha256": "ef6b3861bc7d121d477c6b11cd9b5e962a1ed63a544dc8c8006d74657db34b47",
+      "observed_mop_order": [
+        "LINKS_MULTI_TARGET_DEPTH_LEAD",
+        "LINKS_ARC_SECOND_TOOL",
+        "LINKS_RETURN_FIRST_TOOL"
+      ],
+      "sections": [
+        {
+          "name": "LINKS_MULTI_TARGET_DEPTH_LEAD",
+          "kind": "ProfileMop",
+          "targets_xml_order": [
+            "link-circle-3",
+            "link-circle-1",
+            "link-circle-2"
+          ],
+          "style": "library_default",
+          "tool": 1,
+          "motion_sha256": "317cc43bda2042126bc01cb98b7c1b5ca94521b71a72e9b1d4ba670536d21107",
+          "motion_word_count": 71,
+          "g_counts": {
+            "G0": 26,
+            "G1": 9,
+            "G2": 0,
+            "G3": 36
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0,
+            -3.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              66.2639,
+              7.3887
+            ],
+            [
+              42.2639,
+              7.3887
+            ],
+            [
+              19.2639,
+              7.3887
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              66.2639,
+              7.3887,
+              1.0
+            ],
+            "end": [
+              66.2639,
+              7.3887,
+              0.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            20.0,
+            10.0,
+            -3.0
+          ],
+          "max_arc_radius_mismatch_mm": 2.691007241573118e-05,
+          "unresolved_words": []
+        },
+        {
+          "name": "LINKS_ARC_SECOND_TOOL",
+          "kind": "EngraveMop",
+          "targets_xml_order": [
+            "link-arc"
+          ],
+          "style": "library_default",
+          "tool": 3,
+          "motion_sha256": "b00d683abbf8112a594f5fdb05b27e5ce299654f91665c83e018c403a73c0d79",
+          "motion_word_count": 7,
+          "g_counts": {
+            "G0": 3,
+            "G1": 2,
+            "G2": 1,
+            "G3": 1
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              97.9497,
+              15.9497
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              97.9497,
+              15.9497,
+              1.0
+            ],
+            "end": [
+              97.9497,
+              15.9497,
+              -1.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            97.9497,
+            15.9497,
+            -2.0
+          ],
+          "max_arc_radius_mismatch_mm": 8.633315268991026e-05,
+          "unresolved_words": []
+        },
+        {
+          "name": "LINKS_RETURN_FIRST_TOOL",
+          "kind": "ProfileMop",
+          "targets_xml_order": [
+            "finish-rect"
+          ],
+          "style": "cutout",
+          "tool": 1,
+          "motion_sha256": "bcb06e31be91a145aab74666a5d7c049dd464b5097d40450f3c7bf7258772bb2",
+          "motion_word_count": 14,
+          "g_counts": {
+            "G0": 4,
+            "G1": 10,
+            "G2": 0,
+            "G3": 0
+          },
+          "feed_values": [
+            60.0,
+            240.0
+          ],
+          "cut_depth_endpoints_ordered_mm": [
+            -1.0,
+            -2.0
+          ],
+          "approach_xy_at_z5_ordered_mm": [
+            [
+              123.0,
+              7.0
+            ]
+          ],
+          "first_cut_move": {
+            "g": 1,
+            "start": [
+              123.0,
+              7.0,
+              1.0
+            ],
+            "end": [
+              123.0,
+              7.0,
+              -1.0
+            ],
+            "center": null,
+            "feed": 60.0
+          },
+          "last_cut_end": [
+            123.0,
+            7.0,
+            -2.0
+          ],
+          "max_arc_radius_mismatch_mm": 0.0,
+          "unresolved_words": []
+        }
+      ],
+      "events": [
+        {
+          "line": 9,
+          "m": 6,
+          "tool": 1,
+          "operation_at_line": null,
+          "words": "T1 M6",
+          "position": [
+            null,
+            null,
+            5.0
+          ]
+        },
+        {
+          "line": 12,
+          "m": 3,
+          "tool": 1,
+          "operation_at_line": "LINKS_MULTI_TARGET_DEPTH_LEAD",
+          "words": "M3 S12000",
+          "position": [
+            null,
+            null,
+            5.0
+          ]
+        },
+        {
+          "line": 87,
+          "m": 6,
+          "tool": 3,
+          "operation_at_line": "LINKS_ARC_SECOND_TOOL",
+          "words": "T3 M6",
+          "position": [
+            20.0,
+            10.0,
+            5.0
+          ]
+        },
+        {
+          "line": 88,
+          "m": 3,
+          "tool": 3,
+          "operation_at_line": "LINKS_ARC_SECOND_TOOL",
+          "words": "M3 S12000",
+          "position": [
+            20.0,
+            10.0,
+            5.0
+          ]
+        },
+        {
+          "line": 98,
+          "m": 6,
+          "tool": 1,
+          "operation_at_line": "LINKS_RETURN_FIRST_TOOL",
+          "words": "T1 M6",
+          "position": [
+            97.9497,
+            15.9497,
+            5.0
+          ]
+        },
+        {
+          "line": 99,
+          "m": 3,
+          "tool": 1,
+          "operation_at_line": "LINKS_RETURN_FIRST_TOOL",
+          "words": "M3 S12000",
+          "position": [
+            97.9497,
+            15.9497,
+            5.0
+          ]
+        },
+        {
+          "line": 113,
+          "m": 5,
+          "tool": 1,
+          "operation_at_line": "LINKS_RETURN_FIRST_TOOL",
+          "words": "M5",
+          "position": [
+            123.0,
+            7.0,
+            5.0
+          ]
+        },
+        {
+          "line": 114,
+          "m": 30,
+          "tool": 1,
+          "operation_at_line": "LINKS_RETURN_FIRST_TOOL",
+          "words": "M30",
+          "position": [
+            123.0,
+            7.0,
+            5.0
+          ]
+        }
+      ],
+      "unsupported": [],
+      "status": "posted_observation_unreviewed",
+      "stock_authority": "none"
+    }
+  },
+  "mode_comparisons": {
+    "atlas": {
+      "same_program_motion": false,
+      "same_section_motion": {
+        "ATLAS_PROFILE_RECT_CIRCLE": true,
+        "ATLAS_PROFILE_OPEN_PLINE": true,
+        "ATLAS_POCKET_CLOSED_PLINE": true,
+        "ATLAS_POCKET_REGION_ISLAND": false,
+        "ATLAS_ENGRAVE_ARC_TEXT": false,
+        "ATLAS_DRILL_POINTS": true
+      }
+    },
+    "links": {
+      "same_program_motion": true,
+      "same_section_motion": {
+        "LINKS_MULTI_TARGET_DEPTH_LEAD": true,
+        "LINKS_ARC_SECOND_TOOL": true,
+        "LINKS_RETURN_FIRST_TOOL": true
+      }
+    }
+  }
+}

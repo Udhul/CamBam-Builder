@@ -7,7 +7,7 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 from cambam_builder.integrations.cambam.optimizer_corpus import (
-    MODES, build, inspect_post, parse_default_motion,
+    MODES, build, inspect_post, observe_corpus, parse_default_motion,
 )
 
 
@@ -96,6 +96,34 @@ M30
             source.write_bytes(source.read_bytes() + b" ")
             with self.assertRaisesRegex(ValueError, "hash changed"):
                 inspect_post(directory / "manifest.json", key, posted)
+
+    def test_native_posts_reproduce_checked_in_observations(self):
+        folder = Path(__file__).resolve().parent / "fixtures" / "optimizer_corpus"
+        recorded = json.loads((folder / "observations.json").read_text(encoding="utf-8"))
+        self.assertEqual(observe_corpus(folder / "manifest.json"), recorded)
+        atlas = recorded["mode_comparisons"]["atlas"]["same_section_motion"]
+        self.assertEqual({name for name, same in atlas.items() if not same},
+                         {"ATLAS_POCKET_REGION_ISLAND", "ATLAS_ENGRAVE_ARC_TEXT"})
+        self.assertTrue(recorded["mode_comparisons"]["links"]["same_program_motion"])
+        for mode in MODES:
+            atlas_case = recorded["cases"][f"atlas-{mode}"]
+            sections = atlas_case["sections"]
+            drill = next(item for item in sections
+                         if item["name"] == "ATLAS_DRILL_POINTS")
+            self.assertIsNone(drill["first_cut_move"])
+            self.assertEqual([word["reason"] for word in drill["unresolved_words"]],
+                             ["unsupported_G98", "unsupported_G81", "unsupported_G81"])
+            self.assertEqual([event["m"] for event in atlas_case["events"]],
+                             [6, 3, 6, 3, 5, 30])
+            links_case = recorded["cases"][f"links-{mode}"]
+            first = links_case["sections"][0]
+            self.assertEqual(first["targets_xml_order"],
+                             ["link-circle-3", "link-circle-1", "link-circle-2"])
+            self.assertEqual(first["approach_xy_at_z5_ordered_mm"],
+                             [[66.2639, 7.3887], [42.2639, 7.3887],
+                              [19.2639, 7.3887]])
+            self.assertEqual([event["m"] for event in links_case["events"]],
+                             [6, 3, 6, 3, 6, 3, 5, 30])
 
 
 if __name__ == "__main__":

@@ -465,8 +465,8 @@ document name and explicit `OptimisationMode` token are the only intended
 differences. CamBam's installed enum uses `Standard` for the documented
 0.9.7 Legacy mode and `Experimental` for 0.9.8 New. The candidates pin
 `units="Millimeters"`, Default postprocessor, installed `Standard-mm` styles
-and `Default-mm` tools,
-stock and modeled MOP fields. The module strictly reimports every candidate
+and `Default-mm` tools, stock and modeled MOP fields. The module strictly
+reimports every candidate
 and records its operation/target/property snapshot and SHA-256 in a versioned
 manifest. The owning inventory and acceptance limits are in the
 [mapping foundation](REST_MACHINING_PLAN.md#native-cambam-optimizer-and-output-mapping-foundation).
@@ -480,6 +480,17 @@ unknown. A parsed post has `posted_unreviewed` status and no stock authority;
 domain review and any appropriate motion/stock replay must accept each case
 before its mapping may inform rest calculations. Framework-generated motion
 keeps its separate fingerprint and authority.
+
+The exact four input `.cb` files, returned `.nc` posts, input manifest and
+derived `observations.json` are reusable tracked fixtures under
+`tests/fixtures/optimizer_corpus/`. `observe_corpus()` recomputes the
+observations from these files: candidate/post SHA-256, ordered MOP sections,
+target labels, depth/feed/approach records, arc-radius checks, tool and spindle
+events, unresolved cycle words and section/program motion fingerprints.
+Motion fingerprints omit line numbers and timestamp headers; exact raw NC
+hashes remain separate. The review owner records which observations are
+accepted and their limits. A new `.cb` export with different IDs or changed
+settings needs its own native post and hashes.
 
 ### Detached nominal planar core
 
