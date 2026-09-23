@@ -461,6 +461,57 @@ alone cannot predict its actual emitted result. The Default post does not encode
 the incoming machine position, so RC01 retains the declared test setup
 (-10,-10,+5); physical acceptance is separate.
 
+### Native optimiser shape/MOP mapping corpus
+
+Generate a **new empty** ignored output directory from the repository root:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.optimizer_corpus output/optimizer-corpus-NEW
+& $ProjectPython -m unittest tests.test_optimizer_corpus -v
+```
+
+The prepared 2026-09-23 candidate set is under
+`output/optimizer-corpus-20260923-04/`; its `manifest.json` records exact
+candidate hashes, CamBam Plus 1.0 build, explicit `Standard`/`Experimental`
+mode, modeled MOP properties, target IDs and expected Default post/
+`Standard-mm` style/`Default-mm` tool library hashes. The atlas pair is the
+first output gate. Its two files are `atlas-legacy.cb` and `atlas-new.cb`.
+Earlier `-01` through `-03` draft directories are superseded; post only `-04`.
+The held `links-legacy.cb` and `links-new.cb` cover interactions after the
+atlas method has been accepted. All use synthetic 185 x 45 x 8 mm stock,
+Z=0 surface, +5 clearance and -2 or -3 target depth. These inputs are for
+toolpath observation only, not production machining.
+
+For the first gate, open each atlas `.cb` in the established CamBam Plus 1.0
+installation. Confirm the document is millimeters; `Machining Options` shows
+the Default postprocessor, `Standard-mm` style library and `Default-mm` tool
+library; and a MOP's Optimisation Mode displays **Legacy (0.9.7)** for
+`atlas-legacy.cb`, **New (0.9.8)** for `atlas-new.cb`. Generate toolpaths
+(`Ctrl+T`), then produce G-code (`Ctrl+W`) to a same-basename `.nc` beside
+each unchanged `.cb`. Return the two `.nc` files and report either the mode/
+settings confirmation or the first opening/toolpath/post error. Do not save
+edits into the hash-guarded `.cb` files. The first gate passes only when both
+posts can be tied to their exact source hashes and their MOP sections can be
+reviewed; merely opening the files does not establish mapping acceptance.
+
+After posts arrive, run one intake per candidate and retain the exact JSON
+locally beside it:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.optimizer_corpus output/optimizer-corpus-20260923-04 --post atlas-legacy output/optimizer-corpus-20260923-04/atlas-legacy.nc > output/optimizer-corpus-20260923-04/atlas-legacy-audit.json
+& $ProjectPython -m cambam_builder.integrations.cambam.optimizer_corpus output/optimizer-corpus-20260923-04 --post atlas-new output/optimizer-corpus-20260923-04/atlas-new.nc > output/optimizer-corpus-20260923-04/atlas-new-audit.json
+```
+
+Inspect the exit status and audit contents. Intake status is
+`posted_unreviewed`, never native-motion or stock acceptance. Review each
+native target-to-path section, path order/direction and depth, exact posted
+coordinates/arcs, entry/links/retracts, feed, spindle and tool events. A
+CannedCycle `G81`/`G83` remains raw/unresolved in this reader; the incoming
+machine position and controller trajectory are not encoded. Record actual
+output hashes, version/profile provenance, specific unsupported words and
+accepted limits in the review owner. Then request the held interaction pair
+if the first method has proved adequate.
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not

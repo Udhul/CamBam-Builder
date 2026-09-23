@@ -4706,3 +4706,56 @@ begins at (-10,-10,+5). Residual-location GEOS topology has no formal
 interval proof. No physical machining or controller acceptance is claimed.
 No further user validation is needed for this posted-motion finding; another
 CamBam export adds no new evidence unless the carrier or settings change.
+
+## Native optimiser corpus preparation - 2026-09-23
+
+The installed CamBam Plus 1.0 `CamBam.CAD.dll` enum reports
+`OptimisationModes.Standard=0`, `Experimental=1`, `None=-1`; the
+[CamBam 1.0 Profile guide](https://www.cambam.info/doc/1.0/cam/profile.html)
+labels the first two Legacy (0.9.7) and New (0.9.8). The installed XML roots
+and `lathe-test.cb` sample support the
+[inventory](REST_MACHINING_PLAN.md#inventoried-baseline-and-prepared-slice-2026-09-23).
+The system files used for this baseline have SHA-256:
+
+| Installed profile file | SHA-256 |
+| --- | --- |
+| `post/Default.cbpp` | `adc3034633f0f6ad6ddc4c9eabc63844cb59173be8ee780ac47e198a7145c263` |
+| `styles/Standard-mm.xml` | `d3887ee96277a1a8e8d452b223f2d02d34b341a9de7b7e3b3e7d7080b224e4c4` |
+| `tools/Default-mm.xml` | `afe4b2c7abcfe17a44a9fd4752a1d40847ce0e399fde9b105bd8da66160d08db` |
+
+The accepted-for-posting candidate set is
+`output/optimizer-corpus-20260923-04/`. Its `manifest.json` guards these
+strict-reimported `.cb` hashes:
+
+| Candidate | SHA-256 | Gate |
+| --- | --- | --- |
+| `atlas-legacy.cb` | `972348f5122fc933368f9410d597b4596b59101bcc874d4d637b34c48de9acc3` | First post |
+| `atlas-new.cb` | `ba7457271fbbbed186e5c322cd94df351940c8520fef99d18e1308ca18f5c910` | First post |
+| `links-legacy.cb` | `8faf51989dc149cd8a70de419c7a6297e67553a910774430763afb4c9fc797de` | Held interaction |
+| `links-new.cb` | `957fa0ad7eff19a9ed57487763bac285180cb8168d8d6529c84f88e7c534bd02` | Held interaction |
+
+Each pair is cloned before changing the mode; an XML regression compared
+them after removing only document name and mode text. Every candidate pins
+millimeter units, Default post, installed style/tool library names and
+explicit modeled MOP fields. The interaction pair selects the installed
+`cutout` CAM style on its final Profile while pinning its modeled fields.
+Strict import retains all nine MOPs across the two families and their
+targets/properties per mode. The corpus parser read the previously returned
+native RC01 `N-rough.nc` as 166 G0/G1/G2/G3 motion words, four M events and
+zero unsupported words. That demonstrates intake of one real Default post;
+it is **not** an atlas observation or proof of Legacy/New mapping.
+
+`tests.test_optimizer_corpus` passed three tests for mode-pair identity,
+strict snapshot/hash intake, modal arcs and unresolved cycles. The broad
+base-environment `unittest discover -s tests -v` ran 365 tests and failed
+only two module imports (`test_mcp_cross_document`, `test_mcp_mop_parity`):
+the optional MCP dependency `anyio` is absent from this base environment.
+That broad run is not claimed as passed; no MCP code changed. Package
+`compileall`, import/construct smoke and `git diff --check` passed;
+untracked text was checked separately for trailing whitespace. The first
+manual gate is the two atlas CamBam posts and UI mode/settings confirmation
+in the [runbook](DEVELOPMENT.md#native-optimiser-shapemop-mapping-corpus).
+Until their exact `.nc` hashes, path/event sections and limitations are
+reviewed, all mapping cases remain pending and no native stock/rest
+authority is available. Native-only class reopening criteria remain in the
+inventory; the interaction posts wait for the atlas method verdict.

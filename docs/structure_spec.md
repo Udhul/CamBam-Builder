@@ -456,6 +456,31 @@ explicit-script E output slice for the accepted synthetic RC01 job; it does
 not establish XYZ/Engrave parity, native Pocket N, arbitrary controller
 dialects, physical machining, or formal GEOS topology interval proof.
 
+### Native optimiser mapping corpus boundary
+
+`cambam_builder.integrations.cambam.optimizer_corpus` authors the bounded
+CamBam Plus 1.0 atlas and interaction `.cb` pairs. Each Legacy/New pair is
+cloned from one project so geometry, target IDs and MOP order match; the
+document name and explicit `OptimisationMode` token are the only intended
+differences. CamBam's installed enum uses `Standard` for the documented
+0.9.7 Legacy mode and `Experimental` for 0.9.8 New. The candidates pin
+`units="Millimeters"`, Default postprocessor, installed `Standard-mm` styles
+and `Default-mm` tools,
+stock and modeled MOP fields. The module strictly reimports every candidate
+and records its operation/target/property snapshot and SHA-256 in a versioned
+manifest. The owning inventory and acceptance limits are in the
+[mapping foundation](REST_MACHINING_PLAN.md#native-cambam-optimizer-and-output-mapping-foundation).
+
+`inspect_post()` rejects changed candidate hashes, a mismatched file title,
+non-Default or non-absolute-mm posts, missing/repeated MOP comments, or a
+missing `M30`. It retains native posted words and modal G0/G1/G2/G3 endpoints,
+arc centers, feeds and M events with exact `.nc` hash. Canned cycles and other
+unhandled codes remain explicitly unresolved. The first machine position is
+unknown. A parsed post has `posted_unreviewed` status and no stock authority;
+domain review and any appropriate motion/stock replay must accept each case
+before its mapping may inform rest calculations. Framework-generated motion
+keeps its separate fingerprint and authority.
+
 ### Detached nominal planar core
 
 `cambam_builder.planar` is the public, document-independent owner of immutable
@@ -985,7 +1010,7 @@ them, while the MCP authoring boundary enforces its narrower published ranges.
 | `spindle_speed` | Spindle revolutions/minute; positive when used. A supplied MOP value wins, then framework Part context is resolved. | Resolved value is `Value`; omitted when neither exists. | D, P |
 | `velocity_mode` | Controller cornering mode (`ExactStop` or `ConstantVelocity`). | Always `Value`. | D, P |
 | `work_plane` | Coordinate plane (`XY`, `XZ`, `YZ`) defining the operation axes and depth normal. | Always `Value`. | D, P |
-| `optimisation_mode` | Toolpath ordering algorithm; supported model values are `Standard`, `Experimental`, and `Legacy`. | Always `Value`. | D, P |
+| `optimisation_mode` | Toolpath ordering algorithm; installed CamBam Plus 1.0 enum values are `Standard` (UI Legacy 0.9.7), `Experimental` (UI New 0.9.8), and `None`. Literal `Legacy`/`New` are not XML enum values. | Always `Value`. | D, P |
 | `tool_diameter` | Positive cutter diameter, drawing units. A supplied MOP value wins, then Part, then project context. | Resolved value is `Value`; omitted only if no level supplies one. | D, P |
 | `tool_number` | Tool-library/controller number; zero means current/no tool change in the framework contract. | Always `Value`. | D, P |
 | `tool_profile` | Cutter shape metadata such as `EndMill`, `VCutter`, or `Drill`; affects simulation and some paths. | Always `Value`. | D, N, P |

@@ -713,6 +713,49 @@ only when a specific consumer exposes a missing dependency. The first output
 slice should prove the corpus method end to end before generating the full
 set of fixtures. No physical machining is part of this mapping.
 
+### Inventoried baseline and prepared slice (2026-09-23)
+
+The installed CamBam Plus 1.0 assembly and system samples were inspected
+read-only. [CamBam's entity list](https://www.cambam.info/doc/1.0/cad/entities.html)
+and [machining operation list](https://www.cambam.info/doc/1.0/cam/basics.html)
+provide the documented class boundary. The installed optimiser enum is
+`Standard=0`, `Experimental=1`, `None=-1`; the
+[1.0 Profile documentation](https://www.cambam.info/doc/1.0/cam/profile.html)
+calls the first two Legacy (0.9.7) and New (0.9.8). These are mode names
+within the installed 1.0 application, not evidence of running older builds.
+The writer emits `Standard` and `Experimental`, and the first native post must
+confirm the displayed selection.
+
+| Native shape class / XML | Corpus state and reopening criterion |
+| --- | --- |
+| PolyRectangle `rect`, Circle `circle`, Arc `arc`, Polyline `pline` (open and closed), PointList `points`, MText `text`, Region `entity xsi:type="Region"` | Authorable here; atlas pair prepared in both modes. Native toolpaths and output remain pending. |
+| Line `line`, Spline `spline` | Native only; the strict framework reader rejects these. Reopen with a small native-saved source and verified authoring/import round trip. |
+| Surface `surface` | Native only; pair with a bounded 3D Surface MOP after a controlled mesh and native-saved XML are available. |
+| ScriptEntity `script` | Native only; reopen with a self-contained deterministic script and a reviewed execution boundary. |
+| CADBitmap `bitmap` | Native only; the image is externally linked. Reopen with a synthetic bitmap, relative asset path and both hashes. |
+
+| Native MOP class / XML | Corpus state and reopening criterion |
+| --- | --- |
+| Profile `profile`, Pocket `pocket`, Engrave `engrave`, Drill `drill` | Authorable here; atlas and interaction pairs prepared in both modes. Drill CannedCycle remains raw posted words until a cycle-aware reader is justified. |
+| 3D Surface `surface3d` | Native only; blocked with Surface pending the controlled mesh/XML source and 3D post semantics. |
+| NCFile `ncfile` | Native only; blocked pending a colocated synthetic NC source and its exact inclusion/provenance policy. Optimiser mode may be inapplicable to passthrough output; establish that from a native post. |
+| Lathe plugin `mop xsi:type="MOPLathe"` | Installed, native only; blocked pending a native-saved minimal turned profile, machine axis/post settings and safe interpretation. |
+| Bas Relief `MOPBasRelief` | Historical assembly type, not a current 1.0 UI class; [3D Profile replaced it](https://cambam.info/doc/1.0/cam/3d.html). Reopen only for an actual legacy file or present UI entry. |
+
+The current reader does not preserve unsupported native classes, so none of
+the native-only rows is mislabeled import/preserve-only. The first post request
+is the two atlas candidates. They cover the seven authorable shape families
+and four MOP classes in a common synthetic document; the two held interaction
+candidates cover target order, depth, lead/crossover, return tool change and
+explicit `cutout` style selection. Grouping limits attribution of effects
+between adjacent MOPs, so accepted claims remain per observed section and
+program. Every candidate pins millimeter units, Default postprocessor,
+installed `Standard-mm` style and `Default-mm` tool libraries, stock and
+explicit modeled MOP fields. The manifest records the three system-file
+fingerprints; changed local files require new profile provenance. The native
+reader records exact posted words and modal motion but leaves controller
+cycles, incoming machine position and stock removal unresolved.
+
 ## Problem and machining intent
 
 An endmill cannot reach every point of a sharp internal corner without cutting

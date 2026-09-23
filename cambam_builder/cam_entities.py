@@ -316,7 +316,7 @@ class Mop(CamBamEntity, ABC):
     spindle_speed: Optional[int] = None # If None, uses Part/Project default
     velocity_mode: str = 'ExactStop' # 'ExactStop', 'ConstantVelocity'
     work_plane: str = 'XY' # 'XY', 'XZ', 'YZ'
-    optimisation_mode: str = 'Standard' # 'Standard', 'Experimental', 'Legacy'
+    optimisation_mode: str = 'Standard' # Standard=0.9.7 Legacy; Experimental=0.9.8 New; None
     tool_diameter: Optional[float] = None # If None, uses Part/Project default
     tool_number: int = 0 # If 0, uses current tool
     tool_profile: str = 'EndMill' # CamBam enum: EndMill, VCutter, BullNose, BallNose, Drill, Lathe
