@@ -180,14 +180,37 @@ interval proof. The [contract](structure_spec.md#rc01-selected-posted-motion-sto
 record the boundary. No new CamBam post or manual validation is needed for this
 replay of previously user-posted bytes.
 
-**Next priority:** revisit the recorded RC01 native T1/T2 post as a paired
-stock/rest source, preserving the T1 prefix and explicit source/post freshness
-while determining whether any T2 stock-dependent claim survives the already
-known motion-role failures. This matters now because T1 rest alone cannot
-support native cleanup or mixed sequences. Stop at a blocked/conditional result
-if the existing Pocket/Default carrier cannot express the required roles; do
-not request an unchanged repost. Broad optimiser implementation and native-only
-class breadth remain deferred until a named consumer requires them.
+**2026-09-23 paired native posted-stock assessment completed (backlog 6).**
+The recorded T1/T2 candidate and Default post now join the reusable RC01
+fixture, with a paired evidence record and caller-selectable replay. Source,
+both candidates, setup, manifest, posts, selected MOPs and parsed-motion
+fingerprints are pinned; prior results fail freshness after any byte change.
+The parsed T1 event/move prefix is identical. All three slabs meet rough/final
+rest budgets; four required and eight actual T2 vertical columns have exact
+prior T1 cut witnesses. Rough/final rest is 7.72558–7.72584 / 0.85840–0.85843
+mm² per slab. This is conditional geometric coverage, **not** native cleanup
+execution authority: 62 rough and 233 combined motion-role findings retain
+low rapids, ramps, unsupported feed roles, displaced unstopped tool change and
+unresolved tangencies. `stock_dependent_use` remains blocked. See the
+[contract](structure_spec.md#rc01-selected-posted-motion-stock-authority),
+[runbook](DEVELOPMENT.md#rc01-selected-native-posted-stock-replay) and
+[assessment](REVIEW.md#rc01-paired-native-posted-stock-assessment---2026-09-23).
+No unchanged repost or manual acceptance is needed.
+
+**Next priority:** implement one bounded pointed-cone V-shaped/flat-depth slot
+slice in the shared CAM core, starting from the accepted
+[RC01 cone guard](REST_MACHINING_PLAN.md#rc01-cone-guard-acceptance-scope-and-stopping-condition)
+and the [V-cutter acceptance cases](REST_MACHINING_PLAN.md#first-useful-increment-and-acceptance).
+It should generate and verify finite paths, all-height conical clearance and
+residual for a 4 mm opening, including the 2 mm candidate penetration and
+1 mm depth-cap partial result. This now has greater value than another
+Pocket/Default parameter pass: the native carrier's motion-role gap is
+already identified, while the cone slice advances the accepted rest/V-carve
+workflow and shared execution model. Stop at the pointed-cone bounded geometry;
+defer rounded tips, broader topology, optimiser implementation and native-only
+class breadth until a named consumer requires them. Reopen native Pocket N
+only with a carrier/post change that can encode the required roles and fresh
+whole-motion evidence.
 
 The user selected the proposed synthetic case, including its test-only
 plunge/feed limits, on 2026-09-23. These are accepted
@@ -1162,7 +1185,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    retract. B/C have not been reposted. A fully native Pocket roughing/cleanup
    pair was posted: T1 prefixes match, depth and rest coverage pass the bounded
    numerical checks, and four required plus eight actual T2 columns have exact
-   T1 clearance witnesses. N fails due low rapids, ramps, feed and setup/tool
+   T1 clearance witnesses. The pair is now hash-pinned as a selected
+   conditional stock/rest observation; 62 rough and 233 combined role findings
+   block stock-dependent execution. N fails due low rapids, ramps, feed and setup/tool
    events, with island tangency still unresolved. The Pocket/Default role
    trial could not encode approach/retract/setup roles. The later literal
    CustomScript `.cb` did: its revised CamBam Default post passed exact

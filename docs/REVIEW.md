@@ -4880,3 +4880,49 @@ untracked text was also scanned for trailing whitespace. Manual CamBam
 validation adds no evidence for replaying these already posted exact bytes.
 Reopen the native Pocket/Default execution claim only if a carrier can encode
 the missing roles and its actual post passes renewed whole-motion checks.
+
+## RC01 paired native posted-stock assessment - 2026-09-23
+
+The previously user-posted `N-native-cleanup.cb` and `N-native-cleanup.nc` were
+copied byte-for-byte beside the accepted T1 fixture under
+`tests/fixtures/rc01_native_stock/`. Their SHA-256 values are respectively
+`23e44d90b3d0be46389f0a86b915dad42a578835e5ab4978f52c620c331bd2b1`
+and `6c36c80766c84d8442cb28c6c1808da9f219dcb66d551333db951bf712109e20`.
+The original comparison manifest still pins both candidates to the same source.
+`paired_evidence.json` pins that manifest, the setup, both exact posts and their
+parsed-motion fingerprints. This reuses the posted trial; it is no new CamBam
+export or claim about the unposted Pocket role-trial candidates.
+
+`analyze_rc01_stock("native_posted", evidence_path=...paired_evidence.json)`
+strict-reimports the source and both candidates, checks their selected MOPs,
+headers, sections, source/candidate/post hashes and identical parsed T1
+event/move prefix through the last T1 move. The T1-only and combined parsed
+fingerprints are `a0fdecec1c961b146179371b20b0055b771a566a0412a97853a94aec9e5f5177`
+and `c3ba1b5c07e09f5d6a2777dcf7da65b0718365153f5539a71c0a97da4c45fd35`.
+`check_native_freshness()` invalidates a prior result after changes to either
+post, either candidate, source, setup, manifest or evidence record. Re-pinning
+a changed post alone cannot inherit the accepted motion interpretation.
+
+The paired replay confirms rough rest `7.72557766758–7.72584353670 mm²` and
+final rest `0.85839751862–0.85842705963 mm²` in each of three depth slabs.
+Both area/location budgets pass, all four required and eight actual T2 vertical
+columns have exact prior full-depth T1 cut witnesses, and the parsed T1 prefix
+matches. This supports **bounded geometric T2 coverage conditional on the
+recorded T1 cut footprint**. It does not establish safe T1 execution or safe T2
+entry, linking and engagement. The replay retains 62 rough and 233 combined
+motion-role findings: low rapids, ramped engagement, unsupported F60 low-level
+XY moves, a displaced T2 change without spindle stop, unresolved island
+tangencies and the missing initial machine position. The returned
+`stock_dependent_use` is `blocked_by_motion_or_rest`. Native Pocket N, physical
+machining and production stock authority remain unaccepted. GEOS floating
+topology has no formal interval proof; the arc/radial polygon enclosure does
+not resolve that limit.
+
+Focused `.venv\Scripts\python.exe -m unittest tests.test_rc01_stock_authority
+tests.test_rc01_native -v` passed 13 tests, including real-pair replay,
+freshness and a re-pinned T1-prefix mutation. No manual CamBam validation adds
+evidence to this replay of exact accepted bytes. Reopen native cleanup only
+after a changed carrier/post can encode the required motion roles and a newly
+posted pair passes full trajectory and protected-stock checks. Continuing to
+expand the same Pocket/Default parameter trial has no demonstrated path to
+those roles.

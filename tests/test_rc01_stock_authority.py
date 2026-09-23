@@ -1,5 +1,6 @@
-"""Recorded native roughing stock and independent RC01 authority selection."""
+"""Recorded native rough/cleanup stock and independent RC01 authority selection."""
 
+import hashlib
 import json
 import shutil
 import tempfile
@@ -16,6 +17,73 @@ FIXTURE = Path(__file__).parent / "fixtures" / "rc01_native_stock"
 
 
 class RC01StockAuthorityTests(unittest.TestCase):
+    def test_recorded_native_pair_has_coverage_but_blocks_execution(self):
+        evidence = FIXTURE / "paired_evidence.json"
+        paired = analyze_rc01_stock("native_posted", evidence_path=evidence)
+        self.assertTrue(check_native_freshness(evidence, paired))
+        self.assertEqual(paired["status"], "bounded_paired_posted_stock_observation")
+        self.assertTrue(paired["rough_prefix_identical"])
+        self.assertTrue(paired["coverage_budget_met"])
+        self.assertTrue(paired["t2_vertical_access_witnessed"])
+        self.assertEqual(len(paired["t2_vertical_columns_from_t1"]), 8)
+        self.assertEqual(len(paired["required_corner_columns_from_t1"]), 4)
+        self.assertEqual(paired["motion_role_issue_counts"],
+                         {"rough": 62, "combined": 233})
+        self.assertEqual(paired["stock_dependent_use"], "blocked_by_motion_or_rest")
+        self.assertEqual(paired["input_sha256"]["combined_post"],
+                         "6c36c80766c84d8442cb28c6c1808da9f219dcb66d551333db951bf712109e20")
+        for rough, final in zip(paired["rough_rest_by_depth"],
+                                paired["final_rest_by_depth"]):
+            self.assertAlmostEqual(rough["rest_area_mm2"][0], 7.72557766758, places=8)
+            self.assertAlmostEqual(rough["rest_area_mm2"][1], 7.72584353670, places=8)
+            self.assertAlmostEqual(final["rest_area_mm2"][0], 0.85839751862, places=8)
+            self.assertAlmostEqual(final["rest_area_mm2"][1], 0.85842705963, places=8)
+            self.assertEqual(final["residual_outside_ideal_or_boundary_0_05mm_mm2"], 0)
+
+    def test_paired_freshness_and_t1_prefix_are_fail_closed(self):
+        with tempfile.TemporaryDirectory() as folder:
+            copy = Path(folder)
+            names = ("paired_evidence.json", "comparison.json", "setup.json",
+                     "source.cb", "N-rough.cb", "N-rough.nc",
+                     "N-native-cleanup.cb", "N-native-cleanup.nc")
+            for name in names:
+                shutil.copyfile(FIXTURE / name, copy / name)
+            evidence = copy / "paired_evidence.json"
+            original = analyze_rc01_stock("native_posted", evidence_path=evidence)
+            for name in ("source.cb", "N-rough.cb", "N-rough.nc",
+                         "N-native-cleanup.cb", "N-native-cleanup.nc"):
+                path = copy / name
+                saved = path.read_bytes()
+                try:
+                    path.write_bytes(saved + b" ")
+                    with self.assertRaisesRegex(ValueError, "stale native"):
+                        check_native_freshness(evidence, original)
+                finally:
+                    path.write_bytes(saved)
+            self.assertTrue(check_native_freshness(evidence, original))
+
+            # Even with a newly pinned raw post hash, a changed T1 trajectory
+            # cannot inherit rough-only stock as the combined T1 prefix.
+            post = copy / "N-native-cleanup.nc"
+            saved_post = post.read_bytes()
+            post.write_bytes(saved_post.replace(
+                b"G0 X7.8 Y21.5598", b"G0 X7.9 Y21.5598", 1))
+            record = json.loads(evidence.read_text(encoding="utf-8"))
+            record["combined_post_sha256"] = hashlib.sha256(post.read_bytes()).hexdigest()
+            evidence.write_text(json.dumps(record), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "T1 prefix differs"):
+                analyze_rc01_stock("native_posted", evidence_path=evidence)
+
+            # A changed T2 item with the same T1 prefix needs new reviewed
+            # motion, even when the evidence repins its exact post bytes.
+            t1, t2 = saved_post.split(b"T2 M6", 1)
+            post.write_bytes(t1 + b"T2 M6" + t2.replace(
+                b"G1 F60.0 Z-1.0", b"G0 Z-1.0", 1))
+            record["combined_post_sha256"] = hashlib.sha256(post.read_bytes()).hexdigest()
+            evidence.write_text(json.dumps(record), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "interpretation changed"):
+                analyze_rc01_stock("native_posted", evidence_path=evidence)
+
     def test_recorded_native_post_is_a_distinct_bounded_stock_source(self):
         evidence = FIXTURE / "evidence.json"
         native = analyze_rc01_stock("native_posted", evidence_path=evidence)

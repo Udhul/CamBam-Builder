@@ -1,0 +1,13 @@
+{
+  "format": "rc01-native-paired-stock-v1",
+  "manifest_file": "comparison.json",
+  "manifest_sha256": "a3c7b17d64a92f1b4bebb6adf9f49b4b49a46817e4f9a8e950f1b0591d30bcb4",
+  "setup_file": "setup.json",
+  "setup_sha256": "f5a8e138ee00c8c45826036048f0754721ca10b85c829921dd4568ccd8f1e2e7",
+  "rough_post_file": "N-rough.nc",
+  "rough_post_sha256": "cde87d91d6f4c746cdabe7a80b04808d65551bc4d15db47e724550c6b0d444a2",
+  "combined_post_file": "N-native-cleanup.nc",
+  "combined_post_sha256": "6c36c80766c84d8442cb28c6c1808da9f219dcb66d551333db951bf712109e20",
+  "rough_motion_sha256": "a0fdecec1c961b146179371b20b0055b771a566a0412a97853a94aec9e5f5177",
+  "combined_motion_sha256": "c3ba1b5c07e09f5d6a2777dcf7da65b0718365153f5539a71c0a97da4c45fd35"
+}

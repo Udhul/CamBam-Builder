@@ -464,21 +464,26 @@ the incoming machine position, so RC01 retains the declared test setup
 ### RC01 selected native posted-stock replay
 
 The reusable synthetic fixture under `tests/fixtures/rc01_native_stock/`
-contains the original RC01 source, T1 native Pocket candidate, user-posted
-Default output, setup, comparison manifest and pinned evidence record. Run:
+contains the original RC01 source, T1-only and T1/T2 native Pocket candidates,
+both user-posted Default outputs, setup, comparison manifest and pinned rough
+and paired evidence records. Run:
 
 ```powershell
 & $ProjectPython -m unittest tests.test_rc01_stock_authority -v
 & $ProjectPython -c "from cambam_builder.integrations.cambam.rc01_stock_authority import analyze_rc01_stock; print(analyze_rc01_stock('native_posted', evidence_path='tests/fixtures/rc01_native_stock/evidence.json')['rough_rest_by_depth'])"
+& $ProjectPython -c "from cambam_builder.integrations.cambam.rc01_stock_authority import analyze_rc01_stock; r=analyze_rc01_stock('native_posted', evidence_path='tests/fixtures/rc01_native_stock/paired_evidence.json'); print(r['rough_prefix_identical'], r['coverage_budget_met'], r['motion_role_issue_counts'], r['stock_dependent_use'])"
 ```
 
 Call `check_native_freshness(evidence_path, result)` before reusing a prior
 native observation. `framework_generated` takes a supplied complete RC01
 `Program` and verifies it separately; no selection fallback occurs. The
-recorded native T1 stock bounds support analysis only: its motion-role
-findings block stock-dependent execution, native cleanup acceptance and
-production use. A new CamBam post or edited `.cb` needs a newly reviewed,
-explicitly pinned source/post pair.
+paired result retains both rough and final rest, exact T1 witnesses for the
+actual and required T2 vertical columns, and full motion-role issue counts.
+Its recorded coverage passes, but the 62 rough and 233 combined findings block
+stock-dependent execution and native cleanup acceptance. Both native records
+support analysis only, with no production-use claim. A new CamBam post or
+edited `.cb` needs newly reviewed, explicitly pinned source/post provenance;
+an unchanged repost adds no evidence.
 
 ### Native optimiser shape/MOP mapping corpus
 

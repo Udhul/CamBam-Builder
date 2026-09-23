@@ -671,12 +671,12 @@ area infrastructure only when an RC01 gate or a named next consumer requires it.
 
 ## Native CamBam optimizer and output mapping foundation
 
-**Priority:** next distinct increment now that the RC01 explicit-script
-CamBam output carrier has a recorded pass. The user
+**Completed foundation, 2026-09-23:** after the RC01 explicit-script
+CamBam output carrier passed, the user
 requested a one-time reusable evidence base covering CamBam's native shape
 and machining-operation classes under both its 0.9.7 Legacy and 0.9.8 New
-optimisation modes. The agent prepares complete `.cb` files; the user's only
-required action is generating the corresponding native G-code in CamBam.
+optimisation modes. The agent prepared complete `.cb` files; the user generated
+the corresponding native G-code in CamBam.
 Keep the number of posts small by grouping independent cases, but separate
 cases where one MOP or tool event could alter another's output.
 
