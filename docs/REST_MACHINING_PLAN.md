@@ -595,6 +595,25 @@ V-carve and broader rest consumer before choosing another increment. General
 topology, numeric precision, optimizer and package-layout work reopen only
 when this output gate or a named consumer supplies a failing case.
 
+**2026-09-23 route result:** one native Pocket/Default MOP repair pair was
+strict-reimported with no spiral lead, no path optimisation, cut-feed stepover
+and zero crossover. Those fields address three observed path-generation
+symptoms, but this carrier still cannot independently encode RC01's first
+entry, feed approach, feed retract and setup-position stopped tool change.
+The Default post's rapid formatter covers all rapids; changing it globally
+would also change permitted above-stock XY rapid travel. MOP header/footer
+act at operation boundaries, not every entry and retract. The existing
+posted pair proves coverage but fails these roles, and the repaired pair was
+not posted because it cannot meet the candidate precondition above. E and N
+remain separate failed/pending output gates. A raw-motion carrier through
+CamBam's documented NCFile operation would require producing the complete
+G-code first, so it moves bounded direct posting forward. The user must decide
+whether to advance that work now or keep it after the first useful rest/V-carve
+workflow. The current user workflow remains agent-prepared `.cb` files followed
+by user-generated G-code in CamBam; moving direct posting forward changes that
+boundary and is not inferred from this role trial. Neither choice certifies a
+controller or machine setup.
+
 ### RC01 cone guard, acceptance scope and stopping condition
 
 Pair the cylindrical job with an analytic pointed 90-degree included-angle cone

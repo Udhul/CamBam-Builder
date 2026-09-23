@@ -191,7 +191,7 @@ def _attach_candidate(project, items, tools):
                    for depth in (-1, -2, -3)] for tool in tools}
 
 
-def _attach_native_cleanup(project):
+def _attach_native_cleanup(project, *, pocket_fields=SOURCE_FIELDS):
     layer = project.add_layer("RC01 native cleanup windows")
     part = project.list_parts()[0]
     windows = ((0, 0, 7, 7), (33, 0, 40, 7),
@@ -202,12 +202,12 @@ def _attach_native_cleanup(project):
         mop = project.add_pocket_mop(
             part, targets=[shape], name=f"NATIVE T2 window {index}",
             identifier=f"native-t2-window-{index}", enabled=True,
-            tool_number=2, tool_diameter=2, **SOURCE_FIELDS)
+            tool_number=2, tool_diameter=2, **pocket_fields)
         if shape is None or mop is None:
             raise RuntimeError("could not attach native cleanup window")
 
 
-def build_native_variant(directory):
+def build_native_variant(directory, *, role_trial=False):
     """Prepare native Pocket roughing alone and with four corner cleanup MOPs.
 
     These are execution probes. Their removal is determined from posted motion,
@@ -222,9 +222,18 @@ def build_native_variant(directory):
     synthetic_source().save(str(source_path))
     source = read_cambam_bytes(source_path.read_bytes(), source_name=str(source_path))
     job = normalize(source, setup)
+    # This is one combined local repair of the observed Pocket motion roles.
+    # It does not assert that CamBam's Default post can express the remaining
+    # approach, retract, start-position, and tool-event requirements.
+    pocket_fields = dict(SOURCE_FIELDS)
+    if role_trial:
+        pocket_fields.update(lead_in_type="None", optimisation_mode="None",
+                             stepover_feedrate="Cut Feedrate",
+                             max_crossover_distance=0)
+    prefix = "R" if role_trial else "N"
     variants = {}
-    for key, filename, cleanup in (("rough", "N-rough.cb", False),
-                                    ("combined", "N-native-cleanup.cb", True)):
+    for key, filename, cleanup in (("rough", f"{prefix}-rough.cb", False),
+                                    ("combined", f"{prefix}-native-cleanup.cb", True)):
         project = source.clone()
         part = project.list_parts()[0]
         target = next(p for p in project.list_primitives()
@@ -232,11 +241,11 @@ def build_native_variant(directory):
         rough = project.add_pocket_mop(
             part, targets=[target], name="NATIVE T1 full target roughing",
             identifier="native-t1-rough", enabled=True,
-            tool_number=1, tool_diameter=6, **SOURCE_FIELDS)
+            tool_number=1, tool_diameter=6, **pocket_fields)
         if rough is None:
             raise RuntimeError("could not attach native roughing Pocket")
         if cleanup:
-            _attach_native_cleanup(project)
+            _attach_native_cleanup(project, pocket_fields=pocket_fields)
         path = directory / filename
         project.save(str(path))
         reopened = read_cambam_bytes(path.read_bytes(), source_name=str(path))
@@ -249,6 +258,12 @@ def build_native_variant(directory):
         targets = [reopened.get_mop_targets(m) for m in enabled]
         if targets[0] != [target.internal_id] or any(len(t) != 1 for t in targets):
             raise ValueError(f"{filename} native target selection changed")
+        if role_trial and any(
+                (m.lead_in_type, m.optimisation_mode, m.stepover_feedrate,
+                 m.max_crossover_distance) !=
+                ("None", "None", "Cut Feedrate", 0)
+                for m in enabled):
+            raise ValueError(f"{filename} role repair changed on reimport")
         variants[key] = {
             "file": filename,
             "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
@@ -261,6 +276,10 @@ def build_native_variant(directory):
         "source_file": source_path.name,
         "source_sha256": hashlib.sha256(source_path.read_bytes()).hexdigest(),
         "postprocessor": "Default", "units": "mm", "profile": "Default mm",
+        "role_trial": role_trial,
+        "pocket_repairs": ({k: pocket_fields[k] for k in (
+            "lead_in_type", "optimisation_mode", "stepover_feedrate",
+            "max_crossover_distance")} if role_trial else {}),
         "variants": variants,
     }
     (directory / "setup.json").write_text(json.dumps(setup, indent=2) + "\n",
@@ -351,8 +370,13 @@ if __name__ == "__main__":
     parser.add_argument("directory", help="new or empty output directory")
     parser.add_argument("--native", action="store_true",
                         help="build native Pocket roughing and corner cleanup probes")
+    parser.add_argument("--role-trial", action="store_true",
+                        help="repair native Pocket ramp, ordering and stepover-feed settings")
     args = parser.parse_args()
-    result = build_native_variant(args.directory) if args.native else build_artifacts(args.directory)
+    if args.role_trial and not args.native:
+        parser.error("--role-trial requires --native")
+    result = (build_native_variant(args.directory, role_trial=args.role_trial)
+              if args.native else build_artifacts(args.directory))
     summary = {"directory": args.directory,
                "job_fingerprint": result["job_fingerprint"]}
     if args.native:

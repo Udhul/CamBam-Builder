@@ -4528,3 +4528,57 @@ Final focused checks after the arc/access audit change: `.venv/Scripts/python.ex
 branch. The returned posts were replayed into the ignored `audit.json` after
 the final audit-code edit. This review change is uncommitted; the branch is not
 merge-ready and no physical acceptance was requested.
+
+## RC01 Pocket/Default role-carrier assessment - 2026-09-23
+
+Selected route: one complete native T1 Pocket plus four native T2 window
+Pockets using CamBam's Default post. The user performs CamBam posting from
+prepared `.cb` files. The preceding actual posted pair proved T1/T2 coverage
+but failed entry, low rapid, ramp, feed, setup and tool events together.
+This assessment tested the remaining local MOP controls as one repair, without
+repeating the unchanged export.
+
+`build_native_variant(..., role_trial=True)` produced a rough-only and a
+complete T1/T2 candidate in `output/rc01-roletrial-20260923-1845/`.
+It changed only enabled candidate Pockets: `LeadInType=None`,
+`OptimisationMode=None`, `StepoverFeedrate=Cut Feedrate` and
+`MaxCrossoverDistance=0`. The original Region, Part stock and two disabled
+source MOPs remain; each candidate strict-reimports with the same RC01 job.
+The SHA-256 values are `6fe3782fceb731bede232fcb4a1b0a9868cb13fdcf6faa0e3a65f3cf78f49304`
+for `R-rough.cb` and `a062175ac5df11d1825589c144a9298dee9714146597fa04d5e692b3d796fe26`
+for `R-native-cleanup.cb`. The manifest records hashes and exact enabled order.
+
+[CamBam's lead-move documentation](https://cambamcnc.org/doc/1.0/cam/lead-moves.html)
+says `None` changes a ramp to direct plunge. Its
+[postprocessor documentation](https://cambamcnc.org/doc/1.0/cam/post-processor.html)
+defines general rapid/feed formatting, MOP boundary header/footer scripts,
+and an internally generated block stream. These controls do not expose a
+separate move role for feed approach from +5 to +1, feed retract to +5, or the
+exact first (5,5) cutting entry. Reformatting every rapid as a feed would also
+change the required above-stock XY rapid role. Header/footer scripts cannot
+replace every internally generated entry/link/retract. The Default post's
+earlier T2 change at (31.1081,27,5) without `M5` also needs a complete
+setup-position event sequence, not a feed or lead setting. A custom post-build
+motion rewrite or a G-code/NCFile carrier would own new motion semantics and
+must be independently replayed; it is not established by this repair.
+
+**Result:** the selected Pocket/Default carrier fails the RC01 role-capability
+precondition despite its already proven bounded rest coverage. The repaired
+`.cb` files were not posted, so no claim is made about their actual path order,
+rest or removal. Requesting their post would add no proof that this carrier
+can express the missing roles. E remains failed on Engrave order/role evidence;
+N remains failed on the posted Pocket pair. No route passed full emitted motion,
+protected-stock, access and process verification, and no physical acceptance
+was requested. Reopen with an explicitly role-bearing carrier, not another
+Pocket/Default settings trial. Bounded direct-post timing now requires the
+user's decision under the [RC01 milestone](REST_MACHINING_PLAN.md#next-rc01-output-milestone-after-native-pocket-trial).
+
+Checks: `.venv/Scripts/python.exe -m unittest discover -s tests -p
+test_rc01_native.py -v` passed 8 tests, including strict reimport and
+preserved-source checks for this full T1/T2 pair. These are artifact/input
+checks, not posted-motion or CamBam application acceptance. Replaying the
+previous actual posts with the current audit still returns `fails_RC01`,
+identical T1 prefixes, both rest budgets met, 62 rough and 233 combined
+findings, 9/117 ramped XY moves and a T2 change at (31.1081,27,+5).
+The repeat result is retained locally as `prior-post-audit.json` beside the
+role-trial artifacts; it is evidence about the previous posts only.

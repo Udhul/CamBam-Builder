@@ -103,24 +103,36 @@ island tangencies are numerically unresolved. No complete native motion or
 physical acceptance is recorded. See the [runbook](DEVELOPMENT.md#rc01-native-pocket-roughing-and-corner-cleanup-probe)
 and [posted trial](REVIEW.md#rc01-native-pocket-posted-motion-trial---2026-09-23).
 
-**Next integrated increment (backlog 6):** select and implement one output
-carrier/post strategy that can preserve RC01's setup, approach, retract, feed
-and tool-event roles, then verify one complete T1/T2 emitted sequence against
-the original stock and rest criteria. Use the native Pocket posts as coverage
-evidence, not execution acceptance; another unchanged Pocket/Default export
-will not address the motion defects. This boundary matters now because the
-computed rest coverage cannot become a usable execution workflow until the
-emitted motion preserves the accepted roles, and V-carving will need the same
-output authority. The [bounded milestone and stop rule](REST_MACHINING_PLAN.md#next-rc01-output-milestone-after-native-pocket-trial)
-define route selection and failure handling. One successful route is a useful
-execution slice, while E and N remain separately required gates; reassess
-which remaining gate or V-carve consumer matters next instead of automatically
-subdividing RC01. If a concrete CamBam carrier limitation blocks the selected
-route, bring the direct-posting schedule back for an explicit user decision
-rather than silently changing the accepted sequence. Defer native package
-consolidation, general area precision and optimizer work until the output
-contract or a named consumer requires them.
-Direct posting remains subsequent delivery under the current user decision.
+**2026-09-23 RC01 integrated output-route assessment (backlog 6).** The
+selected native Pocket/Default route received one combined local MOP repair:
+no spiral lead, no path optimisation, cut-feed stepover and zero crossover.
+The strict-reimported T1-only and T1/T2 candidates are retained under
+`output/rc01-roletrial-20260923-1845/`; they are diagnostic artifacts, not an
+acceptance request. The existing posted Pocket pair already establishes bounded
+coverage but fails the required motion roles. The repaired MOP fields can affect
+ramps, order and low-level stepover feed; they cannot encode the exact (5,5)
+first entry, feed approach from +5 to +1, feed retract to +5, or stopped-spindle
+tool change at (-10,-10,+5). CamBam's documented Pocket/Default post interface
+does not expose those roles as independently programmable moves. Therefore no
+repeat post is requested for this carrier. This is a route/interface finding,
+not an emitted-motion pass or a claim that every possible CamBam extension fails.
+See the [review evidence](REVIEW.md#rc01-pocketdefault-role-carrier-assessment---2026-09-23)
+and [milestone stop rule](REST_MACHINING_PLAN.md#next-rc01-output-milestone-after-native-pocket-trial).
+
+**Next decision (backlog 6):** the user chooses whether to bring bounded direct
+posting forward now to deliver the already verified framework T1/T2 motion and
+then optionally import it through CamBam's NCFile operation, or retain the
+previous order and pause RC01 output until the first useful rest/V-carve workflow.
+The former requires the framework to generate a G-code source before CamBam
+can import it, changing the present workflow in which the user generates G-code
+in CamBam from agent-prepared `.cb` files. It needs one declared controller
+dialect, emitted-program replay and any CamBam import/post verification; it is
+not production acceptance. The latter
+keeps E and N failed/pending and should shift implementation to the next useful
+consumer without another Pocket/Default export. This matters now because
+neither E nor N can close from coverage alone. E, N and physical acceptance remain
+separate. Defer native package consolidation, general area precision and optimizer
+work until a named output or consumer need reopens them.
 The user selected the proposed synthetic case, including its test-only
 plunge/feed limits, on 2026-09-23. These are accepted
 test inputs, not production parameters or acceptance of generated/native motion.
@@ -1097,8 +1109,10 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    T1 clearance witnesses. N fails due low rapids, ramps, feed and setup/tool
    events, with island tangency still unresolved. Prove a carrier/post strategy
    for those motion roles before repeating E or N; caller-owned
-   orchestration and subsequent
-   direct posting remain accepted; never infer vertical clearance from fixed-Z evidence.
+   orchestration remains accepted. The Pocket/Default role trial prepared a
+   strict-reimported repaired T1/T2 pair but its interface cannot encode the
+   required approach/retract/setup roles. Direct-post timing is pending the
+   user's decision above; never infer vertical clearance from fixed-Z evidence.
 
    **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
    owns native/extended/core naming and migration criteria. The current RC01

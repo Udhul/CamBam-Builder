@@ -388,6 +388,30 @@ away from setup without an explicit spindle stop violate the accepted motion
 contract. Island tangencies remain numerically unresolved. See the
 [trial evidence](REVIEW.md#rc01-native-pocket-posted-motion-trial---2026-09-23).
 
+### RC01 Pocket role-carrier assessment
+
+The local role trial can be reproduced in a new ignored directory:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.rc01_adapter output/rc01-roletrial-NEW --native --role-trial
+& $ProjectPython -m unittest discover -s tests -p test_rc01_native.py -v
+```
+
+It prepares T1-only `R-rough.cb` and complete T1/T2
+`R-native-cleanup.cb`, plus `source.cb`, `setup.json` and a hash manifest.
+Enabled Pockets pin no spiral lead, no optimisation, cut-feed stepover and
+zero crossover; the original Region and disabled source MOPs are retained.
+Each file is strict-reimported before the builder returns. The prepared pair
+is under `output/rc01-roletrial-20260923-1845/`; the manifest hashes are
+recorded in the [review](REVIEW.md#rc01-pocketdefault-role-carrier-assessment---2026-09-23).
+
+This is a diagnostic carrier assessment. It does not encode RC01's feed
+approach/retract and exact setup/tool-change roles, so no CamBam post is
+requested for it. The user performs any CamBam G-code generation from prepared
+`.cb` files; return of the actual emitted `.nc` is required before a future
+route can be audited. The current route result and direct-post timing decision
+are in the [plan](REST_MACHINING_PLAN.md#next-rc01-output-milestone-after-native-pocket-trial).
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not

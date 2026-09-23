@@ -90,6 +90,34 @@ class NativeRC01Tests(unittest.TestCase):
             self.assertTrue(any("rapid below clearance" in issue
                                 for issue in result["issues"]["rough"]))
 
+    def test_role_trial_reimports_repaired_full_pocket_pair(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory) / "trial"
+            manifest = build_native_variant(folder, role_trial=True)
+            self.assertEqual(manifest["format"], "rc01-native-v1")
+            self.assertTrue(manifest["role_trial"])
+            self.assertEqual(manifest["pocket_repairs"], {
+                "lead_in_type": "None", "optimisation_mode": "None",
+                "stepover_feedrate": "Cut Feedrate",
+                "max_crossover_distance": 0,
+            })
+            self.assertEqual([len(manifest["variants"][key]["enabled_mops"])
+                              for key in ("rough", "combined")], [1, 5])
+            for key in ("rough", "combined"):
+                candidate = folder / manifest["variants"][key]["file"]
+                project = read_cambam_bytes(candidate.read_bytes())
+                self.assertEqual(normalize(project, synthetic_setup(),
+                                           allow_attachments=True), Job())
+                self.assertTrue(all(not mop.enabled for mop in project.list_mops()[:2]))
+                enabled = [mop for mop in project.list_mops() if mop.enabled]
+                self.assertTrue(all(mop.lead_in_type == "None" and
+                                    mop.optimisation_mode == "None" and
+                                    mop.stepover_feedrate == "Cut Feedrate" and
+                                    mop.max_crossover_distance == 0
+                                    for mop in enabled))
+            with self.assertRaisesRegex(ValueError, "new or empty"):
+                build_native_variant(folder, role_trial=True)
+
     def test_native_input_normalizes_and_rejects_relevant_edits(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "input.cb"
