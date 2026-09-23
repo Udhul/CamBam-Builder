@@ -6,6 +6,7 @@ It cannot certify CamBam's native T2 Pocket or controller execution.
 
 import json
 import hashlib
+import math
 import re
 from pathlib import Path
 
@@ -16,8 +17,12 @@ _ALLOWED_G = {0, 1, 17, 21, 40, 61, 64, 90}
 _ALLOWED_M = {3, 5, 6, 30}
 
 
-def read_default_post(data):
-    """Decode known absolute-mm G0/G1 and T/M/F/S tokens; reject everything else."""
+def read_default_post(data, *, allow_arcs=False):
+    """Decode bounded absolute-mm Default-post motion and modal events.
+
+    Native Pocket comparison may opt into XY G2/G3 with relative I/J centers.
+    The explicit Engrave comparison remains straight-only by default.
+    """
     if not isinstance(data, str) or len(data) > 20_000_000:
         raise ValueError("posted text must be bounded Unicode")
     at = (-10.0, -10.0, 5.0)
@@ -36,20 +41,21 @@ def read_default_post(data):
         if "".join(a + b for a, b in words).replace(" ", "") != line.replace(" ", ""):
             raise ValueError(f"line {number}: unsupported command text")
         codes = [(a.upper(), float(b)) for a, b in words]
-        for axis in "XYZFST":
+        for axis in ("XYZFSTIJ" if allow_arcs else "XYZFST"):
             if sum(a == axis for a, _ in codes) > 1:
                 raise ValueError(f"line {number}: repeated {axis} word")
         if any(a == "N" for a, _ in codes):
             codes = [(a, b) for a, b in codes if a != "N"]
-        if any(a not in "GMXYZFST" for a, _ in codes):
+        if any(a not in ("GMXYZFSTIJ" if allow_arcs else "GMXYZFST")
+               for a, _ in codes):
             raise ValueError(f"line {number}: unsupported word")
         gs = [int(v) for a, v in codes if a == "G" and v.is_integer()]
         ms = [int(v) for a, v in codes if a == "M" and v.is_integer()]
         if (len(gs) != sum(a == "G" for a, _ in codes) or
                 len(ms) != sum(a == "M" for a, _ in codes) or
-                any(g not in _ALLOWED_G for g in gs) or
+                any(g not in (_ALLOWED_G | ({2, 3} if allow_arcs else set())) for g in gs) or
                 any(m not in _ALLOWED_M for m in ms) or
-                sum(g in (0, 1) for g in gs) > 1):
+                sum(g in (0, 1, 2, 3) for g in gs) > 1):
             raise ValueError(f"line {number}: unsupported G/M command")
         for g in gs:
             if g == 21:
@@ -58,11 +64,14 @@ def read_default_post(data):
                 absolute = True
             elif g == 17:
                 plane = True
-            elif g in (0, 1):
+            elif g in (0, 1, 2, 3):
                 motion = g
             elif g == 64:
                 warnings.append(f"line {number}: G64 blending needs trajectory evidence")
         values = {a: v for a, v in codes if a in "XYZFST"}
+        offsets = {a: v for a, v in codes if a in "IJ"}
+        if offsets and (motion not in (2, 3) or set(offsets) != {"I", "J"}):
+            raise ValueError(f"line {number}: unsupported arc center")
         if any(a in values for a in "XYZ"):
             if not (units and absolute and motion is not None):
                 raise ValueError(f"line {number}: motion before explicit G21/G90")
@@ -76,14 +85,29 @@ def read_default_post(data):
                 warnings.append(f"line {number}: initial machine position is not encoded")
                 continue
             end = tuple(values.get(axis, at[i]) for i, axis in enumerate("XYZ"))
+            center = None
+            if motion in (2, 3):
+                if not plane or not offsets or end[:2] == at[:2]:
+                    raise ValueError(f"line {number}: unsupported arc geometry")
+                center = (at[0] + offsets["I"], at[1] + offsets["J"])
+                start_radius = math.hypot(at[0] - center[0], at[1] - center[1])
+                end_radius = math.hypot(end[0] - center[0], end[1] - center[1])
+                if start_radius <= 0 or abs(start_radius - end_radius) > 0.001:
+                    raise ValueError(f"line {number}: inconsistent arc radii")
             if end != at:
-                if motion == 1 and "F" not in values and feed is None:
+                if motion in (1, 2, 3) and "F" not in values and feed is None:
                     raise ValueError(f"line {number}: feed move without feed")
-                items.append({"type": "move", "tool": f"T{tool}",
-                              "start": list(at), "end": list(end),
-                              "feed": 0 if motion == 0 else values.get("F", feed),
-                              "g": motion, "line": number})
+                item = {"type": "move", "tool": f"T{tool}",
+                        "start": list(at), "end": list(end),
+                        "feed": 0 if motion == 0 else values.get("F", feed),
+                        "g": motion, "line": number}
+                if center is not None:
+                    item["center"] = list(center)
+                    item["radius_mismatch_mm"] = abs(start_radius - end_radius)
+                items.append(item)
             at = end
+        elif offsets:
+            raise ValueError(f"line {number}: arc center without motion")
         if "F" in values:
             feed = values["F"]
         if "S" in values:

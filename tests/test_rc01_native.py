@@ -9,10 +9,39 @@ from cambam_builder.cam_core.rc01 import Job, Move, generate
 from cambam_builder.cambam_reader import read_cambam_bytes
 from cambam_builder.integrations.cambam.rc01_post import compare_file, compare_posted, read_default_post
 from cambam_builder.integrations.cambam.rc01_adapter import build_artifacts, build_native_variant, normalize, synthetic_setup, synthetic_source
-from cambam_builder.integrations.cambam.rc01_native_post import _area_by_depth, _budget, audit_native_posts
+from cambam_builder.integrations.cambam.rc01_native_post import _area_by_depth, _budget, _path_for_move, _t2_vertical_access, audit_native_posts
 
 
 class NativeRC01Tests(unittest.TestCase):
+    def test_native_arc_reader_preserves_center_and_bounded_curve(self):
+        prefix = ("G21 G90 G61 G40\nG17\nT1 M6\nM3 S12000\n"
+                  "G0 X5 Y5\nG0 Z1\nG1 F60 Z-1\n")
+        arc = "G3 F300 X6 Y6 I0 J1\n"
+        post = prefix + arc + "G0 Z5\nM5\nM30\n"
+        with self.assertRaisesRegex(ValueError, "unsupported"):
+            read_default_post(post)
+        items, warnings = read_default_post(post, allow_arcs=True)
+        self.assertFalse(warnings)
+        curve = next(item for item in items if item.get("g") == 3)
+        self.assertEqual(curve["center"], [5, 6])
+        points, error = _path_for_move(curve, -1)
+        self.assertGreater(len(points), 2)
+        self.assertLess(error, 0.001)
+        with self.assertRaisesRegex(ValueError, "inconsistent arc radii"):
+            read_default_post(prefix + arc.replace("J1", "J2") +
+                              "G0 Z5\nM5\nM30\n", allow_arcs=True)
+
+    def test_t2_column_has_exact_posted_t1_boundary_witness(self):
+        rough = [{"type": "move", "g": 1, "tool": "T1", "line": 42,
+                  "start": [3, 3, -3], "end": [3, 27, -3]}]
+        t2 = [{"type": "move", "g": 0, "tool": "T2", "line": 43,
+               "start": [1, 3.4, 5], "end": [1, 3.4, -1]}]
+        access = _t2_vertical_access(rough, t2)
+        self.assertEqual(access[0]["exact_single_t1_cut_witness_line"], 42)
+        t2[0]["start"][0] = t2[0]["end"][0] = 0.9
+        access = _t2_vertical_access(rough, t2)
+        self.assertIsNone(access[0]["exact_single_t1_cut_witness_line"])
+
     def test_posted_rest_oracle_accepts_known_full_coverage(self):
         job = Job()
         moves = [{"type": "move", "g": 1, "tool": move.tool,

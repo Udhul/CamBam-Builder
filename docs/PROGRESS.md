@@ -90,26 +90,27 @@ generic/extended extraction follows a concrete second consumer or output
 finding. This keeps future sessions from adding more ambiguous root modules
 while limiting the present change to the active slice.
 
-**2026-09-23 native Pocket RC01 variant prepared (backlog 6, output pending).**
+**2026-09-23 native Pocket RC01 trial completed (backlog 6, N fails).**
 The original Region now drives one enabled T1 Pocket; a second candidate adds
 four enabled T2 corner-window Pockets. Both strict-reimport with source MOPs
-disabled. A hash-guarded Default-post audit measures rough/final rest from
-actual G1 motion and reports motion/target violations. Focused synthetic tests
-pass, and a replay of the earlier invalid C post exposed its known Z=-6 and
-tool-change defects plus sub-0.0001 mm island penetration from rounded output.
-The new candidate posts have not yet been returned; no native motion or rest
-acceptance is recorded. See the [runbook](DEVELOPMENT.md#rc01-native-pocket-roughing-and-corner-cleanup-probe)
-and [review evidence](REVIEW.md#rc01-native-pocket-variant-preparation---2026-09-23).
+disabled. The user-posted Default programs have identical T1 prefixes and a
+minimum tip Z=-3. Posted rough rest is 7.72558–7.72584 mm² per slab; final
+rest is 0.85840–0.85843 mm² per slab. Area, benefit and location budgets pass
+within the polygon/GEOS numerical limits, and actual T2 vertical access has
+exact T1 cut witnesses. N still fails because CamBam adds low rapids, ramps,
+F60 low-level XY and a T2 change away from setup without spindle stop;
+island tangencies are numerically unresolved. No complete native motion or
+physical acceptance is recorded. See the [runbook](DEVELOPMENT.md#rc01-native-pocket-roughing-and-corner-cleanup-probe)
+and [posted trial](REVIEW.md#rc01-native-pocket-posted-motion-trial---2026-09-23).
 
-**Next:** post the prepared native rough-only and combined candidates, then
-replay their emitted motion against stock, access and rest criteria. Keep the
-explicit-motion E route separate: Engrave's added entries,
-links and tool events remain an output-carrier blocker despite the first adapter
-repair. The focused repaired-A post has settled the depth correction and exposed
-the target-order contract; do not request more Engrave A/B/C exports until a
-candidate can express those roles meaningfully. The native package consolidation
-follows the motion contract decision; moving imports now would obscure the active
-output defect.
+**Next:** prove an RC01 output carrier/post strategy that preserves required
+setup, approach, retract and tool-event roles, then repeat actual-motion
+verification. The native Pockets already demonstrate near-ideal rest coverage;
+another unchanged Pocket/Default export will not address the recorded motion
+defects. Keep explicit E and native N gates separate, but use their shared
+role/event findings to guide that bounded output decision. Defer native package
+consolidation until the motion contract is settled, and defer general area
+precision and optimizer work without a new consumer or failing budget.
 General area precision and optimizer work remain deferred.
 Direct posting remains subsequent delivery. The user selected the proposed synthetic
 case, including its test-only plunge/feed limits, on 2026-09-23. These are accepted
@@ -1081,10 +1082,11 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    setup/spindle sequence. The repaired A post confirms the intended -1/-2/-3
    depths, but still follows UUID-sorted targets and inserts rapid approach/
    retract. B/C have not been reposted. A fully native Pocket roughing/cleanup
-   pair and independent posted-rest audit are prepared; CamBam posting and
-   replay remain the next gate before any native acceptance claim;
-   revisit the
-   explicit-motion carrier separately before claiming E. Caller-owned
+   pair was posted: T1 prefixes match, depth and rest coverage pass the bounded
+   numerical checks, and four required plus eight actual T2 columns have exact
+   T1 clearance witnesses. N fails due low rapids, ramps, feed and setup/tool
+   events, with island tangency still unresolved. Prove a carrier/post strategy
+   for those motion roles before repeating E or N; caller-owned
    orchestration and subsequent
    direct posting remain accepted; never infer vertical clearance from fixed-Z evidence.
 

@@ -4452,3 +4452,79 @@ changing acceptance bounds or assuming MOP settings certify removal is not a
 valid repair. The first native result decides whether to adjust a native
 parameter/post precision, provide an explicit setup witness, or move to a
 different output carrier. E remains a separate explicit-motion blocker.
+
+## RC01 native Pocket posted-motion trial - 2026-09-23
+
+The user saved both new posts from CamBam. Their headers name the expected
+candidate and `Default` postprocessor; `G21 G90 G61` confirms millimetres,
+absolute coordinates and exact-stop mode in the emitted files. The profile name
+is not encoded in G-code. Candidate SHA-256 values still match `comparison.json`.
+
+| File | SHA-256 |
+| --- | --- |
+| `N-rough.nc` | `cde87d91d6f4c746cdabe7a80b04808d65551bc4d15db47e724550c6b0d444a2` |
+| `N-native-cleanup.nc` | `6c36c80766c84d8442cb28c6c1808da9f219dcb66d551333db951bf712109e20` |
+
+The previous reader rejected native `G3`/I/J at rough line 17. The native-only
+mode now decodes bounded XY G2/G3 relative-center arcs, including helical Z,
+while the explicit Engrave comparison still rejects them. It checks arc radius
+consistency within 0.001 mm and brackets the flattened path using 0.0001 mm
+chord sagitta plus emitted radius mismatch. The audit decoded 168 rough items
+and 590 combined items, including 45 arcs in each. The T1 posted move prefixes
+match, including arc centers; both minimum tip heights are exactly -3 mm.
+
+| Posted result, each of the three open depth slabs | Area interval (mm²) | RC01 coverage budget |
+| --- | ---: | --- |
+| T1 rough rest | 7.7255777–7.7258435 | Upper <= 8.2256661: passes |
+| T1 then T2 rest | 0.8583975–0.8584271 | Upper <= 1.3584073: passes |
+| Guaranteed cleanup benefit | >= 6.8671506 | >= 6.3672588: passes |
+
+The corresponding rough and final volume intervals are 23.1767330–23.1775306
+and 2.5751926–2.5752812 mm³. The polygonal residual outside the allowed ideal
+corner/boundary 0.05 mm envelope is 0 at all three slabs. These are bounded
+coverage results from posted G1/G3 cuts, not a claim that the sequence is safe.
+The lower area interval can lie slightly below the analytic ideal because the
+outer path/radius enclosure deliberately overestimates possible removal; it
+does not prove protected overcut. GEOS floating topology still lacks a formal
+interval bound.
+
+The four required T2 columns at (5,5), (35,5), (35,25), (5,25) and all eight
+actual native T2 vertical locations each have an exact single prior T1 straight
+cut witness at tip Z=-3. Rational point-to-segment distance proves the radius-1
+T2 disk fits in a radius-3 T1 swept cylinder through the full pocket depth.
+The ignored `output/rc01-native-mop-20260923-02/audit.json` retains each witness
+line and the complete per-slab comparison. Small positive GEOS differences at
+two boundary-tangent columns are not used as a clearance pass; the exact
+witnesses are the authority for this bounded column result.
+
+**N output fails the accepted motion contract despite coverage.** Rough T1
+starts at (7.8,21.5598), not the required (5,5). The first approach is `G0 Z1`
+from +5 (rough line 13; combined line 14), and later rapid descents reach -1;
+the audit found 12 low rapids in rough-only and 36 in combined output. The
+native Pocket inserts 9 T1 and 117 combined ramped XY/Z moves whose axial
+engagement is not proved by the bounded RC01 process contract. Twelve rough
+and 48 combined low-level XY moves use F60, which is not an accepted RC01
+cut/cleared-travel role. At combined line 180, `T2 M6` occurs at
+(31.1081,27,5), away from (-10,-10,5), without `M5`; the next `M3` starts
+while the reader still has the spindle running. Final spindle stops also occur
+away from setup. The Default post does not encode its initial machine position.
+Twenty-seven T1 island tangencies remain numerically unresolved, so zero
+protected overcut cannot be certified from these rounded arcs/lines.
+
+The user's file submission establishes that CamBam produced both Default posts,
+and the bounded rest/column checks pass. It does not accept the emitted RC01
+motion or physical machining. This trial closes the native Pocket coverage
+probe with N failed; E remains separately blocked by its Engrave carrier.
+**Reopen** N only with an output representation or post strategy that preserves
+RC01's setup, approach, retract, feed and tool-event roles, followed by fresh
+posted-motion replay. An unchanged Pocket/Default repost would repeat the
+observed failures. Exact island tangency and any changed arc/reader dialect
+need a fresh protected-stock proof before acceptance.
+
+Final focused checks after the arc/access audit change: `.venv/Scripts/python.exe
+-m unittest discover -s tests -p test_rc01_native.py -v` passed 7 tests;
+`compileall -q cambam_builder`, working `git diff --check`, and committed
+`git diff --check main...HEAD` passed. `main` is an ancestor of the current
+branch. The returned posts were replayed into the ignored `audit.json` after
+the final audit-code edit. This review change is uncommitted; the branch is not
+merge-ready and no physical acceptance was requested.

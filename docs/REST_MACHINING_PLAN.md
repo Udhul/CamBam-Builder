@@ -515,6 +515,20 @@ N gate still requires a verified T1 prefix; a future
 fully native Pocket roughing variant may supply one only after its actual
 motion independently passes the same stock, access and residual checks.
 
+**2026-09-23 native Pocket trial:** a full-target T1 Pocket and four T2
+corner-window Pockets were posted separately as rough-only and combined
+Default programs. Their T1 move prefixes match, both stop at Z=-3, posted
+rough/final area and residual-location budgets pass numerically, and the
+required four plus eight actual T2 vertical columns have exact T1 cut
+witnesses. N nevertheless fails the accepted execution gate: low rapid moves,
+ramped entry, F60 low-level XY, displaced T2 change without a spindle stop,
+and unresolved protected-island tangencies remain. See the
+[dated trial](REVIEW.md#rc01-native-pocket-posted-motion-trial---2026-09-23).
+Coverage alone does not satisfy the full motion contract. The next output
+increment should establish a carrier/post strategy that preserves the required
+setup, approach, retract and tool-event roles before repeating RC01 posting;
+general area precision and optimizer work remain deferred.
+
 For N, configure tool 2/diameter 2, stock surface 0, target depth -3, depth increment
 1, stepover 0.4 of diameter, roughing clearance 0, clearance plane +5 and the supplied
 feeds/spindle explicitly; resolve remaining path-affecting fields during adapter

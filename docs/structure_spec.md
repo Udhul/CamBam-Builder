@@ -409,15 +409,23 @@ probe: T1 roughing on the original Region, alone and followed by the four T2
 corner-window Pockets. Source MOPs remain disabled, candidates are strict
 reimports, and `comparison.json` pins their SHA-256 hashes and normalized job.
 `rc01_native_post.audit_native_posts()` accepts only those unchanged candidates
-and two actual CamBam `Default` posts. It checks their T1 move-prefix equality,
-posted event positions, feeds, travel/floor and protected XY target bounds, then
-derives per-slab rough/final rest from the ordered posted G1 straight cuts. Inner
-and inflated outer capsule polygons enclose radius tessellation error; area,
-location and cleanup-benefit budgets use the original target rather than the
-candidate window edges. GEOS floating topology is not formally enclosed, and
-the Default post does not encode its starting machine position. The audit does
-not turn Pocket settings into removal evidence or establish a full process,
-stock-access or physical-machining certificate when these limits remain.
+and two CamBam `Default` posts with matching name headers. The native-mode reader
+adds bounded XY G2/G3 with relative I/J centers to the existing absolute-mm
+G0/G1 subset; the Engrave comparison remains straight-only. The audit checks
+T1 move-prefix equality including arc centers, posted event positions, feeds,
+travel/floor and protected XY target bounds. It derives per-slab rough/final
+rest from ordered posted G1/G2/G3 cuts, including descending ramps/helices.
+An inner path radius reduced by arc mismatch/flattening error and an inflated
+outer radius bound tessellation error; area, location and cleanup-benefit budgets
+use the original target rather than candidate window edges. Exact rational
+single-prior-cut witnesses check the four required corner columns and every
+native T2 vertical location against full-depth T1 straight cuts. The returned
+posted trial passes those coverage and column checks but fails entry, rapid,
+feed and tool-change requirements. GEOS floating topology and island tangency
+are not formally enclosed; the Default post also omits its starting machine
+position. This bounded audit does not establish every axial/lateral engagement
+or physical-machining certificate, and Pocket settings are never treated as
+removal evidence.
 
 ### Detached nominal planar core
 

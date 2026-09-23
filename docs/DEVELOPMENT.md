@@ -355,23 +355,38 @@ editing the `.cb` files. Then run:
 & $ProjectPython -m cambam_builder.integrations.cambam.rc01_native_post output/rc01-native-mop-NEW/comparison.json output/rc01-native-mop-NEW/N-rough.nc output/rc01-native-mop-NEW/N-native-cleanup.nc
 ```
 
-The audit rejects changed candidates, a post header naming another file, and
-unsupported Default-post commands,
-compares the posted T1 move prefix across both outputs, checks motion/event and
-protected-target violations, and computes conservative polygon-radius rest
-intervals at all three slab bottoms from G1 straight moves. It reports T1 and
-final area, residual outside the 0.05 mm location envelope, cleanup benefit and
-the first 24 motion findings per post. The radial polygon enclosure does not
-bound GEOS floating-topology error. It deliberately reports a Default-post
-startup position absent from G-code as unresolved. Its bounded checks do not
-prove all stock-dependent access or axial/lateral engagement. An issue-free
-result remains access-unverified and needs further motion proof and application
-evidence before RC01 N acceptance; physical use has a separate gate.
+The audit rejects changed candidates, a post header naming another file and
+unsupported Default-post commands. Native mode accepts G0/G1 straight moves
+and XY G2/G3 arcs with relative I/J centers, radius mismatch at most 0.001 mm,
+and linear or helical Z. Explicit Engrave comparison remains straight-only.
+The audit compares the posted T1 move prefix including arc centers, checks
+motion/event and protected-target conditions, and computes radial-enclosed
+rest intervals at all three slab bottoms. Arc flattening has 0.0001 mm maximum
+chord sagitta; its radius mismatch and flattening error widen the bounds. It
+reports rough/final area, cleanup benefit, residual outside the 0.05 mm
+location envelope, exact single-prior-cut witnesses for T2 vertical access,
+issue counts by kind and the first 24 findings per post. GEOS floating topology
+is not formally enclosed. The Default post's startup position is absent from
+G-code. The audit does not prove every stock-dependent link or axial/lateral
+engagement; an issue-free result remains access-unverified and needs further
+motion proof before RC01 N acceptance. Physical use has a separate gate.
 
-The current prepared pair is under `output/rc01-native-mop-20260923-02/`.
+The user-posted pair is under `output/rc01-native-mop-20260923-02/`.
 Its candidate SHA-256 values are `e14afa4b5594814c754fe828898e0e13de5672c9d5bd55a4d470aec457f7ea6c`
 and `23e44d90b3d0be46389f0a86b915dad42a578835e5ab4978f52c620c331bd2b1`.
-No native post or rest result is recorded until the `.nc` files are returned.
+`N-rough.nc` and `N-native-cleanup.nc` have SHA-256 values
+`cde87d91d6f4c746cdabe7a80b04808d65551bc4d15db47e724550c6b0d444a2`
+and `6c36c80766c84d8442cb28c6c1808da9f219dcb66d551333db951bf712109e20`.
+The ignored `audit.json` contains the reproducible detailed result. The posted
+T1 prefixes match; both outputs reach only Z=-3. Rough rest is
+7.72558–7.72584 mm² per slab and final rest is 0.85840–0.85843 mm² per slab;
+the area, benefit and location budgets pass within the stated numeric limits.
+All four required RC01 corner columns and eight native T2 vertical locations
+have exact full-depth T1 cut witnesses. **RC01 N still fails:** rapid approaches
+and retracts below +5, ramped entries, low-level XY at F60, and a T2 change
+away from setup without an explicit spindle stop violate the accepted motion
+contract. Island tangencies remain numerically unresolved. See the
+[trial evidence](REVIEW.md#rc01-native-pocket-posted-motion-trial---2026-09-23).
 
 ### Isolated planar backend evaluation
 
