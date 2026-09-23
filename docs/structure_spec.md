@@ -427,6 +427,35 @@ position. This bounded audit does not establish every axial/lateral engagement
 or physical-machining certificate, and Pocket settings are never treated as
 removal evidence.
 
+### RC01 literal-motion CamBam carrier
+
+`cambam_builder.integrations.cambam.rc01_script` owns the bounded explicit
+T1/T2 `Drill/CustomScript` carrier. It clones the normalized source, retains
+the target Region, Part stock and two disabled source Pockets, and attaches one
+enabled Drill MOP to a setup-anchor Point. Its script stores the entire
+`cam_core.rc01.generate()` sequence using exact terminating decimal XYZ
+coordinates and real XML text newlines. CamBam Plus 1.0 preserved literal
+`|` separators on one NC line, so they are not used by this carrier.
+
+CamBam's `Default` post supplies the initial T1 change/spindle start and the
+terminal T2 spindle stop. The script supplies all intervening move roles and
+T1 stop/T2 change/start. `audit_script_post()` hash-guards the strict-reimported
+candidate and source, accepts only the bounded Default post with its name
+header, discards standalone G98/G80 Drill wrapper markers that cause no move,
+and requires every emitted move/event to match the generated sequence exactly
+in decimal coordinates, feed, tool and order. Extra motion fails. The audit
+reconstructs a `Program` from actual emitted endpoints and calls the
+continuous RC01 `verify()` for protected stock, tool-component access, process
+and rough/final rest. Its accepted synthetic setup assumes the initial tip is
+at (-10,-10,+5); the Default post does not encode incoming machine position.
+
+The user-posted newline-repaired file passed all 2,945 items, with per-slab
+rough rest 7.775010615955999–7.787678472024001 mm² and final rest
+0.9214411294439999–0.9263453527720001 mm². This establishes the bounded
+explicit-script E output slice for the accepted synthetic RC01 job; it does
+not establish XYZ/Engrave parity, native Pocket N, arbitrary controller
+dialects, physical machining, or formal GEOS topology interval proof.
+
 ### Detached nominal planar core
 
 `cambam_builder.planar` is the public, document-independent owner of immutable
@@ -1060,7 +1089,7 @@ always makes the method explicit and emits only that method's applicable fields.
 | SpiralMill `drill_lead_out` | Enables a bottom-of-spiral radial move before retracting. | `Value` for SpiralMill; otherwise omitted. | D, N, P |
 | SpiralMill `spiral_flat_base` | Adds a complete circle at the spiral base when true; false can be useful for thread milling. | `Value` for SpiralMill; otherwise omitted. | D, N, P |
 | SpiralMill `lead_out_length` | Signed radial distance in drawing units when lead-out is enabled: positive moves centerward, negative outward. A nonzero value requires lead-out; positive values may not exceed the effective hole radius. CamBam documents enabled zero as moving to the center. | `Value` for SpiralMill; otherwise omitted. | D, N, P |
-| CustomScript `custom_script` | Literal drilling G-code template expanded once per point using CamBam's documented `$c/$d/$f/$h/$n/$p/$q/$r/$s/$t/$x/$y/$z` macros and `|` newline marker. Native output confirms literal text preservation and `$x/$y/$z` expansion. Controller/postprocessor semantics apply. | Nonempty text is `Value` only for CustomScript. Fresh empty CustomScript authoring is rejected; other methods omit it. | D, N, P |
+| CustomScript `custom_script` | Literal drilling G-code template expanded once per point using CamBam's documented `$c/$d/$f/$h/$n/$p/$q/$r/$s/$t/$x/$y/$z` macros. Documentation describes `|` as a newline marker, but CamBam Plus 1.0 preserved it literally in the RC01 post; real XML text newlines produced separate NC blocks. Native output also confirms literal text and `$x/$y/$z` expansion. Controller/postprocessor semantics apply. | Nonempty text is `Value` only for CustomScript. Fresh empty CustomScript authoring is rejected; other methods omit it. | D, N, P |
 
 The CannedCycle-only trio, SpiralMill quartet and CustomScript text are mutually
 exclusive in fresh XML. This prevents irrelevant cached defaults from triggering

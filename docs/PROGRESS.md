@@ -119,7 +119,7 @@ not an emitted-motion pass or a claim that every possible CamBam extension fails
 See the [review evidence](REVIEW.md#rc01-pocketdefault-role-carrier-assessment---2026-09-23)
 and [milestone stop rule](REST_MACHINING_PLAN.md#next-rc01-output-milestone-after-native-pocket-trial).
 
-**2026-09-23 user clarification and next CamBam carrier (backlog 6):** the
+**2026-09-23 explicit CamBam output slice accepted (backlog 6, E-script):** the
 agent prepares complete `.cb` files; the user generates native toolpaths/G-code
 in CamBam and returns only the needed `.nc`. A single complete T1/T2
 `Drill/CustomScript` carrier embeds every verified framework role as literal
@@ -127,27 +127,26 @@ motion inside the `.cb`, retains the target and disabled source MOPs, and
 strict-reimports. The first native post from
 `output/rc01-script-20260923-2115/S-combined.cb` exposed a carrier encoding
 defect: CamBam preserved all 2,941 `|` separators on one invalid NC line,
-so no motion/rest check could run on the actual file. A local diagnostic copy
-that only split those separators replayed all 2,945 logical items and passed
-the continuous RC01 checks, isolating the encoding defect without accepting
-the invalid native file. The builder now stores actual XML newlines;
-the revised, strict-reimported file is
-`output/rc01-script-lines-20260923-01/S-combined.cb`. A synthetic Default-post
-wrapper round trip passes the full sequence and continuous stock/access/process/
-rest replay, including tampered approach rejection, but native output is still
-pending. The user needs to post only the revised file with Default/Default mm
-and return its `S-combined.nc`. The agent will audit every emitted event and
-move and replay actual T1-only/final stock. The original
-XYZ/Engrave E and native Pocket N gates remain separate; this alternate
-explicit carrier has its own output finding. Physical acceptance remains
-separate. See the [runbook](DEVELOPMENT.md#rc01-literal-motion-cambam-carrier)
-and [first post/repair evidence](REVIEW.md#rc01-first-literal-motion-cambam-post-and-newline-repair---2026-09-23).
+so no motion/rest check could run on that actual file. The builder now stores
+real XML newlines. The user-posted revised `S-combined.nc` matches the
+strict-reimported `.cb` hash and all 2,945 ordered emitted items. Continuous
+replay passes protected stock, tool-component and stock-dependent access,
+setup/tool/feed/process limits, three rough/final depth slabs and required
+T1-to-T2 columns. Rough rest is 7.7750106–7.7876785 mm² and final rest
+0.9214411–0.9263454 mm² in each slab; this is finite-tool partial target
+completion. The accepted output is the **explicit-script E carrier** for
+synthetic RC01. The original XYZ/Engrave carrier has no parity acceptance,
+native Pocket N still fails, and physical machining is pending. The Default
+post omits incoming machine position and GEOS residual-location topology
+has no formal interval proof. See the
+[output evidence](REVIEW.md#rc01-literal-motion-cambam-output-acceptance---2026-09-23)
+and [contract](structure_spec.md#rc01-literal-motion-cambam-carrier).
 Direct standalone posting remains later under the accepted order; no change
 to that timing is needed for this CamBam `.cb` route. Defer package-layout,
 general area precision and optimizer implementation work until a named
 finding reopens them.
 
-**High priority at the next natural breakpoint (backlog 6 foundation):** build
+**Next high priority at this natural breakpoint (backlog 6 foundation):** build
 a one-time CamBam Plus 1.0 shape/MOP output mapping corpus for both the 0.9.7
 Legacy and 0.9.8 New optimisation modes. Inventory every native shape and MOP
 class, prepare one or more complete `.cb` fixtures covering each applicable
@@ -159,15 +158,16 @@ consistent evidence source before it can be offered alongside the framework
 path engine for stock/rest calculation. The
 [scope and stopping rule](REST_MACHINING_PLAN.md#native-cambam-optimizer-and-output-mapping-foundation)
 keep this a durable bounded foundation rather than scattered per-feature
-guesses. Start it once this RC01 carrier has a recorded pass or terminal
-limitation; do not interrupt the pending native output audit.
+guesses. The explicit-script output pass now supplies the breakpoint; the
+mapping corpus is the next distinct increment ahead of another Pocket/Default
+repair or broad optimizer implementation.
 The user selected the proposed synthetic case, including its test-only
 plunge/feed limits, on 2026-09-23. These are accepted
-test inputs, not production parameters or acceptance of generated/native motion.
-Definition, standalone generation and automated native-input preparation are
-complete. CamBam produced the bounded native Pocket posts, but complete
-emitted-motion acceptance remains open; the test-only case does not certify
-physical machining.
+test inputs, not production parameters; that selection alone did not accept
+generated or native motion.
+Definition, standalone generation, automated native-input preparation and one
+bounded explicit CamBam output route are complete. Native Pocket N and physical
+machining remain unaccepted; the test-only case does not certify production.
 See [next increment and stopping criteria](#next-detached-stockrest-increment).
 Definition verification: reviewed the two-document change against the implemented
 fixed-section contract; `.venv/Scripts/python.exe` independently recalculated all
@@ -1135,12 +1135,14 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    pair was posted: T1 prefixes match, depth and rest coverage pass the bounded
    numerical checks, and four required plus eight actual T2 columns have exact
    T1 clearance witnesses. N fails due low rapids, ramps, feed and setup/tool
-   events, with island tangency still unresolved. Prove a carrier/post strategy
-   for those motion roles before repeating E or N; caller-owned
-   orchestration remains accepted. The Pocket/Default role trial prepared a
-   strict-reimported repaired T1/T2 pair but its interface cannot encode the
-   required approach/retract/setup roles. Direct-post timing is pending the
-   user's decision above; never infer vertical clearance from fixed-Z evidence.
+   events, with island tangency still unresolved. The Pocket/Default role
+   trial could not encode approach/retract/setup roles. The later literal
+   CustomScript `.cb` did: its revised CamBam Default post passed exact
+   emitted-sequence and continuous stock/access/process/rest replay for all
+   2,945 items. This closes one alternate explicit E output slice, not the
+   original XYZ/Engrave parity or native Pocket N. The user retains CamBam
+   posting; direct standalone posting stays later. Never infer vertical
+   clearance from fixed-Z evidence.
 
    **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
    owns native/extended/core naming and migration criteria. The current RC01
@@ -1152,8 +1154,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    **Implementation stopping condition:** RC01 passes its independent continuous
    motion, stock, process and residual checks, reports expected finite-tool residual
    as partial target completion, and exposes unsupported/stale outcomes. Record
-   standalone, native output and physical acceptance separately; prepare and inspect
-   the specified A/B/C artifacts before requesting native validation. Defer general
+   standalone, each native output carrier and physical acceptance separately;
+   inspect prepared `.cb` artifacts and replay actual posts before output
+   acceptance. Defer general
    topology, positive-error completion, low links, universal MOP parity, optimizer
    infrastructure and general 3D stock until a named consumer or RC01 gate shows why
    the bounded workflow cannot meet its requirements.

@@ -604,12 +604,14 @@ The Default post's rapid formatter covers all rapids; changing it globally
 would also change permitted above-stock XY rapid travel. MOP header/footer
 act at operation boundaries, not every entry and retract. The existing
 posted pair proves coverage but fails these roles, and the repaired pair was
-not posted because it cannot meet the candidate precondition above. E and N
-remain separate failed/pending output gates. A raw-motion carrier through
+not posted because it cannot meet the candidate precondition above. At this
+route-trial point, E and N remained separate failed/pending output gates.
+A raw-motion carrier through
 CamBam's documented NCFile operation would require producing the complete
-G-code first, so it moves bounded direct posting forward. The user must decide
-whether to advance that work now or keep it after the first useful rest/V-carve
-workflow. The current user workflow remains agent-prepared `.cb` files followed
+G-code first, so it moves bounded direct posting forward. That timing would
+need a user decision if no other CamBam carrier passed; the later literal-script
+pass leaves direct posting after the first useful rest/V-carve workflow. The
+current user workflow remains agent-prepared `.cb` files followed
 by user-generated G-code in CamBam; moving direct posting forward changes that
 boundary and is not inferred from this role trial. Neither choice certifies a
 controller or machine setup.
@@ -620,15 +622,21 @@ one complete literal-motion `Drill/CustomScript` MOP in a `.cb`, using the
 already verified T1/T2 framework program. This is an alternate E carrier,
 not a repair of native Pocket N or proof of XYZ/Engrave parity. It can encode
 the required roles within one CamBam operation; its wrapper and literal
-motion must still be checked in the actual Default post. The prepared file,
+motion were checked in the actual Default post. The prepared file,
 manifest and replay command are in the
-[runbook](DEVELOPMENT.md#rc01-literal-motion-cambam-carrier). Only that one
-CamBam carrier is under test. The first post preserved literal `|` separators
+[runbook](DEVELOPMENT.md#rc01-literal-motion-cambam-carrier). The first post
+preserved literal `|` separators
 on one invalid NC line; the agent repaired the `.cb` to contain actual XML
-newlines and prepared one revised post request. The emitted T1/T2 sequence
-remains unverified until that post is audited. Direct standalone posting stays
-later unless the revised post shows another carrier limit and the user changes
-timing.
+newlines. The user-posted revision passed exact comparison of all 2,945
+emitted items and continuous whole-height stock/access/process/residual
+replay, including the T1-only prefix and T2 cleanup. This meets the
+**one-complete-route output milestone** under the alternate literal-script
+E carrier for the accepted synthetic RC01 request. It does not accept the
+earlier XYZ/Engrave implementation, the native Pocket N route, or physical
+machining. Direct standalone posting retains its later timing. The next
+increment is the user-prioritized native optimizer/output mapping foundation
+below; reopen N when its native motion source and role controls have enough
+evidence to satisfy the independent gate.
 
 ### RC01 cone guard, acceptance scope and stopping condition
 
@@ -663,8 +671,8 @@ area infrastructure only when an RC01 gate or a named next consumer requires it.
 
 ## Native CamBam optimizer and output mapping foundation
 
-**Priority:** begin at the next natural breakpoint after the current RC01
-CamBam output carrier has a recorded pass or terminal limitation. The user
+**Priority:** next distinct increment now that the RC01 explicit-script
+CamBam output carrier has a recorded pass. The user
 requested a one-time reusable evidence base covering CamBam's native shape
 and machining-operation classes under both its 0.9.7 Legacy and 0.9.8 New
 optimisation modes. The agent prepares complete `.cb` files; the user's only

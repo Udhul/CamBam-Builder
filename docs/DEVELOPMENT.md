@@ -433,20 +433,21 @@ feeds, approaches, retracts and the T2 stop/change/restart. CamBam's wrapper
 supplies the first T1 change/start and terminal stop. The ignored manifest
 records the candidate hash and framework fingerprints. The source, script
 and candidate strict-reimport; a synthetic wrapper replay passes, but only
-the actual CamBam post can establish E output behavior.
+the actual CamBam post establishes E output behavior.
 
 The first posted file under `output/rc01-script-20260923-2115/` is retained
 as failure evidence: CamBam preserved the previous `|` separators as literal
 text on one NC line, so the reader rejected line 14. Do not repost that `.cb`.
 The repaired candidate uses actual text newlines and has passed strict reimport
-and the local synthetic post/audit checks; native emission is still pending.
+and the local synthetic post/audit checks. The user posted the revised `.nc`;
+its 2,945 emitted items passed the exact-sequence and continuous RC01 replay.
+See the [acceptance evidence](REVIEW.md#rc01-literal-motion-cambam-output-acceptance---2026-09-23).
 
-**One user CamBam action:** open the current `S-combined.cb` in CamBam Plus 1.0, use the
-**Default** postprocessor and **Default mm** profile, generate toolpaths
-(Ctrl+T), then produce G-code (Ctrl+W) and save it as `S-combined.nc` beside
-the `.cb`. Return that `.nc` file or its exact path. No other `.cb` from the
-diagnostic Pocket pairs is needed for this check; no machine run is requested.
-The agent then runs:
+The completed user CamBam action was to open the prepared `S-combined.cb` in
+CamBam Plus 1.0 with the **Default** postprocessor and **Default mm** profile,
+generate toolpaths (Ctrl+T), then produce G-code (Ctrl+W) and save
+`S-combined.nc` beside the `.cb`. No repeat export is needed for this result.
+The agent audited the post with:
 
 ```powershell
 & $ProjectPython -m cambam_builder.integrations.cambam.rc01_script output/rc01-script-lines-20260923-01/comparison.json output/rc01-script-lines-20260923-01/S-combined.nc
@@ -456,7 +457,7 @@ The audit hash-guards the candidate, checks every posted event and move
 against the framework program, rejects extra motion, and replays the actual
 coordinates through continuous stock/access, process and three-slab residual
 verification. CamBam may alter or omit literal script lines; a synthetic pass
-does not predict its actual emitted result. The Default post does not encode
+alone cannot predict its actual emitted result. The Default post does not encode
 the incoming machine position, so RC01 retains the declared test setup
 (-10,-10,+5); physical acceptance is separate.
 

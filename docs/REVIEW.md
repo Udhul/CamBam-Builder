@@ -4662,5 +4662,47 @@ evidence. The actual revised output must pass the full emitted-motion audit
 before E can close. N and physical acceptance remain separate.
 
 Focused `test_rc01_native.py` passed 9 tests after the repair. The real-post
-failure is a regression case for literal newline preservation; no actual
-repaired CamBam post or rest replay exists yet.
+failure is a regression case for literal newline preservation. At that point,
+no repaired CamBam post or rest replay existed yet.
+
+## RC01 literal-motion CamBam output acceptance - 2026-09-23
+
+The user generated `output/rc01-script-lines-20260923-01/S-combined.nc` in
+CamBam from the prepared `.cb`. The candidate SHA-256 is
+`91cb871c22429c9a94bcea0f7cbbee0532fa462eb52e3d8558d69094fa6cf933`;
+the actual post SHA-256 is
+`1e972c5834198c9bbfe11c272ee6db7716e2acb28578d7e57257b7f3e5bf502d`.
+This is the revised, newline-repaired candidate, not the failed pipe-separated
+post above. The post has 2,960 physical lines, zero literal `|` separators,
+and two each of `T[12] M6`, `M3 S12000` and `M5`. Its Default wrapper starts
+in `G21 G90 G61 G40`, changes to T1, starts the spindle and reaches the
+(-10,-10) setup anchor before the script. It ends with `G80`, clearance
+`G0 Z5`, spindle stop and `M30`.
+
+The bounded audit command was:
+
+```powershell
+.venv\Scripts\python.exe -m cambam_builder.integrations.cambam.rc01_script output/rc01-script-lines-20260923-01/comparison.json output/rc01-script-lines-20260923-01/S-combined.nc
+```
+
+It returned `status=bounded_emitted_motion_pass`, with all 2,945 ordered
+program items matched in tool, feed, motion mode and decimal endpoint.
+The audit reconstructs the program from the **actual posted motion** and
+replays the T1-only and complete T1/T2 sequences through continuous RC01
+verification. Protected stock, tool-component and stock-dependent access,
+setup/tool/feed/process limits, and required T1-to-T2 residual columns pass.
+Each of the three depth slabs has rough rest
+`[7.775010615955999, 7.787678472024001]` mm² and final rest
+`[0.9214411294439999, 0.9263453527720001]` mm². The certificate is
+`partial_target_completion`, the expected finite-tool outcome. The exact
+audit result is retained locally as `audit.json` beside the post.
+
+This accepts **one bounded explicit-script E output route** for the synthetic
+RC01 T1 roughing plus T2 cleanup sequence. The original XYZ/Engrave E
+carrier has no parity acceptance; the native Pocket N posts still fail their
+motion-role requirements despite passing rest coverage. The Default post
+does not encode the incoming machine position, so the replay assumes the tip
+begins at (-10,-10,+5). Residual-location GEOS topology has no formal
+interval proof. No physical machining or controller acceptance is claimed.
+No further user validation is needed for this posted-motion finding; another
+CamBam export adds no new evidence unless the carrier or settings change.
