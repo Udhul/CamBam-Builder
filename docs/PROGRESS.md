@@ -32,22 +32,33 @@ verification and output capabilities; consuming applications choose manual,
 automatic or iterative workflows. No fixed reimport sequence or live-sync service
 is imposed. All three architecture questions have now been answered.
 
-**Next:** specify one generated roughing-plus-cleanup acceptance slice, including
-multi-height entry/access. This
-supersedes asking only for a caller-supplied motion fixture: the lead should prepare
-a concrete synthetic job proposal for refinement. It connects the existing section
-evidence to a useful rest/V-carve capability without first reproducing every native
-MOP or broadening the optimizer. Direct posting is accepted as subsequent delivery.
-No runtime changes or tests in this planning round; manual CamBam validation adds
-no evidence. This architecture round is a usable fresh-session breakpoint: accepted
-boundaries and remaining physical acceptance inputs are recorded. Continuing here
-is also appropriate to refine the first job; no workflow-policy answer remains pending.
-See [next increment and stopping criteria](#next-detached-stockrest-increment).
-Documentation verification: reviewed the four-file diff against current code and
-official CamBam references; checked added local links/anchors with the
-declared Python interpreter; `git diff --check` passed. No runtime tests were run,
-as requested. Changes are documentation only and uncommitted; physical acceptance
-inputs, implementation and production acceptance remain open.
+**2026-09-23 first generated acceptance job defined (backlog 6).**
+[RC01](REST_MACHINING_PLAN.md#first-generated-acceptance-job-rc01) proposes a
+40 x 30 x 3 mm pocket with an 8 x 8 mm island in 10 mm stock, a 6 mm rougher and
+2 mm cleanup tool. It records full tool/holder geometry, entry/retract and process
+bounds, independent corner-rest oracles, all-height verification obligations and
+separate standalone, native-input, explicit-path and native-Pocket acceptance gates.
+Zero allowance and a rectangular target keep the first oracle analytic; the earlier
+letter-like/allowance case remains a broader follow-up. A cone feasibility guard
+keeps the shared contracts open to the next V-carve slice.
+
+**Next:** refine the proposed synthetic inputs with the user, then implement the
+RC01 generated endmill sequence and continuous all-height stock verification,
+followed by its native integration gates. This turns the existing fixed-section
+foundation into an independently verifiable two-tool workflow; additional isolated
+area precision or optimizer work has lower priority unless this job needs it.
+Direct posting remains subsequent delivery. The proposed numerical values are not
+user-accepted or production parameters. No runtime or manual CamBam acceptance is
+claimed by this documentation round. Definition is complete; user refinement and
+implementation remain open. Continue this session for that refinement; after it,
+the recorded job/gates provide a fresh-session implementation boundary without
+requiring conversational context. See [next increment and stopping criteria](#next-detached-stockrest-increment).
+Definition verification: reviewed the two-document change against the implemented
+fixed-section contract; `.venv/Scripts/python.exe` independently recalculated all
+eight rounded residual/gain references, stock/target arithmetic and checked all
+eight added local links/anchors. `git diff --check` passed. Runtime tests and manual
+CamBam checks were not run: no runtime/example code changed, and application
+validation adds no evidence to the definition. Changes remain uncommitted.
 
 **2026-09-22 bounded section-motion verification complete (backlog 6).**
 Ordered supplied cuts now update guaranteed removal in an exact rectangular
@@ -977,30 +988,30 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    at other heights. Generated paths, native/MCP attachment, inlays and curved
    topology remain deferred.
 
-   **Next: define one generated roughing-plus-cleanup acceptance job.**
-   Framework-owned roughing plus cleanup is accepted for the first
-   sequence; both standalone and native shape/MOP integration remain required.
-   Direct posting is accepted for subsequent delivery. Caller-owned orchestration
-   settles the edit question; support imported and direct inputs with explicit
-   freshness/verification rather than a mandatory use-case workflow.
-   Prepare one concrete synthetic acceptance job with stock height,
-   target/island, supplied tool geometry/reach, permissible
-   approach, depth/pass/process limits and residual/error criteria for user refinement.
-   The lead proposes entry/retract/connection requirements; the user clarifies job
-   intent and machine constraints, rather than supplying a complete toolpath.
-   Use that job to define the shared motion and all-height occupancy contracts and
-   deliver a deterministic generated endmill sequence, then the cone/V-carve slice.
-   Never infer vertical clearance from the existing fixed-Z verifier.
+   **Definition completed 2026-09-23: generated roughing-plus-cleanup job RC01.**
+   The [job owner](REST_MACHINING_PLAN.md#first-generated-acceptance-job-rc01)
+   records proposed stock/target/island, tool and holder dimensions, depth/process
+   bounds, entry/retract/connection requirements, residual/overcut oracles, rejection
+   variants and standalone/native acceptance gates. The definition stopping condition
+   is met; numerical choices remain proposed pending user refinement. Native Pocket
+   cleanup and explicit framework paths each require evidence from actual emitted
+   motion. Synthetic job acceptance is separate from real-machine constraints.
 
-   **Stopping condition for the next refinement:** the first
-   job has explicit inputs, expected residual/overcut/access results, supported
-   boundaries and output acceptance gates. Keep missing choices visible; do not
-   label recommendations as accepted. **Implementation stopping condition:** the
-   chosen generated sequence passes independent continuous-motion/stock checks and
-   reports unsupported or partial outcomes; output compatibility and physical
-   machining acceptance are separate gates. Defer further scalar area precision,
-   universal MOP parity, general optimizer infrastructure and 3D stock until a named
-   consumer shows why the bounded workflow cannot meet its requirements.
+   **Next: refine RC01 inputs, then deliver the generated endmill sequence.**
+   Promote the agreed job/oracles to reusable fixtures; implement shared motion,
+   generation and continuous all-height stock/access checks, then native input,
+   explicit-path output and native Pocket cleanup acceptance. Follow with the cone/
+   V-carve slice through the same contracts. Caller-owned orchestration and subsequent
+   direct posting remain accepted; never infer vertical clearance from fixed-Z evidence.
+
+   **Implementation stopping condition:** RC01 passes its independent continuous
+   motion, stock, process and residual checks, reports expected finite-tool residual
+   as partial target completion, and exposes unsupported/stale outcomes. Record
+   standalone, native output and physical acceptance separately; prepare and inspect
+   the specified A/B/C artifacts before requesting native validation. Defer general
+   topology, positive-error completion, low links, universal MOP parity, optimizer
+   infrastructure and general 3D stock until a named consumer or RC01 gate shows why
+   the bounded workflow cannot meet its requirements.
 
 7. **Deferred MCP/core capability: author Manual Profile holding-tab positions.**
    Current automatic authoring covers width, height, minimum/maximum count, distance,

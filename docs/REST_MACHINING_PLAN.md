@@ -8,6 +8,8 @@ acceptance criteria. It does not claim implementation or authorize machine execu
 The five original outcomes below are retained. The current design proposal and
 unresolved product decisions are in [Design refinement](#design-refinement---2026-09-22)
 and the latest [execution architecture refinement](#execution-architecture-refinement---2026-09-23).
+The [first generated acceptance job](#first-generated-acceptance-job-rc01)
+now gives concrete proposed inputs and separate standalone/native acceptance gates.
 
 ## Programmatic execution requirement
 
@@ -321,14 +323,229 @@ Workflow decision status, asked 2026-09-23:
   interpretation, change/freshness diagnostics and explicit regeneration capabilities
   for supported inputs; applications decide whether ingestion/recomputation is manual,
   automatic or iterative. See [caller-owned workflows](#caller-owned-workflows-and-reusable-capabilities).
-- The physical acceptance job, process limits, fixtures/reach and residual/error
-  thresholds remain to be specified. Synthetic defaults are test data, not production
-  recommendations or user acceptance.
+- [RC01](#first-generated-acceptance-job-rc01) specifies proposed synthetic geometry,
+  tools, process bounds and residual/error thresholds. User refinement remains open;
+  physical material, workholding, machine limits and production parameters are not
+  established. Synthetic defaults are test data, not production recommendations or
+  user acceptance.
 
 This refinement closes when context, boundaries, recommendations and unanswered
 choices are recorded and reviewed. Documentation-only checks suffice; no pytest,
 native-file validation or machining trial is needed for this round. Implementation,
 output compatibility and production acceptance remain separate future gates.
+
+## First generated acceptance job RC01
+
+**Defined 2026-09-23; proposed synthetic acceptance contract, not implemented or
+user-accepted numerical requirements.** This round defines the job; it does not
+generate executable paths or request a CamBam/machine trial. Framework ownership
+of roughing and cleanup, both input routes, native integration and later direct
+posting are already accepted in the [integration requirement](#accepted-integration-requirement---2026-09-23).
+
+RC01 turns the existing rectangular target/island foundations into a useful
+two-tool pocket sequence with descent, stock-dependent access and output checks.
+It deliberately uses a rectangular opening and zero roughing allowance to retain
+an independent analytic residual oracle. It replaces the earlier letter-like,
+0.5 mm allowance example **as the first generated job only**; that broader case
+remains in the acceptance corpus. Native shape/MOP integration is a required gate,
+not satisfied by an inspection-only path drawing. Direct G-code posting follows
+the first useful rest/V-carve delivery, as previously agreed.
+
+### RC01 inputs and proposed process bounds
+
+All dimensions are millimetres in one right-handed drawing frame. Z is the
+physical cutter-tip height, positive upward; stock top is Z=0. No nesting,
+transforms, external styles, tool-library lookup or inferred defaults are needed.
+
+| Input | Exact proposed value / interpretation |
+| --- | --- |
+| Initial stock | Box X=[-5,45], Y=[-5,35], Z=[-10,0]; 50 x 40 x 10. |
+| Finish target | Remove X=[0,40], Y=[0,30], Z=[-3,0], except the protected island X=[16,24], Y=[11,19]. Vertical walls, flat floor Z=-3, no through-cut, tabs or released bodies. |
+| Protected material | Entire stock outside that removal volume, including the island through the full stock height and the 7 mm floor thickness. Allow boundary contact; forbid penetration. |
+| Fixtures | Synthetic support box X=[-5,45], Y=[-5,35], Z=[-15,-10]. No other obstacles in the modeled tool/holder workspace. This is an explicit test assumption, not an inferred real setup. |
+| T1 rougher | Flat, center-cutting endmill, diameter 6; cutting cylinder at tip-relative heights [0,6], radius 3; non-cutting shank (6,20), radius 3; holder [20,40], radius 10. |
+| T2 cleanup | Flat, center-cutting endmill, diameter 2; cutting cylinder [0,6], radius 1; non-cutting shank (6,20), radius 3; holder [20,40], radius 10. |
+| Tool reach | 20 tip-to-holder, 6 cutting length, for both tools; fixed +Z tool axis. All tool components participate in collision checks. |
+| Roughing | T1 at tip Z=-1,-2,-3 in that order; zero radial/floor allowance. Maximum newly engaged axial depth 1; maximum lateral step between adjacent clearing passes 2.4. Full-width initial slotting and center-cutting plunge are permitted synthetic operations. |
+| Cleanup | T2 after all T1 cuts, also at Z=-1,-2,-3; maximum newly engaged axial depth 1, lateral stepover 0.8. Full-width cutting is permitted; no constant-load/adaptive claim. |
+| Process tokens | Both tools: spindle clockwise 12000 rpm; cutting feed 300 mm/min, cutting plunge 60 mm/min, cleared vertical feed 120 mm/min, retract feed 300 mm/min, coolant off. These values exercise propagation and limits only; material cutting suitability is unassessed. |
+| Travel/setup | Start, tool change and end at tip (-10,-10,+5). Clearance plane +5; approach plane +1. Above-stock XY positioning is rapid, vertical motions are feed moves. Allowed tip travel X=[-15,55], Y=[-15,45], Z=[-3,10]. Tool changes are explicit stopped-spindle events at the setup position. |
+| Geometry/error | Main oracle uses exact synthetic stock/tool dimensions and zero physical position/radius error. Maximum geometric approximation 0.001; comparisons use a separately reported numerical enclosure at most 0.000001 mm. Neither is permission to overcut. Positive-error rejection is a separate required case below. |
+
+The 11 mm minimum island-to-outer-wall gap admits T1 and T2; its topology is
+deliberately uncomplicated. At the lowest tip height, each shank starts at Z=+3
+and each holder at Z=+17. These arithmetic facts simplify this job, but the
+verifier must derive clearance from supplied component dimensions rather than
+assume holders always clear the stock.
+
+### RC01 generated motion and all-height obligations
+
+Use a deterministic baseline of fixed-axis XYZ straight segments and explicit
+tool/setup events. Strategy details and exact pass coordinates belong to the
+generator; no optimal route or replication of native Pocket paths is required.
+Repeat the same T1 XY coverage at each depth so new axial engagement stays bounded.
+Provide T1-cleared vertical access columns centered at (5,5), (35,5), (35,25)
+and (5,25), from Z=0 through -3. Each must contain at least the radius-1 T2
+occupancy, proved from actual T1 cuts; a feasible-center calculation is insufficient.
+
+T1's first entry is at (5,5): position at +5, feed to +1, then use a cutting
+plunge through stock top to -1. Subsequent levels may descend in the previously
+cleared column and cut only the next 1 mm. T2 approaches each corner through its
+proven column, feeding to the requested level before cutting remaining material.
+Confine cleanup to the four corner windows specified in gate N below, retaining
+the original pocket/island as the protected-target authority. Verify the full-target
+residual afterward, including any T1 approximation remainder outside those windows;
+do not discard it from the budget or silently repocket the entire target with T2.
+Between disconnected cutting runs, retract vertically to +5 before XY travel;
+this first job does not require low-level rapid links or ramps/helices. A tool
+change requires retract, travel to the setup position, spindle stop, tool event
+and restart before the next approach. Each output must preserve that dependency.
+
+The shared motion contract must resolve units/frame, tip datum, component geometry,
+ordered endpoints, move role (cutting entry, cut, cleared travel, retract, rapid),
+feed/spindle state, operation/tool identity and input/evidence fingerprints.
+Events cannot be hidden in arbitrary output strings. Each move starts at the
+previous endpoint; tool changes do not imply teleportation. The verifier evaluates
+the complete continuous sweep over all occupied heights, not endpoints or a few
+sampled Z planes:
+
+- Cutting occupancy intersected with initial stock may remove only the original
+  target; the whole tool must avoid fixtures. Check axial/process limits
+  checked against the stock prefix immediately before that move. Intended air cuts
+  may overlap already cleared space; they do not redefine the finish boundary.
+- Non-cutting tool components must avoid remaining stock and fixtures throughout.
+  Cleared travel/rapid moves remove nothing and need guaranteed free occupancy.
+  Retracts must remain in the just-cleared column or other proven free volume.
+- Recompute stock from actual ordered cutting sweeps, including plunges. Retain
+  rough-only and combined snapshots; a later cut cannot erase an earlier overcut
+  or invalid access result. Exact prismatic intervals suffice for this job if
+  continuous coverage is proven; mesh stock is not a prerequisite.
+- Polygonal approximation around the island must be conservative for the entire
+  cutter, including between vertices. Chords of a nominal offset arc are not
+  automatically safe. Geometry approximation and physical uncertainty stay distinct.
+
+### RC01 independent result oracle and rejection cases
+
+The removal section has area `40*30 - 8*8 = 1136 mm^2`, volume `3408 mm^3`.
+For ideal complete coverage by a radius-r cylinder, only the four outer concave
+corners are inaccessible: total section rest is `(4-pi)*r^2`. The convex protected
+island creates no additional ideal inaccessible material at these wide clearances.
+This reference is an attainable-area bound, not evidence that generated paths
+have covered it.
+
+| Result | Analytic ideal | Required generated result |
+| --- | --- | --- |
+| T1 rest | 7.7256661177 mm^2 per section; 23.1769983531 mm^3 over 3 mm depth | Rest bounded between ideal and ideal +0.5 mm^2 at every Z in (-3,0), and volume between ideal and ideal +1.5 mm^3. |
+| T1 then T2 rest | 0.8584073464 mm^2 per section; 2.5752220392 mm^3 | Same +0.5 mm^2 / +1.5 mm^3 upper budgets. Report partial target completion: finite endmills retain the sharp-corner material. |
+| Cleanup benefit | Ideal rest reduction 6.8672587713 mm^2; 20.6017763138 mm^3 | Guaranteed reduction at least 6.3672587713 mm^2 per section and 19.1017763138 mm^3 overall. |
+| Protected material / access | Zero overcut, zero fixture or non-cutting component collision, zero unproved travel | Prove containment/disjointness continuously; unresolved numerical boundary cases are indeterminate, not passes. |
+
+Also bound residual location: outside the analytic ideal corner rest, no remaining
+point may be more than 0.05 mm from either that rest or the original protected
+boundary. Together with the area/volume limits this rejects missed interior strips
+and excessive wall stock; section area alone cannot hide a floor error. Include
+the floor boundary in occupancy/containment checks and prove coverage throughout
+the depth intervals. Independent rectangle/circle references and swept-volume
+checks must not simply call the generator's own feasibility result as their oracle.
+Do not reuse the existing coarse section-area grid as a pass certificate if its
+enclosure cannot resolve these budgets; improve only the accuracy RC01 needs.
+
+Required negative variants of this same job:
+
+- Remove/reorder T1, or feed T2 down an uncut corner instead of its cleared column:
+  reject the claimed cleared access and identify the missing predecessor/volume.
+- Insert an XY rapid at Z=-1 across the island; insert a cut below -3 or into an
+  outer wall: reject continuous occupancy, even if segment endpoints look valid.
+- Shorten cutting length to 2 while keeping the wider T2 shank, or lower its holder
+  start to tip+2: reject any resulting stock collision; do not extrapolate the
+  fixed-section certificate to certify reach.
+- Declare radius uncertainty +/-0.005 and isotropic position error 0.005 on an
+  exact-wall-tangent nominal plan: its nominal clearance certificate is invalid.
+  Reject or return unverified until regenerated and checked with inflated occupancy
+  and reduced guaranteed removal. This round does not promise positive-error
+  completion within the nominal residual budgets.
+- Change geometry, tool, depth or enabled/order state after generation: reject stale
+  evidence. Cosmetic XML/ID changes alone must not change normalized geometry or
+  removal; fresh import without prior session state must still work.
+
+### RC01 standalone and CamBam output gates
+
+These are distinct recorded outcomes. Passing an earlier gate does not imply later
+acceptance, and caller applications can invoke each capability independently.
+
+| Gate | Required evidence and boundary |
+| --- | --- |
+| S: standalone generated sequence | A noninteractive direct-Python request produces deterministic motion, rough/final stock bounds, residual locations, provenance and diagnostics without CamBam, MCP or a postprocessor. Independent checks pass the numerical/process/access criteria and rejection cases. Repeat requests agree after excluding incidental IDs/timestamps. |
+| I: native input and document attachment | A synthetic `.cb` with outer/island Region, Part stock and explicit T1/T2 Pocket intent, plus explicitly supplied tool-component/setup values absent from native fields, normalizes to the same request/results as S. Preserve authored geometry/source MOPs and identity references; attach derived results separately. Reopen/export and import an edited file without hidden session state; supported edits recompute explicitly and invalidate old evidence. Unresolved inherited or unsupported values return diagnostics. |
+| E: explicit framework motion through CamBam | Attach both generated operations using a candidate XYZ-Pline/Engrave adapter. In the established CamBam Plus 1.0 environment, inspect actual regenerated and posted motion: coordinates, interpolation, ordering, feeds, spindle/tool events and every inserted entry/link/retract. Reverify the actual motion against RC01, including its rough-only stock prefix. A path drawing or successful XML round trip alone fails this gate. |
+| N: native smaller-tool region/Pocket cleanup | Preserve the original target and attach T2 Pocket MOPs to four closed 7 x 7 corner windows: [0,7]x[0,7], [33,40]x[0,7], [33,40]x[23,30], [0,7]x[23,30]. These are machining boundaries, not cutter-center regions. Each contains its entire T1 corner rest plus overlap into cleared material; none touches the island. Verify actual CamBam-generated cleanup against the same target, process and residual criteria, after the E-verified T1 prefix. Do not infer native removal from nominal Pocket settings. |
+| P: production / later direct posting | Separate pending gates. S is headless planning, not G-code delivery. A later controller adapter must reverify its emitted motion. Physical machining requires an identified machine/material/setup, real tools/workholding and separately agreed tolerances/process limits. No execution is requested by RC01. |
+
+For N, configure tool 2/diameter 2, stock surface 0, target depth -3, depth increment
+1, stepover 0.4 of diameter, roughing clearance 0, clearance plane +5 and the supplied
+feeds/spindle explicitly; resolve remaining path-affecting fields during adapter
+implementation. The artificial window edges lie in already cleared space; they
+must never become new protected design walls. Inspect native entry/depth order:
+if CamBam inserts a motion or entry that violates the job, N fails even if its final
+rest looks correct. This job proves Pocket attachment; Profile substitution and
+general minimal rest-boundary construction remain separate follow-ups.
+
+No fixture combines enabled native source roughing with its generated replacement.
+Preserve source MOPs disabled in execution variants and report the enabled sequence.
+For E, require at most 0.001 mm continuous centerline deviation from each intended
+cut, preserve cut direction and stock-dependent order, and separately check all
+adapter/post-added moves. This deviation budget never overrides zero protected
+overcut or access requirements. Unknown emitted commands/modal state leave the
+output unverified; parsing only XYZ endpoints is insufficient.
+E and N may legitimately produce different paths, but both must meet the same
+removal/access requirements with evidence from the motions actually executed.
+If Engrave cannot carry the required roles/events, record an adapter blocker and
+revisit output representation; do not silently reinterpret every line as a cut.
+CamBam-posted comparison output is evidence for E/N, not implementation of our
+future standalone postprocessor.
+
+Before requesting manual E/N acceptance, the implementation increment must create
+and inspect artifacts in a unique ignored `output/rc01-<unique>/` directory:
+`A-rough.cb` (verified roughing prefix), `B-explicit.cb` (roughing plus explicit
+cleanup), `C-native-cleanup.cb` (same roughing plus native Pocket cleanup), and the
+independent motion/residual comparison. Keep source geometry and disabled source
+MOPs inspectable in each. Record the chosen CamBam postprocessor/settings and the
+comparison reader's supported command subset before E/N; the controller dialect
+for later direct posting is a separate choice. Provide clickable files, exact enabled-MOP/property and
+motion expectations, bounded steps to regenerate/save comparison output, and a
+report format with I/E/N pass/fail plus deviations. Inspect returned emitted motion
+locally before recording acceptance. Manual file inspection adds native application
+evidence later; it adds no evidence to this documentation-only definition today.
+
+### RC01 cone guard, open choices and stopping condition
+
+Pair the cylindrical job with an analytic pointed 90-degree included-angle cone
+guard, not a claim that a cone can finish its vertical sharp corners. In the
+interior of a 4 mm straight slot defining a V-shaped target, the candidate tip
+depth is 2 mm and its radius at the surface is 2 mm. A supplied cone with maximum
+cutting radius 3 and conical axial length 3 admits that local section; a radius-1.5
+cap does not. With an intentional 1 mm target depth cap, surface radius is 1 mm:
+one centerline pass cannot clear the 4 mm opening. Finite ends, whole-body sweep
+and generated variable-depth/capped-depth completion belong to the next cone
+slice. Original V-target geometry, residual and tool limits must remain separate.
+
+**Recommendation for user refinement:** use RC01 as the first synthetic job,
+accepting its predictable finite-tool corner residual and permissive synthetic
+plunge/full-slotting bounds. Keep real-machine acceptance separate. Still open:
+whether the user wants different geometry/floor/tool dimensions or instead requires
+a particular physical setup now. A physical requirement needs material, machine
+travel/controller, actual cutter/reach/holder, fixtures, allowed entries and process
+limits before numerical production acceptance can be defined. No user approval of
+these proposed numbers has been recorded.
+
+Definition closes with these explicit inputs, oracles, access obligations, limits
+and output gates recorded. Implementation starts by promoting the refined RC01
+inputs/oracles to reusable fixtures and proving the generated T1/T2 sequence with
+continuous all-height stock replay, then the I/E/N adapter gates; cone path delivery
+follows through the same contracts. Do not call full target removal or native output
+accepted while the corresponding gate remains partial, blocked or untested.
+Reopen general topology, positive-error completion, low links, optimizers or finer
+area infrastructure only when an RC01 gate or a named next consumer requires it.
 
 ## Problem and machining intent
 
@@ -714,8 +931,8 @@ User decisions accepted 2026-09-22:
    that proven packages are welcome: prefer established geometry primitives when
    they pass our contract, keeping machining semantics and verification owned here.
 
-Still settle the first acceptance target (outline, floor/through
-depth, wall shape, tools) and allowed residual boundary/thickness/volume tolerances.
+The [RC01 proposal](#first-generated-acceptance-job-rc01) supplies the first target,
+tools and residual/error criteria for user refinement; production limits remain open.
 The [2026-09-23 answer](#accepted-integration-requirement---2026-09-23) permits a first
 framework-generated sequence while requiring native shape/MOP integration too.
 No numerical production defaults or implicit
@@ -910,6 +1127,9 @@ dependency or replacing the already accepted CAD representation.
 
 ### First useful increment and acceptance
 
+The concrete [RC01 job](#first-generated-acceptance-job-rc01) now bounds the first
+generated slice and includes native integration gates. The earlier broader example
+below remains a follow-up acceptance case, not an additional first-job requirement.
 After product decisions, implement one standalone end-to-end slice: explicit flat
 endmill paths on a synthetic letter-like region with a hole, a 0.5 mm allowance,
 stock/rest analysis, safe smaller-endmill access and generated cleanup paths with
