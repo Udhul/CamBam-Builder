@@ -1,10 +1,12 @@
 # Future rest machining and V-cutter paths
 
 Status: **active design refinement, 2026-09-23; bounded geometry and supplied
-section-motion foundations implemented; generated paths and output adapters pending**.
+section-motion foundations plus nominal RC01 generation implemented; native
+output adapters pending**.
 Requested 2026-09-08 and expanded 2026-09-22/23. Priority belongs only to [PROGRESS.md](PROGRESS.md#remaining-backlog-in-order).
 This document owns the problem, proposed outcomes, technical reasoning and future
-acceptance criteria. It does not claim implementation or authorize machine execution.
+acceptance criteria. Only the explicitly marked bounded slices claim implementation;
+none authorize machine execution.
 The five original outcomes below are retained. The current design proposal and
 unresolved product decisions are in [Design refinement](#design-refinement---2026-09-22)
 and the latest [execution architecture refinement](#execution-architecture-refinement---2026-09-23).
@@ -157,9 +159,13 @@ current native or production acceptance.
 
 ### Proposed shared core and adapters
 
-Keep one package initially, with internal modules and dependency direction toward
-owned immutable values. A separate distribution/service or generic plugin registry
-is unnecessary. Names below describe responsibilities, not new public APIs.
+Keep one distribution, with the detached calculations, stock/volume analysis and
+strategies under `cambam_builder.cam_core` as focused internal modules. The first
+end-to-end slice is `cam_core.rc01`; established root-level detached APIs remain
+stable until a concrete migration need justifies moving them. Native CamBam and
+future controller adapters stay outside `cam_core`, depending inward on its
+immutable values. A separate distribution/service or generic plugin registry is
+unnecessary. Names below describe responsibilities, not new public APIs.
 
 | Boundary | Responsibility |
 | --- | --- |

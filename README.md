@@ -23,6 +23,10 @@ project.add_rect(layer=layer, identifier='outline', width=100, height=50)
 See `demos/` for larger examples and the runbook for their limitations.
 Licensed under the [MIT license](LICENSE).
 
+Document-independent CAM calculations and planning live under
+`cambam_builder.cam_core`; native CamBam entities/XML and the MCP adapter remain
+separate. The first generated roughing/cleanup slice is `cam_core.rc01`.
+
 For development, install the environment with `uv sync`, then run the
 project through `.venv\Scripts\python.exe`. Python 3.9 through 3.13 are verified;
 see the [development runbook](docs/DEVELOPMENT.md#environment-and-setup).

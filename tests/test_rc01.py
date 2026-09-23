@@ -4,7 +4,10 @@ from dataclasses import replace
 import math
 import unittest
 
-from cambam_builder.rc01 import Event, Job, Move, _allowed_cut, generate, verify
+from cambam_builder.cam_core.rc01 import (
+    Event, Job, Move, _allowed_cut, generate, verify,
+)
+from cambam_builder.rc01 import generate as legacy_generate
 
 
 class RC01Tests(unittest.TestCase):
@@ -20,6 +23,7 @@ class RC01Tests(unittest.TestCase):
     def test_standalone_sequence_and_independent_corner_oracle(self):
         program = self.program
         self.assertEqual(program, generate())
+        self.assertIs(legacy_generate, generate)
         self.assertEqual(program.items[0].kind, "tool_change")
         self.assertEqual(program.items[1].rpm, 12000)
         self.assertEqual(program.items[1].direction, "CW")
