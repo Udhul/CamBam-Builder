@@ -4242,3 +4242,51 @@ found no root RC01 module and generated 2945 motion items. Optional Shapely
 was absent from the isolated
 environment, showing generation does not eagerly require the residual backend.
 This is package-boundary evidence, not a new CamBam or production acceptance.
+
+## RC01 native input and comparison preparation - 2026-09-23
+
+The user's organization correction is recorded in the
+[package organization plan](structure_spec.md#package-organization-decision-and-migration-plan):
+native CamBam document entities, detached reusable CAM core, optional extended
+strategies and system adapters need visible owners. In this increment the new
+RC01 `.cb` bridge and post reader were moved from the package root to
+`cambam_builder/integrations/cambam/`; `cam_core.rc01` remains pure. The root
+`region.py` is explicitly identified as a native CamBam shape implementation
+and has a staged move to `native/` after the first RC01 output trial. Existing
+root ownership remains authoritative until then; no broad import rewrite was
+mixed into the native-output experiment.
+
+The adapter created `source.cb`, a separate explicit `setup.json`, A/B/C
+candidate `.cb` files and `comparison.json` under the ignored
+`output/rc01-native-20260923-1029/` directory. It strict-reimported the source
+and each candidate, normalized to the accepted `Job()` fingerprint
+`1d7c3e93e8b45cd8df9ff31a12ff120e413043156bbc42fe9494caa19295b2c6`,
+then regenerated the 2945-item program with motion fingerprint
+`39fde4a4c04295d50c7e53875478445cd5881eb9784f0c00d8ef676c4d89ffbd`.
+A/B/C have 5/8/9 total MOPs respectively; the first two source Pocket MOPs
+stay disabled, with preserved identity and target references. Enabled counts
+are 3/6/7. T1 has 79 candidate level-cut paths per depth; B adds 248 T2
+paths per depth; C adds four closed native Pocket windows. The source and all
+three candidate SHA-256 values were independently checked against the manifest.
+The independent rough and final area references are the three-slab S intervals
+above. No CamBam-generated toolpath or posted `.nc` has been supplied or
+accepted. Candidate Engraves omit explicit entry/link/retract/setup roles;
+actual posted motion must resolve that representation before E/N passes.
+
+Checks with the declared Python interpreter: `test_rc01_native.py` 3 tests,
+`test_rc01.py` 6, `test_mop_roundtrip.py` 5 and `test_region.py` 22 passed;
+`compileall` and `git diff --check` passed. The focused native tests cover
+XML reopen, cosmetic identity edits, changed/inherited fields, unsupported
+geometry/tool changes, preserved source identities/targets in A/B/C,
+candidate hash invalidation, and posted-reader fail-closed behavior. `uv build`
+produced a wheel and sdist with both integration modules and no root RC01
+adapter files. A `python -S` import from outside the source root located both
+modules inside the built wheel and generated the expected motion fingerprint;
+the current environment's NumPy was supplied on the search path. This is a
+wheel-content/import check, not a separate clean dependency install.
+
+The next high-value increment is the CamBam Plus 1.0 output trial for these
+three artifacts, with returned posted motion and first deviations recorded
+under the [E/N gates](REST_MACHINING_PLAN.md#rc01-standalone-and-cambam-output-gates).
+Then move the existing native owners as one reviewed package-layout slice;
+the current trial should first identify the adapter contracts worth preserving.

@@ -14,7 +14,7 @@ This specification describes the core architecture for the CamBam CAD/CAM framew
 This is a local Python library with an optional stdio MCP adapter and no database
 or frontend. The public library entry point is `CamBamProject`, also
 exported as `CBProject`. Package declarations include the modern and legacy
-packages, including the detached `cam_core` subpackage; `inactive/` and demos
+packages, the detached `cam_core` and CamBam integration subpackages; `inactive/` and demos
 are outside that runtime package list.
 
 | Owner | Implemented responsibility | Start here when changing |
@@ -35,8 +35,71 @@ are outside that runtime package list.
 | `cambam_builder/machining_planning.py` | Pure through-cut pass balancing and composition of recommendation profiles with formula/machine diagnostics | Candidate planning only; the existing MCP depth tool delegates here, while full profile construction remains a direct-Python API |
 | `cambam_builder/cambam_writer.py` | XML ID assignment and layer/part traversal; delegates individual encoding to entities | Output structure and reference resolution |
 | `cambam_builder/cambam_reader.py` | XML parsing, entity reconstruction, ID mapping and deferred parent/MOP linking | Import defaults, malformed data and round-trip reconstruction |
+| `cambam_builder/integrations/cambam/` | RC01 `.cb` input/attachment and bounded posted-motion comparison; depends on native model and detached RC01 values | Bridge between native documents, generated motion and CamBam output; no source model ownership |
 | `cambam_builder/__init__.py` | Public alias and version | Import surface and version metadata |
 | `cambam_builder/mcp_adapter/` | Optional local stdio launcher, SDK protocol boundary, volatile documents, retry ledger, schema validation and workspace I/O | [MCP contract](MCP_CONTRACT.md); `server.py` owns wire behavior, `service.py` owns application state, `paths.py` owns filesystem policy |
+
+### Package organization decision and migration plan
+
+**User preference recorded 2026-09-23:** the package layout must make native
+CamBam document capability, reusable CAM core, extended machining capability and
+their adapters visibly distinct. A root file named `region.py` is the native
+CamBam Region entity, not a general planar region. Historical `cambam_*`,
+`cam_*` and unprefixed root filenames obscure that distinction. New features
+must choose an owner from this map before adding a module; the repository root
+is a compatibility/import surface, not the default home for new behavior.
+
+| Target owner | Responsibility and examples | Dependency direction |
+| --- | --- | --- |
+| `native/` | CamBam project, identity/relationships, CAD shapes including `Region`, Part/MOPs, transforms and `.cb` XML reader/writer. This is native document *intent* and interchange, not stock replay. | May use shared mathematical values; never import strategies or an output adapter. |
+| `cam_core/` | Document-independent geometry, tool/motion values, stock and verification predicates, numerical bounds. No `.cb`, MOP, MCP or controller knowledge. | Inward-only foundation; may use declared numerical backends. |
+| `cam_extensions/` | Optional policy and generated strategies: machining recommendations/pass planning, rest machining, V-carving, combined strategies and bounded reference jobs. RC01's exact recipe is a reference job, not a generic core primitive. | Depends on `cam_core`; no native model or XML imports. |
+| `integrations/cambam/` | Explicit normalization from native intent, candidate document attachment, CamBam-posted motion readers and output evidence. RC01's current adapter and reader live here. | Depends on native, core and extensions; validates changes after lowering. |
+| `mcp_adapter/` | Optional client protocol, document sessions and workspace transport. | Calls the owners above; does not own their domain rules. |
+
+Current root files classified by that target map:
+
+| Current files | Target owner |
+| --- | --- |
+| `cambam_project.py`, `cambam_transfer.py`, `entity_core.py`, `cad_entities.py`, `region.py`, `cam_entities.py`, `cad_transformations.py`, `cambam_reader.py`, `cambam_writer.py` | `native/` |
+| `planar.py`, `_planar_shapely.py`, `stock.py`, reusable formulas in `machining_calculations.py` | `cam_core/` |
+| `machining_recommendations.py`, `machining_planning.py`, future rest/V-carve strategies | `cam_extensions/` |
+| `cam_core/rc01.py` | Current pure reference implementation; exact recipe later in `cam_extensions/reference_jobs/`, reusable verifier/motion values stay in `cam_core/` |
+| `__init__.py`, `cambam_entities.py` | Root public/compatibility facade; implementations move behind it |
+
+This is one distribution, not a plugin architecture. Under a package, use the
+domain name (`project.py`, `region.py`, `stock.py`, `rest.py`, `vcarve.py`) rather
+than repeating its package prefix. Keep `cambam_` only where a root compatibility
+name or a cross-system adapter needs to identify CamBam explicitly. The pure
+RC01 generator/verifier currently remains in `cam_core/rc01.py`; extracting its
+general motion/stock contracts from its exact job is required before relocating
+the recipe to `cam_extensions/reference_jobs/`. Do not create empty target
+packages as placeholders.
+
+Migration is staged around executable slices:
+
+1. **Current RC01 bridge:** keep `cam_core.rc01` pure; put `.cb` normalization,
+   candidate attachment and post comparison in `integrations/cambam/` and include
+   that package in the wheel. This is implemented.
+2. **Native owner consolidation:** move project/transfer, entity and Region,
+   Part/MOP, transform, reader and writer implementations from the root into
+   `native/` together. Preserve the public `CBProject` and documented old import
+   paths while callers migrate. Check representative Region, MOP identity,
+   target-reference and stock-offset XML round trips plus clean-wheel imports.
+   This is a distinct follow-up after RC01's first CamBam output trial has fixed
+   the actual adapter needs; a mass rename during that trial would mix semantic
+   output failures with import churn.
+3. **Detached and extended consolidation:** move root `planar.py`, `stock.py`
+   and reusable machining math into `cam_core/`; place recommendation/pass
+   planning and later rest/V-carve strategies in `cam_extensions/`. Split RC01's
+   exact recipe from generic motion/verification only when another consumer uses
+   those contracts. Check dependency direction, focused suites, wheel contents
+   and imports outside the source tree. This waits for a concrete second consumer
+   or the E/N output findings, so the abstraction follows demonstrated reuse.
+
+Each move updates the owner table, callers, packaging, runbook and review evidence
+in the same increment. Existing root modules remain authoritative until moved;
+the target table does not imply capabilities or imports that already exist.
 
 ### Data flow and relationship boundaries
 
@@ -82,18 +145,15 @@ derived-result freshness and machining evidence. Import, analysis, regeneration
 and export remain separable capabilities; see the plan's
 [caller-owned workflow contract](REST_MACHINING_PLAN.md#caller-owned-workflows-and-reusable-capabilities).
 
-The detached implementation now has a `cambam_builder.cam_core` package. New
-toolpath calculation, machined-area/volume, rest-area/volume, rest-machining,
-V-carving and combined strategies belong there as focused modules when their
-first consumers are implemented. This is an internal package boundary in the
-same distribution, not a second framework. It may consume detached geometry
-and stock values, but must not import `CamBamProject`, native CAD/MOP entities,
-the XML reader/writer or the MCP adapter. Native `.cb` input/output and future
-controller posting belong in thin adapters outside `cam_core`; adapters normalize
-source data into core values and separately validate emitted motion. Existing
-root-level `stock`, `planar` and machining-calculation modules remain active
-owners. Move one when a concrete slice needs it, update its callers, and avoid
-passive compatibility wrappers for unreleased CAM paths.
+The detached implementation has `cambam_builder.cam_core`. Reusable
+toolpath/stock values and verification belong there; optional rest machining,
+V-carving, combined strategies and policy planning belong in `cam_extensions`
+under the [organization plan](#package-organization-decision-and-migration-plan).
+Neither owner imports `CamBamProject`, native CAD/MOP entities, XML I/O or MCP.
+Native `.cb` input/output and future controller posting use explicit adapters
+outside those packages; adapters normalize source data and separately validate
+emitted motion. Existing root-level `stock`, `planar` and machining modules
+remain active owners until their staged migration.
 
 ### Directional analytic stock section bounds
 
@@ -297,6 +357,41 @@ and motion fingerprints, rough/final per-slab area and volume intervals, and
 Calling `verify(..., measure_rest=False)` yields only `motion_only` diagnostics;
 it is not a residual acceptance certificate. Native/CamBam motion must be
 replayed separately before any output acceptance claim.
+
+### RC01 native input and comparison candidates
+
+`cambam_builder.integrations.cambam.rc01_adapter` owns the bounded `.cb` adapter. `synthetic_source()`
+creates one Region with a rectangular island, one Part with 50 x 40 x 10 mm stock
+at drawing origin (-5,-5), and two disabled Pocket source MOPs in T1/T2 order.
+Every represented path parameter is explicit in the fresh native file. The paired
+`setup.json` explicitly supplies units/frame, fixture extent, tip datum, travel,
+feeds, coolant, uncertainty and full cutter/shank/holder components that the
+native model cannot express. `normalize()` reopens the XML through strict import,
+uses project-owned targets and transformed Region coordinates, and requires the
+exact accepted `Job()`. It rejects inherited or changed source fields and unknown
+extra source entities. Display-name and identity changes may preserve the same
+normalized job; the adapter never trusts session-held Python objects in place of
+reimport. Supported cosmetic edits therefore regenerate the same fingerprint;
+geometry, process and component edits return explicit unsupported diagnostics.
+
+`build_artifacts()` clones the reimported source for A, B and C. A has three
+enabled T1 Engrave candidate MOPs, B also has three T2 Engrave candidates, and C
+has the same T1 candidates plus four T2 Pocket window MOPs. The Engrave MOPs
+target only the generated level-cut centerlines (79 per T1 depth, 248 per T2
+depth); they do **not** encode the generator's entry, link, retract or event roles.
+Those complete ordered roles, source and motion fingerprints, and independent
+rough/final residual intervals live in `comparison.json`. The four C windows are
+design-neutral machining boundaries. Every candidate preserves the original
+Region and disabled source MOPs; the generator does not mutate the source.
+
+`cambam_builder.integrations.cambam.rc01_post` reads a deliberately small CamBam Default-post
+subset: absolute millimetre G0/G1 XYZ motion, explicit G17/G21/G90, F/S/T,
+G40/G61/G64 and M3/M5/M6/M30. Unsupported commands fail closed. It checks
+ordered A/B motion or C's T1 prefix against the manifest within 0.001 mm and
+checks candidate `.cb` SHA-256 before a file comparison. It flags G64 blending as
+unverified trajectory geometry. A clean C prefix does not verify native T2
+Pocket motion. E/N acceptance requires actual regenerated and posted motion,
+including added entries/links/events, stock replay and CamBam application review.
 
 ### Detached nominal planar core
 

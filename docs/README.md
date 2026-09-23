@@ -5,7 +5,7 @@ Read this map after the root README; follow only the relevant owner.
 | Topic | Authoritative home | Boundary |
 | --- | --- | --- |
 | Agent operational rules | [AGENTS.md](../AGENTS.md) | Compact mandatory context |
-| Current architecture, code ownership and intended domain relationships | [structure_spec.md](structure_spec.md) | Section 0: implemented structure; remaining sections: target design |
+| Current architecture, package organization preference/migration plan, code ownership and intended domain relationships | [structure_spec.md](structure_spec.md#package-organization-decision-and-migration-plan) | Section 0: implemented owners and staged target; remaining sections: domain design |
 | Current baseline, priority, backlog, blockers | [PROGRESS.md](PROGRESS.md) | Single status surface; pending items live here |
 | Development commands and troubleshooting | [DEVELOPMENT.md](DEVELOPMENT.md) | Setup, checks and artifact handling |
 | Delegation, lifecycle and handoff | [WORKFLOW.md](WORKFLOW.md) | Reusable working procedures |

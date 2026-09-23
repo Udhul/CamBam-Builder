@@ -54,16 +54,38 @@ and a missing lower-layer strip. The residual-location check uses GEOS polygons
 with <0.000001 mm circle sagitta; floating topology has no formal interval proof.
 Standalone automated acceptance is conditional on that numerical limitation.
 
-**Next:** deliver RC01's native input/document attachment and prepare A/B/C
-CamBam artifacts with a comparison reader, then run E/N native output gates.
-This connects the accepted independent sequence to the user's existing `.cb`
-workflow; additional isolated area precision or optimizer work has lower priority
-unless a native gate or residual uncertainty needs it.
+**2026-09-23 RC01 native input and A/B/C preparation (backlog 6, gate I automated
+slice).** A strict-reimported synthetic `.cb` now carries the target Region,
+Part stock and disabled T1/T2 Pocket intent; a separate explicit setup supplies
+tool components and non-native process values. Normalization reaches the same
+`Job()` as S and rejects unsupported/inherited edits. A/B/C candidate files,
+their SHA-256 guarded comparison manifest and a fail-closed Default-post reader
+are prepared under `integrations/cambam/`. A/B candidate Engraves contain level-cut centerlines; CamBam's
+added motion and C's native T2 Pocket still need emitted-motion verification.
+See the [contract](structure_spec.md#rc01-native-input-and-comparison-candidates),
+[runbook](DEVELOPMENT.md#rc01-native-input-and-abc-comparison-preparation) and
+[dated evidence](REVIEW.md#rc01-native-input-and-comparison-preparation---2026-09-23).
+
+**2026-09-23 package organization preference recorded.** New behavior belongs
+to explicit [native, reusable CAM core, extended CAM, or integration owners](structure_spec.md#package-organization-decision-and-migration-plan).
+The RC01 bridge was moved out of the package root now. Existing root native and
+detached modules remain current owners; the staged native consolidation follows
+the first RC01 output trial **before new rest/V-carve feature breadth**, and
+generic/extended extraction follows a concrete second consumer or output
+finding. This keeps future sessions from adding more ambiguous root modules
+while limiting the present change to the active slice.
+
+**Next:** run the RC01 CamBam Plus 1.0 A/B/C output trial, inspect returned
+posted motion and repair the candidate adapter where its roles/order diverge.
+This is now the shortest route to deciding whether the accepted `.cb` workflow
+can execute the generated sequence. General area precision and optimizer work
+stay deferred unless that output gate or residual uncertainty requires them.
 Direct posting remains subsequent delivery. The user selected the proposed synthetic
 case, including its test-only plunge/feed limits, on 2026-09-23. These are accepted
 test inputs, not production parameters or acceptance of generated/native motion.
-Definition and standalone generation are complete. Native input and emitted-motion
-acceptance remain open; the test-only case does not certify physical machining.
+Definition, standalone generation and automated native-input preparation are
+complete. CamBam application acceptance and emitted-motion acceptance remain
+open; the test-only case does not certify physical machining.
 See [next increment and stopping criteria](#next-detached-stockrest-increment).
 Definition verification: reviewed the two-document change against the implemented
 fixed-section contract; `.venv/Scripts/python.exe` independently recalculated all
@@ -1012,7 +1034,8 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    cleanup and explicit framework paths each require evidence from actual emitted
    motion. Synthetic job acceptance is separate from real-machine constraints.
 
-   **Standalone S implemented 2026-09-23; native gates next.**
+   **Standalone S and automated native I preparation implemented 2026-09-23; E/N
+   output gates next.**
    `cambam_builder.cam_core.rc01` and `tests/test_rc01.py` now own the accepted nominal
    generated motion, whole-height stock/access replay, rational per-slab rest
    intervals and negative variants. New detached CAM features use the
@@ -1021,10 +1044,20 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    and [dated checks](REVIEW.md#rc01-standalone-generated-sequence---2026-09-23).
    GEOS residual-location topology still lacks formal numeric interval proof;
    reopen that precision only if a strict S certificate or native comparison
-   requires it. Next implement native input, explicit-path output and native Pocket
-   cleanup acceptance. Follow with the cone/
-   V-carve slice through the same contracts. Caller-owned orchestration and subsequent
+   requires it. Native input normalization and A/B/C comparison candidates are
+   implemented, with source MOPs disabled and post comparison pending. Next run
+   actual CamBam E/N output checks and repair the candidate representation if
+   native entries, links, order or events diverge. Consolidate native ownership
+   after that trial, then follow with the cone/V-carve slice through the same
+   contracts. Caller-owned orchestration and subsequent
    direct posting remain accepted; never infer vertical clearance from fixed-Z evidence.
+
+   **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
+   owns native/extended/core naming and migration criteria. The current RC01
+   integration package is the proved bridge. Consolidate root native modules
+   after the first E/N output trial so import restructuring does not obscure
+   native-motion defects; promote root detached/policy modules only when an
+   output finding or second consumer fixes the shared abstraction boundary.
 
    **Implementation stopping condition:** RC01 passes its independent continuous
    motion, stock, process and residual checks, reports expected finite-tool residual

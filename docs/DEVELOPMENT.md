@@ -239,6 +239,74 @@ interval proof. Native input, explicit Engrave motion, native Pocket motion and
 physical machining have separate [RC01 gates](REST_MACHINING_PLAN.md#rc01-standalone-and-cambam-output-gates).
 No manual CamBam check adds evidence to this standalone implementation itself.
 
+### RC01 native input and A/B/C comparison preparation
+
+From the repository root, use a new unique ignored directory (the example name
+must be changed for a later run):
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.rc01_adapter output/rc01-native-20260923-example
+& $ProjectPython -m unittest discover -s tests -p test_rc01_native.py -v
+```
+
+The builder saves `source.cb`, `setup.json`, `A-rough.cb`, `B-explicit.cb`,
+`C-native-cleanup.cb` and `comparison.json`. It strict-imports and normalizes
+the source and every candidate before returning. The setup file is the explicit
+non-native component/setup input, not CamBam style inheritance. Each candidate
+retains the original Region, 50 x 40 x 10 mm Part stock at drawing origin
+(-5,-5), and two disabled source Pocket MOPs with one target reference each.
+`comparison.json` records source/candidate hashes, exact framework motion,
+rough/final section and volume intervals, and pending emitted-motion status.
+
+| File | Enabled candidate operations | Expected targets |
+| --- | --- | --- |
+| A | Three T1 Engrave MOPs, Z=-1,-2,-3 | 79 generated level-cut Plines per depth |
+| B | A plus three T2 Engrave MOPs, Z=-1,-2,-3 | 248 T2 level-cut Plines per depth |
+| C | A plus four T2 Pocket MOPs | Closed 7 x 7 mm Regions at the four specified corner windows |
+
+The standalone A rough reference is 7.7750–7.7877 mm² per open depth slab;
+the B final reference is 0.9214–0.9264 mm² per slab. Each of the three slabs is
+1 mm high, so the corresponding volume intervals are three times those area
+intervals. For C, the actual native cleanup must leave at most 1.358408 mm²
+per slab and 4.075223 mm³ overall, with no protected overcut and at least
+6.367258 mm² per-slab cleanup benefit. These are checks on posted motion, not
+inferences from a displayed path or MOP property.
+
+The candidate Engraves carry cut centerlines only. Their XML does not encode
+framework approach, entry, retract, rapid or tool/spindle events; CamBam may add
+or reorder those motions. This makes the A/B/C files comparison probes, not
+accepted E/N output. The C Pocket settings are tool 2, diameter 2, stock
+surface 0, target depth -3, increment 1, stepover 0.4, roughing clearance 0,
+clearance plane +5, cut feed 300, plunge 60 and CW spindle 12000. The source
+Pocket MOPs remain disabled in all three files.
+
+When CamBam Plus 1.0 validation is available, open each file, inspect the source
+Region/Part and enabled MOPs above, regenerate toolpaths and post each separately
+to `A-rough.nc`, `B-explicit.nc`, `C-native-cleanup.nc` in the same output
+directory. Record the actual postprocessor and CAM style. The current reader is
+scoped to CamBam's `Default` post with millimetres, absolute XY/XYZ coordinates,
+G0/G1 straight moves, explicit G17/G21/G90, F/S/T, G40/G61/G64 and
+M3/M5/M6/M30. It rejects arcs, cycles, cutter compensation and unknown modal
+commands. `G64` blending leaves trajectory deviation unverified even when listed
+endpoints match. These are comparison-reader limits, not permissions to machine.
+
+Run each returned post through the reader, for example:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.rc01_post output/rc01-native-20260923-example/comparison.json A output/rc01-native-20260923-example/A-rough.nc
+```
+
+Repeat with `B` and `C`. The result gives `sequence_matches`, `prefix_matches`,
+`deviation` with first line/field, or `unverified` with the reason. A/B must
+match every expected event and move within 0.001 mm with no extra motion before
+E can proceed to independent stock replay; C checks only the T1 prefix, so N
+requires a separate full T2 native-motion replay. Exact regenerated/post-added
+entries, feeds, order, tool changes, shank/holder access, rest and overcut remain
+the acceptance authority. Report I/E/N individually with the first deviation,
+the actual postprocessor/style and the three `.nc` files. A CamBam open/display
+pass alone establishes only native readability. No physical cutting is part of
+this test.
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not

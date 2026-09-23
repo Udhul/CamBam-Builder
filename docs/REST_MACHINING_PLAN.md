@@ -115,7 +115,7 @@ orchestration: the framework supplies reusable capabilities for iterative import
 and embedded headless applications, without imposing a fixed use-case sequence.
 These decisions do not assert that native path equivalence is already established.
 
-Both workflows use the same core to calculate rest, tool access, V-carve motions
+Both workflows use the same detached capabilities to calculate rest, tool access, V-carve motions
 and candidate combinations. CamBam geometry/MOP inputs are normalized through an
 adapter; direct Python inputs need no CamBam document. Keep these result forms
 independently callable and composable:
@@ -159,15 +159,17 @@ current native or production acceptance.
 
 ### Proposed shared core and adapters
 
-Keep one distribution, with the detached calculations, stock/volume analysis and
-strategies under `cambam_builder.cam_core` as focused internal modules. The first
-end-to-end slice is `cam_core.rc01`; root-level stock, planar and calculation
-modules remain active owners until a concrete migration need justifies moving
-them and updating their callers. Do not add compatibility wrappers merely to
-preserve unreleased layout. Native CamBam and
-future controller adapters stay outside `cam_core`, depending inward on its
-immutable values. A separate distribution/service or generic plugin registry is
-unnecessary. Names below describe responsibilities, not new public APIs.
+Keep one distribution. Reusable detached calculations, stock/volume analysis,
+motion values and verification belong in `cambam_builder.cam_core`; optional
+rest/V-carve strategies and policy planning belong in `cam_extensions`. The
+first exact reference job currently lives in `cam_core.rc01`; the
+[package organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
+records its later split and the native/extended migration order. Root-level
+stock, planar and calculation modules remain active owners until moved with
+their callers. Native CamBam integration now lives in `integrations/cambam/`;
+future controller adapters remain separate and depend inward on immutable core
+values. No separate distribution/service or generic plugin registry is needed.
+Names below describe responsibilities, not new public APIs.
 
 | Boundary | Responsibility |
 | --- | --- |
@@ -492,6 +494,17 @@ acceptance, and caller applications can invoke each capability independently.
 | E: explicit framework motion through CamBam | Attach both generated operations using a candidate XYZ-Pline/Engrave adapter. In the established CamBam Plus 1.0 environment, inspect actual regenerated and posted motion: coordinates, interpolation, ordering, feeds, spindle/tool events and every inserted entry/link/retract. Reverify the actual motion against RC01, including its rough-only stock prefix. A path drawing or successful XML round trip alone fails this gate. |
 | N: native smaller-tool region/Pocket cleanup | Preserve the original target and attach T2 Pocket MOPs to four closed 7 x 7 corner windows: [0,7]x[0,7], [33,40]x[0,7], [33,40]x[23,30], [0,7]x[23,30]. These are machining boundaries, not cutter-center regions. Each contains its entire T1 corner rest plus overlap into cleared material; none touches the island. Verify actual CamBam-generated cleanup against the same target, process and residual criteria, after the E-verified T1 prefix. Do not infer native removal from nominal Pocket settings. |
 | P: production / later direct posting | Separate pending gates. S is headless planning, not G-code delivery. A later controller adapter must reverify its emitted motion. Physical machining requires an identified machine/material/setup, real tools/workholding and separately agreed tolerances/process limits. No execution is requested by RC01. |
+
+**2026-09-23 I preparation:** the [native adapter contract](structure_spec.md#rc01-native-input-and-comparison-candidates)
+now constructs and strict-reimports the source `.cb`, normalizes its Region,
+stock and disabled source MOPs with explicit supplemental setup, and rejects
+unsupported/inherited edits. The A/B/C `.cb` files and independent standalone
+comparison manifest are reproducible. This is automated input/attachment
+evidence; CamBam reopen/export and actual E/N emitted-motion acceptance have not
+been recorded. The candidate Engraves currently carry only level-cut
+centerlines, so the E probe must inspect CamBam-added entries, links and events
+before any output pass. The [runbook](DEVELOPMENT.md#rc01-native-input-and-abc-comparison-preparation)
+owns the exact generation and comparison commands.
 
 For N, configure tool 2/diameter 2, stock surface 0, target depth -3, depth increment
 1, stepover 0.4 of diameter, roughing clearance 0, clearance plane +5 and the supplied
