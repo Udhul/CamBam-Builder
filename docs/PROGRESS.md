@@ -32,8 +32,8 @@ verification and output capabilities; consuming applications choose manual,
 automatic or iterative workflows. No fixed reimport sequence or live-sync service
 is imposed. All three architecture questions have now been answered.
 
-**2026-09-23 first generated acceptance job defined (backlog 6).**
-[RC01](REST_MACHINING_PLAN.md#first-generated-acceptance-job-rc01) proposes a
+**2026-09-23 first generated acceptance job defined and selected by the user (backlog 6).**
+[RC01](REST_MACHINING_PLAN.md#first-generated-acceptance-job-rc01) specifies a
 40 x 30 x 3 mm pocket with an 8 x 8 mm island in 10 mm stock, a 6 mm rougher and
 2 mm cleanup tool. It records full tool/holder geometry, entry/retract and process
 bounds, independent corner-rest oracles, all-height verification obligations and
@@ -42,23 +42,27 @@ Zero allowance and a rectangular target keep the first oracle analytic; the earl
 letter-like/allowance case remains a broader follow-up. A cone feasibility guard
 keeps the shared contracts open to the next V-carve slice.
 
-**Next:** refine the proposed synthetic inputs with the user, then implement the
-RC01 generated endmill sequence and continuous all-height stock verification,
+**Next:** implement the accepted synthetic RC01 generated endmill sequence and
+continuous all-height stock verification,
 followed by its native integration gates. This turns the existing fixed-section
 foundation into an independently verifiable two-tool workflow; additional isolated
 area precision or optimizer work has lower priority unless this job needs it.
-Direct posting remains subsequent delivery. The proposed numerical values are not
-user-accepted or production parameters. No runtime or manual CamBam acceptance is
-claimed by this documentation round. Definition is complete; user refinement and
-implementation remain open. Continue this session for that refinement; after it,
-the recorded job/gates provide a fresh-session implementation boundary without
-requiring conversational context. See [next increment and stopping criteria](#next-detached-stockrest-increment).
+Direct posting remains subsequent delivery. The user selected the proposed synthetic
+case, including its test-only plunge/feed limits, on 2026-09-23. These are accepted
+test inputs, not production parameters or acceptance of generated/native motion.
+Definition and user refinement are complete; implementation remains open. A fresh
+session is recommended for implementation: the accepted job/gates are recorded and
+no first-job decision or pending result requires conversational context.
+See [next increment and stopping criteria](#next-detached-stockrest-increment).
 Definition verification: reviewed the two-document change against the implemented
 fixed-section contract; `.venv/Scripts/python.exe` independently recalculated all
 eight rounded residual/gain references, stock/target arithmetic and checked all
 eight added local links/anchors. `git diff --check` passed. Runtime tests and manual
 CamBam checks were not run: no runtime/example code changed, and application
 validation adds no evidence to the definition. Changes remain uncommitted.
+The subsequent user-selection update changes acceptance/priority text only; input
+values and numerical criteria are unchanged. Review and `git diff --check` cover
+that update; no repeat numerical or manual validation is required.
 
 **2026-09-22 bounded section-motion verification complete (backlog 6).**
 Ordered supplied cuts now update guaranteed removal in an exact rectangular
@@ -988,16 +992,16 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    at other heights. Generated paths, native/MCP attachment, inlays and curved
    topology remain deferred.
 
-   **Definition completed 2026-09-23: generated roughing-plus-cleanup job RC01.**
+   **Definition and user selection completed 2026-09-23: roughing-plus-cleanup job RC01.**
    The [job owner](REST_MACHINING_PLAN.md#first-generated-acceptance-job-rc01)
-   records proposed stock/target/island, tool and holder dimensions, depth/process
+   records accepted synthetic stock/target/island, tool and holder dimensions, depth/process
    bounds, entry/retract/connection requirements, residual/overcut oracles, rejection
    variants and standalone/native acceptance gates. The definition stopping condition
-   is met; numerical choices remain proposed pending user refinement. Native Pocket
+   is met; the user selected the proposed synthetic case and test-only limits. Native Pocket
    cleanup and explicit framework paths each require evidence from actual emitted
    motion. Synthetic job acceptance is separate from real-machine constraints.
 
-   **Next: refine RC01 inputs, then deliver the generated endmill sequence.**
+   **Next: deliver the RC01 generated endmill sequence.**
    Promote the agreed job/oracles to reusable fixtures; implement shared motion,
    generation and continuous all-height stock/access checks, then native input,
    explicit-path output and native Pocket cleanup acceptance. Follow with the cone/

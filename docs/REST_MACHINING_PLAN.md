@@ -9,7 +9,7 @@ The five original outcomes below are retained. The current design proposal and
 unresolved product decisions are in [Design refinement](#design-refinement---2026-09-22)
 and the latest [execution architecture refinement](#execution-architecture-refinement---2026-09-23).
 The [first generated acceptance job](#first-generated-acceptance-job-rc01)
-now gives concrete proposed inputs and separate standalone/native acceptance gates.
+now gives user-accepted synthetic inputs and separate standalone/native acceptance gates.
 
 ## Programmatic execution requirement
 
@@ -291,11 +291,11 @@ deliver the user's workflow.
 
 Recommended progression (priority and actual next work live in PROGRESS):
 
-1. Apply the accepted execution/output boundaries to one bounded roughing-plus-
-   cleanup consumer, with full stock height, tool/reach, target, entry/retract and
-   tolerance requirements. Prepare a concrete synthetic proposal for user refinement;
-   do not require the user to invent all trajectory coordinates. Include a cone
-   feasibility case to expose cylindrical-only assumptions.
+1. **Definition and synthetic-case selection complete, 2026-09-23:**
+   [RC01](#first-generated-acceptance-job-rc01) applies the accepted boundaries to
+   one roughing-plus-cleanup consumer, with stock height, tools/reach, target,
+   entry/retract, process and tolerance requirements, plus a cone feasibility guard.
+   The user selected the proposed synthetic case; no physical setup is required now.
 2. Deliver the first generated sequence with shared motion values, all-height
    occupancy/access, stock replay and independently checked residual/overcut.
    First prove an endmill sequence; then pointed-cone variable-depth and capped-depth
@@ -323,11 +323,12 @@ Workflow decision status, asked 2026-09-23:
   interpretation, change/freshness diagnostics and explicit regeneration capabilities
   for supported inputs; applications decide whether ingestion/recomputation is manual,
   automatic or iterative. See [caller-owned workflows](#caller-owned-workflows-and-reusable-capabilities).
-- [RC01](#first-generated-acceptance-job-rc01) specifies proposed synthetic geometry,
-  tools, process bounds and residual/error thresholds. User refinement remains open;
-  physical material, workholding, machine limits and production parameters are not
-  established. Synthetic defaults are test data, not production recommendations or
-  user acceptance.
+- **Answered, 2026-09-23:** the user selected the proposed synthetic
+  [RC01](#first-generated-acceptance-job-rc01) case, including its test-only
+  plunge/feed limits. Its geometry, tools, process bounds and residual/error
+  thresholds are the first acceptance baseline. Physical material, workholding,
+  machine limits and production parameters remain unestablished; accepting the
+  test inputs does not accept generated motion, native output or production use.
 
 This refinement closes when context, boundaries, recommendations and unanswered
 choices are recorded and reviewed. Documentation-only checks suffice; no pytest,
@@ -336,8 +337,8 @@ output compatibility and production acceptance remain separate future gates.
 
 ## First generated acceptance job RC01
 
-**Defined 2026-09-23; proposed synthetic acceptance contract, not implemented or
-user-accepted numerical requirements.** This round defines the job; it does not
+**Defined and selected by the user 2026-09-23; accepted synthetic test inputs,
+implementation and output acceptance pending.** This round defines the job; it does not
 generate executable paths or request a CamBam/machine trial. Framework ownership
 of roughing and cleanup, both input routes, native integration and later direct
 posting are already accepted in the [integration requirement](#accepted-integration-requirement---2026-09-23).
@@ -351,13 +352,13 @@ remains in the acceptance corpus. Native shape/MOP integration is a required gat
 not satisfied by an inspection-only path drawing. Direct G-code posting follows
 the first useful rest/V-carve delivery, as previously agreed.
 
-### RC01 inputs and proposed process bounds
+### RC01 inputs and process bounds
 
 All dimensions are millimetres in one right-handed drawing frame. Z is the
 physical cutter-tip height, positive upward; stock top is Z=0. No nesting,
 transforms, external styles, tool-library lookup or inferred defaults are needed.
 
-| Input | Exact proposed value / interpretation |
+| Input | Accepted synthetic value / interpretation |
 | --- | --- |
 | Initial stock | Box X=[-5,45], Y=[-5,35], Z=[-10,0]; 50 x 40 x 10. |
 | Finish target | Remove X=[0,40], Y=[0,30], Z=[-3,0], except the protected island X=[16,24], Y=[11,19]. Vertical walls, flat floor Z=-3, no through-cut, tabs or released bodies. |
@@ -517,7 +518,7 @@ report format with I/E/N pass/fail plus deviations. Inspect returned emitted mot
 locally before recording acceptance. Manual file inspection adds native application
 evidence later; it adds no evidence to this documentation-only definition today.
 
-### RC01 cone guard, open choices and stopping condition
+### RC01 cone guard, acceptance scope and stopping condition
 
 Pair the cylindrical job with an analytic pointed 90-degree included-angle cone
 guard, not a claim that a cone can finish its vertical sharp corners. In the
@@ -529,17 +530,19 @@ one centerline pass cannot clear the 4 mm opening. Finite ends, whole-body sweep
 and generated variable-depth/capped-depth completion belong to the next cone
 slice. Original V-target geometry, residual and tool limits must remain separate.
 
-**Recommendation for user refinement:** use RC01 as the first synthetic job,
-accepting its predictable finite-tool corner residual and permissive synthetic
-plunge/full-slotting bounds. Keep real-machine acceptance separate. Still open:
-whether the user wants different geometry/floor/tool dimensions or instead requires
-a particular physical setup now. A physical requirement needs material, machine
+**User acceptance, 2026-09-23:** the user answered "Use the proposed synthetic case"
+when offered RC01's 40 x 30 x 3 mm pocket, 8 x 8 mm island, 6 mm rougher, 2 mm cleanup
+tool and proposed test-only plunge/feed limits versus tailoring a physical setup.
+Use the documented RC01 inputs and acceptance criteria as the implementation
+baseline, including expected finite-tool corner residual and synthetic plunge/
+full-slotting bounds. No first-job refinement is pending. This accepts the test
+case, not implementation correctness, CamBam output or physical machining.
+Real-machine acceptance remains separate and will require material, machine
 travel/controller, actual cutter/reach/holder, fixtures, allowed entries and process
-limits before numerical production acceptance can be defined. No user approval of
-these proposed numbers has been recorded.
+limits before numerical production acceptance can be defined.
 
-Definition closes with these explicit inputs, oracles, access obligations, limits
-and output gates recorded. Implementation starts by promoting the refined RC01
+Definition and user refinement are complete with inputs, oracles, access obligations,
+limits and output gates recorded. Implementation starts by promoting the accepted RC01
 inputs/oracles to reusable fixtures and proving the generated T1/T2 sequence with
 continuous all-height stock replay, then the I/E/N adapter gates; cone path delivery
 follows through the same contracts. Do not call full target removal or native output
@@ -931,8 +934,8 @@ User decisions accepted 2026-09-22:
    that proven packages are welcome: prefer established geometry primitives when
    they pass our contract, keeping machining semantics and verification owned here.
 
-The [RC01 proposal](#first-generated-acceptance-job-rc01) supplies the first target,
-tools and residual/error criteria for user refinement; production limits remain open.
+The [accepted RC01 case](#first-generated-acceptance-job-rc01) supplies the first
+synthetic target, tools and residual/error criteria; production limits remain open.
 The [2026-09-23 answer](#accepted-integration-requirement---2026-09-23) permits a first
 framework-generated sequence while requiring native shape/MOP integration too.
 No numerical production defaults or implicit
