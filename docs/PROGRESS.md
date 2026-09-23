@@ -162,13 +162,33 @@ scope. No native stock authority or physical acceptance follows from this
 mapping. See the [runbook](DEVELOPMENT.md#native-optimiser-shapemop-mapping-corpus),
 [inventory and stop rule](REST_MACHINING_PLAN.md#native-cambam-optimizer-and-output-mapping-foundation)
 and [posted evidence](REVIEW.md#native-optimiser-corpus-posted-output---2026-09-23).
-**Next priority:** prove one caller-selectable native posted-motion stock/rest
-authority slice on a controlled Region/Pocket case, with separate source/post
-fingerprints and edit invalidation; then revisit RC01 native N using actual
-posted motion. This turns the bounded corpus into a usable native workflow
-while keeping framework-generated motion independent. Broad optimiser
-implementation and native-only class breadth remain deferred until a named
-consumer requires them.
+
+**2026-09-23 native posted-stock authority T1 slice implemented (backlog 6).**
+The controlled RC01 Region/Pocket T1 source and user-posted Default output are
+now reusable tracked fixtures. A caller explicitly selects `native_posted` or
+`framework_generated`; the two paths retain separate motion fingerprints and
+never fall back to one another. The native path pins the evidence record,
+source, candidate, setup, manifest and post, strict-reimports the
+source/candidate, replays actual posted T1 cuts and rejects byte changes before
+reuse. Native rough rest is 7.7255777–7.7258435 mm² in each of the three
+depth slabs. This is a bounded stock observation, not an accepted native
+execution: 62 recorded motion-role findings still block stock-dependent
+cleanup, and GEOS topology is not a formal
+interval proof. The [contract](structure_spec.md#rc01-selected-posted-motion-stock-authority),
+[runbook](DEVELOPMENT.md#rc01-selected-native-posted-stock-replay) and
+[evidence](REVIEW.md#rc01-selected-native-posted-stock-authority---2026-09-23)
+record the boundary. No new CamBam post or manual validation is needed for this
+replay of previously user-posted bytes.
+
+**Next priority:** revisit the recorded RC01 native T1/T2 post as a paired
+stock/rest source, preserving the T1 prefix and explicit source/post freshness
+while determining whether any T2 stock-dependent claim survives the already
+known motion-role failures. This matters now because T1 rest alone cannot
+support native cleanup or mixed sequences. Stop at a blocked/conditional result
+if the existing Pocket/Default carrier cannot express the required roles; do
+not request an unchanged repost. Broad optimiser implementation and native-only
+class breadth remain deferred until a named consumer requires them.
+
 The user selected the proposed synthetic case, including its test-only
 plunge/feed limits, on 2026-09-23. These are accepted
 test inputs, not production parameters; that selection alone did not accept

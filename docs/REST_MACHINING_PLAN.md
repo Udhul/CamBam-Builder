@@ -1,8 +1,8 @@
 # Future rest machining and V-cutter paths
 
 Status: **active design refinement, 2026-09-23; bounded geometry and supplied
-section-motion foundations plus nominal RC01 generation implemented; native
-output adapters pending**.
+section-motion foundations plus nominal RC01 generation and one pinned native
+posted-stock replay implemented; broader native output adapters pending**.
 Requested 2026-09-08 and expanded 2026-09-22/23. Priority belongs only to [PROGRESS.md](PROGRESS.md#remaining-backlog-in-order).
 This document owns the problem, proposed outcomes, technical reasoning and future
 acceptance criteria. Only the explicitly marked bounded slices claim implementation;
@@ -762,6 +762,13 @@ blocked/historical classes. This is a versioned output observation corpus,
 not a general native path optimizer or a native stock certificate. Reopen a
 blocked class when its stated source/semantics evidence exists, or expand a
 supported combination when a consumer exposes a concrete missing case.
+
+The first separately bounded posted-stock slice now uses the previously
+user-posted RC01 T1 Region/Pocket program. Its
+[contract](structure_spec.md#rc01-selected-posted-motion-stock-authority)
+pins source and post independently, replays native removal and rejects stale
+files. This does not expand the optimiser corpus into general stock authority;
+the recorded RC01 motion-role failures still block dependent execution.
 
 ## Problem and machining intent
 

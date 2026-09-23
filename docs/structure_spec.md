@@ -492,6 +492,35 @@ hashes remain separate. The review owner records which observations are
 accepted and their limits. A new `.cb` export with different IDs or changed
 settings needs its own native post and hashes.
 
+### RC01 selected posted-motion stock authority
+
+`integrations/cambam/rc01_stock_authority.py` supplies the first bounded
+caller-selected stock source for the RC01 rectangular Region with an island.
+`analyze_rc01_stock("native_posted", evidence_path=...)` accepts the recorded
+T1 native Pocket Default post only. The evidence record pins the comparison
+manifest, setup and exact `.nc` SHA-256; the manifest pins original source and
+T1 candidate `.cb` SHA-256. Both documents must strict-import and normalize to
+the same RC01 job, and the candidate must retain the selected enabled MOP.
+The reader checks the matching post title, Default header and selected section,
+then replays actual G0/G1/G2/G3 motion. It reports T1 swept-stock/rest area
+bounds for Z slabs ending at -1, -2 and -3, source/candidate/post hashes, a
+line-independent parsed-motion fingerprint, rough-rest budget and RC01
+motion-role findings.
+`check_native_freshness(evidence_path, result)` rejects an earlier observation
+after any evidence record, source, candidate, setup, manifest or post byte
+change. Reanalysis requires explicit new pair provenance; a matching post
+title alone cannot prove that an edited document was posted.
+
+`analyze_rc01_stock("framework_generated", program=...)` instead verifies a
+supplied complete core `Program` against `Job()` and returns its independent
+motion fingerprint and rough/final certificate. The caller must select one
+authority; missing/stale evidence never falls back to the other. The recorded
+native T1 rest is a **bounded geometric observation**, with GEOS floating
+topology limits and unknown initial machine position. Its known RC01 motion-role
+failures block stock-dependent execution claims; it is not a native-Pocket N or
+physical acceptance certificate. The framework program's own certificate is
+unchanged by native output.
+
 ### Detached nominal planar core
 
 `cambam_builder.planar` is the public, document-independent owner of immutable

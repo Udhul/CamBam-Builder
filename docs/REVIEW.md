@@ -4836,3 +4836,47 @@ untracked fixture text was checked separately for trailing whitespace. The
 earlier broad-suite limitation from optional missing `anyio` is unchanged;
 no MCP or shared XML behavior was edited in this increment. No physical
 CamBam revalidation is requested after the supplied posts.
+
+## RC01 selected native posted-stock authority - 2026-09-23
+
+The first caller-selectable stock/rest slice uses the previously user-posted
+RC01 T1 Region/Pocket pair, now retained with its source, setup, manifest and
+versioned evidence under `tests/fixtures/rc01_native_stock/`. The T1 candidate
+SHA-256 is `e14afa4b5594814c754fe828898e0e13de5672c9d5bd55a4d470aec457f7ea6c`;
+the actual `.nc` SHA-256 is
+`cde87d91d6f4c746cdabe7a80b04808d65551bc4d15db47e724550c6b0d444a2`.
+The original source is pinned by the unchanged comparison manifest. These
+are copies of the accepted posted trial bytes, not a new CamBam export.
+
+`analyze_rc01_stock("native_posted", ...)` strict-reimports both source and
+candidate, checks the selected MOP and all pair hashes, then computes rest
+from posted T1 G1/G2/G3 motion. All three slabs ending at Z=-1,-2,-3 return
+7.72557766758–7.72584353670 mm². The parsed-motion fingerprint is
+`a0fdecec1c961b146179371b20b0055b771a566a0412a97853a94aec9e5f5177`.
+The same entry point with explicit `framework_generated` selection verifies
+the supplied core program independently: its motion fingerprint is
+`39fde4a4c04295d50c7e53875478445cd5881eb9784f0c00d8ef676c4d89ffbd`
+and rough rest is 7.77501061596–7.78767847202 mm² per slab. The differing
+numbers and fingerprints demonstrate why native intent cannot stand in for
+either motion source.
+
+The native observation retains 62 RC01 motion-role findings, including low
+rapids, so stock-dependent execution remains blocked. The initial machine
+position is absent from Default output; the geometric area uses Shapely/GEOS
+polygon enclosures and has no formal topology interval proof. No native T2
+cleanup, complete safe trajectory or physical machining acceptance follows.
+`check_native_freshness()` rejects prior results after evidence record, source,
+candidate, setup, manifest or post byte changes. A repinned edited post with
+the old reviewed motion fingerprint is also rejected. Pairing a new source
+with a new post requires explicit provenance and review; the filename/header
+is insufficient evidence of that pairing.
+
+The combined focused command,
+`.venv\Scripts\python.exe -m unittest tests.test_rc01_stock_authority tests.test_rc01_native tests.test_optimizer_corpus -v`,
+passed all 15 tests. After the final diagnostic-message edit, the two new
+authority tests passed again. Package `compileall`, import/construct
+smoke and `git diff --check` passed; the latter covers tracked files only, so
+untracked text was also scanned for trailing whitespace. Manual CamBam
+validation adds no evidence for replaying these already posted exact bytes.
+Reopen the native Pocket/Default execution claim only if a carrier can encode
+the missing roles and its actual post passes renewed whole-motion checks.

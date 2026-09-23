@@ -461,6 +461,25 @@ alone cannot predict its actual emitted result. The Default post does not encode
 the incoming machine position, so RC01 retains the declared test setup
 (-10,-10,+5); physical acceptance is separate.
 
+### RC01 selected native posted-stock replay
+
+The reusable synthetic fixture under `tests/fixtures/rc01_native_stock/`
+contains the original RC01 source, T1 native Pocket candidate, user-posted
+Default output, setup, comparison manifest and pinned evidence record. Run:
+
+```powershell
+& $ProjectPython -m unittest tests.test_rc01_stock_authority -v
+& $ProjectPython -c "from cambam_builder.integrations.cambam.rc01_stock_authority import analyze_rc01_stock; print(analyze_rc01_stock('native_posted', evidence_path='tests/fixtures/rc01_native_stock/evidence.json')['rough_rest_by_depth'])"
+```
+
+Call `check_native_freshness(evidence_path, result)` before reusing a prior
+native observation. `framework_generated` takes a supplied complete RC01
+`Program` and verifies it separately; no selection fallback occurs. The
+recorded native T1 stock bounds support analysis only: its motion-role
+findings block stock-dependent execution, native cleanup acceptance and
+production use. A new CamBam post or edited `.cb` needs a newly reviewed,
+explicitly pinned source/post pair.
+
 ### Native optimiser shape/MOP mapping corpus
 
 The portable corpus lives in
