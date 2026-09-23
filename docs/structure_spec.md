@@ -60,6 +60,26 @@ The reader's `PRIMITIVE_TAG_TO_CLASS` and `MOP_TAG_TO_CLASS` are the executable
 supported-tag inventory, not a claim of complete CamBam coverage. Consult those
 maps and corresponding entity encoders before adding a type.
 
+### Execution boundary and future CAM core
+
+The current document pipeline authors native geometry/MOP instructions and exports
+`.cb`; CamBam then generates toolpaths and posts G-code. Document fidelity is not
+motion equivalence or evidence of removed stock. Detached planar and stock helpers
+below do not change that execution boundary: supplied section motions are not an
+implemented general XYZ generator, route optimizer or postprocessor.
+
+The [execution architecture proposal](REST_MACHINING_PLAN.md#execution-architecture-refinement---2026-09-23)
+defines a future document-independent motion/stock core with separate strategies,
+verification and CamBam/direct-G-code output adapters. Native-MOP authoring remains
+independently useful. Execution authority, manual-edit invalidation, output
+acceptance and delivery decisions belong to that active plan; no future
+API or native path-equivalence claim is implied by this specification entry.
+The accepted target is an embeddable capability library: consuming applications
+own workflow sequencing and synchronization, while the core owns input validity,
+derived-result freshness and machining evidence. Import, analysis, regeneration
+and export remain separable capabilities; see the plan's
+[caller-owned workflow contract](REST_MACHINING_PLAN.md#caller-owned-workflows-and-reusable-capabilities).
+
 ### Directional analytic stock section bounds
 
 `cambam_builder.stock` owns a detached, backend-independent consumer:

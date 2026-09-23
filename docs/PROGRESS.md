@@ -7,6 +7,48 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**2026-09-23 execution architecture refinement (backlog 6).** The user's context
+preserves today's `.cb` -> native toolpath/G-code workflow while exploring an
+independent shared CAM core and eventual direct G-code output. Existing foundations
+already separate geometry/stock from documents; a general motion representation,
+generators, optimizer and direct postprocessor are not implemented. The
+[refinement](REST_MACHINING_PLAN.md#execution-architecture-refinement---2026-09-23)
+records the three output/execution routes, edit invalidation, compatibility limits
+and recommendations. Native MOP intent cannot certify stock removed by our different
+planned motion. CamBam has in-application automation; a supported standalone
+headless integration has not been established.
+
+**User decision, 2026-09-23:** the first combined sequence may generate both roughing
+and cleanup, with standalone and native CamBam shape/MOP workflows both required.
+The [accepted integration contract](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23)
+records native closed-region Pocket/Profile cleanup, explicit XYZ/Engrave V-carving,
+shared core analysis and supported combinations. Native motion evidence remains
+distinct from our predictions; attachment is not proof of achieved removal.
+The user also accepted designing direct headless G-code now and implementing it
+after the first useful rest/V-carve workflow. The third answer establishes
+[caller-owned orchestration](REST_MACHINING_PLAN.md#caller-owned-workflows-and-reusable-capabilities):
+provide import/interpretation, change and freshness diagnostics, planning,
+verification and output capabilities; consuming applications choose manual,
+automatic or iterative workflows. No fixed reimport sequence or live-sync service
+is imposed. All three architecture questions have now been answered.
+
+**Next:** specify one generated roughing-plus-cleanup acceptance slice, including
+multi-height entry/access. This
+supersedes asking only for a caller-supplied motion fixture: the lead should prepare
+a concrete synthetic job proposal for refinement. It connects the existing section
+evidence to a useful rest/V-carve capability without first reproducing every native
+MOP or broadening the optimizer. Direct posting is accepted as subsequent delivery.
+No runtime changes or tests in this planning round; manual CamBam validation adds
+no evidence. This architecture round is a usable fresh-session breakpoint: accepted
+boundaries and remaining physical acceptance inputs are recorded. Continuing here
+is also appropriate to refine the first job; no workflow-policy answer remains pending.
+See [next increment and stopping criteria](#next-detached-stockrest-increment).
+Documentation verification: reviewed the four-file diff against current code and
+official CamBam references; checked added local links/anchors with the
+declared Python interpreter; `git diff --check` passed. No runtime tests were run,
+as requested. Changes are documentation only and uncommitted; physical acceptance
+inputs, implementation and production acceptance remain open.
+
 **2026-09-22 bounded section-motion verification complete (backlog 6).**
 Ordered supplied cuts now update guaranteed removal in an exact rectangular
 stock/target with one protected island. Explicit cutting, cleared-space and
@@ -19,7 +61,8 @@ connectors, island crossing and uncertainty overrun are rejected. The
 owns assumptions and boundary membership; [review evidence](REVIEW.md#bounded-section-motion-verification---2026-09-22)
 owns acceptance. General planar results remain uncertified.
 
-Next: [supply a concrete multi-height cleanup entry and access fixture](#next-detached-stockrest-increment).
+At that checkpoint, next was a concrete multi-height cleanup entry/access fixture;
+the 2026-09-23 refinement above broadens its purpose to a generated workflow.
 The section verifier now closes the immediate entry/connection gate at one Z,
 but descent, retracts, tool changes and stock at other heights remain unknown.
 Obtain an actual consumer's tool, stock-height and motion requirements before
@@ -890,7 +933,14 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    selects Shapely/GEOS for the design. Adversarial acceptance and the
    [internal value/error contract](REST_MACHINING_PLAN.md#internal-planar-value-and-error-contract)
    are enforced for the [implemented bounded subset](structure_spec.md#detached-nominal-planar-core).
-   Conservative stock/rest, paths and machining acceptance remain later gates.
+   Bounded directional section evidence is implemented below; general conservative
+   stock/rest, generated paths and machining acceptance remain later gates.
+   The [2026-09-23 refinement](REST_MACHINING_PLAN.md#execution-architecture-refinement---2026-09-23)
+   adds the explicit future headless-posting capability and manual-edit contract.
+   Keep ordinary native-MOP export alongside a proposed shared motion core and
+   separate CamBam/direct-post adapters. Direct posting is a recorded future
+   capability within this workstream, accepted after the first useful rest/V-carve workflow;
+   it does not silently expand current implementation scope to all MOPs.
 
    #### Next detached stock/rest increment
 
@@ -927,13 +977,30 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    at other heights. Generated paths, native/MCP attachment, inlays and curved
    topology remain deferred.
 
-   **Next: supply a concrete multi-height cleanup entry and access fixture.**
-   Obtain caller-supplied tool geometry, stock height, intended cut section,
-   entry/retract/connection coordinates and permissible outside-stock approach
-   for one real cleanup consumer. Use it to decide the smallest XYZ occupancy
-   contract that can certify descent and tool transitions. Reopen automatic path
-   generation or wider topology only when that consumer shows a bounded need;
-   do not infer safe access from this fixed-Z result.
+   **Next: define one generated roughing-plus-cleanup acceptance job.**
+   Framework-owned roughing plus cleanup is accepted for the first
+   sequence; both standalone and native shape/MOP integration remain required.
+   Direct posting is accepted for subsequent delivery. Caller-owned orchestration
+   settles the edit question; support imported and direct inputs with explicit
+   freshness/verification rather than a mandatory use-case workflow.
+   Prepare one concrete synthetic acceptance job with stock height,
+   target/island, supplied tool geometry/reach, permissible
+   approach, depth/pass/process limits and residual/error criteria for user refinement.
+   The lead proposes entry/retract/connection requirements; the user clarifies job
+   intent and machine constraints, rather than supplying a complete toolpath.
+   Use that job to define the shared motion and all-height occupancy contracts and
+   deliver a deterministic generated endmill sequence, then the cone/V-carve slice.
+   Never infer vertical clearance from the existing fixed-Z verifier.
+
+   **Stopping condition for the next refinement:** the first
+   job has explicit inputs, expected residual/overcut/access results, supported
+   boundaries and output acceptance gates. Keep missing choices visible; do not
+   label recommendations as accepted. **Implementation stopping condition:** the
+   chosen generated sequence passes independent continuous-motion/stock checks and
+   reports unsupported or partial outcomes; output compatibility and physical
+   machining acceptance are separate gates. Defer further scalar area precision,
+   universal MOP parity, general optimizer infrastructure and 3D stock until a named
+   consumer shows why the bounded workflow cannot meet its requirements.
 
 7. **Deferred MCP/core capability: author Manual Profile holding-tab positions.**
    Current automatic authoring covers width, height, minimum/maximum count, distance,

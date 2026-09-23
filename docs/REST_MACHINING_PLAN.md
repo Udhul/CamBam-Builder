@@ -1,21 +1,29 @@
 # Future rest machining and V-cutter paths
 
-Status: **active design refinement, 2026-09-22; implementation not started**.
-Requested 2026-09-08 and expanded 2026-09-22. Priority belongs only to [PROGRESS.md](PROGRESS.md#remaining-backlog-in-order).
+Status: **active design refinement, 2026-09-23; bounded geometry and supplied
+section-motion foundations implemented; generated paths and output adapters pending**.
+Requested 2026-09-08 and expanded 2026-09-22/23. Priority belongs only to [PROGRESS.md](PROGRESS.md#remaining-backlog-in-order).
 This document owns the problem, proposed outcomes, technical reasoning and future
 acceptance criteria. It does not claim implementation or authorize machine execution.
 The five original outcomes below are retained. The current design proposal and
-unresolved product decisions are in [Design refinement](#design-refinement---2026-09-22).
+unresolved product decisions are in [Design refinement](#design-refinement---2026-09-22)
+and the latest [execution architecture refinement](#execution-architecture-refinement---2026-09-23).
 
 ## Programmatic execution requirement
 
-The framework must calculate geometry and paths programmatically and load/save
-CamBam files without running CamBam. No headless CamBam service or callable CAM
-engine is available to this workflow. Do not design around GUI automation,
+The framework must calculate supported geometry and paths programmatically and
+load/save CamBam files without running CamBam. No supported standalone headless
+CamBam engine has been established for this workflow. CamBam does expose
+in-application scripting/plugins, including a G-code generation example; that is
+different from an independently callable, supported headless service. Do not design around GUI automation,
 CamBam plugins/scripts, or manual toolpath extraction as execution dependencies.
 Implement the needed geometry, cutter and supported MOP path algorithms in the
 framework, using an appropriate programmatic geometry library where justified.
-CamBam is the file consumer and an optional manual validation environment.
+For existing native-MOP authoring, CamBam remains the toolpath generator and
+postprocessor: opening the `.cb` and generating/exporting G-code is required.
+For future framework-generated motion, CamBam is an optional inspection/editing
+environment and one possible output route. A direct postprocessor is a separate
+capability; calculating paths alone does not yet make the workflow headless to G-code.
 
 The useful proxy here is a **file representation**: calculate XYZ tool-center
 paths ourselves, save them as shapes and attach an Engrave MOP. It is not a way
@@ -23,6 +31,304 @@ to invoke CamBam's calculations. Manually exported CamBam paths may serve as
 optional comparison fixtures, but normal operation and automated tests must not
 require them. CamBam's scripting examples document possible file/motion behavior;
 they are not a runtime interface for this framework.
+
+## Execution architecture refinement - 2026-09-23
+
+This section records the user's new context and the lead's recommended design.
+Recommendations and unanswered choices are not recorded as user agreement.
+It refines the detached-core proposal below, not a replacement implementation.
+
+### User context and current capability
+
+- Preserve programmatic CAD/Part/MOP authoring and `.cb` interchange. The product
+  goal is native object coverage; current support is bounded, not full CamBam parity.
+- Today's workflow opens that file in CamBam, generates paths with Ctrl+T and
+  exports G-code with Ctrl+W (the user's workflow also regenerates paths there).
+  CamBam's selected postprocessor and configuration determine the machine output;
+  `.nc` is an example extension, not the interface contract.
+- Users may inspect and edit layout, geometry, enabled Parts/MOPs and output grouping
+  before machining. Preserve this workflow alongside future headless execution.
+- Explore an independent toolpath/stock core, reusable beyond rest and V-carving,
+  with eventual direct G-code output and alternative generators/optimizers.
+  Exact replication of CamBam path shapes/order is not a requirement expressed
+  here. Future shape-following 3D routing is an extension interest, not current scope.
+
+The detached geometry/cutter/stock design, generated-motion evidence, native versus
+explicit-path adapters and extensible strategies were already proposed. The new
+emphasis is two complete output routes, a clear execution authority, edit/reimport
+semantics, and an explicit delivery decision for direct postprocessing. Existing
+`planar.py` provides nominal geometry; `stock.py` verifies supplied horizontal
+section motions; `machining_planning.py` balances depths/process parameters. None
+currently generates a general XYZ path, optimizes routes or posts G-code. Existing
+MOP `optimisation_mode` is a serialized CamBam setting, not our own optimizer.
+
+Primary sources checked 2026-09-23: CamBam's [automation documentation](https://www.cambam.info/doc/plus/Automation.htm)
+documents scripting and .NET plugins, and its [MOP Automate example](https://www.cambam.info/ref/script.mop-automate)
+describes opening a source file, inserting operations and producing G-code.
+Its [script instructions](https://www.cambam.info/ref/script) run inside CamBam.
+Therefore "CamBam has no API/automation" is too strong. These sources do not
+establish a supported standalone headless engine or its deployment/licensing
+contract; no such integration was tested here. Reopen an optional native bridge
+only with a supported interface and concrete consumer need. It must not become
+a dependency of the independent core.
+
+### Execution authority and compatibility
+
+The decisive invariant is that removal evidence describes the motions intended
+for execution. Our generated pocket path cannot certify clearance left by a
+different native pocket path, even when both use the same outline and cutter.
+Ideal reachable area is an upper bound on possible removal, not guaranteed
+cleared space. Conservatively assuming unknown material remains can support
+analysis, but may prevent useful links or invalidate cutting-engagement limits.
+
+| Route | Motion authority and stock evidence | Output and limit |
+| --- | --- | --- |
+| Native MOP workflow | CamBam generates motions; framework estimates remain estimates unless a supported trajectory source or independently proven lower removal bound exists. | Existing editable `.cb`; CamBam generates and posts. No exact native-rest guarantee from MOP parameters alone. |
+| Framework motion through CamBam | Core generates roughing and dependent cleanup; stock comes from those ordered motions. | Proposed XYZ/Engrave adapter must establish actual emitted cutting, entry/link/retract and order semantics. Native regeneration must not silently substitute a different plan. |
+| Framework motion through direct post | The same core plan is lowered to a declared controller dialect and independently checked. | Future headless G-code plus optional `.cb` inspection artifact; bounded dialect support, not universal postprocessor compatibility. |
+
+CamBam [documents a GCode machining operation](https://cambamcnc.org/doc/1.0/toolpaths-and-gcode.html)
+as well as Engrave. A supported NC-reference/import route may be worth comparing
+with XYZ/Engrave for motion inspection; it is not currently implemented or selected.
+Neither route should be called lossless before testing its complete motion
+semantics. An inspection-only file must say so; a path polyline does not encode
+all feed, spindle, tool-change, rapid and program-state semantics.
+
+For native interoperability distinguish three claims: document fidelity, equivalent
+machining intent/result within declared tolerances, and identical trajectories.
+The first remains a library concern; the second is the useful future acceptance
+goal. The third is optional compatibility research, not the default design target.
+
+### Accepted integration requirement - 2026-09-23
+
+The user accepts framework ownership of both roughing and cleanup for the first
+reliable combined sequence, conditional on supporting both standalone operation
+and native CamBam shape/MOP integration. Native integration is a required product
+workflow, not merely a way to preview independent paths. The user also accepts
+designing direct headless G-code output now and implementing it after the first
+useful rest/V-carve workflow. The third answer establishes caller-owned workflow
+orchestration: the framework supplies reusable capabilities for iterative import/edit
+and embedded headless applications, without imposing a fixed use-case sequence.
+These decisions do not assert that native path equivalence is already established.
+
+Both workflows use the same core to calculate rest, tool access, V-carve motions
+and candidate combinations. CamBam geometry/MOP inputs are normalized through an
+adapter; direct Python inputs need no CamBam document. Keep these result forms
+independently callable and composable:
+
+| Requested result | Core result and CamBam attachment contract |
+| --- | --- |
+| Rest analysis | Pure rest with source-motion evidence, original protected target, uncertainty and residuals; optionally attach closed preview shapes. |
+| Native endmill cleanup | Derive tool-specific closed machining regions with permitted overlap into cleared/free space; attach a smaller-tool Pocket, or a Profile only where its finite cutting band covers the intended cleanup. Preserve original geometry/MOPs and explicitly configure the new operation. |
+| Explicit endmill cleanup | Generate cutting and access motions from the same target/stock request; return motion values independently or use a supported path-output adapter. |
+| V-carve cleanup | Generate variable-depth tool-center paths using the original finish target, tool profile, residual stock and allowed overlap; attach XYZ Pline shapes and correctly configured Engrave MOPs through a validated adapter. |
+| Combined strategy | Compare permitted tool/operation sequences against the same target and constraints; return the selected sequence, evidence, residual and tradeoffs. Native and explicit outputs can be combined only where their stock dependencies are supported. |
+
+Do not pass an expanded rest polygon to a general V-carver as a new finish design.
+Its artificial boundary against cleared space would alter the intended wall/depth
+solution. Keep pure rest, allowed machining domain, protected target and tool-center
+paths separate. For endmill attachment, distinguish a cutter-center region from
+the boundary consumed by a native Pocket/Profile; passing centers as boundaries
+would apply tool compensation again. Overlap is tool- and access-dependent, not
+a uniform arbitrary outward offset or a substitute for stepover.
+
+Support curved output as an extension of the motion contract. Preserving endpoint
+Z and bulge in XML does not prove the intervening spatial motion. First use bounded
+XYZ line segments; add bulged paths only after core interpolation, native Engrave
+behavior and relevant post output agree within declared deviation/sweep limits.
+Do not advertise a CamBam bulge as an arbitrary spatial-curve representation.
+
+Attach evidence to each source operation rather than to an entire document mode.
+When CamBam generates a preceding native path, analysis based on our estimated
+counterpart remains estimated. Native region/MOP cleanup authoring is still useful,
+but cannot silently promote that estimate to guaranteed clearance for later links
+or stock-dependent cuts. Unsupported mixed sequences must report the specific
+missing evidence; no silent switch of execution authority is allowed.
+
+Acceptance must eventually cover both input routes and each advertised attachment:
+equivalent normalized requests produce equivalent core results; native cleanup
+regions retain holes/protected walls and admit the chosen cutter; actual native
+Pocket/Profile output achieves the claimed cleanup within tolerance; XYZ/Engrave
+output preserves the required motion; and combinations retain ordered stock
+dependencies. This is a product requirement and future verification plan, not
+current native or production acceptance.
+
+### Proposed shared core and adapters
+
+Keep one package initially, with internal modules and dependency direction toward
+owned immutable values. A separate distribution/service or generic plugin registry
+is unnecessary. Names below describe responsibilities, not new public APIs.
+
+| Boundary | Responsibility |
+| --- | --- |
+| Input normalization | Convert direct Python requests or a CamBam snapshot into resolved geometry, operation intent, tools, setup, units and constraints. Resolve inherited styles/defaults, enabled order, nesting/transforms and stock offsets; reject missing required values or unsupported semantics. |
+| Target and stock | Keep desired final geometry/protected material distinct from evolving stock. Evaluate cutter occupancy/removal, residual and uncertainty against ordered motions; analysis is callable without a generator. |
+| Strategies | Pocket/profile/rest/V-carve algorithms propose cutting passes using shared geometry and stock queries. A V-carve target is independent of which clearing tools precede it. Strategies do not serialize `.cb` or controller commands. |
+| Motion representation | An explicit ordered plan of cutting, entry, linking, retract and setup/tool events with resolved tools, feed/spindle requirements, physical tip datum, frame/units and provenance. Begin with fixed-axis XYZ lines; add arcs with explicit plane/center/sweep/interpolation contracts when needed. |
+| Scheduling and optimization | Respect stock and operation dependencies, tool/process constraints and caller-fixed order. Generate a deterministic baseline first; later improve travel, entry, segmentation or cutting strategy under explicit objectives. Controller acceleration/look-ahead remains a separate machine concern. |
+| Verification | Evaluate final continuous motions, including cutting versus non-cutting tool/holder occupancy and between-height behavior. Replay stock after motion changes. Report unsupported/unassessed process or machine constraints separately from geometric success. |
+| Output adapters | Map a verified plan into a bounded CamBam path representation or controller-specific program. Keep ordinary native-MOP document export independently available. Validate any changed interpolation or inserted motions after lowering. |
+
+Toolpath semantics must not depend on CamBam entity IDs, XML, a Shapely object, or
+a controller's textual G-code. Thin adapters retain mappings back to document
+objects. Use direct pure Python APIs first; MCP remains a caller of the same core.
+Preserve the existing SectionMotion contract as a bounded verifier, not the public
+model for all future motion. Extend or adapt it only where the first XYZ consumer
+proves reuse, avoiding a speculative rewrite of working geometry foundations.
+
+For the first rest/V-carve scope, fixed-axis cutters and bounded depth sections
+with interval coverage are a reasonable representation. Sampling a few Z planes
+does not prove clearance between them. Introduce mesh/dexel/voxel stock only if
+a concrete 3D target cannot be represented efficiently and conservatively by the
+section contract. Future surface-following methods can share motions, tool values
+and provenance while requiring a different target/stock evaluator.
+
+Optimization is not a prerequisite for stock understanding. A sweep can be
+evaluated for supplied or generated trajectories independently of how they were
+chosen. Reordering cuts may preserve final removal yet change intermediate access
+and engagement; simplification/arc fitting can change removal itself. Each proposed
+optimization must retain constraints and revalidate affected stock prefixes and
+output motion. Prefer repeatable useful plans before pursuing better rankings.
+
+Direct postprocessing adds controller-specific units, coordinates, feed modes,
+arc support, tool/length offsets, spindle/coolant, program start/end and file/tool
+transitions. Unsupported commands/macros/cycles must fail explicitly. A CamBam
+postprocessor name or custom header/footer is not sufficient to reproduce its
+semantics; do not execute or silently transplant them. Begin with one declared
+controller profile and parse/backplot its supported output for comparison against
+the final motion plan, including rounding and any post-added moves. G-code emission
+does not imply machine execution or production acceptance.
+
+### Caller-owned workflows and reusable capabilities
+
+**User clarification, 2026-09-23:** use-case workflows are situational and belong
+to consuming applications. The framework may participate in repeated conversational
+iterations, import manually edited documents, or act as a programmatic design-to-
+output adapter inside another application. Neither explicit manual reimport nor
+automatic synchronization is a mandatory framework workflow. The earlier binary
+question is superseded by this separation of capability and orchestration.
+
+Expose independently useful operations for document import/inspection, resolved
+job construction, analysis, path generation, verification, result attachment and
+export. A caller can compose them, provide supported existing motion/stock inputs,
+or request only regions or diagnostics. Convenience composition may implement a
+common sequence without making that sequence the only entry point. Calls must not
+require a GUI, interactive approval, MCP session, network service or an implicit
+global "current job". These are target API requirements, not claims about new APIs
+already implemented. Existing document and MCP contracts remain their own owners.
+
+The consuming application chooses when to ingest changed data, which work to
+recompute, whether to ask a user, which strategy/tool sequence to request and where
+to write outputs. The core owns geometric/motion validity: a caller's workflow
+policy cannot turn stale removal evidence into valid clearance. Return structured
+results distinguishing current, stale, uncertain, unsupported, invalid and partial
+states where applicable, with the affected dependencies and reasons; do not resolve
+missing facts by an interactive prompt or silently change strategy. Keep freshness,
+evidence level and machining completeness distinct rather than one success flag.
+
+Native and standalone paths share these functions. File watching, application
+events or a future native bridge can call them to automate synchronization; they
+are integration responsibilities, not new core infrastructure required now.
+
+### Manual edits, provenance and regeneration
+
+Treat generated plans and stock as derived artifacts tied to immutable input
+snapshots. Retain fingerprints of geometry, resolved operations, tools, stock/setup,
+ordered predecessors, algorithm/tolerances and output profile. Accept a fresh
+document or supported in-memory request independently; when a prior snapshot is
+available, identify relevant semantic changes and affected derived results. Imported
+data must be usable without a prior framework session or hidden sidecar state.
+Persistence/transport of provenance is a separate adapter concern.
+
+"Understand user edits" means correctly interpreting the resulting supported
+geometry, relationships, transforms, enabled/order state and effective MOP/tool
+values, and diagnosing changed assumptions when comparison evidence exists. It
+does not mean inferring why the user edited them. Native numeric ID renumbering or
+XML formatting alone must not masquerade as a changed cut; ambiguous entity matches
+must cause conservative invalidation rather than invented identity. Missing external
+styles/tool settings and unsupported imported features must remain explicit gaps.
+Import preservation does not imply those features are supported for planning.
+
+Geometry/layout/tool/depth/enable/order changes invalidate affected plans and stock.
+The caller chooses whether and when to regenerate, inspect or export the edited
+document; verification must reject stale claims for the affected results. Preserve
+authored originals separately from derived path geometry. Edited generated paths
+can be supplied as explicit motion only through a supported interpretation and
+renewed verification; do not reconstruct pocket or V-carve design intent from them
+automatically. If derivation links are lost, treat paths as independent input with
+unknown provenance rather than overwrite them as if they were still owned output.
+
+Disabling a roughing MOP invalidates cleanup that assumes its removal. Splitting
+output files is valid only with explicit stock/setup and execution dependencies;
+a later file is not independently runnable merely because it contains one Part.
+Changing a postprocessor can invalidate output evidence without changing the
+abstract cutting plan. A complete setup translation can reuse evidence only under
+a proven frame transformation; moving geometry relative to fixtures cannot.
+Do not silently run both native source MOPs and their generated replacements.
+
+The core can only assess state supplied to it; it cannot observe unsaved GUI edits.
+The caller may supply updated state manually or automatically. Neither approach
+changes the dependency/freshness rules, and ingestion need not regenerate paths.
+Round-trip retention of provenance in native files needs its own compatibility
+evidence; do not assume arbitrary metadata survives CamBam save.
+
+Future acceptance must cover fresh edited-file import without session history,
+equivalent direct/document inputs, relevant versus cosmetic changes, disabled or
+reordered predecessors, ambiguous/lost identity, stale-result rejection and explicit
+recomputation. Demonstrate both an iterative document consumer and a noninteractive
+embedded caller using the same core. Do not require live synchronization to prove
+these contracts. These checks are separate from native motion and machine acceptance.
+
+### Delivery recommendation and open decisions
+
+Keep rest/V-carving as the active capability driving the shared core. Do not expand
+the immediate task to all native MOPs, a generic optimizer, general 3D stock, or a
+CamBam postprocessor interpreter. The earlier fixed-section work supplies useful
+regression evidence, but another isolated capsule refinement does not by itself
+deliver the user's workflow.
+
+Recommended progression (priority and actual next work live in PROGRESS):
+
+1. Apply the accepted execution/output boundaries to one bounded roughing-plus-
+   cleanup consumer, with full stock height, tool/reach, target, entry/retract and
+   tolerance requirements. Prepare a concrete synthetic proposal for user refinement;
+   do not require the user to invent all trajectory coordinates. Include a cone
+   feasibility case to expose cylindrical-only assumptions.
+2. Deliver the first generated sequence with shared motion values, all-height
+   occupancy/access, stock replay and independently checked residual/overcut.
+   First prove an endmill sequence; then pointed-cone variable-depth and capped-depth
+   V-carving using the same contracts. Broader topology should serve this outcome.
+3. Prove the CamBam explicit-path adapter against actual emitted motions before
+   relying on it for execution. Design the direct-post boundary now; the user
+   accepted delivery after the first useful rest/V-carve workflow. If native output
+   cannot preserve required semantics, report that blocker and propose revisiting
+   the order rather than weaken the motion contract.
+4. Add one direct controller post with semantic output checks, then expand strategies,
+   optimization and 3D target representations only against concrete jobs and measured
+   limitations. Matching native motion byte-for-byte is not a completion criterion.
+
+Workflow decision status, asked 2026-09-23:
+
+- **Answered:** the first reliable combined workflow may own roughing and cleanup,
+  while both standalone and native shape/MOP workflows are required. See the
+  [accepted integration requirement](#accepted-integration-requirement---2026-09-23).
+  Native-generated predecessors still need a separate motion-evidence contract.
+- **Answered:** design for headless G-code now; implement after the first useful
+  rest/V-carve workflow. Keep the motion model independent of output format.
+  Select the first controller dialect, tool-change/setup behavior and acceptance
+  environment before that later postprocessor increment.
+- **Answered by reframing:** workflows belong to callers. Supply complete import,
+  interpretation, change/freshness diagnostics and explicit regeneration capabilities
+  for supported inputs; applications decide whether ingestion/recomputation is manual,
+  automatic or iterative. See [caller-owned workflows](#caller-owned-workflows-and-reusable-capabilities).
+- The physical acceptance job, process limits, fixtures/reach and residual/error
+  thresholds remain to be specified. Synthetic defaults are test data, not production
+  recommendations or user acceptance.
+
+This refinement closes when context, boundaries, recommendations and unanswered
+choices are recorded and reviewed. Documentation-only checks suffice; no pytest,
+native-file validation or machining trial is needed for this round. Implementation,
+output compatibility and production acceptance remain separate future gates.
 
 ## Problem and machining intent
 
@@ -409,9 +715,10 @@ User decisions accepted 2026-09-22:
    they pass our contract, keeping machining semantics and verification owned here.
 
 Still settle the first acceptance target (outline, floor/through
-depth, wall shape, tools), allowed residual boundary/thickness/volume tolerances,
-and whether the first workflow requires native Profile/Pocket execution or accepts
-framework-generated explicit paths. No numerical production defaults or implicit
+depth, wall shape, tools) and allowed residual boundary/thickness/volume tolerances.
+The [2026-09-23 answer](#accepted-integration-requirement---2026-09-23) permits a first
+framework-generated sequence while requiring native shape/MOP integration too.
+No numerical production defaults or implicit
 permission to change wall shape, floor depth or allowance are established here.
 
 ### Target geometry precedes tool strategy
@@ -592,7 +899,9 @@ proposed synthesis/derivations, not claims that these products implement it iden
   describes drop/push cutter operations and cylindrical, ball, cone and composite
   models. It is a candidate for later surface work, not automatically a rest planner.
 
-No dependency is selected. Compare a small backend shortlist on analytic offset
+At this proposal stage no dependency was selected; the later
+[Shapely/GEOS decision](#shapelygeos-evaluation-decision---2026-09-22) supersedes that
+open choice. Backend evaluation criteria are analytic offset
 accuracy, holes/near-tangencies, deterministic topology, supported Python 3.9-3.13
 and Windows installation, license/distribution obligations and measured performance.
 Start with planar Booleans/offsets; add a medial-axis backend only if the first

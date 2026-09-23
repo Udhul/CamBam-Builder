@@ -15,7 +15,7 @@ Read this map after the root README; follow only the relevant owner.
 | Local MCP protocol, state, tools and compatibility contract | [MCP_CONTRACT.md](MCP_CONTRACT.md) and [tool schemas](../cambam_builder/mcp_adapter/contract_v1.schema.json) | Document foundation and modern/legacy protocols; authoring and desktop/second-PC acceptance follow |
 | Reusable consuming-project agent policy | [consumer_AGENTS.template.md](../cambam_builder/mcp_adapter/consumer_AGENTS.template.md) | Copy-and-customize bootstrap plus daily natural-language CamBam collaboration workflow; not repository development policy |
 | Region and all-shape Z-coordinate parity | [SHAPE_PARITY_PLAN.md](SHAPE_PARITY_PLAN.md) | Independent upstream feature support; priority stays in PROGRESS |
-| Rest machining and V-cutter design | [REST_MACHINING_PLAN.md](REST_MACHINING_PLAN.md) | Active design proposal, open decisions, research and acceptance; priority stays in PROGRESS |
+| Rest machining, V-cutter and shared CAM execution design | [REST_MACHINING_PLAN.md](REST_MACHINING_PLAN.md) | Active core/output proposal, native versus headless workflows, edit invalidation, open decisions, research and acceptance; priority stays in PROGRESS |
 | Package metadata and dependency declarations | `pyproject.toml` | Sole source for published metadata and direct dependencies |
 | Executable API behavior | `cambam_builder/` and future regression tests | Actual implementation; document divergences from target explicitly |
 | License | [LICENSE](../LICENSE) | MIT terms; does not authorize external processing of user data |
