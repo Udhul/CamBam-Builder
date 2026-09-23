@@ -4195,7 +4195,7 @@ remain outside this completed scope. Next priority and reopening criteria are in
 
 The accepted nominal [RC01 request](REST_MACHINING_PLAN.md#rc01-inputs-and-process-bounds)
 now generates ordered T1 roughing and T2 corner cleanup in
-`cambam_builder.cam_core.rc01` (with the previous import path retained).
+`cambam_builder.cam_core.rc01`.
 The verifier checks every move's continuous planar sweep
 and occupied Z interval against original protected geometry, prior guaranteed
 removal, tool components and process bounds. T2's four access columns have actual
@@ -4228,15 +4228,17 @@ comparison or physical validation was performed. The next [I/E/N gates](REST_MAC
 need A/B/C files and actual CamBam motion evidence before native acceptance.
 
 The 2026-09-23 modular boundary follow-up moved this standalone implementation
-to `cambam_builder.cam_core.rc01` while retaining the old import as a thin
-compatibility module. Its direct dependency remains the detached `stock` owner;
+to `cambam_builder.cam_core.rc01`. The former root-level `rc01.py` was removed;
+there was no released API or identified caller requiring a compatibility path.
+Its direct dependency remains the detached `stock` owner;
 the implementation has no direct native entity, XML or MCP import. The explicit
 setuptools package list now includes `cambam_builder.cam_core`. A wheel and sdist
-built with `uv build --out-dir output/cam-core-boundary-mudww54n/` include the new
-subpackage. The wheel installed with its declared NumPy dependency in a clean
-Python 3.13 environment under that ignored directory; a `python -I` probe from
-outside the source root located `cam_core.rc01` in that environment's
-`site-packages`, matched the compatibility import, generated 2945 motion items
-and constructed `CBProject`. Optional Shapely was absent from the isolated
+built with `uv build --out-dir output/cam-core-direct-mudxdu8y/` include
+`cam_core/rc01.py` and exclude the root `rc01.py`. The revised wheel was
+installed in an isolated Python 3.13 environment under
+`output/cam-core-boundary-mudww54n/`; a `python -I` probe from outside the
+source root located `cam_core.rc01` in that environment's `site-packages`,
+found no root RC01 module and generated 2945 motion items. Optional Shapely
+was absent from the isolated
 environment, showing generation does not eagerly require the residual backend.
 This is package-boundary evidence, not a new CamBam or production acceptance.

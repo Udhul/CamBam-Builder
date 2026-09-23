@@ -29,7 +29,6 @@ are outside that runtime package list.
 | `cambam_builder/cad_transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
 | `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy, remaining-section bounds and supplied section-motion verification | Horizontal cuts and explicit travel inside rectangular stock/target; no generated or native path integration |
 | `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock-analysis package; currently owns `rc01.py` | Exact nominal rectangular two-tool job; no native entity, XML, MCP or machine-output dependency |
-| `cambam_builder/rc01.py` | Compatibility imports for RC01's previous module path | Keep existing direct-Python callers working while new code imports `cam_core.rc01` |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
 | `cambam_builder/machining_recommendations.py` | Immutable tool/material/machine contexts, provenance-bearing recommendations, user diameter tables and pluggable pure strategies | Recommendation selection only; contains no curated catalog, persistence, document mutation or safety claim |
@@ -92,8 +91,9 @@ and stock values, but must not import `CamBamProject`, native CAD/MOP entities,
 the XML reader/writer or the MCP adapter. Native `.cb` input/output and future
 controller posting belong in thin adapters outside `cam_core`; adapters normalize
 source data into core values and separately validate emitted motion. Existing
-root-level `stock`, `planar` and machining-calculation APIs remain stable; move
-their implementations only with a concrete consumer and compatibility checks.
+root-level `stock`, `planar` and machining-calculation modules remain active
+owners. Move one when a concrete slice needs it, update its callers, and avoid
+passive compatibility wrappers for unreleased CAM paths.
 
 ### Directional analytic stock section bounds
 

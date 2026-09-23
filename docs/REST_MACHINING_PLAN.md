@@ -161,8 +161,10 @@ current native or production acceptance.
 
 Keep one distribution, with the detached calculations, stock/volume analysis and
 strategies under `cambam_builder.cam_core` as focused internal modules. The first
-end-to-end slice is `cam_core.rc01`; established root-level detached APIs remain
-stable until a concrete migration need justifies moving them. Native CamBam and
+end-to-end slice is `cam_core.rc01`; root-level stock, planar and calculation
+modules remain active owners until a concrete migration need justifies moving
+them and updating their callers. Do not add compatibility wrappers merely to
+preserve unreleased layout. Native CamBam and
 future controller adapters stay outside `cam_core`, depending inward on its
 immutable values. A separate distribution/service or generic plugin registry is
 unnecessary. Names below describe responsibilities, not new public APIs.

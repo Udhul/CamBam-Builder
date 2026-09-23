@@ -1015,8 +1015,7 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    **Standalone S implemented 2026-09-23; native gates next.**
    `cambam_builder.cam_core.rc01` and `tests/test_rc01.py` now own the accepted nominal
    generated motion, whole-height stock/access replay, rational per-slab rest
-   intervals and negative variants. The previous `cambam_builder.rc01` import is
-   retained as a compatibility facade. New detached CAM features use the
+   intervals and negative variants. New detached CAM features use the
    [package boundary](structure_spec.md#execution-boundary-and-future-cam-core)
    before native adapters are added. See the [implemented contract](structure_spec.md#rc01-generated-motion-and-full-height-replay)
    and [dated checks](REVIEW.md#rc01-standalone-generated-sequence---2026-09-23).
