@@ -280,25 +280,24 @@ surface 0, target depth -3, increment 1, stepover 0.4, roughing clearance 0,
 clearance plane +5, cut feed 300, plunge 60 and CW spindle 12000. The source
 Pocket MOPs remain disabled in all three files.
 
-The first user-posted trial is preserved under `output/rc01-output-20260923-130450/`
-and recorded in [the review](REVIEW.md#rc01-first-cambam-output-trial---2026-09-23).
-Those original posts cut to Z=-6 and must not be used as accepted RC01 motion.
-The repaired, still-unposted probes are under `output/rc01-repair-20260923-132551/`.
+The first user-posted trial is recorded in
+[the review](REVIEW.md#rc01-first-cambam-output-trial---2026-09-23). Its B/C
+posts remain under `output/rc01-output-20260923-130450/`; the original A post
+was overwritten by a repeat export, so use its recorded first-trial hash and
+findings. Those original posts cut to Z=-6 and are not accepted RC01 motion.
+The repaired probes are under `output/rc01-repair-20260923-132551/`.
 Their Engrave Plines lie at Z=0; each level MOP uses stock surface 0/-1/-2 and
 target depth -1/-2/-3 respectively, with `OptimisationMode=None`. Preserve the
 old artifacts for comparison. A repeat export is useful only for a focused
 depth/order finding until an output carrier can express required approach,
 retract and tool events; do not treat another A/B/C post as an E/N acceptance
-request by itself.
-
-For the narrow repair check, open only
-`output/rc01-repair-20260923-132551/A-rough.cb` in CamBam Plus 1.0, regenerate
-toolpaths and export the complete machining output with the `Default` post and
-Default mm profile to `A-rough.nc` in that same directory. Do not save the
-`.cb`. The first T1 XY rapid should end at (5,5,+5), the first cutting plunge
-should end at Z=-1, and no cutting move should descend below Z=-3. Report the
-export path and any CamBam warning. Failure of any value reopens the adapter
-repair; passing these three values confirms only depth/order lowering, not E.
+request by itself. The repaired A was posted: the first plunge reaches Z=-1
+and the minimum Z is -3, confirming the depth fix, but the first rapid goes to
+(26.5981,9.5,+5) instead of (5,5,+5). The MOP's UUID-sorted target selection
+explains that order. It also posts rapid approaches/retracts where RC01 requires
+feed moves. See [the focused result](REVIEW.md#rc01-repaired-a-cambam-output-check---2026-09-23).
+No additional Engrave export is requested until a carrier can encode the
+required motion roles. B/C repaired variants have not been posted.
 
 When CamBam Plus 1.0 validation is available, open each file, inspect the source
 Region/Part and enabled MOPs above, regenerate toolpaths and post each separately

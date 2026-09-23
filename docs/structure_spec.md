@@ -381,10 +381,12 @@ target only the generated level-cut centerlines (79 per T1 depth, 248 per T2
 depth); they do **not** encode the generator's entry, link, retract or event roles.
 After the first native output trial showed additive depth and path reordering,
 the candidate Plines are flattened to Z=0, each level MOP has `StockSurface`
-one millimetre above `TargetDepth`, and `OptimisationMode=None` requests generated
-target order. This is an unposted adapter repair, not an
-accepted explicit-motion carrier. It does not encode the required feed approach,
-setup-position tool change or spindle-stop event.
+one millimetre above `TargetDepth`, and `OptimisationMode=None` asks CamBam to
+retain the supplied target sequence. The repaired A post confirms the intended
+depths but follows the project's UUID-sorted MOP target selection rather than
+framework cut order. This is not an accepted explicit-motion carrier. It does
+not encode the required feed approach, setup-position tool change or
+spindle-stop event.
 Those complete ordered roles, source and motion fingerprints, and independent
 rough/final residual intervals live in `comparison.json`. The four C windows are
 design-neutral machining boundaries. Every candidate preserves the original

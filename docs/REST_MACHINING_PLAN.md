@@ -509,8 +509,9 @@ owns the exact generation and comparison commands.
 **2026-09-23 first output trial:** the user posted A/B/C with CamBam Plus 1.0;
 the [review](REVIEW.md#rc01-first-cambam-output-trial---2026-09-23) records
 floor overcut, path reordering and invalid T2 tool-change sequencing. E and N
-failed. The first additive-depth/order repair is prepared but not natively
-posted. The existing N gate still requires a verified T1 prefix; a future
+failed. The repaired A post confirms the additive-depth fix, but still fails
+ordered/role motion; B/C repaired variants have not been posted. The existing
+N gate still requires a verified T1 prefix; a future
 fully native Pocket roughing variant may supply one only after its actual
 motion independently passes the same stock, access and residual checks.
 

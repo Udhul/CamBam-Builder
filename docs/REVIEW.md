@@ -4297,7 +4297,9 @@ The user opened the prepared A/B/C candidates in CamBam Plus 1.0 and exported
 `A-rough.nc`, `B-explicit.nc`, and `C-native-cleanup.nc` under the ignored
 `output/rc01-output-20260923-130450/` directory. The user reported the
 `Default` postprocessor and Default mm profile; the G-code headers independently
-name `Default`. The unchanged original posts have SHA-256 values:
+name `Default`. The posts at the time of the first trial had SHA-256 values
+below. The original A file was later overwritten by a repeat export in that
+directory; its first-trial hash and inspected findings remain recorded here.
 
 | Post | SHA-256 |
 | --- | --- |
@@ -4351,6 +4353,51 @@ source/candidate hashes still match their comparison manifest after the user
 exported G-code. The corrected A/B/C candidate hashes match their new manifest;
 the files were strict-reimported during generation. Automated checks verify
 the adapter's changed XML fields and reader behavior, not CamBam's motion for
-the corrected candidates. A focused repaired-A export is the remaining native
-check for the first depth/order repair; full E/N requires a suitable carrier
-and actual-motion replay.
+the corrected candidates. The focused native result follows; full E/N requires
+a suitable carrier and actual-motion replay.
+
+## RC01 repaired-A CamBam output check - 2026-09-23
+
+After commit `6dd3417`, the user posted the repaired
+`output/rc01-repair-20260923-132551/A-rough.cb` through CamBam Plus 1.0 to
+`A-rough.nc` in that directory. Its SHA-256 is
+`3f94e4f9ed700f529e01cb43414c4273dc37d02bfdc356185baa83d8d455b24e`.
+The candidate `.cb` still matches the comparison manifest hash. A first repeat
+export landed over the original A post in
+`output/rc01-output-20260923-130450/`; it had the old Z=-6 body and
+new timestamp, so it was not evidence for the repaired `.cb`. The second,
+correct export is the repaired-A post above. Preserve the user-provided files.
+
+The repaired post's first T1 plunge ends at Z=-1 (line 14); feed endpoints are
+limited to -1/-2/-3, and its minimum Z is -3. Thus the additive-depth and
+single-level MOP fix passes this narrow native check. The Default post reader
+decodes 1185 items and warns that the startup machine position is not encoded.
+The exact comparison still fails at item 2, line 12: the first XY rapid ends
+at `(26.5981,9.5,5)` instead of `(5,5,5)`. The actual first target equals the
+first UUID-sorted target selected by the MOP after strict `.cb` import.
+The first four posted run starts match the first four selected target starts:
+`(26.5981,9.5)`, `(3,3)`, `(3,20.5)`, `(5,5)`.
+`CamBamProject` owns explicit target selections as unordered sets and
+`get_mop_targets()` sorts UUIDs; the writer exports that order. For the first
+four runs, CamBam's `OptimisationMode=None` follows this exported sequence,
+not the framework motion order. Changing that shared selection contract solely
+for this probe would still leave the carrier unable to encode movement roles.
+
+The first approach is `G0 Z1` from clearance +5, whereas RC01 requests a feed
+approach to +1. After the first cut, `G0 Z5` is a rapid retract where RC01
+requests a feed retract; the post has 236 rapid upward moves from negative Z.
+The final spindle stop is at `(37,15,5)`, not the declared setup/end point.
+These are independent E failures even if target order were restored. B/C were
+not reposted; N remains unverified. The first practical next increment is a
+native-MOP roughing and corner-cleanup variant with independent replay of its
+actual output. Reopen exact explicit-motion delivery with a carrier that can
+preserve ordered targets and the required move/event roles.
+
+Post-commit gates against `main`: clean branch worktree before this evidence
+edit, commit range `main..HEAD` nonempty, `main` ancestor of HEAD, and
+`git diff --check main...HEAD` passed. Focused post-commit checks passed:
+`test_rc01_native.py` 3 tests, `test_rc01.py` 6 tests and
+`compileall -q cambam_builder`. The branch-level diff has 25 changed files;
+no merge-ready conclusion is made from this check because the complete
+`main...HEAD` content has not been reviewed for integration and this evidence
+edit is uncommitted.

@@ -72,10 +72,14 @@ mm profile. All three original posts reach Z=-6 although the target floor is
 Z=-3. The first A path starts at (27,18.5) rather than required (5,5); B and C
 also reorder the T1 prefix. B/C change to T2 away from the setup point without
 an explicit spindle stop. The first adapter repair puts Engrave geometry at Z=0,
-uses one depth interval per MOP and disables CamBam path optimisation. A corrected
-A/B/C candidate set has passed strict reimport and hash checks, but has **not**
-been posted in CamBam. No E/N motion or rest-coverage acceptance is recorded.
-See the [trial evidence](REVIEW.md#rc01-first-cambam-output-trial---2026-09-23).
+uses one depth interval per MOP and disables CamBam path optimisation. The
+user-posted repaired A confirms Z=-1 first plunge and Z=-3 minimum, but its
+first XY rapid is still (26.5981,9.5), not (5,5). The native post follows the
+framework's UUID-sorted MOP target selection, and CamBam adds rapid approach/
+retract moves. B/C repaired posts remain untested. No E/N motion or rest-coverage
+acceptance is recorded.
+See the [first trial](REVIEW.md#rc01-first-cambam-output-trial---2026-09-23)
+and [repaired-A check](REVIEW.md#rc01-repaired-a-cambam-output-check---2026-09-23).
 
 **2026-09-23 package organization preference recorded.** New behavior belongs
 to explicit [native, reusable CAM core, extended CAM, or integration owners](structure_spec.md#package-organization-decision-and-migration-plan).
@@ -90,10 +94,11 @@ while limiting the present change to the active slice.
 execution variant, then replay its posted motion against stock, access and rest
 criteria. Keep the explicit-motion E route separate: Engrave's added entries,
 links and tool events remain an output-carrier blocker despite the first adapter
-repair. Do not request another full A/B/C export until a candidate can test
-those roles meaningfully; the corrected files are available for a focused depth/
-ordering check if needed. The native package consolidation follows the motion
-contract decision; moving imports now would obscure the active output defect.
+repair. The focused repaired-A post has settled the depth correction and exposed
+the target-order contract; do not request more Engrave A/B/C exports until a
+candidate can express those roles meaningfully. The native package consolidation
+follows the motion contract decision; moving imports now would obscure the active
+output defect.
 General area precision and optimizer work remain deferred.
 Direct posting remains subsequent delivery. The user selected the proposed synthetic
 case, including its test-only plunge/feed limits, on 2026-09-23. These are accepted
@@ -1062,9 +1067,11 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    requires it. Native input normalization and A/B/C comparison candidates are
    implemented, with source MOPs disabled. The first posted A/B/C trial exceeded
    the -3 floor to -6, reordered T1, and changed to T2 without the required
-   setup/spindle sequence. A corrected Engrave depth/ordering probe is prepared
-   but not natively posted. Next prove a native-MOP-backed roughing/cleanup
-   variant from actual posted motion and independent stock replay; revisit the
+   setup/spindle sequence. The repaired A post confirms the intended -1/-2/-3
+   depths, but still follows UUID-sorted targets and inserts rapid approach/
+   retract. B/C have not been reposted. Next prove a native-MOP-backed
+   roughing/cleanup variant from actual posted motion and independent stock replay;
+   revisit the
    explicit-motion carrier separately before claiming E. Caller-owned
    orchestration and subsequent
    direct posting remain accepted; never infer vertical clearance from fixed-Z evidence.
