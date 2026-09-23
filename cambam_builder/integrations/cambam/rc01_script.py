@@ -58,7 +58,9 @@ def _script(program):
             lines.append(f"M3 S{item.rpm}")
         else:
             raise ValueError("unsupported RC01 event")
-    return "|".join(lines)
+    # CamBam Plus 1.0 preserved literal '|' in a posted CustomScript. The
+    # property's XML must contain real line breaks for separate NC blocks.
+    return "\n".join(lines)
 
 
 def build_script_carrier(directory):
@@ -111,7 +113,7 @@ def build_script_carrier(directory):
         "job_fingerprint": job.fingerprint,
         "motion_fingerprint": program.motion_fingerprint,
         "item_count": len(program.items),
-        "script_lines": script.count("|") + 1,
+        "script_lines": script.count("\n") + 1,
         "postprocessor": "Default",
         "profile": "Default mm",
         "certificate_status": certificate.status,

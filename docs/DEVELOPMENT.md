@@ -422,20 +422,26 @@ The agent prepares the complete T1 roughing plus T2 cleanup `.cb`:
 & $ProjectPython -m unittest discover -s tests -p test_rc01_native.py -v
 ```
 
-The prepared candidate is
-`output/rc01-script-20260923-2115/S-combined.cb` (SHA-256
-`14b53e40c771ad69b9412729d3110185c3f32ad83c2da10f094ffdcda8c6a8a3`).
+The current prepared candidate is
+`output/rc01-script-lines-20260923-01/S-combined.cb` (SHA-256
+`91cb871c22429c9a94bcea0f7cbbee0532fa462eb52e3d8558d69094fa6cf933`).
 It retains the RC01 Region, Part stock and two disabled source Pockets. Its one
 enabled `RC01 T1 rough plus T2 cleanup literal motion` Drill/CustomScript MOP
 uses one anchor point at setup (-10,-10), tool 1, CW 12000 rpm, clearance +5
-and exact-stop output. The 2,942 literal script lines encode both tool sections,
+and exact-stop output. The 2,942 literal XML text lines encode both tool sections,
 feeds, approaches, retracts and the T2 stop/change/restart. CamBam's wrapper
 supplies the first T1 change/start and terminal stop. The ignored manifest
 records the candidate hash and framework fingerprints. The source, script
 and candidate strict-reimport; a synthetic wrapper replay passes, but only
 the actual CamBam post can establish E output behavior.
 
-**One user CamBam action:** open `S-combined.cb` in CamBam Plus 1.0, use the
+The first posted file under `output/rc01-script-20260923-2115/` is retained
+as failure evidence: CamBam preserved the previous `|` separators as literal
+text on one NC line, so the reader rejected line 14. Do not repost that `.cb`.
+The repaired candidate uses actual text newlines and has passed strict reimport
+and the local synthetic post/audit checks; native emission is still pending.
+
+**One user CamBam action:** open the current `S-combined.cb` in CamBam Plus 1.0, use the
 **Default** postprocessor and **Default mm** profile, generate toolpaths
 (Ctrl+T), then produce G-code (Ctrl+W) and save it as `S-combined.nc` beside
 the `.cb`. Return that `.nc` file or its exact path. No other `.cb` from the
@@ -443,7 +449,7 @@ diagnostic Pocket pairs is needed for this check; no machine run is requested.
 The agent then runs:
 
 ```powershell
-& $ProjectPython -m cambam_builder.integrations.cambam.rc01_script output/rc01-script-20260923-2115/comparison.json output/rc01-script-20260923-2115/S-combined.nc
+& $ProjectPython -m cambam_builder.integrations.cambam.rc01_script output/rc01-script-lines-20260923-01/comparison.json output/rc01-script-lines-20260923-01/S-combined.nc
 ```
 
 The audit hash-guards the candidate, checks every posted event and move

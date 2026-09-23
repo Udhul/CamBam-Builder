@@ -26,13 +26,15 @@ class NativeRC01Tests(unittest.TestCase):
             self.assertEqual([m.name for m in project.list_mops() if m.enabled],
                              ["RC01 T1 rough plus T2 cleanup literal motion"])
             script = next(m for m in project.list_mops() if m.enabled).custom_script
+            self.assertNotIn("|", script)
+            self.assertEqual(script.count("\n") + 1, manifest["script_lines"])
             post = folder / "S-combined.nc"
             header = ("( S-combined synthetic post )\n"
                       "( Post processor: Default )\n"
                       "G21 G90 G61 G40\nG0 Z5\nT1 M6\nG17\n"
                       "M3 S12000\nG0 Z5\nG0 X-10 Y-10\nG98\n")
             footer = "\nG80\nG0 Z5\nM5\nM30\n"
-            post.write_text(header + script.replace("|", "\n") + footer,
+            post.write_text(header + script + footer,
                             encoding="utf-8")
             result = audit_script_post(folder / "comparison.json", post)
             self.assertEqual(result["status"], "bounded_emitted_motion_pass")
@@ -42,7 +44,7 @@ class NativeRC01Tests(unittest.TestCase):
                                 result["rough_rest_by_depth_mm2"]))
             self.assertTrue(all(lo <= hi < 1.4 for lo, hi in
                                 result["final_rest_by_depth_mm2"]))
-            post.write_text(header + script.replace("|", "\n").replace(
+            post.write_text(header + script.replace(
                 "G1 F120 X5 Y5 Z1", "G0 X5 Y5 Z1", 1) + footer,
                 encoding="utf-8")
             self.assertEqual(audit_script_post(folder / "comparison.json", post)

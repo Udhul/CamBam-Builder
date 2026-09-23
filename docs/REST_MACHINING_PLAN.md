@@ -623,8 +623,12 @@ the required roles within one CamBam operation; its wrapper and literal
 motion must still be checked in the actual Default post. The prepared file,
 manifest and replay command are in the
 [runbook](DEVELOPMENT.md#rc01-literal-motion-cambam-carrier). Only that one
-CamBam post is requested. Direct standalone posting stays later unless the
-actual post shows another carrier limit and the user changes timing.
+CamBam carrier is under test. The first post preserved literal `|` separators
+on one invalid NC line; the agent repaired the `.cb` to contain actual XML
+newlines and prepared one revised post request. The emitted T1/T2 sequence
+remains unverified until that post is audited. Direct standalone posting stays
+later unless the revised post shows another carrier limit and the user changes
+timing.
 
 ### RC01 cone guard, acceptance scope and stopping condition
 
@@ -656,6 +660,50 @@ follows through the same contracts. Do not call full target removal or native ou
 accepted while the corresponding gate remains partial, blocked or untested.
 Reopen general topology, positive-error completion, low links, optimizers or finer
 area infrastructure only when an RC01 gate or a named next consumer requires it.
+
+## Native CamBam optimizer and output mapping foundation
+
+**Priority:** begin at the next natural breakpoint after the current RC01
+CamBam output carrier has a recorded pass or terminal limitation. The user
+requested a one-time reusable evidence base covering CamBam's native shape
+and machining-operation classes under both its 0.9.7 Legacy and 0.9.8 New
+optimisation modes. The agent prepares complete `.cb` files; the user's only
+required action is generating the corresponding native G-code in CamBam.
+Keep the number of posts small by grouping independent cases, but separate
+cases where one MOP or tool event could alter another's output.
+
+First inventory all classes available in the CamBam Plus 1.0 baseline and
+label each as authorable here, import/preserve-only, native-only, or unsupported.
+Include Rect, Circle, Arc, open/closed Pline, Points, Text and Region, and
+every discovered MOP class rather than assuming the current library's four
+authorable kinds are the whole CamBam set. Use controlled geometry, stock,
+tool and units so the expected path can be judged; include a small set of
+interaction fixtures for islands, multi-target ordering, multiple depths,
+lead/rapid/crossover moves, tool changes, arcs and styles. Pin the optimiser,
+postprocessor/profile, CamBam build and every relevant MOP property in each
+candidate. Preserve source `.cb` hashes and exact returned `.nc` hashes.
+
+For each supported case, record the native target-to-path relationship, path
+order/direction, depth sequence, interpolation/rounding, entry/link/retract,
+feed/spindle/tool events and any post-added moves. Use deterministic parsers
+and stock replay where supported; record indeterminate geometry or controller
+semantics rather than estimating removal from intent. The durable outcome is
+a versioned mapping and reusable fixture/reader tests in their code and
+documentation owners, with a coverage table and explicit unresolved modes.
+It must let later callers select either native CamBam-derived posted motion
+or framework-generated motion as the stock/rest authority, with separate
+fingerprints and invalidation. Neither authority is silently substituted
+for the other.
+
+**Stopping condition:** every inventoried shape/MOP class has at least one
+accepted native-output observation in each applicable optimiser mode, or an
+explicit unsupported/blocked result with reopening criteria; the bounded
+interaction cases have reproducible input/output hashes and documented
+parser limits. This is finite class and behavior coverage, not every numeric
+parameter combination or a universal CamBam emulator. Expand combinations
+only when a specific consumer exposes a missing dependency. The first output
+slice should prove the corpus method end to end before generating the full
+set of fixtures. No physical machining is part of this mapping.
 
 ## Problem and machining intent
 
