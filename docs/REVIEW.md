@@ -4401,3 +4401,54 @@ edit, commit range `main..HEAD` nonempty, `main` ancestor of HEAD, and
 no merge-ready conclusion is made from this check because the complete
 `main...HEAD` content has not been reviewed for integration and this evidence
 edit is uncommitted.
+
+## RC01 native Pocket variant preparation - 2026-09-23
+
+The next output probe uses a native T1 Pocket on the original RC01 Region rather
+than an Engrave rendering of framework T1 centerlines. The rough-only candidate
+enables that one Pocket; the combined candidate appends four T2 native Pockets
+on the prescribed 7 x 7 mm corner windows. Both preserve the original Region,
+Part stock and disabled source T1/T2 intent. The builder strict-reimported each
+candidate and confirmed the source normalizes to the accepted `Job()`.
+
+The prepared, ignored files are under `output/rc01-native-mop-20260923-02/`.
+`N-rough.cb` has SHA-256
+`e14afa4b5594814c754fe828898e0e13de5672c9d5bd55a4d470aec457f7ea6c`;
+`N-native-cleanup.cb` has
+`23e44d90b3d0be46389f0a86b915dad42a578835e5ab4978f52c620c331bd2b1`.
+The `comparison.json` manifest guards both. No `.nc` exists for this pair yet,
+so these hashes are input evidence only. The user-facing CamBam procedure is
+in the [runbook](DEVELOPMENT.md#rc01-native-pocket-roughing-and-corner-cleanup-probe).
+
+`rc01_native_post` parses the existing bounded Default-post dialect, compares
+the T1 move prefix between both posts, and measures rough/final area and
+residual location at all three depth-slab bottoms from posted G1 straight
+segments. It checks basic event, rapid, feed, travel, floor and protected XY
+bounds, while keeping GEOS topology and unencoded startup machine position as
+explicit limits. It is not an independent toolpath generator.
+
+A stress replay of the **older invalid** C post decoded 1402 items. It exposed
+the already recorded missing T1/T2 spindle stop, displaced tool change and
+rapid below +5. Its posted T1 cuts give polygon-radius rough-rest intervals
+`[7.7255777, 7.7258435] mm²` per slab, but this is no acceptance: that post
+reaches Z=-6. The lower bound below the ideal `7.7256661 mm²` is consistent
+with a separately flagged roughly 0.00004 mm inward island rounding at the
+first contour (line 15). This confirms that a plausible area result cannot
+override protected overcut or motion failures. A focused synthetic regression
+also rejects a posted pair with too little coverage and a rapid below clearance.
+The independent posted-rest oracle accepts the known generated RC01 coverage
+within both rough and final budgets. Final focused verification used
+`.venv/Scripts/python.exe`: `test_rc01_native.py` 5 tests passed,
+`compileall -q cambam_builder` passed, and `git diff --check` plus the untracked
+text trailing-whitespace scan found no errors. These tests do not substitute
+for posting the new candidates.
+
+**Reopen/next evidence:** obtain `N-rough.nc` and `N-native-cleanup.nc` from
+CamBam Plus 1.0 using the stated Default post/profile, retain candidate hashes,
+run the local audit, then inspect its actual cut order, T1 access to T2 entries,
+tool events, floor and residuals. If Default-post rounding again penetrates a
+protected boundary or its entries/retracts violate RC01, record N as failed;
+changing acceptance bounds or assuming MOP settings certify removal is not a
+valid repair. The first native result decides whether to adjust a native
+parameter/post precision, provide an explicit setup witness, or move to a
+different output carrier. E remains a separate explicit-motion blocker.

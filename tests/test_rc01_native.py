@@ -5,13 +5,62 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from cambam_builder.cam_core.rc01 import Job
+from cambam_builder.cam_core.rc01 import Job, Move, generate
 from cambam_builder.cambam_reader import read_cambam_bytes
 from cambam_builder.integrations.cambam.rc01_post import compare_file, compare_posted, read_default_post
-from cambam_builder.integrations.cambam.rc01_adapter import build_artifacts, normalize, synthetic_setup, synthetic_source
+from cambam_builder.integrations.cambam.rc01_adapter import build_artifacts, build_native_variant, normalize, synthetic_setup, synthetic_source
+from cambam_builder.integrations.cambam.rc01_native_post import _area_by_depth, _budget, audit_native_posts
 
 
 class NativeRC01Tests(unittest.TestCase):
+    def test_posted_rest_oracle_accepts_known_full_coverage(self):
+        job = Job()
+        moves = [{"type": "move", "g": 1, "tool": move.tool,
+                  "start": list(map(float, move.start)),
+                  "end": list(map(float, move.end))}
+                 for move in generate(job).items
+                 if isinstance(move, Move) and move.role in ("entry", "cut")]
+        rough = _area_by_depth([m for m in moves if m["tool"] == "T1"], job, 3)
+        final = _area_by_depth(moves, job, 1)
+        self.assertEqual(_budget(rough, final), (True, True))
+        self.assertTrue(all(7.7 < row["rest_area_mm2"][0] < 7.9
+                            for row in rough))
+        self.assertTrue(all(0.8 < row["rest_area_mm2"][0] < 1.0
+                            for row in final))
+
+    def test_native_pocket_variant_and_post_replay_reject_missing_coverage(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory) / "native"
+            manifest = build_native_variant(folder)
+            self.assertEqual(manifest["format"], "rc01-native-v1")
+            self.assertEqual([len(manifest["variants"][key]["enabled_mops"])
+                              for key in ("rough", "combined")], [1, 5])
+            for key in ("rough", "combined"):
+                project = read_cambam_bytes((folder / manifest["variants"][key]["file"])
+                                            .read_bytes())
+                self.assertEqual(normalize(project, synthetic_setup(),
+                                           allow_attachments=True), Job())
+                self.assertTrue(all(not m.enabled for m in project.list_mops()[:2]))
+                self.assertTrue(all(m.enabled for m in project.list_mops()[2:]))
+            preamble = ("( Post processor: Default )\nG21 G90 G61 G40\n"
+                        "G0 Z5\nT1 M6\nG17\nM3 S12000\nG0 X5 Y5\n"
+                        "G0 Z0\nG1 F60 Z-1\nG0 Z5\n")
+            rough = folder / "N-rough.nc"
+            combined = folder / "N-native-cleanup.nc"
+            rough.write_text("( N-rough synthetic )\n" + preamble + "M5\nM30\n",
+                             encoding="utf-8")
+            combined.write_text("( N-native-cleanup synthetic )\n" + preamble
+                                + "M5\nT2 M6\nM3 S12000\n"
+                                "G0 X5 Y5\nG0 Z0\nG1 F60 Z-1\n"
+                                "G0 Z5\nM5\nM30\n", encoding="utf-8")
+            result = audit_native_posts(folder / "comparison.json", rough, combined)
+            self.assertTrue(result["rough_prefix_identical"])
+            self.assertFalse(result["rough_rest_budget_met"])
+            self.assertFalse(result["final_rest_budget_met"])
+            self.assertEqual(result["status"], "fails_RC01")
+            self.assertTrue(any("rapid below clearance" in issue
+                                for issue in result["issues"]["rough"]))
+
     def test_native_input_normalizes_and_rejects_relevant_edits(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "input.cb"

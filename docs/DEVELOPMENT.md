@@ -328,6 +328,51 @@ the actual postprocessor/style and the three `.nc` files. A CamBam open/display
 pass alone establishes only native readability. No physical cutting is part of
 this test.
 
+### RC01 native Pocket roughing and corner-cleanup probe
+
+Build a fresh ignored pair from the repository root:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.rc01_adapter output/rc01-native-mop-NEW --native
+```
+
+The command requires a new or empty directory. It writes `source.cb`,
+`setup.json`, `N-rough.cb`, `N-native-cleanup.cb` and a SHA-256 guarded
+`comparison.json`; it strict-reimports both candidates. `N-rough.cb` enables
+one T1 native Pocket on the original Region. `N-native-cleanup.cb` adds four T2
+native Pockets on the 7 x 7 mm corner windows in window order. Both retain the
+two disabled source Pocket MOPs. The full-target T1 and window T2 operations
+pin tool number/diameter, stock surface 0, target depth -3, increment 1,
+stepover 0.4, clearance plane +5, zero roughing clearance, CW 12000 rpm,
+plunge 60 and cut 300. These settings are intent, not removal evidence.
+
+In CamBam Plus 1.0, open each candidate, regenerate toolpaths with Ctrl+T and
+post with Ctrl+W using the **Default** postprocessor and **Default mm** profile.
+Save `N-rough.nc` and `N-native-cleanup.nc` beside the candidates, without
+editing the `.cb` files. Then run:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.rc01_native_post output/rc01-native-mop-NEW/comparison.json output/rc01-native-mop-NEW/N-rough.nc output/rc01-native-mop-NEW/N-native-cleanup.nc
+```
+
+The audit rejects changed candidates, a post header naming another file, and
+unsupported Default-post commands,
+compares the posted T1 move prefix across both outputs, checks motion/event and
+protected-target violations, and computes conservative polygon-radius rest
+intervals at all three slab bottoms from G1 straight moves. It reports T1 and
+final area, residual outside the 0.05 mm location envelope, cleanup benefit and
+the first 24 motion findings per post. The radial polygon enclosure does not
+bound GEOS floating-topology error. It deliberately reports a Default-post
+startup position absent from G-code as unresolved. Its bounded checks do not
+prove all stock-dependent access or axial/lateral engagement. An issue-free
+result remains access-unverified and needs further motion proof and application
+evidence before RC01 N acceptance; physical use has a separate gate.
+
+The current prepared pair is under `output/rc01-native-mop-20260923-02/`.
+Its candidate SHA-256 values are `e14afa4b5594814c754fe828898e0e13de5672c9d5bd55a4d470aec457f7ea6c`
+and `23e44d90b3d0be46389f0a86b915dad42a578835e5ab4978f52c620c331bd2b1`.
+No native post or rest result is recorded until the `.nc` files are returned.
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not

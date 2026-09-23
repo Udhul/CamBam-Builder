@@ -404,6 +404,21 @@ position retained for comparison. A clean C prefix does not verify native T2
 Pocket motion. E/N acceptance requires actual regenerated and posted motion,
 including added entries/links/events, stock replay and CamBam application review.
 
+`rc01_adapter.build_native_variant()` now prepares a separate native Pocket
+probe: T1 roughing on the original Region, alone and followed by the four T2
+corner-window Pockets. Source MOPs remain disabled, candidates are strict
+reimports, and `comparison.json` pins their SHA-256 hashes and normalized job.
+`rc01_native_post.audit_native_posts()` accepts only those unchanged candidates
+and two actual CamBam `Default` posts. It checks their T1 move-prefix equality,
+posted event positions, feeds, travel/floor and protected XY target bounds, then
+derives per-slab rough/final rest from the ordered posted G1 straight cuts. Inner
+and inflated outer capsule polygons enclose radius tessellation error; area,
+location and cleanup-benefit budgets use the original target rather than the
+candidate window edges. GEOS floating topology is not formally enclosed, and
+the Default post does not encode its starting machine position. The audit does
+not turn Pocket settings into removal evidence or establish a full process,
+stock-access or physical-machining certificate when these limits remain.
+
 ### Detached nominal planar core
 
 `cambam_builder.planar` is the public, document-independent owner of immutable

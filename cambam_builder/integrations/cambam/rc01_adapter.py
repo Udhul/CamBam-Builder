@@ -123,10 +123,11 @@ def normalize(project, setup, *, allow_attachments=False):
         raise ValueError("unsupported RC01 extra geometry or machining operation")
     xyz = target.get_absolute_coordinates_xyz()
     outer, island = _box(xyz["outer_curve"]), _box(xyz["hole_curves"][0])
-    mops = [m for m in project.get_mops_in_part(part) if
-            type(m) is PocketMop and
-            project.get_mop_targets(m) == [target.internal_id]]
-    if len(mops) != 2 or [m.tool_number for m in mops] != [1, 2]:
+    all_mops = project.get_mops_in_part(part)
+    mops = all_mops[:2]
+    if len(mops) != 2 or any(type(m) is not PocketMop or
+            project.get_mop_targets(m) != [target.internal_id]
+            for m in mops) or [m.tool_number for m in mops] != [1, 2]:
         raise ValueError("RC01 source Pocket order/targets/tool numbers changed")
     baseline_mops = synthetic_source().list_mops()
     for mop, baseline in zip(mops, baseline_mops):
@@ -206,6 +207,69 @@ def _attach_native_cleanup(project):
             raise RuntimeError("could not attach native cleanup window")
 
 
+def build_native_variant(directory):
+    """Prepare native Pocket roughing alone and with four corner cleanup MOPs.
+
+    These are execution probes. Their removal is determined from posted motion,
+    never from the Pocket settings or the standalone generated certificate.
+    """
+    directory = Path(directory)
+    if directory.exists() and any(directory.iterdir()):
+        raise ValueError("RC01 output directory must be new or empty")
+    directory.mkdir(parents=True, exist_ok=True)
+    setup = synthetic_setup()
+    source_path = directory / "source.cb"
+    synthetic_source().save(str(source_path))
+    source = read_cambam_bytes(source_path.read_bytes(), source_name=str(source_path))
+    job = normalize(source, setup)
+    variants = {}
+    for key, filename, cleanup in (("rough", "N-rough.cb", False),
+                                    ("combined", "N-native-cleanup.cb", True)):
+        project = source.clone()
+        part = project.list_parts()[0]
+        target = next(p for p in project.list_primitives()
+                      if p.user_identifier == "rc01-target")
+        rough = project.add_pocket_mop(
+            part, targets=[target], name="NATIVE T1 full target roughing",
+            identifier="native-t1-rough", enabled=True,
+            tool_number=1, tool_diameter=6, **SOURCE_FIELDS)
+        if rough is None:
+            raise RuntimeError("could not attach native roughing Pocket")
+        if cleanup:
+            _attach_native_cleanup(project)
+        path = directory / filename
+        project.save(str(path))
+        reopened = read_cambam_bytes(path.read_bytes(), source_name=str(path))
+        if normalize(reopened, setup, allow_attachments=True) != job:
+            raise ValueError(f"{filename} source input changed during attachment")
+        enabled = [m for m in reopened.list_mops() if m.enabled]
+        if len(enabled) != (5 if cleanup else 1) or any(
+                type(m) is not PocketMop for m in enabled):
+            raise ValueError(f"{filename} enabled MOP sequence changed")
+        targets = [reopened.get_mop_targets(m) for m in enabled]
+        if targets[0] != [target.internal_id] or any(len(t) != 1 for t in targets):
+            raise ValueError(f"{filename} native target selection changed")
+        variants[key] = {
+            "file": filename,
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            "enabled_mops": [m.name for m in enabled],
+            "source_mops_disabled": all(not m.enabled for m in reopened.list_mops()[:2]),
+            "emitted_motion_status": "pending_CamBam_regeneration_and_post",
+        }
+    manifest = {
+        "format": "rc01-native-v1", "job_fingerprint": job.fingerprint,
+        "source_file": source_path.name,
+        "source_sha256": hashlib.sha256(source_path.read_bytes()).hexdigest(),
+        "postprocessor": "Default", "units": "mm", "profile": "Default mm",
+        "variants": variants,
+    }
+    (directory / "setup.json").write_text(json.dumps(setup, indent=2) + "\n",
+                                                encoding="utf-8")
+    (directory / "comparison.json").write_text(json.dumps(manifest, indent=2) + "\n",
+                                                     encoding="utf-8")
+    return manifest
+
+
 def _motion_record(item):
     record = {k: v for k, v in asdict(item).items()}
     for key in ("position", "start", "end"):
@@ -283,10 +347,16 @@ def build_artifacts(directory):
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Build RC01 native A/B/C candidates")
+    parser = argparse.ArgumentParser(description="Build RC01 CamBam candidates")
     parser.add_argument("directory", help="new or empty output directory")
+    parser.add_argument("--native", action="store_true",
+                        help="build native Pocket roughing and corner cleanup probes")
     args = parser.parse_args()
-    result = build_artifacts(args.directory)
-    print(json.dumps({"directory": args.directory,
-                      "job_fingerprint": result["job_fingerprint"],
-                      "motion_fingerprint": result["motion_fingerprint"]}, indent=2))
+    result = build_native_variant(args.directory) if args.native else build_artifacts(args.directory)
+    summary = {"directory": args.directory,
+               "job_fingerprint": result["job_fingerprint"]}
+    if args.native:
+        summary["variants"] = result["variants"]
+    else:
+        summary["motion_fingerprint"] = result["motion_fingerprint"]
+    print(json.dumps(summary, indent=2))

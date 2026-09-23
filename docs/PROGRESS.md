@@ -90,9 +90,20 @@ generic/extended extraction follows a concrete second consumer or output
 finding. This keeps future sessions from adding more ambiguous root modules
 while limiting the present change to the active slice.
 
-**Next:** establish a useful native-MOP-backed RC01 roughing and corner-cleanup
-execution variant, then replay its posted motion against stock, access and rest
-criteria. Keep the explicit-motion E route separate: Engrave's added entries,
+**2026-09-23 native Pocket RC01 variant prepared (backlog 6, output pending).**
+The original Region now drives one enabled T1 Pocket; a second candidate adds
+four enabled T2 corner-window Pockets. Both strict-reimport with source MOPs
+disabled. A hash-guarded Default-post audit measures rough/final rest from
+actual G1 motion and reports motion/target violations. Focused synthetic tests
+pass, and a replay of the earlier invalid C post exposed its known Z=-6 and
+tool-change defects plus sub-0.0001 mm island penetration from rounded output.
+The new candidate posts have not yet been returned; no native motion or rest
+acceptance is recorded. See the [runbook](DEVELOPMENT.md#rc01-native-pocket-roughing-and-corner-cleanup-probe)
+and [review evidence](REVIEW.md#rc01-native-pocket-variant-preparation---2026-09-23).
+
+**Next:** post the prepared native rough-only and combined candidates, then
+replay their emitted motion against stock, access and rest criteria. Keep the
+explicit-motion E route separate: Engrave's added entries,
 links and tool events remain an output-carrier blocker despite the first adapter
 repair. The focused repaired-A post has settled the depth correction and exposed
 the target-order contract; do not request more Engrave A/B/C exports until a
@@ -1069,8 +1080,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    the -3 floor to -6, reordered T1, and changed to T2 without the required
    setup/spindle sequence. The repaired A post confirms the intended -1/-2/-3
    depths, but still follows UUID-sorted targets and inserts rapid approach/
-   retract. B/C have not been reposted. Next prove a native-MOP-backed
-   roughing/cleanup variant from actual posted motion and independent stock replay;
+   retract. B/C have not been reposted. A fully native Pocket roughing/cleanup
+   pair and independent posted-rest audit are prepared; CamBam posting and
+   replay remain the next gate before any native acceptance claim;
    revisit the
    explicit-motion carrier separately before claiming E. Caller-owned
    orchestration and subsequent
