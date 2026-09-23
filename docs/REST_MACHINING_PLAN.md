@@ -491,7 +491,7 @@ acceptance, and caller applications can invoke each capability independently.
 | --- | --- |
 | S: standalone generated sequence | Implemented for the exact nominal RC01 request with deterministic motion, ordered rough/final prefixes, rational per-slab area intervals and conservative residual-location diagnostics. Automated negative cases pass. The GEOS location test has <0.000001 mm polygon sagitta but no formal floating-topology interval proof, so strict numerical certification remains conditional. See the [implementation contract](structure_spec.md#rc01-generated-motion-and-full-height-replay) and [evidence](REVIEW.md#rc01-standalone-generated-sequence---2026-09-23). |
 | I: native input and document attachment | A synthetic `.cb` with outer/island Region, Part stock and explicit T1/T2 Pocket intent, plus explicitly supplied tool-component/setup values absent from native fields, normalizes to the same request/results as S. Preserve authored geometry/source MOPs and identity references; attach derived results separately. Reopen/export and import an edited file without hidden session state; supported edits recompute explicitly and invalidate old evidence. Unresolved inherited or unsupported values return diagnostics. |
-| E: explicit framework motion through CamBam | Attach both generated operations using a candidate XYZ-Pline/Engrave adapter. In the established CamBam Plus 1.0 environment, inspect actual regenerated and posted motion: coordinates, interpolation, ordering, feeds, spindle/tool events and every inserted entry/link/retract. Reverify the actual motion against RC01, including its rough-only stock prefix. A path drawing or successful XML round trip alone fails this gate. |
+| E: explicit framework motion through CamBam | Attach both generated operations using a candidate XYZ-Pline/Engrave adapter or an explicitly bounded, role-bearing CamBam carrier. In the established CamBam Plus 1.0 environment, inspect actual regenerated and posted motion: coordinates, interpolation, ordering, feeds, spindle/tool events and every inserted entry/link/retract. Reverify the actual motion against RC01, including its rough-only stock prefix. A path drawing or successful XML round trip alone fails this gate. Record the accepted carrier; one carrier's result does not imply parity of another. |
 | N: native smaller-tool region/Pocket cleanup | Preserve the original target and attach T2 Pocket MOPs to four closed 7 x 7 corner windows: [0,7]x[0,7], [33,40]x[0,7], [33,40]x[23,30], [0,7]x[23,30]. These are machining boundaries, not cutter-center regions. Each contains its entire T1 corner rest plus overlap into cleared material; none touches the island. Verify actual CamBam-generated cleanup against the same target, process and residual criteria, after the E-verified T1 prefix. Do not infer native removal from nominal Pocket settings. |
 | P: production / later direct posting | Separate pending gates. S is headless planning, not G-code delivery. A later controller adapter must reverify its emitted motion. Physical machining requires an identified machine/material/setup, real tools/workholding and separately agreed tolerances/process limits. No execution is requested by RC01. |
 
@@ -613,6 +613,18 @@ workflow. The current user workflow remains agent-prepared `.cb` files followed
 by user-generated G-code in CamBam; moving direct posting forward changes that
 boundary and is not inferred from this role trial. Neither choice certifies a
 controller or machine setup.
+
+**User clarification and selected follow-through, 2026-09-23:** retain the
+agent-prepared `.cb` / user-posted CamBam `.nc` workflow. The agent prepared
+one complete literal-motion `Drill/CustomScript` MOP in a `.cb`, using the
+already verified T1/T2 framework program. This is an alternate E carrier,
+not a repair of native Pocket N or proof of XYZ/Engrave parity. It can encode
+the required roles within one CamBam operation; its wrapper and literal
+motion must still be checked in the actual Default post. The prepared file,
+manifest and replay command are in the
+[runbook](DEVELOPMENT.md#rc01-literal-motion-cambam-carrier). Only that one
+CamBam post is requested. Direct standalone posting stays later unless the
+actual post shows another carrier limit and the user changes timing.
 
 ### RC01 cone guard, acceptance scope and stopping condition
 

@@ -4570,8 +4570,10 @@ can express the missing roles. E remains failed on Engrave order/role evidence;
 N remains failed on the posted Pocket pair. No route passed full emitted motion,
 protected-stock, access and process verification, and no physical acceptance
 was requested. Reopen with an explicitly role-bearing carrier, not another
-Pocket/Default settings trial. Bounded direct-post timing now requires the
-user's decision under the [RC01 milestone](REST_MACHINING_PLAN.md#next-rc01-output-milestone-after-native-pocket-trial).
+Pocket/Default settings trial. The subsequent user clarification and
+role-bearing CamBam carrier are recorded below; direct standalone posting
+retains its previous timing under the
+[RC01 milestone](REST_MACHINING_PLAN.md#next-rc01-output-milestone-after-native-pocket-trial).
 
 Checks: `.venv/Scripts/python.exe -m unittest discover -s tests -p
 test_rc01_native.py -v` passed 8 tests, including strict reimport and
@@ -4582,3 +4584,39 @@ identical T1 prefixes, both rest budgets met, 62 rough and 233 combined
 findings, 9/117 ramped XY moves and a T2 change at (31.1081,27,+5).
 The repeat result is retained locally as `prior-post-audit.json` beside the
 role-trial artifacts; it is evidence about the previous posts only.
+
+## RC01 literal-motion CamBam carrier preparation - 2026-09-23
+
+The user clarified the handoff: the agent creates the complete `.cb`; the user
+generates native G-code in CamBam and returns the `.nc` only when needed.
+No standalone direct-post timing change was requested. The selected next
+carrier is one enabled Drill/CustomScript MOP with a single setup anchor Point
+at (-10,-10). Its literal text contains the complete generated T1/T2 sequence
+from `cam_core.rc01`, including all feed/rapid move roles and the internal
+T1 stop, T2 change and restart. The MOP/Default post is expected to wrap it
+with the initial T1 change/start and terminal stop; actual behavior is pending
+the user's native post. This is an alternate explicit E carrier. It is not
+native Pocket N, and it does not establish XYZ/Engrave parity.
+
+`output/rc01-script-20260923-2115/S-combined.cb` is 64,034 bytes, SHA-256
+`14b53e40c771ad69b9412729d3110185c3f32ad83c2da10f094ffdcda8c6a8a3`.
+It preserves the original Region, Part and two disabled source Pockets and
+strict-reimports with the same RC01 job. The carrier has 2,942 literal lines
+representing 2,945 framework items once wrapper events are included. Its
+manifest records job and motion fingerprints and pending native output.
+The local audit accepts only the bounded Default-post dialect and standalone
+G98/G80 Drill wrapper markers. It compares every emitted move/event to the
+planned role, rejects extras, and replays actual decimal coordinates through
+the continuous RC01 verifier. The exact-centre decimal writer rejects
+nonterminating coordinates rather than rounding a protected boundary.
+
+A synthetic wrapper with all 2,945 items passed T1/final stock, access,
+process and rest verification and reported finite-tool partial completion.
+Changing the first feed approach to a rapid was rejected as a sequence
+deviation. This test proves the builder/audit boundary, not CamBam behavior:
+CamBam may modify, omit or insert script motion. The only requested user
+artifact is a Default/Default mm `S-combined.nc` posted from the prepared
+`.cb`; the [runbook](DEVELOPMENT.md#rc01-literal-motion-cambam-carrier) gives
+the exact steps. After receipt, inspect the native post and record E, N and
+physical acceptance separately. Existing GEOS residual topology and the
+declared initial setup position remain limits.

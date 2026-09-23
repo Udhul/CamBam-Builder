@@ -119,20 +119,25 @@ not an emitted-motion pass or a claim that every possible CamBam extension fails
 See the [review evidence](REVIEW.md#rc01-pocketdefault-role-carrier-assessment---2026-09-23)
 and [milestone stop rule](REST_MACHINING_PLAN.md#next-rc01-output-milestone-after-native-pocket-trial).
 
-**Next decision (backlog 6):** the user chooses whether to bring bounded direct
-posting forward now to deliver the already verified framework T1/T2 motion and
-then optionally import it through CamBam's NCFile operation, or retain the
-previous order and pause RC01 output until the first useful rest/V-carve workflow.
-The former requires the framework to generate a G-code source before CamBam
-can import it, changing the present workflow in which the user generates G-code
-in CamBam from agent-prepared `.cb` files. It needs one declared controller
-dialect, emitted-program replay and any CamBam import/post verification; it is
-not production acceptance. The latter
-keeps E and N failed/pending and should shift implementation to the next useful
-consumer without another Pocket/Default export. This matters now because
-neither E nor N can close from coverage alone. E, N and physical acceptance remain
-separate. Defer native package consolidation, general area precision and optimizer
-work until a named output or consumer need reopens them.
+**2026-09-23 user clarification and next CamBam carrier (backlog 6):** the
+agent prepares complete `.cb` files; the user generates native toolpaths/G-code
+in CamBam and returns only the needed `.nc`. A single complete T1/T2
+`Drill/CustomScript` carrier is now prepared as
+`output/rc01-script-20260923-2115/S-combined.cb`. It embeds every verified
+framework role as literal motion inside the `.cb`, retains the target and
+disabled source MOPs, and strict-reimports. A synthetic Default-post wrapper
+round trip passes the full sequence and continuous stock/access/process/rest
+replay, including tampered approach rejection. This is a carrier feasibility
+check, not actual CamBam output. The user needs to post only this one file with
+Default/Default mm and return `S-combined.nc`. The agent will audit every
+emitted event and move and replay actual T1-only/final stock. The original
+XYZ/Engrave E and native Pocket N gates remain separate; this alternate
+explicit carrier has its own output finding. Physical acceptance remains
+separate. See the [runbook](DEVELOPMENT.md#rc01-literal-motion-cambam-carrier)
+and [preparation evidence](REVIEW.md#rc01-literal-motion-cambam-carrier-preparation---2026-09-23).
+Direct standalone posting remains later under the accepted order; no change
+to that timing is needed for this CamBam `.cb` route. Defer package-layout,
+general area precision and optimizer work until a named finding reopens them.
 The user selected the proposed synthetic case, including its test-only
 plunge/feed limits, on 2026-09-23. These are accepted
 test inputs, not production parameters or acceptance of generated/native motion.

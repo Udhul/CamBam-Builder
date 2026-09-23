@@ -10,9 +10,44 @@ from cambam_builder.cambam_reader import read_cambam_bytes
 from cambam_builder.integrations.cambam.rc01_post import compare_file, compare_posted, read_default_post
 from cambam_builder.integrations.cambam.rc01_adapter import build_artifacts, build_native_variant, normalize, synthetic_setup, synthetic_source
 from cambam_builder.integrations.cambam.rc01_native_post import _area_by_depth, _budget, _path_for_move, _t2_vertical_access, audit_native_posts
+from cambam_builder.integrations.cambam.rc01_script import audit_script_post, build_script_carrier
 
 
 class NativeRC01Tests(unittest.TestCase):
+    def test_full_literal_motion_carrier_and_post_replay(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory) / "script"
+            manifest = build_script_carrier(folder)
+            self.assertEqual(manifest["item_count"], 2945)
+            candidate = folder / "S-combined.cb"
+            project = read_cambam_bytes(candidate.read_bytes())
+            self.assertEqual(normalize(project, synthetic_setup(),
+                                       allow_attachments=True), Job())
+            self.assertEqual([m.name for m in project.list_mops() if m.enabled],
+                             ["RC01 T1 rough plus T2 cleanup literal motion"])
+            script = next(m for m in project.list_mops() if m.enabled).custom_script
+            post = folder / "S-combined.nc"
+            header = ("( S-combined synthetic post )\n"
+                      "( Post processor: Default )\n"
+                      "G21 G90 G61 G40\nG0 Z5\nT1 M6\nG17\n"
+                      "M3 S12000\nG0 Z5\nG0 X-10 Y-10\nG98\n")
+            footer = "\nG80\nG0 Z5\nM5\nM30\n"
+            post.write_text(header + script.replace("|", "\n") + footer,
+                            encoding="utf-8")
+            result = audit_script_post(folder / "comparison.json", post)
+            self.assertEqual(result["status"], "bounded_emitted_motion_pass")
+            self.assertEqual(result["certificate_status"], "partial_target_completion")
+            self.assertEqual(result["item_count"], manifest["item_count"])
+            self.assertTrue(all(lo <= hi < 8.3 for lo, hi in
+                                result["rough_rest_by_depth_mm2"]))
+            self.assertTrue(all(lo <= hi < 1.4 for lo, hi in
+                                result["final_rest_by_depth_mm2"]))
+            post.write_text(header + script.replace("|", "\n").replace(
+                "G1 F120 X5 Y5 Z1", "G0 X5 Y5 Z1", 1) + footer,
+                encoding="utf-8")
+            self.assertEqual(audit_script_post(folder / "comparison.json", post)
+                             ["status"], "deviation")
+
     def test_native_arc_reader_preserves_center_and_bounded_curve(self):
         prefix = ("G21 G90 G61 G40\nG17\nT1 M6\nM3 S12000\n"
                   "G0 X5 Y5\nG0 Z1\nG1 F60 Z-1\n")

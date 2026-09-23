@@ -409,8 +409,50 @@ This is a diagnostic carrier assessment. It does not encode RC01's feed
 approach/retract and exact setup/tool-change roles, so no CamBam post is
 requested for it. The user performs any CamBam G-code generation from prepared
 `.cb` files; return of the actual emitted `.nc` is required before a future
-route can be audited. The current route result and direct-post timing decision
-are in the [plan](REST_MACHINING_PLAN.md#next-rc01-output-milestone-after-native-pocket-trial).
+route can be audited. The subsequent role-bearing `.cb` carrier is documented
+below; the route decision is in the
+[plan](REST_MACHINING_PLAN.md#next-rc01-output-milestone-after-native-pocket-trial).
+
+### RC01 literal-motion CamBam carrier
+
+The agent prepares the complete T1 roughing plus T2 cleanup `.cb`:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.rc01_script output/rc01-script-NEW
+& $ProjectPython -m unittest discover -s tests -p test_rc01_native.py -v
+```
+
+The prepared candidate is
+`output/rc01-script-20260923-2115/S-combined.cb` (SHA-256
+`14b53e40c771ad69b9412729d3110185c3f32ad83c2da10f094ffdcda8c6a8a3`).
+It retains the RC01 Region, Part stock and two disabled source Pockets. Its one
+enabled `RC01 T1 rough plus T2 cleanup literal motion` Drill/CustomScript MOP
+uses one anchor point at setup (-10,-10), tool 1, CW 12000 rpm, clearance +5
+and exact-stop output. The 2,942 literal script lines encode both tool sections,
+feeds, approaches, retracts and the T2 stop/change/restart. CamBam's wrapper
+supplies the first T1 change/start and terminal stop. The ignored manifest
+records the candidate hash and framework fingerprints. The source, script
+and candidate strict-reimport; a synthetic wrapper replay passes, but only
+the actual CamBam post can establish E output behavior.
+
+**One user CamBam action:** open `S-combined.cb` in CamBam Plus 1.0, use the
+**Default** postprocessor and **Default mm** profile, generate toolpaths
+(Ctrl+T), then produce G-code (Ctrl+W) and save it as `S-combined.nc` beside
+the `.cb`. Return that `.nc` file or its exact path. No other `.cb` from the
+diagnostic Pocket pairs is needed for this check; no machine run is requested.
+The agent then runs:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.rc01_script output/rc01-script-20260923-2115/comparison.json output/rc01-script-20260923-2115/S-combined.nc
+```
+
+The audit hash-guards the candidate, checks every posted event and move
+against the framework program, rejects extra motion, and replays the actual
+coordinates through continuous stock/access, process and three-slab residual
+verification. CamBam may alter or omit literal script lines; a synthetic pass
+does not predict its actual emitted result. The Default post does not encode
+the incoming machine position, so RC01 retains the declared test setup
+(-10,-10,+5); physical acceptance is separate.
 
 ### Isolated planar backend evaluation
 
