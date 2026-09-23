@@ -218,6 +218,27 @@ tool changes and other heights are unverified.
 No CamBam manual validation adds evidence: this slice has no serialization, path
 generation or execution claim. Physical uncertainty limits remain caller inputs.
 
+### RC01 standalone generated-sequence checks
+
+Install the already declared optional planar backend (`uv sync --extra planar
+--python 3.13`), then run from the repository root:
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -p test_rc01.py -v
+& $ProjectPython -m unittest discover -s tests -p test_stock.py -v
+& $ProjectPython -m compileall -q cambam_builder
+git diff --check
+```
+
+The RC01 suite checks deterministic ordered T1/T2 motion, exact all-height
+access/component and process rejection, independent three-slab residual bounds,
+and missing-bottom-layer rejection. A passing result is synthetic standalone
+evidence only. GEOS powers the conservative residual-location check; its
+polygon sagitta is below 0.000001 mm, while floating topology is not a formal
+interval proof. Native input, explicit Engrave motion, native Pocket motion and
+physical machining have separate [RC01 gates](REST_MACHINING_PLAN.md#rc01-standalone-and-cambam-output-gates).
+No manual CamBam check adds evidence to this standalone implementation itself.
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not

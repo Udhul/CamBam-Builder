@@ -42,17 +42,28 @@ Zero allowance and a rectangular target keep the first oracle analytic; the earl
 letter-like/allowance case remains a broader follow-up. A cone feasibility guard
 keeps the shared contracts open to the next V-carve slice.
 
-**Next:** implement the accepted synthetic RC01 generated endmill sequence and
-continuous all-height stock verification,
-followed by its native integration gates. This turns the existing fixed-section
-foundation into an independently verifiable two-tool workflow; additional isolated
-area precision or optimizer work has lower priority unless this job needs it.
+**2026-09-23 standalone RC01 slice implemented (backlog 6, gate S).** Deterministic
+T1 roughing and four-window T2 cleanup now emit ordered XYZ motion, explicit
+setup/spindle events and rough/final evidence fingerprints. Continuous-height
+replay checks target, access, tool components, process limits and three depth
+slabs. Independent rational strip area bounds place rough rest at
+7.7750–7.7877 mm² and final rest at 0.9214–0.9264 mm² per slab; the finite-tool
+result is partial target completion. Focused adversarial checks cover stale input,
+missing predecessor, island crossing, low rapid, component reach, uncertainty
+and a missing lower-layer strip. The residual-location check uses GEOS polygons
+with <0.000001 mm circle sagitta; floating topology has no formal interval proof.
+Standalone automated acceptance is conditional on that numerical limitation.
+
+**Next:** deliver RC01's native input/document attachment and prepare A/B/C
+CamBam artifacts with a comparison reader, then run E/N native output gates.
+This connects the accepted independent sequence to the user's existing `.cb`
+workflow; additional isolated area precision or optimizer work has lower priority
+unless a native gate or residual uncertainty needs it.
 Direct posting remains subsequent delivery. The user selected the proposed synthetic
 case, including its test-only plunge/feed limits, on 2026-09-23. These are accepted
 test inputs, not production parameters or acceptance of generated/native motion.
-Definition and user refinement are complete; implementation remains open. A fresh
-session is recommended for implementation: the accepted job/gates are recorded and
-no first-job decision or pending result requires conversational context.
+Definition and standalone generation are complete. Native input and emitted-motion
+acceptance remain open; the test-only case does not certify physical machining.
 See [next increment and stopping criteria](#next-detached-stockrest-increment).
 Definition verification: reviewed the two-document change against the implemented
 fixed-section contract; `.venv/Scripts/python.exe` independently recalculated all
@@ -1001,10 +1012,15 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    cleanup and explicit framework paths each require evidence from actual emitted
    motion. Synthetic job acceptance is separate from real-machine constraints.
 
-   **Next: deliver the RC01 generated endmill sequence.**
-   Promote the agreed job/oracles to reusable fixtures; implement shared motion,
-   generation and continuous all-height stock/access checks, then native input,
-   explicit-path output and native Pocket cleanup acceptance. Follow with the cone/
+   **Standalone S implemented 2026-09-23; native gates next.**
+   `cambam_builder.rc01` and `tests/test_rc01.py` now own the accepted nominal
+   generated motion, whole-height stock/access replay, rational per-slab rest
+   intervals and negative variants. See the [implemented contract](structure_spec.md#rc01-generated-motion-and-full-height-replay)
+   and [dated checks](REVIEW.md#rc01-standalone-generated-sequence---2026-09-23).
+   GEOS residual-location topology still lacks formal numeric interval proof;
+   reopen that precision only if a strict S certificate or native comparison
+   requires it. Next implement native input, explicit-path output and native Pocket
+   cleanup acceptance. Follow with the cone/
    V-carve slice through the same contracts. Caller-owned orchestration and subsequent
    direct posting remain accepted; never infer vertical clearance from fixed-Z evidence.
 

@@ -27,6 +27,7 @@ packages; `inactive/` and demos are outside that runtime package list.
 | `cambam_builder/cambam_entities.py` | Explicit compatibility/discovery facade re-exporting canonical objects from the four entity owners | Preserve public entity imports; implementation modules must import owners directly |
 | `cambam_builder/cad_transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
 | `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy, remaining-section bounds and supplied section-motion verification | Horizontal cuts and explicit travel inside rectangular stock/target; no generated or native path integration |
+| `cambam_builder/rc01.py` | Standalone synthetic RC01 motion generation, continuous-height replay and independent residual bounds | Exact nominal rectangular two-tool job; no native attachment or machine output |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
 | `cambam_builder/machining_recommendations.py` | Immutable tool/material/machine contexts, provenance-bearing recommendations, user diameter tables and pluggable pure strategies | Recommendation selection only; contains no curated catalog, persistence, document mutation or safety claim |
@@ -238,6 +239,50 @@ section clearance, not a vertical access corridor. Path changes, tool changes,
 retracts, holders, stock at other heights, Z uncertainty, generated paths and
 machine execution remain unverified. Callers must retain those limits when using
 the result; directly constructed result records are not proof.
+
+### RC01 generated motion and full-height replay
+
+`cambam_builder.rc01.generate()` emits an immutable `Program` for the accepted
+synthetic [RC01 job](REST_MACHINING_PLAN.md#first-generated-acceptance-job-rc01).
+The generator currently accepts only the exact nominal `Job()` value. It emits
+T1 roughing at tip Z=-1,-2,-3, followed by T2 cleanup in the four prescribed
+7 x 7 corner windows at those depths. Every run contains a +5 rapid position,
+fed approach, cutting entry or T1-cleared T2 descent, horizontal/vertical cut,
+and fed retract. Tool changes and spindle start/stop are explicit setup events;
+feeds, RPM, coolant state, tool identity, frame, units and tip datum are values.
+The first T1 entry is (5,5); all four T2 columns are proved from actual T1 cuts.
+The T1 raster uses 0.5 mm row spacing and vertical wall traverses; T2 uses
+0.25 mm row spacing. An island offset endpoint is rounded away from protected
+material. This is a deterministic baseline, not an optimized path.
+
+`verify(program, job)` checks an ordered motion stream against the original
+target and each earlier stock prefix. Axis-aligned cut disk sweeps and
+single-prior-cylinder access containment use rational predicates over complete
+segments. Cutting length, shank and holder cylinders are checked over their
+entire occupied Z intervals, including descent and retract. New axial engagement
+is limited to 1 mm by requiring the whole preceding layer's disk sweep to be
+covered by earlier cuts. Low rapids, unproved travel, stale inputs, unsupported
+diagonal cuts, positive physical error, and changed setup/process values fail
+closed. A clearance route that needs a union of several prior cylinders is
+outside this bounded proof even if physically safe. This restriction does not
+affect generated RC01 motion.
+
+The verifier retains rough-only and final cut prefixes, and reports rest for
+each of the three open depth slabs. Each slab's section is constant because
+all accepted cuts have integer tip depths and cylindrical vertical extents.
+Independent integer-nanometre Y-strip bounds enclose the union area using
+directed square roots; a 0.001 mm strip yields exact rational area bounds. A
+separate GEOS polygon check rejects residual more than 0.05 mm from the four
+ideal outer-corner rests or the original protected boundary. Its 1024-segment
+quarter-circle has radial sagitta below 0.000001 mm; GEOS floating topology is
+not a formal interval-arithmetic proof. The certificate reports its area coordinate
+enclosure, polygon sagitta and `location_numeric_enclosure_mm=None` separately.
+The `Certificate` carries both request
+and motion fingerprints, rough/final per-slab area and volume intervals, and
+`partial_target_completion` because finite cutters leave sharp-corner stock.
+Calling `verify(..., measure_rest=False)` yields only `motion_only` diagnostics;
+it is not a residual acceptance certificate. Native/CamBam motion must be
+replayed separately before any output acceptance claim.
 
 ### Detached nominal planar core
 

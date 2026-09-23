@@ -4190,3 +4190,38 @@ expressions. Physical uncertainty and complete supplied-pass coverage remain cal
 assumptions. Implementation is uncommitted; target islands and generated cleanup
 remain outside this completed scope. Next priority and reopening criteria are in
 [PROGRESS](PROGRESS.md#next-detached-stockrest-increment).
+
+## RC01 standalone generated sequence - 2026-09-23
+
+The accepted nominal [RC01 request](REST_MACHINING_PLAN.md#rc01-inputs-and-process-bounds)
+now generates ordered T1 roughing and T2 corner cleanup in
+`cambam_builder.rc01`. The verifier checks every move's continuous planar sweep
+and occupied Z interval against original protected geometry, prior guaranteed
+removal, tool components and process bounds. T2's four access columns have actual
+T1 predecessors. Rough and final stock prefixes are retained separately.
+
+The independent rational 0.001 mm Y-strip oracle reports, at each of the three
+depth slabs, T1 rest [7.775010615955999, 7.787678472024001] mm² and final rest
+[0.9214411294439999, 0.9263453527720001] mm². Their volume bounds are
+[23.325031847867997, 23.363035416072] and
+[2.7643233883319995, 2.7790360583160005] mm³. These are above the ideal
+finite-tool references 7.7256661177 and 0.8584073464 mm² and meet the accepted
++0.5 mm² / +1.5 mm³ budgets. Result status is partial target completion.
+The area interval's arithmetic uses integer nanometres and directed integer
+square roots, independently of the path generator and GEOS. The separate
+0.05 mm residual-location check uses GEOS polygons at <0.000001 mm circle
+sagitta; GEOS floating topology is not a formal numerical interval proof.
+This is the remaining strict-S evidence limit, to revisit if native comparison
+or a consumer requires a formal location certificate.
+
+Verification with `.venv\Scripts\python.exe` (Python 3.13.5, declared Shapely
+2.1.2 planar extra): `-m unittest discover -s tests -p test_rc01.py -v`
+passed 6 tests; `-m unittest discover -s tests -p test_stock.py -v` passed 20;
+`-m compileall -q cambam_builder` and `git diff --check` passed. Negative
+variants reject a missing lower-layer strip despite complete upper layers,
+missing rough predecessor, stale or uncertain inputs, continuous island
+crossing, a low rapid, a shortened cutter or lowered holder and a floor overrun.
+The new source/test files were inspected separately because `git diff --check`
+does not include untracked files. No native `.cb` attachment, posted-motion
+comparison or physical validation was performed. The next [I/E/N gates](REST_MACHINING_PLAN.md#rc01-standalone-and-cambam-output-gates)
+need A/B/C files and actual CamBam motion evidence before native acceptance.

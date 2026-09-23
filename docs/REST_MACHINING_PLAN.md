@@ -338,8 +338,11 @@ output compatibility and production acceptance remain separate future gates.
 ## First generated acceptance job RC01
 
 **Defined and selected by the user 2026-09-23; accepted synthetic test inputs,
-implementation and output acceptance pending.** This round defines the job; it does not
-generate executable paths or request a CamBam/machine trial. Framework ownership
+standalone generation implemented, native output acceptance pending.** The original
+definition did not generate executable paths or request a CamBam/machine trial;
+the standalone implementation is now described in the
+[implemented contract](structure_spec.md#rc01-generated-motion-and-full-height-replay).
+Framework ownership
 of roughing and cleanup, both input routes, native integration and later direct
 posting are already accepted in the [integration requirement](#accepted-integration-requirement---2026-09-23).
 
@@ -476,7 +479,7 @@ acceptance, and caller applications can invoke each capability independently.
 
 | Gate | Required evidence and boundary |
 | --- | --- |
-| S: standalone generated sequence | A noninteractive direct-Python request produces deterministic motion, rough/final stock bounds, residual locations, provenance and diagnostics without CamBam, MCP or a postprocessor. Independent checks pass the numerical/process/access criteria and rejection cases. Repeat requests agree after excluding incidental IDs/timestamps. |
+| S: standalone generated sequence | Implemented for the exact nominal RC01 request with deterministic motion, ordered rough/final prefixes, rational per-slab area intervals and conservative residual-location diagnostics. Automated negative cases pass. The GEOS location test has <0.000001 mm polygon sagitta but no formal floating-topology interval proof, so strict numerical certification remains conditional. See the [implementation contract](structure_spec.md#rc01-generated-motion-and-full-height-replay) and [evidence](REVIEW.md#rc01-standalone-generated-sequence---2026-09-23). |
 | I: native input and document attachment | A synthetic `.cb` with outer/island Region, Part stock and explicit T1/T2 Pocket intent, plus explicitly supplied tool-component/setup values absent from native fields, normalizes to the same request/results as S. Preserve authored geometry/source MOPs and identity references; attach derived results separately. Reopen/export and import an edited file without hidden session state; supported edits recompute explicitly and invalidate old evidence. Unresolved inherited or unsupported values return diagnostics. |
 | E: explicit framework motion through CamBam | Attach both generated operations using a candidate XYZ-Pline/Engrave adapter. In the established CamBam Plus 1.0 environment, inspect actual regenerated and posted motion: coordinates, interpolation, ordering, feeds, spindle/tool events and every inserted entry/link/retract. Reverify the actual motion against RC01, including its rough-only stock prefix. A path drawing or successful XML round trip alone fails this gate. |
 | N: native smaller-tool region/Pocket cleanup | Preserve the original target and attach T2 Pocket MOPs to four closed 7 x 7 corner windows: [0,7]x[0,7], [33,40]x[0,7], [33,40]x[23,30], [0,7]x[23,30]. These are machining boundaries, not cutter-center regions. Each contains its entire T1 corner rest plus overlap into cleared material; none touches the island. Verify actual CamBam-generated cleanup against the same target, process and residual criteria, after the E-verified T1 prefix. Do not infer native removal from nominal Pocket settings. |
@@ -542,9 +545,8 @@ travel/controller, actual cutter/reach/holder, fixtures, allowed entries and pro
 limits before numerical production acceptance can be defined.
 
 Definition and user refinement are complete with inputs, oracles, access obligations,
-limits and output gates recorded. Implementation starts by promoting the accepted RC01
-inputs/oracles to reusable fixtures and proving the generated T1/T2 sequence with
-continuous all-height stock replay, then the I/E/N adapter gates; cone path delivery
+limits and output gates recorded. The exact nominal T1/T2 sequence and continuous
+all-height replay are implemented. The I/E/N adapter gates follow; cone path delivery
 follows through the same contracts. Do not call full target removal or native output
 accepted while the corresponding gate remains partial, blocked or untested.
 Reopen general topology, positive-error completion, low links, optimizers or finer
