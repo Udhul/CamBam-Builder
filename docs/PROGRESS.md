@@ -103,21 +103,31 @@ island tangencies are numerically unresolved. No complete native motion or
 physical acceptance is recorded. See the [runbook](DEVELOPMENT.md#rc01-native-pocket-roughing-and-corner-cleanup-probe)
 and [posted trial](REVIEW.md#rc01-native-pocket-posted-motion-trial---2026-09-23).
 
-**Next:** prove an RC01 output carrier/post strategy that preserves required
-setup, approach, retract and tool-event roles, then repeat actual-motion
-verification. The native Pockets already demonstrate near-ideal rest coverage;
-another unchanged Pocket/Default export will not address the recorded motion
-defects. Keep explicit E and native N gates separate, but use their shared
-role/event findings to guide that bounded output decision. Defer native package
-consolidation until the motion contract is settled, and defer general area
-precision and optimizer work without a new consumer or failing budget.
-General area precision and optimizer work remain deferred.
-Direct posting remains subsequent delivery. The user selected the proposed synthetic
-case, including its test-only plunge/feed limits, on 2026-09-23. These are accepted
+**Next integrated increment (backlog 6):** select and implement one output
+carrier/post strategy that can preserve RC01's setup, approach, retract, feed
+and tool-event roles, then verify one complete T1/T2 emitted sequence against
+the original stock and rest criteria. Use the native Pocket posts as coverage
+evidence, not execution acceptance; another unchanged Pocket/Default export
+will not address the motion defects. This boundary matters now because the
+computed rest coverage cannot become a usable execution workflow until the
+emitted motion preserves the accepted roles, and V-carving will need the same
+output authority. The [bounded milestone and stop rule](REST_MACHINING_PLAN.md#next-rc01-output-milestone-after-native-pocket-trial)
+define route selection and failure handling. One successful route is a useful
+execution slice, while E and N remain separately required gates; reassess
+which remaining gate or V-carve consumer matters next instead of automatically
+subdividing RC01. If a concrete CamBam carrier limitation blocks the selected
+route, bring the direct-posting schedule back for an explicit user decision
+rather than silently changing the accepted sequence. Defer native package
+consolidation, general area precision and optimizer work until the output
+contract or a named consumer requires them.
+Direct posting remains subsequent delivery under the current user decision.
+The user selected the proposed synthetic case, including its test-only
+plunge/feed limits, on 2026-09-23. These are accepted
 test inputs, not production parameters or acceptance of generated/native motion.
 Definition, standalone generation and automated native-input preparation are
-complete. CamBam application acceptance and emitted-motion acceptance remain
-open; the test-only case does not certify physical machining.
+complete. CamBam produced the bounded native Pocket posts, but complete
+emitted-motion acceptance remains open; the test-only case does not certify
+physical machining.
 See [next increment and stopping criteria](#next-detached-stockrest-increment).
 Definition verification: reviewed the two-document change against the implemented
 fixed-section contract; `.venv/Scripts/python.exe` independently recalculated all

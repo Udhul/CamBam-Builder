@@ -565,6 +565,36 @@ report format with I/E/N pass/fail plus deviations. Inspect returned emitted mot
 locally before recording acceptance. Manual file inspection adds native application
 evidence later; it adds no evidence to this documentation-only definition today.
 
+### Next RC01 output milestone after native Pocket trial
+
+Treat the shared E/N role and event blocker as one integrated output increment,
+not a queue of individual rapid, ramp, feed and tool-change edits. Select the
+most credible bounded carrier/post route using the actual failed posts, implement
+it for the complete T1 roughing plus T2 cleanup job, and inspect its emitted
+program. A candidate must be able to express the required setup position,
+ordered entry, approach, retract, feed, spindle stop/start and tool change
+before another CamBam export is requested. Native Pocket settings alone already
+passed the numerical coverage check and cannot certify those emitted roles.
+
+**Increment acceptance:** strict-reimport any new `.cb` candidate, preserve the
+original target and disabled source MOPs, inspect the full posted program and
+independently replay continuous motion, protected stock, T1-to-T2 access,
+process limits and per-depth rest. Pass one complete output route under its own
+E or N gate; retain the other gate as an explicit overall requirement and keep
+physical acceptance separate. A coverage-only pass or another Default-post
+sequence with the same role/event failures does not complete this increment.
+
+**Stop or change route:** if emitted evidence after local repairs or a documented
+CamBam interface limit shows the selected carrier cannot preserve those roles,
+record the exact blocker and present the direct-posting timing as a concrete
+user decision. Its currently accepted delivery order remains after the first
+useful rest/V-carve workflow until the user changes it. Do not create a series
+of smaller RC01 follow-ups around already diagnosed symptoms. After a successful
+output slice, compare the remaining E/N gate with the first variable-depth
+V-carve and broader rest consumer before choosing another increment. General
+topology, numeric precision, optimizer and package-layout work reopen only
+when this output gate or a named consumer supplies a failing case.
+
 ### RC01 cone guard, acceptance scope and stopping condition
 
 Pair the cylindrical job with an analytic pointed 90-degree included-angle cone
