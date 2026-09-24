@@ -550,6 +550,30 @@ This verifies the bounded reference dialect only. It assumes initial tip
 or physical setup; do not treat it as a machine-ready program. Manual CamBam
 validation adds no evidence to this headless output gate.
 
+An edited member of the straight family uses an edited native source and matching
+explicit setup. Build into a new empty ignored directory, then audit that exact
+manifest without `--compare` unless there is a separately accepted post for the
+same edited source and motion:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.direct_variable_v output/direct-variable-v-edited-NEW --source path/to/edited-source.cb --setup path/to/edited-setup.json
+& $ProjectPython -m cambam_builder.integrations.direct_variable_v output/direct-variable-v-edited-NEW/direct-evidence.json
+```
+
+The retained 14 mm spine / 8 mm cone example is under
+`output/direct-variable-v-edited-20260924-01/`. Its ignored `generate.py` recreates
+the edited native source and setup from the synthetic fixture, then builds and
+audits `direct/direct-V-variable.nc`. The direct file SHA-256 is
+`e5b33039303c53bcccf4b104e907b1bdc9835537482580cc6f427bc7f5710a69`.
+The cut runs from (5,2,-1.0285714285714287) to
+(15,2,-2.1714285714285717). Reparsed motion has nine exact items and two
+cone sweeps. Its five target-minus-cut rest areas at depths
+0/0.8/1.3333333333333335/1.8666666666666667/2.4 mm are
+13.86847630534713 / 7.426634715521917 / 4.518313632820263 /
+1.9880579984409152 / 0 mm2. This is partial target completion. The
+comparison-post field is null because the accepted CamBam post belongs to the
+original member; no CamBam export is required for this direct output gate.
+
 ### RC01 native input and A/B/C comparison preparation
 
 From the repository root, use a new unique ignored directory (the example name

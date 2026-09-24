@@ -15,9 +15,6 @@ from ..cam_core import replay, tapered_vcarve
 from .cambam.rc01_post import read_default_post
 
 
-DEPTHS = (0, 1, 1.5, 2, 2.5)
-
-
 def _sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
@@ -26,7 +23,7 @@ def _number(value):
     if isinstance(value, bool) or not math.isfinite(float(value)):
         raise ValueError("direct V output requires a finite numeric value")
     number = Decimal(str(value))
-    if number.as_tuple().exponent < -9 or abs(number) > 1_000_000:
+    if number.as_tuple().exponent < -17 or abs(number) > 1_000_000:
         raise ValueError("direct V value exceeds reference-dialect precision")
     if number == 0:
         return "0"
@@ -35,9 +32,7 @@ def _number(value):
 
 
 def render(plan):
-    """Lower only the previously verified bounded plan to reference G-code."""
-    if plan != tapered_vcarve.generate():
-        raise ValueError("unsupported direct V plan")
+    """Lower a verified straight variable-depth V plan to reference G-code."""
     trace = tapered_vcarve.output_trace(plan)
     replay.replay(trace, expected_source=plan.fingerprint)
     lines = [
@@ -125,8 +120,14 @@ def _audit_text(text, plan, *, comparison_post=None):
     observed = _compare(trace, items)
     stock = replay.replay(observed, expected_source=plan.fingerprint)
     result = tapered_vcarve.TaperedResult(plan, stock)
-    areas = {f"depth_{depth:g}": result.residual_area(depth)
-             for depth in DEPTHS}
+    first_depth, last_depth = plan.target_spine[3:5]
+    span = last_depth - first_depth
+    depths = (0, first_depth, first_depth + span / 3,
+              first_depth + 2 * span / 3, last_depth)
+    if len(set(depths)) != 5:
+        raise ValueError("direct V target cannot resolve five section depths")
+    areas = {f"depth_{_number(depth)}": result.residual_area(depth)
+             for depth in depths}
     if comparison_post is not None and _semantic_items(items) != _semantic_items(
             _cambam_items(comparison_post)):
         raise ValueError("direct V semantics differ from accepted CamBam post")

@@ -5313,10 +5313,11 @@ containment and safe retract for both members. Invalid slopes, insufficient
 stock/tool reach, out-of-range intervals, nonfinite values and a deeper
 tampered cut are rejected.
 
-An edited strict-imported `.cb` with matching VCutter diameter normalizes to
-that same request and reports a planning-only result. The original
-CustomScript/Engrave/direct output adapters still accept their posted example;
-the edited input is rejected before any candidate directory is created. This
+At this planning checkpoint, an edited strict-imported `.cb` with matching
+VCutter diameter normalized to that same request and reported a planning-only
+result. The original CustomScript/Engrave/direct output adapters still accepted
+their posted example; the edited input was rejected before any candidate
+directory was created. This
 keeps the old output evidence scoped to the exact source and motion it proved.
 The edited family has no CamBam post or physical acceptance. Manual validation
 adds no evidence to this detached planning and input-normalization increment.
@@ -5333,3 +5334,52 @@ for the existing accepted native source/setup without creating files. Work is
 uncommitted. Reopen output acceptance for an edited member
 only after its generated file is independently parsed and replayed; an actual
 CamBam candidate needs a fresh whole-post audit.
+
+## Edited direct V reference output - 2026-09-24
+
+The next increment carried that same 14 mm spine, 8 mm pointed cone,
+22 x 8 x 3 mm stock and `[5,15]` cut interval through the direct writer.
+The native source and setup were generated in the ignored
+`output/direct-variable-v-edited-20260924-01/` from the synthetic fixture;
+their SHA-256 values are respectively
+`0ea2f6ca9744691378173eb4e57afe6ee66cf556a3cc666dd6aed2bde878fffe`
+and `e2349d2fefb37baed2323c9fe4146673829bd64422241b68a8ced05fa0ecc9d3`.
+The retained `direct/direct-V-variable.nc` SHA-256 is
+`e5b33039303c53bcccf4b104e907b1bdc9835537482580cc6f427bc7f5710a69`;
+its manifest pins plan fingerprint
+`b5556805c024515bcce95f1bada7a53d3b71fe88134956ab165a49de524923a3`
+and motion fingerprint
+`2904770cf333e6a04aa7f5d1004a5169141c27f0c51eb0b99ddd192f062dbadd`.
+
+The direct file's own reader decoded nine ordered items with no warnings.
+Its parsed cutting line starts at `(5,2,-1.0285714285714287)` and ends at
+`(15,2,-2.1714285714285717)`, exactly matching the core's derived cut.
+The writer compared tool, G0/G1 role, feed, every XYZ position and spindle
+event with the core trace before replaying **parsed** positions against the
+original target. Replay returned one `variable-v` prefix and two contained
+cone sweeps. Target-minus-cut rest at depths
+0/0.8/1.3333333333333335/1.8666666666666667/2.4 mm is
+13.86847630534713 / 7.426634715521917 / 4.518313632820263 /
+1.9880579984409152 / 0 mm2. The edited native integration regression checks
+all five values against independent midpoint-row integration to 0.0005 mm2.
+The exact manifest was audited a second time and passed. The accepted
+original direct manifest was also audited again against its hash-pinned
+CamBam post; its file SHA-256 remains
+`220faa9b9e7836ee5a80be263a6150371adee456375b314638d292ce678b86c5`.
+
+The edited manifest has no CamBam comparison post. The file is a headless
+reference dialect with an assumed initial tip position; it is not a selected
+controller program or physical machining acceptance. The CamBam CustomScript
+and Engrave outputs remain scoped to the previously posted source. Reopen
+those output routes only for a named edited consumer and a fresh whole-post
+audit. Reopen controller posting only with a selected controller and setup.
+
+Final focused verification:
+`.venv/Scripts/python.exe -m unittest tests.test_variable_vcarve
+tests.test_native_variable_v tests.test_direct_variable_v
+tests.test_variable_cone_script tests.test_variable_cone_engrave
+tests.test_cone_script tests.test_vcarve_slot tests.test_mixed_replay -q`
+passed 24 tests. Package/test `compileall -q` and `git diff --check` passed;
+Git printed only working-copy LF/CRLF warnings. The retained edited generator
+and exact original manifest audit both passed. Manual CamBam validation adds
+no evidence to this headless reference output gate.

@@ -15,7 +15,9 @@ from cambam_builder.integrations.cambam.variable_cone_script import (
     audit_variable_post, build_variable_carrier,
 )
 from cambam_builder.integrations.cambam.variable_cone_engrave import build_engrave_candidate
-from cambam_builder.integrations.direct_variable_v import build_program
+from cambam_builder.integrations.cambam.rc01_post import read_default_post
+from cambam_builder.integrations.direct_variable_v import audit_program, build_program
+from tests.test_variable_vcarve import _independent_row_area
 
 
 class NativeVariableVTests(unittest.TestCase):
@@ -127,7 +129,7 @@ class NativeVariableVTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "XML fields"):
                 normalize_bytes(unknown, synthetic_setup())
 
-    def test_edited_native_geometry_stock_and_tool_plan_without_carriers(self):
+    def test_edited_native_geometry_stock_and_tool_direct_output(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
             source = directory / "edited.cb"
@@ -167,9 +169,31 @@ class NativeVariableVTests(unittest.TestCase):
                     build(directory / name, native_source_bytes=source.read_bytes(),
                           native_setup=setup)
                 self.assertFalse((directory / name).exists())
-            with self.assertRaisesRegex(ValueError, "unsupported direct V plan"):
-                build_program(directory / "direct", source_path=source, setup=setup)
-            self.assertFalse((directory / "direct").exists())
+            direct = build_program(directory / "direct", source_path=source,
+                                   setup=setup)
+            self.assertEqual(direct["status"], "bounded_direct_variable_v_pass")
+            self.assertEqual(direct["item_count"], 9)
+            self.assertEqual(direct["stock_prefixes"], [["variable-v", 2]])
+            self.assertFalse(direct["matches_cambam_post"])
+            self.assertEqual(direct["completion"], "partial_target_completion")
+            plan = tapered_vcarve.generate(request)
+            posted = Path(direct["program"]).read_text(encoding="ascii")
+            parsed, warnings = read_default_post(posted)
+            self.assertEqual(warnings, [])
+            self.assertEqual(tuple(parsed[5]["start"]),
+                             (plan.cut_spine[0], plan.cut_spine[2],
+                              -plan.cut_spine[3]))
+            self.assertEqual(tuple(parsed[5]["end"]),
+                             (plan.cut_spine[1], plan.cut_spine[2],
+                              -plan.cut_spine[4]))
+            for key, area in direct["section_rest_mm2"].items():
+                depth = float(key.removeprefix("depth_"))
+                reference = (_independent_row_area(plan.target_spine, depth) -
+                             _independent_row_area(plan.cut_spine, depth))
+                self.assertAlmostEqual(area, reference, delta=0.0005)
+            audited = audit_program(directory / "direct" / "direct-evidence.json")
+            self.assertEqual(audited["section_rest_mm2"],
+                             direct["section_rest_mm2"])
 
             wrong = dict(setup, cone_maximum_radius_mm=3)
             with self.assertRaises(ValueError):

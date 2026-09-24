@@ -333,20 +333,36 @@ section-rest references at five depths. Edited native XYZ spine, Part stock,
 VCutter diameter and explicit cone/cut setup normalize to the same verified
 detached plan. A `--plan-only` route exposes that result without creating
 unverified output candidates. The original accepted plan and motion hashes
-remain unchanged; existing output adapters still accept only that example.
-This completes planning and native input normalization, not output or physical
-acceptance for edited cases. See the [runbook](DEVELOPMENT.md#bounded-native-v-input-normalization)
+remain unchanged; at this planning checkpoint, output adapters still accepted
+only that example.
+This completes planning and native input normalization; edited direct reference
+output is recorded below. See the [runbook](DEVELOPMENT.md#bounded-native-v-input-normalization)
 and [evidence](REVIEW.md#straight-variable-depth-v-planning-family---2026-09-24).
 
-**Next priority:** carry one edited straight-groove request through the
-headless reference writer, reparse its coordinates and replay them against
-the original finish target. The new family can plan real size/depth/tool edits
-but the direct writer still rejects them; this is now the shortest route from
-verified planning to usable headless reference output. Keep the CamBam
-CustomScript and preview candidates on their accepted case until a specific
-edited output consumer and fresh whole-post audit justify broadening them.
-Curved topology, optimizer and controller-specific output remain deferred
-until a named consumer and setup justify their separate proof costs.
+**2026-09-24 edited direct V reference output (backlog 6).** The strict native
+14 mm spine / 8 mm cone member now writes an ASCII headless reference file.
+Its SHA-256 is
+`e5b33039303c53bcccf4b104e907b1bdc9835537482580cc6f427bc7f5710a69`.
+The writer reparses nine exact items, including the derived sloped cut, and
+replays the parsed coordinates against the original finish target. All five
+section-rest values agree with the independent row oracle within 0.0005 mm2;
+the result is partial target completion. The accepted original file hash is
+unchanged. No edited CamBam post, controller profile or physical setup is
+accepted. See the [contract](structure_spec.md#bounded-direct-variable-depth-v-reference-output),
+[runbook](DEVELOPMENT.md#bounded-direct-variable-depth-v-reference-output) and
+[evidence](REVIEW.md#edited-direct-v-reference-output---2026-09-24).
+
+**Next priority:** carry the accepted RC01 roughing/cleanup core trace through
+one bounded headless reference writer, then reparse and replay the emitted
+motion against its original target and independent rest bounds. RC01 is the
+user-selected combined-tool workflow, while the current direct route covers V
+grooves only; this would extend headless output to that distinct useful job.
+Stop at exact parsed roles, coordinates, process events and bounded rest proof
+for that one job. Keep the CamBam V CustomScript and preview candidates on
+their accepted case until a specific edited output consumer and fresh
+whole-post audit justify broadening them. Curved topology, optimizer and
+controller-specific output remain deferred until a named consumer and setup
+justify their separate proof costs.
 
 The [clarified output direction](REST_MACHINING_PLAN.md#programmatic-execution-requirement)
 keeps original finish-target geometry separate from derived path Plines. The
@@ -1368,9 +1384,11 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    residual replay. A separate headless reference G-code file now parses and
    replays to the same semantic sequence and partial rest. A straight
    variable-depth family and edited native input normalization now support
-   planning with other dimensions and pointed tools, while output adapters
-   remain bound to the posted member. A controller-specific direct post remains
-   future work; N remains blocked on its known role controls.
+   other dimensions and pointed tools. One edited member also emits a parsed
+   and target-replayed direct reference file; the CamBam output adapters remain
+   bound to the posted member. The next useful headless slice is RC01 direct
+   reference output. A controller-specific direct post remains future work;
+   N remains blocked on its known role controls.
 
    **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
    owns native/extended/core naming and migration criteria. The current RC01
