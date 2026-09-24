@@ -48,10 +48,14 @@ Drill/CustomScript carrier proved one exact output path but does not show its
 literal motion as a CamBam toolpath; the user confirmed the posted slope in
 CAMotics. Keep it as a verified execution route/fallback while developing the
 visible Engrave route. Do not enable both for the same cut in one posted job.
-First test straight XYZ segments and actual native preview/post against the
-calculated cut plus entry, retract, link, feed and setup requirements. CamBam
-previously added Engrave target depth to vertex Z and changed RC01 order/roles;
-set zero depth offset deliberately and audit the complete post. Bulge encodes
+The first bounded straight XYZ preview showed the slope directly on the
+Engrave Pline and its Default post contained the exact isolated cut. The
+[whole-motion finding](REVIEW.md#bounded-xyz-engrave-cambam-post-finding---2026-09-24)
+records missing feed approach, feed retract and setup return. Keep the
+accepted CustomScript post as execution authority; the Engrave candidate is
+for inspection. CamBam previously added Engrave target depth to vertex Z and
+changed RC01 order/roles; keep zero depth offset and whole-post auditing for
+any reopened Engrave carrier. Bulge encodes
 an XY circular arc with vertex Z, not an arbitrary 3D curve. Add spatial bulge
 output only after interpolation, native preview and postprocessor behavior pass
 a bounded geometric/motion comparison; bounded XYZ line segments can represent

@@ -514,6 +514,27 @@ passed all nine emitted-item comparisons and the original target residual
 replay on 2026-09-24. This accepts only the bounded explicit carrier; a native
 Pline/Engrave V-carve workflow still needs its own output evidence.
 
+`integrations.cambam.variable_cone_engrave` is the separate visible-toolpath
+probe for the same bounded plan. Its source preserves the original XYZ target
+spine; a second, generated XYZ Pline contains only the calculated cut from
+(2,2,-1.25) to (10,2,-2.25). One enabled VCutter Engrave targets only the
+generated Pline. It sets TargetDepth=0 to avoid adding a depth offset,
+OptimisationMode=None, StockSurface=0, DepthIncrement=3, exact-stop intent,
+T3/CW 12000 rpm, F60 plunge and F300 cut. The source guide is never a MOP
+target. Strict reimport checks both XYZ paths, their MOP relationship and all
+process fields. A hash-guarded manifest retains the same nine-item explicit
+motion reference and five independent rest areas. The Default-post audit
+compares every parsed move/event and separately reports whether the sloped
+cut appears. The cut's presence alone cannot authorize this Engrave carrier:
+entry, retract, links, feed roles, setup and events must all match before
+posted-coordinate stock replay. CamBam preview and actual Default post are
+now recorded: the user's XZ preview shows the slope and the native post
+contains one exact sloped F300 cut. Its eight-item sequence omits the F120
+approach, feed retract and setup return; it adds a rapid from the cut endpoint
+at negative Z. The whole-motion gate fails, so this Engrave is an inspection
+carrier only. The accepted CustomScript carrier remains the execution
+authority for the bounded synthetic groove.
+
 ### RC01 native input and comparison candidates
 
 `cambam_builder.integrations.cambam.rc01_adapter` owns the bounded `.cb` adapter. `synthetic_source()`

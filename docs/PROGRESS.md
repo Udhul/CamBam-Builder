@@ -273,20 +273,39 @@ See the
 [runbook](DEVELOPMENT.md#bounded-variable-depth-v-groove-carrier-and-posted-replay)
 and [evidence](REVIEW.md#bounded-variable-depth-v-groove-posted-output---2026-09-24).
 
-**Next priority:** attach the already generated variable-depth XYZ cut path to
-an Engrave MOP in one bounded, CamBam-visible `.cb` candidate, then compare
-its displayed toolpath and actual Default post against the calculated motion.
+**2026-09-24 bounded XYZ Engrave output finding (backlog 6).** The
+strict-reimported `V-variable-engrave.cb` keeps the original target spine
+separate from the generated (2,2,-1.25) to (10,2,-2.25) cut Pline, with one
+enabled Engrave targeting only the cut. TargetDepth=0,
+OptimisationMode=None, and all test process fields are explicit. The
+hash-guarded whole-post audit passes a synthetic exact wrapper and rejects a
+wrapper that retains the sloped cut but loses approach/retract roles. The
+user's CamBam Plus 1.0 preview shows one directly sloped Engrave toolpath;
+the actual Default post contains one exact F300 sloped cut and no other XY
+feed cuts. Its whole-motion audit fails: eight items versus nine required,
+with no F120 feed approach, a rapid retract from Z=-2.25, and no setup
+return before spindle stop. Engrave is a visible inspection carrier, not an
+accepted executable carrier. The previously accepted CustomScript file
+remains execution authority. See the [contract](structure_spec.md#bounded-variable-depth-v-groove-and-cambam-carrier),
+[runbook](DEVELOPMENT.md#bounded-variable-depth-xyz-engrave-preview-and-post-probe)
+and [posted finding](REVIEW.md#bounded-xyz-engrave-cambam-post-finding---2026-09-24).
+
+**Next priority:** normalize one bounded native CamBam V-groove input into
+the same detached target/tool request used by standalone generation, then
+show that the original finish geometry, generated preview Pline and accepted
+explicit output remain separate. This advances the required native plus
+standalone workflow; another unchanged Engrave post adds no evidence.
+
 The [clarified output direction](REST_MACHINING_PLAN.md#programmatic-execution-requirement)
 keeps original finish-target geometry separate from derived path Plines. The
 accepted CustomScript route supplies exact motion but cannot display its
 literal result as a CamBam toolpath; the user confirmed the slope in CAMotics.
-Probe straight XYZ first with explicit zero depth offset and no path
-optimisation; independently audit entry, retract, links, feeds, setup and
-cutting against the target. Promote Engrave to an executable carrier only if
-its entire emitted sequence passes, not just the visible sloped cut. Stop after
-that bounded output finding; if roles still differ, retain script as execution
-authority and report the precise visual/operational split. Add spatial bulges
-after a separate interpolation and posted-motion proof. The broader
+The bounded straight XYZ probe established a visible sloped cut, while its
+actual post failed entry, retract and setup roles. Retain script as execution
+authority and the Engrave candidate as a preview. Reopen Engrave execution
+only if a carrier/post control can express the missing roles and a fresh
+whole-post audit passes; do not repeat the same candidate. Add spatial bulges
+only after separate interpolation and posted-motion proof. The broader
 [native plus explicit workflow](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23)
 still needs supported native-input normalization. Defer rounded tips, optimizer,
 general topology and direct posting until a named consumer requires them.
@@ -1286,10 +1305,11 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    This is a constant-tip-depth one-pass output slice, not general variable-depth
    V-carving or physical acceptance. The bounded sloped target, independent
    residual reference and explicit carrier are now implemented. The actual
-   Default post passed exact motion and residual replay; the next distinct
-   gate is visible generated-XYZ-Pline/Engrave output. Native input
-   normalization remains a separate requirement. N remains blocked on its
-   known role controls.
+   Default post passed exact motion and residual replay. The distinct
+   generated-XYZ-Pline/Engrave gate now has a visible sloped path and exact
+   isolated cutting segment, but fails whole-motion roles; it is inspection
+   only. Native input normalization remains the next product-workflow
+   requirement. N remains blocked on its known role controls.
 
    **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
    owns native/extended/core naming and migration criteria. The current RC01

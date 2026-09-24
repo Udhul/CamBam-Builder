@@ -1,5 +1,75 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Bounded XYZ Engrave CamBam post finding - 2026-09-24
+
+The user opened the prepared `V-variable-engrave.cb` in CamBam Plus 1.0,
+generated toolpaths and reported that the Engrave toolpath slopes directly
+along the Pline with no visible extra pass. The resulting
+`output/variable-v-engrave-20260924-01/V-variable-engrave.nc` has SHA-256
+`69367ec77654c9c2e005fd2db7dbc44c8c4d98bcacbc617a12b682e2cd926981`.
+The candidate hash remains
+`0b7d2e3d42a04785b2989f4b19b0d43916ce09452f62f76d5182c3fb141a5585`.
+The header identifies `V-variable-engrave` and `Default`; `G21 G90 G61 G40`
+and the modal reader establish the bounded millimetre/absolute post dialect.
+
+The exact audit returned `engrave_emitted_motion_deviation` (exit 1): eight
+parsed items versus nine required. It found **one exact sloped XY feed cut**,
+`G1 F300 X10 Z-2.25`, from (2,2,-1.25) to (10,2,-2.25), and no other XY
+feed cuts. This corroborates the user's visible slope and the generated
+cut-path geometry. The original ideal cone target/rest calculation therefore
+still describes that isolated cut, conditional on the stated tool model; the
+native *whole motion* did not pass stock/process replay.
+
+The post first rapids from assumed setup (-10,-10,+5) to (2,2,+5), then
+rapids down to (2,2,+2.75). It omits the required F120 feed approach to +1
+and feeds at F60 directly from +2.75 to -1.25. At the far end it rapids from
+(10,2,-2.25) to +5 instead of feeding at F300 to +1. M5 occurs at
+(10,2,+5); there is no rapid return to setup. The tool change and M3 S12000
+match the expected initial events only under the declared incoming setup
+position; the post cannot prove that physical position. The rapid retract
+violates the required process role even though it follows the cut endpoint.
+
+**Decision:** the bounded XYZ Pline/Engrave carrier passes the native
+*visible sloped toolpath and isolated cutting-segment* check, but fails the
+complete emitted-motion gate. It is an inspection carrier only. Keep the
+previously accepted Drill/CustomScript post as execution authority for this
+synthetic V groove. Do not enable both carriers for the same cut. No changed
+Engrave candidate or unchanged repost is justified by this finding. Reopen
+Engrave execution only with a demonstrated carrier/post control for F120
+approach, feed retract and setup return, followed by a fresh whole-post audit.
+Neither route has physical machining acceptance.
+
+## Bounded XYZ Engrave candidate preparation - 2026-09-24
+
+The explicit variable-depth post passed previously, but its Drill/CustomScript
+motion is not a visible CamBam toolpath. This bounded probe uses the same
+target/plan and no new geometric breadth. The source holds the original target
+spine (0,2,-1) to (12,2,-2.5). `V-variable-engrave.cb` adds a separate
+generated cut Pline (2,2,-1.25) to (10,2,-2.25) and one enabled VCutter
+Engrave selecting only that cut. TargetDepth=0 prevents the additive-Z error
+observed in RC01; OptimisationMode=None requests source order. The local
+strict-reimport check confirms both paths and the MOP/process fields.
+
+The ignored candidate/source SHA-256 values are respectively
+`0b7d2e3d42a04785b2989f4b19b0d43916ce09452f62f76d5182c3fb141a5585`
+and `aea8757a00e0e4fcc3aa0bd5b43005332c3c4635d29231b7f81265271c19bf4a`.
+The manifest pins the same nine-item complete motion and five rest areas as
+the accepted explicit route. A synthetic Default wrapper passes exact
+comparison and posted-coordinate replay. A deliberately native-like wrapper
+with the expected sloped cut but omitted approach and feed retract fails
+whole-motion acceptance while reporting that the sloped cut is present.
+This is parser/adapter evidence, not CamBam-produced output or preview.
+The focused RC01/cone/variable test selection passed 17 tests; compileall,
+tracked `git diff --check`, untracked source/test whitespace inspection,
+strict reimport and candidate/source hash verification passed. This work is
+uncommitted and ready to commit, not merge-ready.
+
+At preparation, CamBam Plus 1.0 preview and `V-variable-engrave.nc` were pending. The
+[runbook](DEVELOPMENT.md#bounded-variable-depth-xyz-engrave-preview-and-post-probe)
+gives the exact steps and pass criteria. Do not infer native execution from
+the visible cut alone; re-open only with actual Default post and preview
+evidence. The accepted script route remains the bounded execution authority.
+
 ## Bounded variable-depth V groove posted output - 2026-09-24
 
 The user exported `output/variable-v-20260924-01/V-variable.nc` from the

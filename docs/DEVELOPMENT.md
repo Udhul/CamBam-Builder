@@ -379,6 +379,67 @@ references. No repeat post is needed for this bounded Default/Default mm gate.
 The user reported the one-point Drill target; that is the declared explicit
 carrier relationship, not native sloped-Pline toolpath generation.
 
+### Bounded variable-depth XYZ Engrave preview and post probe
+
+The one candidate is
+`output/variable-v-engrave-20260924-01/V-variable-engrave.cb` (SHA-256
+`0b7d2e3d42a04785b2989f4b19b0d43916ce09452f62f76d5182c3fb141a5585`).
+Its `source.cb` (SHA-256
+`aea8757a00e0e4fcc3aa0bd5b43005332c3c4635d29231b7f81265271c19bf4a`)
+holds the original target spine. The candidate adds the generated cut as a
+different XYZ Pline and enables one Engrave MOP targeting **only** that cut.
+`expected-motion.json` pins the source/candidate hashes, plan/motion
+fingerprints, complete nine-item reference and five rest-area references.
+TargetDepth=0, OptimisationMode=None and DepthIncrement=3 are explicit. The
+synthetic Default wrapper passes the whole-motion audit; a wrapper with the
+correct sloped cut but missing approach/retract fails. This establishes local
+adapter behavior only. The later CamBam preview and native post result are
+recorded below.
+
+In CamBam Plus 1.0, open the candidate above with **Default** postprocessor
+and **Default mm** profile. Select `CANDIDATE variable-depth XYZ Engrave`,
+generate toolpaths (Ctrl+T), and inspect the XZ view. Report whether the
+Engrave toolpath contains exactly one sloped cutting segment from
+(2,2,-1.25) to (10,2,-2.25), with no extra depth pass. Then post G-code
+(Ctrl+W) to `V-variable-engrave.nc` in the same directory. Leave the `.cb`
+and manifest unchanged. This is synthetic evidence gathering; do not run the
+post on a machine. The original target guide is separate from the selected
+cut Pline, and the Drill/CustomScript MOP is absent from this candidate.
+
+Audit the actual CamBam-produced file from the repository root with:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.variable_cone_engrave output/variable-v-engrave-20260924-01/expected-motion.json output/variable-v-engrave-20260924-01/V-variable-engrave.nc
+```
+
+The strict acceptance status is `bounded_emitted_variable_v_engrave_pass`:
+one exact sloped F300 cut, all nine ordered moves/events including F120
+approach, F60 entry, F300 retract, setup return and T3/spindle events, one
+`variable-v` stock prefix with two cone sweeps, and rest areas at depths
+0/1/1.5/2/2.5 of 15.091265791880026 / 7.028684027518187 /
+4.21460291488107 / 1.8062583920918873 / 0 mm2 within 1e-9 mm2. Any
+missing/extra/reordered/changed item, low rapid, overcut or unsupported
+post word fails. Record the actual NC SHA-256 and the user's preview report
+before promoting Engrave to an executable carrier. If it fails, retain the
+accepted script route and report the precise visual/operational split. The
+Default post does not encode incoming machine position; tip
+(-10,-10,+5) remains a declared setup assumption, and physical machining
+is outside this probe.
+
+The user completed the preview and post on 2026-09-24. The XZ toolpath
+appeared to slope directly along the Pline with no extra pass. The actual
+`V-variable-engrave.nc` SHA-256 is
+`69367ec77654c9c2e005fd2db7dbc44c8c4d98bcacbc617a12b682e2cd926981`.
+The audit command above returned `engrave_emitted_motion_deviation` (exit 1):
+one exact sloped F300 cut and no other XY feed cuts, but eight posted items
+versus nine required. The post rapids to +2.75 before plunging at F60,
+rapids out of the cut to +5, and stops at (10,2,+5) instead of returning to
+setup. It omits F120 approach and F300 feed retract. The
+[review finding](REVIEW.md#bounded-xyz-engrave-cambam-post-finding---2026-09-24)
+records the precise split. This closes the bounded probe: use this file for
+visible path inspection only and the accepted `V-variable.cb` CustomScript
+carrier for exact execution. No unchanged repost is needed.
+
 ### RC01 native input and A/B/C comparison preparation
 
 From the repository root, use a new unique ignored directory (the example name
