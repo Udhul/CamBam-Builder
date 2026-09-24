@@ -273,8 +273,57 @@ residual membership before and after the cone cut, and rejects stale source,
 removed cone entry, low link and missing tool change. The adjacent suites
 retain each original target, access and numerical residual oracle; the native
 RC01 checks guard its existing adapter consumers. This is detached synthetic
-evidence only. No CamBam manual check adds evidence until a cone output adapter
-and posted machine motion exist.
+evidence only. At that checkpoint, a manual CamBam check added no evidence;
+the posted cone output audit is the separate next section.
+
+### Bounded cone CustomScript carrier and posted replay
+
+Build one new ignored directory from the repository root:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.cone_script output/cone-script-NEW
+& $ProjectPython -m unittest tests.test_cone_script tests.test_vcarve_slot tests.test_mixed_replay -v
+```
+
+The current prepared file is
+`output/cone-script-20260924-01/V-cone.cb` (SHA-256
+`59cd263d5dafac98a5f2dd794ea30906545118e3ebf3631d015e8fed62143150`).
+`source.cb` is the synthetic Rect/Part input; `expected-motion.json` gives the
+exact nine expected items, six literal NC lines, process values, hashes and
+analytic residual references. Both `.cb` files strict-reimport. The ignored
+`refresh_expected.py` updated only that manifest to the final complete-item
+format after the candidate was generated; it did not edit the candidate.
+
+In CamBam Plus 1.0, open `V-cone.cb`, use the **Default** postprocessor and
+**Default mm** profile, generate toolpaths (Ctrl+T), and post G-code (Ctrl+W)
+to `V-cone.nc` in that same directory. Do not edit either `.cb`. The expected
+motion begins with T3/M6 and M3/S12000 at the declared setup tip
+(-10,-10,+5), rapids to (2,2,+5), feeds to (2,2,+1), plunges to (2,2,-2),
+cuts to (10,2,-2), feeds up to (10,2,+1), rapids back to setup, then stops.
+The `expected-motion.json` file is the complete coordinate/feed/event reference.
+
+Audit the **CamBam-produced** file with:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.cone_script output/cone-script-20260924-01/expected-motion.json output/cone-script-20260924-01/V-cone.nc
+```
+
+Pass requires `bounded_emitted_cone_motion_pass`, nine matched posted items,
+one `slot` prefix with two ideal cut sweeps, and residual areas at depths
+0/1/2 of 3.4336293856408275 / 0.8584073464102069 / 0 mm2 (floating
+comparison tolerance 1e-9 mm2). Extra, missing, reordered or changed moves,
+feeds, tool/spindle events, low rapid and protected-wall overcut fail. The
+Default post does not encode initial machine position; physically confirm the
+declared setup separately before any machine use. The result is an ideal-stock
+output observation, not physical machining acceptance.
+
+The user posted the prepared file on 2026-09-24 and confirmed CamBam displayed
+the Drill toolpath after closer inspection. Its Ctrl+W Default post emitted
+all six literal motion blocks. `V-cone.nc` SHA-256 is
+`1c4281c930e26fade89d5fc75064a36908466f6ffa3ed96d2b5d30b390761cd4`.
+The command above returned `bounded_emitted_cone_motion_pass`: nine items,
+one `slot` prefix/two cone sweeps, partial target completion and the exact
+0/1/2 mm residual references. No repeat CamBam export is needed for this gate.
 
 ### RC01 native input and A/B/C comparison preparation
 

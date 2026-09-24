@@ -441,6 +441,35 @@ compatible; this proves mixed representation, ordering, fingerprints and stock
 prefix updates, but does not certify interacting targets or emitted machine
 motion. Synthetic cone setup events have no feed/RPM or physical machine claim.
 
+### Bounded pointed-cone CamBam output carrier
+
+`integrations.cambam.cone_script` attaches the full-depth 12 x 4 mm slot to one
+enabled Drill/CustomScript MOP in a strict-reimported `.cb`. The document has a
+Rect target at X=[0,12], Y=[0,4], Part stock X=[-1,13], Y=[-1,5], Z=[-3,0],
+and a setup anchor Point at (-10,-10,0). The separate resolved tool contract is
+a 90-degree pointed cone with maximum radius and conical length 3 mm, tip datum,
+T3, CW 12000 rpm. The MOP carries `VCutter`, diameter 6, Default mm and exact-stop
+intent. Its one full-depth path is (2,2,-2) to (10,2,-2). The synthetic process
+uses feed 120 from +5 to +1, plunge feed 60, cut/retract feed 300 mm/min, and
+above-stock rapid positioning. These are test tokens, not cutting parameters.
+
+The `Default` post is expected to supply the first T3 change/start and terminal
+stop. Six literal script lines supply all intervening motion, including return
+to the setup position at tip Z=+5. Real XML newlines separate G-code blocks.
+`expected-motion.json` records the exact ordered roles, positions, feeds,
+tool/spindle events, candidate/source SHA-256 values and plan/motion fingerprints.
+The candidate and source hashes must still match when its post is audited.
+
+The audit accepts only the bounded straight-line Default-post dialect, harmless
+standalone Drill G98/G80 wrapper markers, one optional redundant final M5, and
+the declared initial tip position. It compares every emitted move/event with
+the resolved trace before replaying the **posted coordinates** through
+`cam_core.replay` and the original cone slot oracle. An actual CamBam `.nc` is
+required for output acceptance; a synthetic wrapper only checks the adapter and
+reader. The ideal cone proof has zero physical error and no holder, fixture,
+controller or material-process certification. The post header does not prove the
+incoming physical machine position; the setup tip position is an assumption.
+
 ### RC01 native input and comparison candidates
 
 `cambam_builder.integrations.cambam.rc01_adapter` owns the bounded `.cb` adapter. `synthetic_source()`

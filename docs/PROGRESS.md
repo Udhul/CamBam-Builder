@@ -232,14 +232,30 @@ acceptance. Work is uncommitted and ready to commit. See the
 [runbook](DEVELOPMENT.md#shared-rc01cone-motion-and-stock-replay-checks) and
 [review](REVIEW.md#shared-rc01cone-motion-and-stock-replay---2026-09-24).
 
-**Next priority:** use the shared trace for one bounded explicit cone output
-carrier and replay the actual posted motion against the cone target. This is
-the shortest path from the now-proven detached mixed core toward the required
-[native plus explicit V-carving workflow](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23).
-Prepare a synthetic `.cb` and exact expected output before asking for a CamBam
-post; accept only the observed emitted motion and its stock replay. Stop at the
-bounded slot output. Defer rounded tips, general topology, optimizer and direct
-postprocessor until that output finding or a named consumer needs them. Native
+**2026-09-24 bounded cone output carrier accepted (backlog 6).**
+The bounded full-depth slot now has a strict-reimported `V-cone.cb` with one
+literal Drill/CustomScript motion carrier, a hash-guarded exact expected-motion
+manifest, and a Default-post audit that replays parsed emitted cone cuts against
+the original slot target. The user-posted Default/Default mm `V-cone.nc` matched
+all nine expected items, including feeds, spindle/tool events and return to
+setup. Shared replay found one slot prefix and two cone cut sweeps; independent
+section residuals at depths 0/1/2 are 3.4336293856408275 /
+0.8584073464102069 / 0 mm2, so completion remains partial. The user confirmed
+CamBam displayed the Drill toolpath; the actual post contains all six motion blocks.
+The prepared files, exact audit and SHA-256 values are in the
+[runbook](DEVELOPMENT.md#bounded-cone-customscript-carrier-and-posted-replay).
+This closes only the bounded explicit cone output gate, with the declared
+initial-position and ideal-tool assumptions; physical machining remains
+unaccepted. See the [contract](structure_spec.md#bounded-pointed-cone-cambam-output-carrier)
+and [review](REVIEW.md#bounded-cone-carrier-preparation---2026-09-24).
+
+**Next priority:** define one bounded variable-depth V-carve target and
+independent residual reference, then generate and post its motion through the
+accepted explicit carrier. This moves toward the required
+[native plus explicit V-carving workflow](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23)
+and tests a capability the constant-depth slot cannot establish. Stop after
+that named consumer passes actual posted replay. Defer rounded tips, general
+topology, optimizer and direct posting until its evidence requires them. Native
 Pocket N reopens only with a carrier/post change that encodes its missing roles
 and fresh whole-motion evidence.
 
@@ -1227,6 +1243,16 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    original XYZ/Engrave parity or native Pocket N. The user retains CamBam
    posting; direct standalone posting stays later. Never infer vertical
    clearance from fixed-Z evidence.
+
+   **Bounded pointed-cone explicit output accepted 2026-09-24.** The 12 x 4 mm
+   full-depth V slot has one accepted Default/Default mm CustomScript post.
+   Exact event/move comparison and actual posted cone-sweep replay preserve
+   protected target and the independent partial-rest references. The user
+   confirmed a displayed Drill toolpath; posted G-code is the motion authority.
+   This is a constant-tip-depth one-pass output slice, not general variable-depth
+   V-carving or physical acceptance. The next useful #6 increment is a
+   bounded variable-depth target with an independent reference and actual
+   posted-motion replay; N remains blocked on its known role controls.
 
    **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
    owns native/extended/core naming and migration criteria. The current RC01

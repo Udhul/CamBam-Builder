@@ -1,5 +1,53 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Bounded cone carrier preparation - 2026-09-24
+
+The prior RC01 literal Drill/CustomScript carrier had passed an actual Default
+post, so the same carrier shape was used for one full-depth 12 x 4 mm pointed-cone
+slot. `output/cone-script-20260924-01/V-cone.cb` strict-reimports with one
+VCutter/CustomScript MOP and six real-newline motion blocks; candidate SHA-256 is
+`59cd263d5dafac98a5f2dd794ea30906545118e3ebf3631d015e8fed62143150`.
+The exact expected manifest includes nine setup/motion items, source and motion
+fingerprints, and the original analytic residual references. It checks a tip
+path from (2,2,-2) to (10,2,-2) with +5/+1 approach, feeds, setup return and
+T3 spindle events. The ideal cone has 3 mm maximum radius/conical length.
+
+The focused synthetic Default-wrapper test accepts the nine parsed items and
+replays two cone sweeps through shared stock and the independent slot area
+oracle. It rejects a rapid plunge, excess depth, changed spindle RPM, missing
+approach, stale manifest and changed candidate. This verified the adapter's
+boundary before native posting. The initial JSON manifest check exposed a
+tuple/list serialization mismatch; the audit now compares canonical JSON lists.
+
+The user posted `output/cone-script-20260924-01/V-cone.nc` in CamBam Plus 1.0
+with Default/Default mm. Its SHA-256 is
+`1c4281c930e26fade89d5fc75064a36908466f6ffa3ed96d2b5d30b390761cd4`.
+The user initially saw no path, then confirmed CamBam displayed the Drill
+toolpath on closer inspection. The Ctrl+W file has the exact six
+newline-separated script blocks. Its wrapper has G21/G90/G61/G40, T3/M6,
+G17, M3/S12000, G98/G80 and terminal M5/M30. The fail-closed reader matched
+all nine ordered items, including G0/G1, F120/F60/F300, setup return and stop.
+The parsed coordinates replay as one `slot` prefix with two cone cut sweeps.
+The original target oracle reports partial target completion: surface rest
+3.4336293856408275 mm2, depth-1 rest 0.8584073464102069 mm2 and depth-2
+rest 0 mm2. This passes the bounded explicit cone output gate. The Drill
+toolpath display is a native UI observation; the posted file establishes the
+literal motion and stock replay result.
+
+The Default post does not encode the incoming physical machine position. The
+audit assumes tip (-10,-10,+5); it models an ideal pointed cone with zero
+physical error and no holder, fixture, controller or material-process proof.
+Physical machining and broader variable-depth V-carving remain separate. Reopen
+the output finding if the postprocessor/profile, carrier or cone geometry changes.
+
+Verification on `.venv/Scripts/python.exe`: 20 focused cone/slot/mixed/RC01
+native tests pass after the manifest fix; `compileall` and import/construct
+smoke pass. The actual `V-cone.nc` audit returns
+`bounded_emitted_cone_motion_pass`; `git diff --check` and the untracked text
+whitespace scan pass. The broad suite was not rerun because the shared replay
+and native RC01 contracts were not changed in this increment. Work is
+uncommitted and ready to commit, not merge-ready.
+
 ## Shared RC01/cone motion and stock replay - 2026-09-24
 
 The bounded increment extracted `cam_core.replay`: one immutable ordered XYZ
@@ -20,9 +68,10 @@ No new CamBam post or manual application check was needed for this detached
 representation. There is no claim for interacting targets, arbitrary 3D access,
 cone holder/fixture clearance, output parity or physical machining.
 
-The next useful gate is one explicit cone carrier with actual user-posted motion
-replayed through this source contract. Reopen the shared geometry evaluator for
-overlapping endmill/cone targets only when a concrete combined target requires
+The next gate was the explicit cone carrier with actual user-posted motion
+replayed through this source contract; its result is recorded above. Reopen
+the shared geometry evaluator for overlapping endmill/cone targets only when a
+concrete combined target requires
 cross-profile stock access or residual credit; the disjoint case does not prove
 that behavior. Native Pocket N still needs a carrier capable of its missing
 motion roles and fresh whole-motion evidence.

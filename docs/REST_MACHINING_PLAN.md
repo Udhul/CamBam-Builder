@@ -667,10 +667,15 @@ Definition and user refinement are complete with inputs, oracles, access obligat
 limits and output gates recorded. The exact nominal T1/T2 sequence and continuous
 all-height replay are implemented. A bounded pointed-cone slot and one shared
 RC01/cone ordered replay are also implemented; the mixed sequence keeps targets
-disjoint to preserve both original residual oracles. Cone emitted-motion
-acceptance remains a separate output gate. The I/E/N adapter gates follow; cone path delivery
-follows through the same contracts. Do not call full target removal or native output
-accepted while the corresponding gate remains partial, blocked or untested.
+disjoint to preserve both original residual oracles. The bounded cone
+emitted-motion gate passed on 2026-09-24 through one Drill/CustomScript carrier
+and a user-posted Default/Default mm program. All nine emitted items and the
+original cone residual oracle passed; the result is partial target completion.
+The user confirmed CamBam displayed the Drill toolpath, while its posted G-code
+contained the accepted literal motion. This does not extend to variable-depth
+V-carving or native output. The I/E/N adapter gates follow their separately
+recorded results. Do not call full target removal or native output accepted
+while the corresponding gate remains partial, blocked or untested.
 Reopen general topology, positive-error completion, low links, optimizers or finer
 area infrastructure only when an RC01 gate or a named next consumer requires it.
 
