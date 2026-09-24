@@ -378,19 +378,34 @@ later native adapters; it does not claim new generated motion or native toolpath
 parity. See the [owner contract](structure_spec.md#package-organization-decision-and-migration-plan)
 and [dated evidence](REVIEW.md#native-owner-consolidation---2026-09-24).
 
-**Next priority:** advance the [backlog 6 rest/V-carve capability](#remaining-backlog-in-order)
-with one bounded, nonrectangular closed-region consumer that uses supplied prior
-motion to identify pure rest, proves safe cutter access against the original
-protected target, and generates a variable-depth pointed-tool cleanup path using
-the shared ordered-motion/replay contract. Define a feasible synthetic case and
-independent numerical reference before implementation; preserve separate native
-source, preview and execution roles. This addresses the gap between the accepted
-rectangular RC01 and straight-groove V family and the intended reusable toolpath
-engine. Stop after one independently checked end-to-end path; widen topology,
-optimize routes or choose a controller only when this consumer exposes a need.
-The detached/policy package move in
-[stage 3](structure_spec.md#package-organization-decision-and-migration-plan)
-waits for a concrete owner boundary from this consumer rather than preceding it.
+**2026-09-24 convex closed-region rest/pointed cleanup slice (backlog 6):**
+the detached core now consumes one caller-supplied, fingerprint-guarded prior
+cone column in a nonrectangular triangular target. Shared replay identifies
+pure rest after that prior cut, proves the cleanup's cleared descent through
+the column and checks its variable-depth cone sweep against the original
+protected triangle at every height. Prior and cleanup remain distinct ordered
+prefixes. Exact pure-rest section areas at 0/1/2 mm are
+43.476106579/21.207669627/5.333333333 mm²; final rest is
+35.160992224/18.089501744/5.333333333 mm² and independently agrees with
+row-integrated cone widths within 0.002 mm². Completion is partial, as intended.
+The [implemented contract](structure_spec.md#bounded-convex-closed-region-rest-and-pointed-cleanup)
+and [acceptance case](REST_MACHINING_PLAN.md#bounded-convex-region-restv-acceptance-case-2026-09-24)
+retain the convex, pointed, nominal limits. This is standalone geometry and
+motion evidence, not native source, preview, posted execution or physical
+acceptance. Focused shared replay checks passed 16 tests, and the final
+repository suite passed 409 tests with one existing Windows symlink-privilege
+skip; syntax, tracked diff and untracked whitespace checks passed.
+
+**Next priority:** make this same accepted triangle usable from a strict native
+Region/Part source while keeping its source geometry, generated path preview and
+explicit execution candidate separate. Pin source and candidate freshness, then
+audit any actual CamBam post through the same ordered trace before accepting
+execution. This closes the immediate user-facing gap exposed by the detached
+consumer; broader concave/island topology, route optimization, controller-specific
+output and the detached/policy [stage 3 package move](structure_spec.md#package-organization-decision-and-migration-plan)
+wait for evidence from that integration or another named consumer. Stop after
+one native triangle workflow and its independently audited post; do not expand
+the geometry family merely because adjacent cases exist.
 
 The [clarified output direction](REST_MACHINING_PLAN.md#programmatic-execution-requirement)
 keeps original finish-target geometry separate from derived path Plines. The

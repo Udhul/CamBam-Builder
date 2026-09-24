@@ -370,6 +370,42 @@ choices are recorded and reviewed. Documentation-only checks suffice; no pytest,
 native-file validation or machining trial is needed for this round. Implementation,
 output compatibility and production acceptance remain separate future gates.
 
+## Bounded convex-region rest/V acceptance case (2026-09-24)
+
+Before implementing this consumer, fix the following independent synthetic oracle.
+The closed, counterclockwise opening is the triangle `(0,0), (12,0), (6,8)`
+in millimetres; stock is above Z=-3 and its top is Z=0. The protected original
+target is the ideal 90-degree pointed V recess `H(x,y)=min(3,q(x,y))`, where
+`q` is the minimum Euclidean distance to the three triangle edges. Its inward
+offsets are similar triangles with inradius 3, so target area at depths
+`z=0,1,2` is exactly `48, 64/3, 16/3` mm² respectively. A 3 mm radius,
+3 mm conical-length pointed tool is supplied. Prior ordered motion makes one
+vertical cone plunge at `(3,2)` to Z=-1.2 and retracts to Z=+1. The consumer
+receives that motion, rather than reconstructing prior stock from intent.
+
+Pure rest is original target minus the replayed prior cone. Its section areas
+at depths `0,1,2` are exactly `48-1.44*pi`, `64/3-0.04*pi`, and `16/3` mm².
+Its witnesses include `(3,2,z=0)` removed and `(4,2,z=1)` still required.
+The cleanup starts in that prior cleared column, cuts horizontally to `(4,2)`,
+and follows tip depth `d(x)=0.8*x-1.2`, from 1.2 to 2 mm. Its depth is the
+original left-edge clearance `(4*x-3*y)/5` along y=2, not a depth inferred
+from the prior rest boundary. At both endpoints every cone section is inside
+all three original polygon halfspaces; linear interpolation and convexity
+prove containment along the entire moving cut. The prior disk is included in
+the cleanup sweep. All links stay above Z=0, and the retract uses the newly
+cut endpoint column. This is a partial finish, with rest outside the path.
+
+Acceptance: reject a stale supplied trace, altered prior/cleanup motion,
+overdeep endpoint, endpoint outside a convex opening, unsupported tool, and
+uncleared low link. Replay must retain distinct prior and cleanup prefixes and
+report monotone removal at the stated witnesses. Independently integrate
+horizontal widths of the variable-radius disk union at each of the three
+depths; compare final residual with `target area - integrated sweep area`
+within 0.002 mm². Exact pure-rest area checks use 1e-9 mm² tolerance.
+No physical clearance, holder, process limit or native output acceptance is
+claimed. The existing native source, preview and execution roles stay separate;
+this detached geometry slice needs no new output carrier.
+
 ## First generated acceptance job RC01
 
 **Defined and selected by the user 2026-09-23; accepted synthetic test inputs,

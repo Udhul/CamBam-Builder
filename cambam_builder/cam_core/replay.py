@@ -36,6 +36,38 @@ def _tapered_cone_contains(spine, x, y, depth):
     return (x - x0 - u) ** 2 + (y - cy) ** 2 <= radius ** 2
 
 
+def _affine_cone_contains(a, b, d0, d1, x, y, depth):
+    """Membership in the disk union of a linearly changing cone tip depth."""
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    length = math.hypot(dx, dy)
+    if length == 0 or depth < 0 or depth > max(d0, d1):
+        return False
+    slope = (d1 - d0) / length
+    if abs(slope) >= 1:
+        return False
+    along = ((x - a[0]) * dx + (y - a[1]) * dy) / length
+    across = ((x - a[0]) * dy - (y - a[1]) * dx) / length
+    radius0 = d0 - depth
+    low = max(0.0, -radius0 / slope) if slope > 0 else 0.0
+    high = min(length, -radius0 / slope) if slope < 0 else length
+    if low > high:
+        return False
+    u = min(high, max(low, (along + slope * radius0) /
+                      (1 - slope * slope)))
+    radius = radius0 + slope * u
+    return (along - u) ** 2 + across ** 2 <= radius ** 2
+
+
+def _polygon_clearance(polygon, point):
+    values = tuple(((b[0] - a[0]) * (point[1] - a[1]) -
+                    (b[1] - a[1]) * (point[0] - a[0])) /
+                   math.hypot(b[0] - a[0], b[1] - a[1])
+                   for a, b in zip(polygon, polygon[1:] + polygon[:1]))
+    if any(not math.isfinite(value) for value in values):
+        raise ValueError("polygon clearance arithmetic is unresolved")
+    return min(values)
+
+
 @dataclass(frozen=True)
 class ToolProfile:
     name: str
@@ -61,6 +93,7 @@ class Target:
     inset_per_depth: bool = False
     island: tuple = ()
     cone_spine: tuple = ()       # x0, x1, center y, tip depth at x0/x1
+    polygon: tuple = ()          # strictly convex CCW closed-region shell
 
     def __post_init__(self):
         if (not self.name or len(self.bounds) != 4 or
@@ -71,8 +104,34 @@ class Target:
                 (self.island and (len(self.island) != 4 or
                                   self.inset_per_depth)) or
                 (self.cone_spine and (len(self.cone_spine) != 5 or
-                    self.inset_per_depth or self.island))):
+                    self.inset_per_depth or self.island or self.polygon)) or
+                (self.polygon and (self.inset_per_depth or self.island))):
             raise ValueError("unsupported replay target")
+        if self.polygon:
+            p = self.polygon
+            if (type(p) is not tuple or len(p) < 3 or
+                    any(type(v) is not tuple or len(v) != 2 or
+                        any(isinstance(c, bool) or not isinstance(c, Real) or
+                            not math.isfinite(float(c)) for c in v) or
+                        not (self.bounds[0] <= v[0] <= self.bounds[2] and
+                             self.bounds[1] <= v[1] <= self.bounds[3])
+                        for v in p)):
+                raise ValueError("invalid convex target polygon")
+            edges = tuple((b[0] - a[0], b[1] - a[1])
+                          for a, b in zip(p, p[1:] + p[:1]))
+            if (any(not math.isfinite(math.hypot(*edge)) for edge in edges) or
+                    any(not math.isfinite((b[0] - a[0]) * (v[1] - a[1]) -
+                                          (b[1] - a[1]) * (v[0] - a[0]))
+                        for a, b in zip(p, p[1:] + p[:1]) for v in p)):
+                raise ValueError("target polygon arithmetic is unresolved")
+            if any(edges[i][0] * edges[(i + 1) % len(p)][1] -
+                   edges[i][1] * edges[(i + 1) % len(p)][0] <= 0
+                   for i in range(len(p))):
+                raise ValueError("target polygon must be strictly convex CCW")
+            if any((b[0] - a[0]) * (v[1] - a[1]) -
+                   (b[1] - a[1]) * (v[0] - a[0]) < 0
+                   for a, b in zip(p, p[1:] + p[:1]) for v in p):
+                raise ValueError("target polygon must be globally convex")
         if self.cone_spine:
             x0, x1, cy, d0, d1 = self.cone_spine
             if (any(not math.isfinite(float(v)) for v in self.cone_spine) or
@@ -87,6 +146,8 @@ class Target:
             return False
         if self.cone_spine:
             return _tapered_cone_contains(self.cone_spine, x, y, depth)
+        if self.polygon:
+            return _polygon_clearance(self.polygon, (x, y)) >= depth
         a, b, c, d = self.bounds
         t = depth if self.inset_per_depth else 0
         inside = a + t <= x <= c - t and b + t <= y <= d - t
@@ -169,7 +230,11 @@ def _distance2(point, a, b):
         return ((point[1] - a[1]) ** 2 +
                 max(min(a[0], b[0]) - point[0], 0,
                     point[0] - max(a[0], b[0])) ** 2)
-    raise ValueError("replay supports axis-aligned stock cuts")
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    length2 = dx * dx + dy * dy
+    u = 0 if length2 == 0 else min(1, max(0, ((point[0] - a[0]) * dx +
+                                               (point[1] - a[1]) * dy) / length2))
+    return (point[0] - a[0] - u * dx) ** 2 + (point[1] - a[1] - u * dy) ** 2
 
 
 @dataclass(frozen=True)
@@ -191,15 +256,31 @@ class Sweep:
 
     def contains(self, x, y, depth):
         if self.bottom_start is not None:
-            return _tapered_cone_contains(
-                (self.a[0], self.b[0], self.a[1],
-                 -self.bottom_start, -self.bottom), x, y, depth)
+            return _affine_cone_contains(self.a, self.b,
+                                         -self.bottom_start, -self.bottom,
+                                         x, y, depth)
         radius = self.radius_at(depth)
         return radius is not None and _distance2((x, y), self.a, self.b) <= radius ** 2
 
 
 def _safe_cut(sweep, target):
     a, b = sweep.a, sweep.b
+    if target.polygon:
+        if sweep.tool.kind != "pointed_cone":
+            raise ValueError("convex V target requires a pointed cone")
+        start_depth = (-sweep.bottom_start if sweep.bottom_start is not None
+                       else -sweep.bottom)
+        end_depth = -sweep.bottom
+        length = math.dist(a, b)
+        if (not 0 < start_depth <= sweep.tool.cutting_length or
+                not start_depth <= end_depth <= min(target.depth,
+                                                    sweep.tool.cutting_length) or
+                (sweep.bottom_start is not None and
+                 (length == 0 or abs(end_depth - start_depth) >= length)) or
+                _polygon_clearance(target.polygon, a) < start_depth or
+                _polygon_clearance(target.polygon, b) < end_depth):
+            raise ValueError("cut crosses protected convex target or tool limit")
+        return
     if target.cone_spine:
         x0, x1, cy, d0, d1 = target.cone_spine
         if (sweep.tool.kind != "pointed_cone" or a[1] != cy or b[1] != cy or
@@ -249,12 +330,13 @@ def _covered(cuts, move, tool):
                                    for p in (a, b)):
                 return True
     else:
-        # The bounded cone route only retracts vertically along its immediately
-        # preceding, full-depth cut endpoint. That cut contains every section of
-        # the retracting cone. Broader cone access needs a separate proof.
+        # A variable-depth cut proves the full-depth column only at its deep
+        # endpoint. A constant-depth cut proves columns all along its path.
+        # Broader cone access needs a separate proof.
         if (a == b and cuts and cuts[-1].tool == tool and
                 cuts[-1].bottom <= low and
-                _distance2(a, cuts[-1].a, cuts[-1].b) == 0):
+                (a == cuts[-1].b if cuts[-1].bottom_start is not None else
+                 _distance2(a, cuts[-1].a, cuts[-1].b) == 0)):
             return True
     return False
 
@@ -322,7 +404,10 @@ def replay(trace, *, expected_source):
             if item.role == "entry" and item.start[:2] != item.end[:2]:
                 raise ValueError(f"move {index}: entry changes XY")
             variable = (item.role == "cut" and item.start[2] != item.end[2] and
-                        op.target.cone_spine and op.tool.kind == "pointed_cone")
+                        (op.target.cone_spine or op.target.polygon) and
+                        op.tool.kind == "pointed_cone")
+            if variable and op.target.polygon and item.end[2] >= item.start[2]:
+                raise ValueError(f"move {index}: convex cone cut must grow in depth")
             if item.role == "cut" and item.start[2] != item.end[2] and not variable:
                 raise ValueError(f"move {index}: non-level cut")
             bottom = min(item.start[2], item.end[2])

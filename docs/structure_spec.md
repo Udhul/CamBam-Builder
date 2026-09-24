@@ -446,6 +446,35 @@ compatible; this proves mixed representation, ordering, fingerprints and stock
 prefix updates, but does not certify interacting targets or emitted machine
 motion. Synthetic cone setup events have no feed/RPM or physical machine claim.
 
+### Bounded convex closed-region rest and pointed cleanup
+
+`cam_core.replay.Target.polygon` accepts a strictly convex counterclockwise
+millimetre shell in the target's XY bounds. Its ideal 90-degree V target is the
+original shell eroded by Euclidean distance `z` at depth `z`, up to the target's
+declared depth. Each variable-depth straight cone cut is checked against every
+original polygon edge at both endpoints. Edge clearance and tip depth vary
+linearly along the segment; endpoint inequalities plus convexity prove every
+intermediate disk and every stock-height section remains inside the target.
+The tool is a pointed cone with equal maximum radius and conical cutting length.
+The polygon branch admits no holes, concavity, arcs, holders or fixtures.
+
+`cam_core.convex_rest.generate(prior_trace, end, expected_source=...,
+expected_motion=...)` consumes a complete caller-supplied ordered trace of one
+same-tool cone column. It checks source and motion fingerprints and replays the
+prior column before planning. The start tip depth must equal clearance to the
+**original** polygon, and the requested endpoint must have rising original
+clearance with depth slope below one. The cleanup enters with a shared-replay
+`cleared_descent` through that exact prior column, traverses one variable-depth
+line, and retracts through its new endpoint column. Combined replay has separate
+prior/cleanup cut prefixes. The result exposes pointwise pure rest after prior
+motion, final residual, and nominal section areas; convex clipping gives target
+area, the prior disk gives pure-rest area, and the existing analytic tapered
+sweep formula gives final rest. A separate midpoint row integration checks that
+last formula in the [synthetic triangle case](REST_MACHINING_PLAN.md#bounded-convex-region-restv-acceptance-case-2026-09-24).
+This is a detached nominal geometry result with partial target completion. It
+does not turn native source geometry or a CamBam preview into executable motion;
+any future output carrier needs its own posted-coordinate replay and acceptance.
+
 ### Bounded pointed-cone CamBam output carrier
 
 `integrations.cambam.cone_script` attaches the full-depth 12 x 4 mm slot to one

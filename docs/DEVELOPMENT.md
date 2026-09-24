@@ -302,6 +302,25 @@ RC01 checks guard its existing adapter consumers. This is detached synthetic
 evidence only. At that checkpoint, a manual CamBam check added no evidence;
 the posted cone output audit is the separate next section.
 
+### Convex closed-region rest and pointed cleanup checks
+
+From the repository root with the declared interpreter:
+
+```powershell
+& $ProjectPython -m unittest tests.test_convex_rest tests.test_variable_vcarve tests.test_mixed_replay tests.test_vcarve_slot -v
+& $ProjectPython -m compileall -q cambam_builder/cam_core tests/test_convex_rest.py
+git diff --check
+```
+
+The triangle case checks exact original and pure-rest section areas at 0, 1 and
+2 mm, plus a separate midpoint row integration of the final variable-radius
+cone sweep within 0.002 mm². It checks ordered prior/cleanup prefixes, a
+prior-cleared descent, partial completion, stale source/motion, invalid prior,
+overcut, unsupported polygon/tool and low-link rejection. This is detached
+synthetic geometry only. No manual CamBam validation adds evidence for this
+slice; source normalization, preview and emitted execution remain distinct
+future gates.
+
 ### Bounded cone CustomScript carrier and posted replay
 
 Build one new ignored directory from the repository root:

@@ -1,5 +1,31 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Convex-region rest and variable-depth pointed cleanup - 2026-09-24
+
+The fixed triangle acceptance case in the [rest plan](REST_MACHINING_PLAN.md#bounded-convex-region-restv-acceptance-case-2026-09-24)
+was specified before implementation. A supplied, fingerprint-pinned cone-column
+trace was replayed first; the cleanup used that column for its cleared descent
+and followed the original triangle's left-edge clearance from 1.2 to 2 mm tip
+depth. Shared replay records one prior cut and one cleanup cut in separate
+prefixes. At depths 0/1/2 mm, exact triangle-minus-prior-disk rest is
+43.476106578830695/21.207669627189745/5.333333333333332 mm². Final rest is
+35.160992224151634/18.089501744185096/5.333333333333332 mm². Independent
+midpoint integration of disk-union row widths agrees within 0.002 mm²;
+stale input, changed prior motion, unsupported convexity/tool, overdeep cut,
+decreasing-depth cut and low rapid are rejected.
+
+The first broad run had one incorrect new test expectation: it counted the
+cleanup's prior-cleared descent as a cut. The replay correctly retained two
+cutting sweeps. The assertion was corrected. The final focused shared-contract
+run passed 16 tests; the final repository suite passed 409 tests with one
+existing Windows symlink-privilege skip. `compileall` for the core and new test,
+`git diff --check`, and explicit whitespace/final-newline checks for both
+untracked files passed. The evidence is conditional nominal geometry;
+holder, fixtures, physical error, native source/preview, posted execution and
+machining have not been assessed. Reopen the geometric contract for a named
+concave/island or non-pointed-tool consumer, or if a native triangle workflow
+shows a missing replay/access role.
+
 ## Bounded direct RC01 reference output - 2026-09-24
 
 `integrations.direct_rc01` lowered the accepted nominal T1 roughing/T2 cleanup
