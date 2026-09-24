@@ -1,7 +1,8 @@
 # Future rest machining and V-cutter paths
 
-Status: **bounded core and native/explicit output bridge accepted; proposed
-polygonal-region v1 completion milestones below await product-scope confirmation**.
+Status: **bounded core and native/explicit output bridge accepted; v1 scope
+includes curved Regions and rounded V tips by user decision on 2026-09-24;
+remaining completion milestones are open**.
 Requested 2026-09-08 and expanded 2026-09-22/23. Priority belongs only to [PROGRESS.md](PROGRESS.md#remaining-backlog-in-order).
 This document owns the problem, proposed outcomes, technical reasoning and future
 acceptance criteria. Only the explicitly marked bounded slices claim implementation;
@@ -12,45 +13,56 @@ and the latest [execution architecture refinement](#execution-architecture-refin
 The [first generated acceptance job](#first-generated-acceptance-job-rc01)
 now gives user-accepted synthetic inputs and separate standalone/native acceptance gates.
 
-## Bounded epic completion contract and milestone scorecard (proposal 2026-09-24)
+## Bounded epic completion contract and milestone scorecard (2026-09-24)
 
-This proposed finish line responds to the risk of indefinitely extending one
-synthetic example. It is **pending user acceptance**; the five desired outcomes
-below and the earlier accepted native/headless decisions remain authoritative.
+This finish line responds to the risk of indefinitely extending one synthetic
+example. The user chose to include curved Regions and rounded tips in v1 on
+2026-09-24. The five desired outcomes below and the earlier accepted
+native/headless decisions remain authoritative. The bounded shape and tool
+interpretation below makes that inclusion testable; a broader interpretation
+requires an explicit scope decision.
 Count delivery milestones, not commits, probes or individual edge cases. One
 milestone closes only after its whole user-visible capability and independent
 evidence are recorded. Bugs and internal steps do not add milestones. If a
 blocker changes the supported product or output route, record the failed gate
 and obtain a scope decision instead of recursively subdividing it.
 
-**Proposed v1 supported domain:** finite planar, straight-edge closed Regions,
-including concavity and holes, in explicit millimetre frames; supplied
-source-bound prior motion; round endmills and straight conical V tools with
-pointed or flat tips; fixed-axis stock, declared tool/process limits and
-partial-result reporting. Reject unsupported touching/curved rings, rounded
-tips, tilted cutters and missing prior-motion authority. A polygonal boundary
-is a v1 release limit, not a claim that the broader original design's curved
-shapes are complete. Native `.cb` source and preview, exact explicit motion,
-and a separately checked direct output route remain required. Do not claim
-physical machining without real setup acceptance.
+**v1 supported domain:** finite planar closed Regions made of straight and
+directed circular-arc segments, including concavity and holes, in explicit
+millimetre frames; supplied source-bound prior motion; round endmills and V
+tools with pointed, flat, or spherical-lowest-point tips tangent to a cone;
+fixed-axis stock, declared tool/process limits and partial-result reporting.
+Native arc/Circle or bulged-Pline source meaning must survive import and
+reopening; chord approximations need the owned boundary/area error ledger and
+separate conservative stock/access checks. Posted curved cuts may be bounded
+straight XYZ segments; spatial bulges need independent interpolation and
+posted-motion proof. Reject unsupported splines, ambiguous/touching rings,
+generic rounded edges around a flat tip, tilted cutters and missing
+prior-motion authority with explicit diagnostics. Native `.cb` source and
+preview, exact explicit motion, and a separately checked direct output route
+remain required. Do not claim physical machining without real setup acceptance.
 
 | Milestone | Whole-outcome definition of done | Status on this branch |
 | --- | --- | --- |
 | M0: reusable proof and output bridge | Shared motion/stock replay, strict native source, separate visible preview and exact executable candidate, with at least one independently audited actual CamBam post and a parsed direct reference program. | **Accepted.** RC01 and the pointed/variable-depth cone examples, including the native triangle, establish this bridge. Their geometry and process scopes remain bounded. |
 | M1: polygonal rest and smaller-endmill cleanup | On the existing letter-like Region with a hole and 0.5 mm allowance, derive pure rest from supplied prior motion, retain the original protected boundary, create safe smaller-tool access through verified cleared space, emit complete entry/cut/link/retract motion, and independently bound residual/overcut. Strict native reimport and a fresh actual explicit post must pass. Attach a separate native Pocket/Profile cleanup candidate and audit its actual post before crediting that route; a failed native role gate blocks M1 until the user explicitly revises the route requirement. Include a distinct narrow-access/corner rejection fixture. | **Open.** RC01 proves a rectangular two-endmill slice; the native Pocket N role gate failed. This milestone must resolve or explicitly escalate that gate, not accept nominal MOP settings as motion evidence. |
-| M2: polygonal V cleanup and edge tracing | For the same original target and residual stock, generate pointed and flat-tip variable-depth paths, depth-capped/wide-area additional passes, and boundary/corner cleanup around concavity and holes. Check full cone occupancy, access, protected material, residual and infeasible/partial results between vertices. Strict native preview and actual explicit post must be audited; Engrave remains inspection-only unless its whole post passes. | **Open.** Straight grooves and one convex triangle prove limited pieces; flat tips, wide areas, concave/hole routes and edge cleanup do not yet pass. |
-| M3: composed workflow and edits | One reopened/edited native source runs rest analysis, alternative endmill/V strategy comparison, selected ordered operations and stock-dependent cleanup without hidden session state. Relevant edits invalidate source, path and post claims; unchanged cosmetic edits retain valid evidence. The same accepted plan is available through native preview/explicit output and a parsed, stock-replayed direct reference program. | **Open.** Existing fingerprints and direct reference writers provide parts, but no complete edited polygonal combined job is accepted. |
-| M4: one controller output | Select one named controller dialect and setup, lower the M3 plan with declared units, tools, feeds, spindle, entry/link/retract and end roles, parse its actual file independently and replay the emitted coordinates. Record machine-specific limits and user simulation/controlled acceptance separately. | **Open; needs controller selection.** Existing ASCII reference dialect is verified but is not a controller profile. |
+| M2: curved Region rest and endmill cleanup | On a native annulus and a mixed line/arc concave Region with a hole, derive pure rest from supplied prior motion and produce complete smaller-endmill entry/cut/link/retract paths. Preserve analytic source identity; validate arc topology, conservative access/protection and independently bounded residual/overcut through approximation and emitted motion. Strict native reimport, visible preview, actual explicit post and stock replay must pass; include a curved narrow-access rejection and translated/reflected frame case. | **Open.** Arc-aware bounds and an approximation contract exist; curved rest, access and posted cleanup do not yet pass. |
+| M3: V cleanup and edge tracing | On the polygonal target and at least one accepted curved target, generate pointed, flat-tip and tangent spherical/conical rounded-tip variable-depth paths, depth-capped/wide-area additional passes, and boundary/corner cleanup around concavity and holes. Check tool-profile continuity, full cutter occupancy, access, protected material, residual and infeasible/partial results between vertices and around arcs. Strict native preview and actual explicit post must be audited; Engrave remains inspection-only unless its whole post passes. | **Open.** Straight grooves and one convex triangle prove limited pieces; flat/rounded tips, wide areas, concave/hole/arc routes and edge cleanup do not yet pass. |
+| M4: composed workflow and edits | One reopened/edited native source runs rest analysis, alternative endmill/V strategy comparison, selected ordered operations and stock-dependent cleanup without hidden session state. Include a curved target and rounded-tip strategy in the accepted comparison. Relevant edits invalidate source, path and post claims; unchanged cosmetic edits retain valid evidence. The same accepted plan is available through native preview/explicit output and a parsed, stock-replayed direct reference program. | **Open.** Existing fingerprints and direct reference writers provide parts, but no complete edited combined job is accepted. |
+| M5: one controller output | Select one named controller dialect and setup, lower the M4 plan with declared units, tools, feeds, spindle, entry/link/retract and end roles, parse its actual file independently and replay the emitted coordinates. Record machine-specific limits and user simulation/controlled acceptance separately. | **Open; needs controller selection.** Existing ASCII reference dialect is verified but is not a controller profile. |
 
-This is **one accepted milestone and four remaining milestones**, not a time or
-effort percentage: M1/M2 carry the largest geometry and native-output risks.
-M1 and M2 may advance in parallel where interfaces are stable; M3 composes
-them, and M4 follows an accepted M3 plan. The branch's existing RC01 and
-triangle work remains reusable evidence toward M1/M2; it does not silently
+This is **one accepted milestone and five remaining milestones**, not a time or
+effort percentage: M1-M3 carry the largest geometry and native-output risks.
+The user-approved curved/rounded scope adds one whole-outcome milestone to the
+earlier polygonal plan; it does not create an open-ended sequence of arc or tip
+subtasks. M1 establishes polygonal endmill cleanup, M2 extends rest/endmill
+cleanup to curves, M3 establishes V cleanup across those targets, M4 composes
+them, and M5 follows an accepted M4 plan. The branch's existing RC01 and
+triangle work remains reusable evidence toward M1/M3; it does not silently
 close their broader definitions. The first M1 fixture is already described in
 [First useful increment and acceptance](#first-useful-increment-and-acceptance).
-M1 closes original outcomes 1-2 in the supported domain; M2 closes outcomes
-3-5. M3/M4 close the accepted composition and direct-output requirements.
+M1/M2 close original outcomes 1-2 in the supported domain; M3 closes outcomes
+3-5. M4/M5 close the accepted composition and direct-output requirements.
 Before coding each open milestone, fix its independent expected residuals,
 geometric and process tolerances, rejection cases and native/manual gate in the
 existing acceptance corpus. Passing its core tests without its stated
@@ -63,7 +75,8 @@ same controls or collecting a series of isolated role fixes cannot advance M1.
 If that bounded hypothesis fails, leave M1 blocked and present the user with a
 route/scope decision; do not create extra milestones to hide the failure.
 Reassess the count only when the user explicitly changes this release finish
-line; defer shape and route extras with a named reopening condition.
+line; defer spline/freeform geometry, generic rounded-flat tips and extra
+controller dialects until a user requirement or accepted fixture requires them.
 
 ## Programmatic execution requirement
 

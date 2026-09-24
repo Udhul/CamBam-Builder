@@ -417,20 +417,22 @@ The retained files and CamBam procedure are in the
 bounded support. Native execution evidence is accepted for this one candidate;
 controller, physical setup and machining remain unverified.
 
-**Epic completion forecast, proposed 2026-09-24:** the
-[bounded scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-proposal-2026-09-24)
-sets five whole-outcome milestones for a polygonal-Region v1. M0, the reusable
-core/native/explicit output bridge, is accepted on this branch. Four milestones
-remain: M1 polygonal rest and smaller-endmill cleanup, M2 pointed/flat-tip V
-cleanup and edge tracing, M3 one edited combined workflow with direct
-reference output, and M4 one selected controller dialect. This is **1 of 5
-milestones accepted, 4 remaining**, not a time/effort percentage. M1/M2 are
-already partially de-risked by RC01 and the native triangle; their stated
-broader acceptance is still open. The release boundary and count await the
-user's product-scope confirmation. Internal fixes and probes do not create new
-milestones.
+**Epic completion forecast, scope set 2026-09-24:** the user selected curved
+Regions and rounded V tips for v1. The
+[bounded scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
+sets six whole-outcome milestones. M0, the reusable core/native/explicit output
+bridge, is accepted on this branch. Five remain: M1 polygonal rest and
+smaller-endmill cleanup; M2 curved Region rest and endmill cleanup; M3
+pointed/flat/tangent spherical-conical rounded-tip V cleanup and edge tracing
+on polygonal and curved targets; M4 one edited combined workflow with direct
+reference output; M5 one selected controller dialect. This is **1 of 6
+milestones accepted, 5 remaining**, not a time/effort percentage. RC01 and
+the native triangle partially de-risk M1/M3; accepted curved-bound and
+geometry-design work does not yet pass M2/M3 path gates. The added M2 reflects
+the user's expanded finish line, not a succession of small internal steps.
+Internal fixes and probes do not create new milestones.
 
-**Next priority after that scope decision:** complete M1 against the already
+**Next priority:** complete M1 against the already
 documented letter-like Region with hole and 0.5 mm allowance, including pure
 rest, safe smaller-endmill access, explicit output and the independent native
 Pocket/Profile motion gate. The existing failed RC01 native Pocket role trial
@@ -438,7 +440,8 @@ must be resolved or escalated as a product decision; it cannot become an
 unbounded chain of nearby probes. This is the next useful capability because
 it proves the endmill half of the intended combined workflow on a nonrectangular
 target. Backlog 7 needs a separate Manual-tab fixture; 8-10 are complete.
-Defer additional geometry, optimization and the detached/policy
+Defer geometry outside the six-milestone supported domain, optimization and
+the detached/policy
 [stage 3 package move](structure_spec.md#package-organization-decision-and-migration-plan)
 unless a scorecard gate requires them. Reopen the accepted triangle only if its
 source, supplied prior, tool/setup or post changes.
@@ -455,8 +458,10 @@ whole-post audit passes; do not repeat the same candidate. Add spatial bulges
 only after separate interpolation and posted-motion proof. The broader
 [native plus explicit workflow](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23)
 now has one bounded native-input and accepted explicit-output route. Defer
-rounded tips, optimizer and general topology until a named consumer requires
-them. The direct reference route is now verified; controller-specific and
+optimizer and topology outside the specified line/arc Region domain until a
+named consumer requires them. Rounded spherical/conical tips and line/arc
+Regions are scheduled in M2/M3, with independent tool/geometry bounds. The
+direct reference route is now verified; controller-specific and
 production output remain separate pending a selected controller and real setup.
 Native Pocket N reopens only with a carrier/post change that encodes its
 missing roles and fresh whole-motion evidence.

@@ -2,19 +2,29 @@
 
 ## Rest/V epic branch progress audit - 2026-09-24
 
-The clean `feat/rest-machining-and-vcarving` branch is 48 commits beyond
-`main` at this review. The useful accepted vertical evidence is RC01's
+Before this documentation update, `feat/rest-machining-and-vcarving` is 49
+commits beyond `main`, with the working tree clean. The useful accepted
+vertical evidence is RC01's
 standalone two-endmill sequence and literal CamBam output, straight pointed
 V-groove planning/native input/direct reference output, and the native convex
 triangle's separate source, visible preview and audited posted cleanup.
 The last recorded repository run passed 412 tests with one Windows
 symlink-privilege skip. Commit count, changed-file count and test count measure
-work and regression coverage; the [milestone scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-proposal-2026-09-24)
+work and regression coverage; the [milestone scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
 measures product delivery. The original five broad rest/V outcomes do not yet
 pass for concave Regions with holes: RC01 native Pocket roles fail, flat-tip
 and edge-tracing routes are absent, combined edit/recompute has no accepted
 job, and no controller dialect is selected. This is why the branch's strong
 foundation does not imply near-complete epic breadth.
+
+The user subsequently included curved Regions and rounded V tips in the v1
+finish line. The bounded interpretation is line/circular-arc Regions and a
+tangent spherical/conical lowest-point tip, matching the existing geometric
+and cutter contracts. This changes the scorecard from five to six milestones:
+M0 remains accepted and five whole-outcome milestones remain. M2 must prove
+curved rest/endmill output end to end; M3 must prove rounded-tip V paths and
+arc-boundary cleanup. Existing curved bounds, arc approximation criteria and
+spherical-tip references are foundations, not accepted generated paths.
 
 ## Native triangle source, preview and explicit candidate - 2026-09-24
 
