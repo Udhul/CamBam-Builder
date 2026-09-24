@@ -417,17 +417,31 @@ The retained files and CamBam procedure are in the
 bounded support. Native execution evidence is accepted for this one candidate;
 controller, physical setup and machining remain unverified.
 
-**Next priority:** choose a named real rest-machining consumer with source
-geometry, prior-cut evidence, target finish, tool components and required
-output, then define one bounded acceptance job from those inputs. The accepted
-triangle establishes the native/preview/explicit bridge, but its strict
-synthetic geometry does not select which broader shape or process matters
-next. Backlog 7 requires a separate native Manual-tab fixture; 8-10 are
-completed. Defer concave/island topology, route optimization,
-controller-specific output and the detached/policy
+**Epic completion forecast, proposed 2026-09-24:** the
+[bounded scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-proposal-2026-09-24)
+sets five whole-outcome milestones for a polygonal-Region v1. M0, the reusable
+core/native/explicit output bridge, is accepted on this branch. Four milestones
+remain: M1 polygonal rest and smaller-endmill cleanup, M2 pointed/flat-tip V
+cleanup and edge tracing, M3 one edited combined workflow with direct
+reference output, and M4 one selected controller dialect. This is **1 of 5
+milestones accepted, 4 remaining**, not a time/effort percentage. M1/M2 are
+already partially de-risked by RC01 and the native triangle; their stated
+broader acceptance is still open. The release boundary and count await the
+user's product-scope confirmation. Internal fixes and probes do not create new
+milestones.
+
+**Next priority after that scope decision:** complete M1 against the already
+documented letter-like Region with hole and 0.5 mm allowance, including pure
+rest, safe smaller-endmill access, explicit output and the independent native
+Pocket/Profile motion gate. The existing failed RC01 native Pocket role trial
+must be resolved or escalated as a product decision; it cannot become an
+unbounded chain of nearby probes. This is the next useful capability because
+it proves the endmill half of the intended combined workflow on a nonrectangular
+target. Backlog 7 needs a separate Manual-tab fixture; 8-10 are complete.
+Defer additional geometry, optimization and the detached/policy
 [stage 3 package move](structure_spec.md#package-organization-decision-and-migration-plan)
-until that consumer demonstrates a need. Reopen the accepted triangle only if
-its source, supplied prior, tool/setup or post changes.
+unless a scorecard gate requires them. Reopen the accepted triangle only if its
+source, supplied prior, tool/setup or post changes.
 
 The [clarified output direction](REST_MACHINING_PLAN.md#programmatic-execution-requirement)
 keeps original finish-target geometry separate from derived path Plines. The
