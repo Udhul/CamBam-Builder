@@ -1,5 +1,39 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Bounded direct RC01 reference output - 2026-09-24
+
+`integrations.direct_rc01` lowered the accepted nominal T1 roughing/T2 cleanup
+trace to `output/rc01-direct-20260924-01/direct-RC01.nc`. SHA-256 is
+`390a6b31f961088a0224c957396a09c28b6dca4f5e2604af001b472911d5b8af`.
+The emitted file declares G21/G90/G61/G40/G17, T1/T2 changes, CW 12000 rpm
+starts, individual G0/G1 coordinates and feeds, stops and M30. Its exact
+terminating decimals preserve the generated cutter centers. The file assumes
+the initial tip is (-10,-10,+5) and coolant is off; it does not establish
+machine position or coolant state.
+
+The standalone audit reparsed 2,945 emitted items (2,939 moves), matched all
+tool/process events and G0/G1/feed/coordinate roles exactly, then replayed the
+parsed values through the original RC01 verifier. Every open depth slab had
+rough rest [7.775010615955999, 7.787678472024001] mm2 and final rest
+[0.9214411294439999, 0.9263453527720001] mm2. Rough/final volume intervals
+were [23.325031847867997, 23.363035416072] and
+[2.7643233883319995, 2.7790360583160005] mm3. Completion remains partial
+because finite cutters leave sharp-corner stock. The rational area coordinate
+enclosure is 0.000000001 mm; the GEOS residual-location result still lacks a
+formal numeric topology enclosure. The focused direct-output tests passed
+(2 tests), including changed-feed and forged-hash rejection; the existing
+RC01 standalone tests passed (6 tests). The retained manifest re-audit passed
+with the same program hash and intervals. These are headless synthetic checks;
+manual CamBam validation would add no evidence. No controller or physical
+machining acceptance follows from this reference file.
+
+The initial test run exposed a JSON tuple/list mismatch in persisted evidence
+and a Windows line-ending mismatch in a tamper fixture. Both were corrected;
+the final audit and focused tests use JSON-stable lists and exact ASCII bytes.
+Reopen this route only for an edited RC01 request with its own generator and
+target proof, or for an identified controller/setup with a fresh emitted-motion
+audit. The distinct native Pocket role findings remain open.
+
 ## Bounded XYZ Engrave CamBam post finding - 2026-09-24
 
 The user opened the prepared `V-variable-engrave.cb` in CamBam Plus 1.0,

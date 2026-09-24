@@ -36,6 +36,7 @@ are outside that runtime package list.
 | `cambam_builder/cambam_writer.py` | XML ID assignment and layer/part traversal; delegates individual encoding to entities | Output structure and reference resolution |
 | `cambam_builder/cambam_reader.py` | XML parsing, entity reconstruction, ID mapping and deferred parent/MOP linking | Import defaults, malformed data and round-trip reconstruction |
 | `cambam_builder/integrations/cambam/` | RC01 `.cb` input/attachment and bounded posted-motion comparison; depends on native model and detached RC01 values | Bridge between native documents, generated motion and CamBam output; no source model ownership |
+| `cambam_builder/integrations/direct_*.py` | Bounded headless V and RC01 reference-dialect writers, parsed-output audits and evidence manifests | Output adapters; consume detached plans/traces and preserve their target verifiers |
 | `cambam_builder/__init__.py` | Public alias and version | Import surface and version metadata |
 | `cambam_builder/mcp_adapter/` | Optional local stdio launcher, SDK protocol boundary, volatile documents, retry ledger, schema validation and workspace I/O | [MCP contract](MCP_CONTRACT.md); `server.py` owns wire behavior, `service.py` owns application state, `paths.py` owns filesystem policy |
 
@@ -626,6 +627,28 @@ section-rest values. Byte-for-byte G-code identity is not required. This is a
 headless **reference dialect** slice,
 not a selected machine controller profile; it carries no holder, fixture,
 physical-position or production-process acceptance.
+
+### Bounded direct RC01 roughing/cleanup reference output
+
+`integrations.direct_rc01` emits the exact nominal `rc01.generate(Job())`
+two-tool sequence as deterministic ASCII G0/G1 in an absolute millimetre
+reference dialect. It declares G17/G21/G90/G40/G61, T1/T2 changes, CW spindle
+starts at 12000 rpm, stops and M30. Every feed move carries its resolved F word;
+coordinates are exact terminating decimals. The initial tip position at
+(-10,-10,+5) and coolant-off state are external setup assumptions; the
+reference dialect emits no coolant command. The writer accepts only the
+nominal detached job; native edits and controller profiles are outside this
+output route.
+
+The direct audit requires canonical bytes and a SHA-256 guarded manifest,
+parses every emitted event and motion through the bounded Default-dialect
+reader, and matches tool, G0/G1 role, feed, endpoint, RPM and order exactly to
+the core trace. Role and operation names are reconstructed from that exact
+match. It then passes the **parsed** values to `rc01.verify` with the original
+job, retaining the T1-only and T1/T2 stock prefixes and rational three-slab
+rest intervals. The separate GEOS residual-location check has sub-micrometre
+polygon sagitta but no formal numeric topology enclosure. This is bounded
+headless output evidence, not CamBam, controller or physical acceptance.
 
 ### RC01 native input and comparison candidates
 

@@ -352,17 +352,30 @@ accepted. See the [contract](structure_spec.md#bounded-direct-variable-depth-v-r
 [runbook](DEVELOPMENT.md#bounded-direct-variable-depth-v-reference-output) and
 [evidence](REVIEW.md#edited-direct-v-reference-output---2026-09-24).
 
-**Next priority:** carry the accepted RC01 roughing/cleanup core trace through
-one bounded headless reference writer, then reparse and replay the emitted
-motion against its original target and independent rest bounds. RC01 is the
-user-selected combined-tool workflow, while the current direct route covers V
-grooves only; this would extend headless output to that distinct useful job.
-Stop at exact parsed roles, coordinates, process events and bounded rest proof
-for that one job. Keep the CamBam V CustomScript and preview candidates on
-their accepted case until a specific edited output consumer and fresh
-whole-post audit justify broadening them. Curved topology, optimizer and
-controller-specific output remain deferred until a named consumer and setup
-justify their separate proof costs.
+**2026-09-24 bounded direct RC01 reference output (backlog 6).** The nominal
+two-tool core sequence now writes a deterministic ASCII headless reference file.
+Its 2,945 emitted items are reparsed and matched exactly to the generated
+roles, feeds, coordinates and process events, then the parsed values pass the
+original RC01 continuous stock, access, process and three-slab residual checks.
+The rough-only and final residual intervals preserve the accepted finite-tool
+partial completion. The output SHA-256 is
+`390a6b31f961088a0224c957396a09c28b6dca4f5e2604af001b472911d5b8af`.
+This closes one headless combined-tool reference dialect, with no controller,
+physical or edited-job acceptance. See the
+[contract](structure_spec.md#bounded-direct-rc01-roughingcleanup-reference-output),
+[runbook](DEVELOPMENT.md#bounded-direct-rc01-roughingcleanup-reference-output)
+and [evidence](REVIEW.md#bounded-direct-rc01-reference-output---2026-09-24).
+
+**Next priority:** perform the staged native-owner consolidation in
+[backlog 6](#remaining-backlog-in-order) and its
+[migration contract](structure_spec.md#package-organization-decision-and-migration-plan).
+The RC01 CamBam and headless output semantics are now pinned, so moving root
+native project/entity/XML implementations behind compatibility imports can be
+tested without simultaneously diagnosing output roles. Bound the next increment
+to representative Region, MOP identity, target-reference and stock-offset XML
+round trips plus clean-wheel imports. Keep edited RC01 jobs, curved topology,
+optimizer and controller-specific output deferred until a named consumer and
+setup justify their separate proof costs.
 
 The [clarified output direction](REST_MACHINING_PLAN.md#programmatic-execution-requirement)
 keeps original finish-target geometry separate from derived path Plines. The
@@ -1386,8 +1399,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    variable-depth family and edited native input normalization now support
    other dimensions and pointed tools. One edited member also emits a parsed
    and target-replayed direct reference file; the CamBam output adapters remain
-   bound to the posted member. The next useful headless slice is RC01 direct
-   reference output. A controller-specific direct post remains future work;
+   bound to the posted member. The nominal RC01 two-tool sequence now also has
+   exact parsed and replayed headless reference output. A controller-specific
+   direct post remains future work;
    N remains blocked on its known role controls.
 
    **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)

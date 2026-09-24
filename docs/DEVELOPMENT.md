@@ -574,6 +574,39 @@ cone sweeps. Its five target-minus-cut rest areas at depths
 comparison-post field is null because the accepted CamBam post belongs to the
 original member; no CamBam export is required for this direct output gate.
 
+### Bounded direct RC01 roughing/cleanup reference output
+
+The direct writer consumes the exact nominal detached `rc01.generate(Job())`
+trace. It writes one ASCII absolute-mm G0/G1 reference file, reparses all
+2,945 emitted items and replays the parsed motion against the original stock,
+island, tool components, process constraints and independent three-slab rest
+bounds. From the repository root, with `$ProjectPython` set above:
+
+```powershell
+& $ProjectPython -m unittest tests.test_direct_rc01 tests.test_rc01 -v
+& $ProjectPython -m cambam_builder.integrations.direct_rc01 output/rc01-direct-NEW
+& $ProjectPython -m cambam_builder.integrations.direct_rc01 output/rc01-direct-NEW/direct-evidence.json
+```
+
+Use a new empty ignored directory for each generated run. The retained
+`output/rc01-direct-20260924-01/direct-RC01.nc` has SHA-256
+`390a6b31f961088a0224c957396a09c28b6dca4f5e2604af001b472911d5b8af`.
+The manifest pins that file, nominal job and motion fingerprints. It reports
+2,939 moves, partial target completion, rough rest per depth
+[7.775010615955999, 7.787678472024001] mm2, and final rest per depth
+[0.9214411294439999, 0.9263453527720001] mm2. The same intervals apply
+to each open depth slab (-1,0), (-2,-1) and (-3,-2); rough/final volume
+intervals are [23.325031847867997, 23.363035416072] and
+[2.7643233883319995, 2.7790360583160005] mm3. The area coordinate
+enclosure is 0.000000001 mm; the GEOS residual-location topology has no
+formal numeric interval proof. A changed file, stale manifest or changed
+parsed role/feed/coordinate fails the audit.
+
+This is a strict reference dialect under the declared initial tip position
+(-10,-10,+5) and initial coolant-off state. No controller or physical setup is
+selected. Manual CamBam
+validation adds no evidence to this headless output gate.
+
 ### RC01 native input and A/B/C comparison preparation
 
 From the repository root, use a new unique ignored directory (the example name

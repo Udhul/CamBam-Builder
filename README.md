@@ -28,8 +28,9 @@ Document-independent CAM calculations and planning live under
 separate. The first generated roughing/cleanup slice is `cam_core.rc01`.
 A validated family of straight variable-depth V grooves supports detached
 planning and edited native inputs. The accepted baseline and one edited member
-also have verified headless G-code reference output. Its strict millimetre
-dialect is not a machine controller profile. See the
+also have verified headless G-code reference output. The nominal RC01
+roughing/cleanup job also has a parsed and stock-replayed headless reference
+file. Their strict millimetre dialect is not a machine controller profile. See the
 [current status](docs/PROGRESS.md#active-work-and-next-priority).
 
 For development, install the environment with `uv sync`, then run the
