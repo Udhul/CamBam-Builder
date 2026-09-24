@@ -394,8 +394,11 @@ values match the manifest. CamBam did not show the CustomScript motion as a
 toolpath; inspect the separate preview file for a visible generated path.
 `preview/triangle-preview.nc` was also parsed and contains the exact F300
 segment `(3,2,-1.2)` to `(4,2,-2)`. The user confirmed the preview's sloped
-polyline is visible in CamBam. The source/stock/unit display check has not yet
-been reported. Do not repeat the accepted explicit post unless the candidate,
+polyline is visible in CamBam. They confirmed the source triangle in the
+millimetre drawing and the Part's offset `(-1,-1)`, size `(14,10,3)` and
+stock surface Z=0, putting the global stock bottom at Z=-3. This completes
+the bounded native display and posted-motion acceptance. Do not repeat the
+accepted explicit post unless the candidate,
 source, prior or output setup changes. Physical machining remains unverified.
 
 ### Bounded cone CustomScript carrier and posted replay

@@ -41,9 +41,13 @@ CamBam toolpath. The separate `preview/triangle-preview.nc` (SHA-256
 `8b40dd340c906e6dd312b3963c59f8c99ce3d1c96777d4df603ba0355a6e0e3f`)
 was parsed and contains the exact `(3,2,-1.2)` to `(4,2,-2)` F300 segment.
 The user confirmed the separate preview's sloped polyline is visible in
-CamBam. The user's source/stock/unit observations were not yet reported; do
-not infer them from the NC files. Holder, fixture, physical setup and
-controller acceptance remain outside the case.
+CamBam. They also confirmed the source triangle vertices match and the Part
+shows stock offset `(-1,-1)`, size `(14,10,3)` and stock surface Z=0 in the
+millimetre drawing; its global stock bottom is Z=-3. This closes the bounded
+native source, preview and posted-output acceptance for the retained files.
+Holder, fixture, physical setup and controller acceptance remain outside the
+case. Reopen only when the source, prior trace, tool/setup or post changes, or
+a named consumer needs geometry or behavior outside this strict triangle.
 
 ## Convex-region rest and variable-depth pointed cleanup - 2026-09-24
 

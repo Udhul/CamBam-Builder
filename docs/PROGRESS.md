@@ -408,20 +408,26 @@ section rest. The user saw entry, retract, repeated entry, slope and final
 retract in CAMotics. CamBam did not display the CustomScript path. The
 separate preview NC contains the exact sloped cut, and the user confirmed
 that the preview's sloped polyline is visible in CamBam.
+The user also confirmed the source triangle in the millimetre drawing and
+Part stock offset `(-1,-1)`, size `(14,10,3)` and surface Z=0 (global bottom
+Z=-3). This closes the bounded native input, preview and posted-motion gate.
 The retained files and CamBam procedure are in the
 [runbook](DEVELOPMENT.md#native-triangle-source-preview-and-post-gate), and the
 [owner contract](structure_spec.md#one-native-triangle-workflow) describes the
 bounded support. Native execution evidence is accepted for this one candidate;
 controller, physical setup and machining remain unverified.
 
-**Next priority:** record the source Region, Part stock and millimetre display
-check in CamBam. The explicit post and separate sloped preview are already
-accepted and do not need repeating. Stop this triangle workstream after that report;
-broader concave/island topology, route optimization, controller-specific
-output and the detached/policy
+**Next priority:** choose a named real rest-machining consumer with source
+geometry, prior-cut evidence, target finish, tool components and required
+output, then define one bounded acceptance job from those inputs. The accepted
+triangle establishes the native/preview/explicit bridge, but its strict
+synthetic geometry does not select which broader shape or process matters
+next. Backlog 7 requires a separate native Manual-tab fixture; 8-10 are
+completed. Defer concave/island topology, route optimization,
+controller-specific output and the detached/policy
 [stage 3 package move](structure_spec.md#package-organization-decision-and-migration-plan)
-wait for a named consumer. Evaluate the distinct remaining backlog before
-selecting another implementation increment.
+until that consumer demonstrates a need. Reopen the accepted triangle only if
+its source, supplied prior, tool/setup or post changes.
 
 The [clarified output direction](REST_MACHINING_PLAN.md#programmatic-execution-requirement)
 keeps original finish-target geometry separate from derived path Plines. The

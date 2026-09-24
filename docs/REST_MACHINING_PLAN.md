@@ -435,7 +435,8 @@ the ten-item and posted-stock audit on 2026-09-24. The user confirmed the
 ordered motion in CAMotics and reported that CamBam does not display the
 CustomScript path. The separate preview NC contains the exact sloped segment,
 and the user confirmed the preview's sloped polyline is visible in CamBam.
-Source/stock/unit display remains a separate report. See the
+The user also confirmed the source triangle and millimetre Part stock offset,
+size and surface, completing this bounded native acceptance. See the
 [dated evidence](REVIEW.md#native-triangle-source-preview-and-explicit-candidate---2026-09-24).
 
 ## First generated acceptance job RC01
