@@ -470,6 +470,45 @@ reader. The ideal cone proof has zero physical error and no holder, fixture,
 controller or material-process certification. The post header does not prove the
 incoming physical machine position; the setup tip position is an assumption.
 
+### Bounded variable-depth V groove and CamBam carrier
+
+`cam_core.tapered_vcarve` owns one millimetre, fixed-axis 90-degree pointed-cone
+case. The original finish target is the exact union of cone sections along a
+straight spine from (0,2,-1) to (12,2,-2.5). Cone radius grows linearly with
+tip depth and has a maximum radius/conical length of 3 mm. The generated cut is
+the proper subspine (2,2,-1.25) to (10,2,-2.25); its tip Z changes during the
+single cutting move. At each stock depth, the target and cut sections are unions
+of disks whose radius grows linearly along X. The cut is contained in the
+original target because its entire spine is a subspine with the same depth
+function. Entry/retract are vertical subsets of the endpoint cones; links are
+above stock. Source geometry in `.cb` is an XYZ Pline guide to this resolved
+target, not a native V-carve request. Stock is X=[-2,16], Y=[-2,6], Z=[-3,0].
+
+`cam_core.replay` accepts a sloped cone cut only for this explicit tapered-spine
+target. It proves endpoint depth inequalities for the shared linear profile,
+cutting-length limits and ordered access; its swept-section membership maximizes
+a concave quadratic over the finite spine. The target and cut section areas have
+an independent analytic reference from their two tangent sides and two endpoint
+arcs. Rest is `target area - cut area`, with the cut a proven subset. At stock
+depths 0/1/1.5/2/2.5 mm, nominal rest is respectively
+15.091265791880026 / 7.028684027518187 / 4.21460291488107 /
+1.8062583920918873 / 0 mm2. Midpoint row integration independently checks the
+formula to 0.0005 mm2. Positive rest establishes partial completion. These are
+ideal geometric results evaluated in ordinary floating arithmetic, without a
+directed interval proof; no physical error, holder or fixture is modeled.
+
+`integrations.cambam.variable_cone_script` builds a strict-reimported source and
+`V-variable.cb` with one enabled VCutter Drill/CustomScript carrier. It lowers
+the sloped core trace through the previously accepted literal-motion route,
+with T3/CW 12000 rpm, +5/+1 approach, F120/F60/F300 test feeds, setup return
+and exact-stop intent. The Default/Default mm output audit pins source/candidate,
+plan and motion fingerprints, compares every ordered parsed event and move,
+then replays **actual posted coordinates** through the original target and
+analytic rest reference. The Default post does not encode the incoming machine
+position, so tip (-10,-10,+5) is an explicit setup assumption. A synthetic
+Default wrapper verifies the adapter; output acceptance requires an actual
+CamBam-produced `.nc` and remains pending until that file is audited.
+
 ### RC01 native input and comparison candidates
 
 `cambam_builder.integrations.cambam.rc01_adapter` owns the bounded `.cb` adapter. `synthetic_source()`

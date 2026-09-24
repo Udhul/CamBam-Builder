@@ -249,15 +249,32 @@ initial-position and ideal-tool assumptions; physical machining remains
 unaccepted. See the [contract](structure_spec.md#bounded-pointed-cone-cambam-output-carrier)
 and [review](REVIEW.md#bounded-cone-carrier-preparation---2026-09-24).
 
-**Next priority:** define one bounded variable-depth V-carve target and
-independent residual reference, then generate and post its motion through the
-accepted explicit carrier. This moves toward the required
-[native plus explicit V-carving workflow](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23)
-and tests a capability the constant-depth slot cannot establish. Stop after
-that named consumer passes actual posted replay. Defer rounded tips, general
-topology, optimizer and direct posting until its evidence requires them. Native
-Pocket N reopens only with a carrier/post change that encodes its missing roles
-and fresh whole-motion evidence.
+**2026-09-24 bounded variable-depth V groove prepared (backlog 6).** One
+straight tapered finish target is the exact swept envelope of a pointed cone
+whose spine rises in depth from 1 to 2.5 mm. A proper subspine from
+(2,2,-1.25) to (10,2,-2.25) generates a genuinely sloped XYZ feed cut and
+leaves independently calculated finite-end rest. Shared replay checks its
+all-height containment and ordered entry/cut/retract; tangent/arc section
+area and independent row integration agree within 0.0005 mm2. A
+strict-reimported `V-variable.cb` and exact expected-motion manifest are ready
+under `output/variable-v-20260924-01/`; a synthetic Default wrapper passes the
+nine-item audit. The 34 focused RC01/cone/variable tests, compileall and text
+checks pass. No actual CamBam-produced `V-variable.nc` has been audited, so
+the variable-depth emitted-motion gate remains pending. See the
+[contract](structure_spec.md#bounded-variable-depth-v-groove-and-cambam-carrier),
+[runbook](DEVELOPMENT.md#bounded-variable-depth-v-groove-carrier-and-posted-replay)
+and [evidence](REVIEW.md#bounded-variable-depth-v-groove-preparation---2026-09-24).
+
+**Next priority:** post that prepared `.cb` once in CamBam Plus 1.0 with
+Default/Default mm and audit the actual emitted motion. This is the remaining
+gate for the named variable-depth consumer; synthetic wrapper success cannot
+establish it. Stop this increment after the actual post passes or a concrete
+carrier deviation is recorded. After that gate, assess native shape/MOP
+V-carve integration against the [accepted dual-workflow requirement](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23)
+before widening topology or implementing direct posting. Defer rounded tips,
+optimizer and broader target geometry until a named consumer requires them.
+Native Pocket N reopens only with a carrier/post change that encodes its
+missing roles and fresh whole-motion evidence.
 
 The user selected the proposed synthetic case, including its test-only
 plunge/feed limits, on 2026-09-23. These are accepted
@@ -1250,9 +1267,10 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    protected target and the independent partial-rest references. The user
    confirmed a displayed Drill toolpath; posted G-code is the motion authority.
    This is a constant-tip-depth one-pass output slice, not general variable-depth
-   V-carving or physical acceptance. The next useful #6 increment is a
-   bounded variable-depth target with an independent reference and actual
-   posted-motion replay; N remains blocked on its known role controls.
+   V-carving or physical acceptance. The bounded sloped target, independent
+   residual reference and explicit carrier are now implemented; an actual
+   CamBam post and replay remain the next gate. N remains blocked on its known
+   role controls.
 
    **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
    owns native/extended/core naming and migration criteria. The current RC01

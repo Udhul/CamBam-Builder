@@ -156,6 +156,66 @@ def build_cone_carrier(directory):
             if key not in ("script_lines", "expected_items")}
 
 
+def _compare_post(trace, candidate, posted_path, *, tool=TOOL, rpm=RPM):
+    """Match every Default-post item and return the observed trace or a failure."""
+    posted_path = Path(posted_path)
+    post = posted_path.read_text(encoding="utf-8-sig")
+    if ("( Post processor: Default )" not in post or
+            not any(line.startswith(f"( {candidate.stem} ")
+                    for line in post.splitlines()[:6])):
+        raise ValueError("CamBam post header does not match candidate/Default")
+    normalized = "\n".join("" if line.strip() in ("G98", "G80") else line
+                           for line in post.splitlines())
+    actual, warnings = read_default_post(normalized)
+    warnings = [w for w in warnings
+                if "initial machine position is not encoded" not in w]
+    if warnings:
+        return None, {"status": "unverified", "reason": warnings[0]}
+    if (len(actual) == len(trace.items) + 1 and
+            actual[-1]["type"] == "event" and
+            actual[-1]["kind"] == "spindle_stop" and
+            actual[-1]["tool"] == tool and
+            tuple(actual[-1]["position"]) == trace.items[-1].position):
+        actual = actual[:-1]
+    if len(actual) != len(trace.items):
+        return None, {"status": "deviation", "reason": "extra or missing emitted item",
+                      "expected_items": len(trace.items), "actual_items": len(actual)}
+    observed = []
+    for index, (want, got) in enumerate(zip(trace.items, actual)):
+        if type(want) is replay.Motion:
+            if got["type"] != "move":
+                return None, {"status": "deviation", "item": index,
+                              "line": got["line"], "expected_role": want.role,
+                              "actual": got}
+            fields = (got["tool"] == want.tool,
+                      got["g"] == (0 if want.role == "rapid" else 1),
+                      got["feed"] == want.feed,
+                      tuple(got["start"]) == want.start,
+                      tuple(got["end"]) == want.end)
+            if not all(fields):
+                return None, {"status": "deviation", "item": index,
+                              "line": got["line"], "expected_role": want.role,
+                              "actual": got}
+            observed.append(replace(want, start=tuple(got["start"]),
+                                    end=tuple(got["end"]), feed=got["feed"]))
+        else:
+            if got["type"] != "event":
+                return None, {"status": "deviation", "item": index,
+                              "line": got["line"], "expected_event": want.kind,
+                              "actual": got}
+            fields = (got["kind"] == want.kind,
+                      got["tool"] == want.tool,
+                      tuple(got["position"]) == want.position)
+            if want.kind == "spindle_start":
+                fields += (got["rpm"] == rpm,)
+            if not all(fields):
+                return None, {"status": "deviation", "item": index,
+                              "line": got["line"], "expected_event": want.kind,
+                              "actual": got}
+            observed.append(replace(want, position=tuple(got["position"])))
+    return replace(trace, items=tuple(observed)), None
+
+
 def audit_cone_post(expected_path, posted_path):
     """Read actual emitted items, compare every role, then replay their sweeps."""
     expected_path = Path(expected_path)
@@ -180,62 +240,10 @@ def audit_cone_post(expected_path, posted_path):
     if (len(enabled) != 1 or type(enabled[0]) is not DrillMop or
             enabled[0].custom_script != _script(trace)):
         raise ValueError("cone candidate script differs from manifest")
-    posted_path = Path(posted_path)
-    post = posted_path.read_text(encoding="utf-8-sig")
-    if ("( Post processor: Default )" not in post or
-            not any(line.startswith(f"( {candidate.stem} ")
-                    for line in post.splitlines()[:6])):
-        raise ValueError("CamBam post header does not match candidate/Default")
-    normalized = "\n".join("" if line.strip() in ("G98", "G80") else line
-                           for line in post.splitlines())
-    actual, warnings = read_default_post(normalized)
-    warnings = [w for w in warnings
-                if "initial machine position is not encoded" not in w]
-    if warnings:
-        return {"status": "unverified", "reason": warnings[0]}
-    if (len(actual) == len(trace.items) + 1 and
-            actual[-1]["type"] == "event" and
-            actual[-1]["kind"] == "spindle_stop" and
-            actual[-1]["tool"] == TOOL and
-            tuple(actual[-1]["position"]) == START):
-        actual = actual[:-1]
-    if len(actual) != len(trace.items):
-        return {"status": "deviation", "reason": "extra or missing emitted item",
-                "expected_items": len(trace.items), "actual_items": len(actual)}
-    observed = []
-    for index, (want, got) in enumerate(zip(trace.items, actual)):
-        if type(want) is replay.Motion:
-            if got["type"] != "move":
-                return {"status": "deviation", "item": index,
-                        "line": got["line"], "expected_role": want.role,
-                        "actual": got}
-            fields = (got["tool"] == want.tool,
-                      got["g"] == (0 if want.role == "rapid" else 1),
-                      got["feed"] == want.feed,
-                      tuple(got["start"]) == want.start,
-                      tuple(got["end"]) == want.end)
-            if not all(fields):
-                return {"status": "deviation", "item": index,
-                        "line": got["line"], "expected_role": want.role,
-                        "actual": got}
-            observed.append(replace(want, start=tuple(got["start"]),
-                                    end=tuple(got["end"]), feed=got["feed"]))
-        else:
-            if got["type"] != "event":
-                return {"status": "deviation", "item": index,
-                        "line": got["line"], "expected_event": want.kind,
-                        "actual": got}
-            fields = (got["kind"] == want.kind,
-                      got["tool"] == want.tool,
-                      tuple(got["position"]) == want.position)
-            if want.kind == "spindle_start":
-                fields += (got["rpm"] == RPM,)
-            if not all(fields):
-                return {"status": "deviation", "item": index,
-                        "line": got["line"], "expected_event": want.kind,
-                        "actual": got}
-            observed.append(replace(want, position=tuple(got["position"])))
-    posted_trace = replace(trace, items=tuple(observed))
+    posted_trace, failure = _compare_post(trace, candidate, posted_path)
+    if failure:
+        return failure
+    observed = posted_trace.items
     stock = replay.replay(posted_trace, expected_source=plan.fingerprint)
     # Build the specialized cone result from the actual pass coordinates, not
     # from the original plan. The exact comparison above preserves its roles.
@@ -250,7 +258,7 @@ def audit_cone_post(expected_path, posted_path):
         "status": "bounded_emitted_cone_motion_pass",
         "candidate_sha256": expected["candidate_sha256"],
         "post_sha256": _sha(posted_path),
-        "item_count": len(actual),
+        "item_count": len(observed),
         "stock_prefixes": stock.prefixes,
         "completion": result.completion,
         "section_rest_mm2": {"surface": result.residual_area(0),

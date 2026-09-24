@@ -1,5 +1,42 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Bounded variable-depth V groove preparation - 2026-09-24
+
+The next backlog-6 consumer uses one exact tapered finish groove: a 90-degree
+pointed cone's ideal swept envelope along (0,2,-1) to (12,2,-2.5). The generated
+proper subspine runs (2,2,-1.25) to (10,2,-2.25), so it changes tip Z during a
+single feed cut and leaves finite-end rest. Its conical radius/length is 3 mm;
+the X slope is 0.125, below the cone's unit radial slope. The core checks
+all-height containment by the common target/cut linear depth law, and shared
+replay records two ordered cone sweeps. A separate closed-form section-area
+reference uses two tangent sides and endpoint arcs; an independent midpoint
+row integral agrees within 0.0005 mm2 at depths 0/1/1.5/2/2.5. Analytic rest
+there is 15.091265791880026 / 7.028684027518187 / 4.21460291488107 /
+1.8062583920918873 / 0 mm2. This is partial target completion.
+
+`output/variable-v-20260924-01/V-variable.cb` strict-reimports with one enabled
+VCutter Drill/CustomScript MOP and six literal motion lines. Candidate SHA-256 is
+`5f58068f39ffcaef6cf40147750a62f4e0be55d5580a42c90a01c9ae26d064b0`;
+source SHA-256 is `652a830b75ee19fb10b860cf14f796ed85ad1a0115a2d4157ce3d144262b1d2c`.
+The source XYZ Pline guide was reimported with exact endpoint Z=-1/-2.5.
+`expected-motion.json` pins both file hashes, fingerprints, all nine ordered
+items and five residual references. A synthetic Default wrapper passed the
+exact reader and posted-coordinate replay, and mutations of depth, G0/G1,
+RPM and approach fail. This is adapter evidence only; no CamBam-produced
+`V-variable.nc` has yet been received or audited.
+
+The shared replay change was checked by 34 RC01/cone/variable tests, all passed.
+`compileall -q cambam_builder tests/test_variable_vcarve.py
+tests/test_variable_cone_script.py` and tracked `git diff --check` passed;
+the four untracked source/test files have no trailing whitespace and end in
+newlines. The target is an ideal cone-sweep envelope represented in `.cb` by
+an XYZ guide; the guide is not a native V-carve MOP. The Default post's initial
+machine position is assumed, and no holder, fixture, physical tolerance or
+production process is certified. The [runbook](DEVELOPMENT.md#bounded-variable-depth-v-groove-carrier-and-posted-replay)
+owns the pending user post/audit. Reopen geometry breadth for a named target
+that this straight, linearly tapered case cannot represent. Work is uncommitted
+and ready to commit, not merge-ready.
+
 ## Bounded cone carrier preparation - 2026-09-24
 
 The prior RC01 literal Drill/CustomScript carrier had passed an actual Default

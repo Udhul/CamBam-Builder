@@ -325,6 +325,50 @@ The command above returned `bounded_emitted_cone_motion_pass`: nine items,
 one `slot` prefix/two cone sweeps, partial target completion and the exact
 0/1/2 mm residual references. No repeat CamBam export is needed for this gate.
 
+### Bounded variable-depth V groove carrier and posted replay
+
+From the repository root, using the declared project interpreter:
+
+```powershell
+& $ProjectPython -m unittest tests.test_variable_vcarve tests.test_variable_cone_script tests.test_cone_script tests.test_vcarve_slot tests.test_mixed_replay -v
+& $ProjectPython -m cambam_builder.integrations.cambam.variable_cone_script output/variable-v-NEW
+```
+
+The prepared file is `output/variable-v-20260924-01/V-variable.cb`, SHA-256
+`5f58068f39ffcaef6cf40147750a62f4e0be55d5580a42c90a01c9ae26d064b0`.
+Its strict-reimported `source.cb`, SHA-256
+`652a830b75ee19fb10b860cf14f796ed85ad1a0115a2d4157ce3d144262b1d2c`,
+contains the exact XYZ finish-spine guide and stock. The ignored
+`expected-motion.json` pins the source/candidate and all nine expected items.
+The guide runs from (0,2,-1) to (12,2,-2.5); the one generated sloped cut runs
+from (2,2,-1.25) to (10,2,-2.25). Both use the same 90-degree pointed-cone
+depth law. The finite ends remain partial target stock.
+
+To complete the pending output gate, open `V-variable.cb` in CamBam Plus 1.0,
+select **Default** postprocessor and **Default mm** profile, generate toolpaths
+(Ctrl+T), then post G-code (Ctrl+W) to `V-variable.nc` in the same directory.
+Leave the prepared `.cb` files unchanged. Report the displayed Drill toolpath
+and the `.nc` path; the posted bytes are the motion authority. The script's six
+lines and expected ordered roles are in `expected-motion.json`. In particular,
+the cut must feed from Z=-1.25 to Z=-2.25 while X moves from 2 to 10. The
+test-only feed tokens are 120 approach, 60 plunge and 300 cut/retract mm/min.
+
+Audit the **CamBam-produced** file with:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.variable_cone_script output/variable-v-20260924-01/expected-motion.json output/variable-v-20260924-01/V-variable.nc
+```
+
+Pass requires `bounded_emitted_variable_v_motion_pass`, all nine exact emitted
+items, one `variable-v` prefix with two cone sweeps, and ideal section rest at
+depths 0/1/1.5/2/2.5 mm of 15.091265791880026 / 7.028684027518187 /
+4.21460291488107 / 1.8062583920918873 / 0 mm2, each within 1e-9 mm2 of
+the recorded analytic calculation. Independent row integration agrees within
+0.0005 mm2. Any extra, missing, reordered or changed event, coordinate, G0/G1
+role or feed fails. The post does not encode incoming physical machine position;
+tip (-10,-10,+5) is a declared setup assumption. No physical machining is
+authorized by this ideal geometric test.
+
 ### RC01 native input and A/B/C comparison preparation
 
 From the repository root, use a new unique ignored directory (the example name
