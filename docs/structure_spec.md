@@ -500,14 +500,19 @@ directed interval proof; no physical error, holder or fixture is modeled.
 `integrations.cambam.variable_cone_script` builds a strict-reimported source and
 `V-variable.cb` with one enabled VCutter Drill/CustomScript carrier. It lowers
 the sloped core trace through the previously accepted literal-motion route,
+targeting a one-point anchor; the XYZ Pline records the finish-target spine
+and is not targeted by the MOP. CamBam does not generate the sloped cut from
+that Pline in this route. The carrier emits the cut as literal script motion,
 with T3/CW 12000 rpm, +5/+1 approach, F120/F60/F300 test feeds, setup return
 and exact-stop intent. The Default/Default mm output audit pins source/candidate,
 plan and motion fingerprints, compares every ordered parsed event and move,
 then replays **actual posted coordinates** through the original target and
 analytic rest reference. The Default post does not encode the incoming machine
 position, so tip (-10,-10,+5) is an explicit setup assumption. A synthetic
-Default wrapper verifies the adapter; output acceptance requires an actual
-CamBam-produced `.nc` and remains pending until that file is audited.
+Default wrapper verifies the adapter. The actual CamBam-produced Default post
+passed all nine emitted-item comparisons and the original target residual
+replay on 2026-09-24. This accepts only the bounded explicit carrier; a native
+Pline/Engrave V-carve workflow still needs its own output evidence.
 
 ### RC01 native input and comparison candidates
 

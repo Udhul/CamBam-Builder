@@ -344,11 +344,13 @@ The guide runs from (0,2,-1) to (12,2,-2.5); the one generated sloped cut runs
 from (2,2,-1.25) to (10,2,-2.25). Both use the same 90-degree pointed-cone
 depth law. The finite ends remain partial target stock.
 
-To complete the pending output gate, open `V-variable.cb` in CamBam Plus 1.0,
+To repeat the accepted output gate, open `V-variable.cb` in CamBam Plus 1.0,
 select **Default** postprocessor and **Default mm** profile, generate toolpaths
 (Ctrl+T), then post G-code (Ctrl+W) to `V-variable.nc` in the same directory.
-Leave the prepared `.cb` files unchanged. Report the displayed Drill toolpath
-and the `.nc` path; the posted bytes are the motion authority. The script's six
+Leave the prepared `.cb` files unchanged. The Drill MOP intentionally targets
+the one-point script anchor; the sloped XYZ Pline is a finish-target guide and
+does not drive a native V-carve MOP. The posted bytes are the motion authority.
+The script's six
 lines and expected ordered roles are in `expected-motion.json`. In particular,
 the cut must feed from Z=-1.25 to Z=-2.25 while X moves from 2 to 10. The
 test-only feed tokens are 120 approach, 60 plunge and 300 cut/retract mm/min.
@@ -368,6 +370,14 @@ the recorded analytic calculation. Independent row integration agrees within
 role or feed fails. The post does not encode incoming physical machine position;
 tip (-10,-10,+5) is a declared setup assumption. No physical machining is
 authorized by this ideal geometric test.
+
+The user exported the prepared file on 2026-09-24. The actual `V-variable.nc`
+SHA-256 is `3d37cd3ecd5c69efbdb3ddab381f283dda2352d470a3733e9477606da0e6c570`.
+The command above returned `bounded_emitted_variable_v_motion_pass`, nine
+matched items, one `variable-v` prefix/two sweeps and the exact five residual
+references. No repeat post is needed for this bounded Default/Default mm gate.
+The user reported the one-point Drill target; that is the declared explicit
+carrier relationship, not native sloped-Pline toolpath generation.
 
 ### RC01 native input and A/B/C comparison preparation
 

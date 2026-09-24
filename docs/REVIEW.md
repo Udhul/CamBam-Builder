@@ -1,5 +1,33 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Bounded variable-depth V groove posted output - 2026-09-24
+
+The user exported `output/variable-v-20260924-01/V-variable.nc` from the
+prepared candidate using CamBam's Default post. Actual post SHA-256 is
+`3d37cd3ecd5c69efbdb3ddab381f283dda2352d470a3733e9477606da0e6c570`;
+the candidate hash remained
+`5f58068f39ffcaef6cf40147750a62f4e0be55d5580a42c90a01c9ae26d064b0`.
+The post contains the literal `G1 F60 X2 Y2 Z-1.25` entry followed by
+`G1 F300 X10 Y2 Z-2.25`, then retract and setup return. The exact audit returned
+`bounded_emitted_variable_v_motion_pass`: all nine emitted items matched,
+including tool/spindle events, G0/G1 roles, feeds and coordinates. Shared replay
+found one `variable-v` prefix with two cone sweeps. The independent target
+oracle returned partial completion with rest at depths 0/1/1.5/2/2.5 mm of
+15.091265791880026 / 7.028684027518187 / 4.21460291488107 /
+1.8062583920918873 / 0 mm2. This accepts the bounded explicit output route.
+
+The user observed one Drill MOP targeting the one-point primitive rather than
+the sloped Pline. Strict reimport confirms that relationship: the Point is the
+CustomScript carrier anchor, and the XYZ Pline is a target guide. The emitted
+G-code, not a native Pline-driven MOP, establishes the sloped motion. No claim
+is made that CamBam displayed that slope as a toolpath, computed a native
+V-carve, or verified a physical setup. The post does not encode incoming
+machine position; ideal tool, holder/fixture and process limits remain as
+declared in the [contract](structure_spec.md#bounded-variable-depth-v-groove-and-cambam-carrier).
+Next inspect a bounded native shape/MOP V-carve consumer because the dual
+workflow requirement remains open. The prepared implementation was committed
+as `ba46a7d`; this posted-output record is a separate documentation change.
+
 ## Bounded variable-depth V groove preparation - 2026-09-24
 
 The next backlog-6 consumer uses one exact tapered finish groove: a 90-degree
@@ -34,8 +62,9 @@ an XYZ guide; the guide is not a native V-carve MOP. The Default post's initial
 machine position is assumed, and no holder, fixture, physical tolerance or
 production process is certified. The [runbook](DEVELOPMENT.md#bounded-variable-depth-v-groove-carrier-and-posted-replay)
 owns the pending user post/audit. Reopen geometry breadth for a named target
-that this straight, linearly tapered case cannot represent. Work is uncommitted
-and ready to commit, not merge-ready.
+that this straight, linearly tapered case cannot represent. At preparation,
+work was uncommitted and ready to commit, not merge-ready; it was subsequently
+committed as `ba46a7d` before the actual post arrived.
 
 ## Bounded cone carrier preparation - 2026-09-24
 

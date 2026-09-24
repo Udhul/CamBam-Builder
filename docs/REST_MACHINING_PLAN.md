@@ -673,10 +673,12 @@ and a user-posted Default/Default mm program. All nine emitted items and the
 original cone residual oracle passed; the result is partial target completion.
 The user confirmed CamBam displayed the Drill toolpath, while its posted G-code
 contained the accepted literal motion. One bounded variable-depth tapered
-V-groove has now been generated and prepared with an exact analytic residual
-reference and a strict-reimported explicit carrier; its actual CamBam post is
-pending. This does not establish general variable-depth V-carving or native
-output. The I/E/N adapter gates follow their separately
+V-groove has now been generated with an analytic residual reference and a
+strict-reimported explicit carrier. Its actual CamBam Default post passed exact
+emitted-motion and residual replay on 2026-09-24. The Drill/CustomScript MOP
+targets a one-point anchor; the sloped Pline is a design guide. This does not
+establish native Pline-driven or general variable-depth V-carving. The I/E/N
+adapter gates follow their separately
 recorded results. Do not call full target removal or native output accepted
 while the corresponding gate remains partial, blocked or untested.
 Reopen general topology, positive-error completion, low links, optimizers or finer
