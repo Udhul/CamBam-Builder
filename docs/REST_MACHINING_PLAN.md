@@ -647,8 +647,10 @@ depth is 2 mm and its radius at the surface is 2 mm. A supplied cone with maximu
 cutting radius 3 and conical axial length 3 admits that local section; a radius-1.5
 cap does not. With an intentional 1 mm target depth cap, surface radius is 1 mm:
 one centerline pass cannot clear the 4 mm opening. Finite ends, whole-body sweep
-and generated variable-depth/capped-depth completion belong to the next cone
-slice. Original V-target geometry, residual and tool limits must remain separate.
+and capped-depth partial completion are now covered by the
+[bounded pointed-cone slot contract](structure_spec.md#bounded-pointed-cone-slot-generation-and-verification).
+Original V-target geometry, residual and tool limits remain separate; broader
+variable-depth regions remain future scope.
 
 **User acceptance, 2026-09-23:** the user answered "Use the proposed synthetic case"
 when offered RC01's 40 x 30 x 3 mm pocket, 8 x 8 mm island, 6 mm rougher, 2 mm cleanup

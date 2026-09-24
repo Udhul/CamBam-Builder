@@ -197,19 +197,37 @@ unresolved tangencies. `stock_dependent_use` remains blocked. See the
 [assessment](REVIEW.md#rc01-paired-native-posted-stock-assessment---2026-09-23).
 No unchanged repost or manual acceptance is needed.
 
-**Next priority:** implement one bounded pointed-cone V-shaped/flat-depth slot
-slice in the shared CAM core, starting from the accepted
-[RC01 cone guard](REST_MACHINING_PLAN.md#rc01-cone-guard-acceptance-scope-and-stopping-condition)
-and the [V-cutter acceptance cases](REST_MACHINING_PLAN.md#first-useful-increment-and-acceptance).
-It should generate and verify finite paths, all-height conical clearance and
-residual for a 4 mm opening, including the 2 mm candidate penetration and
-1 mm depth-cap partial result. This now has greater value than another
-Pocket/Default parameter pass: the native carrier's motion-role gap is
-already identified, while the cone slice advances the accepted rest/V-carve
-workflow and shared execution model. Stop at the pointed-cone bounded geometry;
-defer rounded tips, broader topology, optimiser implementation and native-only
-class breadth until a named consumer requires them. Reopen native Pocket N
-only with a carrier/post change that can encode the required roles and fresh
+**2026-09-23 bounded pointed-cone slot implemented (backlog 6).** The detached
+`cam_core.vcarve` slice now generates finite plunge, cut, retract and above-stock
+link motions for a 12 x 4 mm V-shaped rectangular slot. A 90-degree pointed cone
+with 3 mm maximum radius/conical length makes one 2 mm centerline pass; a
+radius-1.5 tool is rejected. At a 1 mm target cap, three passes reduce the
+surface residual while leaving the flat floor partial. Analytic inequalities
+check conical containment at every stock height; section membership and area
+are available at arbitrary depth, with a geometrically bounded volume interval
+subject to floating roundoff. The [contract](structure_spec.md#bounded-pointed-cone-slot-generation-and-verification)
+and [focused checks](DEVELOPMENT.md#bounded-pointed-cone-slot-checks) state exact
+scope and limits. This is generated geometric evidence, not native motion or
+physical machining acceptance.
+The five new tests and 44 related cone/RC01/stock/reference tests pass;
+`compileall` and tracked `git diff --check` pass. A broad run executed 375 tests
+but failed on two MCP imports because the optional `anyio` package is absent;
+its 73 skips and two errors are not a full-suite pass. No manual CamBam check
+adds evidence for this detached geometry. The [review](REVIEW.md#bounded-pointed-cone-slot---2026-09-23)
+records numerical references and limits. Work is uncommitted and ready to commit.
+
+**Next priority:** extract one shared motion and stock-replay contract proven by
+both the RC01 endmill and this cone slot before adding another geometry class.
+Their current value types and verifiers are separate, which limits the accepted
+[combined-tool and direct-output workflow](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23).
+The next increment should preserve each existing residual oracle and fail-closed
+access check while replaying both tool profiles through one ordered source
+fingerprint and stock update. Stop after one synthetic mixed-tool sequence; defer
+rounded tips, A-shaped/general topology, optimizer, direct postprocessor and
+native-only class breadth until a named consumer requires them. This has greater
+project value now than another Pocket/Default parameter pass, since the native
+carrier's motion-role gap is already identified. Reopen native Pocket N only
+with a carrier/post change that can encode the required roles and fresh
 whole-motion evidence.
 
 The user selected the proposed synthetic case, including its test-only

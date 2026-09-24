@@ -1,5 +1,46 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Bounded pointed-cone slot - 2026-09-23
+
+The [implemented contract](structure_spec.md#bounded-pointed-cone-slot-generation-and-verification)
+fixes a 12 x 4 mm rectangular opening, 90-degree pointed cone and stock top Z=0.
+The 2 mm candidate has one finite x=2..10, y=2 pass. A 3 mm maximum
+radius/conical length admits it; a 1.5 mm radius/length rejects it. At a 1 mm
+design cap, three x=1..11 passes at y=1,2,3 improve coverage over the
+centerline-only case. Every path has plunge, cut and retract; above-stock rapid
+links are explicit. The verifier rejects incomplete/reordered motions, target
+wall overrun, insufficient tool radius and a changed access path.
+
+Analytic section references for the full V are 3.4336293856408275 mm2 rest at
+the surface, 0.8584073464102069 mm2 at depth 1 and zero at the centerline at
+depth 2. The capped three-pass result has 1.0319614364481282 mm2 surface rest,
+0.643805509807656 mm2 at depth 0.5 and 20 mm2 of floor rest at depth 1. Its
+centerline-only surface rest would be `28-pi` mm2. Independent direct row
+integration agrees with analytic section area within 0.002 mm2 at four depths
+per case. At 4096 slabs, geometric volume enclosures are
+2.2670001928631014..2.3116855369897467 mm3 for the full V and
+5.643645141380579..5.661947885370508 mm3 for the capped result.
+
+The all-height containment argument is algebraic: at stock depth `t`, each
+deepest-path disk radius is `d-t`; endpoint-to-wall margin is at least `d`.
+Vertical traversal is a subset of that deepest disk and rapid links begin above
+stock. The volume enclosures use nested sets and floating area calculations;
+they are geometric bounds subject to floating roundoff, not directed numeric
+intervals. No machine feeds, holder, fixtures, process uncertainty, native
+CamBam motion or physical cut is accepted. Reopen wider topology or tool-profile
+classes only when a named consumer fixes their acceptance requirements. The
+[next shared-motion increment](PROGRESS.md#active-work-and-next-priority) is
+separate from this completed reference geometry.
+
+Verification on `.venv/Scripts/python.exe` (Python 3.13): the five new tests
+pass. The related cone/RC01/stock/reference suite has 44 passing tests;
+`compileall` and tracked `git diff --check` pass, and the two new untracked
+files pass a direct trailing-whitespace check. A broader discovery run executed
+375 tests but failed to import two MCP modules because the optional `anyio`
+dependency is absent (73 skips); this does not establish a passing full suite.
+Manual CamBam validation adds no evidence to the detached geometry. Work remains
+uncommitted and ready to commit, not merge-ready.
+
 ## Bounded section-motion verification - 2026-09-22
 
 `verify_section_motion` accepts ordered, supplied horizontal cutting and travel

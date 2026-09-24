@@ -28,7 +28,7 @@ are outside that runtime package list.
 | `cambam_builder/cambam_entities.py` | Explicit compatibility/discovery facade re-exporting canonical objects from the four entity owners | Preserve public entity imports; implementation modules must import owners directly |
 | `cambam_builder/cad_transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
 | `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy, remaining-section bounds and supplied section-motion verification | Horizontal cuts and explicit travel inside rectangular stock/target; no generated or native path integration |
-| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock-analysis package; currently owns `rc01.py` | Exact nominal rectangular two-tool job; no native entity, XML, MCP or machine-output dependency |
+| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock-analysis package; owns `rc01.py` and bounded pointed-cone `vcarve.py` | Exact nominal rectangular two-tool job and analytic slot; no native entity, XML, MCP or machine-output dependency |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
 | `cambam_builder/machining_recommendations.py` | Immutable tool/material/machine contexts, provenance-bearing recommendations, user diameter tables and pluggable pure strategies | Recommendation selection only; contains no curated catalog, persistence, document mutation or safety claim |
@@ -357,6 +357,53 @@ and motion fingerprints, rough/final per-slab area and volume intervals, and
 Calling `verify(..., measure_rest=False)` yields only `motion_only` diagnostics;
 it is not a residual acceptance certificate. Native/CamBam motion must be
 replayed separately before any output acceptance claim.
+
+### Bounded pointed-cone slot generation and verification
+
+`cambam_builder.cam_core.vcarve` implements one detached 90-degree pointed-cone
+reference geometry in millimetres, frame `slot-drawing`, stock top Z=0. `Slot`
+defines a 12 x 4 mm rectangular opening by default. Its desired depth at a point
+is the smaller of distance to its four sides and `depth_cap`; the cap is 2 mm for
+the V-shaped case or 1 mm for the flat-depth case. Sections at depth `t` are
+`[t,L-t] x [t,W-t]`, including a floor section at the cap. This is original
+target geometry; residual is target minus actual swept cone, never a changed
+target. Outside the opening is protected stock. No fixture is modeled above
+stock top or below the requested target.
+
+`PointedCone` has equal maximum cutting radius and conical length: the default
+is 3 mm for each. At height `h` above the tip, its cutting radius is `h` through
+that length. `generate_slot()` rejects the radius-1.5/length-1.5 tool for 2 mm
+penetration. For a 2 mm cap it emits a finite centerline from `(2,2)` to `(10,2)`
+at tip Z=-2. For the 1 mm cap it emits three finite passes from x=1 to 11 at
+y=1, 2 and 3, all at tip Z=-1. Each pass has an explicit vertical plunge,
+horizontal cut and vertical retract; consecutive passes have a rapid link at
+tip Z=+1. These are ideal geometric motions without feeds, spindle events or a
+controller representation.
+
+`verify_slot` requires that complete ordered motion structure and equal-depth,
+equal-span passes, then checks each against the fixed original target and tool
+limit. For every stock depth `t` in `[0,d]`, the swept disk radius is `d-t`.
+The four endpoint constraints
+`x0>=d`, `x1<=L-d`, `y>=d`, `y<=W-d` prove that the entire horizontal sweep lies
+in the inset target section. Each vertical plunge/retract sweep is contained in
+its deepest endpoint disk; rapid links have their tip strictly above stock.
+This gives all-height ideal conical containment without testing only sampled
+planes. `SlotResult` validates its plan on creation, reports pointwise residual
+membership and analytic section residual area at any supported depth. Its volume
+interval uses nesting of target and cone sections; the geometric bound tightens
+with `steps`, but float roundoff is not a formal directed interval bound. Results
+carry a plan fingerprint and a conditional analytic evidence class. `completion`
+is partial when an exposed section has positive rest; otherwise it remains
+undetermined rather than inferring complete volume removal.
+
+For the default 2 mm case, section residual area is `16-4*pi = 3.4336293856`
+mm2 at the surface, `4-pi = 0.8584073464` mm2 at depth 1, and zero at the V
+centerline at depth 2. Finite end corners remain. For the 1 mm cap, three passes
+reduce surface residual to about 1.0319614364 mm2 and leave 20 mm2 of flat-floor
+area at depth 1 because finite pointed paths have zero floor area. This is an
+explicit partial result. No numerical physical uncertainty, holder, stock above
+Z=0, lateral engagement, machine constraints, broader region topology or native
+CamBam output is certified. Rounded/flat tips and optimizers remain separate.
 
 ### RC01 native input and comparison candidates
 

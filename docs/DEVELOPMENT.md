@@ -239,6 +239,24 @@ interval proof. Native input, explicit Engrave motion, native Pocket motion and
 physical machining have separate [RC01 gates](REST_MACHINING_PLAN.md#rc01-standalone-and-cambam-output-gates).
 No manual CamBam check adds evidence to this standalone implementation itself.
 
+### Bounded pointed-cone slot checks
+
+From the repository root, using the declared project interpreter:
+
+```powershell
+& $ProjectPython -m unittest tests.test_vcarve_slot -v
+& $ProjectPython -m compileall -q cambam_builder/cam_core tests/test_vcarve_slot.py
+git diff --check
+```
+
+The focused suite checks finite plunge/cut/retract and above-stock links for the
+12 x 4 mm slot, exact 2 mm cone guard, full-height containment rejection,
+independent row-integrated section residuals, analytic V and capped-depth
+references, and volume enclosures. No CamBam file is generated. Manual CamBam
+validation adds no evidence to this detached geometric slice; it remains a
+conditional ideal-stock calculation, not a production toolpath or native output
+acceptance.
+
 ### RC01 native input and A/B/C comparison preparation
 
 From the repository root, use a new unique ignored directory (the example name
