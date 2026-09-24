@@ -11,6 +11,7 @@ import math
 from typing import Optional
 
 from ..stock import SectionRectangle, SectionTarget
+from . import replay as stock_replay
 
 
 def _q(value):
@@ -147,6 +148,28 @@ class Certificate:
     location_polygon_sagitta_mm: float
     location_numeric_enclosure_mm: Optional[float]
     status: str = "partial_target_completion"
+
+
+def replay_trace(program, job=Job(), *, frame=None):
+    """Adapt RC01 values to the shared ordered stock replay contract."""
+    frame = job.frame if frame is None else frame
+    target = stock_replay.Target(
+        "rc01-pocket", (job.outer.xmin, job.outer.ymin,
+                        job.outer.xmax, job.outer.ymax), -job.floor,
+        island=(job.island.xmin, job.island.ymin,
+                job.island.xmax, job.island.ymax))
+    operations = tuple(stock_replay.Operation(
+        name, stock_replay.ToolProfile(tool.name, "cylinder", tool.radius,
+                                       tool.cutting_length), target)
+        for name, tool in zip(("rough", "cleanup"), job.tools))
+    items = tuple(
+        stock_replay.Event(item.kind, item.tool, item.position)
+        if isinstance(item, Event) else
+        stock_replay.Motion(item.role, item.tool, item.operation,
+                            item.start, item.end, item.feed)
+        for item in program.items)
+    return stock_replay.Trace(job.fingerprint, frame, SETUP,
+                              operations, items)
 
 
 SETUP = (Q(-10), Q(-10), Q(5))
@@ -513,6 +536,16 @@ def verify(program, job=Job(), *, measure_rest=True):
         p = tuple(map(Q, corner))
         if not _covered_by_single(rough, p, p, Q(1), Q(-3)):
             raise ValueError("missing T1-cleared T2 corner column")
+    shared = stock_replay.replay(replay_trace(program, job),
+                                 expected_source=job.fingerprint)
+    if len(shared.cuts) != len(cuts):
+        raise ValueError("shared replay cut count differs from RC01 proof")
+    # All downstream stock sections consume the common replay's ordered cuts.
+    old_rough_count = len(rough)
+    cuts = tuple((s.bottom, Q(0) if s.a == s.b else
+                  min(Q(0), s.bottom + s.tool.cutting_length),
+                  s.a, s.b, s.tool.radius, s.tool.name) for s in shared.cuts)
+    rough = cuts[:old_rough_count]
     area_cache = {}
     def by_depth(prefix, radius):
         if not measure_rest:

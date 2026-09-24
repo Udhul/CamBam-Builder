@@ -257,6 +257,25 @@ validation adds no evidence to this detached geometric slice; it remains a
 conditional ideal-stock calculation, not a production toolpath or native output
 acceptance.
 
+### Shared RC01/cone motion and stock replay checks
+
+From the repository root, using the declared project interpreter:
+
+```powershell
+& $ProjectPython -m unittest tests.test_rc01 tests.test_vcarve_slot tests.test_mixed_replay tests.test_rc01_native tests.test_rc01_stock_authority -v
+& $ProjectPython -m compileall -q cambam_builder tests/test_mixed_replay.py
+git diff --check
+```
+
+The mixed test checks a single ordered source/motion fingerprint and stock cut
+prefix across RC01 T1, T2 and the translated cone slot. It checks independent
+residual membership before and after the cone cut, and rejects stale source,
+removed cone entry, low link and missing tool change. The adjacent suites
+retain each original target, access and numerical residual oracle; the native
+RC01 checks guard its existing adapter consumers. This is detached synthetic
+evidence only. No CamBam manual check adds evidence until a cone output adapter
+and posted machine motion exist.
+
 ### RC01 native input and A/B/C comparison preparation
 
 From the repository root, use a new unique ignored directory (the example name

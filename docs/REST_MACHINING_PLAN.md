@@ -665,7 +665,10 @@ limits before numerical production acceptance can be defined.
 
 Definition and user refinement are complete with inputs, oracles, access obligations,
 limits and output gates recorded. The exact nominal T1/T2 sequence and continuous
-all-height replay are implemented. The I/E/N adapter gates follow; cone path delivery
+all-height replay are implemented. A bounded pointed-cone slot and one shared
+RC01/cone ordered replay are also implemented; the mixed sequence keeps targets
+disjoint to preserve both original residual oracles. Cone emitted-motion
+acceptance remains a separate output gate. The I/E/N adapter gates follow; cone path delivery
 follows through the same contracts. Do not call full target removal or native output
 accepted while the corresponding gate remains partial, blocked or untested.
 Reopen general topology, positive-error completion, low links, optimizers or finer

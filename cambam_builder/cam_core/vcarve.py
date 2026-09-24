@@ -11,6 +11,8 @@ from dataclasses import dataclass, field
 import hashlib
 import math
 
+from . import replay as stock_replay
+
 
 def _finite(value):
     if isinstance(value, bool) or not isinstance(value, (int, float)):
@@ -138,6 +140,33 @@ class SlotPlan:
         return hashlib.sha256(repr(values).encode("utf-8")).hexdigest()
 
 
+def replay_trace(plan, *, frame=None, offset=(0, 0)):
+    """Adapt the bounded cone plan without changing its geometry oracle."""
+    if len(offset) != 2 or any(not math.isfinite(float(v)) for v in offset):
+        raise ValueError("finite XY placement required")
+    ox, oy = offset
+    tool = stock_replay.ToolProfile("cone", "pointed_cone",
+                                    plan.tool.maximum_radius,
+                                    plan.tool.conical_length)
+    target = stock_replay.Target(
+        "cone-slot", (ox, oy, ox + plan.slot.length, oy + plan.slot.width),
+        plan.slot.depth_cap, inset_per_depth=True)
+    operation = stock_replay.Operation("slot", tool, target)
+    start = plan.motions[0].start
+    position = (start[0] + ox, start[1] + oy, start[2])
+    items = [stock_replay.Event("tool_change", tool.name, position),
+             stock_replay.Event("spindle_start", tool.name, position)]
+    for move in plan.motions:
+        role = "entry" if move.role == "plunge" else move.role
+        a = (move.start[0] + ox, move.start[1] + oy, move.start[2])
+        b = (move.end[0] + ox, move.end[1] + oy, move.end[2])
+        items.append(stock_replay.Motion(role, tool.name, "slot", a, b))
+    items.append(stock_replay.Event("spindle_stop", tool.name, items[-1].end))
+    return stock_replay.Trace(plan.fingerprint,
+                              plan.slot.frame if frame is None else frame,
+                              position, (operation,), tuple(items))
+
+
 def generate_slot(slot=Slot(), tool=PointedCone()):
     """Generate the one full-depth V pass or three capped-depth clearing passes."""
     if type(slot) is not Slot or type(tool) is not PointedCone:
@@ -204,9 +233,13 @@ def _circle_primitive(radius, offset):
 class SlotResult:
     plan: SlotPlan
     evidence_class: str = field(default="conditional_analytic_cone_slot", init=False)
+    replay_result: stock_replay.ReplayResult = field(init=False, repr=False)
 
     def __post_init__(self):
         _check_slot(self.plan)
+        trace = replay_trace(self.plan)
+        object.__setattr__(self, "replay_result", stock_replay.replay(
+            trace, expected_source=self.plan.fingerprint))
 
     @property
     def completion(self):
@@ -221,7 +254,9 @@ class SlotResult:
         depth = _finite(depth)
         if not 0 <= depth <= self.plan.slot.depth_cap:
             raise ValueError("section is outside target depth")
-        return depth, tuple(p for p in self.plan.passes if p.tip_depth >= depth)
+        return depth, tuple(Pass(s.a[0], s.b[0], s.a[1], -s.bottom)
+                            for s in self.replay_result.cuts
+                            if s.a != s.b and -s.bottom >= depth)
 
     def removed_contains(self, x, y, depth):
         x, y = _finite(x), _finite(y)

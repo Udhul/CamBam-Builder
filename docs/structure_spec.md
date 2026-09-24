@@ -28,7 +28,7 @@ are outside that runtime package list.
 | `cambam_builder/cambam_entities.py` | Explicit compatibility/discovery facade re-exporting canonical objects from the four entity owners | Preserve public entity imports; implementation modules must import owners directly |
 | `cambam_builder/cad_transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
 | `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy, remaining-section bounds and supplied section-motion verification | Horizontal cuts and explicit travel inside rectangular stock/target; no generated or native path integration |
-| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock-analysis package; owns `rc01.py` and bounded pointed-cone `vcarve.py` | Exact nominal rectangular two-tool job and analytic slot; no native entity, XML, MCP or machine-output dependency |
+| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns shared ordered XYZ/cut-sweep values, while `rc01.py`, `vcarve.py` and `mixed.py` own bounded reference jobs | Exact nominal rectangular two-tool job, analytic slot and one placed mixed trace; no native entity, XML, MCP or machine-output dependency |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
 | `cambam_builder/machining_recommendations.py` | Immutable tool/material/machine contexts, provenance-bearing recommendations, user diameter tables and pluggable pure strategies | Recommendation selection only; contains no curated catalog, persistence, document mutation or safety claim |
@@ -71,9 +71,11 @@ This is one distribution, not a plugin architecture. Under a package, use the
 domain name (`project.py`, `region.py`, `stock.py`, `rest.py`, `vcarve.py`) rather
 than repeating its package prefix. Keep `cambam_` only where a root compatibility
 name or a cross-system adapter needs to identify CamBam explicitly. The pure
-RC01 generator/verifier currently remains in `cam_core/rc01.py`; extracting its
-general motion/stock contracts from its exact job is required before relocating
-the recipe to `cam_extensions/reference_jobs/`. Do not create empty target
+RC01 generator/verifier currently remains in `cam_core/rc01.py`; its shared
+ordered motion/stock contract now has a second consumer in `cam_core/replay.py`,
+while the RC01 process and residual oracle stay in that reference module.
+Relocate the exact recipe only with a concrete consumer and complete dependency
+checks. Do not create empty target
 packages as placeholders.
 
 Migration is staged around executable slices:
@@ -91,11 +93,11 @@ Migration is staged around executable slices:
    output failures with import churn.
 3. **Detached and extended consolidation:** move root `planar.py`, `stock.py`
    and reusable machining math into `cam_core/`; place recommendation/pass
-   planning and later rest/V-carve strategies in `cam_extensions/`. Split RC01's
-   exact recipe from generic motion/verification only when another consumer uses
-   those contracts. Check dependency direction, focused suites, wheel contents
-   and imports outside the source tree. This waits for a concrete second consumer
-   or the E/N output findings, so the abstraction follows demonstrated reuse.
+   planning and later rest/V-carve strategies in `cam_extensions/`. The shared
+   replay contract has its second consumer in the cone slot; RC01's exact recipe
+   and specialized process oracle still await relocation. Check dependency
+   direction, focused suites, wheel contents and imports outside the source tree
+   when that migration is justified by an output or package-consumer need.
 
 Each move updates the owner table, callers, packaging, runbook and review evidence
 in the same increment. Existing root modules remain authoritative until moved;
@@ -404,6 +406,40 @@ area at depth 1 because finite pointed paths have zero floor area. This is an
 explicit partial result. No numerical physical uncertainty, holder, stock above
 Z=0, lateral engagement, machine constraints, broader region topology or native
 CamBam output is certified. Rounded/flat tips and optimizers remain separate.
+
+### Shared RC01 and pointed-cone motion/stock replay
+
+`cam_core.replay` accepts immutable, millimetre, fixed-axis XYZ `Trace` values
+with one source fingerprint, drawing frame, starting position, ordered setup/tool
+events and motions, and resolved operation/tool/target values. Cylindrical and
+90-degree pointed-cone cutting profiles use a bottom/point tip datum respectively.
+`replay(trace, expected_source=...)` rejects stale sources, missing or displaced
+tool/spindle events, discontinuous endpoints, low rapid/approach moves, unsupported
+diagonal cuts, target/depth overcuts and uncleared descent/retract. Each accepted
+entry or cut appends one swept-volume value to the same stock prefix. A result
+reports the ordered cut tuple, operation-end prefixes, source and motion
+fingerprints, and pointwise removed/residual membership at a requested prefix.
+
+For cylinders, continuous axis-aligned capsule containment and protected-island
+separation use exact arithmetic when the input coordinates are rational. Access
+uses a conservative single prior-cylinder witness. For cones, a horizontal
+deepest-tip pass and its entry are bounded by the inset slot section at every
+depth; a vertical retract is allowed only through its immediately preceding
+same-tool cut. Other cone access, tool components, fixtures, physical uncertainty,
+feeds and machine dynamics require a separate verifier and remain outside this
+bounded replay. The common replay is not a general collision engine.
+
+`rc01.replay_trace` and `vcarve.replay_trace` adapt their existing public motion
+types to this representation. The RC01 verifier still enforces its setup,
+spindle/feed, axial engagement, holder and rest-location obligations, then uses
+the shared ordered cuts for its three-slab residual oracle. The slot verifier
+retains its complete pass traversal and analytic section/volume oracle, fed by
+the shared cuts. `cam_core.mixed.verify_mixed()` validates both standalone plans
+and replays RC01 T1/T2 followed by a cone slot translated to x=50..62 in one
+frame. The slot lies beyond RC01 stock, so their independent target oracles are
+compatible; this proves mixed representation, ordering, fingerprints and stock
+prefix updates, but does not certify interacting targets or emitted machine
+motion. Synthetic cone setup events have no feed/RPM or physical machine claim.
 
 ### RC01 native input and comparison candidates
 

@@ -216,19 +216,32 @@ its 73 skips and two errors are not a full-suite pass. No manual CamBam check
 adds evidence for this detached geometry. The [review](REVIEW.md#bounded-pointed-cone-slot---2026-09-23)
 records numerical references and limits. Work is uncommitted and ready to commit.
 
-**Next priority:** extract one shared motion and stock-replay contract proven by
-both the RC01 endmill and this cone slot before adding another geometry class.
-Their current value types and verifiers are separate, which limits the accepted
-[combined-tool and direct-output workflow](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23).
-The next increment should preserve each existing residual oracle and fail-closed
-access check while replaying both tool profiles through one ordered source
-fingerprint and stock update. Stop after one synthetic mixed-tool sequence; defer
-rounded tips, A-shaped/general topology, optimizer, direct postprocessor and
-native-only class breadth until a named consumer requires them. This has greater
-project value now than another Pocket/Default parameter pass, since the native
-carrier's motion-role gap is already identified. Reopen native Pocket N only
-with a carrier/post change that can encode the required roles and fresh
-whole-motion evidence.
+**2026-09-24 shared RC01/cone replay implemented (backlog 6).**
+`cam_core.replay` now owns an immutable ordered XYZ trace, resolved cylinder/cone
+profiles and targets, tool/spindle events, source and motion fingerprints, and
+cumulative cut-sweep prefixes. RC01 and cone adapt their existing motions into
+that contract; their residual calculations consume the shared ordered cuts while
+retaining their separate access/process and analytic oracles. One synthetic
+trace places the cone slot beside RC01 stock and replays T1 roughing, T2 cleanup
+and cone carving in order. It rejects stale source, a removed cone entry,
+low links and missing tool change. The focused RC01/cone/mixed/native-adapter
+suite passed 28 tests; compileall, import smoke and working-diff checks pass.
+This remains detached synthetic evidence, not CamBam cone output or physical
+acceptance. Work is uncommitted and ready to commit. See the
+[contract](structure_spec.md#shared-rc01-and-pointed-cone-motionstock-replay),
+[runbook](DEVELOPMENT.md#shared-rc01cone-motion-and-stock-replay-checks) and
+[review](REVIEW.md#shared-rc01cone-motion-and-stock-replay---2026-09-24).
+
+**Next priority:** use the shared trace for one bounded explicit cone output
+carrier and replay the actual posted motion against the cone target. This is
+the shortest path from the now-proven detached mixed core toward the required
+[native plus explicit V-carving workflow](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23).
+Prepare a synthetic `.cb` and exact expected output before asking for a CamBam
+post; accept only the observed emitted motion and its stock replay. Stop at the
+bounded slot output. Defer rounded tips, general topology, optimizer and direct
+postprocessor until that output finding or a named consumer needs them. Native
+Pocket N reopens only with a carrier/post change that encodes its missing roles
+and fresh whole-motion evidence.
 
 The user selected the proposed synthetic case, including its test-only
 plunge/feed limits, on 2026-09-23. These are accepted

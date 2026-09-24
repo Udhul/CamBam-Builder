@@ -1,5 +1,32 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Shared RC01/cone motion and stock replay - 2026-09-24
+
+The bounded increment extracted `cam_core.replay`: one immutable ordered XYZ
+trace and source/motion fingerprint, resolved cylinder or pointed-cone profile,
+target, tool/spindle events, and cumulative cut-sweep prefixes. RC01 and the
+cone slot retain their own strict process/geometry checks and independent
+residual oracles, but both now feed their residual calculations from shared
+ordered cuts. The synthetic mixed trace runs RC01 T1/T2 and a cone slot beside
+the RC01 stock in one drawing frame. Keeping the targets disjoint prevents a
+false claim that cone cuts remove material already cleared by the endmills.
+
+The focused RC01, cone, mixed, RC01 native and RC01 stock-authority suites passed
+28 tests. The mixed regression checks operation prefix order, residual membership
+before/after the cone cut, source/motion identity, and fail-closed stale source,
+removed cone entry, low link and missing tool event. The pre-existing RC01
+and cone tests retain their all-height/target and numerical residual references.
+No new CamBam post or manual application check was needed for this detached
+representation. There is no claim for interacting targets, arbitrary 3D access,
+cone holder/fixture clearance, output parity or physical machining.
+
+The next useful gate is one explicit cone carrier with actual user-posted motion
+replayed through this source contract. Reopen the shared geometry evaluator for
+overlapping endmill/cone targets only when a concrete combined target requires
+cross-profile stock access or residual credit; the disjoint case does not prove
+that behavior. Native Pocket N still needs a carrier capable of its missing
+motion roles and fresh whole-motion evidence.
+
 ## Bounded pointed-cone slot - 2026-09-23
 
 The [implemented contract](structure_spec.md#bounded-pointed-cone-slot-generation-and-verification)
