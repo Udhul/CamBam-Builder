@@ -535,6 +535,35 @@ at negative Z. The whole-motion gate fails, so this Engrave is an inspection
 carrier only. The accepted CustomScript carrier remains the execution
 authority for the bounded synthetic groove.
 
+#### Bounded native V input normalization
+
+`cam_core.tapered_vcarve.TaperedRequest` is the detached input shared by
+standalone generation and `integrations.cambam.native_variable_v`. The native
+adapter strict-imports one millimetre `.cb` with the original two-vertex XYZ
+finish spine, one 18 x 8 x 3 mm Part at drawing origin (-2,-2,0), and one
+**disabled** Engrave targeting that spine. The native MOP records explicit T3,
+6 mm VCutter, zero depth offset/clearance and test process fields; it is source
+intent, not executable V-carve evidence. `setup.json` supplies the pointed-cone
+radius/axial length, tip datum, cut interval, +1 safe plane, approach/retract
+feeds and setup tip position absent from native geometry. Normalization checks
+the world XYZ shape, stock placement, source selection, enabled state and every
+modeled Engrave parameter as an explicit Value; inherited, missing or changed
+values fail closed. The current bounded case accepts the exact standalone
+request, with cosmetic MOP display-name changes allowed. Equal numeric values
+are canonicalized before plan fingerprinting, so XML `2` and Python `2.0`
+produce identical plans. Broader target/tool edits require a new core contract.
+
+`build_native_workflow` preserves the original source bytes and creates two
+separate derived `.cb` files. The preview has a generated XYZ cut Pline and an
+enabled Engrave targeting only that cut. The explicit file has a Point anchor
+and enabled Drill/CustomScript targeting only the anchor. Each retains the
+original target spine and disabled source intent and is strict-reimported to
+check the source request and target links. Both derive the same plan and expected
+motion reference as standalone generation. The previously posted CustomScript
+case establishes the carrier mechanism; a newly built native-derived candidate
+needs its own actual CamBam post before its emitted motion is accepted. The
+Engrave post remains an unaccepted execution route.
+
 ### RC01 native input and comparison candidates
 
 `cambam_builder.integrations.cambam.rc01_adapter` owns the bounded `.cb` adapter. `synthetic_source()`

@@ -440,6 +440,70 @@ records the precise split. This closes the bounded probe: use this file for
 visible path inspection only and the accepted `V-variable.cb` CustomScript
 carrier for exact execution. No unchanged repost is needed.
 
+### Bounded native V input normalization
+
+The native source has the original XYZ finish spine, one Part stock and one
+disabled Engrave targeting the original spine. `setup.json` explicitly supplies
+the 90-degree cone dimensions and non-native setup controls. From the repository
+root, create a new ignored directory with:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_variable_v output/native-variable-v-NEW
+& $ProjectPython -m unittest tests.test_native_variable_v tests.test_variable_vcarve tests.test_variable_cone_script tests.test_variable_cone_engrave -v
+```
+
+To normalize an edited native file, pass its path and its explicit setup:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_variable_v output/native-variable-v-EDITED path/to/source.cb --setup path/to/setup.json
+```
+
+The builder strict-imports the native `.cb`, rejects unsupported geometry,
+stock, inherited/changed MOP fields and setup values, then compares the detached
+request and plan fingerprint with standalone generation. It keeps the source
+bytes and makes separate `preview/V-variable-engrave.cb` and
+`explicit/V-variable.cb`. The preview's enabled Engrave targets only the
+generated sloped cut Pline; the explicit file's enabled Drill/CustomScript
+targets only a Point anchor. The original finish spine and disabled source
+Engrave remain in both files. Their `expected-motion.json` manifests pin the
+source/candidate hashes and motion reference. A new native-derived candidate
+does not inherit the acceptance of an older post merely because its planned
+script is identical.
+
+The prepared example is under `output/native-variable-v-20260924-02/`.
+`source.cb` SHA-256 is
+`ab97360d39640dc26da0cd65257ef2fec2d44e3afb279cc66f5a4cf700f45411`;
+the preview `.cb` is
+`04e1658da909ed6e1a3d93352243b2243287d12962e73b9889e6ba6bfba6f746`,
+and the explicit `.cb` is
+`edef7f1eb33e3dffcc5dbaf3f2cfda2c2ff65a96866fe532d1613ad3c5d6c376`.
+The canonical plan fingerprint is
+`4e0c0f4249c94da0f51a8fb4b38f9da718bb60fe12134fb391beb235c1fd0f46`;
+the expected motion fingerprint is
+`53867dca493fbc394dbaa3c49feea92f8527d1ed5146cc9dc8dd62aa2adf4244`.
+Automated checks establish the input normalization and file separation. No
+manual CamBam action adds evidence to that input claim.
+
+For the separate **native-derived emitted-output** gate, open
+`explicit/V-variable.cb` in CamBam Plus 1.0 with **Default** postprocessor and
+**Default mm** profile, generate toolpaths (Ctrl+T), then post (Ctrl+W) as
+`explicit/V-variable.nc`. Leave the `.cb` and manifest unchanged. Do not use
+the preview candidate for execution. Audit the actual CamBam-produced file:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.variable_cone_script output/native-variable-v-20260924-02/explicit/expected-motion.json output/native-variable-v-20260924-02/explicit/V-variable.nc
+```
+
+Pass is `bounded_emitted_variable_v_motion_pass`: nine exact ordered items,
+including the F120 approach, F60 entry, sloped F300 cut from (2,2,-1.25) to
+(10,2,-2.25), F300 retract and setup return; one `variable-v` prefix/two cone
+sweeps; section rest at 0/1/1.5/2/2.5 mm of 15.091265791880026 /
+7.028684027518187 / 4.21460291488107 / 1.8062583920918873 / 0 mm2 within
+1e-9 mm2. Report the audit JSON and posted file SHA-256. Any deviation fails
+this candidate's output gate. The declared initial tip position
+(-10,-10,+5) and ideal-tool assumptions remain outside the post; this is no
+physical machining acceptance.
+
 ### RC01 native input and A/B/C comparison preparation
 
 From the repository root, use a new unique ignored directory (the example name

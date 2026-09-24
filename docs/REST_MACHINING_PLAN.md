@@ -706,6 +706,15 @@ establish native Pline-driven or general variable-depth V-carving. The I/E/N
 adapter gates follow their separately
 recorded results. Do not call full target removal or native output accepted
 while the corresponding gate remains partial, blocked or untested.
+
+The bounded V native-input adapter now imports an original XYZ finish spine,
+disabled source Engrave and Part stock with explicit non-native cone/setup
+values into the same detached request as standalone generation. It attaches
+the visible generated Pline and literal-motion carrier in separate copies of
+the original document. The input/attachment gate is automated and complete
+for this one case. The new native-derived literal candidate still needs its
+own CamBam-produced post audit before its emitted-output gate closes; the
+earlier accepted post belongs to a different `.cb` byte sequence.
 Reopen general topology, positive-error completion, low links, optimizers or finer
 area infrastructure only when an RC01 gate or a named next consumer requires it.
 

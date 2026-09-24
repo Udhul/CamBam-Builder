@@ -17,6 +17,22 @@ TARGET_SPINE = (0.0, 12.0, 2.0, 1.0, 2.5)
 STOCK_BOUNDS = (-2.0, -2.0, 16.0, 6.0)
 
 
+@dataclass(frozen=True)
+class TaperedRequest:
+    """Detached finish target, tool and bounded planning controls."""
+
+    target_spine: tuple = TARGET_SPINE
+    stock_bounds: tuple = STOCK_BOUNDS
+    stock_bottom: float = -3.0
+    tool: PointedCone = field(default_factory=PointedCone)
+    cut_interval: tuple = (2.0, 10.0)
+    safe_z: float = 1.0
+
+
+def standalone_request():
+    return TaperedRequest()
+
+
 def _depth_at(spine, x):
     x0, x1, _, d0, d1 = spine
     return d0 + (d1 - d0) * (x - x0) / (x1 - x0)
@@ -46,12 +62,19 @@ class TaperedPlan:
                               .encode("utf-8")).hexdigest()
 
 
-def generate():
-    x0, x1, y = 2.0, 10.0, TARGET_SPINE[2]
-    cut = (x0, x1, y, _depth_at(TARGET_SPINE, x0),
-           _depth_at(TARGET_SPINE, x1))
-    plan = TaperedPlan(TARGET_SPINE, cut, PointedCone(),
-                       _motions(cut, 1.0))
+def generate(request=None):
+    request = standalone_request() if request is None else request
+    if type(request) is not TaperedRequest or request != standalone_request():
+        raise ValueError("unsupported bounded variable-depth V request")
+    # Equal numeric values can differ in repr (2 versus 2.0). Use the
+    # canonical bounded request so fingerprints are stable across XML input.
+    request = standalone_request()
+    x0, x1 = request.cut_interval
+    y = request.target_spine[2]
+    cut = (x0, x1, y, _depth_at(request.target_spine, x0),
+           _depth_at(request.target_spine, x1))
+    plan = TaperedPlan(request.target_spine, cut, request.tool,
+                       _motions(cut, request.safe_z), request.safe_z)
     verify(plan)
     return plan
 

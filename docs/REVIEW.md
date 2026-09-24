@@ -5183,3 +5183,53 @@ after a changed carrier/post can encode the required motion roles and a newly
 posted pair passes full trajectory and protected-stock checks. Continuing to
 expand the same Pocket/Default parameter trial has no demonstrated path to
 those roles.
+
+## Bounded native V input normalization - 2026-09-24
+
+The prepared `output/native-variable-v-20260924-02/source.cb` contains the
+original XYZ spine (0,2,-1) to (12,2,-2.5), an 18 x 8 x 3 mm Part with
+drawing origin (-2,-2,0), and one disabled VCutter Engrave targeting that spine.
+Its explicit `setup.json` supplies the 3 mm radius/length pointed cone and
+non-native setup controls. The source SHA-256 is
+`ab97360d39640dc26da0cd65257ef2fec2d44e3afb279cc66f5a4cf700f45411`.
+Strict import and normalization give the same `TaperedRequest` and plan
+fingerprint `4e0c0f4249c94da0f51a8fb4b38f9da718bb60fe12134fb391beb235c1fd0f46`
+as the standalone generator. The integration test compares the complete
+nine-item expected motion and literal script with the standalone carrier,
+then passes the whole-motion audit on a synthetic Default wrapper. The
+synthetic wrapper checks the adapter, not a CamBam-produced post.
+
+The preview candidate SHA-256 is
+`04e1658da909ed6e1a3d93352243b2243287d12962e73b9889e6ba6bfba6f746`;
+its sole enabled Engrave selects only the generated cut Pline. The explicit
+candidate SHA-256 is
+`edef7f1eb33e3dffcc5dbaf3f2cfda2c2ff65a96866fe532d1613ad3c5d6c376`;
+its sole enabled Drill/CustomScript selects only the Point anchor. Both retain
+the original spine UUID and disabled source Engrave relationship after strict
+reimport. Negative checks reject changed world spine, stock width, VCutter
+diameter, inherited diameter, altered cone setup and an unmodeled Engrave XML
+field. A cosmetic source MOP display-name edit preserves the normalized
+request. The XML integer/float fingerprint mismatch found on first integration
+run was corrected by canonicalizing the bounded request before generation.
+
+This closes automated native-input normalization and document separation for
+one bounded case. The accepted older CustomScript post belongs to a different
+`.cb`; this new native-derived candidate awaits its own actual CamBam post and
+exact whole-motion audit. No manual CamBam check adds evidence to the input
+normalization claim. Reopen the bounded input contract for changed target/tool
+values only with a new core request and independent residual/output evidence;
+reopen the explicit output claim when the prepared candidate is actually posted.
+
+Verification after the final XML-field guard: `.venv/Scripts/python.exe -m
+unittest tests.test_native_variable_v tests.test_variable_vcarve
+tests.test_variable_cone_script tests.test_variable_cone_engrave
+tests.test_cone_script tests.test_vcarve_slot tests.test_mixed_replay -q`
+passed 19 tests. Package `compileall`, import/construct smoke, `git diff
+--check`, and the untracked Python/Markdown/JSON trailing-whitespace scan
+passed. The broader `unittest discover -s tests -q` run reached 389 tests
+with no assertion failures but ended with two import errors because this base
+environment lacks optional `anyio` for MCP-only test modules; 73 tests were
+skipped. The requested work does not change or exercise the MCP adapter, so
+the framework-focused gate above is the relevant final check. No MCP dependency
+was installed. Reopen the broader MCP gate only when that adapter is in scope
+and its declared optional environment is prepared.

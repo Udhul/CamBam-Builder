@@ -290,11 +290,26 @@ remains execution authority. See the [contract](structure_spec.md#bounded-variab
 [runbook](DEVELOPMENT.md#bounded-variable-depth-xyz-engrave-preview-and-post-probe)
 and [posted finding](REVIEW.md#bounded-xyz-engrave-cambam-post-finding---2026-09-24).
 
-**Next priority:** normalize one bounded native CamBam V-groove input into
-the same detached target/tool request used by standalone generation, then
-show that the original finish geometry, generated preview Pline and accepted
-explicit output remain separate. This advances the required native plus
-standalone workflow; another unchanged Engrave post adds no evidence.
+**2026-09-24 bounded native V input normalized (backlog 6).** A strict-reimported
+`.cb` with the original XYZ finish spine, 18 x 8 x 3 mm Part stock and disabled
+VCutter Engrave intent now normalizes with explicit supplemental cone/setup
+values to the same detached `TaperedRequest` and canonical plan fingerprint as
+standalone generation. Relevant geometry, stock, tool, inherited-state and
+setup edits fail closed. Separate derived files retain the original spine:
+the visible preview Engrave targets only a generated sloped Pline; the literal
+CustomScript targets only a Point anchor. Their expected nine-item motion is
+identical to the previously accepted standalone carrier. Automated input and
+separation checks pass; no new CamBam post has been attributed to this
+native-derived candidate. See the [contract](structure_spec.md#bounded-native-v-input-normalization),
+[runbook](DEVELOPMENT.md#bounded-native-v-input-normalization) and
+[evidence](REVIEW.md#bounded-native-v-input-normalization---2026-09-24).
+
+**Next priority:** post and audit the prepared native-derived explicit `.cb` to
+close its own end-to-end CamBam output gate. The new disabled source MOP is a
+material document difference from the previously posted carrier, so expected
+script equality alone does not establish emitted equivalence. Use the prepared
+[file and exact pass criteria](DEVELOPMENT.md#bounded-native-v-input-normalization).
+The existing Engrave preview needs no unchanged repost.
 
 The [clarified output direction](REST_MACHINING_PLAN.md#programmatic-execution-requirement)
 keeps original finish-target geometry separate from derived path Plines. The
@@ -307,7 +322,7 @@ only if a carrier/post control can express the missing roles and a fresh
 whole-post audit passes; do not repeat the same candidate. Add spatial bulges
 only after separate interpolation and posted-motion proof. The broader
 [native plus explicit workflow](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23)
-still needs supported native-input normalization. Defer rounded tips, optimizer,
+now has one bounded native-input normalization. Defer rounded tips, optimizer,
 general topology and direct posting until a named consumer requires them.
 Native Pocket N reopens only with a carrier/post change that encodes its
 missing roles and fresh whole-motion evidence.
@@ -1308,8 +1323,10 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    Default post passed exact motion and residual replay. The distinct
    generated-XYZ-Pline/Engrave gate now has a visible sloped path and exact
    isolated cutting segment, but fails whole-motion roles; it is inspection
-   only. Native input normalization remains the next product-workflow
-   requirement. N remains blocked on its known role controls.
+   only. One bounded native V input now normalizes to the same standalone
+   request and keeps source, preview and explicit candidates separate. Its
+   own CamBam-produced explicit post remains the next output gate. N remains
+   blocked on its known role controls.
 
    **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
    owns native/extended/core naming and migration criteria. The current RC01

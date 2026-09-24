@@ -45,30 +45,39 @@ def _check_candidate(path, plan):
     return project
 
 
-def build_engrave_candidate(directory):
+def build_engrave_candidate(directory, *, native_source_bytes=None, native_setup=None):
     """Create a separate finish guide and active generated path; pin exact bytes."""
     directory = Path(directory)
     if directory.exists() and any(directory.iterdir()):
         raise ValueError("XYZ Engrave output directory must be new or empty")
     directory.mkdir(parents=True, exist_ok=True)
-    plan = tapered_vcarve.generate()
+    if native_source_bytes is not None:
+        from .native_variable_v import normalize_bytes
+        request = normalize_bytes(native_source_bytes, native_setup)
+    else:
+        request = tapered_vcarve.standalone_request()
+    plan = tapered_vcarve.generate(request)
     trace = _trace(plan)
     replay.replay(trace, expected_source=plan.fingerprint)
 
-    source = CBProject("Tapered variable-depth V groove synthetic input")
-    guide_layer = source.add_layer("Exact target spine guide")
-    x0, x1, y, d0, d1 = plan.target_spine
-    guide = source.add_pline(guide_layer, [(x0, y, -d0), (x1, y, -d1)],
-                             identifier="tapered-target-spine")
-    part = source.add_part("Tapered V part", stock_thickness=3,
-                           stock_width=18, stock_height=8,
-                           stock_offset=(-2, -2), stock_surface=0)
-    if guide is None or part is None:
-        raise RuntimeError("could not create variable V source")
     source_path = directory / "source.cb"
-    source.save(str(source_path))
+    if native_source_bytes is None:
+        source = CBProject("Tapered variable-depth V groove synthetic input")
+        guide_layer = source.add_layer("Exact target spine guide")
+        x0, x1, y, d0, d1 = plan.target_spine
+        guide = source.add_pline(guide_layer, [(x0, y, -d0), (x1, y, -d1)],
+                                 identifier="tapered-target-spine")
+        part = source.add_part("Tapered V part", stock_thickness=3,
+                               stock_width=18, stock_height=8,
+                               stock_offset=(-2, -2), stock_surface=0)
+        if guide is None or part is None:
+            raise RuntimeError("could not create variable V source")
+        source.save(str(source_path))
+    else:
+        source_path.write_bytes(native_source_bytes)
     project = read_cambam_bytes(source_path.read_bytes(),
                                 source_name=str(source_path))
+    source_ids = {p.internal_id for p in project.list_primitives()}
     path_layer = project.add_layer("Generated XYZ cut path")
     cx0, cx1, cy, cd0, cd1 = plan.cut_spine
     cut = project.add_pline(path_layer, [(cx0, cy, -cd0),
@@ -89,7 +98,15 @@ def build_engrave_candidate(directory):
         raise RuntimeError("could not attach XYZ Engrave candidate")
     candidate = directory / "V-variable-engrave.cb"
     project.save(str(candidate))
-    _check_candidate(candidate, plan)
+    reopened = _check_candidate(candidate, plan)
+    if native_source_bytes is not None and (
+            not source_ids.issubset({p.internal_id for p in reopened.list_primitives()}) or
+            len([m for m in reopened.list_mops() if not m.enabled]) != 1):
+        raise ValueError("native V source changed during preview attachment")
+    if native_source_bytes is not None:
+        from .native_variable_v import normalize
+        if normalize(reopened, native_setup, allow_attachments=True) != request:
+            raise ValueError("native V request changed during preview attachment")
     expected = {
         "format": "variable-cone-engrave-v1",
         "candidate": candidate.name,
