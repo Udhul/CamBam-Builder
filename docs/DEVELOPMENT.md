@@ -384,6 +384,20 @@ fail or unverified result. Report preview slope pass/fail, source/stock/units
 pass/fail, the generated NC path and audit result. Keep the files until that
 acceptance is recorded; there is no production or controller claim.
 
+The user generated the retained `explicit/triangle-explicit.nc` in CamBam
+Plus 1.0 and observed its enter/retract/re-enter/sloped-cut/retract sequence in
+CAMotics. The posted file SHA-256 is
+`2cfe5e2c9cda871342f7b229fd4a77658a800b7af01dc36746adedc03a3aea5a`.
+The command above returned `bounded_triangle_post_pass`: all ten items matched,
+the parsed post replayed `prior` then `cleanup`, and the final section rest
+values match the manifest. CamBam did not show the CustomScript motion as a
+toolpath; inspect the separate preview file for a visible generated path.
+`preview/triangle-preview.nc` was also parsed and contains the exact F300
+segment `(3,2,-1.2)` to `(4,2,-2)`. The user confirmed the preview's sloped
+polyline is visible in CamBam. The source/stock/unit display check has not yet
+been reported. Do not repeat the accepted explicit post unless the candidate,
+source, prior or output setup changes. Physical machining remains unverified.
+
 ### Bounded cone CustomScript carrier and posted replay
 
 Build one new ignored directory from the repository root:

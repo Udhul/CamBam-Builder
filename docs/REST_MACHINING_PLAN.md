@@ -430,6 +430,14 @@ that post audit; any preview discrepancy is recorded separately and does not
 promote Engrave to execution. The [runbook](DEVELOPMENT.md#native-triangle-source-preview-and-post-gate)
 owns the concrete files and steps.
 
+The retained explicit candidate's actual CamBam Plus 1.0 Default post passed
+the ten-item and posted-stock audit on 2026-09-24. The user confirmed the
+ordered motion in CAMotics and reported that CamBam does not display the
+CustomScript path. The separate preview NC contains the exact sloped segment,
+and the user confirmed the preview's sloped polyline is visible in CamBam.
+Source/stock/unit display remains a separate report. See the
+[dated evidence](REVIEW.md#native-triangle-source-preview-and-explicit-candidate---2026-09-24).
+
 ## First generated acceptance job RC01
 
 **Defined and selected by the user 2026-09-23; accepted synthetic test inputs,

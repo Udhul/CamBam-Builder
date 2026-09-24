@@ -396,25 +396,32 @@ acceptance. Focused shared replay checks passed 16 tests, and the final
 repository suite passed 409 tests with one existing Windows symlink-privilege
 skip; syntax, tracked diff and untracked whitespace checks passed.
 
-**2026-09-24 native triangle workflow prepared (backlog 6):** the accepted
+**2026-09-24 native triangle workflow and posted execution accepted (backlog 6):** the accepted
 Region/Part source and exact supplied prior trace now produce separate generated
 XYZ/Engrave preview and complete prior-plus-cleanup Drill/CustomScript candidate.
 The copied source, supplied prior, preview, explicit candidate and ordered
 motion are pinned; strict reimport and constructed-post regression checks pass.
+The user's CamBam Plus 1.0 Default/Default mm NC for the exact explicit
+candidate passed all ten ordered events/moves and posted-coordinate stock
+replay, retaining `prior` then `cleanup` prefixes and the expected partial
+section rest. The user saw entry, retract, repeated entry, slope and final
+retract in CAMotics. CamBam did not display the CustomScript path. The
+separate preview NC contains the exact sloped cut, and the user confirmed
+that the preview's sloped polyline is visible in CamBam.
 The retained files and CamBam procedure are in the
 [runbook](DEVELOPMENT.md#native-triangle-source-preview-and-post-gate), and the
 [owner contract](structure_spec.md#one-native-triangle-workflow) describes the
-bounded support. This is implementation closure, pending native acceptance.
+bounded support. Native execution evidence is accepted for this one candidate;
+controller, physical setup and machining remain unverified.
 
-**Next priority:** inspect the retained preview in CamBam Plus 1.0 and post the
-exact explicit candidate with Default/Default mm. Audit that actual NC against
-the pinned trace and replay its posted coordinates before claiming execution.
-The user must supply the CamBam-produced file and preview report; a synthetic
-NC regression does not complete this gate. Stop after one native triangle
-workflow and its independently audited post. Broader concave/island topology,
-route optimization, controller-specific output and the detached/policy
+**Next priority:** record the source Region, Part stock and millimetre display
+check in CamBam. The explicit post and separate sloped preview are already
+accepted and do not need repeating. Stop this triangle workstream after that report;
+broader concave/island topology, route optimization, controller-specific
+output and the detached/policy
 [stage 3 package move](structure_spec.md#package-organization-decision-and-migration-plan)
-wait for evidence from this integration or another named consumer.
+wait for a named consumer. Evaluate the distinct remaining backlog before
+selecting another implementation increment.
 
 The [clarified output direction](REST_MACHINING_PLAN.md#programmatic-execution-requirement)
 keeps original finish-target geometry separate from derived path Plines. The

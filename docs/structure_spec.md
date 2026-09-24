@@ -508,9 +508,12 @@ every move/event in a CamBam Default/Default mm post against the explicit
 candidate, then stock-replays the parsed posted coordinates and requires the
 separate `prior`/`cleanup` prefixes. The test suite exercises this gate with a
 constructed NC fixture; only an actual CamBam-produced post can establish the
-native emitted-motion acceptance. The Engrave preview is not an execution
-authority. Tool holder, fixture, physical error, machine setup and controller
-behavior remain outside this bounded nominal claim.
+native emitted-motion acceptance. The retained CamBam Plus 1.0 Default post
+passed this exact ten-item gate and stock replay; the user confirmed its
+enter/retract/re-entry/slope/retract sequence in CAMotics. CamBam did not
+display the CustomScript motion as a toolpath. The Engrave preview is not an
+execution authority. Tool holder, fixture, physical error, machine setup and
+controller behavior remain outside this bounded nominal claim.
 
 ### Bounded pointed-cone CamBam output carrier
 

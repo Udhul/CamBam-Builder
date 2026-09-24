@@ -23,10 +23,27 @@ tests. The repository suite passed 412 tests with one existing Windows
 symlink-privilege skip before a local audit refinement that reports section
 rest from parsed posted stock; the final focused 10-test run passed afterward.
 `compileall`, `git diff --check` and untracked text whitespace checks passed.
-Native preview display and actual CamBam-produced
-post remain pending; reopen this slice if either differs from the pinned
-trace. Holder, fixture, physical setup and controller acceptance remain outside
-the case.
+
+The user posted `explicit/triangle-explicit.nc` from the retained candidate
+with CamBam Plus 1.0 Default/Default mm. Its SHA-256 is
+`2cfe5e2c9cda871342f7b229fd4a77658a800b7af01dc36746adedc03a3aea5a`.
+The pinned audit matched the exact candidate SHA-256, all ten ordered items,
+tool, feeds and coordinates, then replayed the parsed posted motion as distinct
+`prior` (one cut) and `cleanup` (two cumulative cuts) prefixes. Pure rest at
+depths 0/1/2 mm is
+43.476106578830695/21.207669627189745/5.333333333333332 mm²; final rest
+is 35.160992224151634/18.089501744185096/5.333333333333332 mm².
+The user inspected this NC in CAMotics and reported entry, retract, repeated
+entry at the cleared column, sloped descent and final retract. CamBam did not
+show the CustomScript toolpath. This matches the intended split: the posted NC
+is execution evidence, while the script carrier does not supply a visible
+CamBam toolpath. The separate `preview/triangle-preview.nc` (SHA-256
+`8b40dd340c906e6dd312b3963c59f8c99ce3d1c96777d4df603ba0355a6e0e3f`)
+was parsed and contains the exact `(3,2,-1.2)` to `(4,2,-2)` F300 segment.
+The user confirmed the separate preview's sloped polyline is visible in
+CamBam. The user's source/stock/unit observations were not yet reported; do
+not infer them from the NC files. Holder, fixture, physical setup and
+controller acceptance remain outside the case.
 
 ## Convex-region rest and variable-depth pointed cleanup - 2026-09-24
 
