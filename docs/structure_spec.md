@@ -475,6 +475,43 @@ This is a detached nominal geometry result with partial target completion. It
 does not turn native source geometry or a CamBam preview into executable motion;
 any future output carrier needs its own posted-coordinate replay and acceptance.
 
+#### One native triangle workflow
+
+`integrations.cambam.native_convex_rest` strict-imports the accepted zero-Z,
+unbulged counterclockwise three-vertex Region `(0,0),(12,0),(6,8)` and one
+enabled, unnested Part with drawing-space stock `(-1,-1)` to `(13,9)`, top Z=0
+and bottom Z=-3. The source has no MOP. Millimetres are asserted by the
+separate supplied prior-motion JSON because native XML does not persist a
+verified drawing unit. Other topology, geometry, stock and source MOPs fail
+closed. An existing `.cb` needs an explicit `prior.json`; the synthetic example
+creates that supplied-motion fixture and binds it to the exact source SHA-256.
+The adapter reconstructs the five supplied ordered prior items, checks their
+source binding, and passes them to `convex_rest.generate`; it does not infer
+prior removal from a native machining operation.
+
+`build_workflow` copies those source bytes to `source.cb`, writes the supplied
+trace to `prior.json`, and makes separate `preview/triangle-preview.cb` and
+`explicit/triangle-explicit.cb`. The preview adds one XYZ cleanup Pline and an
+enabled Engrave targeting only that generated path. It is a visual inspection
+candidate. The explicit file adds one Point anchor and an enabled
+Drill/CustomScript carrying the prior and cleanup moves, while the MOP/post
+supplies tool and spindle events. The complete expected trace includes a safe
+approach from the declared `(-10,-10,+5)` tip position, feeds, retracts and
+return. Both retain the original Region and Part;
+neither executes the other's generated path. Strict reimport checks target
+links, process fields, source geometry and stock. The source, prior, preview and
+explicit bytes plus motion references are SHA-256/fingerprint pinned in
+`expected-motion.json`.
+
+`audit_post` rechecks all four artifacts and the reconstructed motion, compares
+every move/event in a CamBam Default/Default mm post against the explicit
+candidate, then stock-replays the parsed posted coordinates and requires the
+separate `prior`/`cleanup` prefixes. The test suite exercises this gate with a
+constructed NC fixture; only an actual CamBam-produced post can establish the
+native emitted-motion acceptance. The Engrave preview is not an execution
+authority. Tool holder, fixture, physical error, machine setup and controller
+behavior remain outside this bounded nominal claim.
+
 ### Bounded pointed-cone CamBam output carrier
 
 `integrations.cambam.cone_script` attaches the full-depth 12 x 4 mm slot to one

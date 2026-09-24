@@ -321,6 +321,69 @@ synthetic geometry only. No manual CamBam validation adds evidence for this
 slice; source normalization, preview and emitted execution remain distinct
 future gates.
 
+### Native triangle source, preview and post gate
+
+The bounded native consumer is `integrations.cambam.native_convex_rest`. From
+the repository root, build a fresh synthetic case with the declared interpreter:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_convex_rest output/native-convex-rest-NEW
+& $ProjectPython -m unittest tests.test_native_convex_rest tests.test_convex_rest -v
+```
+
+For an existing accepted triangle, provide both its `.cb` and matching
+source-SHA-bound supplied prior trace. The generated example's `prior.json`
+shows the exact schema. Existing source without `--prior` is rejected:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_convex_rest output/native-convex-rest-EDITED --source path/to/source.cb --prior path/to/prior.json
+```
+
+The retained synthetic delivery is `output/native-convex-rest-20260924-04/`.
+Its `source.cb`, `prior.json`, `preview/triangle-preview.cb` and
+`explicit/triangle-explicit.cb` are separate files. The source SHA-256 is
+`fd811374e7cfb12783d25bc90f937f14167bee524fc8b18176f50b84dd6fc79d`;
+the prior JSON is `d3af3561df9b18bf91283dc0939223c1628a6a5f272d04918d4b7b7aac95c1dd`;
+the preview is `7da156b420a7db4f1267f66db85dab0efc353696ee664592cdf02f40c85d0a68`;
+and the explicit candidate is
+`e3bf022ab0f3cabfa78906e5466d714dc4644d24d36469c4b6fddae95c841c60`.
+The manifest pins these hashes, the prior and full motion fingerprints, every
+expected motion item and section residuals. The prior tip enters at `(3,2,1)`,
+plunges to `(3,2,-1.2)` and retracts. The generated cleanup descends through
+that cleared column, cuts from `(3,2,-1.2)` to `(4,2,-2)`, then retracts.
+Pure rest at depths 0/1/2 mm is
+`43.476106579/21.207669627/5.333333333` mm²; final partial rest is
+`35.160992224/18.089501744/5.333333333` mm² (1e-9 mm² comparison for the
+manifest calculations).
+
+CamBam validation adds two pieces of evidence. First open the **preview**
+`.cb` in CamBam Plus 1.0, confirm millimetres, the three original Region
+vertices, stock XY `(-1,-1)` to `(13,9)` and Z `-3` to `0`, and that the enabled Engrave
+targets only the generated XYZ cleanup line. Generate its toolpath and report
+whether the displayed segment visibly slopes from Z=-1.2 to Z=-2; this checks
+preview usability only. Then open the **explicit** `.cb` separately with
+**Default** postprocessor and **Default mm** profile, confirm only its
+Drill/CustomScript is enabled, generate toolpaths and post it as
+`explicit/triangle-explicit.nc`. Do not post the preview. Preserve all four
+pinned files unchanged. The declared setup assumes the tip starts at
+`(-10,-10,+5)` and uses test-only T3, 90-degree pointed 3 mm radius/length,
+CW 12000 rpm, entry 60 and cut/retract 300 mm/min; the post does not prove
+physical setup.
+
+Audit the actual CamBam-produced NC from the root:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_convex_rest output/native-convex-rest-20260924-04/expected-motion.json output/native-convex-rest-20260924-04/explicit/triangle-explicit.nc
+```
+
+Pass requires `bounded_triangle_post_pass`, the exact candidate hash above,
+all ten ordered events/moves, `prior` then `cleanup` cut prefixes, and the
+stated pure/final rest values. Any missing/extra move, feed or coordinate,
+changed source/prior/candidate, unsupported post word or replay failure is a
+fail or unverified result. Report preview slope pass/fail, source/stock/units
+pass/fail, the generated NC path and audit result. Keep the files until that
+acceptance is recorded; there is no production or controller claim.
+
 ### Bounded cone CustomScript carrier and posted replay
 
 Build one new ignored directory from the repository root:

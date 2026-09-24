@@ -1,5 +1,33 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Native triangle source, preview and explicit candidate - 2026-09-24
+
+The exact accepted convex triangle now strict-imports as one Region and one
+Part with separate source-bound supplied prior motion. The native consumer
+replayed that prior cone column before generating cleanup, then produced
+independent preview Engrave and literal Drill/CustomScript `.cb` files. Source
+geometry and Part stock survived candidate reimport. The initial candidate
+check incorrectly required Part internal UUID stability; this reader assigns
+a fresh Part UUID on import. The check now compares the Part's persisted stock,
+placement and state while preserving the Region identity and geometry check.
+The retained delivery is `output/native-convex-rest-20260924-04/`; exact hashes
+and steps are in the
+[runbook](DEVELOPMENT.md#native-triangle-source-preview-and-post-gate).
+
+The regression builds both candidates, checks their separate enabled targets,
+replays a constructed Default-dialect NC through the full ordered trace, and
+rejects stale prior/source, edited source geometry, changed posted coordinates
+and a changed candidate hash. A constructed post proves the audit mechanics,
+not CamBam behavior. The focused native/convex/adjacent carrier run passed 10
+tests. The repository suite passed 412 tests with one existing Windows
+symlink-privilege skip before a local audit refinement that reports section
+rest from parsed posted stock; the final focused 10-test run passed afterward.
+`compileall`, `git diff --check` and untracked text whitespace checks passed.
+Native preview display and actual CamBam-produced
+post remain pending; reopen this slice if either differs from the pinned
+trace. Holder, fixture, physical setup and controller acceptance remain outside
+the case.
+
 ## Convex-region rest and variable-depth pointed cleanup - 2026-09-24
 
 The fixed triangle acceptance case in the [rest plan](REST_MACHINING_PLAN.md#bounded-convex-region-restv-acceptance-case-2026-09-24)

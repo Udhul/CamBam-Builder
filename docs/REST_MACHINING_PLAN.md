@@ -406,6 +406,30 @@ No physical clearance, holder, process limit or native output acceptance is
 claimed. The existing native source, preview and execution roles stay separate;
 this detached geometry slice needs no new output carrier.
 
+### Native triangle source, preview and execution gate (2026-09-24)
+
+The next bounded consumer uses the exact triangle and supplied prior cone
+column above. Its strict native source is one original Region and one Part;
+the prior motion remains an explicit, source-hash-bound input. It generates a
+separate visible cleanup XYZ/Engrave preview and a complete prior-plus-cleanup
+Drill/CustomScript candidate. The preview is inspectable but has no execution
+claim. Both derived files preserve the original Region and Part, with one
+enabled operation each; source `.cb`, prior JSON, preview `.cb` and explicit
+`.cb` are pinned independently.
+
+Automated acceptance requires strict reimport of both candidates, matching
+target links and process settings, unchanged original geometry/stock, exact
+source/prior/candidate freshness, core replay of the supplied column and
+cleanup, and rejection of changed source, prior motion, candidate and posted
+coordinates. Emitted-motion acceptance additionally requires a newly produced
+CamBam Plus 1.0 Default/Default mm post from this exact explicit candidate,
+exact ordered event/move/feed/coordinate comparison, and stock replay of those
+parsed posted values with separate prior and cleanup prefixes. A constructed
+NC regression tests the audit mechanics but is not native acceptance. Stop at
+that post audit; any preview discrepancy is recorded separately and does not
+promote Engrave to execution. The [runbook](DEVELOPMENT.md#native-triangle-source-preview-and-post-gate)
+owns the concrete files and steps.
+
 ## First generated acceptance job RC01
 
 **Defined and selected by the user 2026-09-23; accepted synthetic test inputs,
