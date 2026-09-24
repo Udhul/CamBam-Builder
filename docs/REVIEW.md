@@ -5233,3 +5233,60 @@ skipped. The requested work does not change or exercise the MCP adapter, so
 the framework-focused gate above is the relevant final check. No MCP dependency
 was installed. Reopen the broader MCP gate only when that adapter is in scope
 and its declared optional environment is prepared.
+
+## Bounded native-derived V output - 2026-09-24
+
+The user exported `output/native-variable-v-20260924-02/explicit/V-variable.nc`
+from the prepared native-derived `.cb`. The actual post SHA-256 is
+`969e0bcceb3556747aec2d2005ad7f91bd992915479933b38dd09181a25709bf`.
+The hash-guarded `audit_variable_post` returned
+`bounded_emitted_variable_v_motion_pass`: all nine ordered items match,
+including T3/spindle events, F120 approach, F60 entry, the sloped F300 cut,
+F300 retract and setup return. Parsed posted coordinates replay as one
+`variable-v` prefix with two ideal cone sweeps. Section rest at depths
+0/1/1.5/2/2.5 mm is 15.091265791880026 / 7.028684027518187 /
+4.21460291488107 / 1.8062583920918873 / 0 mm2, matching the independent
+reference within 1e-9 mm2. The result is partial target completion. The user
+reported export, not a new preview or physical machine trial. This closes
+the bounded native input through explicit CamBam emitted-output gate only;
+the separately observed Engrave post still fails whole-motion roles.
+
+## Bounded direct V reference output - 2026-09-24
+
+`cam_core.tapered_vcarve.output_trace` supplies the same resolved nine-item
+process trace to the existing CamBam CustomScript adapter and the new direct
+writer. The headless writer generated
+`output/direct-variable-v-20260924-01/direct-V-variable.nc` from the exact
+native source and explicit setup. Its SHA-256 is
+`220faa9b9e7836ee5a80be263a6150371adee456375b314638d292ce678b86c5`.
+The independently parsed direct file matches every ordered tool, spindle,
+G0/G1 role, feed and XYZ coordinate in the accepted CamBam post. Parsed-motion
+replay returns one `variable-v` prefix/two cone sweeps, the same five section
+rest values above and partial target completion. The direct file differs in
+text from CamBam's wrapper, as expected. `direct-evidence.json` pins exact
+source, setup, direct file and accepted post hashes plus unchanged plan and
+motion fingerprints. A second audit of that manifest passed. Negative tests
+reject a changed or re-pinned feed word, changed source and changed comparison
+post. No CamBam application validation adds evidence to this headless writer.
+
+This closes one bounded reference-dialect output capability, not a selected
+controller profile or machine-ready program. The initial tip position is
+assumed; actual tool/holder, fixture, material, controller behavior and cutting
+limits are unverified. Broader core V geometry is the next useful increment:
+the current request accepts only the exact synthetic spine, so real geometry
+edits cannot yet be planned. Reopen controller output when a specific target
+controller and setup are supplied and its emitted behavior is independently
+verified. Reopen curved topology only after a core target and residual oracle
+need it.
+
+Final focused verification on the combined native-output/direct-reference tree:
+`.venv/Scripts/python.exe -m unittest tests.test_direct_variable_v
+tests.test_native_variable_v tests.test_variable_vcarve
+tests.test_variable_cone_script tests.test_variable_cone_engrave
+tests.test_cone_script tests.test_vcarve_slot tests.test_mixed_replay -q`
+passed 21 tests. The actual native-derived CamBam post audit and pinned direct
+manifest audit both passed again after moving process-trace ownership into the
+core. Package `compileall`, import/construct smoke, `git diff --check` and the
+untracked-text trailing-whitespace scan passed. No MCP tests or dependencies
+were used for this framework increment. Manual validation adds no evidence to
+the direct reference gate; a chosen real controller requires a separate test.

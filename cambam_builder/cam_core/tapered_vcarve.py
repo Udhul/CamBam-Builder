@@ -5,7 +5,7 @@ The finish target is the swept envelope of a 90-degree pointed cone along a
 cut covers only x=2..10, so both finite ends retain measurable target stock.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import hashlib
 import math
 
@@ -15,6 +15,10 @@ from .vcarve import Motion, PointedCone
 
 TARGET_SPINE = (0.0, 12.0, 2.0, 1.0, 2.5)
 STOCK_BOUNDS = (-2.0, -2.0, 16.0, 6.0)
+OUTPUT_SETUP = (-10.0, -10.0, 5.0)
+OUTPUT_TOOL = "T3"
+OUTPUT_RPM = 12000
+OUTPUT_FEEDS = {"approach": 120, "entry": 60, "cut": 300, "retract": 300}
 
 
 @dataclass(frozen=True)
@@ -97,6 +101,33 @@ def trace_for(plan):
                               plan.motions[-1].end))
     return replay.Trace(plan.fingerprint, "tapered-groove-drawing", first,
                         (op,), tuple(items))
+
+
+def output_trace(plan):
+    """Resolved bounded process trace shared by CamBam and direct output."""
+    verify(plan)
+    original = trace_for(plan)
+    first = plan.motions[0].start
+    clearance = (first[0], first[1], OUTPUT_SETUP[2])
+    items = [replay.Event("tool_change", OUTPUT_TOOL, OUTPUT_SETUP),
+             replay.Event("spindle_start", OUTPUT_TOOL, OUTPUT_SETUP),
+             replay.Motion("rapid", OUTPUT_TOOL, "variable-v",
+                           OUTPUT_SETUP, clearance),
+             replay.Motion("approach", OUTPUT_TOOL, "variable-v", clearance,
+                           first, OUTPUT_FEEDS["approach"])]
+    for move in plan.motions:
+        role = "entry" if move.role == "plunge" else move.role
+        items.append(replay.Motion(role, OUTPUT_TOOL, "variable-v",
+                                   move.start, move.end,
+                                   OUTPUT_FEEDS.get(role, 0)))
+    items.extend((replay.Motion("rapid", OUTPUT_TOOL, "variable-v",
+                                items[-1].end, OUTPUT_SETUP),
+                  replay.Event("spindle_stop", OUTPUT_TOOL, OUTPUT_SETUP)))
+    operation = replace(original.operations[0],
+                        tool=replace(original.operations[0].tool,
+                                     name=OUTPUT_TOOL))
+    return replay.Trace(plan.fingerprint, original.frame, OUTPUT_SETUP,
+                        (operation,), tuple(items))
 
 
 def verify(plan):

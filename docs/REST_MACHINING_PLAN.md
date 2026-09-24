@@ -518,7 +518,7 @@ acceptance, and caller applications can invoke each capability independently.
 | I: native input and document attachment | A synthetic `.cb` with outer/island Region, Part stock and explicit T1/T2 Pocket intent, plus explicitly supplied tool-component/setup values absent from native fields, normalizes to the same request/results as S. Preserve authored geometry/source MOPs and identity references; attach derived results separately. Reopen/export and import an edited file without hidden session state; supported edits recompute explicitly and invalidate old evidence. Unresolved inherited or unsupported values return diagnostics. |
 | E: explicit framework motion through CamBam | Attach both generated operations using a candidate XYZ-Pline/Engrave adapter or an explicitly bounded, role-bearing CamBam carrier. In the established CamBam Plus 1.0 environment, inspect actual regenerated and posted motion: coordinates, interpolation, ordering, feeds, spindle/tool events and every inserted entry/link/retract. Reverify the actual motion against RC01, including its rough-only stock prefix. A path drawing or successful XML round trip alone fails this gate. Record the accepted carrier; one carrier's result does not imply parity of another. |
 | N: native smaller-tool region/Pocket cleanup | Preserve the original target and attach T2 Pocket MOPs to four closed 7 x 7 corner windows: [0,7]x[0,7], [33,40]x[0,7], [33,40]x[23,30], [0,7]x[23,30]. These are machining boundaries, not cutter-center regions. Each contains its entire T1 corner rest plus overlap into cleared material; none touches the island. Verify actual CamBam-generated cleanup against the same target, process and residual criteria, after the E-verified T1 prefix. Do not infer native removal from nominal Pocket settings. |
-| P: production / later direct posting | Separate pending gates. S is headless planning, not G-code delivery. A later controller adapter must reverify its emitted motion. Physical machining requires an identified machine/material/setup, real tools/workholding and separately agreed tolerances/process limits. No execution is requested by RC01. |
+| P: production / controller-specific direct posting | Separate pending gates. S is headless planning; the bounded V reference-dialect file is not a controller profile. A later controller adapter must reverify its emitted motion. Physical machining requires an identified machine/material/setup, real tools/workholding and separately agreed tolerances/process limits. No execution is requested by RC01. |
 
 **2026-09-23 I preparation:** the [native adapter contract](structure_spec.md#rc01-native-input-and-comparison-candidates)
 now constructs and strict-reimports the source `.cb`, normalizes its Region,
@@ -712,9 +712,13 @@ disabled source Engrave and Part stock with explicit non-native cone/setup
 values into the same detached request as standalone generation. It attaches
 the visible generated Pline and literal-motion carrier in separate copies of
 the original document. The input/attachment gate is automated and complete
-for this one case. The new native-derived literal candidate still needs its
-own CamBam-produced post audit before its emitted-output gate closes; the
-earlier accepted post belongs to a different `.cb` byte sequence.
+for this one case. The new native-derived literal candidate's CamBam Default
+post passed its own exact nine-item emitted-motion and residual audit. The
+shared core now supplies the same resolved process trace to a direct
+reference-dialect writer, which reparses and replays its output and matches
+the accepted CamBam post semantically. This is not yet a controller-specific
+or production post; broadening the detached straight-groove request is the
+next core dependency before widening output adapters.
 Reopen general topology, positive-error completion, low links, optimizers or finer
 area infrastructure only when an RC01 gate or a named next consumer requires it.
 

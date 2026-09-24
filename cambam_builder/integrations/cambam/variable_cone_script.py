@@ -1,6 +1,5 @@
 """Bounded variable-depth cone carrier and exact Default-post replay."""
 
-from dataclasses import replace
 import json
 from pathlib import Path
 
@@ -8,30 +7,17 @@ from ... import CBProject
 from ...cam_core import replay, tapered_vcarve
 from ...cam_entities import DrillMop
 from ...cambam_reader import read_cambam_bytes
-from .cone_script import (_compare_post, _expected_items, _script, _sha,
-                          FEEDS, RPM, START, TOOL)
+from .cone_script import _compare_post, _expected_items, _script, _sha
+
+
+FEEDS = tapered_vcarve.OUTPUT_FEEDS
+RPM = tapered_vcarve.OUTPUT_RPM
+START = tapered_vcarve.OUTPUT_SETUP
+TOOL = tapered_vcarve.OUTPUT_TOOL
 
 
 def _trace(plan):
-    original = tapered_vcarve.trace_for(plan)
-    first = plan.motions[0].start
-    clearance = (first[0], first[1], START[2])
-    items = [replay.Event("tool_change", TOOL, START),
-             replay.Event("spindle_start", TOOL, START),
-             replay.Motion("rapid", TOOL, "variable-v", START, clearance),
-             replay.Motion("approach", TOOL, "variable-v", clearance,
-                           first, FEEDS["approach"])]
-    for move in plan.motions:
-        role = "entry" if move.role == "plunge" else move.role
-        items.append(replay.Motion(role, TOOL, "variable-v",
-                                   move.start, move.end, FEEDS.get(role, 0)))
-    items.extend((replay.Motion("rapid", TOOL, "variable-v",
-                                items[-1].end, START),
-                  replay.Event("spindle_stop", TOOL, START)))
-    operation = replace(original.operations[0],
-                        tool=replace(original.operations[0].tool, name=TOOL))
-    return replay.Trace(plan.fingerprint, original.frame, START,
-                        (operation,), tuple(items))
+    return tapered_vcarve.output_trace(plan)
 
 
 def _sections(result):

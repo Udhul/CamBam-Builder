@@ -504,6 +504,42 @@ this candidate's output gate. The declared initial tip position
 (-10,-10,+5) and ideal-tool assumptions remain outside the post; this is no
 physical machining acceptance.
 
+The user exported this exact native-derived candidate on 2026-09-24.
+`explicit/V-variable.nc` SHA-256 is
+`969e0bcceb3556747aec2d2005ad7f91bd992915479933b38dd09181a25709bf`.
+The audit command above returned `bounded_emitted_variable_v_motion_pass` with
+all nine items, one `variable-v` prefix/two sweeps and the exact five rest
+references. No repeat CamBam export is needed for this bounded gate.
+
+### Bounded direct variable-depth V reference output
+
+The direct writer consumes the same detached plan and verified process trace
+as the accepted native-derived CamBam carrier. It emits an absolute millimetre
+G0/G1 reference program without starting CamBam. To regenerate in a new ignored
+directory from a native input, run:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.direct_variable_v output/direct-variable-v-NEW --source output/native-variable-v-20260924-02/source.cb --setup output/native-variable-v-20260924-02/setup.json --compare output/native-variable-v-20260924-02/explicit/V-variable.nc
+& $ProjectPython -m cambam_builder.integrations.direct_variable_v output/direct-variable-v-NEW/direct-evidence.json --compare output/native-variable-v-20260924-02/explicit/V-variable.nc
+```
+
+Omit `--source`, `--setup` and `--compare` for the equivalent standalone
+request without a native comparison. The prepared program is
+`output/direct-variable-v-20260924-01/direct-V-variable.nc`, SHA-256
+`220faa9b9e7836ee5a80be263a6150371adee456375b314638d292ce678b86c5`.
+Its `direct-evidence.json` pins source, setup, program, accepted CamBam post,
+plan and motion fingerprints. The independent reader parses nine exact items;
+posted-coordinate replay returns one `variable-v` prefix with two cone sweeps
+and partial rest at 0/1/1.5/2/2.5 mm of 15.091265791880026 /
+7.028684027518187 / 4.21460291488107 / 1.8062583920918873 / 0 mm2.
+The direct and CamBam programs have different text but the same parsed event
+and motion sequence. Any changed source/setup/program/comparison post,
+unsupported command, altered role/feed/coordinate or stale manifest fails.
+This verifies the bounded reference dialect only. It assumes initial tip
+(-10,-10,+5) and does not select or certify a controller, real tool, material
+or physical setup; do not treat it as a machine-ready program. Manual CamBam
+validation adds no evidence to this headless output gate.
+
 ### RC01 native input and A/B/C comparison preparation
 
 From the repository root, use a new unique ignored directory (the example name

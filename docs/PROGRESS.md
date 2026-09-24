@@ -9,9 +9,9 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 **2026-09-23 execution architecture refinement (backlog 6).** The user's context
 preserves today's `.cb` -> native toolpath/G-code workflow while exploring an
-independent shared CAM core and eventual direct G-code output. Existing foundations
-already separate geometry/stock from documents; a general motion representation,
-generators, optimizer and direct postprocessor are not implemented. The
+independent shared CAM core and eventual direct G-code output. At that point,
+the general motion representation, generators, optimizer and direct postprocessor
+were not implemented. The
 [refinement](REST_MACHINING_PLAN.md#execution-architecture-refinement---2026-09-23)
 records the three output/execution routes, edit invalidation, compatibility limits
 and recommendations. Native MOP intent cannot certify stock removed by our different
@@ -299,17 +299,37 @@ setup edits fail closed. Separate derived files retain the original spine:
 the visible preview Engrave targets only a generated sloped Pline; the literal
 CustomScript targets only a Point anchor. Their expected nine-item motion is
 identical to the previously accepted standalone carrier. Automated input and
-separation checks pass; no new CamBam post has been attributed to this
-native-derived candidate. See the [contract](structure_spec.md#bounded-native-v-input-normalization),
+separation checks pass. The user then exported the prepared native-derived
+explicit candidate with CamBam Default/Default mm. Its exact nine-item audit
+passed, including posted-coordinate cone replay and the five section-rest
+references; the result remains partial target completion with the declared
+initial-position and ideal-tool assumptions. This closes the bounded native
+input to explicit CamBam output gate, not the preview Engrave or physical
+machining gate. See the [contract](structure_spec.md#bounded-native-v-input-normalization),
 [runbook](DEVELOPMENT.md#bounded-native-v-input-normalization) and
-[evidence](REVIEW.md#bounded-native-v-input-normalization---2026-09-24).
+[evidence](REVIEW.md#bounded-native-derived-v-output---2026-09-24).
 
-**Next priority:** post and audit the prepared native-derived explicit `.cb` to
-close its own end-to-end CamBam output gate. The new disabled source MOP is a
-material document difference from the previously posted carrier, so expected
-script equality alone does not establish emitted equivalence. Use the prepared
-[file and exact pass criteria](DEVELOPMENT.md#bounded-native-v-input-normalization).
-The existing Engrave preview needs no unchanged repost.
+**2026-09-24 bounded direct V reference output (backlog 6).** The accepted
+native-derived source and the standalone request now produce the same
+deterministic direct millimetre G0/G1 file. The shared core owns the resolved
+nine-item process trace; the direct adapter emits, reparses and replays every
+item against the original cone target. Its parsed semantics exactly match the
+accepted CamBam post, and all five section-rest references pass. Exact source,
+setup, output and comparison-post hashes guard the evidence. This delivers a
+headless reference-dialect G-code route for one bounded case; no controller
+profile, production setup or physical machining is accepted. See the
+[contract](structure_spec.md#bounded-direct-variable-depth-v-reference-output),
+[runbook](DEVELOPMENT.md#bounded-direct-variable-depth-v-reference-output) and
+[evidence](REVIEW.md#bounded-direct-v-reference-output---2026-09-24).
+
+**Next priority:** broaden the detached V request from one fixed synthetic
+geometry to a validated family of straight variable-depth grooves, with
+independent all-height containment and section-rest checks for at least two
+different target/tool inputs. Then normalize supported native geometry/tool edits
+into that family. The current exact-case restriction rejects every real size or
+depth edit, so this core capability matters more now than another carrier or
+unchanged post. Defer curved topology, optimizer and controller-specific output
+until the bounded family and an identified consumer justify them.
 
 The [clarified output direction](REST_MACHINING_PLAN.md#programmatic-execution-requirement)
 keeps original finish-target geometry separate from derived path Plines. The
@@ -322,8 +342,10 @@ only if a carrier/post control can express the missing roles and a fresh
 whole-post audit passes; do not repeat the same candidate. Add spatial bulges
 only after separate interpolation and posted-motion proof. The broader
 [native plus explicit workflow](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23)
-now has one bounded native-input normalization. Defer rounded tips, optimizer,
-general topology and direct posting until a named consumer requires them.
+now has one bounded native-input and accepted explicit-output route. Defer
+rounded tips, optimizer and general topology until a named consumer requires
+them. The direct reference route is now verified; controller-specific and
+production output remain separate pending a selected controller and real setup.
 Native Pocket N reopens only with a carrier/post change that encodes its
 missing roles and fresh whole-motion evidence.
 
@@ -1234,9 +1256,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    The [2026-09-23 refinement](REST_MACHINING_PLAN.md#execution-architecture-refinement---2026-09-23)
    adds the explicit future headless-posting capability and manual-edit contract.
    Keep ordinary native-MOP export alongside a proposed shared motion core and
-   separate CamBam/direct-post adapters. Direct posting is a recorded future
-   capability within this workstream, accepted after the first useful rest/V-carve workflow;
-   it does not silently expand current implementation scope to all MOPs.
+   separate CamBam/direct-post adapters. One bounded reference-dialect direct
+   V output is implemented after the first useful native plus explicit V
+   workflow. Controller-specific posting and other MOPs remain future scope.
 
    #### Next detached stock/rest increment
 
@@ -1309,7 +1331,7 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    emitted-sequence and continuous stock/access/process/rest replay for all
    2,945 items. This closes one alternate explicit E output slice, not the
    original XYZ/Engrave parity or native Pocket N. The user retains CamBam
-   posting; direct standalone posting stays later. Never infer vertical
+   posting for RC01; direct RC01 posting stays later. Never infer vertical
    clearance from fixed-Z evidence.
 
    **Bounded pointed-cone explicit output accepted 2026-09-24.** The 12 x 4 mm
@@ -1325,8 +1347,10 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    isolated cutting segment, but fails whole-motion roles; it is inspection
    only. One bounded native V input now normalizes to the same standalone
    request and keeps source, preview and explicit candidates separate. Its
-   own CamBam-produced explicit post remains the next output gate. N remains
-   blocked on its known role controls.
+   own CamBam-produced explicit post passed all nine items and the original
+   residual replay. A separate headless reference G-code file now parses and
+   replays to the same semantic sequence and partial rest. A controller-specific
+   direct post remains future work; N remains blocked on its known role controls.
 
    **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
    owns native/extended/core naming and migration criteria. The current RC01

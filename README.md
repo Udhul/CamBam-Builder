@@ -26,6 +26,9 @@ Licensed under the [MIT license](LICENSE).
 Document-independent CAM calculations and planning live under
 `cambam_builder.cam_core`; native CamBam entities/XML and the MCP adapter remain
 separate. The first generated roughing/cleanup slice is `cam_core.rc01`.
+One bounded variable-depth V groove also has a verified headless G-code
+reference output; its strict millimetre dialect is not a machine controller
+profile. See the [current status](docs/PROGRESS.md#active-work-and-next-priority).
 
 For development, install the environment with `uv sync`, then run the
 project through `.venv\Scripts\python.exe`. Python 3.9 through 3.13 are verified;
