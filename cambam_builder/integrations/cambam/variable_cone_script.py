@@ -26,15 +26,17 @@ def _sections(result):
 
 
 def build_variable_carrier(directory, *, native_source_bytes=None, native_setup=None):
-    directory = Path(directory)
-    if directory.exists() and any(directory.iterdir()):
-        raise ValueError("variable V output directory must be new or empty")
-    directory.mkdir(parents=True, exist_ok=True)
     if native_source_bytes is not None:
         from .native_variable_v import normalize_bytes
         request = normalize_bytes(native_source_bytes, native_setup)
     else:
         request = tapered_vcarve.standalone_request()
+    if request != tapered_vcarve.standalone_request():
+        raise ValueError("edited V inputs are planning-only; literal carrier requires the accepted example")
+    directory = Path(directory)
+    if directory.exists() and any(directory.iterdir()):
+        raise ValueError("variable V output directory must be new or empty")
+    directory.mkdir(parents=True, exist_ok=True)
     plan = tapered_vcarve.generate(request)
     result = tapered_vcarve.verify(plan)
     trace = _trace(plan)

@@ -8,12 +8,14 @@ from pathlib import Path
 from cambam_builder.cam_core import tapered_vcarve
 from cambam_builder.cambam_reader import read_cambam_bytes
 from cambam_builder.integrations.cambam.native_variable_v import (
-    build_native_workflow, normalize, normalize_bytes, synthetic_setup,
+    build_native_workflow, normalize, normalize_bytes, plan_native_input, synthetic_setup,
     synthetic_source,
 )
 from cambam_builder.integrations.cambam.variable_cone_script import (
     audit_variable_post, build_variable_carrier,
 )
+from cambam_builder.integrations.cambam.variable_cone_engrave import build_engrave_candidate
+from cambam_builder.integrations.direct_variable_v import build_program
 
 
 class NativeVariableVTests(unittest.TestCase):
@@ -99,12 +101,12 @@ class NativeVariableVTests(unittest.TestCase):
             self.assertEqual(normalize(project, synthetic_setup()),
                              tapered_vcarve.standalone_request())
             project = read()
-            project.get_primitive("tapered-target-spine").vertices[1].z = -2.6
-            with self.assertRaisesRegex(ValueError, "finish spine"):
+            project.get_primitive("tapered-target-spine").vertices[1].z = -0.5
+            with self.assertRaisesRegex(ValueError, "bounded family"):
                 normalize(project, synthetic_setup())
             project = read()
-            project.list_parts()[0].stock_width = 19
-            with self.assertRaisesRegex(ValueError, "stock"):
+            project.list_parts()[0].stock_width = 15
+            with self.assertRaisesRegex(ValueError, "bounded family"):
                 normalize(project, synthetic_setup())
             project = read()
             project.list_mops()[0].tool_diameter = 5
@@ -117,13 +119,64 @@ class NativeVariableVTests(unittest.TestCase):
                 normalize(read(), synthetic_setup())
             setup = synthetic_setup()
             setup["cone_conical_length_mm"] = 2
-            with self.assertRaisesRegex(ValueError, "setup/tool"):
+            with self.assertRaisesRegex(ValueError, "90-degree"):
                 normalize_bytes(path.read_bytes(), setup)
             synthetic_source().save(str(path))
             unknown = path.read_bytes().replace(
                 b"</engrave>", b"<LeadInMove>Spiral</LeadInMove></engrave>")
             with self.assertRaisesRegex(ValueError, "XML fields"):
                 normalize_bytes(unknown, synthetic_setup())
+
+    def test_edited_native_geometry_stock_and_tool_plan_without_carriers(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            source = directory / "edited.cb"
+            project = synthetic_source()
+            guide = project.get_primitive("tapered-target-spine")
+            guide.vertices[0].x = 3
+            guide.vertices[0].z = -0.8
+            guide.vertices[1].x = 17
+            guide.vertices[1].z = -2.4
+            project.list_parts()[0].stock_width = 22
+            project.list_mops()[0].tool_diameter = 8
+            project.save(str(source))
+            setup = synthetic_setup()
+            setup["cone_maximum_radius_mm"] = 4
+            setup["cone_conical_length_mm"] = 4
+            setup["cut_x_interval_mm"] = [5, 15]
+            request = normalize_bytes(source.read_bytes(), setup)
+            self.assertEqual(request, tapered_vcarve.TaperedRequest(
+                target_spine=(3, 17, 2, 0.8, 2.4),
+                stock_bounds=(-2, -2, 20, 6), stock_bottom=-3,
+                tool=request.tool, cut_interval=(5, 15)))
+            evidence = plan_native_input(source.read_bytes(), setup)
+            self.assertEqual(evidence["status"], "straight_variable_v_plan_verified")
+            self.assertEqual(evidence["output_state"], "planning_only")
+            self.assertEqual(evidence["cone_radius_mm"], 4)
+            self.assertGreater(evidence["section_rest_mm2"]["depth_0"], 0)
+            self.assertNotEqual(evidence["plan_fingerprint"],
+                                tapered_vcarve.generate().fingerprint)
+            with self.assertRaisesRegex(ValueError, "planning-only"):
+                build_native_workflow(directory / "carrier", source_path=source,
+                                      setup=setup)
+            self.assertFalse((directory / "carrier").exists())
+            for name, build in (("literal", build_variable_carrier),
+                                ("preview", build_engrave_candidate)):
+                with self.subTest(name=name), self.assertRaisesRegex(
+                        ValueError, "planning-only"):
+                    build(directory / name, native_source_bytes=source.read_bytes(),
+                          native_setup=setup)
+                self.assertFalse((directory / name).exists())
+            with self.assertRaisesRegex(ValueError, "unsupported direct V plan"):
+                build_program(directory / "direct", source_path=source, setup=setup)
+            self.assertFalse((directory / "direct").exists())
+
+            wrong = dict(setup, cone_maximum_radius_mm=3)
+            with self.assertRaises(ValueError):
+                normalize_bytes(source.read_bytes(), wrong)
+            wrong = dict(setup, cut_x_interval_mm=[3, 15])
+            with self.assertRaises(ValueError):
+                normalize_bytes(source.read_bytes(), wrong)
 
 
 if __name__ == "__main__":

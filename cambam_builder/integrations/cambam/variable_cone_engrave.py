@@ -47,15 +47,17 @@ def _check_candidate(path, plan):
 
 def build_engrave_candidate(directory, *, native_source_bytes=None, native_setup=None):
     """Create a separate finish guide and active generated path; pin exact bytes."""
-    directory = Path(directory)
-    if directory.exists() and any(directory.iterdir()):
-        raise ValueError("XYZ Engrave output directory must be new or empty")
-    directory.mkdir(parents=True, exist_ok=True)
     if native_source_bytes is not None:
         from .native_variable_v import normalize_bytes
         request = normalize_bytes(native_source_bytes, native_setup)
     else:
         request = tapered_vcarve.standalone_request()
+    if request != tapered_vcarve.standalone_request():
+        raise ValueError("edited V inputs are planning-only; preview carrier requires the accepted example")
+    directory = Path(directory)
+    if directory.exists() and any(directory.iterdir()):
+        raise ValueError("XYZ Engrave output directory must be new or empty")
+    directory.mkdir(parents=True, exist_ok=True)
     plan = tapered_vcarve.generate(request)
     trace = _trace(plan)
     replay.replay(trace, expected_source=plan.fingerprint)

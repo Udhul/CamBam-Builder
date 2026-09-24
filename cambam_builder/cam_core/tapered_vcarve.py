@@ -1,13 +1,9 @@
-"""One bounded variable-depth V groove and its independent section reference.
-
-The finish target is the swept envelope of a 90-degree pointed cone along a
-12 mm center spine whose tip depth rises linearly from 1 to 2.5 mm. The generated
-cut covers only x=2..10, so both finite ends retain measurable target stock.
-"""
+"""Straight, increasing-depth pointed-cone grooves and section references."""
 
 from dataclasses import dataclass, field, replace
 import hashlib
 import math
+from numbers import Real
 
 from . import replay
 from .vcarve import Motion, PointedCone
@@ -37,6 +33,35 @@ def standalone_request():
     return TaperedRequest()
 
 
+def _numbers(values, size, label):
+    if (type(values) not in (tuple, list) or len(values) != size or
+            any(isinstance(value, bool) or not isinstance(value, Real) or
+                not math.isfinite(float(value)) for value in values)):
+        raise ValueError(f"{label} requires {size} finite numbers")
+    return tuple(float(value) for value in values)
+
+
+def _validated_request(request):
+    if type(request) is not TaperedRequest or type(request.tool) is not PointedCone:
+        raise ValueError("unsupported variable-depth V request/tool")
+    spine = _numbers(request.target_spine, 5, "target spine")
+    bounds = _numbers(request.stock_bounds, 4, "stock bounds")
+    interval = _numbers(request.cut_interval, 2, "cut interval")
+    bottom, safe = _numbers((request.stock_bottom, request.safe_z), 2,
+                            "stock bottom and safe Z")
+    x0, x1, y, d0, d1 = spine
+    xmin, ymin, xmax, ymax = bounds
+    if (not x0 < x1 or not 0 < d0 < d1 or
+            not 0 < (d1 - d0) / (x1 - x0) < 1 or
+            d1 > request.tool.conical_length or bottom > -d1 or safe <= 0 or
+            not xmin < xmax or not ymin < ymax or
+            x0 - d0 < xmin or x1 + d1 > xmax or
+            y - d1 < ymin or y + d1 > ymax or
+            not x0 < interval[0] < interval[1] < x1):
+        raise ValueError("variable-depth V target, stock, tool or cut interval outside bounded family")
+    return TaperedRequest(spine, bounds, bottom, request.tool, interval, safe)
+
+
 def _depth_at(spine, x):
     x0, x1, _, d0, d1 = spine
     return d0 + (d1 - d0) * (x - x0) / (x1 - x0)
@@ -58,27 +83,30 @@ class TaperedPlan:
     tool: PointedCone
     motions: tuple
     safe_z: float = 1.0
+    stock_bounds: tuple = STOCK_BOUNDS
+    stock_bottom: float = -3.0
 
     @property
     def fingerprint(self):
-        return hashlib.sha256(repr((self.target_spine, self.cut_spine,
-                                    self.tool, self.motions, self.safe_z))
+        values = (self.target_spine, self.cut_spine, self.tool,
+                  self.motions, self.safe_z)
+        # Preserve the accepted example's fingerprint and pinned output audits.
+        if (self.stock_bounds, self.stock_bottom) != (STOCK_BOUNDS, -3.0):
+            values += (self.stock_bounds, self.stock_bottom)
+        return hashlib.sha256(repr(values)
                               .encode("utf-8")).hexdigest()
 
 
 def generate(request=None):
     request = standalone_request() if request is None else request
-    if type(request) is not TaperedRequest or request != standalone_request():
-        raise ValueError("unsupported bounded variable-depth V request")
-    # Equal numeric values can differ in repr (2 versus 2.0). Use the
-    # canonical bounded request so fingerprints are stable across XML input.
-    request = standalone_request()
+    request = _validated_request(request)
     x0, x1 = request.cut_interval
     y = request.target_spine[2]
     cut = (x0, x1, y, _depth_at(request.target_spine, x0),
            _depth_at(request.target_spine, x1))
     plan = TaperedPlan(request.target_spine, cut, request.tool,
-                       _motions(cut, request.safe_z), request.safe_z)
+                       _motions(cut, request.safe_z), request.safe_z,
+                       request.stock_bounds, request.stock_bottom)
     verify(plan)
     return plan
 
@@ -87,7 +115,7 @@ def trace_for(plan):
     tool = replay.ToolProfile("tapered-cone", "pointed_cone",
                               plan.tool.maximum_radius,
                               plan.tool.conical_length)
-    target = replay.Target("tapered-groove", STOCK_BOUNDS,
+    target = replay.Target("tapered-groove", plan.stock_bounds,
                            plan.target_spine[4], cone_spine=plan.target_spine)
     op = replay.Operation("variable-v", tool, target)
     first = plan.motions[0].start
@@ -131,19 +159,22 @@ def output_trace(plan):
 
 
 def verify(plan):
-    if (type(plan) is not TaperedPlan or
-            type(plan.tool) is not PointedCone or
-            plan.target_spine != TARGET_SPINE or
-            len(plan.cut_spine) != 5 or
-            plan.motions != _motions(plan.cut_spine, plan.safe_z) or
-            plan.safe_z <= 0):
+    if type(plan) is not TaperedPlan:
+        raise ValueError("invalid variable-depth plan")
+    request = _validated_request(TaperedRequest(
+        plan.target_spine, plan.stock_bounds, plan.stock_bottom, plan.tool,
+        (plan.cut_spine[0], plan.cut_spine[1]) if
+        type(plan.cut_spine) is tuple and len(plan.cut_spine) == 5 else (),
+        plan.safe_z))
+    if (plan.target_spine != request.target_spine or
+            plan.stock_bounds != request.stock_bounds or
+            plan.stock_bottom != request.stock_bottom or
+            plan.motions != _motions(plan.cut_spine, plan.safe_z)):
         raise ValueError("invalid bounded variable-depth plan")
-    x0, x1, y, d0, d1 = plan.cut_spine
-    tx0, tx1, ty, _, _ = plan.target_spine
-    if (not tx0 <= x0 < x1 <= tx1 or y != ty or
-            d0 != _depth_at(plan.target_spine, x0) or
-            d1 != _depth_at(plan.target_spine, x1) or
-            d1 > plan.tool.conical_length):
+    if plan.cut_spine != (request.cut_interval[0], request.cut_interval[1],
+                               request.target_spine[2],
+                               _depth_at(request.target_spine, request.cut_interval[0]),
+                               _depth_at(request.target_spine, request.cut_interval[1])):
         raise ValueError("variable-depth cut crosses target or tool limit")
     stock = replay.replay(trace_for(plan), expected_source=plan.fingerprint)
     return TaperedResult(plan, stock)
@@ -155,14 +186,18 @@ def section_area(spine, depth):
     Its boundary has two common-tangent sides and two endpoint circle arcs.
     At depths beyond the first tip, the active spine starts where radius is zero.
     """
-    if len(spine) != 5 or not 0 <= depth:
+    spine = _numbers(spine, 5, "section spine")
+    if (isinstance(depth, bool) or not isinstance(depth, Real) or
+            not math.isfinite(float(depth)) or not 0 <= depth):
         raise ValueError("unsupported section depth")
     x0, x1, _, d0, d1 = spine
-    if depth >= d1:
-        return 0.0
+    if not x0 < x1 or not 0 < d0 < d1:
+        raise ValueError("unsupported tapered spine")
     slope = (d1 - d0) / (x1 - x0)
     if not 0 < slope < 1:
         raise ValueError("unsupported tapered spine")
+    if depth >= d1:
+        return 0.0
     r0, r1 = max(0.0, d0 - depth), d1 - depth
     length = (r1 - r0) / slope
     cosine = math.sqrt(1 - slope * slope)

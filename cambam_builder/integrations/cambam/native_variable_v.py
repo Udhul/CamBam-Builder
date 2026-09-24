@@ -1,6 +1,8 @@
-"""Strict native input for the one accepted bounded variable-depth V request."""
+"""Strict native input for straight variable-depth V planning."""
 
 import json
+import math
+from numbers import Real
 from pathlib import Path
 
 from ... import CBProject
@@ -63,9 +65,20 @@ def synthetic_source():
 
 
 def normalize(project, setup, *, allow_attachments=False):
-    """Return only the detached bounded request; reject unsupported edits."""
-    if setup != synthetic_setup():
+    """Normalize an edited finish spine, stock and pointed tool for planning."""
+    fixed = synthetic_setup()
+    varying = {"cone_maximum_radius_mm", "cone_conical_length_mm",
+               "cut_x_interval_mm"}
+    if (type(setup) is not dict or set(setup) != set(fixed) or
+            any(setup[key] != value for key, value in fixed.items()
+                if key not in varying)):
         raise ValueError("unsupported or incomplete native V setup/tool components")
+    cone_values = (setup["cone_maximum_radius_mm"],
+                   setup["cone_conical_length_mm"])
+    if any(isinstance(value, bool) or not isinstance(value, Real) or
+           not math.isfinite(float(value)) for value in cone_values):
+        raise ValueError("invalid native V cone dimensions")
+    tool = PointedCone(*cone_values)
     parts = project.list_parts()
     shapes = project.list_primitives()
     mops = project.list_mops()
@@ -81,15 +94,14 @@ def normalize(project, setup, *, allow_attachments=False):
         raise ValueError("native V finish spine or source Engrave missing")
     guide, mop = guides[0], source_mops[0]
     if (not part.enabled or part.nesting_method != "None" or
-            tuple(part.machining_origin) != (0, 0) or
-            part.stock_drawing_origin != (-2, -2, 0) or
-            (part.stock_width, part.stock_height, part.stock_thickness) !=
-            (18, 8, 3)):
+            part.stock_surface != 0 or
+            part.stock_drawing_origin[2] != 0):
         raise ValueError("unsupported native V Part stock or placement")
-    if (type(guide) is not Pline or guide.user_identifier != "tapered-target-spine" or
-            guide.closed or len(guide.vertices) != 2 or
-            tuple(guide.get_absolute_coordinates_xyz()) !=
-            ((0, 2, -1, 0), (12, 2, -2.5, 0))):
+    if (type(guide) is not Pline or guide.closed or len(guide.vertices) != 2):
+        raise ValueError("unsupported native V finish spine or transform")
+    vertices = tuple(guide.get_absolute_coordinates_xyz())
+    if (len(vertices) != 2 or any(vertex[3] != 0 for vertex in vertices) or
+            vertices[0][1] != vertices[1][1]):
         raise ValueError("unsupported native V finish spine or transform")
     if (type(mop) is not EngraveMop or mop.enabled or
             mop not in project.get_mops_in_part(part) or
@@ -105,22 +117,46 @@ def normalize(project, setup, *, allow_attachments=False):
     for field, value in SOURCE_FIELDS.items():
         if getattr(mop, "_xml_parameter_states", {}).get(field) != "Value":
             raise ValueError(f"native V {field} is inherited or absent")
+        if field == "tool_diameter":
+            value = 2 * tool.maximum_radius
         if getattr(mop, field) != value:
             raise ValueError(f"unsupported native V {field} change")
+    stock_x, stock_y, _ = part.stock_drawing_origin
     request = tapered_vcarve.TaperedRequest(
-        target_spine=(0, 12, 2, 1, 2.5),
-        stock_bounds=(-2, -2, 16, 6), stock_bottom=-3,
-        tool=PointedCone(setup["cone_maximum_radius_mm"],
-                         setup["cone_conical_length_mm"]),
-        cut_interval=tuple(setup["cut_x_interval_mm"]),
+        target_spine=(vertices[0][0], vertices[1][0], vertices[0][1],
+                      -vertices[0][2], -vertices[1][2]),
+        stock_bounds=(stock_x, stock_y, stock_x + part.stock_width,
+                      stock_y + part.stock_height),
+        stock_bottom=-part.stock_thickness,
+        tool=tool,
+        cut_interval=setup["cut_x_interval_mm"],
         safe_z=setup["safe_z_mm"])
-    if request != tapered_vcarve.standalone_request():
-        raise ValueError("unsupported native V target or tool request")
-    return request
+    return tapered_vcarve._validated_request(request)
 
 
 def normalize_bytes(data, setup):
     return normalize(read_cambam_bytes(data, source_name="native V input"), setup)
+
+
+def plan_native_input(data, setup):
+    """Plan and verify native source bytes without creating output candidates."""
+    request = normalize_bytes(data, setup)
+    plan = tapered_vcarve.generate(request)
+    result = tapered_vcarve.verify(plan)
+    depths = (0, request.target_spine[3],
+              (request.target_spine[3] + request.target_spine[4]) / 2,
+              request.target_spine[4])
+    return {"status": "straight_variable_v_plan_verified",
+            "plan_fingerprint": plan.fingerprint,
+            "target_spine_x0_x1_y_d0_d1_mm": plan.target_spine,
+            "cut_spine_x0_x1_y_d0_d1_mm": plan.cut_spine,
+            "stock_bounds_mm": plan.stock_bounds,
+            "stock_bottom_mm": plan.stock_bottom,
+            "cone_radius_mm": plan.tool.maximum_radius,
+            "section_rest_mm2": {f"depth_{depth:g}": result.residual_area(depth)
+                                 for depth in depths},
+            "completion": result.completion,
+            "output_state": "planning_only"}
 
 
 def build_native_workflow(directory, *, source_path=None, setup=None):
@@ -128,18 +164,23 @@ def build_native_workflow(directory, *, source_path=None, setup=None):
     from .variable_cone_engrave import build_engrave_candidate
     from .variable_cone_script import build_variable_carrier
 
+    setup = synthetic_setup() if setup is None else setup
+    if source_path is None and setup != synthetic_setup():
+        raise ValueError("standalone V carriers require the accepted synthetic setup")
+    request = (tapered_vcarve.standalone_request() if source_path is None else
+               normalize_bytes(Path(source_path).read_bytes(), setup))
+    if request != tapered_vcarve.standalone_request():
+        raise ValueError("edited V inputs are planning-only; output carriers require the accepted example")
     directory = Path(directory)
     if directory.exists() and any(directory.iterdir()):
         raise ValueError("native V output directory must be new or empty")
     directory.mkdir(parents=True, exist_ok=True)
-    setup = synthetic_setup() if setup is None else setup
     source = directory / "source.cb"
     if source_path is None:
         synthetic_source().save(str(source))
     else:
         source.write_bytes(Path(source_path).read_bytes())
     data = source.read_bytes()
-    request = normalize_bytes(data, setup)
     plan = tapered_vcarve.generate(request)
     (directory / "setup.json").write_text(json.dumps(setup, indent=2) + "\n",
                                           encoding="utf-8")
@@ -167,10 +208,18 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Prepare bounded native V input")
-    parser.add_argument("output", help="new output directory")
+    parser.add_argument("output", help="new output directory, or source.cb with --plan-only")
     parser.add_argument("source", nargs="?", help="existing native source.cb")
     parser.add_argument("--setup", help="explicit setup.json for existing source")
+    parser.add_argument("--plan-only", action="store_true",
+                        help="verify edited source without creating carriers")
     args = parser.parse_args()
     setup = json.loads(Path(args.setup).read_text(encoding="utf-8")) if args.setup else None
-    print(json.dumps(build_native_workflow(args.output, source_path=args.source,
-                                           setup=setup), indent=2))
+    if args.plan_only:
+        if args.source or setup is None:
+            parser.error("--plan-only requires source.cb as the first path and --setup")
+        result = plan_native_input(Path(args.output).read_bytes(), setup)
+    else:
+        result = build_native_workflow(args.output, source_path=args.source,
+                                       setup=setup)
+    print(json.dumps(result, indent=2))

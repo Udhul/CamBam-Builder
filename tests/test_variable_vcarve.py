@@ -5,7 +5,7 @@ import math
 import unittest
 
 from cambam_builder.cam_core import replay, tapered_vcarve as groove
-from cambam_builder.cam_core.vcarve import Motion
+from cambam_builder.cam_core.vcarve import Motion, PointedCone
 
 
 def _independent_row_area(spine, depth, rows=8000):
@@ -55,6 +55,60 @@ class VariableVCarveTests(unittest.TestCase):
         self.assertTrue(result.residual_contains(12, 2, 1))
         self.assertFalse(result.residual_contains(-1.1, 2, 0))
         self.assertFalse(result.residual_contains(-1.0001, 2, 0))
+
+    def test_edited_straight_groove_and_tool_have_independent_section_oracle(self):
+        request = groove.TaperedRequest(
+            target_spine=(3, 17, 2, 0.8, 2.4),
+            stock_bounds=(-2, -2, 20, 6), stock_bottom=-3,
+            tool=PointedCone(4, 4), cut_interval=(5, 15))
+        plan = groove.generate(request)
+        result = groove.verify(plan)
+        self.assertEqual(plan.cut_spine[:3], (5.0, 15.0, 2.0))
+        self.assertAlmostEqual(plan.cut_spine[3], 0.8 + 1.6 * 2 / 14)
+        self.assertAlmostEqual(plan.cut_spine[4], 0.8 + 1.6 * 12 / 14)
+        self.assertNotEqual(plan.fingerprint, groove.generate().fingerprint)
+        wider_stock = groove.generate(replace(
+            request, stock_bounds=(-2, -2, 21, 6)))
+        self.assertNotEqual(plan.fingerprint, wider_stock.fingerprint)
+        self.assertEqual(result.stock.prefixes, (("variable-v", 2),))
+        for depth in (0, 0.8, 1.2, 2, 2.4):
+            reference = (_independent_row_area(plan.target_spine, depth) -
+                         _independent_row_area(plan.cut_spine, depth))
+            self.assertAlmostEqual(result.residual_area(depth), reference,
+                                   delta=0.0005)
+        self.assertTrue(result.residual_contains(3, 2, 0))
+        self.assertFalse(result.residual_contains(10, 2, 1))
+        self.assertTrue(result.residual_contains(17, 2, 1))
+        self.assertFalse(result.residual_contains(0, 2, 0))
+
+    def test_family_rejects_invalid_tool_stock_and_spines(self):
+        base = groove.TaperedRequest(
+            target_spine=(3, 17, 2, 0.8, 2.4),
+            stock_bounds=(-2, -2, 20, 6), stock_bottom=-3,
+            tool=PointedCone(4, 4), cut_interval=(5, 15))
+        invalid = (
+            replace(base, target_spine=(3, 17, 2, 0.8, 0.8)),
+            replace(base, target_spine=(3, 4, 2, 0.8, 2.4)),
+            replace(base, target_spine=(3, 17, 2, float("nan"), 2.4)),
+            replace(base, tool=PointedCone(2, 2)),
+            replace(base, stock_bounds=(-2, -2, 18, 6)),
+            replace(base, stock_bottom=-2),
+            replace(base, cut_interval=(3, 15)),
+            replace(base, cut_interval=(5, 17)),
+            replace(base, safe_z=0),
+        )
+        for request in invalid:
+            with self.subTest(request=request), self.assertRaises(ValueError):
+                groove.generate(request)
+
+        plan = groove.generate(base)
+        trace = groove.trace_for(plan)
+        items = list(trace.items)
+        items[3] = replace(items[3], end=(15, 2, -2.6))
+        items[4] = replace(items[4], start=(15, 2, -2.6))
+        with self.assertRaisesRegex(ValueError, "crosses tapered cone target"):
+            replay.replay(replace(trace, items=tuple(items)),
+                          expected_source=plan.fingerprint)
 
     def test_stale_and_overdeep_cut_are_rejected(self):
         plan = groove.generate()

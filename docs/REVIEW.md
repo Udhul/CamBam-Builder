@@ -5290,3 +5290,46 @@ core. Package `compileall`, import/construct smoke, `git diff --check` and the
 untracked-text trailing-whitespace scan passed. No MCP tests or dependencies
 were used for this framework increment. Manual validation adds no evidence to
 the direct reference gate; a chosen real controller requires a separate test.
+
+## Straight variable-depth V planning family - 2026-09-24
+
+The detached request now accepts finite, increasing-X straight target spines,
+90-degree pointed cones and strict interior cut intervals inside rectangular
+stock. The cut follows the target's linear depth law. The original 12 mm/6 mm
+case remains valid, with unchanged plan fingerprint
+`4e0c0f4249c94da0f51a8fb4b38f9da718bb60fe12134fb391beb235c1fd0f46`
+and motion fingerprint
+`53867dca493fbc394dbaa3c49feea92f8527d1ed5146cc9dc8dd62aa2adf4244`.
+An edited 14 mm spine `(3,17,2,0.8,2.4)`, 8 mm cone, 22 x 8 x 3 mm stock
+and cut interval `[5,15]` produces cut endpoint depths
+`1.0285714285714287/2.1714285714285717` mm. Its fingerprint is
+`b5556805c024515bcce95f1bada7a53d3b71fe88134956ab165a49de524923a3`.
+Independent midpoint-row integration agrees with analytic rest at depths
+0/0.8/1.2/2/2.4 mm within 0.0005 mm2; analytic rest is respectively
+13.86847630534713 / 7.426634715521917 / 5.150877541415101 /
+1.3554940898460783 / 0 mm2. Shared replay establishes one ordered
+`variable-v` prefix with entry and sloped cut sweeps, all-height target
+containment and safe retract for both members. Invalid slopes, insufficient
+stock/tool reach, out-of-range intervals, nonfinite values and a deeper
+tampered cut are rejected.
+
+An edited strict-imported `.cb` with matching VCutter diameter normalizes to
+that same request and reports a planning-only result. The original
+CustomScript/Engrave/direct output adapters still accept their posted example;
+the edited input is rejected before any candidate directory is created. This
+keeps the old output evidence scoped to the exact source and motion it proved.
+The edited family has no CamBam post or physical acceptance. Manual validation
+adds no evidence to this detached planning and input-normalization increment.
+
+Final checks: `.venv/Scripts/python.exe -m unittest tests.test_variable_vcarve
+tests.test_native_variable_v tests.test_direct_variable_v
+tests.test_variable_cone_script tests.test_variable_cone_engrave
+tests.test_cone_script tests.test_vcarve_slot tests.test_mixed_replay -q`
+passed 24 tests. Package `compileall -q` and import/construct smoke passed.
+`git diff --check` passed; its only output was Git's LF/CRLF conversion
+warning. The `--plan-only` CLI also returned
+`straight_variable_v_plan_verified` and the unchanged original fingerprint
+for the existing accepted native source/setup without creating files. Work is
+uncommitted. Reopen output acceptance for an edited member
+only after its generated file is independently parsed and replayed; an actual
+CamBam candidate needs a fresh whole-post audit.

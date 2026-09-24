@@ -717,8 +717,11 @@ post passed its own exact nine-item emitted-motion and residual audit. The
 shared core now supplies the same resolved process trace to a direct
 reference-dialect writer, which reparses and replays its output and matches
 the accepted CamBam post semantically. This is not yet a controller-specific
-or production post; broadening the detached straight-groove request is the
-next core dependency before widening output adapters.
+or production post. The detached straight-groove request now accepts a
+[validated planning family](structure_spec.md#straight-variable-depth-v-planning-family),
+including supported native geometry, stock and pointed-tool edits. Its output
+adapters still accept only the posted example; priority and reopening criteria
+remain in [PROGRESS](PROGRESS.md#active-work-and-next-priority).
 Reopen general topology, positive-error completion, low links, optimizers or finer
 area infrastructure only when an RC01 gate or a named next consumer requires it.
 

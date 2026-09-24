@@ -322,14 +322,31 @@ profile, production setup or physical machining is accepted. See the
 [runbook](DEVELOPMENT.md#bounded-direct-variable-depth-v-reference-output) and
 [evidence](REVIEW.md#bounded-direct-v-reference-output---2026-09-24).
 
-**Next priority:** broaden the detached V request from one fixed synthetic
-geometry to a validated family of straight variable-depth grooves, with
-independent all-height containment and section-rest checks for at least two
-different target/tool inputs. Then normalize supported native geometry/tool edits
-into that family. The current exact-case restriction rejects every real size or
-depth edit, so this core capability matters more now than another carrier or
-unchanged post. Defer curved topology, optimizer and controller-specific output
-until the bounded family and an identified consumer justify them.
+**2026-09-24 straight variable-depth V planning family (backlog 6).** The
+detached request now accepts finite increasing-X, constant-Y target spines,
+rectangular stock, 90-degree pointed cones and strict interior cut intervals
+within the [bounded family](structure_spec.md#straight-variable-depth-v-planning-family).
+Generation derives the cut depth from the original target and shared replay
+checks all-height cone containment and ordered access. The accepted example
+and an edited 14 mm spine with an 8 mm cone both pass independent midpoint-row
+section-rest references at five depths. Edited native XYZ spine, Part stock,
+VCutter diameter and explicit cone/cut setup normalize to the same verified
+detached plan. A `--plan-only` route exposes that result without creating
+unverified output candidates. The original accepted plan and motion hashes
+remain unchanged; existing output adapters still accept only that example.
+This completes planning and native input normalization, not output or physical
+acceptance for edited cases. See the [runbook](DEVELOPMENT.md#bounded-native-v-input-normalization)
+and [evidence](REVIEW.md#straight-variable-depth-v-planning-family---2026-09-24).
+
+**Next priority:** carry one edited straight-groove request through the
+headless reference writer, reparse its coordinates and replay them against
+the original finish target. The new family can plan real size/depth/tool edits
+but the direct writer still rejects them; this is now the shortest route from
+verified planning to usable headless reference output. Keep the CamBam
+CustomScript and preview candidates on their accepted case until a specific
+edited output consumer and fresh whole-post audit justify broadening them.
+Curved topology, optimizer and controller-specific output remain deferred
+until a named consumer and setup justify their separate proof costs.
 
 The [clarified output direction](REST_MACHINING_PLAN.md#programmatic-execution-requirement)
 keeps original finish-target geometry separate from derived path Plines. The
@@ -1349,8 +1366,11 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    request and keeps source, preview and explicit candidates separate. Its
    own CamBam-produced explicit post passed all nine items and the original
    residual replay. A separate headless reference G-code file now parses and
-   replays to the same semantic sequence and partial rest. A controller-specific
-   direct post remains future work; N remains blocked on its known role controls.
+   replays to the same semantic sequence and partial rest. A straight
+   variable-depth family and edited native input normalization now support
+   planning with other dimensions and pointed tools, while output adapters
+   remain bound to the posted member. A controller-specific direct post remains
+   future work; N remains blocked on its known role controls.
 
    **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
    owns native/extended/core naming and migration criteria. The current RC01

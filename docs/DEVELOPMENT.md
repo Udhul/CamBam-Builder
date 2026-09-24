@@ -452,16 +452,25 @@ root, create a new ignored directory with:
 & $ProjectPython -m unittest tests.test_native_variable_v tests.test_variable_vcarve tests.test_variable_cone_script tests.test_variable_cone_engrave -v
 ```
 
-To normalize an edited native file, pass its path and its explicit setup:
+To verify an edited native spine, stock or pointed tool for detached planning,
+pass the source and its explicit setup without creating output candidates:
 
 ```powershell
-& $ProjectPython -m cambam_builder.integrations.cambam.native_variable_v output/native-variable-v-EDITED path/to/source.cb --setup path/to/setup.json
+& $ProjectPython -m cambam_builder.integrations.cambam.native_variable_v --plan-only path/to/source.cb --setup path/to/setup.json
 ```
 
-The builder strict-imports the native `.cb`, rejects unsupported geometry,
-stock, inherited/changed MOP fields and setup values, then compares the detached
-request and plan fingerprint with standalone generation. It keeps the source
-bytes and makes separate `preview/V-variable-engrave.cb` and
+The planner strict-imports the native `.cb` and returns the canonical target,
+cut, stock, tool, plan fingerprint and section rest. It accepts an increasing-X,
+constant-Y, unbulged two-point XYZ target inside Part stock, a 90-degree cone
+whose explicit setup radius/length match the source VCutter diameter, and a
+strict interior cut interval. The fixed process/setup fields, disabled source
+Engrave and explicit Value states remain required. Unsupported edits fail.
+The result is planning evidence only; no CamBam post or physical setup is
+accepted for the changed case. The detached family and its limits are in the
+[specification](structure_spec.md#straight-variable-depth-v-planning-family).
+
+The no-argument example builder still requires the original request. It keeps
+the source bytes and makes separate `preview/V-variable-engrave.cb` and
 `explicit/V-variable.cb`. The preview's enabled Engrave targets only the
 generated sloped cut Pline; the explicit file's enabled Drill/CustomScript
 targets only a Point anchor. The original finish spine and disabled source
@@ -481,8 +490,9 @@ The canonical plan fingerprint is
 `4e0c0f4249c94da0f51a8fb4b38f9da718bb60fe12134fb391beb235c1fd0f46`;
 the expected motion fingerprint is
 `53867dca493fbc394dbaa3c49feea92f8527d1ed5146cc9dc8dd62aa2adf4244`.
-Automated checks establish the input normalization and file separation. No
-manual CamBam action adds evidence to that input claim.
+Automated checks establish edited input normalization, independent section
+rest and original-case file separation. Manual CamBam action adds no evidence
+to the detached planning claim.
 
 For the separate **native-derived emitted-output** gate, open
 `explicit/V-variable.cb` in CamBam Plus 1.0 with **Default** postprocessor and

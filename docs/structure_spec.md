@@ -539,21 +539,49 @@ authority for the bounded synthetic groove.
 
 `cam_core.tapered_vcarve.TaperedRequest` is the detached input shared by
 standalone generation and `integrations.cambam.native_variable_v`. The native
-adapter strict-imports one millimetre `.cb` with the original two-vertex XYZ
-finish spine, one 18 x 8 x 3 mm Part at drawing origin (-2,-2,0), and one
-**disabled** Engrave targeting that spine. The native MOP records explicit T3,
-6 mm VCutter, zero depth offset/clearance and test process fields; it is source
+adapter strict-imports one millimetre `.cb` with an open, unbulged two-vertex
+world XYZ finish spine, one Part with stock surface Z=0, and one **disabled**
+Engrave targeting that spine. The native MOP records explicit T3, a VCutter
+diameter equal to twice the supplemental cone radius, zero depth
+offset/clearance and fixed test process fields; it is source
 intent, not executable V-carve evidence. `setup.json` supplies the pointed-cone
 radius/axial length, tip datum, cut interval, +1 safe plane, approach/retract
 feeds and setup tip position absent from native geometry. Normalization checks
 the world XYZ shape, stock placement, source selection, enabled state and every
-modeled Engrave parameter as an explicit Value; inherited, missing or changed
-values fail closed. The current bounded case accepts the exact standalone
-request, with cosmetic MOP display-name changes allowed. Equal numeric values
-are canonicalized before plan fingerprinting, so XML `2` and Python `2.0`
-produce identical plans. Broader target/tool edits require a new core contract.
+modeled Engrave parameter as an explicit Value; inherited, missing or unsupported
+changes fail closed. Supported spine/stock/cone/cut-interval edits normalize to
+the same family as detached requests. Equal numeric values are canonicalized
+before plan fingerprinting, so XML `2` and Python `2.0` produce identical plans.
 
-`build_native_workflow` preserves the original source bytes and creates two
+#### Straight variable-depth V planning family
+
+`generate(TaperedRequest(...))` accepts finite millimetre values for an
+increasing-X, constant-Y target spine `(x0,x1,y,d0,d1)` with `0 < d0 < d1`
+and `0 < (d1-d0)/(x1-x0) < 1`. Its target is the exact union of ideal 90-degree
+cone sections centered along that spine. The pointed cone has equal positive
+maximum radius and conical length, at least `d1`. The rectangular stock must
+contain the whole target envelope, and its bottom must be at or below `-d1`.
+The requested cut interval is a strict interior subinterval of the target
+spine. Its endpoint depths are derived from the target's linear depth law;
+plunge and retract occur at those endpoints and `safe_z > 0`. Other slope
+directions, bulges, curved paths, asymmetric cones and intervals touching the
+target ends are outside this family.
+
+`verify` reconstructs the canonical cut and ordered motion, then uses shared
+replay to check tool length, access and cone containment across every stock
+height. The containment proof follows from the cut being an exact subspine of
+the original cone envelope; endpoint depth inequalities bound the linear
+profile throughout the cut. The analytic tangent/arc section formula supplies
+target-minus-cut rest, with independent midpoint-row integration for the
+original and an edited target/tool input. The original plan and motion
+fingerprints remain unchanged. Edited stock bounds/bottom participate in the
+plan fingerprint. These are ideal floating-point geometry checks without
+physical error or interval arithmetic. `plan_native_input` exposes a planning
+result from edited `.cb` source bytes and explicit setup without producing a
+CamBam carrier. The existing preview, literal and direct output adapters remain
+restricted to the previously accepted synthetic request.
+
+For the original synthetic request, `build_native_workflow` preserves the source bytes and creates two
 separate derived `.cb` files. The preview has a generated XYZ cut Pline and an
 enabled Engrave targeting only that cut. The explicit file has a Point anchor
 and enabled Drill/CustomScript targeting only the anchor. Each retains the
