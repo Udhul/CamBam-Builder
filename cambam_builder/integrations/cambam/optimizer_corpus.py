@@ -12,10 +12,10 @@ import re
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
-from ... import CBProject
-from ...cambam_reader import read_cambam_bytes
-from ...cad_entities import Pline
-from ...cam_entities import MOP_XML_FIELD_PATHS
+from ...native.project import CamBamProject as CBProject
+from ...native.reader import read_cambam_bytes
+from ...native.cad import Pline
+from ...native.cam import MOP_XML_FIELD_PATHS
 
 
 MODES = {"legacy": "Standard", "new": "Experimental"}

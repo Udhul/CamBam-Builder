@@ -10,7 +10,7 @@ import math
 from pathlib import Path
 
 from ...cam_core.rc01 import Job, Program, verify
-from ...cambam_reader import read_cambam_bytes
+from ...native.reader import read_cambam_bytes
 from .rc01_adapter import normalize
 from .rc01_native_post import _area_by_depth, _motion_findings, audit_native_posts
 from .rc01_post import read_default_post

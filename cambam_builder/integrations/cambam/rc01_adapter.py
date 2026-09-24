@@ -11,12 +11,12 @@ import json
 import math
 from pathlib import Path
 
-from ... import CBProject
-from ...cad_entities import Pline
-from ...cam_entities import MOP_XML_FIELD_PATHS, PocketMop
+from ...native.project import CamBamProject as CBProject
+from ...native.cad import Pline
+from ...native.cam import MOP_XML_FIELD_PATHS, PocketMop
 from ...cam_core.rc01 import Event, Job, Move, Tool, generate, verify
-from ...cambam_reader import read_cambam_bytes
-from ...region import Region
+from ...native.reader import read_cambam_bytes
+from ...native.region import Region
 from ...stock import SectionRectangle
 
 

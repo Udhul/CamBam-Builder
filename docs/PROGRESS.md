@@ -366,16 +366,31 @@ physical or edited-job acceptance. See the
 [runbook](DEVELOPMENT.md#bounded-direct-rc01-roughingcleanup-reference-output)
 and [evidence](REVIEW.md#bounded-direct-rc01-reference-output---2026-09-24).
 
-**Next priority:** perform the staged native-owner consolidation in
-[backlog 6](#remaining-backlog-in-order) and its
-[migration contract](structure_spec.md#package-organization-decision-and-migration-plan).
-The RC01 CamBam and headless output semantics are now pinned, so moving root
-native project/entity/XML implementations behind compatibility imports can be
-tested without simultaneously diagnosing output roles. Bound the next increment
-to representative Region, MOP identity, target-reference and stock-offset XML
-round trips plus clean-wheel imports. Keep edited RC01 jobs, curved topology,
-optimizer and controller-specific output deferred until a named consumer and
-setup justify their separate proof costs.
+**2026-09-24 native-owner consolidation (backlog 6):** the nine native document,
+entity, transform and XML implementations now have canonical owners under
+`cambam_builder.native`; old root paths re-export the same objects. Runtime
+callers import native owners directly, and the wheel includes the new package.
+The focused two-cycle Region/Pocket identity, target-reference and stock-offset
+regression, varied-order imports, same-code-version snapshot and isolated
+clean-wheel import/XML check pass. The final suite passed 406 tests with one
+Windows symlink-privilege skip. This closes the package boundary needed for
+later native adapters; it does not claim new generated motion or native toolpath
+parity. See the [owner contract](structure_spec.md#package-organization-decision-and-migration-plan)
+and [dated evidence](REVIEW.md#native-owner-consolidation---2026-09-24).
+
+**Next priority:** advance the [backlog 6 rest/V-carve capability](#remaining-backlog-in-order)
+with one bounded, nonrectangular closed-region consumer that uses supplied prior
+motion to identify pure rest, proves safe cutter access against the original
+protected target, and generates a variable-depth pointed-tool cleanup path using
+the shared ordered-motion/replay contract. Define a feasible synthetic case and
+independent numerical reference before implementation; preserve separate native
+source, preview and execution roles. This addresses the gap between the accepted
+rectangular RC01 and straight-groove V family and the intended reusable toolpath
+engine. Stop after one independently checked end-to-end path; widen topology,
+optimize routes or choose a controller only when this consumer exposes a need.
+The detached/policy package move in
+[stage 3](structure_spec.md#package-organization-decision-and-migration-plan)
+waits for a concrete owner boundary from this consumer rather than preceding it.
 
 The [clarified output direction](REST_MACHINING_PLAN.md#programmatic-execution-requirement)
 keeps original finish-target geometry separate from derived path Plines. The
@@ -1405,11 +1420,11 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    N remains blocked on its known role controls.
 
    **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
-   owns native/extended/core naming and migration criteria. The current RC01
-   integration package is the proved bridge. Consolidate root native modules
-   after the RC01 output semantics are settled so import restructuring does not
-   obscure native-motion defects; promote root detached/policy modules only when an
-   output finding or second consumer fixes the shared abstraction boundary.
+   owns native/extended/core naming and migration criteria. The RC01 integration
+   package is the proved bridge; native document owners were consolidated after
+   the output semantics settled. Promote root detached/policy modules only when
+   the next capability consumer fixes the shared abstraction boundary; a package
+   move alone does not close the general rest/V-carve gap.
 
    **Implementation stopping condition:** RC01 passes its independent continuous
    motion, stock, process and residual checks, reports expected finite-tool residual

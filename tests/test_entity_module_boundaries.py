@@ -11,16 +11,17 @@ class EntityModuleBoundaryTests(unittest.TestCase):
     def test_facade_reexports_canonical_owner_classes(self):
         from cambam_builder import cambam_entities as facade
         from cambam_builder import cad_entities, cam_entities, entity_core
+        from cambam_builder.native import cad, cam, core, region as native_region
         from cambam_builder.region import Region
 
         owner_exports = {
-            entity_core: (
+            core: (
                 "Vertex",
                 "BoundingBox",
                 "CamBamEntity",
                 "Primitive",
             ),
-            cad_entities: (
+            cad: (
                 "Layer",
                 "Pline",
                 "Circle",
@@ -29,7 +30,7 @@ class EntityModuleBoundaryTests(unittest.TestCase):
                 "Points",
                 "Text",
             ),
-            cam_entities: (
+            cam: (
                 "Part",
                 "Mop",
                 "ProfileMop",
@@ -42,11 +43,18 @@ class EntityModuleBoundaryTests(unittest.TestCase):
             for name in names:
                 with self.subTest(name=name):
                     self.assertIs(getattr(facade, name), getattr(owner, name))
+                    legacy = {
+                        core: entity_core,
+                        cad: cad_entities,
+                        cam: cam_entities,
+                    }[owner]
+                    self.assertIs(getattr(legacy, name), getattr(owner, name))
                     self.assertEqual(getattr(owner, name).__module__, owner.__name__)
 
         self.assertIs(facade.Region, Region)
-        self.assertIs(Region.__mro__[1], entity_core.Primitive)
-        self.assertEqual(Region.__module__, "cambam_builder.region")
+        self.assertIs(Region, native_region.Region)
+        self.assertIs(Region.__mro__[1], core.Primitive)
+        self.assertEqual(Region.__module__, "cambam_builder.native.region")
 
     def test_owner_and_facade_construction_use_canonical_types(self):
         from cambam_builder import cambam_entities as facade
@@ -70,6 +78,16 @@ class EntityModuleBoundaryTests(unittest.TestCase):
             "cambam_builder.cad_entities",
             "cambam_builder.region",
             "cambam_builder.cam_entities",
+            "cambam_builder.cambam_project",
+            "cambam_builder.cambam_reader",
+            "cambam_builder.cambam_writer",
+            "cambam_builder.native.core",
+            "cambam_builder.native.cad",
+            "cambam_builder.native.region",
+            "cambam_builder.native.cam",
+            "cambam_builder.native.project",
+            "cambam_builder.native.reader",
+            "cambam_builder.native.writer",
         )
         orders = [
             modules,
@@ -86,7 +104,14 @@ class EntityModuleBoundaryTests(unittest.TestCase):
                 "from cambam_builder import cambam_entities as facade",
                 "from cambam_builder.entity_core import Primitive",
                 "from cambam_builder.region import Region",
+                "from cambam_builder.native.core import Primitive as NativePrimitive",
+                "from cambam_builder.native.region import Region as NativeRegion",
+                "from cambam_builder.native.project import CamBamProject as NativeProject",
+                "from cambam_builder import CBProject",
                 "assert facade.Region is Region",
+                "assert Region is NativeRegion",
+                "assert Primitive is NativePrimitive",
+                "assert CBProject is NativeProject",
                 "assert issubclass(Region, Primitive)",
             )
         )

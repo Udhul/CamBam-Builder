@@ -5,12 +5,12 @@ import math
 from numbers import Real
 from pathlib import Path
 
-from ... import CBProject
-from ...cad_entities import Pline
+from ...native.project import CamBamProject as CBProject
+from ...native.cad import Pline
 from ...cam_core import tapered_vcarve
 from ...cam_core.vcarve import PointedCone
-from ...cam_entities import EngraveMop
-from ...cambam_reader import read_cambam_bytes
+from ...native.cam import EngraveMop
+from ...native.reader import read_cambam_bytes
 
 
 SOURCE_FIELDS = {

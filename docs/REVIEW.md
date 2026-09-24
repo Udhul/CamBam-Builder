@@ -5417,3 +5417,56 @@ passed 24 tests. Package/test `compileall -q` and `git diff --check` passed;
 Git printed only working-copy LF/CRLF warnings. The retained edited generator
 and exact original manifest audit both passed. Manual CamBam validation adds
 no evidence to this headless reference output gate.
+
+## Native owner consolidation - 2026-09-24
+
+The backlog 6 native document migration moved project/transfer, core/CAD/Region/
+CAM entities, transformations and XML reader/writer into nine canonical
+`cambam_builder.native` modules. Every old root module path remains a forwarding
+import; the entity facade and `CBProject` resolve to the same canonical objects.
+Runtime MCP and CamBam integration imports now name native owners directly, and
+`pyproject.toml` includes the native package in the wheel. The native package
+does not import detached CAM strategies, output adapters or MCP code. A byte
+comparison with `HEAD` confirmed all 7,199 moved implementation lines were
+identical apart from the required relative import rewrites. The final working
+files also remove 466 bytes of inherited trailing spaces from `project.py` and
+`transformations.py`; no behavior or other text changed.
+
+Permanent regression coverage checks varied clean-process import orders and
+facade/legacy/native class identity, including `Region` inheriting canonical
+`Primitive`. A full-document two-cycle XML check uses a Region with a hole,
+Pocket MOP identity and target reference, plus a nonzero Part-local stock offset
+and independent machining origin. It checks serialized PMin/PMax, reconstructed
+drawing-space stock origin and a same-code-version pickle snapshot. Existing
+Region, MOP, copy/transfer and adapter suites supply wider interchange checks.
+The changed `__module__` and logger namespaces are now asserted against the
+native owners; old pickle migration remains outside the documented snapshot
+contract.
+
+Verification used `.venv/Scripts/python.exe` with the declared MCP and planar
+extras: `unittest discover -s tests -v` passed **406 tests in 214.891 seconds**
+with one existing Windows symlink-privilege skip. Focused pre-final checks passed
+22 Region, 5 MOP context, 16 copy/transfer, 3 import-boundary and 1 new
+migration regression tests; the earlier full run found only stale module/logger
+expectations plus missing optional `anyio`, which were corrected before this
+final run. `compileall -q cambam_builder legacy_cambam_builder tests` and the
+public import/construct smoke passed. `git diff HEAD --check` passed on the
+final working files. The initially staged snapshot failed `git diff --cached
+--check` because new files included the inherited spaces; stage the cleaned
+files before committing. Git's LF/CRLF working-copy warnings are informational.
+
+An isolated Python 3.13 environment installed the locally built wheel and its
+declared NumPy 2.5.3 dependency. From a working directory outside the source
+tree, the smoke check confirmed all nine native and old root module paths came
+from installed `site-packages`, their class identity, distribution metadata,
+legacy package import and a Rect/Profile target plus stock-offset XML cycle.
+Build output, the wheel, isolated environment, migration/check scripts and verbose
+logs remain only under ignored `output/native-owner-20260924-a/` or the ignored
+root `build/`; none is a tracked source candidate. The work remains uncommitted.
+No manual CamBam validation adds evidence to this import/ownership-only change:
+native XML encoding and parsing implementations were moved without semantic edits.
+
+The next capability increment should use the new boundary to prove one
+nonrectangular closed-region rest and variable-depth pointed-tool consumer with
+independent motion/stock acceptance. Keep the detached/policy package move
+deferred until that consumer exposes a specific shared owner boundary.

@@ -19,22 +19,22 @@ are outside that runtime package list.
 
 | Owner | Implemented responsibility | Start here when changing |
 | --- | --- | --- |
-| `cambam_builder/cambam_project.py` | UUID entity registries, identifier lookup, ordered layers/parts/MOPs, relationship updates, transform orchestration and persistence | Public creation/query/mutation APIs and relationship invariants |
-| `cambam_builder/cambam_transfer.py` | Transactional primitive-tree copy/transfer staging, identity mapping, collision validation and relationship publication | Copy/transfer semantics and atomic registry updates; inspect project wrappers and tests |
-| `cambam_builder/entity_core.py` | Shared vertex/bounds/numeric foundations, `CamBamEntity`, and `Primitive`, including local and parent-composed transforms | Identity, base inheritance, shared validation, bounds foundations, or primitive transform context |
-| `cambam_builder/cad_entities.py` | `Layer` plus ordinary Pline/Circle/Rect/Arc/Points/Text geometry and XML behavior | Ordinary CAD fields, geometry, bounds, baking, or entity XML |
-| `cambam_builder/region.py` | Owned Region contours, planar curved topology validation and typed Region XML; depends directly on core and ordinary CAD owners | Region geometry and interchange; project and reader use this owner |
-| `cambam_builder/cam_entities.py` | `Part`, MOP classes, and MOP XML path/encoding policy inventories | Part stock/nesting or MOP parameters and XML policy |
-| `cambam_builder/cambam_entities.py` | Explicit compatibility/discovery facade re-exporting canonical objects from the four entity owners | Preserve public entity imports; implementation modules must import owners directly |
-| `cambam_builder/cad_transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
+| `cambam_builder/native/project.py` | UUID entity registries, identifier lookup, ordered layers/parts/MOPs, relationship updates, transform orchestration and persistence | Public creation/query/mutation APIs and relationship invariants |
+| `cambam_builder/native/transfer.py` | Transactional primitive-tree copy/transfer staging, identity mapping, collision validation and relationship publication | Copy/transfer semantics and atomic registry updates; inspect project wrappers and tests |
+| `cambam_builder/native/core.py` | Shared vertex/bounds/numeric foundations, `CamBamEntity`, and `Primitive`, including local and parent-composed transforms | Identity, base inheritance, shared validation, bounds foundations, or primitive transform context |
+| `cambam_builder/native/cad.py` | `Layer` plus ordinary Pline/Circle/Rect/Arc/Points/Text geometry and XML behavior | Ordinary CAD fields, geometry, bounds, baking, or entity XML |
+| `cambam_builder/native/region.py` | Owned Region contours, planar curved topology validation and typed Region XML; depends directly on core and ordinary CAD owners | Region geometry and interchange; project and reader use this owner |
+| `cambam_builder/native/cam.py` | `Part`, MOP classes, and MOP XML path/encoding policy inventories | Part stock/nesting or MOP parameters and XML policy |
+| `cambam_builder/cambam_entities.py` and nine old root module paths | Compatibility/discovery imports of canonical native objects; no native implementation remains at root | Preserve public and documented direct imports; implementation modules import owners directly |
+| `cambam_builder/native/transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
 | `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy, remaining-section bounds and supplied section-motion verification | Horizontal cuts and explicit travel inside rectangular stock/target; no generated or native path integration |
 | `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns shared ordered XYZ/cut-sweep values, while `rc01.py`, `vcarve.py` and `mixed.py` own bounded reference jobs | Exact nominal rectangular two-tool job, analytic slot and one placed mixed trace; no native entity, XML, MCP or machine-output dependency |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
 | `cambam_builder/machining_recommendations.py` | Immutable tool/material/machine contexts, provenance-bearing recommendations, user diameter tables and pluggable pure strategies | Recommendation selection only; contains no curated catalog, persistence, document mutation or safety claim |
 | `cambam_builder/machining_planning.py` | Pure through-cut pass balancing and composition of recommendation profiles with formula/machine diagnostics | Candidate planning only; the existing MCP depth tool delegates here, while full profile construction remains a direct-Python API |
-| `cambam_builder/cambam_writer.py` | XML ID assignment and layer/part traversal; delegates individual encoding to entities | Output structure and reference resolution |
-| `cambam_builder/cambam_reader.py` | XML parsing, entity reconstruction, ID mapping and deferred parent/MOP linking | Import defaults, malformed data and round-trip reconstruction |
+| `cambam_builder/native/writer.py` | XML ID assignment and layer/part traversal; delegates individual encoding to entities | Output structure and reference resolution |
+| `cambam_builder/native/reader.py` | XML parsing, entity reconstruction, ID mapping and deferred parent/MOP linking | Import defaults, malformed data and round-trip reconstruction |
 | `cambam_builder/integrations/cambam/` | RC01 `.cb` input/attachment and bounded posted-motion comparison; depends on native model and detached RC01 values | Bridge between native documents, generated motion and CamBam output; no source model ownership |
 | `cambam_builder/integrations/direct_*.py` | Bounded headless V and RC01 reference-dialect writers, parsed-output audits and evidence manifests | Output adapters; consume detached plans/traces and preserve their target verifiers |
 | `cambam_builder/__init__.py` | Public alias and version | Import surface and version metadata |
@@ -62,7 +62,7 @@ Current root files classified by that target map:
 
 | Current files | Target owner |
 | --- | --- |
-| `cambam_project.py`, `cambam_transfer.py`, `entity_core.py`, `cad_entities.py`, `region.py`, `cam_entities.py`, `cad_transformations.py`, `cambam_reader.py`, `cambam_writer.py` | `native/` |
+| `cambam_project.py`, `cambam_transfer.py`, `entity_core.py`, `cad_entities.py`, `region.py`, `cam_entities.py`, `cad_transformations.py`, `cambam_reader.py`, `cambam_writer.py` | Moved to `native/` on 2026-09-24; the old root paths are compatibility imports |
 | `planar.py`, `_planar_shapely.py`, `stock.py`, reusable formulas in `machining_calculations.py` | `cam_core/` |
 | `machining_recommendations.py`, `machining_planning.py`, future rest/V-carve strategies | `cam_extensions/` |
 | `cam_core/rc01.py` | Current pure reference implementation; exact recipe later in `cam_extensions/reference_jobs/`, reusable verifier/motion values stay in `cam_core/` |
@@ -89,9 +89,12 @@ Migration is staged around executable slices:
    `native/` together. Preserve the public `CBProject` and documented old import
    paths while callers migrate. Check representative Region, MOP identity,
    target-reference and stock-offset XML round trips plus clean-wheel imports.
-   This is a distinct follow-up after RC01's first CamBam output trial has fixed
-   the actual adapter needs; a mass rename during that trial would mix semantic
-   output failures with import churn.
+   Implemented 2026-09-24 after the RC01 output contracts were fixed. The nine
+   canonical implementation modules are under `native/`; root paths forward
+   imports to the same classes and functions, and runtime callers use native
+   owners directly. The wheel declares `cambam_builder.native`. Existing
+   same-code-version pickle snapshots use the new canonical module names;
+   old-pickle migration is outside the stated snapshot contract.
 3. **Detached and extended consolidation:** move root `planar.py`, `stock.py`
    and reusable machining math into `cam_core/`; place recommendation/pass
    planning and later rest/V-carve strategies in `cam_extensions/`. The shared
@@ -101,8 +104,9 @@ Migration is staged around executable slices:
    when that migration is justified by an output or package-consumer need.
 
 Each move updates the owner table, callers, packaging, runbook and review evidence
-in the same increment. Existing root modules remain authoritative until moved;
-the target table does not imply capabilities or imports that already exist.
+in the same increment. Remaining root detached and policy modules are authoritative
+until a separately justified migration; the target table does not imply capabilities
+or imports that already exist.
 
 ### Data flow and relationship boundaries
 

@@ -238,7 +238,7 @@ class ParentRoundTripTests(unittest.TestCase):
             path = self.save(source, directory)
             self.rewrite_parent_tags(path, {"child": str(expected["root"].internal_id),
                                             "grandchild": str(expected["child"].internal_id)})
-            with self.assertLogs("cambam_builder.cambam_reader", level=logging.ERROR) as logs:
+            with self.assertLogs("cambam_builder.native.reader", level=logging.ERROR) as logs:
                 self.assertIsNone(read_cambam_file(str(path)))
             self.assertIn("singular world transform", " ".join(logs.output))
             # UUID-sorted export may encounter either singular ancestor first.

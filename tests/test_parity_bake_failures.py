@@ -28,7 +28,7 @@ class ParityBakeFailureTests(unittest.TestCase):
     def test_global_curved_bake_failure_preserves_whole_subtree(self):
         project, root, region = self.make_project()
         before = ET.tostring(build_xml_tree(project).getroot())
-        with self.assertLogs("cambam_builder.cambam_project", level="ERROR"):
+        with self.assertLogs("cambam_builder.native.project", level="ERROR"):
             self.assertFalse(project.transform_primitive(root, np.diag([2., 1., 1.]), bake=True))
         self.assert_unchanged(project, root, before)
         self.assertIs(project.get_primitive("region"), region)
@@ -37,7 +37,7 @@ class ParityBakeFailureTests(unittest.TestCase):
         project, root, _ = self.make_project()
         root.effective_transform = np.array([[1., .4, 2.], [0., 1., 3.], [0., 0., 1.]])
         before = ET.tostring(build_xml_tree(project).getroot())
-        with self.assertLogs("cambam_builder.cambam_project", level="ERROR"):
+        with self.assertLogs("cambam_builder.native.project", level="ERROR"):
             self.assertFalse(project.bake_primitive_transform(root))
         self.assert_unchanged(project, root, before)
         self.assertEqual(root.local_z_offset, 3.)

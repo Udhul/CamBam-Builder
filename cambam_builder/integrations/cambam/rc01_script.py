@@ -10,8 +10,8 @@ import json
 from pathlib import Path
 
 from ...cam_core.rc01 import Event, Job, Move, Program, generate, verify
-from ...cam_entities import DrillMop
-from ...cambam_reader import read_cambam_bytes
+from ...native.cam import DrillMop
+from ...native.reader import read_cambam_bytes
 from .rc01_adapter import normalize, synthetic_setup, synthetic_source
 from .rc01_post import read_default_post
 

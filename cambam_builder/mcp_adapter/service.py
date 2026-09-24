@@ -13,16 +13,16 @@ from jsonschema import ValidationError
 
 from cambam_builder import CBProject
 from cambam_builder.machining_planning import plan_depth_passes
-from cambam_builder.entity_core import Primitive, Vertex
-from cambam_builder.cad_entities import Arc, Circle, Pline, Points, Rect, Text
-from cambam_builder.cam_entities import (
+from cambam_builder.native.core import Primitive, Vertex
+from cambam_builder.native.cad import Arc, Circle, Pline, Points, Rect, Text
+from cambam_builder.native.cam import (
     DrillMop, EngraveMop, Mop, PocketMop, ProfileMop, MOP_COMMON_FIELD_POLICIES,
     MOP_DRILL_FIELD_POLICIES, MOP_ENGRAVE_FIELD_POLICIES,
     MOP_POCKET_FIELD_POLICIES, MOP_PROFILE_FIELD_POLICIES,
     MOP_XML_FIELD_PATHS,
 )
-from cambam_builder.cambam_reader import CamBamImportLimitError, read_cambam_bytes
-from cambam_builder.region import Region
+from cambam_builder.native.reader import CamBamImportLimitError, read_cambam_bytes
+from cambam_builder.native.region import Region
 from .paths import DomainError, MAX_XML_BYTES, Workspace
 from .schema import CONTRACT, OUTPUTS, StrictValidator, TOOLS, validated_arguments
 

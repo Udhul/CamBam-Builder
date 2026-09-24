@@ -164,6 +164,32 @@ evidence, not a release location. `legacy_cambam_builder.cambam_builder_cli` is
 a dormant historical module with no declared entry point and is outside the
 supported import surface; no CLI or publishing behavior was added.
 
+### Native owner migration checks
+
+The canonical CamBam document modules are in `cambam_builder.native`; the old
+root module paths remain import-compatible. From the repository root, use the
+declared interpreter for the focused contract checks:
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -p test_entity_module_boundaries.py -v
+& $ProjectPython -m unittest discover -s tests -p test_native_owner_migration.py -v
+& $ProjectPython -m unittest discover -s tests -p test_region.py -v
+& $ProjectPython -m unittest discover -s tests -p test_mop_roundtrip.py -v
+& $ProjectPython -m unittest discover -s tests -p test_mop_context.py -v
+& $ProjectPython -m unittest discover -s tests -p test_copy_transfer.py -v
+```
+
+The migration test checks canonical/legacy import identity, two full XML cycles
+with a Region target, Pocket MOP identity/reference and Part-local stock offset,
+and a same-code-version pickle snapshot. Broaden to the full suite for changes to
+native owners or adapters. A wheel check must build into a unique ignored
+`output/` directory, install it with its declared NumPy dependency into an
+isolated environment and import from outside the repository source path. Verify
+both `cambam_builder.native` and old root paths resolve to the installed wheel,
+not to the checkout; the dated
+[review evidence](REVIEW.md#native-owner-consolidation---2026-09-24) records one
+such check.
+
 Reproduce the development environment with `uv sync`. Because the lockfile is
 local and ignored, dependency versions may advance over time. For a fresh
 artifact check, build with `uv build --out-dir <unique-output-directory>`, install

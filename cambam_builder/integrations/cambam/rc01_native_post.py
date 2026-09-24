@@ -13,7 +13,7 @@ from pathlib import Path
 
 from .rc01_adapter import normalize
 from .rc01_post import read_default_post
-from ...cambam_reader import read_cambam_bytes
+from ...native.reader import read_cambam_bytes
 
 
 LEVELS = (-1.0, -2.0, -3.0)

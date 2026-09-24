@@ -3,10 +3,10 @@
 import json
 from pathlib import Path
 
-from ... import CBProject
+from ...native.project import CamBamProject as CBProject
 from ...cam_core import replay, tapered_vcarve
-from ...cam_entities import DrillMop
-from ...cambam_reader import read_cambam_bytes
+from ...native.cam import DrillMop
+from ...native.reader import read_cambam_bytes
 from .cone_script import _compare_post, _expected_items, _script, _sha
 
 
