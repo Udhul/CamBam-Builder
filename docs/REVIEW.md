@@ -24,8 +24,12 @@ is made that CamBam displayed that slope as a toolpath, computed a native
 V-carve, or verified a physical setup. The post does not encode incoming
 machine position; ideal tool, holder/fixture and process limits remain as
 declared in the [contract](structure_spec.md#bounded-variable-depth-v-groove-and-cambam-carrier).
-Next inspect a bounded native shape/MOP V-carve consumer because the dual
-workflow requirement remains open. The prepared implementation was committed
+The user later confirmed that CAMotics displays the script-produced sloped
+line, while CamBam does not display the script's resulting toolpath. This
+supports output visibility as the next concrete gap; it adds no physical
+machining acceptance. The [output direction](REST_MACHINING_PLAN.md#programmatic-execution-requirement)
+retains generated XYZ Pline/Engrave as the inspectable candidate, with exact
+post and full-role replay still required. The prepared implementation was committed
 as `ba46a7d`; this posted-output record is a separate documentation change.
 
 ## Bounded variable-depth V groove preparation - 2026-09-24

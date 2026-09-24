@@ -36,6 +36,27 @@ optional comparison fixtures, but normal operation and automated tests must not
 require them. CamBam's scripting examples document possible file/motion behavior;
 they are not a runtime interface for this framework.
 
+**Output direction clarified 2026-09-24 after the variable-depth post:** the
+user wants the computed V-carve path inspectable as a CamBam toolpath. The
+intended CamBam carrier is generated XYZ Plines selected by an Engrave MOP,
+with original finish-design geometry retained separately. Engrave follows the
+selected shape's Z according to the [CamBam 1.0 manual](https://cambamcnc.org/doc/1.0/cam/engrave.html);
+CamBam's [sloped-lines example](https://www.cambam.info/ref/script.sloped-lines)
+uses source Plines with Target Depth 0 and Optimisation Mode None. This is
+evidence for a bounded candidate, not acceptance of our emitted motion. The
+Drill/CustomScript carrier proved one exact output path but does not show its
+literal motion as a CamBam toolpath; the user confirmed the posted slope in
+CAMotics. Keep it as a verified execution route/fallback while developing the
+visible Engrave route. Do not enable both for the same cut in one posted job.
+First test straight XYZ segments and actual native preview/post against the
+calculated cut plus entry, retract, link, feed and setup requirements. CamBam
+previously added Engrave target depth to vertex Z and changed RC01 order/roles;
+set zero depth offset deliberately and audit the complete post. Bulge encodes
+an XY circular arc with vertex Z, not an arbitrary 3D curve. Add spatial bulge
+output only after interpolation, native preview and postprocessor behavior pass
+a bounded geometric/motion comparison; bounded XYZ line segments can represent
+curves until then.
+
 ## Execution architecture refinement - 2026-09-23
 
 This section records the user's new context and the lead's recommended design.

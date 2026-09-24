@@ -273,17 +273,25 @@ See the
 [runbook](DEVELOPMENT.md#bounded-variable-depth-v-groove-carrier-and-posted-replay)
 and [evidence](REVIEW.md#bounded-variable-depth-v-groove-posted-output---2026-09-24).
 
-**Next priority:** assess native shape/MOP V-carve input and attachment against
-the [accepted dual-workflow requirement](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23).
-The user's one-point Drill MOP observation makes the gap concrete: the
-explicit carrier executes the sloped cut, but the target Pline does not drive
-a native V-carve MOP. Define one bounded native target/MOP consumer, its edit
-semantics and actual-output gate before broadening topology or implementing
-direct posting. Reopen the explicit carrier only if a changed post/profile or
-script breaks exact emitted-motion replay. Defer rounded tips and optimizer
-work until a named consumer requires them. Native Pocket N reopens only with
-a carrier/post change that encodes its missing roles and fresh whole-motion
-evidence.
+**Next priority:** attach the already generated variable-depth XYZ cut path to
+an Engrave MOP in one bounded, CamBam-visible `.cb` candidate, then compare
+its displayed toolpath and actual Default post against the calculated motion.
+The [clarified output direction](REST_MACHINING_PLAN.md#programmatic-execution-requirement)
+keeps original finish-target geometry separate from derived path Plines. The
+accepted CustomScript route supplies exact motion but cannot display its
+literal result as a CamBam toolpath; the user confirmed the slope in CAMotics.
+Probe straight XYZ first with explicit zero depth offset and no path
+optimisation; independently audit entry, retract, links, feeds, setup and
+cutting against the target. Promote Engrave to an executable carrier only if
+its entire emitted sequence passes, not just the visible sloped cut. Stop after
+that bounded output finding; if roles still differ, retain script as execution
+authority and report the precise visual/operational split. Add spatial bulges
+after a separate interpolation and posted-motion proof. The broader
+[native plus explicit workflow](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23)
+still needs supported native-input normalization. Defer rounded tips, optimizer,
+general topology and direct posting until a named consumer requires them.
+Native Pocket N reopens only with a carrier/post change that encodes its
+missing roles and fresh whole-motion evidence.
 
 The user selected the proposed synthetic case, including its test-only
 plunge/feed limits, on 2026-09-23. These are accepted
@@ -1279,8 +1287,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    V-carving or physical acceptance. The bounded sloped target, independent
    residual reference and explicit carrier are now implemented. The actual
    Default post passed exact motion and residual replay; the next distinct
-   gate is native shape/MOP V-carve integration. N remains blocked on its known
-   role controls.
+   gate is visible generated-XYZ-Pline/Engrave output. Native input
+   normalization remains a separate requirement. N remains blocked on its
+   known role controls.
 
    **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
    owns native/extended/core naming and migration criteria. The current RC01
