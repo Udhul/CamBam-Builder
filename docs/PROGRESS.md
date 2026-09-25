@@ -422,13 +422,13 @@ Regions and rounded V tips for v1. The
 [bounded scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
 sets six whole-outcome milestones. M0, the reusable core/native/explicit output
 bridge, M1 polygonal rest and smaller-endmill cleanup, and M2 curved Region
-rest and endmill cleanup are accepted on this branch. Three remain: M3
-pointed/flat/tangent spherical-conical rounded-tip V cleanup and edge tracing
-on polygonal and curved targets; M4 one edited combined workflow with direct
-reference output; M5 one selected controller dialect. This is **3 of 6
-milestones accepted, 3 remaining**, not a time/effort percentage. RC01 and
+rest and endmill cleanup are accepted on this branch. M3 bounded V cleanup
+and edge tracing on polygonal and curved targets is also accepted. Two
+remain: M4 one edited combined workflow with direct reference output and
+M5 one selected controller dialect. This is **4 of 6 milestones accepted,
+2 remaining**, not a time/effort percentage. RC01 and
 the native triangle partially de-risk M1/M3; accepted curved-bound and
-geometry-design work does not yet pass M3 path gates. The added M2 reflects
+geometry-design work preceded the accepted M3 path gates. The added M2 reflects
 the user's expanded finish line, not a succession of small internal steps.
 Internal fixes and probes do not create new milestones.
 
@@ -499,8 +499,7 @@ source-derived synthetic-motion compatibility check; every motion item, script
 line and residual stayed identical. CustomScript verifies CamBam literal-motion
 transport, while Engrave verifies native centerline interpretation. Neither
 establishes independent native Pocket planning, controller acceptance or
-physical machining. **M2 is accepted for this bounded explicit route; count is
-3 of 6.**
+physical machining. **At this M2 checkpoint, the count was 3 of 6.**
 
 **2026-09-25 M4 native series and strategy building block (backlog 6).**
 `native_series` now binds strict native source/candidate geometry and stock to
@@ -524,8 +523,9 @@ and [checks](DEVELOPMENT.md#native-mop-series-normalization-and-strategy-selecti
 The new package built as wheel/sdist, and the installed wheel imported its
 new modules from outside the checkout. This does not verify all supported
 Python versions or CamBam physical execution.
-**M4 remains open** pending M3 rounded-tip geometry, a reopened edited
-curved combined job and parsed direct reference output.
+**M4 remains open** pending a reopened edited curved combined job,
+contour-parallel offset fill and parsed direct reference output. The M3
+rounded-tip geometry and native output gates are now accepted.
 
 **2026-09-25 M3 implementation checkpoint (backlog 6):** The bounded 2 mm
 capped inward V recess on the accepted A01 letter and M2 annulus now has
@@ -559,14 +559,19 @@ The preview adapter now requests zero crossover distance, and seven corrected
 source-bound previews are prepared at
 `output/m3-v-preview-retract-20260925-01/`. The original NCs remain failure
 evidence; see [dated audit](REVIEW.md#m3-actual-cambam-post-audit-and-preview-crossover-correction---2026-09-25).
-**M3 remains open and the epic count stays 3 of 6** until the seven corrected
-preview actual posts pass their centerline gate. Reopen the adapter if CamBam
-still adds low connectors or changes expected segments. The finish target and
-M4 comparison scope remain as recorded above.
-**Next priority:** post and audit the seven corrected CamBam M3 previews,
-record the resulting visibility and acceptance, then implement M4 edited
-composition on a curved target with a rounded-tip route and one offset fill
-candidate alongside the raster proof input.
+**2026-09-25 corrected M3 acceptance:** The user exported all fourteen
+corrected Default NC files. All seven preview centerline audits and all seven
+complete explicit T1/T3 stock, access and residual audits passed. Every
+preview XY rapid link is at Z=+5 mm. The corrected candidates share source,
+prior and plan fingerprints with the seven visually accepted previews.
+**M3 is accepted for the bounded capped inward V recess; the epic count is
+4 of 6.** The result is partial with quantified finite-stepover residual;
+controller and physical machining acceptance remain separate. Exact NC hashes,
+limits and reopening criteria are in the
+[dated acceptance](REVIEW.md#m3-corrected-native-output-acceptance---2026-09-25).
+**Next priority:** implement M4 edited composition on a curved target with a
+rounded-tip route and one contour-parallel offset fill candidate alongside
+the raster proof input, then audit the complete native and direct outputs.
 See the [runbook](DEVELOPMENT.md#m3-region-v-paths-and-native-output-gate) and
 [scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24).
 M1 fixes the route criterion: each candidate's actual emitted motion earns

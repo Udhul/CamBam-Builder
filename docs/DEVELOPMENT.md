@@ -604,7 +604,8 @@ Six original preview posts exposed shallow CamBam crossover feeds, so the
 corrected preview candidates are under
 `output/m3-v-preview-retract-20260925-01/`. They use the same source, prior,
 tool and path geometry, with Engrave `MaxCrossoverDistance=0`. Preserve the
-original exports as failure evidence; post only the corrected previews.
+original exports as failure evidence. All fourteen corrected actual posts
+passed their separate gates; the user also exported fresh explicit posts.
 Each has `source.cb`, `prior.json`, `preview/m3-preview.cb`,
 `explicit/m3-explicit.cb` and `expected-motion.json`. The first six pair the
 accepted A01 letter and M2 annulus with pointed, 0.25 mm flat-tip and 0.5 mm
@@ -650,41 +651,41 @@ Run the focused automated checks from the root:
 & $ProjectPython -m unittest tests.test_v_region tests.test_native_v_region tests.test_rest_vcarve_acceptance_fixtures -v
 ```
 
-For each suffix above, open
+To reproduce the accepted native inspection, for each suffix above open
 `output/m3-v-preview-retract-20260925-01/<suffix>/preview/m3-preview.cb`
 in CamBam Plus 1.0.
 The user's original seven previews already established visible source Regions,
 shell/hole edge paths and variable-Z fill paths; the corrected candidates have
 the same source and plan fingerprints, so that check need not be repeated.
-Generate toolpaths and post
-with **Default** / **Default mm** to `preview/m3-preview.nc` beside that
-corrected `.cb`. The original `-02` explicit posts already passed. Their
+Generate toolpaths and post with **Default** / **Default mm** to
+`preview/m3-preview.nc` beside that corrected `.cb`. The corrected
+`explicit/m3-explicit.cb` was also posted with Default mm. Its
 displayed Drill path need not show the CustomScript cuts; the NC contains the
 complete T1/T3 motion: no XY rapid at Z<=0, no cut outside the Region or below
 Z=-2, and a +5 mm retract between disconnected paths. The proposed feed and
 spindle values need no physical machining trial for this gate.
 
-Audit the seven corrected previews and the seven retained explicit posts from
-the repository root:
+Audit the fourteen corrected posts from the repository root:
 
 ```powershell
 $Names = 'letter-pointed','letter-flat','letter-rounded','annulus-pointed','annulus-flat','annulus-rounded','mixed-rounded'
 foreach ($Name in $Names) {
-  $PreviewJob = Join-Path 'output/m3-v-preview-retract-20260925-01' $Name
-  $ExplicitJob = Join-Path 'output/m3-v-suite-20260925-02' $Name
-  & $ProjectPython -m cambam_builder.integrations.cambam.native_v_region preview "$PreviewJob/expected-motion.json" "$PreviewJob/preview/m3-preview.nc"
-  & $ProjectPython -m cambam_builder.integrations.cambam.native_v_region audit "$ExplicitJob/expected-motion.json" "$ExplicitJob/explicit/m3-explicit.nc"
+  $Job = Join-Path 'output/m3-v-preview-retract-20260925-01' $Name
+  & $ProjectPython -m cambam_builder.integrations.cambam.native_v_region preview "$Job/expected-motion.json" "$Job/preview/m3-preview.nc"
+  & $ProjectPython -m cambam_builder.integrations.cambam.native_v_region audit "$Job/expected-motion.json" "$Job/explicit/m3-explicit.nc"
 }
 ```
 
-Each corrected preview must return `m3_v_preview_centerlines_match`; each
-retained explicit post must return `bounded_m3_v_post_pass`. A parser failure,
+Each corrected preview returned `m3_v_preview_centerlines_match`; each
+corrected explicit post returned `bounded_m3_v_post_pass`. A parser failure,
 `deviation`, changed hash, missing segment or unsafe link fails that job.
 Record the fourteen combined audit statuses, including any first failing
-line/reason. The original seven visible preview observations remain accepted.
-The synthetic post test checks the parser only; the corrected preview's
-actual CamBam output remains pending. Controller and physical machining
-acceptance are separate.
+line/reason. The original seven visible preview observations remain accepted;
+the corrected jobs retain their source and plan fingerprints. The synthetic
+post test checks the parser only, while these actual CamBam posts establish
+the bounded native gate. Controller and physical machining acceptance are
+separate. Exact accepted NC hashes are in the
+[dated review](REVIEW.md#m3-corrected-native-output-acceptance---2026-09-25).
 
 To regenerate a new isolated job or audit one file:
 

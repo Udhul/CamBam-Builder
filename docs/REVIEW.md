@@ -1,5 +1,43 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## M3 corrected native output acceptance - 2026-09-25
+
+The user exported all seven corrected preview and seven corrected explicit
+CamBam Plus 1.0 Default NC files under the ignored
+`output/m3-v-preview-retract-20260925-01/` jobs. The previously reported
+visibility of all seven source Regions and V paths remains applicable: each
+corrected job has the same source, prior and plan fingerprints as the visible
+original preview. All seven corrected previews returned
+`m3_v_preview_centerlines_match`; all seven corrected explicit streams returned
+`bounded_m3_v_post_pass`, including complete T1/T3 motion, prior-stock replay,
+V occupancy, access and the fixed residual/gain criteria. Every XY rapid in
+the preview posts occurs at Z=+5 mm: 96 links per letter, 24 per annulus and
+33 for mixed. No extra shallow feed connector remains.
+On the committed `86bc8fd` tree, the focused M3/corpus command passed 24
+tests in 56.222 seconds. The prior 451-test repository run remains the broad
+regression evidence for that same implementation; this round changed only
+the documentation owners after the native audits.
+
+| Job | Preview NC SHA-256 | Explicit NC SHA-256 |
+| --- | --- | --- |
+| annulus-flat | `3195aad259e6084ea3652f28168a378b376d48ddbdf2aadbccacce423ffed2a5` | `0391a6ba537230157ab3dadce50bc6d9a4812d123ead80d275d5f433b38accdc` |
+| annulus-pointed | `5a8daa0aad26e488dfa7caed86283f8c24bed636e9ab5b7fac45380716ea601e` | `4a995bc50b105496d45f7d59a45b37b39ffc3127c90ba1b286234f7d6230a0fa` |
+| annulus-rounded | `53750402b1c2677f50292cf11a92414ab11246f5495db73885b73f1819fd3739` | `87ed000915caff32f3b1ea9c3a487bc7387737be9d8b2a7ff3bd529bf218add8` |
+| letter-flat | `c366e1db6b904812974b3ba6d9c8ae04ea192abbb1daccf75188498469c5dbc8` | `a91a1509a9754f000cad9da9ac3d5baa76c840c547123ed019c97e9bf6157701` |
+| letter-pointed | `bd270ad2fbcf0e01bb5880259ccce506010e3a310b8800cf2ce207bf5451aebd` | `1e779d52989a3f10bd6969cfe7b5a7d6390b522499b5b4614437025ccae45b25` |
+| letter-rounded | `9b71c5a380f5c76cb7d9c097448087cd13f4b10e1054ae266ea0f106c2af3f50` | `d559104c13ce850059d3d4b158d052be8f455e435e90820d1f569b0b75c16cd8` |
+| mixed-rounded | `0ac1dee62549cbd64d9a8f9851c7385cc11dab4a2c71ec88097d8469e742024a` | `060aa167bd4c83db8957af9cbbf9d07337a832e0b3200172ba1a1a3b8db488cc` |
+
+This closes M3 for the bounded 2 mm capped inward V recess on the accepted
+polygonal and curved targets. The explicit CustomScript path remains a posted
+motion carrier without a visible CamBam cut preview; Engrave remains
+inspection-only. The finite-stepover result remains partial with its reported
+residual, and the synthetic T1 raster remains proof input. No controller or
+physical machining acceptance is implied. Reopen M3 evidence if a source,
+prior trace, tool/profile, target, candidate or post changes, or if a new
+strategy emits different motion. M4 owns combining native and framework
+stages and testing offset fill through the same verification contract.
+
 ## M3 actual CamBam post audit and preview crossover correction - 2026-09-25
 
 The user exported all seven preview and seven explicit NC files from the
