@@ -527,9 +527,37 @@ Python versions or CamBam physical execution.
 **M4 remains open** pending M3 rounded-tip geometry, a reopened edited
 curved combined job and parsed direct reference output.
 
-**Next priority:** Implement M3 pointed/flat/tangent rounded-tip V cleanup and edge
-tracing across polygonal and curved targets; that is required before full M4
-composition can close. See the
+**2026-09-25 M3 implementation checkpoint (backlog 6):** The bounded 2 mm
+capped inward V recess on the accepted A01 letter and M2 annulus now has
+pointed, flat and tangent spherical/conical rounded-tip profile math,
+continuous full-height segment occupancy, shell/hole edge contours,
+variable-Z fill rows, complete high-link motion and conditional section
+residual bounds. The mixed concave line/arc Region and its reflected frame
+also pass core protection checks; a narrow curved throat reports infeasible.
+One supplied source-bound T1 cylinder trace per job now establishes prior
+stock, passes the V finish's full-height protection check and produces a
+separate pure-rest section. The final V paths reduce the Z=-1 residual by
+more than 500/90/200 mm² on letter/annulus/mixed respectively. Native
+preview and ordered T1/T3 literal candidates strict-reimport for all three
+profiles on letter/annulus and rounded on mixed. Seven combined jobs are under
+`output/m3-v-suite-20260925-02/`; synthetic Default-post regressions pass
+complete-stream and tamper checks. The original Region/Part survives both
+candidates. See the [contract](structure_spec.md#m3-bounded-region-v-path-and-native-candidate-contract),
+[runbook](DEVELOPMENT.md#m3-region-v-paths-and-native-output-gate) and
+[M3 criteria](../tests/fixtures/rest_vcarve_acceptance.json). The T1 raster
+is a proof fixture, not a production roughing recommendation. The finish
+target is an inward V recess; selection against earlier M1/M2 flat-pocket
+strategies and a square-wall flat floor remain separate.
+**M3 remains open and the epic count stays 3 of 6** until the user confirms
+visible CamBam previews and seven preview plus seven explicit actual Default
+posts pass their separate audit gates. Reopen the geometry if any actual post
+changes path order/coordinates or if a different V finish target is selected.
+The next increment is those prepared actual-post gates; their result decides
+whether M3 can be accepted or needs a specific carrier/path correction before
+M4 composition.
+**Next priority:** complete the seven prepared CamBam M3 preview and explicit
+post gates, resolve any concrete deviations, then record user acceptance scope.
+See the [runbook](DEVELOPMENT.md#m3-region-v-paths-and-native-output-gate) and
 [scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24).
 M1 fixes the route criterion: each candidate's actual emitted motion earns
 its own stock/access certificate. M4 then composes native MOP series, custom

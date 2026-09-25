@@ -1,5 +1,40 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## M3 bounded Region V implementation and pending native gate - 2026-09-25
+
+The fixed finish is a 2 mm capped inward V recess on the accepted A01 letter,
+M2 annulus and mixed line/arc concave Region. The new profile model covers
+pointed, 0.25 mm flat and 0.5 mm tangent spherical/conical rounded tips.
+Continuous line clearance checks reject protected crossings between vertices
+and across holes. A separate source-bound, full-height-checked T1 cylindrical
+trace establishes prior stock; its synthetic raster is proof input, not a
+production roughing recommendation. At Z=-1 the conditional prior/final
+upper residuals are 626.476/4.360, 626.476/6.193 and 587.129/4.808 mm²
+for letter pointed/flat/rounded; 112.365/1.534, 112.365/1.519 and
+103.128/1.524 mm² for annulus; and 260.204/4.193 mm² for mixed rounded.
+Inflated nominal protected overcut is zero for these generated paths. The
+mixed reflected core geometry also passes, and a 0.8 mm curved throat
+rejects a 0.5 mm flat tip as infeasible. GEOS floating topology and the
+0.001 mm curved sagitta bracket limit the geometric certificate.
+
+Seven combined source/prior/preview/explicit jobs were strict-reimported
+under `output/m3-v-suite-20260925-02/`; source Region UUID, analytic bulges,
+world geometry and Part stock remain intact. Synthetic Default wrappers pass
+ordered T1/T3 tool, spindle, feed and coordinate parsing, prior stock replay,
+V occupancy and source/prior/candidate tamper rejection. They do not establish
+CamBam output behavior. The seven actual preview NC and seven actual explicit
+NC files, plus visible preview observations, are pending. The
+[runbook](DEVELOPMENT.md#m3-region-v-paths-and-native-output-gate) owns their
+exact steps and result criteria. Reopen any path/carrier assumption that an
+actual post contradicts; M3 remains open until the whole gate passes.
+
+The broad repository run reached 448 tests and failed one corpus identity
+assertion that treated `kind` as unique even though the accepted M2 annulus
+and mixed rows already share a kind. The assertion now checks unique case IDs.
+After that fix and the source-bound M3 addition, the final focused M3/corpus
+run passed 24 tests, including two XML round trips for the curved candidates.
+No second full repository run is claimed.
+
 ## Rest/V epic branch progress audit - 2026-09-24
 
 Before this documentation update, `feat/rest-machining-and-vcarving` is 49

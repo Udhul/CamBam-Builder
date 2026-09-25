@@ -116,6 +116,18 @@
       "kind": "curved_region_endmill_access",
       "input": {"outer_radius_mm": 3, "hole_radius_mm": 2.2, "radial_width_mm": 0.8, "tool_diameter_mm": 1},
       "expected": {"low_level_crossing": "reject; no radius-0.5 disk center fits the curved annular throat", "protected_overcut_upper_mm2": 0}
+    },
+    {
+      "id": "M3_polygonal_and_curved_V_paths",
+      "kind": "v_region_paths",
+      "input": {"source_cases": ["A01", "M2_annulus", "M2_mixed"], "finish": "2 mm capped inward V recess", "cap_depth_mm": 2, "stepover_mm": 1, "xy_step_mm": 1, "clearance_margin_mm": 0.01, "max_cut_slope_mm_per_mm": 2, "supplied_prior_tool_radius_mm": 0.5, "profiles": [{"kind": "pointed", "angle_degrees": 90, "tip_radius_mm": 0}, {"kind": "flat", "angle_degrees": 90, "tip_radius_mm": 0.25}, {"kind": "rounded", "angle_degrees": 60, "tip_radius_mm": 0.5}]},
+      "expected": {"section_depth_mm": 1, "A01_residual_upper_mm2": {"pointed": 5, "flat": 7, "rounded": 5}, "annulus_residual_upper_mm2": {"pointed": 2, "flat": 2, "rounded": 2}, "mixed_rounded_residual_upper_mm2": 5, "minimum_prior_to_v_gain_mm2": {"A01": 500, "M2_annulus": 90, "M2_mixed": 200}, "annulus_rounded_residual_volume_upper_mm3": 80, "protected_overcut_upper_mm2": 0.0000001, "partial_result": true, "required_paths": ["edge", "variable_depth_fill"], "native_gate": "strict source/prior/candidate reimport, visible Engrave preview, fresh actual Default preview centerline audit and exact ordered T1/T3 CustomScript whole-post audit"}
+    },
+    {
+      "id": "M3_flat_tip_curved_narrow_access",
+      "kind": "v_region_infeasible",
+      "input": {"outer_radius_mm": 3, "hole_radius_mm": 2.2, "flat_tip_radius_mm": 0.5, "angle_degrees": 90, "cap_depth_mm": 1},
+      "expected": {"status": "infeasible", "reason": "no positive-depth cutter center fits", "protected_overcut_upper_mm2": 0}
     }
   ]
 }

@@ -594,6 +594,97 @@ T1 items equal the source-derived synthetic fixture; other supplied traces
 still need a current exact fingerprint. A 0.1 mm preview NC coordinate tamper
 returned `deviation`. No physical or controller acceptance is implied.
 
+### M3 Region V paths and native output gate
+
+The ignored `output/m3-v-suite-20260925-02/` holds seven source-bound jobs.
+Earlier `m3-v-suite-20260925-01` files were standalone V probes and are not
+the M3 acceptance candidates; use the `-02` combined jobs below.
+Each has `source.cb`, `prior.json`, `preview/m3-preview.cb`,
+`explicit/m3-explicit.cb` and `expected-motion.json`. The first six pair the
+accepted A01 letter and M2 annulus with pointed, 0.25 mm flat-tip and 0.5 mm
+tangent rounded-tip V tools; `mixed-rounded` adds the accepted concave line/arc
+shell and circular hole. All use a 2 mm capped inward V recess, 1 mm raster
+stepover, 0.01 mm center clearance margin, 2 mm tip-Z change per XY
+millimetre maximum cut slope and +5 mm tip clearance. The
+included angles are 90/90/60 degrees respectively. Tool maximum radius is
+4 mm and cutting length 3 mm. A separate source-bound synthetic T1 trace
+uses a 1 mm cylinder and cuts only the interior of the V target before T3.
+T1 and T3 use CW 12000 rpm, F60 entries and F300 cuts/retracts. These are
+test tokens, not material or controller settings. The
+original source Region and Part stock must stay unchanged.
+
+| Job suffix | Section Z=-1 residual interval, mm² | Generated literal moves |
+| --- | ---: | ---: |
+| `letter-pointed` | 3.95018–4.36033 | 2368 |
+| `letter-flat` | 4.90681–6.19275 | 2281 |
+| `letter-rounded` | 4.17639–4.80768 | 2316 |
+| `annulus-pointed` | 1.27043–1.53412 | 453 |
+| `annulus-flat` | 1.26181–1.51851 | 434 |
+| `annulus-rounded` | 1.31719–1.52394 | 437 |
+| `mixed-rounded` | 2.64310–4.19296 | 924 |
+
+These are conditional GEOS bounds from the four-decimal candidate paths;
+every inflated nominal protected-overcut area at Z=-1 is zero. At Z=-1 the
+prior upper residual is 626.47571 mm² for letter pointed/flat, 587.12897 mm²
+for letter rounded, 112.36541 mm² for annulus pointed/flat, 103.12817 mm² for
+annulus rounded and 260.20373 mm² for mixed rounded. Minimum prior-to-V gains
+are 500/90/200 mm² for letter/annulus/mixed. The independent
+upper budgets are 5/7/5 mm² for the letter, 2 mm² for every annulus profile
+and 5 mm² for mixed rounded. The annulus rounded eight-slab volume upper bound
+is 80 mm³. The tracked [M3 corpus](../tests/fixtures/rest_vcarve_acceptance.json)
+owns those criteria and the narrow curved flat-tip infeasibility fixture.
+The [core contract](structure_spec.md#m3-bounded-region-v-path-and-native-candidate-contract)
+explains the finish target and numeric limits. The supplied T1 raster is a
+stock-proof fixture, not a production roughing recommendation. The result
+does not claim a square-wall flat-floor finish.
+
+Run the focused automated checks from the root:
+
+```powershell
+& $ProjectPython -m unittest tests.test_v_region tests.test_native_v_region tests.test_rest_vcarve_acceptance_fixtures -v
+```
+
+For each suffix above, open `preview/m3-preview.cb` in CamBam Plus 1.0.
+Confirm millimetres, the unchanged source Region and Part, visible shell/hole
+edge paths and variable-Z fill paths. For `mixed-rounded`, confirm the concave
+notch and both curved source edges remain visible. Generate toolpaths and post
+with **Default** / **Default mm** to `preview/m3-preview.nc`. Open
+`explicit/m3-explicit.cb` separately, confirm only its literal Drill is enabled,
+generate toolpaths and post to `explicit/m3-explicit.nc`. Its displayed Drill
+path need not display the CustomScript cuts. In an NC viewer, inspect the
+complete T1/T3 motion: no XY rapid at Z<=0, no cut outside the Region or below
+Z=-2, and a +5 mm retract between disconnected paths. The proposed feed and
+spindle values need no physical machining trial for this gate.
+
+Audit all 14 **CamBam-produced** files from the repository root:
+
+```powershell
+$Names = 'letter-pointed','letter-flat','letter-rounded','annulus-pointed','annulus-flat','annulus-rounded','mixed-rounded'
+foreach ($Name in $Names) {
+  $Job = Join-Path 'output/m3-v-suite-20260925-02' $Name
+  & $ProjectPython -m cambam_builder.integrations.cambam.native_v_region preview "$Job/expected-motion.json" "$Job/preview/m3-preview.nc"
+  & $ProjectPython -m cambam_builder.integrations.cambam.native_v_region audit "$Job/expected-motion.json" "$Job/explicit/m3-explicit.nc"
+}
+```
+
+Each preview must return `m3_v_preview_centerlines_match`; each explicit post
+must return `bounded_m3_v_post_pass`. A parser failure, `deviation`, changed
+hash, missing segment or unsafe link fails that job. Report which seven
+previews were visible and the fourteen audit statuses, including any first
+failing line/reason. The synthetic post test checks the parser only; actual
+CamBam output and visibility are still pending. Controller and physical
+machining acceptance are separate.
+
+To regenerate a new isolated job or audit one file:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_v_region build output/m3-new-UNIQUE --case annulus --profile rounded
+& $ProjectPython -m cambam_builder.integrations.cambam.native_v_region audit output/m3-new-UNIQUE/expected-motion.json output/m3-new-UNIQUE/explicit/m3-explicit.nc
+```
+
+For an existing native source, pass both `--source path/to/source.cb` and
+`--prior path/to/prior.json`; a source alone has no removal authority.
+
 ### Bounded cone CustomScript carrier and posted replay
 
 Build one new ignored directory from the repository root:

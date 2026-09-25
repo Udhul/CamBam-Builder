@@ -1,8 +1,8 @@
-"""Check independent acceptance references, not an unimplemented CAM engine.
+"""Check independent acceptance references apart from the CAM implementations.
 
-The JSON corpus is intended for future backend/engine runners. These checks catch
-corrupt inputs or golden values using analytic geometry and existing CAD validation.
-They do not certify the future runner's Boolean, offset, sweep or path behavior.
+These checks catch corrupt inputs or golden values using analytic geometry and
+existing CAD validation. Planner/output tests separately consume case budgets;
+this module alone does not certify their Boolean, sweep or path behavior.
 """
 
 import json
@@ -38,6 +38,7 @@ class RestVcarveReferenceTests(unittest.TestCase):
     def setUpClass(cls):
         cls.corpus = json.loads(CORPUS.read_text(encoding="utf-8"))
         cls.cases = {case["kind"]: case for case in cls.corpus["cases"]}
+        cls.by_id = {case["id"]: case for case in cls.corpus["cases"]}
 
     def values(self, kind):
         case = self.cases[kind]
@@ -52,7 +53,7 @@ class RestVcarveReferenceTests(unittest.TestCase):
         self.assertEqual(self.corpus["version"], 1)
         self.assertEqual(self.corpus["units"], "mm")
         self.assertEqual(len({case["id"] for case in cases}), len(cases))
-        self.assertEqual(len(self.cases), len(cases))
+        self.assertEqual(len(self.by_id), len(cases))
         for value in self.corpus["backend_limits"].values():
             self.assertGreater(value, 0)
 

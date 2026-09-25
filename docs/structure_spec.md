@@ -630,6 +630,72 @@ does not certify that CamBam independently generated the execution sequence.
 The analytic arc area, bounded rest and replay of parsed actual coordinates
 are the stock evidence, conditional on GEOS floating topology.
 
+### M3 bounded Region V path and native candidate contract
+
+`cam_core.v_region` defines a 2 mm capped inward V recess on the original
+planar Region: its section at depth `t` is the source opening eroded by
+`t * tan(included_angle/2)`. A pointed cone has `rho(h)=h*tan`; a flat tip has
+`rho(h)=a+h*tan`. A spherical lowest point of radius `b` joins the cone at
+`h=b*(1-sin(angle/2))`, `rho=b*cos(angle/2)` with equal radius and slope.
+Maximum radius and cutting length constrain every path. This finish choice is
+explicit: it does not claim to restore a square wall and flat floor left by
+an endmill. The result is reported as partial when a finite stepover/tip
+leaves stock. An empty center region returns an infeasible result and reason.
+
+For a tip penetration `d` and section `t`, cutter occupancy measured from the
+original boundary is `t*tan + rho(d-t) <= rho(d)` for all three supported
+profiles. Each straight XYZ segment, including changing Z between vertices,
+must remain inside the inward-safe source and at least `rho(max endpoint d)`
+from its boundary with a clearance margin. This continuous segment test covers
+the full cutting profile and rejects a chord across a hole even when its
+endpoints fit. A separate process bound limits tip-depth change to 2 mm per
+XY millimetre on each cut segment. Entry feeds descend at the verified first
+point to at most the declared 2 mm cap; every path
+retracts above stock before the next XY link. At the cap, separate contours
+trace the feasible shell and holes; variable-depth scan rows add passes across
+wide interiors. Disconnected feasible pieces use separate safe entries. No
+path-length or retraction optimum is claimed.
+
+The curved source uses `curved_region.approximate`'s inward-safe and outward
+brackets, preserving the native analytic arc separately. `section_report`
+forms inner/outer straight-segment cutter buffers and reports conditional GEOS
+residual-area intervals plus an inflated protected-overcut check. For changing
+Z, a segment's minimum endpoint depth supplies its inner sweep and maximum
+endpoint depth supplies its outer sweep; this deliberately brackets all
+intermediate cutter radii. `volume_bounds` integrates conservative slab
+enclosures; its current eight-slab interval is broad and is not a physical
+surface-finish guarantee. Arc sagitta is at most 0.001 mm; GEOS topology and
+floating arithmetic remain conditional.
+
+`cam_core.v_region.with_prior` replays one supplied source-bound cylindrical
+trace before the V stage. Each prior cut must lie within the same capped V
+target at every height: its entire line has original-boundary clearance at
+least `cylinder radius + cut depth * tan(angle/2)` plus margin. A cut that
+would be legal in a flat pocket but gouge the V finish therefore fails.
+The prior and final section reports measure pure rest and V cleanup gain.
+
+`integrations.cambam.native_v_region` strict-imports the accepted A01 letter
+and M2 annulus/mixed native Regions and Part stock. It binds a separate
+`prior.json` with source/motion fingerprints. The synthetic T1 raster is a
+proof fixture, not a production roughing recommendation; an external native
+source requires a matching supplied prior file. It rounds V paths to the
+Default post's four-decimal grid and rechecks full occupancy. The original
+Region UUID, bulges, world geometry and Part setup must survive candidate
+reimport. A separate XYZ Pline/Engrave MOP is preview only; a
+Drill/CustomScript MOP carries the complete T1 then T3 sequence, including
+both tools' entry, cut, high link and retract roles, CW 12000 rpm, F60 entry,
+F300 cut/retract and +5 mm tip clearance. Source/prior/candidate SHA-256
+values, target/plan/motion fingerprints and both section results are recorded
+in the manifest. `audit_preview` checks all posted
+Engrave XYZ centerline segments and rejects low XY rapids; it grants no
+execution certificate. `audit_post` checks the complete actual Default mm
+stream against the exact candidate, including both tool/spindle sequences
+and feeds, then replays the parsed prior stock and rechecks V path occupancy
+and residual/gain. Its synthetic post regression proves the reader, not
+CamBam acceptance. This bounded job uses its own supplied V-safe T1 stock;
+selection among the earlier M1/M2 flat-pocket routes and V strategies still
+belongs to M4.
+
 ### Bounded pointed-cone CamBam output carrier
 
 `integrations.cambam.cone_script` attaches the full-depth 12 x 4 mm slot to one
