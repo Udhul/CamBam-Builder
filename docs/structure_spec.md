@@ -14,7 +14,7 @@ This specification describes the core architecture for the CamBam CAD/CAM framew
 This is a local Python library with an optional stdio MCP adapter and no database
 or frontend. The public library entry point is `CamBamProject`, also
 exported as `CBProject`. Package declarations include the modern and legacy
-packages, the detached `cam_core` and CamBam integration subpackages; `inactive/` and demos
+packages, the detached `cam_core`, `cam_extensions` and CamBam integration subpackages; `inactive/` and demos
 are outside that runtime package list.
 
 | Owner | Implemented responsibility | Start here when changing |
@@ -28,14 +28,15 @@ are outside that runtime package list.
 | `cambam_builder/cambam_entities.py` and nine old root module paths | Compatibility/discovery imports of canonical native objects; no native implementation remains at root | Preserve public and documented direct imports; implementation modules import owners directly |
 | `cambam_builder/native/transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
 | `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy, remaining-section bounds and supplied section-motion verification | Horizontal cuts and explicit travel inside rectangular stock/target; no generated or native path integration |
-| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns shared ordered XYZ/cut-sweep values, while `rc01.py`, `vcarve.py` and `mixed.py` own bounded reference jobs | Exact nominal rectangular two-tool job, analytic slot and one placed mixed trace; no native entity, XML, MCP or machine-output dependency |
+| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns shared ordered XYZ/cut-sweep values and `curved_region.py` owns bounded circular-arc access/rest approximation | Exact nominal and curved endmill stock, analytic slot and placed mixed trace; no native entity, XML, MCP or machine-output dependency |
+| `cambam_builder/cam_extensions/strategy.py` | Deterministic selection among separately audited ordered routes, including partial and infeasible outcomes | Policy over evidence records; no XML or native entity dependency |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
 | `cambam_builder/machining_recommendations.py` | Immutable tool/material/machine contexts, provenance-bearing recommendations, user diameter tables and pluggable pure strategies | Recommendation selection only; contains no curated catalog, persistence, document mutation or safety claim |
 | `cambam_builder/machining_planning.py` | Pure through-cut pass balancing and composition of recommendation profiles with formula/machine diagnostics | Candidate planning only; the existing MCP depth tool delegates here, while full profile construction remains a direct-Python API |
 | `cambam_builder/native/writer.py` | XML ID assignment and layer/part traversal; delegates individual encoding to entities | Output structure and reference resolution |
 | `cambam_builder/native/reader.py` | XML parsing, entity reconstruction, ID mapping and deferred parent/MOP linking | Import defaults, malformed data and round-trip reconstruction |
-| `cambam_builder/integrations/cambam/` | RC01 `.cb` input/attachment and bounded posted-motion comparison; depends on native model and detached RC01 values | Bridge between native documents, generated motion and CamBam output; no source model ownership |
+| `cambam_builder/integrations/cambam/` | Native `.cb` input/attachment, M2 curved candidates, actual posted MOP-series normalization and bounded posted-stock comparison; depends on native model and detached CAM values | Bridge between native documents, generated motion and CamBam output; no source model ownership |
 | `cambam_builder/integrations/direct_*.py` | Bounded headless V and RC01 reference-dialect writers, parsed-output audits and evidence manifests | Output adapters; consume detached plans/traces and preserve their target verifiers |
 | `cambam_builder/__init__.py` | Public alias and version | Import surface and version metadata |
 | `cambam_builder/mcp_adapter/` | Optional local stdio launcher, SDK protocol boundary, volatile documents, retry ledger, schema validation and workspace I/O | [MCP contract](MCP_CONTRACT.md); `server.py` owns wire behavior, `service.py` owns application state, `paths.py` owns filesystem policy |
@@ -591,6 +592,44 @@ CamBam does not display CustomScript motion as its generated toolpath; the
 posted NC and independent replay are the execution evidence. The preview
 Engrave displays final-depth T2 geometry only.
 
+### M2 curved Region endmill rest and literal output candidate
+
+`cam_core.curved_region.approximate` consumes directed circular-arc bulge rings
+after the native `Region` owner has validated analytic topology. It subdivides
+each arc at at most 0.001 mm sagitta, records the exact source arc area and the
+sum of circular-segment chord area errors, and constructs nominal, inward-safe
+and outward-covering GEOS Regions. It rejects nonfinite geometry,
+subresolution bulges, excess subdivision and offset
+topology changes. The inward-safe Region is the
+`cam_core.replay.Target` for both supplied T1 cuts and generated T2 cuts;
+this makes the original analytic wall and hole protected under the stated
+chord bound. Outer/inner cutter-sweep polygons and outward/inward target
+polygons bound remaining area at each section. Constant-depth slabs give
+volume intervals. GEOS topology and offsets are conditional floating results,
+not formal interval proofs. A curved throat with no cutter-center clearance
+fails instead of being bridged by a low cut.
+
+`integrations.cambam.native_curved_rest` strict-imports one zero-Z native
+Region with at least one arc and one non-nested 4 mm Part. The exact `.cb` hash
+binds a separately supplied ordered T1 trace; imported source geometry,
+including bulges and a reflected native transform, stays authored. The bounded
+fixture uses two levels, T1/T2 diameters 3/1.5 mm and 0.25 mm T1 allowance.
+`polygon_rest.generate` supplies full T2 entry, cut, high link and retract
+roles on the inward-safe target. Separate preview Engrave and literal
+Drill/CustomScript candidates strict-reimport with the original Region and
+stock intact. The preview is visual only for execution; `audit_preview`
+separately compares CamBam's actual Engrave post against its source-bound
+Z=-4 T2 centerlines within Default's four-decimal coordinate precision.
+`audit_post` requires a matching
+actual CamBam Default/Default mm program, checks every ordered move/event,
+replays the emitted coordinates and recomputes curved source residual bounds.
+The tracked annulus, mixed concave/hole and reflected cases passed those
+separate actual CamBam posts, strict source/candidate reimport and visible
+curved preview observation. CustomScript confirms literal-post transport; it
+does not certify that CamBam independently generated the execution sequence.
+The analytic arc area, bounded rest and replay of parsed actual coordinates
+are the stock evidence, conditional on GEOS floating topology.
+
 ### Bounded pointed-cone CamBam output carrier
 
 `integrations.cambam.cone_script` attaches the full-depth 12 x 4 mm slot to one
@@ -932,6 +971,58 @@ Motion fingerprints omit line numbers and timestamp headers; exact raw NC
 hashes remain separate. The review owner records which observations are
 accepted and their limits. A new `.cb` export with different IDs or changed
 settings needs its own native post and hashes.
+
+### Bounded native MOP-series normalization and strategy selection
+
+`integrations.cambam.native_series.normalize_native_series` strict-reimports
+the source and candidate `.cb` files, preserves original primitive identity,
+analytic world geometry and Part stock, and parses a complete actual CamBam
+Default post in document MOP order. The bounded subset has one non-nested
+millimetre Part, unique enabled MOP names and explicit cylindrical EndMill
+tools. Native XML units/post settings or an explicit matching Default-mm setup
+are required. Exact source, candidate and post SHA-256 values remain separate
+from the modal motion fingerprint. Every G0/G1/G2/G3 item and tool/spindle
+event is retained with its MOP section; unsupported words, cycles, absent or
+reordered sections, tool mismatches and unbound setup fail. A parsed post
+alone has no stock authority. The retained actual M1 Pocket post normalizes as
+two ordered sections but its arcs and previously observed unsafe entries do
+not acquire a replay certificate from this parser.
+
+For a source with no MOP intent, the source evidence key normalizes original
+primitive UUID/world geometry, Part stock and millimetre units. Document-title
+and other presentation-only edits that leave that snapshot unchanged retain
+the candidate/post certificate; geometry or stock edits invalidate it. A
+source containing any MOP still requires exact source bytes because its MOP
+intent lacks a semantic edit classifier. Candidate and actual post bytes are
+always exact-hash guarded. The bounded linear audit also requires each native
+MOP to target the same original Rect or straight Region geometry and floor;
+a caller-supplied larger target cannot manufacture safe stock clearance.
+
+`NativeSeries.to_trace` lowers only bounded G0/G1 linear motion on supported
+XY Pocket/Profile/Engrave stages into the shared ordered replay model. Arcs,
+ramps and low XY rapids have no lowering until continuous occupancy and access
+proofs exist. `native_series_audit.audit_linear_native_series` rechecks the
+source/candidate/post bytes, binds one source target and supplied cutting
+lengths/entry modes, replays each complete prefix and reports section residual
+area intervals, integrated volume intervals and inflated protected-overcut
+upper area. A failed role/access/target/overcut check creates no selectable
+stage certificate. The bounded geometry is a straight-edge Region or rectangle
+with one common target across stages. Curved and V profiles need their own
+source-bound occupancy adapter before this audit can certify them.
+
+`cam_extensions.strategy.select_strategy` consumes only chained `StageAudit`
+evidence with current source, actual emitted-motion fingerprints, complete
+motion and passed tool/entry/link/stock/target/residual/post gates. It compares
+safe alternatives by feasibility first, then final upper remaining area and
+volume, then a caller-declared tie order. Manual selection can retain a safe
+partial route but cannot choose an unsafe one. It returns selected, partial or
+infeasible diagnostics and each stage's residuals. Native, custom Region and
+framework stages can be mixed when each has its own audit; this policy never
+infers stock from MOP intent. The current native linear end-to-end fixture
+proves the parser-to-replay-to-selector path. A composed edited curved target
+with rounded-tip comparison and direct reference output remains the full M4
+gate; [the milestone scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
+owns its acceptance.
 
 ### RC01 selected posted-motion stock authority
 

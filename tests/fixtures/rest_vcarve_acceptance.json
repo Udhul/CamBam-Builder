@@ -98,6 +98,24 @@
       "kind": "polygonal_endmill_access",
       "input": {"shell": [[0, 0], [10, 0], [10, 4.1], [14, 4.1], [14, 0], [24, 0], [24, 10], [14, 10], [14, 5.9], [10, 5.9], [10, 10], [0, 10]], "tool_radius_mm": 1, "crossing_start": [5, 5], "crossing_end": [19, 5]},
       "expected": {"area_mm2": 207.2, "throat_width_mm": 1.8, "minimum_tool_diameter_mm": 2, "low_crossing_protected_overcut_mm2": 0.8, "low_crossing": "reject; a retracted independent entry remains possible", "finite_square_corner_rest_per_chamber_mm2": 0.8584073464102069}
+    },
+    {
+      "id": "M2_annulus_curved_cleanup",
+      "kind": "curved_region_endmill_rest",
+      "input": {"outer_radius_mm": 9, "hole_radius_mm": 2, "depth_mm": 4, "depth_levels_mm": [2, 4], "t1_radius_mm": 1.5, "t2_radius_mm": 0.75, "rough_allowance_mm": 0.25, "arc_sagitta_upper_mm": 0.001},
+      "expected": {"analytic_area_mm2": 241.90263424221752, "chord_area_error_upper_mm2": 0.05, "rough_rest_upper_mm2": 18.2, "final_rest_upper_mm2": 0.2, "cleanup_gain_lower_mm2": 17.7, "final_area_interval_width_upper_mm2": 0.15, "final_volume_upper_mm3": 0.8, "protected_overcut_upper_mm2": 0, "native_gate": "fresh actual Default literal post, visible separate preview, strict source reimport and stock replay"}
+    },
+    {
+      "id": "M2_mixed_arc_concave_hole",
+      "kind": "curved_region_endmill_rest",
+      "input": {"shell": [[-16,-10,0.17],[16,-10,0],[16,10,0],[5,10,0],[5,4,0],[-5,4,0],[-5,10,0],[-16,10,0]], "hole_center_mm": [0,-3], "hole_radius_mm": 1.5, "depth_mm": 4, "t1_radius_mm": 1.5, "t2_radius_mm": 0.75, "rough_allowance_mm": 0.25, "reflected_frame": "x -> 40-x, y -> y+7"},
+      "expected": {"analytic_area_mm2": 631.2921057999616, "chord_area_error_upper_mm2": 0.03, "rough_rest_upper_mm2": 35.5, "final_rest_upper_mm2": 1.0, "cleanup_gain_lower_mm2": 34.0, "protected_overcut_upper_mm2": 0, "native_gate": "fresh actual Default literal post for mixed and transformed source, strict reimport and stock replay"}
+    },
+    {
+      "id": "M2_curved_narrow_access_rejection",
+      "kind": "curved_region_endmill_access",
+      "input": {"outer_radius_mm": 3, "hole_radius_mm": 2.2, "radial_width_mm": 0.8, "tool_diameter_mm": 1},
+      "expected": {"low_level_crossing": "reject; no radius-0.5 disk center fits the curved annular throat", "protected_overcut_upper_mm2": 0}
     }
   ]
 }

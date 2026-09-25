@@ -46,12 +46,12 @@ remain required. Do not claim physical machining without real setup acceptance.
 | --- | --- | --- |
 | M0: reusable proof and output bridge | Shared motion/stock replay, strict native source, separate visible preview and exact executable candidate, with at least one independently audited actual CamBam post and a parsed direct reference program. | **Accepted.** RC01 and the pointed/variable-depth cone examples, including the native triangle, establish this bridge. Their geometry and process scopes remain bounded. |
 | M1: polygonal rest and smaller-endmill cleanup | On the existing letter-like Region with a hole and 0.5 mm allowance, derive pure rest from source-bound supplied prior motion, retain the original protected boundary, create safe smaller-tool access through verified cleared space, emit complete entry/cut/link/retract motion, and independently bound residual area/volume and overcut. Strict native reimport and a fresh actual explicit post must pass. Attach a separate native Pocket/Profile cleanup candidate and audit its actual post before crediting that route; select the route whose full emitted motion passes stock and access gates. Include a distinct narrow-access/corner rejection fixture. | **Accepted for the bounded A01 case via exact explicit motion.** The revised two-contour candidate passes its actual 2,692-item CamBam post and stock replay. The independent native Pocket post passes area but fails 12 T2 access entries and is excluded from execution. The supplied synthetic T1 raster is a proof fixture, not a recommended roughing strategy. |
-| M2: curved Region rest and endmill cleanup | On a native annulus and a mixed line/arc concave Region with a hole, derive pure rest from supplied prior motion and produce complete smaller-endmill entry/cut/link/retract paths. Preserve analytic source identity; validate arc topology, conservative access/protection and independently bounded residual/overcut through approximation and emitted motion. Strict native reimport, visible preview, actual explicit post and stock replay must pass; include a curved narrow-access rejection and translated/reflected frame case. | **Open.** Arc-aware bounds and an approximation contract exist; curved rest, access and posted cleanup do not yet pass. |
+| M2: curved Region rest and endmill cleanup | On a native annulus and a mixed line/arc concave Region with a hole, derive pure rest from supplied prior motion and produce complete smaller-endmill entry/cut/link/retract paths. Preserve analytic source identity; validate arc topology, conservative access/protection and independently bounded residual/overcut through approximation and emitted motion. Strict native reimport, visible preview, actual explicit post and stock replay must pass; include a curved narrow-access rejection and translated/reflected frame case. | **Accepted for the bounded annulus, mixed and reflected synthetic jobs via exact explicit motion.** All three actual Default posts pass ordered motion and stock replay; their native Engrave preview posts separately match the final T2 centerlines. The user confirmed curved preview visibility. CustomScript proves post transport, not independent CamBam path planning; neither route is physical machining acceptance. |
 | M3: V cleanup and edge tracing | On the polygonal target and at least one accepted curved target, generate pointed, flat-tip and tangent spherical/conical rounded-tip variable-depth paths, depth-capped/wide-area additional passes, and boundary/corner cleanup around concavity and holes. Check tool-profile continuity, full cutter occupancy, access, protected material, residual and infeasible/partial results between vertices and around arcs. Strict native preview and actual explicit post must be audited; Engrave remains inspection-only unless its whole post passes. | **Open.** Straight grooves and one convex triangle prove limited pieces; flat/rounded tips, wide areas, concave/hole/arc routes and edge cleanup do not yet pass. |
-| M4: composed workflow and edits | One reopened/edited native source runs rest analysis, alternative endmill/V strategy comparison, selected ordered operations and stock-dependent cleanup without hidden session state. Normalize complete actual emitted motion from any supported native CamBam MOP or ordered MOP series as prior-stock authority, with explicit rejection of unsupported motion; calculate remaining area and volume by stage. Include a curved target and rounded-tip strategy in the accepted comparison, and allow manual or planned chaining of safe native MOPs, custom Region MOPs and exact framework paths. Relevant edits invalidate source, path and post claims; unchanged cosmetic edits retain valid evidence. The same accepted plan is available through native preview/explicit output and a parsed, stock-replayed direct reference program. | **Open.** Existing fingerprints and direct reference writers provide parts, but no generic actual native MOP-series normalizer or complete edited combined job is accepted. |
+| M4: composed workflow and edits | One reopened/edited native source runs rest analysis, alternative endmill/V strategy comparison, selected ordered operations and stock-dependent cleanup without hidden session state. Normalize complete actual emitted motion from any supported native CamBam MOP or ordered MOP series as prior-stock authority, with explicit rejection of unsupported motion; calculate remaining area and volume by stage. Include a curved target and rounded-tip strategy in the accepted comparison, and allow manual or planned chaining of safe native MOPs, custom Region MOPs and exact framework paths. Relevant edits invalidate source, path and post claims; unchanged cosmetic edits retain valid evidence. The same accepted plan is available through native preview/explicit output and a parsed, stock-replayed direct reference program. | **Open; bounded native-series and selection building block implemented.** Actual Default MOP-series parsing, linear cylindrical prefix replay and deterministic evidence-gated selection pass a synthetic end-to-end check. Arc/unsafe posts remain unselectable; curved/rounded-tip edited composition and direct output are not yet accepted. |
 | M5: one controller output | Select one named controller dialect and setup, lower the M4 plan with declared units, tools, feeds, spindle, entry/link/retract and end roles, parse its actual file independently and replay the emitted coordinates. Record machine-specific limits and user simulation/controlled acceptance separately. | **Open; needs controller selection.** Existing ASCII reference dialect is verified but is not a controller profile. |
 
-This is **two accepted milestones and four remaining milestones**, not a time or
+This is **three accepted milestones and three remaining milestones**, not a time or
 effort percentage: M1-M3 carry the largest geometry and native-output risks.
 The user-approved curved/rounded scope adds one whole-outcome milestone to the
 earlier polygonal plan; it does not create an open-ended sequence of arc or tip
@@ -123,6 +123,30 @@ MOP-series posts, route comparison and edit-aware selection remain M4 work.
 Reassess the count only when the user explicitly changes this release finish
 line; defer spline/freeform geometry, generic rounded-flat tips and extra
 controller dialects until a user requirement or accepted fixture requires them.
+
+**M2 fixed acceptance and actual-post result (2026-09-25).** The tracked corpus
+fixes three curved jobs before CamBam posting: a radius-9/radius-2 annulus,
+a concave mixed line/arc shell with a circular hole, and a translated/reflected
+version of the mixed source. All use a 4 mm opening, two 2 mm levels, T1/T2
+radii 1.5/0.75 mm and 0.25 mm rough allowance. Independently, annulus analytic
+source area is `77π = 241.902634242` mm²; the mixed source has analytic
+arc-adjusted area `631.292105800` mm². A maximum 0.001 mm chord sagitta,
+outward/inward target bounds and inner/outer cutter sweeps bracket residuals.
+For the annulus, rough/final upper bounds are 18.2/0.2 mm², gain exceeds
+17.7 mm² and final volume is below 0.8 mm³. For each mixed frame, rough/final
+upper bounds are 35.5/1.0 mm² and gain exceeds 34.0 mm². Protected overcut
+upper area is zero. The separate annular 0.8 mm throat rejects a 1 mm tool.
+Native Region topology validation, source-hash-bound supplied prior, safe
+access, generated complete T2 motion, strict reimport and separate preview/
+literal candidates are implemented; [the runbook](DEVELOPMENT.md#m2-curved-region-rest-and-smaller-endmill-output-gate)
+holds the three prepared file sets and exact actual-post evidence. The user
+confirmed curved preview visibility. All three actual preview posts match the
+generated Z=-4 T2 centerlines; all three actual explicit posts pass exact
+ordered motion and stock replay against the original analytic source. The
+literal carrier proves CamBam transport, while the preview confirms its native
+Engrave interpretation; it does not make CamBam's Engrave operation the
+execution route. **M2 passes its bounded gate.** Physical setup remains
+unverified.
 
 ## Programmatic execution requirement
 

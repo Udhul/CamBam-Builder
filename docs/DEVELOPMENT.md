@@ -494,6 +494,106 @@ Neither gate is controller or physical machining acceptance. The Default
 post does not encode the incoming machine position, and GEOS topology is not
 a formal numerical interval proof.
 
+### M2 curved Region rest and smaller-endmill output gate
+
+Use `.venv\Scripts\python.exe` from the repository root with the optional
+planar backend installed. The tracked acceptance inputs and numeric limits are
+`M2_*` in [the rest corpus](../tests/fixtures/rest_vcarve_acceptance.json).
+The three prepared, ignored synthetic jobs are:
+
+| Case | Directory | Analytic opening area | Rough/final area interval at Z=-1 and -3 mm |
+| --- | --- | ---: | ---: |
+| Annulus | `output/m2-annulus-20260925-02/` | 241.902634242 mm² | 17.96728–18.10760 / 0.03366–0.17300 mm² |
+| Mixed line/arc concave Region with circular hole | `output/m2-mixed-20260925-01/` | 631.292105800 mm² | 35.06282–35.31860 / 0.64979–0.90388 mm² |
+| Translated/reflected mixed Region | `output/m2-reflected-20260925-01/` | 631.292105800 mm² | 35.06282–35.31860 / 0.64979–0.90388 mm² |
+
+Each directory contains exact `source.cb`, `prior.json`, separate
+`preview/m2-preview.cb` and `explicit/m2-explicit.cb`, and a hash-guarded
+`expected-motion.json`. The source preserves native bulges; the reflected
+case retains a native Region transform. The preview Engrave shows only final
+depth T2 paths. The literal Drill/CustomScript carries all supplied T1 and
+generated T2 motion, including entries, high links and retracts. Its displayed
+Drill path does not show the CustomScript motion. T1 raster/contour motion is
+a stock-proof fixture, not a production roughing recommendation. The declared
+millimetre setup uses stock Z=0..-4, T1/T2 diameters 3/1.5 mm, both cutting
+lengths 8 mm, CW 12000 rpm, F60 entries, F300 cuts/retracts and a +5 mm tip
+clearance. These are test tokens, not material-safe feeds or controller output.
+The CustomScript post checks literal-motion transport through CamBam; it does
+not show that CamBam independently planned the same path. The separate Engrave
+post checks CamBam's native interpretation of the generated T2 preview
+centerlines. Neither preview operation supplies the T1/entry/link certificate.
+The analytic arc area and independently fixed residual budgets, source-bound
+stock replay, and complete actual explicit post provide that bounded result.
+
+Rebuild a new isolated job with an exact existing `.cb` and matching supplied
+motion, then run focused checks:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_curved_rest output/m2-new-UNIQUE --source path/to/source.cb --prior path/to/prior.json
+& $ProjectPython -m unittest tests.test_curved_rest tests.test_polygon_rest tests.test_region -v
+```
+
+The source alone cannot assert T1 removal; a missing or stale `prior.json`
+fails. Generated area and volume are conditional GEOS bounds around an
+analytic circular-arc source. The 0.001 mm maximum chord sagitta and explicit
+inner/outer Regions are recorded in each manifest. The curved narrow-annulus
+fixture rejects a tool wider than its 0.8 mm radial throat; replay also rejects
+cuts across protected holes. The independent source-area and residual budgets
+are in the corpus, and a posted file must satisfy the same budget.
+
+For each of the three jobs, open its `source.cb` and `preview/m2-preview.cb`
+in CamBam Plus 1.0. Confirm millimetres, the native curved shell/hole and Part
+stock, and visible generated T2 centerlines at Z=-4. For the reflected job,
+confirm its curved Region appears at drawing X=24..56 and Y about -5..17.
+Then open `explicit/m2-explicit.cb` separately, choose **Default** postprocessor
+and **Default mm** profile, confirm only its literal Drill is enabled, generate
+toolpaths and post to `explicit/m2-explicit.nc`. Inspect the complete T1/T2
+motion in an NC viewer: every low cut stays in the opening and every link
+retracts to +5 mm. The original source and expected files must stay unchanged.
+
+Audit each actual file from the repository root:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_curved_rest output/m2-annulus-20260925-02/expected-motion.json output/m2-annulus-20260925-02/explicit/m2-explicit.nc
+& $ProjectPython -m cambam_builder.integrations.cambam.native_curved_rest output/m2-mixed-20260925-01/expected-motion.json output/m2-mixed-20260925-01/explicit/m2-explicit.nc
+& $ProjectPython -m cambam_builder.integrations.cambam.native_curved_rest output/m2-reflected-20260925-01/expected-motion.json output/m2-reflected-20260925-01/explicit/m2-explicit.nc
+& $ProjectPython -m cambam_builder.integrations.cambam.native_curved_rest output/m2-annulus-20260925-02/expected-motion.json output/m2-annulus-20260925-02/preview/m2-preview.nc --preview
+& $ProjectPython -m cambam_builder.integrations.cambam.native_curved_rest output/m2-mixed-20260925-01/expected-motion.json output/m2-mixed-20260925-01/preview/m2-preview.nc --preview
+& $ProjectPython -m cambam_builder.integrations.cambam.native_curved_rest output/m2-reflected-20260925-01/expected-motion.json output/m2-reflected-20260925-01/preview/m2-preview.nc --preview
+```
+
+Pass requires `bounded_m2_curved_post_pass` and
+`m2_native_preview_centerlines_pass` for all three unchanged candidates,
+zero inflated protected overcut, matching every ordered event/move and the
+manifest's stock prefixes and residual intervals. Report each NC path, audit
+result and the source/stock/preview observations. A constructed NC regression
+tests the parser but is not actual CamBam acceptance. Controller and physical
+machining acceptance remain separate.
+
+**2026-09-25 actual CamBam Plus 1.0 acceptance.** The user reported visible
+curved preview paths in CamBam, generated all three preview and explicit NC
+files, and confirmed that CustomScript motion is absent from the Drill
+toolpath display. Strict native reimport checked the original Region bulges,
+Part stock and candidate source identities. All three preview posts passed the
+separate 4-decimal T2 centerline comparison at Z=-4; the annulus has 2 paths
+with 214/502 vertices, and both mixed cases have 2 with 192/442 vertices.
+All three explicit Default posts passed exact ordered event/move comparison,
+source/candidate hashes, stock replay and the fixed residual/overcut budgets:
+
+| Case | Preview post SHA-256 | Explicit post SHA-256 | Ordered items | Final area interval at Z=-1/-3 mm |
+| --- | --- | --- | ---: | ---: |
+| Annulus | `4f19ee35e7ca9763c8aaced736e70ac2caa0b798ab9cdb325e5f06e47ab84080` | `c7fb042a63380f2c94970aed2b645f627511e527b975273eb29e12690e4fecf5` | 2,984 | 0.033661–0.172997 mm² |
+| Mixed | `0851e8774b1feede38f1e3853f09ef619e28536ecff5a71a1800049602549988` | `a8499c356958d8d849556841ca8750172e662faf30fcc4c5f4b4fb1e84cff6e2` | 2,688 | 0.649797–0.903873 mm² |
+| Reflected | `718e45c8b8cee4af17f8ef79735e7a2db11b4367ab17c39793bc8b43632bb375` | `879bc3c0e2416e1e75d2d8cebc39f2e3480de406b6a21ed9f9cdc4a4243a9b4c` | 2,684 | 0.649797–0.903873 mm² |
+
+The two mixed v1 manifests retained fingerprints incorporating an older replay
+target representation. Their source hashes, every supplied T1 item, generated
+T2 item, script line, analytic area and residual bound match exactly. The
+legacy acceptance branch permits that fingerprint drift only when the supplied
+T1 items equal the source-derived synthetic fixture; other supplied traces
+still need a current exact fingerprint. A 0.1 mm preview NC coordinate tamper
+returned `deviation`. No physical or controller acceptance is implied.
+
 ### Bounded cone CustomScript carrier and posted replay
 
 Build one new ignored directory from the repository root:
@@ -1104,6 +1204,50 @@ new exports require their own posts and provenance; do not overwrite this
 accepted fixture set. `G98`/`G81` CannedCycle words remain raw/unresolved in
 the modal parser. Incoming machine position, controller execution and stock
 removal are not certified by this mapping.
+
+### Native MOP-series normalization and strategy selection checks
+
+The bounded M4 building block consumes a strict native `.cb` source,
+candidate and **actual** CamBam Default post. It binds the original source
+primitive identity, analytic geometry and Part stock, ordered enabled MOP
+sections, explicit cylindrical tool fields and declared millimetre/Default
+setup when native XML omits those values. The parser retains posted arcs but
+does not grant them stock authority. Linear XY motion can be lowered to
+`cam_core.replay`; each prefix then receives bounded area, volume and
+protected-overcut measurements for one source-bound rectangle or straight
+Region. The strategy policy compares only complete, current, fully audited
+stage chains and reports selected, partial or infeasible outcomes. A MOP-free
+source permits document-title presentation edits when its original primitive
+UUID/world geometry and Part stock are unchanged; sources with existing MOPs
+still use exact-byte freshness. Candidate/post bytes always stay exact.
+
+Run the focused gate from the repository root:
+
+```powershell
+& $ProjectPython -m unittest tests.test_native_series tests.test_native_series_audit tests.test_strategy_selection -v
+```
+
+The native-series test also normalizes the retained actual M1 two-Pocket post
+under its separately recorded Default-mm setup. This proves ordered post
+reading, not that the M1 native route is safe: its arcs and 12 previously
+observed T2 entries still block a generic linear replay certificate. The
+synthetic two-MOP linear post test proves full parser-to-stock-to-selector
+behavior; it is constructed test data, not new CamBam acceptance. No new
+manual CamBam validation adds evidence for the pure selector or this bounded
+normalizer because the actual M1 post is already retained. Reopen the linear
+certificate boundary when an actual, source-bound candidate with supported
+linear motion and safe entries is available. A curved/rounded-tip combined
+edited job and parsed direct reference output remain the full M4 acceptance
+gate.
+
+The 2026-09-25 packaging gate built both wheel and sdist under
+`output/m4-series-20260925-03/`, installed the local wheel without dependencies
+under `output/m4-wheel-smoke-20260925-02/installed`, then imported
+`cam_extensions.strategy`, `integrations.cambam.native_series_audit` and
+`cam_core.curved_region` after changing the interpreter's working directory
+outside the checkout. All three module paths resolved inside the installed
+wheel target. This checks package inclusion and import, not a clean dependency
+resolution or all supported Python versions.
 
 ### Isolated planar backend evaluation
 

@@ -5,6 +5,7 @@ center contours and bounded sweep polygons; replay checks every actual segment.
 """
 
 from dataclasses import dataclass
+from functools import lru_cache
 import hashlib
 import math
 
@@ -43,6 +44,7 @@ def _segments(geometry):
     return ()
 
 
+@lru_cache(maxsize=32)
 def _cut_polygon(cuts, depth, *, radial_error=0):
     from shapely.geometry import GeometryCollection
     from shapely.ops import unary_union

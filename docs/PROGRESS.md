@@ -421,14 +421,14 @@ controller, physical setup and machining remain unverified.
 Regions and rounded V tips for v1. The
 [bounded scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
 sets six whole-outcome milestones. M0, the reusable core/native/explicit output
-bridge, and M1 polygonal rest and smaller-endmill cleanup are accepted on this
-branch. Four remain: M2 curved Region rest and endmill cleanup; M3
+bridge, M1 polygonal rest and smaller-endmill cleanup, and M2 curved Region
+rest and endmill cleanup are accepted on this branch. Three remain: M3
 pointed/flat/tangent spherical-conical rounded-tip V cleanup and edge tracing
 on polygonal and curved targets; M4 one edited combined workflow with direct
-reference output; M5 one selected controller dialect. This is **2 of 6
-milestones accepted, 4 remaining**, not a time/effort percentage. RC01 and
+reference output; M5 one selected controller dialect. This is **3 of 6
+milestones accepted, 3 remaining**, not a time/effort percentage. RC01 and
 the native triangle partially de-risk M1/M3; accepted curved-bound and
-geometry-design work does not yet pass M2/M3 path gates. The added M2 reflects
+geometry-design work does not yet pass M3 path gates. The added M2 reflects
 the user's expanded finish line, not a succession of small internal steps.
 Internal fixes and probes do not create new milestones.
 
@@ -471,15 +471,72 @@ The [contract](structure_spec.md#m1-polygonal-endmill-rest-and-native-output-can
 and [M1 scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
 own the limits. **M1 is accepted for bounded A01; count is 2 of 6.**
 
-**Next priority:** M2 curved Region rest and smaller-endmill cleanup on the
-native annulus and mixed line/arc Region, including original-source identity,
-conservative arc bounds, access and actual-post replay per the
+**2026-09-25 M2 curved rest and actual post accepted for three bounded jobs
+(backlog 6).** The native annulus, mixed line/arc concave Region with a circular
+hole, and translated/reflected version now strict-import with their analytic
+bulges and original Part stock. Source-hash-bound supplied T1 motion and an
+inward-safe arc approximation drive complete generated T2 motion; separate
+visual Engrave and exact Drill/CustomScript candidates are retained under the
+three `output/m2-*-20260925-*` directories named in the
+[runbook](DEVELOPMENT.md#m2-curved-region-rest-and-smaller-endmill-output-gate).
+The maximum chord sagitta is 0.001 mm. The analytic annulus area is
+241.902634242 mm²; its rough/final section residual intervals are
+17.96728–18.10760 / 0.03366–0.17300 mm². The mixed and reflected source area
+is 631.292105800 mm²; their rough/final intervals are
+35.06282–35.31860 / 0.64979–0.90388 mm². The inner/outer target and cutter
+brackets yield zero nominal protected overcut in these generated plans and
+finite volume intervals. A narrower curved annulus rejects a too-wide T2 cut.
+These GEOS results are conditional, and the synthetic T1 trace is test stock
+authority rather than a roughing recommendation. The user confirmed visible
+curved paths in CamBam and posted all three preview and explicit NC files.
+The actual preview posts match CamBam-generated final Z=-4 T2 centerlines
+within 4-decimal post precision; the actual explicit posts pass every ordered
+event/move, source/candidate hashes, stock replay and fixed budgets: annulus
+2,984 items, mixed 2,688, reflected 2,684. Their exact NC hashes and area
+intervals are in the [runbook](DEVELOPMENT.md#m2-curved-region-rest-and-smaller-endmill-output-gate).
+The mixed manifests' old target-representation fingerprints required a narrow
+source-derived synthetic-motion compatibility check; every motion item, script
+line and residual stayed identical. CustomScript verifies CamBam literal-motion
+transport, while Engrave verifies native centerline interpretation. Neither
+establishes independent native Pocket planning, controller acceptance or
+physical machining. **M2 is accepted for this bounded explicit route; count is
+3 of 6.**
+
+**2026-09-25 M4 native series and strategy building block (backlog 6).**
+`native_series` now binds strict native source/candidate geometry and stock to
+ordered enabled MOP sections in a complete actual Default post. It preserves
+every parsed line/arc and tool/spindle event with exact evidence hashes;
+unsupported words and ambiguous ordering fail. A bounded linear cylindrical
+bridge replays each stage against one source-bound rectangle or straight
+Region, measures remaining area and volume by prefix, checks protected
+overcut and refuses arcs, ramps or unsafe access. The deterministic selector
+compares only complete, current, audited native/custom/framework stage chains;
+manual selection cannot override an unsafe gate. A MOP-free source preserves
+its certificate across document-title edits when original UUID/world geometry
+and Part stock are unchanged; source files with MOPs still require exact-byte
+freshness. The retained actual M1
+Pocket post normalizes as an ordered two-stage input but has no generic replay
+certificate; its independent M1 audit already rejected 12 T2 entries. A
+constructed two-MOP linear file proves end-to-end normalization, stock replay
+and selected strategy without claiming fresh CamBam acceptance. See the
+[contract](structure_spec.md#bounded-native-mop-series-normalization-and-strategy-selection)
+and [checks](DEVELOPMENT.md#native-mop-series-normalization-and-strategy-selection-checks).
+The new package built as wheel/sdist, and the installed wheel imported its
+new modules from outside the checkout. This does not verify all supported
+Python versions or CamBam physical execution.
+**M4 remains open** pending M3 rounded-tip geometry, a reopened edited
+curved combined job and parsed direct reference output.
+
+**Next priority:** Implement M3 pointed/flat/tangent rounded-tip V cleanup and edge
+tracing across polygonal and curved targets; that is required before full M4
+composition can close. See the
 [scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24).
 M1 fixes the route criterion: each candidate's actual emitted motion earns
 its own stock/access certificate. M4 then composes native MOP series, custom
 Region MOPs and framework paths into an edit-aware strategy choice with
-area/volume reporting. Generic native-MOP normalization and strategy
-optimization are not yet implemented.
+area/volume reporting. Bounded native-MOP normalization and strategy selection
+are now M4 components; they cannot claim M4 acceptance without an
+edited combined curved/rounded-tip job and direct output evidence.
 Backlog 7 needs a separate Manual-tab fixture; 8-10 are complete.
 Defer geometry outside the six-milestone supported domain, optimization and
 the detached/policy
