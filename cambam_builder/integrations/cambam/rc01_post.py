@@ -17,7 +17,8 @@ _ALLOWED_G = {0, 1, 17, 21, 40, 61, 64, 90}
 _ALLOWED_M = {3, 5, 6, 30}
 
 
-def read_default_post(data, *, allow_arcs=False):
+def read_default_post(data, *, allow_arcs=False,
+                      initial_position=(-10.0, -10.0, 5.0)):
     """Decode bounded absolute-mm Default-post motion and modal events.
 
     Native Pocket comparison may opt into XY G2/G3 with relative I/J centers.
@@ -25,7 +26,11 @@ def read_default_post(data, *, allow_arcs=False):
     """
     if not isinstance(data, str) or len(data) > 20_000_000:
         raise ValueError("posted text must be bounded Unicode")
-    at = (-10.0, -10.0, 5.0)
+    if (not isinstance(initial_position, tuple) or len(initial_position) != 3 or
+            any(isinstance(v, bool) or not isinstance(v, (int, float)) or
+                not math.isfinite(v) for v in initial_position)):
+        raise ValueError("finite initial tip XYZ required")
+    at = initial_position
     tool, feed, rpm, motion = None, None, None, None
     units, absolute, plane = False, False, False
     items, warnings = [], []

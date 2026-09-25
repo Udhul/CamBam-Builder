@@ -401,6 +401,99 @@ the bounded native display and posted-motion acceptance. Do not repeat the
 accepted explicit post unless the candidate,
 source, prior or output setup changes. Physical machining remains unverified.
 
+### M1 polygonal Region rest and smaller-endmill output gate
+
+Install the optional planar backend (`uv sync --extra planar`) and use the
+declared project interpreter. The retained synthetic fixture and posted
+CamBam candidates are under `output/m1-polygon-20260924-04/`. `source.cb`
+has the eight-edge letter-like Region and triangular hole. `prior.json`
+contains the complete supplied T1 motion and its exact source binding.
+`expected-motion.json` pins the source, supplied motion and all candidates.
+The preview and execution files are separate:
+
+- `preview/m1-preview.cb`: two final-level Z=-8 T2 contour centerlines,
+  one at the shell and one at the hole, as a visual Engrave. The full
+  four-level sequence is in the explicit candidate, not this preview.
+- `explicit/m1-explicit.cb`: one literal T1/T2 Drill/CustomScript execution
+  carrier; its displayed Drill toolpath is not its executable motion.
+- `native/m1-native.cb`: independent original-Region T1/T2 Pocket trial.
+
+For another existing source, supply both its `.cb` and matching source-bound
+`prior.json`; an absent prior fails rather than inferring Pocket removal:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_polygon_rest output/m1-polygon-NEW --source path/to/source.cb --prior path/to/prior.json
+& $ProjectPython -m unittest tests.test_polygon_rest tests.test_rest_vcarve_acceptance_fixtures -v
+```
+
+The retained source SHA-256 is
+`be092ec2827810ca0c47f6bc7a9a901a2d9fa2d609b096599261995bf1e5947f`;
+the supplied prior is
+`875becc966121baa362299afe756e12fb7159257e2f03f03110f25cd0ac3c98c`.
+The revised explicit candidate is
+`3691b0221882247ca3b9be577dd7f1b4d5fa5138a9523bf20b8ef445dbd44973`;
+the native candidate is
+`4b2140b4d317511cc798cfa6acadfeee8cbfa02748974f9506129fbc38811460`.
+The latter is byte-identical to the already posted native trial; no native
+repost is needed. Do not modify the pinned files. The synthetic setup assumes
+millimetres, original Region area 1532 mm², Part stock X=-26..26, Y=-2..62,
+Z=-8..0, initial tip (-30,-10,+5), T1 diameter 5, T2 diameter 2,
+10 mm cutting length, 2 mm axial levels to Z=-8, CW 12000 rpm, feed 60
+for entry and 300 mm/min for cut/retract. The T1 allowance is 0.5 mm.
+These are test tokens, not real material cutting parameters.
+
+Manual validation adds evidence beyond automated checks. In CamBam Plus 1.0,
+open the **preview** and confirm the source shell/hole, stock and a visible
+T2 centerline after generating toolpaths; do not post this file. Open the
+**explicit** file separately, select `Default` postprocessor and `Default mm`
+profile, confirm only the literal Drill MOP is enabled, generate toolpaths and
+post to `explicit/m1-explicit.nc`. Return that exact NC file and report
+source/stock/units and whether both preview contours are visible. The
+CustomScript motion may be absent from CamBam's toolpath display; its actual
+post is the execution evidence.
+
+Audit both posts from the repository root:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_polygon_rest output/m1-polygon-20260924-04/expected-motion.json output/m1-polygon-20260924-04/explicit/m1-explicit.nc --route explicit
+& $ProjectPython -m cambam_builder.integrations.cambam.native_polygon_rest output/m1-polygon-20260924-04/expected-motion.json output/m1-polygon-20260924-04/native/m1-native.nc --route native
+```
+
+The revised explicit gate returned `bounded_m1_explicit_post_pass` for actual
+Default NC SHA-256
+`e214571c55c67cb525a0a2d17a8b0508b9aa11da776e97a0c138b866ee172ba5`.
+It verified all 2,692
+ordered items, `prior` then `cleanup` stock prefixes, and the same section
+rest interval at depths 1/3/5/7 mm: rough
+137.218201–137.230366 mm² and final 1.313264–1.318529 mm². The
+independent finite-tool lower limit is 1.190659933 mm²; the allowed final
+upper limit is 1.690659933 mm². Inflated nominal protected overcut and
+residual outside the ideal/original-boundary 0.05 mm envelope must be zero.
+The separate native gate needs `bounded_m1_native_post_pass` with no motion
+findings and the same final upper budget. Its Pocket strategy may emit
+different coordinates from the explicit trace; it cannot borrow that trace's
+certificate. The actual retained native post has SHA-256
+`c675f00cbaf050c3b7776d8ecab45164a403419db71d473d3ee8d85b22471d05`.
+Its area passes, 180 low vertical rapids have prior-cut witnesses and
+boundary shortfall is at most 0.000397 mm within the declared 0.001 mm
+backend tolerance, but 12 T2 feed descents have no T1-cleared column.
+The native command returns `native_motion_gate_failed`. The selected M1 route
+is the audited explicit post; the native Pocket route is excluded. Do not
+repeat the native post or iterate minor Pocket controls. The posted explicit
+NC contains the fixture's supplied T1 raster, with 208 long horizontal feed
+segments, followed by the two-contour T2 cleanup. CamBam does not render the
+CustomScript motion as its generated toolpath; inspect the NC in CAMotics for
+the full sequence. The preview Engrave shows only the final-depth T2 contours.
+For A01, integrated rough rest is 1097.74561–1097.84293 mm³ and final rest
+is 10.50611–10.54823 mm³, conditional on the section geometry backend.
+The synthetic T1 raster is a stock-proof fixture, not a recommended machining
+strategy. The user's revised preview display and source/stock UI observations
+were not separately reported; strict file reimport and actual NC acceptance
+are recorded independently.
+Neither gate is controller or physical machining acceptance. The Default
+post does not encode the incoming machine position, and GEOS topology is not
+a formal numerical interval proof.
+
 ### Bounded cone CustomScript carrier and posted replay
 
 Build one new ignored directory from the repository root:

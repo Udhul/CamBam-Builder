@@ -91,7 +91,13 @@
       "id": "A01_general_region_composition",
       "kind": "region_composition",
       "input": {"outer": [[-24, 0], [-8, 60], [8, 60], [24, 0], [12, 0], [6, 18], [-6, 18], [-12, 0]], "holes": [[[-4, 28], [4, 28], [0, 44]]], "stock_thickness": 8, "included_angle_degrees": 90, "cap_depth": 3, "endmill_diameter": 5, "v_cutter_maximum_diameter": 12, "roughing_allowance": 0.5},
-      "expected": {"opening_area": 1532, "components": 1, "holes": 1, "path_acceptance": "pending independent swept-stock verification; input validation alone is not acceptance"}
+      "expected": {"opening_area": 1532, "components": 1, "holes": 1, "path_acceptance": "M1 requires supplied-motion sweep and actual posted-motion verification", "m1": {"target_depth_mm": 8, "depth_levels_mm": [2, 4, 6, 8], "rough_tool_radius_mm": 2.5, "rough_allowance_mm": 0.5, "cleanup_tool_radius_mm": 1, "minimum_cutting_length_mm": 8, "section_depths_mm": [1, 3, 5, 7], "original_boundary_allowance_band_mm2_approx": 127.265122238, "rough_rest_upper_mm2": 139, "analytic_finite_cleanup_rest_lower_mm2": 1.190659933126879, "final_rest_upper_mm2": 1.690659933126879, "minimum_cleanup_gain_mm2": 100, "protected_overcut_upper_mm2": 0, "area_interval_width_upper_mm2": 0.01, "geometric_backend_error_mm": 0.001, "native_gate": "fresh actual explicit Default post and separate native Pocket/Profile whole-post audit"}}
+    },
+    {
+      "id": "M1_narrow_access_rejection",
+      "kind": "polygonal_endmill_access",
+      "input": {"shell": [[0, 0], [10, 0], [10, 4.1], [14, 4.1], [14, 0], [24, 0], [24, 10], [14, 10], [14, 5.9], [10, 5.9], [10, 10], [0, 10]], "tool_radius_mm": 1, "crossing_start": [5, 5], "crossing_end": [19, 5]},
+      "expected": {"area_mm2": 207.2, "throat_width_mm": 1.8, "minimum_tool_diameter_mm": 2, "low_crossing_protected_overcut_mm2": 0.8, "low_crossing": "reject; a retracted independent entry remains possible", "finite_square_corner_rest_per_chamber_mm2": 0.8584073464102069}
     }
   ]
 }

@@ -5571,3 +5571,154 @@ The next capability increment should use the new boundary to prove one
 nonrectangular closed-region rest and variable-depth pointed-tool consumer with
 independent motion/stock acceptance. Keep the detached/policy package move
 deferred until that consumer exposes a specific shared owner boundary.
+
+## M1 letter-like polygonal endmill rest preparation - 2026-09-24
+
+The tracked A01 Region has shell area 1596 mm² and a triangular 64 mm² hole,
+so its original target area is 1532 mm². The bounded M1 case uses the source
+shell/hole unchanged, 8 mm stock and floor, T1 radius 2.5 mm with 0.5 mm
+allowance, and T2 radius 1 mm at Z=-2/-4/-6/-8. A complete source-SHA-bound
+supplied T1 trace is replayed first. T2 starts every below-stock descent at
+an actual full-depth T1 cut endpoint, cuts to its planned contour/raster
+path inside the original Region and retracts before the next path. Shared
+replay reports `prior` after 784 cuts and `cleanup` after 2,764 cumulative
+cuts. The test separately rejects a radius-1 mm low link through a 1.8 mm
+throat. The crossing would enter 0.8 mm² of protected throat material.
+
+Analytic corner geometry independently gives the six convex shell corners'
+finite T2 limit of 1.190659933126879 mm² per slab. The generated replay's
+rough area interval is 137.2182012241–137.2303653174 mm², and its final
+interval is 1.3132647731–1.3185281533 mm², at each depth 1/3/5/7 mm.
+The final upper is below the corpus budget 1.6906599331 mm²; the gain lower
+exceeds 135 mm². A 128-quarter-segment inner/outer capsule enclosure with
+0.000001 mm radial perturbation reports nominal protected overcut upper
+0 mm² and residual outside a 0.05 mm ideal/original-boundary envelope 0 mm².
+These are conditional GEOS floating-topology results, not formally certified
+numeric intervals or real-tool uncertainty bounds. The finite cutter leaves
+partial target completion; no zero-residual claim is made.
+
+The retained `output/m1-polygon-20260924-03/` source, supplied prior,
+preview, explicit and native candidates are strict-reimported and pinned by
+`expected-motion.json`. Source/prior SHA-256 values are
+`be092ec2827810ca0c47f6bc7a9a901a2d9fa2d609b096599261995bf1e5947f`
+and `875becc966121baa362299afe756e12fb7159257e2f03f03110f25cd0ac3c98c`;
+the literal/native candidates are
+`9e04fc9e2a6acad92908b238db96a90c8b903d2f434772e290d41fdf493bd7cd`
+and `4b2140b4d317511cc798cfa6acadfeee8cbfa02748974f9506129fbc38811460`.
+The synthetic 3,932-item NC check exercises exact item matching, source
+freshness, parsed-coordinate replay and first-deviation rejection. A separate
+constructed native file with low rapid fails the native role audit. Neither
+file is an actual CamBam post. The only bounded native Pocket hypothesis in
+this M1 trial adds a return-to-setup/stop Custom MOP Footer to the no-lead,
+no-optimisation, cut-feed stepover and zero-crossover settings. Prior RC01
+evidence shows those other settings alone cannot close the role gate.
+
+The focused M1, corpus, convex, RC01 native/stock and direct RC01 command
+passed **44 tests in 158.199 seconds**. A neighboring mixed replay, cone,
+variable-V and direct-V command passed **19 tests in 14.485 seconds**.
+`compileall -q cambam_builder tests`, the public import/construct smoke,
+`git diff --check` and untracked text whitespace inspection passed. This
+work is uncommitted. The generated source/preview/explicit/native files were
+reimported, and the retained manifest's 3,932 items and two cut prefixes
+were regenerated from its exact pinned inputs. Manual CamBam validation is
+required for the fresh actual explicit and native posts plus preview/source
+display. No output-route acceptance is recorded for M1 yet. If the native
+whole-post gate fails, retain the result and request the scorecard's route
+decision; do not infer acceptance from Pocket settings or the constructed
+audit. The [runbook](DEVELOPMENT.md#m1-polygonal-region-rest-and-smaller-endmill-output-gate)
+gives the exact files, commands and pass criteria.
+
+### M1 first actual CamBam posts and contour-only revision - 2026-09-24
+
+The user posted the original M1 explicit and native candidates from
+`output/m1-polygon-20260924-03/` with CamBam Plus 1.0 Default output. They
+confirmed the preview displays a cleanup path assigned to Engrave, and
+observed that it seemed to cover the whole Region with no depth variation.
+The preview intentionally showed only final Z=-8 geometry, but the full
+interior coverage was an avoidable strategy defect: scanlines selected for a
+small boundary rest crossed the entire pocket. The source/Part dimensions
+and millimetre profile were not separately reported by the user, so that
+display acceptance remains pending.
+
+The original explicit `.nc` SHA-256 is
+`753d0d51b4f1384fc3cc9eeceef1a266920496f69f02e7e8e71217bdc60d3574`.
+Its pinned candidate SHA-256 was
+`9e04fc9e2a6acad92908b238db96a90c8b903d2f434772e290d41fdf493bd7cd`.
+The exact Default-post audit returned `bounded_m1_explicit_post_pass`: all
+3,932 items matched, stock replay retained `prior` after 784 cuts and
+`cleanup` after 2,764 cumulative cuts, and final area was
+1.3132647731–1.3185281533 mm² in all four section slabs. This is actual
+posted-motion evidence for the **superseded interior-scanline candidate**,
+not acceptance for a later changed path.
+
+The actual native Pocket `.nc` SHA-256 is
+`c675f00cbaf050c3b7776d8ecab45164a403419db71d473d3ee8d85b22471d05`.
+Its parsed 1,117 items include 180 below-surface vertical rapids, all with
+earlier cut-column witnesses. The footer returned to setup for tool change;
+the earlier RC01 displaced-tool-change failure did not recur. Conservative
+arc interpolation leaves a maximum nominal boundary shortfall of
+0.000397 mm, within the declared 0.001 mm backend tolerance. Rough rest is
+134.68847–134.70265 mm²; final rest is 1.19083–1.19264 mm² per slab.
+The inflated final overcut area upper is 0.005307 mm², within the 0.01 mm²
+backend error budget, but not a proof of zero physical overcut. Crucially,
+12 T2 feed descents at three positions repeated over four levels are farther
+than 1.5 mm from any T1 centerline cleared to that depth. The first are NC
+lines 333, 347 and 357. They enter remaining stock rather than previously
+cleared columns, so `audit_native_post` returns `native_motion_gate_failed`
+despite good coverage. This is the one bounded Pocket/footer hypothesis in
+the M1 scorecard; more nominal controls are not a next step. The user route
+decision has been requested and is pending.
+
+The planner now tests actual residual **after** its two T2 boundary contours
+before adding an interior scanline. On A01, no scanline is needed. With the
+unchanged exact source/prior and reused byte-identical native Pocket
+candidate/post, `output/m1-polygon-20260924-04/` has a two-contour final-level
+preview and revised literal candidate. Its explicit `.cb` SHA-256 is
+`3691b0221882247ca3b9be577dd7f1b4d5fa5138a9523bf20b8ef445dbd44973`.
+The new trace has 2,692 items, `prior` after 784 cuts and `cleanup` after
+2,268 cumulative cuts. Final rest remains
+1.3132647731–1.3185281534 mm² per slab, with zero inflated nominal
+protected overcut and zero rest outside the 0.05 mm envelope. The revised
+source, supplied prior, preview, literal and native files were all strict
+reimported and hash-pinned. The revised actual explicit post was audited
+separately; no v4 output acceptance was inherited from v3.
+
+The revised actual `.nc` has SHA-256
+`e214571c55c67cb525a0a2d17a8b0508b9aa11da776e97a0c138b866ee172ba5`.
+Its independent Default-post audit returned `bounded_m1_explicit_post_pass`:
+all 2,692 items match the pinned candidate and the posted trace replays with
+`prior` after 784 cuts and `cleanup` after 2,268 cumulative cuts. The posted
+rough/final area bounds remain 137.218201–137.230366 and
+1.313264–1.318529 mm² at 1/3/5/7 mm. Integration over the four 2 mm slabs
+gives 1097.74561–1097.84293 and 10.50611–10.54823 mm³ remaining volume.
+
+The user inspected the v4 NC in CAMotics and objected to horizontal passes
+across the whole letter. Inspection of the exact posted program attributes
+208 horizontal feed segments longer than 5 mm to the supplied synthetic T1
+raster, before `T2 M6`. T2 has 20 such segments, each an edge of one of its
+two shell/hole contours; it has no interior raster. The T1 fixture is valid
+supplied-stock evidence but an inefficient roughing strategy and must not be
+recommended as a production plan. The user clarified again that CamBam does
+not render CustomScript paths. The Engrave preview is final-level geometry;
+actual NC is the execution witness. The user's report did not separately
+confirm revised preview visibility, Part display or UI units; no such manual
+acceptance is inferred. Strict candidate reimport and NC audit are separate.
+
+The user's route direction allows native MOPs, custom Region MOPs and exact
+framework paths according to scenario and whole-post safety. We select the
+passing literal path for bounded M1 and reject the actual Pocket candidate
+because its 12 T2 entries lack prior clearance. Reopen that route only with
+a changed candidate whose actual post passes access, geometry and residual
+gates. Generic import of actual native MOP-series motion and edit-aware route
+comparison remain in M4; the M1 fixture does not claim them.
+
+Final-tree focused verification ran 45 tests in 357.752 seconds: polygon rest,
+acceptance corpus, convex rest/native bridge, RC01 core/native/stock authority
+and direct RC01. All passed. `compileall -q cambam_builder tests`,
+`git diff --check`, `git diff --cached --check` and `git diff HEAD --check`
+passed. The final actual explicit audit returned
+`bounded_m1_explicit_post_pass`; the final actual native audit returned
+`native_motion_gate_failed` with only the 12 stock-dependent descent findings.
+The original source/posted NC hashes were unchanged. No controller or machine
+acceptance was performed. Some files are staged by external work and have
+additional unstaged edits; no staging or commit was done in this round.

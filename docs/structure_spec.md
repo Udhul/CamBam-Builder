@@ -515,6 +515,82 @@ display the CustomScript motion as a toolpath. The Engrave preview is not an
 execution authority. Tool holder, fixture, physical error, machine setup and
 controller behavior remain outside this bounded nominal claim.
 
+### M1 polygonal endmill rest and native output candidates
+
+`cam_core.replay.Target.region_shell/region_holes` adds one valid straight-edge
+planar Region with holes and a constant XY section to the shared trace. This
+branch accepts cylindrical cuts only. Each entry/cut centerline must remain in
+the original Region with boundary distance at least the tool radius, and the
+tip must stay within target depth and cutting length. A crossing through a
+concavity or hole fails even if both endpoints are inside. Region validation,
+distance and polygon topology use the optional Shapely/GEOS backend; their
+floating evaluation is conditional, not a formal interval proof. The existing
+convex pointed-cone target remains a separate branch.
+
+`cam_core.polygon_rest.generate` takes a source- and motion-fingerprint-bound
+complete ordered prior trace. The core accepts multiple cylindrical prior
+operations on the same target; the M1 native JSON adapter supplies one T1
+operation and does not yet normalize arbitrary native MOP posts. It replays
+the supplied trace, enforces the supplied roughing
+allowance against the **original** Region boundary, and derives pure rest from
+the actual T1 cut prefix. For the letter fixture, T1 has radius 2.5 mm,
+0.5 mm allowance and four levels to Z=-8. T2 has radius 1 mm and uses the
+original Region eroded by radius plus 0.0005 mm to form outer/hole contours
+and interior scanlines only where contour cleanup leaves real rest beyond the
+0.05 mm ideal/original-boundary envelope. The letter case needs only its
+outer and hole contours; the preview shows their final Z=-8 level. Every T2
+descent starts at an actual full-depth
+T1 cut endpoint. Its connector cuts to the T2 path inside the original Region;
+links between paths retract to Z=+5. The combined trace retains all prior
+prefixes then `cleanup`. Disconnected T2 center regions and paths without a direct
+cleared-column connector fail closed; the planner does not silently make a new
+plunge into uncleared stock. A separate 1.8 mm throat fixture rejects a
+radius-1 mm low-level crossing.
+
+Section residuals use inner/outer capsule polygons with 128 quarter-circle
+segments, radius perturbation 0.000001 mm and a circumscribing outer radius.
+Area intervals are integrated across constant-depth slabs to report nominal
+remaining volume. For A01 the prior leaves 1097.74561–1097.84293 mm³ and
+the T2 path leaves 10.50611–10.54823 mm³.
+The original 1532 mm² Region, including its triangular hole, remains the
+target; the prior rest boundary never becomes a wall. All four section slabs
+have rough rest 137.21820–137.23037 mm² and final rest
+1.31326–1.31853 mm². The separate analytic six-convex-corner finite-tool
+limit is 1.190659933 mm² per slab. Inflated sweep overcut and final residual
+outside the ideal-or-original-boundary 0.05 mm envelope evaluate to zero in
+this fixture, conditional on GEOS topology. Completion is partial. Synthetic
+tools have 10 mm cutting length; their declared shank starts 10 mm and holder
+20 mm above the tip, leaving both above Z=0 at the Z=-8 floor. Physical tool
+error, material forces, fixtures and controller behavior remain unassessed.
+
+`integrations.cambam.native_polygon_rest` strictly reimports the original
+zero-Z eight-edge shell, triangular hole and one Part with stock X=[-26,26],
+Y=[-2,62], Z=[-8,0]. A supplied `prior.json` is bound to the exact source SHA-256
+and reconstructs every ordered T1 motion; there is no inference from native
+Pocket intent. Separate `preview`, `explicit` and `native` `.cb` files preserve
+the source. The preview Engrave is visual only. The explicit Drill/CustomScript
+contains the full T1/T2 trace and a hash-guarded item-by-item Default-post
+audit; the reader now accepts a declared initial XYZ for this source. The
+native candidate has T1 and T2 Pocket MOPs on the original Region, with
+0.5/0 mm roughing clearance and one bounded post-control hypothesis: no
+spiral/optimisation, cut-feed stepover, zero crossover and a Custom MOP Footer
+that moves to setup before stopping the spindle. CamBam documents the footer
+as inserted [after each MOP's blocks](https://cambam.info/doc/1.0/cam/post-processor.html).
+`audit_native_post` reads its **actual** Default post independently, bounds
+posted G2/G3 arcs by chord sagitta, checks motion roles and the original
+protected Region, and fails closed on unbounded ramps. It accepts low vertical
+rapids only with earlier cleared-column witnesses. Neither candidate's
+settings certify emitted motion. The revised contour-only literal candidate
+passed its actual 2,692-item Default post. The one actual
+Pocket post meets bounded area/0.001 mm geometry tolerance but has 12 T2 feed
+descents outside the T1-cleared stock; that native route is rejected. The user
+directed scenario-based selection of native MOPs, custom Regions and framework
+paths, so the audited exact literal route is selected for A01. The synthetic
+T1 raster is stock evidence for this test, not a recommended roughing strategy.
+CamBam does not display CustomScript motion as its generated toolpath; the
+posted NC and independent replay are the execution evidence. The preview
+Engrave displays final-depth T2 geometry only.
+
 ### Bounded pointed-cone CamBam output carrier
 
 `integrations.cambam.cone_script` attaches the full-depth 12 x 4 mm slot to one

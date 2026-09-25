@@ -45,13 +45,13 @@ remain required. Do not claim physical machining without real setup acceptance.
 | Milestone | Whole-outcome definition of done | Status on this branch |
 | --- | --- | --- |
 | M0: reusable proof and output bridge | Shared motion/stock replay, strict native source, separate visible preview and exact executable candidate, with at least one independently audited actual CamBam post and a parsed direct reference program. | **Accepted.** RC01 and the pointed/variable-depth cone examples, including the native triangle, establish this bridge. Their geometry and process scopes remain bounded. |
-| M1: polygonal rest and smaller-endmill cleanup | On the existing letter-like Region with a hole and 0.5 mm allowance, derive pure rest from supplied prior motion, retain the original protected boundary, create safe smaller-tool access through verified cleared space, emit complete entry/cut/link/retract motion, and independently bound residual/overcut. Strict native reimport and a fresh actual explicit post must pass. Attach a separate native Pocket/Profile cleanup candidate and audit its actual post before crediting that route; a failed native role gate blocks M1 until the user explicitly revises the route requirement. Include a distinct narrow-access/corner rejection fixture. | **Open.** RC01 proves a rectangular two-endmill slice; the native Pocket N role gate failed. This milestone must resolve or explicitly escalate that gate, not accept nominal MOP settings as motion evidence. |
+| M1: polygonal rest and smaller-endmill cleanup | On the existing letter-like Region with a hole and 0.5 mm allowance, derive pure rest from source-bound supplied prior motion, retain the original protected boundary, create safe smaller-tool access through verified cleared space, emit complete entry/cut/link/retract motion, and independently bound residual area/volume and overcut. Strict native reimport and a fresh actual explicit post must pass. Attach a separate native Pocket/Profile cleanup candidate and audit its actual post before crediting that route; select the route whose full emitted motion passes stock and access gates. Include a distinct narrow-access/corner rejection fixture. | **Accepted for the bounded A01 case via exact explicit motion.** The revised two-contour candidate passes its actual 2,692-item CamBam post and stock replay. The independent native Pocket post passes area but fails 12 T2 access entries and is excluded from execution. The supplied synthetic T1 raster is a proof fixture, not a recommended roughing strategy. |
 | M2: curved Region rest and endmill cleanup | On a native annulus and a mixed line/arc concave Region with a hole, derive pure rest from supplied prior motion and produce complete smaller-endmill entry/cut/link/retract paths. Preserve analytic source identity; validate arc topology, conservative access/protection and independently bounded residual/overcut through approximation and emitted motion. Strict native reimport, visible preview, actual explicit post and stock replay must pass; include a curved narrow-access rejection and translated/reflected frame case. | **Open.** Arc-aware bounds and an approximation contract exist; curved rest, access and posted cleanup do not yet pass. |
 | M3: V cleanup and edge tracing | On the polygonal target and at least one accepted curved target, generate pointed, flat-tip and tangent spherical/conical rounded-tip variable-depth paths, depth-capped/wide-area additional passes, and boundary/corner cleanup around concavity and holes. Check tool-profile continuity, full cutter occupancy, access, protected material, residual and infeasible/partial results between vertices and around arcs. Strict native preview and actual explicit post must be audited; Engrave remains inspection-only unless its whole post passes. | **Open.** Straight grooves and one convex triangle prove limited pieces; flat/rounded tips, wide areas, concave/hole/arc routes and edge cleanup do not yet pass. |
-| M4: composed workflow and edits | One reopened/edited native source runs rest analysis, alternative endmill/V strategy comparison, selected ordered operations and stock-dependent cleanup without hidden session state. Include a curved target and rounded-tip strategy in the accepted comparison. Relevant edits invalidate source, path and post claims; unchanged cosmetic edits retain valid evidence. The same accepted plan is available through native preview/explicit output and a parsed, stock-replayed direct reference program. | **Open.** Existing fingerprints and direct reference writers provide parts, but no complete edited combined job is accepted. |
+| M4: composed workflow and edits | One reopened/edited native source runs rest analysis, alternative endmill/V strategy comparison, selected ordered operations and stock-dependent cleanup without hidden session state. Normalize complete actual emitted motion from any supported native CamBam MOP or ordered MOP series as prior-stock authority, with explicit rejection of unsupported motion; calculate remaining area and volume by stage. Include a curved target and rounded-tip strategy in the accepted comparison, and allow manual or planned chaining of safe native MOPs, custom Region MOPs and exact framework paths. Relevant edits invalidate source, path and post claims; unchanged cosmetic edits retain valid evidence. The same accepted plan is available through native preview/explicit output and a parsed, stock-replayed direct reference program. | **Open.** Existing fingerprints and direct reference writers provide parts, but no generic actual native MOP-series normalizer or complete edited combined job is accepted. |
 | M5: one controller output | Select one named controller dialect and setup, lower the M4 plan with declared units, tools, feeds, spindle, entry/link/retract and end roles, parse its actual file independently and replay the emitted coordinates. Record machine-specific limits and user simulation/controlled acceptance separately. | **Open; needs controller selection.** Existing ASCII reference dialect is verified but is not a controller profile. |
 
-This is **one accepted milestone and five remaining milestones**, not a time or
+This is **two accepted milestones and four remaining milestones**, not a time or
 effort percentage: M1-M3 carry the largest geometry and native-output risks.
 The user-approved curved/rounded scope adds one whole-outcome milestone to the
 earlier polygonal plan; it does not create an open-ended sequence of arc or tip
@@ -69,11 +69,57 @@ existing acceptance corpus. Passing its core tests without its stated
 source/output checks is progress within that milestone, not a new completed
 increment. Record partial target completion explicitly where finite tools or
 depth caps make full removal impossible.
-The known native Pocket role failure needs one stated carrier/post-control
-hypothesis and a whole-post pass criterion before another trial. Reposting the
-same controls or collecting a series of isolated role fixes cannot advance M1.
-If that bounded hypothesis fails, leave M1 blocked and present the user with a
-route/scope decision; do not create extra milestones to hide the failure.
+The native Pocket/footer trial failed its whole-post access criterion. The
+user's 2026-09-24 route direction selects among native MOPs, custom Regions,
+framework paths and their combinations by posted stock and access evidence.
+Thus the passing exact explicit carrier is the M1 execution route; Pocket is
+retained as a failed comparison. Reposting the same Pocket controls cannot
+certify it. A later native route may be selected only after its own complete
+post passes the same gate.
+
+**M1 fixed acceptance before native posting (2026-09-24).** The tracked A01
+letter fixture has an eight-edge shell, one triangular hole and 1532 mm²
+original opening. Stock is 8 mm deep; T1/T2 diameters are 5/2 mm, T1 radial
+stock-to-leave is 0.5 mm, and four levels end at Z=-8. The original Region
+protects both shell and hole; actual supplied T1 sweeps define pure rest.
+The six convex shell corners give an independent minimum T2 finite-tool rest
+of 1.190659933 mm² per slab. At depths 1/3/5/7 mm require rough rest below
+139 mm² and above the approximately 127.265 mm² intentional allowance band,
+final rest no more than 1.690659933 mm², gain above 100 mm², section interval
+width below 0.01 mm², nominal protected overcut zero and no residual more
+than 0.05 mm from the ideal/original boundary. The separate 1.8 mm throat
+fixture rejects a radius-1 mm low-level crossing and any zero sharp-corner
+residual claim. The [tracked corpus](../tests/fixtures/rest_vcarve_acceptance.json)
+owns the exact synthetic inputs/limits. The [runbook](DEVELOPMENT.md#m1-polygonal-region-rest-and-smaller-endmill-output-gate)
+owns the generated A/B output files and post audit. One native Pocket/Default
+hypothesis adds a footer that returns to the setup point and stops the spindle,
+alongside no lead, no optimisation, cut-feed stepover and zero crossover.
+Whole-post role/stock evidence, not settings, decides that route. A failed
+actual native gate is evaluated independently. The first native trial failed
+on 12 stock-dependent T2 descents, even though its rough/final area budgets
+passed. It shows why nominal Pocket coverage cannot substitute for safe entry.
+The contour-only literal candidate passed its own actual post. The user's
+CAMotics view found long horizontal passes across the letter: inspection of
+the posted program attributes these to the **supplied synthetic T1 raster**
+(208 horizontal feed segments longer than 5 mm), while T2 has only its two
+shell/hole contour paths (20 long horizontal segments are contour edges).
+This validates motion identity but does not endorse the T1 strategy for a
+production job.
+
+**Ordered route decision for the combined workflow.** Obtain source-bound,
+ordered *actual emitted* motion for each native MOP or MOP series; missing or
+edited motion has no stock authority. Replay each prefix to calculate the
+remaining section area and volume, protected overcut and known-clear access.
+For each cleanup stage, compare native Pocket/Profile/V-carve, custom Regions
+with native MOPs, and framework-generated motion where applicable. Select a
+native route only when its own complete post passes tool, entry, link, stock,
+target and residual gates. Otherwise try a bounded custom Region/MOP route;
+if its post fails, use an exact audited framework path where supported.
+Report an infeasible or partial result when no route passes. Manual chaining
+may select among audited alternatives, with the same source/motion fingerprints
+and checks. M1 proves the single-region T1/T2 explicit case and replay of an
+ordered two-operation supplied trace; normalization of arbitrary native
+MOP-series posts, route comparison and edit-aware selection remain M4 work.
 Reassess the count only when the user explicitly changes this release finish
 line; defer spline/freeform geometry, generic rounded-flat tips and extra
 controller dialects until a user requirement or accepted fixture requires them.

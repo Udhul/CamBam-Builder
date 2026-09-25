@@ -94,6 +94,8 @@ class Target:
     island: tuple = ()
     cone_spine: tuple = ()       # x0, x1, center y, tip depth at x0/x1
     polygon: tuple = ()          # strictly convex CCW closed-region shell
+    region_shell: tuple = ()     # planar straight-edge shell, with optional holes
+    region_holes: tuple = ()
 
     def __post_init__(self):
         if (not self.name or len(self.bounds) != 4 or
@@ -105,8 +107,26 @@ class Target:
                                   self.inset_per_depth)) or
                 (self.cone_spine and (len(self.cone_spine) != 5 or
                     self.inset_per_depth or self.island or self.polygon)) or
-                (self.polygon and (self.inset_per_depth or self.island))):
+                (self.polygon and (self.inset_per_depth or self.island or
+                                   self.region_shell)) or
+                (self.region_shell and (self.inset_per_depth or self.island or
+                                        self.cone_spine or self.polygon)) or
+                (self.region_holes and not self.region_shell)):
             raise ValueError("unsupported replay target")
+        if self.region_shell:
+            from shapely.geometry import Polygon as ShapelyPolygon
+            rings = (self.region_shell,) + self.region_holes
+            if (any(type(ring) is not tuple or len(ring) < 3 or
+                    any(type(p) is not tuple or len(p) != 2 or
+                        any(isinstance(c, bool) or not isinstance(c, Real) or
+                            not math.isfinite(float(c)) or
+                            not self.bounds[i % 2] <= c <= self.bounds[i % 2 + 2]
+                            for i, c in enumerate(p)) for p in ring)
+                    for ring in rings)):
+                raise ValueError("invalid polygonal Region rings")
+            region = ShapelyPolygon(self.region_shell, self.region_holes)
+            if not region.is_valid or region.is_empty or region.area <= 0:
+                raise ValueError("invalid polygonal Region topology")
         if self.polygon:
             p = self.polygon
             if (type(p) is not tuple or len(p) < 3 or
@@ -148,6 +168,9 @@ class Target:
             return _tapered_cone_contains(self.cone_spine, x, y, depth)
         if self.polygon:
             return _polygon_clearance(self.polygon, (x, y)) >= depth
+        if self.region_shell:
+            from shapely.geometry import Point, Polygon as ShapelyPolygon
+            return ShapelyPolygon(self.region_shell, self.region_holes).covers(Point(x, y))
         a, b, c, d = self.bounds
         t = depth if self.inset_per_depth else 0
         inside = a + t <= x <= c - t and b + t <= y <= d - t
@@ -265,6 +288,18 @@ class Sweep:
 
 def _safe_cut(sweep, target):
     a, b = sweep.a, sweep.b
+    if target.region_shell:
+        from shapely.geometry import LineString, Point, Polygon as ShapelyPolygon
+        if (sweep.tool.kind != "cylinder" or sweep.bottom_start is not None or
+                sweep.bottom < -target.depth or
+                -sweep.bottom > sweep.tool.cutting_length):
+            raise ValueError("unsupported polygonal Region cut/tool depth")
+        region = ShapelyPolygon(target.region_shell, target.region_holes)
+        line = Point(a) if a == b else LineString((a, b))
+        if (not region.covers(line) or
+                line.distance(region.boundary) < sweep.tool.radius - 1e-9):
+            raise ValueError(f"cut crosses original polygonal Region boundary: {a} to {b}")
+        return
     if target.polygon:
         if sweep.tool.kind != "pointed_cone":
             raise ValueError("convex V target requires a pointed cone")

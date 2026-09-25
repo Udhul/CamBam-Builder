@@ -421,25 +421,66 @@ controller, physical setup and machining remain unverified.
 Regions and rounded V tips for v1. The
 [bounded scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
 sets six whole-outcome milestones. M0, the reusable core/native/explicit output
-bridge, is accepted on this branch. Five remain: M1 polygonal rest and
-smaller-endmill cleanup; M2 curved Region rest and endmill cleanup; M3
+bridge, and M1 polygonal rest and smaller-endmill cleanup are accepted on this
+branch. Four remain: M2 curved Region rest and endmill cleanup; M3
 pointed/flat/tangent spherical-conical rounded-tip V cleanup and edge tracing
 on polygonal and curved targets; M4 one edited combined workflow with direct
-reference output; M5 one selected controller dialect. This is **1 of 6
-milestones accepted, 5 remaining**, not a time/effort percentage. RC01 and
+reference output; M5 one selected controller dialect. This is **2 of 6
+milestones accepted, 4 remaining**, not a time/effort percentage. RC01 and
 the native triangle partially de-risk M1/M3; accepted curved-bound and
 geometry-design work does not yet pass M2/M3 path gates. The added M2 reflects
 the user's expanded finish line, not a succession of small internal steps.
 Internal fixes and probes do not create new milestones.
 
-**Next priority:** complete M1 against the already
-documented letter-like Region with hole and 0.5 mm allowance, including pure
-rest, safe smaller-endmill access, explicit output and the independent native
-Pocket/Profile motion gate. The existing failed RC01 native Pocket role trial
-must be resolved or escalated as a product decision; it cannot become an
-unbounded chain of nearby probes. This is the next useful capability because
-it proves the endmill half of the intended combined workflow on a nonrectangular
-target. Backlog 7 needs a separate Manual-tab fixture; 8-10 are complete.
+**2026-09-24 M1 polygonal endmill implementation and actual-post acceptance
+(backlog 6).** The existing A01 letter-like Region with triangular
+hole and 0.5 mm T1 allowance now has a source-bound supplied T1 trace,
+shared replay of original-boundary cylindrical cuts, pure rest and generated
+T2 smaller-endmill cleanup. T2 descends only at T1-cleared
+columns and retracts above stock between paths. Four 2 mm levels reach
+Z=-8. Independent corner geometry gives a 1.190659933 mm² finite-tool
+minimum residual per slab. The generated rough/final intervals at depths
+1/3/5/7 mm are 137.21820–137.23037 / 1.31326–1.31853 mm²; the final
+upper is below the fixed 1.690659933 mm² budget. Inflated nominal
+protected overcut and residual outside the 0.05 mm ideal/original-boundary
+envelope evaluate to zero. A separate 1.8 mm throat rejects a radius-1 mm
+low-level crossing. These are conditional GEOS numerical results; they do
+not certify physical tool error or controller motion.
+
+The user posted both initial CamBam candidates. The original explicit file
+passed all 3,932 ordered items and stock replay. The user's preview finding
+showed redundant T2 interior scanlines; those were removed because the two
+boundary contours alone meet the same residual budget. The revised preview
+shows only shell/hole contours at final Z=-8, and the new 2,692-item explicit
+candidate under `output/m1-polygon-20260924-04/` passed its fresh Default post:
+SHA-256 `e214571c55c67cb525a0a2d17a8b0508b9aa11da776e97a0c138b866ee172ba5`,
+all 2,692 ordered items and stock prefixes `prior` 784 cuts, `cleanup` 2,268
+cumulative cuts. Integrated rough and final volume bounds are available from
+the same four section slabs. The original native Pocket candidate/post is
+byte-identical in that directory. Its actual post meets rough/final area
+budgets and all 180 low vertical
+rapids have prior-cut witnesses, but **12 T2 feed descents begin outside
+T1-cleared columns**. The native motion gate fails; MOP settings and bounded
+coverage cannot certify those entries. The user's scenario-based direction
+selects the audited exact explicit route and retains Pocket as a failed
+comparison. CAMotics revealed long horizontal passes through the letter;
+posted-motion inspection assigns these to the supplied synthetic T1 raster,
+not the two-contour T2 cleanup. This fixture is no roughing recommendation.
+The [contract](structure_spec.md#m1-polygonal-endmill-rest-and-native-output-candidates),
+[runbook](DEVELOPMENT.md#m1-polygonal-region-rest-and-smaller-endmill-output-gate)
+and [M1 scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
+own the limits. **M1 is accepted for bounded A01; count is 2 of 6.**
+
+**Next priority:** M2 curved Region rest and smaller-endmill cleanup on the
+native annulus and mixed line/arc Region, including original-source identity,
+conservative arc bounds, access and actual-post replay per the
+[scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24).
+M1 fixes the route criterion: each candidate's actual emitted motion earns
+its own stock/access certificate. M4 then composes native MOP series, custom
+Region MOPs and framework paths into an edit-aware strategy choice with
+area/volume reporting. Generic native-MOP normalization and strategy
+optimization are not yet implemented.
+Backlog 7 needs a separate Manual-tab fixture; 8-10 are complete.
 Defer geometry outside the six-milestone supported domain, optimization and
 the detached/policy
 [stage 3 package move](structure_spec.md#package-organization-decision-and-migration-plan)
