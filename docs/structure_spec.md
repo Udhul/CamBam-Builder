@@ -684,14 +684,19 @@ Region UUID, bulges, world geometry and Part setup must survive candidate
 reimport. A separate XYZ Pline/Engrave MOP is preview only; a
 Drill/CustomScript MOP carries the complete T1 then T3 sequence, including
 both tools' entry, cut, high link and retract roles, CW 12000 rpm, F60 entry,
-F300 cut/retract and +5 mm tip clearance. Source/prior/candidate SHA-256
+F300 cut/retract and +5 mm tip clearance. The preview Engrave MOP sets
+`MaxCrossoverDistance=0` to request a clearance-plane retract between
+separate paths; inherited 0.7 let CamBam add shallow XY feed connectors on
+six of seven actual preview posts. Source/prior/candidate SHA-256
 values, target/plan/motion fingerprints and both section results are recorded
 in the manifest. `audit_preview` checks all posted
 Engrave XYZ centerline segments and rejects low XY rapids; it grants no
 execution certificate. `audit_post` checks the complete actual Default mm
 stream against the exact candidate, including both tool/spindle sequences
 and feeds, then replays the parsed prior stock and rechecks V path occupancy
-and residual/gain. Its synthetic post regression proves the reader, not
+and residual/gain. Each audit checks its own candidate against the common
+source, prior and plan; changing a preview cannot invalidate an unchanged
+explicit post. Its synthetic post regression proves the reader, not
 CamBam acceptance. This bounded job uses its own supplied V-safe T1 stock;
 selection among the earlier M1/M2 flat-pocket routes and V strategies still
 belongs to M4.

@@ -73,6 +73,13 @@ class NativeVRegionTests(unittest.TestCase):
                             encoding="utf-8")
             self.assertEqual(m3.audit_post(folder / "expected-motion.json", post)
                              ["status"], "deviation")
+            post.write_text(body, encoding="utf-8")
+            preview = folder / "preview/m3-preview.cb"
+            original_preview = preview.read_bytes()
+            preview.write_bytes(original_preview + b"\n")
+            self.assertEqual(m3.audit_post(folder / "expected-motion.json", post)
+                             ["status"], "bounded_m3_v_post_pass")
+            preview.write_bytes(original_preview)
             prior = folder / "prior.json"
             original_prior = prior.read_bytes()
             prior.write_bytes(original_prior + b"\n")
@@ -142,6 +149,9 @@ class NativeVRegionTests(unittest.TestCase):
             report = m3.audit_preview(folder / "expected-motion.json", posted)
             self.assertEqual(report["status"],
                              "m3_v_preview_centerlines_match")
+            preview = read_cambam_bytes(
+                (folder / "preview/m3-preview.cb").read_bytes())
+            self.assertEqual(preview.list_mops()[0].max_crossover_distance, 0)
             posted.write_text(posted.read_text(encoding="utf-8").replace(
                 "G1 F300", "G1 F300 X0", 1), encoding="utf-8")
             with self.assertRaises(ValueError):

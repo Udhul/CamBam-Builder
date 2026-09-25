@@ -256,7 +256,8 @@ def _candidate(project, kind, plan, moves, start, tool, prior_trace):
             roughing_clearance=0, clearance_plane=start[2],
             plunge_feedrate=ENTRY_FEED, cut_feedrate=CUT_FEED,
             spindle_direction="CW", spindle_speed=RPM, work_plane="XY",
-            velocity_mode="ExactStop", optimisation_mode="None")
+            velocity_mode="ExactStop", optimisation_mode="None",
+            max_crossover_distance=0)
     elif kind == "explicit":
         layer = project.add_layer("M3 literal motion anchor")
         anchor = project.add_points(layer, [(start[0], start[1], 0)],
@@ -305,6 +306,7 @@ def _check_candidate(data, source_bytes, case, kind, plan, moves, start, tool,
                     for shape, path in zip(shapes, plan.paths)) or
                 type(mop) is not EngraveMop or
                 mop.target_depth != 0 or mop.optimisation_mode != "None" or
+                mop.max_crossover_distance != 0 or
                 set(project.get_mop_targets(mop)) !=
                 {shape.internal_id for shape in shapes}):
             raise ValueError("M3 preview path or MOP changed")
@@ -409,14 +411,13 @@ def audit_post(manifest_path, posted_path):
             manifest["prior_section_1_mm2"] or
             list(v_region.section_report(rest, 1)) != manifest["section_1_mm2"]):
         raise ValueError("M3 target, plan or stock report changed")
-    for kind, entry in manifest["candidates"].items():
-        candidate = root / entry["file"]
-        data = candidate.read_bytes()
-        if _sha(data) != entry["sha256"]:
-            raise ValueError("M3 candidate changed")
-        _check_candidate(data, source_bytes, manifest["case"], kind,
-                         plan, moves, start, tool, prior_trace)
-    candidate = root / manifest["candidates"]["explicit"]["file"]
+    entry = manifest["candidates"]["explicit"]
+    candidate = root / entry["file"]
+    data = candidate.read_bytes()
+    if _sha(data) != entry["sha256"]:
+        raise ValueError("M3 candidate changed")
+    _check_candidate(data, source_bytes, manifest["case"], "explicit",
+                     plan, moves, start, tool, prior_trace)
     posted = Path(posted_path).read_text(encoding="utf-8-sig")
     lines = posted.splitlines()
     if ("( Post processor: Default )" not in lines[:12] or
@@ -535,6 +536,7 @@ def audit_preview(manifest_path, posted_path):
                            ((x, y, -d) for x, y, d in path.points),
                            ((x, y, -d) for x, y, d in path.points[1:])))
     observed = Counter()
+    first_line = {}
     for item in actual:
         if item["type"] != "move":
             continue
@@ -545,11 +547,16 @@ def audit_preview(manifest_path, posted_path):
             return {"status": "deviation", "reason": "unsafe preview motion",
                     "line": item["line"]}
         if item["g"] == 1 and a[:2] != b[:2]:
-            observed[key(a, b)] += 1
+            segment = key(a, b)
+            observed[segment] += 1
+            first_line.setdefault(segment, item["line"])
     if observed != expected:
+        extra = observed - expected
         return {"status": "deviation", "reason": "preview centerlines differ",
                 "expected_segments": sum(expected.values()),
-                "observed_segments": sum(observed.values())}
+                "observed_segments": sum(observed.values()),
+                "first_extra_line": (first_line[next(iter(extra))]
+                                     if extra else None)}
     return {"status": "m3_v_preview_centerlines_match",
             "post_sha256": _sha(Path(posted_path).read_bytes()),
             "centerline_segments": sum(expected.values()),

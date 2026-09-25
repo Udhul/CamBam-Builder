@@ -548,15 +548,25 @@ candidates. See the [contract](structure_spec.md#m3-bounded-region-v-path-and-na
 is a proof fixture, not a production roughing recommendation. The finish
 target is an inward V recess; selection against earlier M1/M2 flat-pocket
 strategies and a square-wall flat floor remain separate.
-**M3 remains open and the epic count stays 3 of 6** until the user confirms
-visible CamBam previews and seven preview plus seven explicit actual Default
-posts pass their separate audit gates. Reopen the geometry if any actual post
-changes path order/coordinates or if a different V finish target is selected.
-The next increment is those prepared actual-post gates; their result decides
-whether M3 can be accepted or needs a specific carrier/path correction before
-M4 composition.
-**Next priority:** complete the seven prepared CamBam M3 preview and explicit
-post gates, resolve any concrete deviations, then record user acceptance scope.
+**2026-09-25 actual M3 post checkpoint:** The user exported all fourteen
+CamBam files and saw source geometry and V paths in the seven previews.
+All seven explicit posts passed complete T1/T3 stock, access and residual
+audits. Their CustomScript Drill carrier does not display those literal cuts
+as CamBam toolpaths. Six of seven preview posts failed the centerline gate:
+CamBam inserted one to three shallow feed crossovers between separate paths;
+letter-rounded matched. The inherited Engrave crossover distance was 0.7.
+The preview adapter now requests zero crossover distance, and seven corrected
+source-bound previews are prepared at
+`output/m3-v-preview-retract-20260925-01/`. The original NCs remain failure
+evidence; see [dated audit](REVIEW.md#m3-actual-cambam-post-audit-and-preview-crossover-correction---2026-09-25).
+**M3 remains open and the epic count stays 3 of 6** until the seven corrected
+preview actual posts pass their centerline gate. Reopen the adapter if CamBam
+still adds low connectors or changes expected segments. The finish target and
+M4 comparison scope remain as recorded above.
+**Next priority:** post and audit the seven corrected CamBam M3 previews,
+record the resulting visibility and acceptance, then implement M4 edited
+composition on a curved target with a rounded-tip route and one offset fill
+candidate alongside the raster proof input.
 See the [runbook](DEVELOPMENT.md#m3-region-v-paths-and-native-output-gate) and
 [scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24).
 M1 fixes the route criterion: each candidate's actual emitted motion earns
@@ -564,7 +574,7 @@ its own stock/access certificate. M4 then composes native MOP series, custom
 Region MOPs and framework paths into an edit-aware strategy choice with
 area/volume reporting. Bounded native-MOP normalization and strategy selection
 are now M4 components; they cannot claim M4 acceptance without an
-edited combined curved/rounded-tip job and direct output evidence.
+edited combined curved/rounded-tip job, offset fill and direct output evidence.
 Backlog 7 needs a separate Manual-tab fixture; 8-10 are complete.
 Defer geometry outside the six-milestone supported domain, optimization and
 the detached/policy

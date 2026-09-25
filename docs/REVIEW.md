@@ -1,5 +1,47 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## M3 actual CamBam post audit and preview crossover correction - 2026-09-25
+
+The user exported all seven preview and seven explicit NC files from the
+prepared `output/m3-v-suite-20260925-02/` jobs. They reported that the
+preview documents showed the source geometry and toolpaths; the explicit
+CustomScript documents did not show their cutting motion as toolpaths. The
+explicit NC streams nevertheless passed the independent complete-motion,
+source-bound prior-stock, V occupancy and residual audit. No controller or
+physical machining result is claimed.
+
+| Job | Original preview | First extra feed line | Explicit post SHA-256 |
+| --- | --- | ---: | --- |
+| letter-pointed | 1 extra connector | 1287 | `c13fdb3b6742276511b3e6b16664b4d59861369574dac1fd98b036b829bfa168` |
+| letter-flat | 1 extra connector | 1875 | `21300cd86cfe3d550a0ea0438765fccbd5790d4a566ad662dc8c8458e518e4b5` |
+| letter-rounded | centerlines match | - | `e5b9c429107e0723660b7cdc191308f4cc82b8a8f53d364a109c9c122fe9f46d` |
+| annulus-pointed | 3 extra connectors | 149 | `d35f47d38c2267c2f41e76b86987919cd79b1b77f52d52a03d3786550afb7570` |
+| annulus-flat | 2 extra connectors | 180 | `8c8970c5702e1fab42593d1e72727cf907d313fd36919f5115d75fb25c2c152e` |
+| annulus-rounded | 2 extra connectors | 91 | `ba72b12ff28b92fd8d137851f767a7876e230360b8a225b69b53097da6cd21d2` |
+| mixed-rounded | 1 extra connector | 180 | `31aa981a80a157185cdffe4249d6898a8059b98fb0133dafd7964c9baca28ac9` |
+
+All seven explicit statuses were `bounded_m3_v_post_pass`; their Z=-1 final
+residual intervals remained inside the fixed [M3 criteria](../tests/fixtures/rest_vcarve_acceptance.json).
+Six preview statuses were `deviation`; only letter-rounded returned
+`m3_v_preview_centerlines_match`. The unexpected segments were CamBam Engrave
+feed crossovers between separate paths at shallow Z (typically -0.05 mm;
+annulus-pointed also has one at -1.9707 mm). The inherited Engrave
+`MaxCrossoverDistance` was 0.7 tool diameters. Zero is now explicit in the
+candidate contract, following CamBam's documented crossover/retract rule.
+The source is [CamBam Engrave's Max Crossover Distance property](https://www.cambam.info/doc/plus/cam/Engrave.htm).
+Seven corrected preview candidates are in the ignored
+`output/m3-v-preview-retract-20260925-01/`; their native posts remain
+unperformed. Their source, prior and plan fingerprints equal those of the
+original jobs, and strict reimport reads zero crossover distance for each.
+The seven retained explicit posts still pass after separating the two
+candidate audit gates. Reopen the adapter if any corrected preview still inserts an
+unplanned feed, omits a path, changes source geometry or fails to retract.
+The retained original posts document the rejected route; the explicit
+carrier needs no repost for this correction.
+The corrected adapter's repository run passed 451 tests in 555.528 seconds
+with one skip; `compileall` and `git diff --check` passed. The intentional
+negative-input diagnostics emitted during that run were not test failures.
+
 ## M3 bounded Region V implementation and pending native gate - 2026-09-25
 
 The fixed finish is a 2 mm capped inward V recess on the accepted A01 letter,
