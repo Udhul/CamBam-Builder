@@ -35,8 +35,9 @@ with conservative XY cells is sufficient for this fixture, so no general
 mesh/signed-distance backend is selected. [Contract](structure_spec.md#bounded-sloped-surface-and-ball-cutter-evidence),
 [runbook](DEVELOPMENT.md#sloped-surface-and-ball-cutter-evidence), and
 [dated evidence](REVIEW.md#sloped-surface-and-ball-cutter-evidence---2026-09-26)
-state its bounds. Holder body, external fixtures and runtime remain outside
-this offline evidence.
+state its bounds. That original slope slice did not model holder body or
+external fixtures; the later bounded setup case below adds them. Runtime
+remains outside both offline results.
 
 **Prior 2026-09-26 reusable ordered-job increment:** M0-M4
 retain their bounded acceptance. M5's named UCCNC/Grbl fixtures and the new
@@ -112,17 +113,30 @@ See the [contract](structure_spec.md#bounded-layered-3d-stock-and-waterline-evid
 [runbook](DEVELOPMENT.md#layered-3d-stock-and-waterline-evidence) and
 [dated evidence](REVIEW.md#layered-3d-stock-and-waterline-evidence---2026-09-26).
 
-**Next priority, backlog 6:** add one bounded holder/fixture occupancy case
-to decoded ordered stock evidence, using an explicit synthetic setup and a
-collision counterexample. Cutter-only access is now covered for native arcs,
-stepped volume and sloped ball passes; holder/fixture clearance is the common
-remaining safety gap and matters more than another native arc shape or helix
-fixture. Keep controller-runtime claims separate. Reopen surface backend
-selection for a named
-curved/overhanging target, holder/fixture requirement, or residual tolerance
-that the affine-plane and conservative-cell case cannot meet. Manual-tab
-authoring remains lower priority until the requested before/after native
-fixture exists.
+**Completed offline holder/fixture increment, backlog 6:** a supplied
+program-frame stock box, rectangular side clamp and cutter/shank/holder body
+now bind to the ordered-job fingerprint. Both independently decoded UCCNC and
+Grbl sloped-ball jobs pass continuous stage-motion body/box occupancy with
+0.1 mm minimum modeled fixture clearance. Moving only the clamp makes the
+holder collide between clear endpoints while the cutter remains clear;
+changing the holder radius restores clearance. The [contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy),
+[runbook](DEVELOPMENT.md#bounded-holder-and-fixture-occupancy) and
+[evidence](REVIEW.md#bounded-holder-and-fixture-occupancy---2026-09-27)
+state its conservative stock assumption and excluded transition/runtime motion.
+
+**Next priority, backlog 6:** bring tool-body/fixture occupancy to one
+source-bound native/generated job with a declared same-frame setup and a
+changed-setup rejection. This matters now because the accepted actual CamBam
+posts and generated finishes have cutter-only stock evidence, while the
+synthetic decoded holder case now supplies a reusable component check. Choose
+one existing accepted hybrid and prove its complete supported stage motion;
+extend curved or V tool-body envelopes only as that chosen case requires.
+Stop after one decoded native/generated job and its fixture counterexample;
+defer broader body shapes and controller runtime until a named setup or trace
+requires them. Reopen surface backend selection for a named curved/overhanging
+target, non-box fixture, or residual tolerance the current bounded methods
+cannot meet. Manual-tab authoring remains lower priority until the requested
+native before/after fixture exists.
 
 The user reaffirmed native CamBam interchange, independent calculation, hybrid
 native/generated jobs and future volume/surface methods as the product direction.
@@ -134,9 +148,9 @@ to concrete product choices or external observations. See
 Manual-tab authoring remains deferred: it needs a native before/after fixture
 and contributes less to the current shared-core objective. The sloped
 ball-surface slice is an offline engineering result. The actual native arc
-hybrid is now accepted for its bounded offline scope; its source, post and
-output handoff remain retained as evidence. The holder/fixture task has a
-distinct scope and needs no pending arc decision.
+hybrid is accepted for its bounded offline scope; its source, post and output
+handoff remain retained as evidence. The synthetic holder/fixture increment
+is closed; the next native/generated setup case is a separate scope.
 The dated entries below retain development history.
 
 **2026-09-23 execution architecture refinement (backlog 6).** The user's context
@@ -1733,8 +1747,8 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    is implemented for its bounded offline domain and closes the M5 synthetic
    native order/edit evidence gap. The actual native Profile plus generated V
    hybrid and the bounded actual native G3 Pocket/rounded-V hybrid are accepted.
-   The stepped-volume and sloped-ball foundations also now pass decoded offline
-   gates. Further capability directions follow the
+   The stepped-volume, sloped-ball and bounded holder/fixture foundations also
+   pass decoded offline gates. Further capability directions follow the
    [capability progression](REST_MACHINING_PLAN.md#subsequent-capability-progression).
    Historical entries below retain earlier stage limits; they do not permanently
    restrict the framework to RC01 or a fixed-axis sample workflow.

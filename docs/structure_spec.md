@@ -28,7 +28,7 @@ are outside that runtime package list.
 | `cambam_builder/cambam_entities.py` and nine old root module paths | Compatibility/discovery imports of canonical native objects; no native implementation remains at root | Preserve public and documented direct imports; implementation modules import owners directly |
 | `cambam_builder/native/transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
 | `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy, remaining-section bounds and supplied section-motion verification | Horizontal cuts and explicit travel inside rectangular stock/target; no generated or native path integration |
-| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns ordered XYZ/cut-sweep values, `ordered_job.py` owns caller-supplied stage/state and decoded stock auditing, `volume3d.py` owns bounded layered 3D stock, `surface3d.py` owns affine-plane ball contact/stock, and `curved_region.py` owns bounded circular-arc access/rest approximation | Exact nominal and curved endmill stock, stepped-volume and sloped-ball evidence slices, analytic slot and placed mixed trace; no native entity, XML, MCP or machine-output dependency |
+| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns ordered XYZ/cut-sweep values, `ordered_job.py` owns caller-supplied stage/state and decoded stock auditing, `volume3d.py` owns bounded layered 3D stock, `surface3d.py` owns affine-plane ball contact/stock, `occupancy.py` owns bounded tool-body/box clearance, and `curved_region.py` owns bounded circular-arc access/rest approximation | Exact nominal and curved endmill stock, stepped-volume, sloped-ball and holder/fixture evidence slices; no native entity, XML, MCP or machine-output dependency |
 | `cambam_builder/cam_extensions/strategy.py` | Deterministic selection among separately audited ordered routes, including partial and infeasible outcomes | Policy over evidence records; no XML or native entity dependency |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
@@ -490,8 +490,10 @@ reports conservative per-slab residual area and whole-volume intervals. A
 cleared descent requires its complete outer cutter footprint to lie within
 the predecessor stages' inner cleared sweep at every relevant depth. Each
 outer cut sweep must stay inside the original target, protecting the thin rib.
-Cut depth cannot exceed tool cutting length. The fixture has no modeled holder
-shape; its declared cutting length leaves the holder above Z=0 at every cut.
+Cut depth cannot exceed tool cutting length. This evaluator alone has no
+modeled holder shape; its declared cutting length leaves the holder start
+above Z=0 at every cut. The optional body/box gate below adds a bounded
+clearance check to decoded ordered motion.
 
 Shapely's 24-segment-per-quadrant buffer is an inscribed cutter bound. An
 enlarged buffer by `1/cos(pi/96)` supplies the outer footprint. The
@@ -527,9 +529,10 @@ shank filling to the stock top. A plane-offset inequality at both endpoints
 of each linear move proves no penetration of the infinite protected plane.
 `cleared_descent` requires an earlier stage's same-XY vertical entry with at
 least the new radius and depth; this is a bounded prior-sweep witness. Cutting
-length places the unmodeled holder start above Z=0, and the report gives its
-minimum clearance. Motion outside the rectangular stock is clipped from
-material accounting; external fixtures are not modeled.
+length places the holder start above Z=0, and the report gives its minimum
+height. Motion outside the rectangular stock is clipped from material
+accounting. The optional body/box gate below checks a supplied holder and
+external rectangular fixtures on the same decoded stage motion.
 
 Remaining target volume is enclosed by XY cells. At a cell center, virtual
 ball radii `r ± half_cell_diagonal` bound occupancy throughout the cell;
@@ -539,9 +542,36 @@ and boundary uncertainty and are deliberately wider than the exact-plane
 target volume. Floating arithmetic and decoded-coordinate precision limit
 formal guarantees. The slope case selects exact affine contact/protection
 plus conservative cells for stock; it does not select a general mesh, signed
-distance, curved surface or holder backend. See the
+distance or curved surface backend. See the
 [runbook](DEVELOPMENT.md#sloped-surface-and-ball-cutter-evidence) and
 [evidence](REVIEW.md#sloped-surface-and-ball-cutter-evidence---2026-09-26).
+
+### Bounded tool-body and fixture occupancy
+
+`cam_core.occupancy` checks an optional `ordered_job.Job.occupancy_setup`
+after independent UCCNC/Grbl decoding and motion comparison. The setup names
+the program frame, the same Z=0 initial stock box as each bounded 3D stage,
+closed fixture boxes and one coaxial tool body per stage tool. Each body has
+contiguous tip-relative cutter, shank and holder cylinders. The cutter cylinder
+conservatively encloses the operation radius and cutting length; it may cut
+stock, but every band must clear every fixture, while shank and holder must
+clear initial stock. This conservative stock check does not credit cavities
+removed by earlier stages. Setup, tool and fixture changes invalidate the job
+and prefix fingerprints. Jobs without a setup retain their earlier fingerprints
+and have no tool-body/fixture clearance result.
+
+For every decoded straight stage move, the checker restricts the XY center
+segment to the parameter interval where a band overlaps a box in Z. It then
+compares the exact segment-to-rectangle distance with the band's radius;
+touching within 1e-9 mm rejects. This covers entries, cuts, retracts and rapids
+between endpoints. An attached setup rejects arcs and modeled or decoded
+transition travel until a corresponding continuous body check exists. The
+bounded evidence uses a side clamp outside the stock and the existing sloped
+ball stages; it does not represent tool body above the declared holder top,
+clamps of other shapes, fixture uncertainty, machine kinematics or controller
+runtime. The [runbook](DEVELOPMENT.md#bounded-holder-and-fixture-occupancy)
+and [review](REVIEW.md#bounded-holder-and-fixture-occupancy---2026-09-27)
+record the fixture and result.
 
 ### Directional analytic stock section bounds
 

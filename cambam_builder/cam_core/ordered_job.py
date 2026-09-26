@@ -183,6 +183,7 @@ class Job:
     stock_present: bool = True
     units: str = "mm"
     source_kind: str = "direct"
+    occupancy_setup: object = None
 
     def __post_init__(self):
         if (not self.source_fingerprint or type(self.stages) is not tuple or
@@ -194,6 +195,12 @@ class Job:
             raise ValueError("invalid ordered job")
         _xyz(self.initial_tip)
         _xyz(self.translation_xyz_mm)
+        if self.occupancy_setup is not None:
+            from .occupancy import OccupancySetup
+            if (type(self.occupancy_setup) is not OccupancySetup or
+                    self.occupancy_setup.frame != self.program_frame or
+                    not self.stock_present):
+                raise ValueError("occupancy setup needs matching frame and stock")
         at = self.initial_tip
         for index, stage in enumerate(self.stages):
             if stage.motions[0].start != at:
@@ -208,17 +215,20 @@ class Job:
 
     @property
     def fingerprint(self):
-        return _hash((VERSION, self.source_fingerprint, self.stages,
+        base = (VERSION, self.source_fingerprint, self.stages,
                       self.initial_tip, self.translation_xyz_mm,
                       self.program_frame, self.work_frame, self.stock_present,
-                      self.units, self.source_kind, MATCH_TOLERANCE_MM))
+                      self.units, self.source_kind, MATCH_TOLERANCE_MM)
+        return _hash(base if self.occupancy_setup is None else
+                     base + (self.occupancy_setup,))
 
     @property
     def prefixes(self):
         return tuple(_hash((VERSION, self.source_fingerprint,
                             self.stages[:n], self.initial_tip,
                             self.translation_xyz_mm, self.stock_present,
-                            self.source_kind))
+                            self.source_kind) + (() if self.occupancy_setup is None
+                                                 else (self.occupancy_setup,)))
                      for n in range(1, len(self.stages) + 1))
 
 
@@ -263,9 +273,10 @@ def _observed_stage(stage, decoded, translation):
         end = tuple(round(a - b, 7) for a, b in zip(got.end, translation))
         expected_g = (want.arc_g or
                       (0 if want.role in ("rapid", "rapid_retract") else 1))
-        center = (None if got.center is None else
+        decoded_center = getattr(got, "center", None)
+        center = (None if decoded_center is None else
                   tuple(round(a - b, 7) for a, b in zip(
-                      got.center, translation[:2])))
+                      decoded_center, translation[:2])))
         if (got.g != expected_g or
                 ((center is None) != (want.center is None)) or
                 (center is not None and not _near(center, want.center)) or
@@ -385,6 +396,10 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
                     raise ValueError("offset compensation travels into stock")
         elif transition_moves:
             raise ValueError("unmodeled transition travel")
+        if job.occupancy_setup is not None and (
+                transition_moves or
+                (stage.transition is not None and stage.transition.travel)):
+            raise ValueError("tool-body occupancy transition motion unsupported")
         actual.append(_observed_stage(stage, read, job.translation_xyz_mm))
         work_tip = tuple(a + b for a, b in zip(stage.motions[-1].end,
                                                 job.translation_xyz_mm))
@@ -429,6 +444,25 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
         report["stock_access_residual"] = {"status": "not_evaluated",
                                            "reason": "no supplied initial stock"}
         return report
+    if job.occupancy_setup is not None:
+        from . import occupancy
+        setup = job.occupancy_setup
+        bodies = {tool.tool_id: tool for tool in setup.tools}
+        for stage in job.stages:
+            op = stage.surface_operation or stage.volume_operation
+            if op is None:
+                raise ValueError("tool-body occupancy requires bounded 3D operation")
+            target = op.target
+            x0, y0, x1, y1 = target.stock_xy
+            if setup.stock.bounds != (x0, y0, -target.stock_depth_mm,
+                                       x1, y1, 0):
+                raise ValueError("occupancy stock differs from stage target")
+            body = bodies.get(stage.tool_id)
+            if body is None or (body.bands[0].radius_mm < op.radius_mm or
+                                body.bands[0].top_mm < op.cutting_length_mm):
+                raise ValueError("occupancy cutter differs from stage tool")
+        report["tool_fixture_occupancy"] = occupancy.verify(
+            setup, job.stages, actual)
     if all(s.surface_operation is not None for s in job.stages):
         from . import surface3d
         report["stock_access_residual"] = surface3d.replay_stages(

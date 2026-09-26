@@ -1,5 +1,54 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Bounded holder and fixture occupancy - 2026-09-27
+
+**Offline engineering result.** The reusable `tests.test_occupancy` case
+attaches an explicit program-frame setup to the already accepted sloped-ball
+job. Initial stock is X=[0,4], Y=[0,2], Z=[-3,0] mm. A side clamp occupies
+X=[1.8,2.2], Y=[-1.2,-0.9], Z=[2,2.5] mm. T1 has a radius-0.5 mm cutter
+from tip+0 to +2.5, a radius-0.5 mm shank to +3.5, and a radius-0.8 mm
+holder to +5.5. Both split UCCNC and in-program Grbl output independently
+decode all 12 stage moves, preserve the existing two-stage stock result, and
+pass the attached continuous body/box gate. The minimum modeled fixture
+clearance is 0.1 mm.
+
+Moving only the clamp near face to Y=-0.55 mm rejects a holder collision
+on the second-stage X=1 to X=3 cut. Its radius-0.5 mm cutter and the cut's
+endpoints clear that clamp; narrowing the holder to radius 0.4 mm passes.
+The checker restricts each segment to its axial overlap interval with a box,
+so this is a between-endpoint occupancy rejection. A changed clamp changes
+the job and prefix fingerprints and invalidates the original written handoff.
+Wrong frame, stock extent or cutter envelope also reject. The initial stock
+box is deliberately conservative for non-cutting components; prior cavities
+do not supply clearance credit.
+
+This result represents coaxial cylindrical cutter/shank/holder bands and
+rectangular static fixtures in one declared frame. It excludes stage arcs,
+transition travel, tool body above the declared holder top, non-box fixtures,
+physical installation and controller runtime. The existing slope evaluator's
+`minimum_holder_clearance_mm` was only a height-to-stock-top check; the new
+`tool_fixture_occupancy` record is the separate body/fixture result. No
+CamBam GUI step adds evidence to the detached synthetic output. The
+[contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy) and
+[runbook](DEVELOPMENT.md#bounded-holder-and-fixture-occupancy) own reusable
+behavior and commands.
+
+The shared ordered auditor also accepts straight `DecodedMove` values from
+the older M5 reader that lack an arc-center field; a real arc still requires
+its center. This compatibility repair was prompted by the broader M5
+regression run and does not change arc or holder semantics.
+
+Final verification: `tests.test_occupancy` passed 5 tests, including a
+nonidentity program-to-work translation. The broader command with
+`tests.test_occupancy tests.test_surface3d tests.test_volume3d
+tests.test_ordered_job tests.test_ordered_dialects tests.test_native_arc_replay
+tests.test_native_v_hybrid tests.test_native_series_audit` passed 30 tests
+before that final test addition; `tests.test_uccnc_m5` passed 4 after the
+reader compatibility repair. Package/test `compileall -q`, tracked
+`git diff --check` and untracked-text trailing-space inspection passed.
+No controller-runtime or physical acceptance is inferred. The worktree is
+uncommitted and ready to commit after review.
+
 ## Safe native G2/G3 hybrid evidence - 2026-09-26
 
 **Accepted bounded actual-post and offline hybrid result.** The previous accepted hybrid

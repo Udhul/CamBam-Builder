@@ -1878,6 +1878,34 @@ evidence. The [contract](structure_spec.md#bounded-sloped-surface-and-ball-cutte
 and [review](REVIEW.md#sloped-surface-and-ball-cutter-evidence---2026-09-26)
 define the bounded claim and measured result.
 
+### Bounded holder and fixture occupancy
+
+Run the reusable synthetic case from the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_occupancy -v
+```
+
+`tests.test_occupancy.with_setup` attaches a program-frame 4 x 2 x 3 mm stock
+box, one rectangular side clamp, and tip-relative radius-0.5 mm cutter,
+radius-0.5 mm shank and radius-0.8 mm holder to the existing two-stage sloped
+ball job. Both UCCNC split and Grbl pause output decode and pass the same
+stock and continuous body/box check. Moving the clamp's near Y face from
+-0.9 to -0.55 mm makes the holder hit it along the X=1 to X=3 cut while the
+radius-0.5 mm cutter and both move endpoints remain clear. The changed setup
+also changes the job fingerprint. Narrowing the holder to radius 0.4 mm
+restores clearance. Print the bounded result with:
+
+```powershell
+& .\.venv\Scripts\python.exe -c "from tests.test_occupancy import with_setup; from tests.test_surface3d import synthetic_job; from cambam_builder.integrations.ordered_output import emit; import pprint; pprint.pp(emit(with_setup(synthetic_job()),'uccnc')[1]['tool_fixture_occupancy'])"
+```
+
+The setup is synthetic and detached; no CamBam GUI check adds evidence.
+The [contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy)
+states the represented shapes and excluded transition motion. The
+[review](REVIEW.md#bounded-holder-and-fixture-occupancy---2026-09-27)
+owns measured results and limits.
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not

@@ -597,10 +597,20 @@ active increment after each outcome.
   clearance, cutting length, prior-cleared descent and conservative residual
   intervals; the dependent pass demonstrably removes more stock. Exact plane
   contact with conservative XY cells suffices for this fixture, so general
-  curved/solid and holder backends remain unselected. The
+  curved/solid and non-box holder backends remain unselected. The
   [contract](structure_spec.md#bounded-sloped-surface-and-ball-cutter-evidence)
   and [evidence](REVIEW.md#sloped-surface-and-ball-cutter-evidence---2026-09-26)
   record its scope and reopening criterion.
+
+  **Completed bounded occupancy slice, 2026-09-27:** an explicit stock box,
+  side clamp and three-band tool body now check continuous decoded straight
+  stage motion on the same sloped-ball job. A holder collision between clear
+  endpoints rejects although the cutter clears. Setup changes invalidate job
+  evidence. The [contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy)
+  and [review](REVIEW.md#bounded-holder-and-fixture-occupancy---2026-09-27)
+  state the conservative initial-stock and fixture-shape limits. The next
+  source-bound native/generated setup case is prioritized in
+  [PROGRESS](PROGRESS.md#active-work-and-next-priority).
 - **Additional methods and optimization:** medial/contact tracing, adaptive
   clearing, tool combinations and improved entry/link methods consume the same
   target/stock capabilities and independently checked motion. Rank feasible
