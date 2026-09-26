@@ -219,6 +219,31 @@ def _load(manifest_path, current_source_path=None):
     return root, manifest, source, json.loads(prior_data)
 
 
+def load_selected_plan(manifest_path, fill="raster", *, current_source_path=None):
+    """Resolve a source-bound M4 route for an independent output adapter.
+
+    The native normalization stays here; controller adapters receive detached
+    plan, prior trace and declared initial tip rather than CamBam helpers.
+    """
+    root, manifest, source, supplied = _load(manifest_path,
+                                             current_source_path)
+    if fill not in ("raster", "offset"):
+        raise ValueError("unknown M4 fill")
+    folder = root / fill
+    if ((folder / "source.cb").read_bytes() != source or
+            json.loads((folder / "prior.json").read_text(encoding="utf-8"))
+            != supplied or
+            _sha((folder / "expected-motion.json").read_bytes()) !=
+            manifest["jobs"][fill]["native_manifest_sha256"]):
+        raise ValueError("M4 selected route evidence changed")
+    plan, start = m3._plan(source, manifest["case"], ROUNDED, 2, 1, fill)
+    prior = m3._prior_trace(source, plan, start, supplied)
+    if (plan.fingerprint != manifest["jobs"][fill]["plan_fingerprint"] or
+            prior.motion_fingerprint != manifest["prior_motion_fingerprint"]):
+        raise ValueError("M4 source-bound plan changed")
+    return plan, prior, start
+
+
 def audit_direct(manifest_path, fill, *, current_source_path=None):
     root, manifest, source, supplied = _load(manifest_path,
                                              current_source_path)
@@ -235,11 +260,8 @@ def audit_direct(manifest_path, fill, *, current_source_path=None):
             json.loads((folder / "prior.json").read_text(encoding="utf-8"))
             != supplied):
         raise ValueError("M4 direct or native evidence changed")
-    plan, start = m3._plan(source, manifest["case"], ROUNDED, 2, 1, fill)
-    prior = m3._prior_trace(source, plan, start, supplied)
-    if (plan.fingerprint != manifest["jobs"][fill]["plan_fingerprint"] or
-            prior.motion_fingerprint != manifest["prior_motion_fingerprint"]):
-        raise ValueError("M4 source-bound plan changed")
+    plan, prior, start = load_selected_plan(
+        manifest_path, fill, current_source_path=current_source_path)
     report = _audit_direct_text(direct_file.read_text(encoding="ascii"),
                                 plan, prior, start)
     report = json.loads(json.dumps(report))

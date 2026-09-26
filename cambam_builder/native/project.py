@@ -612,7 +612,8 @@ class CamBamProject:
                  nesting_grid_order: str = "RightUp",
                  nesting_grid_alternate: bool = False,
                  stock_offset: Tuple[float, float] = (0.0, 0.0),
-                 stock_surface: float = 0.0) -> Optional[Part]:
+                 stock_surface: float = 0.0,
+                 stock_present: Optional[bool] = None) -> Optional[Part]:
         """Creates or updates a part and adds it to the project."""
         existing_uuid = self._resolve_identifier(identifier, Part)
         if existing_uuid:
@@ -635,6 +636,8 @@ class CamBamProject:
             part.nesting_grid_alternate = nesting_grid_alternate
             part.stock_offset = stock_offset
             part.stock_surface = stock_surface
+            if stock_present is not None:
+                part.stock_present = stock_present
             if part.internal_id not in self._part_order:
                  pos = self._find_insert_position(target_identifier, self._part_order, place_last)
                  self._part_order.insert(pos, part.internal_id)
@@ -648,7 +651,8 @@ class CamBamProject:
                             nesting_columns=nesting_columns, nesting_spacing=nesting_spacing,
                             nesting_grid_order=nesting_grid_order,
                             nesting_grid_alternate=nesting_grid_alternate,
-                            stock_offset=stock_offset, stock_surface=stock_surface)
+                            stock_offset=stock_offset, stock_surface=stock_surface,
+                            stock_present=True if stock_present is None else stock_present)
             if not self._register_entity(new_part, self._parts):
                 return None
             pos = self._find_insert_position(target_identifier, self._part_order, place_last)

@@ -24,6 +24,9 @@ class Part(CamBamEntity):
     ``machining_origin + stock_offset`` in XY, with ``stock_surface`` as Z.
     The XML PMin/PMax coordinates encode the local stock box, not that derived
     drawing position.
+    ``stock_present`` records whether a Part Stock element exists. Imported
+    stockless Parts retain their parsed placeholder dimensions without turning
+    those values into stock on export.
     """
     enabled: bool = True
     stock_thickness: float = 12.5
@@ -42,6 +45,7 @@ class Part(CamBamEntity):
     nesting_grid_alternate: bool = False
     stock_offset: Tuple[float, float] = (0.0, 0.0)
     stock_surface: float = 0.0
+    stock_present: bool = True
     # Note: No mop_ids or _xml_machineops_element here. Managed by Project.
 
     @property
@@ -62,19 +66,19 @@ class Part(CamBamEntity):
         # The <machineops> sub-element will be added by the writer based on project registry
 
         # Add stock and other part-level settings directly here
-        stock = ET.SubElement(part_elem, "Stock")
-        # CamBam stock is defined by PMin(x,y,z) and PMax(x,y,z)
-        # PMin/PMax are the Part-local stock box. The effective drawing XY is
-        # machining_origin + stock_offset; stock_surface is the top Z plane.
-        offset_x, offset_y = self.stock_offset
-        ET.SubElement(stock, "PMin").text = (
-            f"{offset_x},{offset_y},{self.stock_surface - self.stock_thickness}"
-        )
-        ET.SubElement(stock, "PMax").text = (
-            f"{offset_x + self.stock_width},{offset_y + self.stock_height},{self.stock_surface}"
-        )
-        ET.SubElement(stock, "Material").text = self.stock_material
-        ET.SubElement(stock, "Color").text = self.stock_color
+        if self.stock_present:
+            stock = ET.SubElement(part_elem, "Stock")
+            # PMin/PMax are the Part-local stock box. The effective drawing XY
+            # is machining_origin + stock_offset; stock_surface is the top Z.
+            offset_x, offset_y = self.stock_offset
+            ET.SubElement(stock, "PMin").text = (
+                f"{offset_x},{offset_y},{self.stock_surface - self.stock_thickness}"
+            )
+            ET.SubElement(stock, "PMax").text = (
+                f"{offset_x + self.stock_width},{offset_y + self.stock_height},{self.stock_surface}"
+            )
+            ET.SubElement(stock, "Material").text = self.stock_material
+            ET.SubElement(stock, "Color").text = self.stock_color
 
         ET.SubElement(part_elem, "MachiningOrigin").text = f"{self.machining_origin[0]},{self.machining_origin[1]}"
 

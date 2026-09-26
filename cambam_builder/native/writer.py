@@ -235,7 +235,8 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
         # Create the <part> element itself
         part_elem = part.to_xml_element()
         native_stock = getattr(part, "_xml_stock", None)
-        if native_stock is not None and _stock_matches_model(part, native_stock):
+        if (part.stock_present and native_stock is not None
+                and _stock_matches_model(part, native_stock)):
             generated_stock = part_elem.find("Stock")
             stock_index = list(part_elem).index(generated_stock)
             part_elem.remove(generated_stock)

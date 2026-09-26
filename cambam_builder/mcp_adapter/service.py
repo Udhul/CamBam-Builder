@@ -973,6 +973,11 @@ class DocumentService:
 
             origin = existing.machining_origin if existing is not None else (0.0, 0.0)
             stock_offset = existing.stock_offset if existing is not None else (0.0, 0.0)
+            stock_keys = {
+                "stock_width", "stock_height", "stock_thickness",
+                "stock_material", "stock_color", "stock_offset_x",
+                "stock_offset_y", "stock_surface",
+            }
             part = staged.add_part(
                 args["part"], enabled=patched("enabled", "enabled", True),
                 stock_thickness=patched("stock_thickness", "stock_thickness", 0.0),
@@ -1001,6 +1006,9 @@ class DocumentService:
                 stock_offset=(args.get("stock_offset_x", stock_offset[0]),
                               args.get("stock_offset_y", stock_offset[1])),
                 stock_surface=patched("stock_surface", "stock_surface", 0.0),
+                stock_present=(True if stock_keys.intersection(args)
+                               else existing.stock_present if existing is not None
+                               else True),
             )
             if part is None:
                 raise DomainError("INTERNAL_ERROR", "Framework rejected part configuration")

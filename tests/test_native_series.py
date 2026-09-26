@@ -117,6 +117,76 @@ class NativeSeriesTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "geometry or stock changed"):
                 series.check_freshness(source, candidate, post, setup=setup)
 
+    def test_stock_presence_alone_invalidates_semantic_source_evidence(self):
+        with tempfile.TemporaryDirectory() as folder:
+            directory = Path(folder)
+            candidate, post = self.make_case(directory)
+            stockless_candidate = read_cambam_bytes(candidate.read_bytes())
+            stockless_candidate.get_part("Part").stock_present = False
+            stockless_candidate.save(str(candidate))
+            source = directory / "stockless-source.cb"
+            stockless_source = stockless_candidate.clone()
+            for mop in tuple(stockless_source.list_mops()):
+                self.assertTrue(stockless_source.remove_mop(mop.internal_id))
+            stockless_source.save(str(source))
+            setup = {"units": "mm", "postprocessor": "Default"}
+            series = normalize_native_series(source, candidate, post,
+                                             initial_position=(5, 5, 5),
+                                             setup=setup)
+            self.assertFalse(series.source_has_mops)
+            self.assertTrue(series.check_freshness(source, candidate, post,
+                                                   setup=setup))
+            stockless_source.get_part("Part").stock_present = True
+            stockless_source.save(str(source))
+            with self.assertRaisesRegex(ValueError, "geometry or stock changed"):
+                series.check_freshness(source, candidate, post, setup=setup)
+
+    def test_stockless_positive_program_z_preserves_post_coordinates(self):
+        with tempfile.TemporaryDirectory() as folder:
+            candidate, post = self.make_case(Path(folder))
+            project = read_cambam_bytes(candidate.read_bytes())
+            part = project.get_part("Part")
+            part.stock_present = False
+            first, second = project.list_mops()
+            self.assertTrue(project.remove_mop(second.internal_id))
+            first.stock_surface = 4.5
+            first.target_depth = 2
+            first.clearance_plane = 8
+            project.save(str(candidate))
+            post.write_text("""( Made using CamBam )
+( candidate stockless test )
+( Post processor: Default )
+G21 G90 G61 G40
+G0 Z8
+T1 M6
+( FIRST )
+G17
+M3 S12000
+G1 F60 Z2
+G1 F240 X7
+G1 F60 Z8
+M5
+M30
+""", encoding="utf-8")
+            series = normalize_native_series(candidate, candidate, post,
+                                             initial_position=(5, 5, 8),
+                                             setup={"units": "mm",
+                                                    "postprocessor": "Default"})
+            self.assertFalse(read_cambam_bytes(
+                candidate.read_bytes()).get_part("Part").stock_present)
+            self.assertEqual(series.stages[0].stock_surface_mm, 4.5)
+            self.assertEqual([item.end[2] for item in series.items
+                              if hasattr(item, "end")], [2, 2, 8])
+            self.assertEqual(series.initial_position, (5, 5, 8))
+            # Parsing posted coordinates earns no stock certificate here:
+            # the fixture deliberately supplies no initial material model.
+            evidence = series.parsed_evidence()
+            self.assertEqual(evidence["posted_motion"]["status"], "pass")
+            self.assertEqual(evidence["posted_motion"][
+                "initial_position_assumption_xyz_mm"], (5, 5, 8))
+            self.assertEqual(evidence["stock_access_residual"]["status"],
+                             "not_evaluated")
+
     def test_sections_modal_words_and_tool_binding_fail_closed(self):
         with tempfile.TemporaryDirectory() as folder:
             candidate, post = self.make_case(Path(folder))

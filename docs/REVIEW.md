@@ -1,5 +1,104 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## M5 stockless and UCCNC split output - 2026-09-26
+
+The reproduced stockless Part defect is fixed: native import/save/reopen now
+keeps absent Part and MachiningOptions Stock nodes absent while retaining MOP
+identity and raw parameter states. Distinct explicit stock, including all-zero
+dimensions, and newly authored default stock remain present. Clone,
+copy/transfer and MCP Part patches preserve presence until an explicit stock
+edit requests Stock. The native-series semantic key distinguishes absent stock
+from identical placeholder dimensions without invalidating the accepted M4
+explicit-stock fingerprint. Its posted-cut count now uses each MOP's explicit
+stock surface, so a synthetic stockless Default post cutting from Z4.5 down to
+Z2 retains those positive program coordinates. That fixture is a parser test,
+not a fresh CamBam post or a stock-removal certificate. Unresolved Auto states
+remain authored XML; no formula or stock shift is inferred.
+
+The accepted M4 rounded-raster source and supplied T1 trace produced the
+[synthetic UCCNC split bundle](../output/m5-uccnc-20260926-02/handoff.json).
+The manifest SHA-256 is
+`e9b74436ea9e5b8478f30c96cff16d2355049d0011d3f5b3a225d65a4238535d`;
+T1 and T3 file hashes are
+`156fbd079699e6af86459eb5b429daf919ffa356ba33eea890d3458a26396dd7`
+and `f3fb3e31553de7c74ea5e265ee377190ee6c91f61a67a1f4778ea888a483cee3`.
+The strict independent UCCNC reader decoded all 61 T1 and 383 T3 moves,
+checked G54 metric absolute exact-stop startup, spindle/feed and terminal
+states, and rejected unmodeled tool, pause, macro and offset words. The audit
+replayed 30 decoded T1 cylindrical cuts as T3 predecessor stock and rebuilt
+the rounded V paths from decoded T3 coordinates. Conditional Z=-1 section
+remaining upper bound is 1.526323 mm2; eight-slab volume upper is
+42.675342 mm3, both within the fixed 2 mm2 and 80 mm3 budgets, with zero
+nominal protected overcut. The output coordinate comparison uses a predeclared
+0.000051 mm tolerance; stock bounds use decoded coordinates. Missing/altered
+files, changed handoff order, rehashed changed T3 motion, unsupported commands
+and a mismatched explicitly translated datum are rejected in tests.
+
+The manifest's operator-installed T1/T3 tools, per-tool surface touch-off,
+unchanged G54 XY datum and safe initial-tip positions are **assumptions**. The
+files contain no M6 and were not run in UCCNC or on a machine. Runtime parity,
+physical installation, tool measurement, fixture collision and production
+acceptance are `not_evaluated`. The stockless native source has no supplied
+material model, so its material-removal, residual and stock-dependent access
+checks are also `not_evaluated`. A generic move-level explicit -4.5 mm datum
+fixture passes decode/inversion and rejects an unchanged or altered path; the
+full-job alternative datum and tool-table fixtures remain in the next unit.
+
+The first split-file implementation and native fidelity gate are complete.
+M5 remains open for its second dialect and transition-policy portability gate.
+Verification with `.venv\Scripts\python.exe`: full unittest discovery ran
+464 tests, passed with one skip; a focused stockless/native-series/M4/M5
+run passed 19 tests after the last M5 motion edit, then the final
+stockless/native-series/M5 run passed 18 after adding the parser-only status
+report. `compileall -q
+cambam_builder tests`, `git diff --check`, untracked-text trailing-space
+inspection, and a fresh audit of the recorded `handoff.json` passed. The
+prepared stockless source and framework round trip were parsed to confirm
+zero Stock nodes and unchanged Z fields. The new tests cover missing, changed,
+rehashed and reordered handoff artifacts, unknown commands, datum mismatch,
+positive-Z stockless posts and Auto-state preservation.
+Reopen this evidence if the source, supplied prior, setup, profile, emitted
+bytes, decoder/numerical policy or stock verifier changes. No manual visual
+inspection adds whole-program evidence; the separately supplied actual
+stockless CamBam post is recorded below.
+
+## M5 stockless actual CamBam post acceptance - 2026-09-26
+
+The user opened the prepared `framework-roundtrip.cb` in CamBam Plus 1.0,
+confirmed **no Part stock** and Profile `Stock Surface=4.5`, and reported
+that its toolpath descends incrementally to `Target Depth=2`. They supplied
+the fresh [Default post](../output/m5-stockless-acceptance-20260926-01/framework-roundtrip.nc)
+for independent file inspection. This positive-Z fixture is intentionally
+different from their usual stock-surface-Z0 workflow; it proves that explicit
+authored coordinates survive without a global preference imposed by the
+framework. The source XML has no Part or MachiningOptions Stock and retains
+`StockSurface=4.5`, `TargetDepth=2.0`, `ClearancePlane=8.0`, all `Value`.
+
+The source SHA-256 is
+`3994a52890f17300499f7299612f51aad0c716e122c73816262935420064da7c`;
+the actual NC SHA-256 is
+`0f5fa797c58de03b547e348c4cfb9c7d5c4da7e8673955172aade84b5969326c`.
+`normalize_native_series` accepted the exact source and post under an explicit
+Default/mm setup and a declared initial-tip assumption `(0,0,8)` mm. It found
+one enabled Profile/T1 stage, 45 parsed moves (3 G0, 42 G1), and motion SHA-256
+`4e70d7fbc1c381743543ca9db120827ec043f1c8a9414e3e00a5fc5c916bbabc`.
+Ordered feed descent endpoints are Z4.5, 4.1, 3.7, 3.3, 2.9, 2.5, 2.1 and
+2.0 mm; the final move returns to Z8. The minimum programmed Z is 2.0 mm.
+No automatic -4.5 mm translation or negative-Z cut appears. This closes the
+stockless native import/actual-post comparison for this one Profile fixture.
+
+`NativeSeries.parsed_evidence()` reports document and posted-motion parsing
+`pass`, with the declared initial position, while material-removal, residual
+and stock-dependent access remain `not_evaluated`: no trustworthy initial
+material model or replay certificate was supplied. Freshness recheck passed;
+`to_trace` rejects this positive-surface stage for its current zero-surface
+stock replay contract. The Default post contains
+`T1 M6`, whose controller macro/physical effect is not covered by this native
+post comparison. It is neither a UCCNC program nor a machine-execution claim.
+Reopen this acceptance if the native source, MOP parameters, actual post,
+declared initial-tip setup or parser changes; other stockless MOP types and
+`Auto` resolution still need their own evidence.
+
 ## M5 mediation architecture review - 2026-09-26
 
 The user requested an architecture review before delegating M5 implementation.

@@ -185,7 +185,7 @@ def _read_mop_parameter(
     """Read one CamBam MOP parameter without allowing bad metadata to abort import.
 
     The value is parsed for the in-memory model.  The state and original text are
-    returned separately so entity encoders can retain CamBam's Default/Value
+    returned separately so entity encoders can retain CamBam's Auto/Default/Value
     distinction while still allowing later field edits to win.
     """
     element = mop_elem.find(tag)
@@ -193,7 +193,7 @@ def _read_mop_parameter(
         return default, None, None
     raw = element.text
     state = element.get("state")
-    if state not in ("Default", "Value"):
+    if state not in ("Auto", "Default", "Value"):
         state = None
     if raw is None or not raw.strip():
         return default, state, raw
@@ -218,7 +218,7 @@ def _read_nested_mop_parameter(
         return default, None, None
     raw = element.text
     state = element.get("state")
-    if state not in ("Default", "Value"):
+    if state not in ("Auto", "Default", "Value"):
         state = None
     if raw is None or not raw.strip():
         return default, state, raw
@@ -621,7 +621,8 @@ def _reconstruct_part(project: CamBamProject, part_elem: ET.Element, *, strict: 
         nesting_columns=nesting_columns, nesting_spacing=nesting_spacing,
         nesting_grid_order=nesting_grid_order,
         nesting_grid_alternate=nesting_grid_alternate,
-        stock_offset=stock_offset, stock_surface=stock_surface
+        stock_offset=stock_offset, stock_surface=stock_surface,
+        stock_present=stock_node is not None
         # Order handled by XML sequence
     )
     if part is None:

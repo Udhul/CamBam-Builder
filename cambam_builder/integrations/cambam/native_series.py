@@ -70,7 +70,10 @@ def _part_stock(part):
               "default_tool_diameter", "default_spindle_speed", "nesting_method",
               "nesting_rows", "nesting_columns", "nesting_spacing",
               "nesting_grid_order", "nesting_grid_alternate")
-    return tuple((field, _stable(getattr(part, field))) for field in fields)
+    snapshot = tuple((field, _stable(getattr(part, field))) for field in fields)
+    # Preserve the accepted explicit-stock semantic fingerprint while giving
+    # stockless imports their own identity, even with identical dimensions.
+    return snapshot if part.stock_present else snapshot + (("stock_present", False),)
 
 
 def _source_semantic(project, data):
@@ -138,6 +141,27 @@ class NativeSeries:
     initial_position: tuple
     stages: tuple
     items: tuple
+
+    def parsed_evidence(self):
+        """Report parser evidence without promoting it to a stock certificate."""
+        return {
+            "document_fidelity": {
+                "status": "pass",
+                "scope": "bound native source/candidate geometry, Part and MOP order",
+                "source_sha256": self.source_sha256,
+                "candidate_sha256": self.candidate_sha256,
+            },
+            "posted_motion": {
+                "status": "pass", "scope": "strict parsed CamBam Default post",
+                "post_sha256": self.post_sha256,
+                "motion_sha256": self.motion_sha256,
+                "initial_position_assumption_xyz_mm": self.initial_position,
+            },
+            "stock_access_residual": {
+                "status": "not_evaluated",
+                "reason": "no caller-supplied initial stock and replay certificate",
+            },
+        }
 
     @property
     def evidence_fingerprint(self):
@@ -325,7 +349,12 @@ def normalize_native_series(source_path, candidate_path, post_path, *, initial_p
             raise ValueError(f"line {raw['line']}: posted tool differs from MOP")
         name = mop.name
         move_counts[name] += 1
-        if raw["g"] in (1, 2, 3) and min(raw["start"][2], raw["end"][2]) < 0:
+        # A posted cut can be entirely above program Z=0 when the explicit
+        # MOP stock surface is positive. Native stock presence does not shift
+        # these authored or posted coordinates.
+        if (raw["g"] in (1, 2, 3) and
+                min(raw["start"][2], raw["end"][2]) <
+                float(mop.stock_surface) - 1e-9):
             cut_counts[name] += 1
         items.append(PostedMove(name, raw["tool"], raw["g"],
                                 tuple(raw["start"]), tuple(raw["end"]), raw["feed"],

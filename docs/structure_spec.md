@@ -209,7 +209,7 @@ remain active owners until their staged migration.
 
 ### Mediation invariants and evidence contract
 
-**Design contract, 2026-09-26; M5 implementation pending.** These rules apply
+**Design contract, 2026-09-26; first M5 split-file slice implemented.** These rules apply
 at native/core/controller boundaries. They do not widen the currently verified
 fixed-axis milling domain or promise universal controller/kinematics support.
 
@@ -267,6 +267,32 @@ reproducible audits. Introduce only fields exercised by the current slice; no
 plugin registry, workflow engine or generalized native path interpreter is
 required. The [M5 implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet)
 owns the sequence, negative cases and stopping conditions.
+
+The native `Part.stock_present` flag records XML presence independently of
+placeholder dimensions. Imported absence survives save/reopen and relationship
+copy/transfer; newly authored Parts retain their default explicit Stock.
+Explicit MCP stock edits opt an imported stockless Part into Stock emission.
+Unchanged `Auto`/`Default`/explicit MOP XML states remain authored states,
+not resolved path values. The bounded native-series parser counts a positive-Z
+cut relative to its MOP stock surface and leaves coordinates unchanged.
+`NativeSeries.parsed_evidence()` reports source and posted-motion parsing
+separately from stock/access/residual `not_evaluated`; parsing alone grants
+no stock certificate.
+
+`integrations.m4_curved_workflow.load_selected_plan` exposes the accepted
+source-bound rounded raster plan, supplied T1 trace and initial tip to the first
+controller adapter. `cam_core.v_region.complete_motion` assembles safe travel
+around the detached V plan. `integrations.uccnc_m5` emits separate T1/T3 files
+for one declared G54, metric, absolute, exact-stop, no-length-compensation
+profile; `integrations.uccnc_reader` independently decodes its strict G0/G1
+subset and rejects unknown commands. The manifest pins source/prior/plan,
+profile/setup, ordered tool handoff and file hashes. Its auditor compares every
+decoded move to the intended path within 0.000051 mm, reconstructs T1 stock and
+T3 rounded V paths from decoded coordinates, then computes section and volume
+bounds on that decoded chain. The per-tool installation/touch-off conditions
+remain explicit assumptions. Generic native MOP generation, other controller
+dialects, controller runtime parity and physical machine acceptance are outside
+this first slice.
 
 ### Directional analytic stock section bounds
 

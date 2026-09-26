@@ -1432,17 +1432,65 @@ retains the four exact NC hashes and area/volume evidence.
 
 ### M5 UCCNC output and automatic evidence
 
-Follow the [implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet)
+The first bounded split-file adapter is executable. From the repository root,
+use a **new** ignored directory for each build; the recorded synthetic bundle
+is `output/m5-uccnc-20260926-02/`:
+
+```powershell
+$ProjectPython = '.\.venv\Scripts\python.exe'
+& $ProjectPython -m cambam_builder.integrations.uccnc_m5 output/m5-uccnc-NEW --m4-manifest output/m4-edited-curved-20260925-02/comparison/comparison.json
+& $ProjectPython -m cambam_builder.integrations.uccnc_m5 output/m5-uccnc-NEW/handoff.json
+& $ProjectPython -m unittest tests.test_stockless_native tests.test_native_series tests.test_uccnc_m5 -v
+```
+
+The build writes `T1.nc`, `T3.nc` and a versioned `handoff.json`. The audit
+command rechecks source/prior/plan and setup lineage, exact file hashes, both
+decoded programs and chained stock. Its first profile requires G54, G21, G90,
+G17, G61, G40 and G49; each file identifies its installed tool in a comment,
+sets S12000/F60/F300 in its move stream, and ends with M5/M30. Neither file
+installs or measures a tool. The recorded audit has 61 T1 plus 383 T3 moves,
+30 T1 cuts, Z=-1 final remaining-area upper 1.526323 mm2 and final volume
+upper 42.675342 mm3. Treat the emitted parameters and files as synthetic test
+data, not as a production machine setup. The manifest reports runtime and
+physical setup `not_evaluated`. The independent reader rejects unknown G/M/T
+words and the auditor rejects missing/reordered/stale files or handoff values.
+The [dated evidence](REVIEW.md#m5-stockless-and-uccnc-split-output---2026-09-26)
+records exact hashes and limits.
+
+For the separate **native stockless acceptance**, the prepared
+[source](../output/m5-stockless-acceptance-20260926-01/stockless-source.cb)
+and [framework round trip](../output/m5-stockless-acceptance-20260926-01/framework-roundtrip.cb)
+both have zero Part/MachiningOptions Stock nodes and Profile `StockSurface=4.5`,
+`TargetDepth=2.0`, `ClearancePlane=8.0` with `Value` states; XML parsing
+confirmed these exact values. The user accepted the stockless source in CamBam
+Plus 1.0 and supplied its fresh
+[Default post](../output/m5-stockless-acceptance-20260926-01/framework-roundtrip.nc).
+The native-series reader parsed its complete bounded command set without a
+datum shift: one Profile/T1 stage, 45 moves, ordered feed descent endpoints
+Z4.5 through Z2.0 and a final Z8 retract. Repeat the parser audit from the
+repository root with the declared interpreter:
+
+```powershell
+& $ProjectPython -c "from pathlib import Path; from cambam_builder.integrations.cambam.native_series import normalize_native_series; d=Path('output/m5-stockless-acceptance-20260926-01'); s=normalize_native_series(d/'framework-roundtrip.cb',d/'framework-roundtrip.cb',d/'framework-roundtrip.nc',initial_position=(0,0,8),setup={'units':'mm','postprocessor':'Default'}); print(s.parsed_evidence())"
+```
+
+The `(0,0,8)` mm initial tip is an **assumption**, because the post does not
+encode the machine's initial position. Parsing reports stock/access/residual
+`not_evaluated` without a separate trustworthy initial-stock model and replay
+certificate. The post's `T1 M6` has no certified controller or physical
+effect here. This native acceptance is separate from the automated UCCNC pair;
+the [dated record](REVIEW.md#m5-stockless-actual-cambam-post-acceptance---2026-09-26)
+owns hashes, exact values and reopening criteria.
+
+The first slice followed the [implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet)
 and [mediation invariants](structure_spec.md#mediation-invariants-and-evidence-contract).
-Start with the reproduced stockless Part persistence defect, recorded with
+The original stockless Part persistence defect is recorded with
 synthetic files and a replay command in the
 [architecture review](REVIEW.md#m5-mediation-architecture-review---2026-09-26).
-Inspect saved XML for **absence of Stock**, not only unchanged MOP values.
-After that fix, run `test_mop_parameters.py`, `test_mop_roundtrip.py`,
-`test_native_series.py` and affected copy/clone/transfer tests with the declared
-interpreter; broaden to the full suite for a shared Part/persistence change.
-The implementation must add executable M5 commands and negative tests here;
-this runbook currently specifies acceptance, not an existing controller CLI.
+The new stockless tests inspect saved XML for **absence of Stock**, in addition
+to MOP values. Run `test_mop_parameters.py`, `test_mop_roundtrip.py`,
+`test_native_series.py`, affected copy/clone/transfer tests and the full suite
+for shared Part/persistence changes.
 
 The user selected UCCNC for production. The [M5 evidence contract](REST_MACHINING_PLAN.md#m5-controller-coverage-and-automatic-evidence---2026-09-26)
 keeps the plan and verifier controller-neutral, with one declared dialect/setup

@@ -30,7 +30,9 @@ A validated family of straight variable-depth V grooves supports detached
 planning and edited native inputs. The accepted baseline and one edited member
 also have verified headless G-code reference output. The nominal RC01
 roughing/cleanup job also has a parsed and stock-replayed headless reference
-file. Their strict millimetre dialect is not a machine controller profile. See the
+file. Their strict millimetre dialect is not a machine controller profile.
+The first bounded UCCNC profile now emits an independently decoded, stock-replayed
+synthetic T1/T3 pair; runtime and physical setup are unassessed. See the
 [current status](docs/PROGRESS.md#active-work-and-next-priority).
 
 For development, install the environment with `uv sync`, then run the

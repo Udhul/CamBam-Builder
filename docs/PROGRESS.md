@@ -7,19 +7,26 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**Current entry point - 2026-09-26 architecture review:** M1-M4 retain their
-bounded acceptance; M5 is still open (5 of 6). The
-[M5 implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet)
-now fixes the next unit: preserve stockless native round trips, then deliver
-the split T1/T3 UCCNC slice with independent decoding and stock replay for
-both tools. A reproduced import/save defect invents Part stock; it is a
-prerequisite fix, not an accepted limitation to carry into M5. The subsequent
-portability unit uses Grbl v1.1 and manual/automatic transition fixtures.
+**Current entry point - 2026-09-26 first M5 output slice:** M1-M4 retain their
+bounded acceptance; M5 is still open (5 of 6). Stockless Part import/save/reopen
+now preserves absence through copy/transfer and MCP edits, without changing
+explicit MOP Z values. The accepted M4 rounded-raster route now emits separate
+T1/T3 UCCNC files with strict independent decoding and decoded T1-to-T3 stock,
+rounded-cutter, access and residual checks. The synthetic
+[handoff and files](../output/m5-uccnc-20260926-02/handoff.json) pass the first
+level-1 output gate; physical setup and UCCNC runtime parity remain unassessed.
+The next [M5 implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet)
+unit proves portability with Grbl v1.1 and manual/automatic transition fixtures.
 The [mediation contract](structure_spec.md#mediation-invariants-and-evidence-contract)
 defines source, frame, state and evidence ownership; the
 [review evidence](REVIEW.md#m5-mediation-architecture-review---2026-09-26)
-records the implementation gaps. This is a documentation/review outcome;
-controller implementation and runtime/physical acceptance remain outstanding.
+records the original gaps; the [M5 implementation evidence](REVIEW.md#m5-stockless-and-uccnc-split-output---2026-09-26)
+records the first bounded output result. The user then confirmed the stockless
+Part and explicit MOP Z values in CamBam Plus 1.0 and supplied a fresh
+[Default post](../output/m5-stockless-acceptance-20260926-01/framework-roundtrip.nc).
+Its parsed positive-Z path reaches Z2 without an inferred shift; see the
+[dated native acceptance](REVIEW.md#m5-stockless-actual-cambam-post-acceptance---2026-09-26).
+Runtime/physical acceptance remains outstanding.
 The dated entries below retain development history.
 
 **2026-09-23 execution architecture refinement (backlog 6).** The user's context
@@ -654,22 +661,17 @@ for a verified controller-output claim. LinuxCNC
 shared subset, not UCCNC execution authority. See the
 [M5 evidence contract](REST_MACHINING_PLAN.md#m5-controller-coverage-and-automatic-evidence---2026-09-26)
 and [dated finding](REVIEW.md#m5-controller-evidence-route-correction---2026-09-26).
-No controller file or runtime acceptance exists; the milestone count stays
-5 of 6.
+The first synthetic UCCNC file pair now has a decoded level-1 audit; no runtime
+acceptance exists and the milestone count stays 5 of 6.
 
-**Next priority:** execute the [M5 implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet):
-first preserve absent native stock through import/save/reopen, then
-emit separate T1/T3 UCCNC files for the selected M4 route,
-with a declared per-tool setup and checked T1-stock-to-T3 handoff; then
-independently decode and stock-replay every emitted move on Windows. Prove
-stockless explicit-MOP import without changing its Z settings or inventing a
-post shift; report unavailable stock checks rather than rejecting the file.
-Prove one explicitly requested
-nonidentity datum map and an alternative fixed-work-origin/tool-table setup
-through the decoded audit. Prove a
+**Next priority:** execute the portability unit in the
+[M5 implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet):
+extend the same detached plan and decoded verifier to Grbl v1.1, then prove a
 declared in-program manual handoff, a modeled automatic-changer fixture and a
-second dialect Grbl v1.1 against the same plan/audit, while rejecting
-unknown `M6`, stop and macro behavior. Seek machine-readable UCCNC runtime
+mixed-policy transition, while rejecting unknown `M6`, stop and macro behavior.
+Add the fixed-work-origin/tool-table setup and a full decoded nonidentity-datum
+job fixture; the current map unit test proves translation and mismatch rejection
+only at the move-comparison boundary. Seek machine-readable UCCNC runtime
 evidence before claiming exact controller parity. Production output waits for
 the user's actual machine profile and setup; add other controller adapters
 against named fixtures rather than assuming universal G-code compatibility.

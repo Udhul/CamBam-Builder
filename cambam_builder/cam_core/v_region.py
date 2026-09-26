@@ -278,6 +278,23 @@ def _motions(paths, safe_z):
     return tuple(items)
 
 
+def complete_motion(plan, initial_tip):
+    """Include safe travel to and from one verified V plan."""
+    verify(plan)
+    replay._xyz(initial_tip)
+    if not plan.motions:
+        raise ValueError("V plan has no executable motion")
+    first = plan.motions[0].start
+    moves = []
+    if first != initial_tip:
+        moves.append(VMotion("rapid", initial_tip, first))
+    moves.extend(plan.motions)
+    last = moves[-1].end
+    if last != initial_tip:
+        moves.append(VMotion("rapid", last, initial_tip))
+    return tuple(moves)
+
+
 def plan(target, tool, *, stepover_mm=1.0, xy_step_mm=1.0,
          margin_mm=0.01, safe_z=2.0, max_paths=1000,
          fill_pattern="raster"):
