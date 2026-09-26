@@ -35,11 +35,26 @@ an effective tip-to-surface datum for that setup, but is not necessarily a
 tool-table length offset. LinuxCNC distinguishes
 [setting a work-coordinate value at the current position](https://www.linuxcnc.org/docs/scratch/html/gcode/g-code.html)
 from [updating a tool table and applying `G43`](https://www.linuxcnc.org/docs/html/gcode/tool-compensation.html).
-For the accepted M4 fixture, CAM stock top and this work-surface Z are both 0.
-That coincidence cannot be generalized: CAM stock top +4.5 and work-surface
-Z0 need a -4.5 post translation (or a different touch-off value). A fixture
-with this difference and a separate tool-table method are now required M5
-evidence; no physical touch-off was observed here.
+The earlier M5 wording said a stock object with top Z+4.5 plus work-surface
+Z0 required a -4.5 post shift. That was incorrect: it conflated optional
+stock geometry with the resolved MOP/program Z datum. The user's manually
+authored CamBam files may omit a stock object and keep explicit operation
+`Stock Surface` and `Target Depth` coordinates. CamBam 1.0 documents the
+[stock object's `Auto` dependencies](https://www.cambam.info/doc/1.0/cam/machining-options.html)
+and [absolute `Target Depth`](https://www.cambam.info/doc/1.0/cam/pocket.html).
+The first M4 fixture happens to program its intended physical surface at Z0.
+Only an explicitly declared difference between that **programmed** datum and
+the controller work datum warrants a post translation. Missing stock must not
+invalidate import; it leaves stock-dependent checks without evidence. An
+imported `Auto` value needs CamBam resolution or actual-post evidence before
+claiming its final motion. No physical touch-off was observed here.
+Local code inspection found that `native.reader` accepts absent Part stock and
+retains MOP parameter states. The focused
+`python -m unittest discover -s tests -p test_mop_parameters.py` check passed
+18 tests, including save/reimport of explicit MOPs without a stock object.
+The `integrations.cambam.native_series` stock-replay normalizer rejects
+nonzero MOP stock surfaces for its bounded M4 proof; this is an audit-scope
+limit, not a native import restriction or a reason to rewrite source Z.
 The controller-independent proof is a strict independent parse of the final NC
 files followed by the same full stock/access/cutter/residual replay already used
 for M4. A controller-runtime claim additionally needs a machine-readable

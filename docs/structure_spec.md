@@ -169,15 +169,20 @@ dependency. An independent reader must decode every emitted command stream
 back to ordered motion and state before stock replay. An interpreter or
 controller runtime trace, when available, supplies a separate execution-level
 check and cannot certify another dialect.
-The core motion uses a physical tool-tip datum in a named CAM frame tied to
-stock and fixture geometry. A setup provides an explicit CAM-to-controller
-work-frame transform, including the CAM stock-top elevation and the work Z
-assigned to that physical surface. The profile declares work-coordinate and
-tool-length compensation state; an adapter transforms emitted coordinates and
-the verifier inverts that map before stock replay. A nonzero stock top or a
-new tool must not silently reset this relationship. Work-coordinate touch-off,
+The core motion uses a physical tool-tip datum in the **resolved programmed
+CAM frame**. A Part/Machining stock object is optional for importing a native
+project; it contributes to path values only where CamBam `Auto` properties
+request it. Stock/fixture geometry can be supplied later for stock-dependent
+verification without rewriting explicit MOP coordinates. A setup separately
+provides an explicit CAM-to-controller work-frame map and declares the active
+work and tool-length offsets. Identity mapping preserves an imported program
+by default. An adapter applies only declared transforms; the verifier inverts
+them before comparing decoded motion with the original path. A stock object's
+top elevation alone never commands a Z shift. Work-coordinate touch-off,
 tool-table length compensation, probing and preset tools are distinct ways to
-establish the required effective tip datum, not core motion types.
+establish the required effective tip datum. Missing stock leaves stock checks
+unassessed rather than invalidating import; unresolved `Auto` values remain
+unresolved until sufficient source or actual-post evidence exists.
 Tool changes are plan events with old/new tool, safe pre/post tip, spindle,
 effective offset, stock-lineage and confirmed completion/abort requirements.
 A failed or unconfirmed change cannot resume cutting. A per-transition policy

@@ -1444,9 +1444,10 @@ For the first Windows-side UCCNC gate, create a unique ignored
 manifest. Start from the accepted M4 rounded-raster source/plan. In this
 synthetic setup, declare G54, metric absolute XY-plane exact-stop motion, no
 active tool-length compensation, one unchanged XY datum and work Z=0 at the
-physical stock top for each installed tool. Its CAM stock top is also Z=0, so
-the CAM-to-work Z mapping is identity. This models the user's manual
-surface-touch-off method as a **per-tool work-coordinate setup**, without
+physical stock top for each installed tool. The selected M4 path is already
+programmed with its intended surface at Z=0, so the CAM-to-work Z map is
+identity; its stock model also happens to have a top at Z=0. This models the
+user's manual surface-touch-off method as a **per-tool work-coordinate setup**, without
 assuming that the touch-off writes a tool-length table entry. Pin the safe
 initial tip `(-17,-17,+5)` mm, stock/fixture identity, tool geometry,
 required T1-to-T3 order, source, prior, profile and output hashes. The test
@@ -1462,15 +1463,26 @@ Reject controller commands, transforms or handoff states whose effects are
 unknown. This automated gate is the precise whole-program check; no manual
 visual comparison of hundreds of moves is requested.
 
-Add a nonzero-datum fixture before generalizing the output adapter: set CAM
-stock top to `+4.5 mm` while the physical surface is assigned work Z=0. The
-posted Z must shift by `-4.5 mm`, and inverse-mapped decoded motion must give
-the same tip-to-stock sweeps and residuals. Reject unchanged CAM Z output for
-that touch-off, a stale per-tool datum, or simultaneous touch-off and tool
-compensation that applies the length correction twice. A separate declared
-tool-table/preset fixture should retain a fixed work origin and apply the
-appropriate controller length offset; it must pass the same inverse-mapped
-audit. These are setup alternatives, not changes to the CAM plan.
+Before generalizing the output adapter, import a CamBam file with **no stock
+object** and explicit operation `Stock Surface`/`Target Depth` values. Preserve
+its XML states and compare a fresh post without inventing a Z shift; missing
+stock must not make import fail. Report stock-dependent material/access results
+as not evaluated until a stock
+model is supplied. Check separately that a stock-object edit does not rewrite
+explicit MOP Z values; if either MOP field is `Auto`, resolve its inherited or
+stock-dependent value by CamBam semantics or an actual post before comparing
+motion. CamBam documents this [Auto dependency](https://www.cambam.info/doc/1.0/cam/machining-options.html).
+
+Use a distinct **explicit datum-map** fixture to test translation: declare a
+resolved program surface at Z `+4.5 mm` and a controller setup that touches
+the same physical surface to work Z=0. Only this declared mismatch calls for
+a `-4.5 mm` post shift; decode and invert the shift to compare with the
+original path. A stock object's top value alone must never trigger it. Reject
+a stale per-tool datum, a path that violates a declared mapping, or a
+double-applied touch-off/tool-length correction when claiming verified output.
+A separate declared tool-table/preset fixture should retain a fixed work
+origin and apply its controller length offset. These are setup alternatives,
+not changes to the imported CAM program.
 
 `C:\UCCNC\UCCNC.exe` is installed locally. CNCdrive documents an unlicensed
 Windows demo mode, but the installed `Profiles\Macro_Default\M6.txt` is an

@@ -625,12 +625,16 @@ in-program or split-program handoff, and measurement/offset method. `M6`, an
 `M0` stop block and a changer macro are controller-specific implementations,
 not core tool-change types. CamBam Parts can group same-tool MOPs for separate
 posting. The user's own manual method retracts Z, changes tool, touches the
-new tip to the stock surface and sets work Z=0. This is valid for the first
-M4 fixture because its CAM stock top is Z=0 and the declared setup uses no
-active tool-length compensation. The core must instead carry the physical
-tip-to-stock datum and an explicit CAM-to-work transform: a different CAM
-stock-top elevation or tool-table workflow must not silently inherit Z=0.
-Unknown scripts, motion, datum or offset effects fail closed. LinuxCNC
+new tip to the stock surface and sets work Z=0. It fits the first M4 fixture
+because that fixture's **resolved path** treats the physical surface as Z=0
+and declares no active tool-length compensation. The Part stock object is
+optional for imported files with explicit MOP settings; it must not silently
+shift posted coordinates. CamBam can use stock values when MOP settings are
+`Auto`, so preserve and resolve those states separately. A missing stock
+model makes stock-dependent checks unassessed, not import invalid. The core
+retains the programmed tip path; only an explicit CAM-to-work setup map may
+transform it. Unknown scripts, motion, datum or offset effects fail closed
+for a verified controller-output claim. LinuxCNC
 `rs274` can later provide an independent command-line interpreter check of a
 shared subset, not UCCNC execution authority. See the
 [M5 evidence contract](REST_MACHINING_PLAN.md#m5-controller-coverage-and-automatic-evidence---2026-09-26)
@@ -640,9 +644,12 @@ No controller file or runtime acceptance exists; the milestone count stays
 
 **Next priority:** emit separate T1/T3 UCCNC files for the selected M4 route,
 with a declared per-tool setup and checked T1-stock-to-T3 handoff; then
-independently decode and stock-replay every emitted move on Windows. Prove a
-nonzero CAM stock-top translation and an alternative fixed-work-origin/
-tool-table setup through the same inverse-mapped stock audit. Prove a
+independently decode and stock-replay every emitted move on Windows. Prove
+stockless explicit-MOP import without changing its Z settings or inventing a
+post shift; report unavailable stock checks rather than rejecting the file.
+Prove one explicitly requested
+nonidentity datum map and an alternative fixed-work-origin/tool-table setup
+through the decoded audit. Prove a
 declared in-program manual handoff, a modeled automatic-changer fixture and a
 second dialect such as Grbl v1.1 against the same plan/audit, while rejecting
 unknown `M6`, stop and macro behavior. Seek machine-readable UCCNC runtime

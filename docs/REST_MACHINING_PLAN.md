@@ -49,7 +49,7 @@ remain required. Do not claim physical machining without real setup acceptance.
 | M2: curved Region rest and endmill cleanup | On a native annulus and a mixed line/arc concave Region with a hole, derive pure rest from supplied prior motion and produce complete smaller-endmill entry/cut/link/retract paths. Preserve analytic source identity; validate arc topology, conservative access/protection and independently bounded residual/overcut through approximation and emitted motion. Strict native reimport, visible preview, actual explicit post and stock replay must pass; include a curved narrow-access rejection and translated/reflected frame case. | **Accepted for the bounded annulus, mixed and reflected synthetic jobs via exact explicit motion.** All three actual Default posts pass ordered motion and stock replay; their native Engrave preview posts separately match the final T2 centerlines. The user confirmed curved preview visibility. CustomScript proves post transport, not independent CamBam path planning; neither route is physical machining acceptance. |
 | M3: V cleanup and edge tracing | On the polygonal target and at least one accepted curved target, generate pointed, flat-tip and tangent spherical/conical rounded-tip variable-depth paths, depth-capped/wide-area additional passes, and boundary/corner cleanup around concavity and holes. Check tool-profile continuity, full cutter occupancy, access, protected material, residual and infeasible/partial results between vertices and around arcs. Strict native preview and actual explicit post must be audited; Engrave remains inspection-only unless its whole post passes. | **Accepted for the bounded capped inward V recess.** The user saw geometry and V paths in all seven previews. All seven corrected actual preview posts match centerlines with +5 mm XY rapid links; all seven corrected explicit posts pass complete T1/T3 stock, access and residual audits. Pointed, flat and rounded profiles cover letter and annulus; mixed rounded and curved rejection pass. Flat-pocket strategy selection remains M4 work. |
 | M4: composed workflow and edits | One reopened/edited native source runs rest analysis, alternative endmill/V strategy comparison, selected ordered operations and stock-dependent cleanup without hidden session state. Normalize complete actual emitted motion from any supported native CamBam MOP or ordered MOP series as prior-stock authority, with explicit rejection of unsupported motion; calculate remaining area and volume by stage. Include a curved target and rounded-tip strategy in the accepted comparison; prove one contour-parallel offset fill candidate alongside the raster proof input through the same stock verifier. Allow manual or planned chaining of safe native MOPs, custom Region MOPs and exact framework paths. Relevant edits invalidate source, path and post claims; unchanged cosmetic edits retain valid evidence. The same accepted plan is available through native preview/explicit output and a parsed, stock-replayed direct reference program. | **Accepted for the bounded edited annulus.** The reopened 2.1 mm hole, T1-only partial endmill route and rounded raster/contour-offset finishes pass shared stock and direct reference audits. The user saw source primitives and Engrave toolpaths in both previews. Both actual preview posts match centerlines and both actual explicit Default posts pass complete T1/T3 motion and stock audits; the area-first selector chooses raster while offset also meets the fixed budgets. The bounded linear native-MOP normalizer rejects unsupported arc/unsafe motion; generic curved native Pocket planning is not certified. |
-| M5: first controller output | Lower the accepted M4 plan through a declared controller profile with explicit units, coordinate/datum mapping, tools, feeds, spindle, entry/link/retract and end roles; independently decode every emitted program or command stream and replay its actual coordinates with stock carried across program boundaries. Keep tool-change intent, measurement/offset method, execution method and dialect separate. Prove manual and automatic transition contracts, a nonzero CAM stock-top mapping, and two distinct controller dialect fixtures through the same fail-closed audit; physical changer behavior remains machine-specific acceptance. Record controller-runtime and physical acceptance separately. | **Open.** UCCNC is the first output fixture; the user's machine profile is pending. LinuxCNC and Grbl expose materially different tool-change command sets and are candidates for the second dialect fixture. Existing ASCII reference output is not a controller profile. |
+| M5: first controller output | Lower the accepted M4 plan through a declared controller profile with explicit units, coordinate/datum mapping, tools, feeds, spindle, entry/link/retract and end roles; independently decode every emitted program or command stream and replay its actual coordinates with stock carried across program boundaries. Keep tool-change intent, measurement/offset method, execution method and dialect separate. Prove manual and automatic transition contracts, stockless explicit-MOP import, an explicitly requested nonidentity datum map, and two distinct controller dialect fixtures. Report stock-dependent checks as unavailable when no stock model is supplied; physical changer behavior remains machine-specific acceptance. | **Open.** UCCNC is the first output fixture; the user's machine profile is pending. LinuxCNC and Grbl expose materially different tool-change command sets and are candidates for the second dialect fixture. Existing ASCII reference output is not a controller profile. |
 
 This is **five accepted milestones and one remaining milestone**, not a time or
 effort percentage. M4's bounded edited curved composition and direct/native
@@ -68,40 +68,56 @@ behavior fails closed. The user's UCCNC `M6` pauses for a manual change, but
 its exact macro, machine version and physical limits remain production inputs.
 The previous LinuxCNC-only simulation selection is superseded.
 
-The core's Z contract is the **physical cutting tip relative to the CAM stock
-and fixture**, in a named CAM frame with an explicit stock-top elevation and
-tool-tip datum. A setup maps that frame to the controller work frame, including
-units, axis direction, XY/WCS origin and the Z value assigned to the physical
-stock surface. The map is not inferred from a file name, controller display or
-the convention that stock top equals zero. Each output profile declares the
-active work offset, tool-length compensation state and method by which the
-new tool's tip is registered. Re-touching Z on the stock surface, probing a
-fixed setter, applying a preset tool-table length and other methods are
-alternative ways to establish the same required tip-to-stock relationship.
-The measurement reference may be stock top, stock bottom, a fixture surface
-or a tool setter; it must still be accessible and physically unchanged at the
-handoff. A surface removed by an earlier operation cannot serve as an
-unexamined touch-off reference.
-The core specifies that relationship and the required post-change state; the
-adapter owns controller commands and the operator/machine owns the actual
-measurement. A controller's work-coordinate touch-off need not update its
-tool-length table, and combining both methods without a declared composition
-can apply the correction twice. See LinuxCNC's separate
+The core's Z contract starts with the **resolved programmed tool-tip path in
+its named CAM coordinate frame**. A CamBam Part/Machining stock object is
+optional input for stock simulation, clearance and `Auto` properties; it is
+not itself a request to translate output coordinates. Explicit MOP `Stock
+Surface`, `Target Depth` and clearance settings, including their inherited
+style states, determine the toolpath. CamBam documents that a stock object
+supplies an operation's `Stock Surface` or `Target Depth` when those values
+are `Auto`, while `Target Depth` is an absolute Z coordinate. A stock-aware
+postprocessor macro may separately write stock data, so the actual post still
+needs decoding. Preserve MOP states on import and resolve them by CamBam
+semantics or an actual post, never
+by assuming that a missing stock object means an invalid drawing. See the
+[CamBam 1.0 Machining Options](https://www.cambam.info/doc/1.0/cam/machining-options.html)
+and [Pocket operation](https://www.cambam.info/doc/1.0/cam/pocket.html).
+
+The setup separately declares how the **programmed tool-tip coordinates** map
+to controller work coordinates and, when a material model is available, how
+the physical stock/fixture sits in that same frame. The default for an
+existing CamBam program is identity: preserve its authored Z coordinates.
+The user's usual method touches each installed tool to the physical stock
+surface and sets work Z=0; it fits programs whose intended surface is Z=0.
+Other setups may use a different work datum, tool-table lengths, a fixed
+setter or probing. The output profile declares active work and tool-length
+offset states and the method that registers the new tip. A work-coordinate
+touch-off need not update a tool-length table; combining both without a
+declared composition can double-apply a correction. See LinuxCNC's separate
 [work-coordinate setting](https://www.linuxcnc.org/docs/scratch/html/gcode/g-code.html)
 and [tool compensation](https://www.linuxcnc.org/docs/html/gcode/tool-compensation.html)
-interfaces.
+interfaces. The measurement reference must still exist at the handoff.
 
-For a simple same-axis Z translation, post
-`z_work = z_cam + (z_work_at_stock_top - z_cam_stock_top)` and invert this map before stock
-replay. If CAM stock top is `+4.5 mm` and the operator sets work Z to `0` at
-that surface, the post must subtract `4.5 mm` from the CAM Z coordinates.
-Alternatively the operator may assign work Z `+4.5 mm` at the surface with an
-identity post. Emitting unchanged CAM coordinates while touching the surface
-to work Z `0` is a datum error and must be rejected. The actual transform may
-also include nontrivial XY placement or orientation; support only declared,
-auditable transforms. Keep a single stock/fixture identity and the same
-physical cut positions across all tools even when the controller's numeric
-work offset or active tool-length offset changes between files.
+Translate coordinates **only when an explicit setup says the programmed and
+controller datums differ**. For example, if a resolved MOP path treats the
+physical surface as programmed Z `+4.5 mm`, but the operator touches that
+surface to controller work Z `0`, a declared `-4.5 mm` translation preserves
+the intended path. Merely changing or omitting a stock object's top elevation
+does not trigger that translation. Decode emitted coordinates and invert any
+declared map before comparison with the original path; reject a mismatch
+when claiming verified output. Keep the same physical cut positions across
+tools even if work or tool-length offsets change between programs.
+
+Import and verification have separate outcomes. A manually authored `.cb`
+with no stock object and explicit MOP values must remain importable and keep
+its explicit Z settings and source identity. With no trustworthy stock or
+fixture model, report
+material-removal, residual, collision and access checks as **not evaluated**;
+do not turn that missing evidence into an import failure or a claim of full
+stock certification. If an `Auto` parameter lacks the information needed to
+resolve its path, retain the source and report that path unresolved until a
+CamBam post or sufficient setup is supplied. Unknown controller commands or
+offset effects still prevent a verified controller-output claim.
 
 Keep tool transitions as controller-neutral plan events with the old/new tool,
 safe pre/post tip states, spindle/coolant state, stock lineage, clearance
@@ -118,10 +134,10 @@ completion signal and machine-specific acceptance. Unknown motion, offset
 changes or resume state cannot be silently treated as zero-effect transitions.
 
 The first Windows proof uses **separate T1 and T3 UCCNC files** with a checked
-manual handoff. Its synthetic CAM stock top and work-surface Z are both `0`,
+manual handoff. Its resolved program surface and work-surface Z are both `0`,
 so the chosen Z map is identity. The operator installs and measures each tool
-before its file starts; neither file calls an unverified `M6` macro. This also permits CamBam
-Part-per-tool export where native MOPs are used. The T3 file consumes the
+before its file starts; neither file calls an unverified `M6` macro. This also
+permits CamBam Part-per-tool export where native MOPs are used. The T3 file consumes the
 decoded T1 stock result, not a fresh-stock assumption. Both files need explicit
 modal startup, tool/setup identity, safe initial-tip precondition,
 spindle/feeds and end state. The handoff manifest names their order, the same
@@ -197,10 +213,12 @@ change moves and hardware actions; it does not represent the user's manual
 change profile. No installed default profile is a production recommendation.
 The first M5 increment stops when the two selected UCCNC files, their setup
 declarations and chained stock replay pass level 1, and unknown commands or
-handoff states are rejected. A transformed nonzero stock-top fixture must
-produce the same physical tip/stock replay after inverse mapping; an unchanged
-post with a mismatched touch-off datum must fail. M5's portability gate then
-uses the same plan and
+handoff states are rejected. A stockless imported file with explicit MOP
+values must preserve those settings and compare actual output without an
+invented Z shift; stock-dependent checks remain unassessed.
+A separate fixture with an explicitly nonidentity program-to-work datum must
+verify the requested transform and reject a mismatched emitted path. M5's
+portability gate then uses the same plan and
 auditor for a second named dialect fixture, plus a declared in-program manual
 transition and a bounded automatic-changer contract. The automatic fixture
 checks tool/offset/return effects without claiming physical ATC acceptance.
