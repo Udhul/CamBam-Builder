@@ -1,5 +1,56 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## M5 Grbl portability and transition policies - 2026-09-26
+
+The [recorded portability bundle](../output/m5-portability-20260926-01/handoff.json)
+uses the accepted M4 edited annulus source and T1 prior. It contains one
+Grbl v1.1 manual T1/T3 program and one mixed T1/T3/T1 program with a synthetic
+external changer effect stream. SHA-256 values: manifest
+`d3d16b5fe624422f3781d6c9edbc5d83877425ad9dd1894a22c6d3d08f9d46e8`,
+`manual.nc` `37c81d7e4b353d9e982f2b2d891b03aeb539c74051b128dcad6136334b7af329`,
+`mixed.nc` `f351347805112b95df07efe331802471f1309fc23fbcf1ff5eff22aadeae114a`,
+and `mixed-changer.json`
+`d79176f9d63416f03d64a3b588d56aa2346e7e41f8b98eff8cb5b46615a5d3e7`.
+
+The independent strict Grbl reader decoded the complete one-program manual
+fixture: 61 T1 and 383 T3 moves, one `M0`, G49 inactive length compensation
+and a declared resolved CAM surface at +4.5 mm mapped to work surface zero.
+The full decoded path inverted the -4.5 mm map and passed comparison against
+the source-bound CAM path; wrong/double shifts failed. The mixed program
+decoded 61 T1, 383 T3 and two final safe T1 return moves, two `M0` blocks
+and `G43.1` values 2/3/2 mm supplied from a synthetic external table while
+G54 remains fixed. The separate effect stream declared three safe spindle-off
+travel segments, T3-to-T1 installation and offset return. The decoder and
+auditor rejected missing or altered stop, unknown M6/macro, stale tool/offset,
+altered effect, absent effect file and changed handoff policy. Grbl `M0` itself
+only pauses; the synthetic host completion is explicitly **assumed, not
+observed**.
+
+Both Grbl fixtures fed the same decoded T1/T3 stock verifier as the UCCNC
+fixture. Each has 30 replayed T1 cuts, Z=-1 mm final remaining-area upper
+1.526323 mm2, eight-slab final volume upper 42.675342 mm3 and zero nominal
+protected overcut, inside the predeclared 2 mm2/80 mm3 budgets. The decoded
+final T1 safe stage has no cuts; external travel stays at Z+5. Grbl and UCCNC
+runtime parity, physical tool installation, host completion, fixture collision
+and production process acceptance remain `not_evaluated`.
+
+The M5 **offline portability implementation gate** is complete for this
+bounded source and two named dialect subsets. Bounded user acceptance has not
+been recorded. No visual comparison of 444 moves adds evidence to the decoded
+audit. Reopen when source/prior/plan, setup map, tool table, profile, emitted
+bytes, reader, effect model or verifier changes, or when an exact controller
+trace or actual production machine profile becomes available. The next
+project increment is backlog 7's separate Manual-tab fixture; see
+[current priority](PROGRESS.md#active-work-and-next-priority).
+
+Verification with `.venv\Scripts\python.exe`: full unittest discovery passed
+468 tests with one skip during the increment; the final focused M5/UCCNC run
+passed eight tests after the last semantic reader and negative-case edits.
+`compileall -q cambam_builder tests`, the recorded bundle audit command,
+`git diff --check` and untracked-source trailing-whitespace inspection passed.
+The broad run preceded the final small reader/test changes, which the final
+focused run covers. No physical or exact controller interpreter check ran.
+
 ## M5 stockless and UCCNC split output - 2026-09-26
 
 The reproduced stockless Part defect is fixed: native import/save/reopen now

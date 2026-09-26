@@ -7,16 +7,25 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**Current entry point - 2026-09-26 first M5 output slice:** M1-M4 retain their
-bounded acceptance; M5 is still open (5 of 6). Stockless Part import/save/reopen
+**Current entry point - 2026-09-26 M5 automated portability gate:** M1-M4 retain
+their bounded acceptance; M5 implementation has passed its declared offline
+gate, with bounded user acceptance still unrecorded (5 of 6 accepted). Stockless Part import/save/reopen
 now preserves absence through copy/transfer and MCP edits, without changing
 explicit MOP Z values. The accepted M4 rounded-raster route now emits separate
 T1/T3 UCCNC files with strict independent decoding and decoded T1-to-T3 stock,
 rounded-cutter, access and residual checks. The synthetic
 [handoff and files](../output/m5-uccnc-20260926-02/handoff.json) pass the first
 level-1 output gate; physical setup and UCCNC runtime parity remain unassessed.
-The next [M5 implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet)
-unit proves portability with Grbl v1.1 and manual/automatic transition fixtures.
+The [Grbl portability bundle](../output/m5-portability-20260926-01/handoff.json)
+now proves the second dialect, a full in-program manual handoff with a -4.5 mm
+declared CAM-to-work Z map, and a mixed manual/synthetic-automatic T1/T3/T1
+fixture with fixed G54 and declared dynamic length offsets. Its separate
+Grbl reader feeds the same decoded T1/T3 stock verifier; the safe final T1
+stage and asserted external changer travel are checked too. Unknown pause,
+macro, offset, tool and changed effect behavior fail closed. The automatic
+effect is a synthetic host contract, not observed Grbl or physical changer
+behavior. [Dated evidence](REVIEW.md#m5-grbl-portability-and-transition-policies---2026-09-26)
+owns exact hashes and results.
 The [mediation contract](structure_spec.md#mediation-invariants-and-evidence-contract)
 defines source, frame, state and evidence ownership; the
 [review evidence](REVIEW.md#m5-mediation-architecture-review---2026-09-26)
@@ -26,7 +35,9 @@ Part and explicit MOP Z values in CamBam Plus 1.0 and supplied a fresh
 [Default post](../output/m5-stockless-acceptance-20260926-01/framework-roundtrip.nc).
 Its parsed positive-Z path reaches Z2 without an inferred shift; see the
 [dated native acceptance](REVIEW.md#m5-stockless-actual-cambam-post-acceptance---2026-09-26).
-Runtime/physical acceptance remains outstanding.
+Runtime/physical acceptance remains outstanding. No visual review can improve
+the offline per-move evidence; production setup acceptance requires a real
+machine profile and tool-change/offset effects.
 The dated entries below retain development history.
 
 **2026-09-23 execution architecture refinement (backlog 6).** The user's context
@@ -664,20 +675,20 @@ and [dated finding](REVIEW.md#m5-controller-evidence-route-correction---2026-09-
 The first synthetic UCCNC file pair now has a decoded level-1 audit; no runtime
 acceptance exists and the milestone count stays 5 of 6.
 
-**Next priority:** execute the portability unit in the
-[M5 implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet):
-extend the same detached plan and decoded verifier to Grbl v1.1, then prove a
-declared in-program manual handoff, a modeled automatic-changer fixture and a
-mixed-policy transition, while rejecting unknown `M6`, stop and macro behavior.
-Add the fixed-work-origin/tool-table setup and a full decoded nonidentity-datum
-job fixture; the current map unit test proves translation and mismatch rejection
-only at the move-comparison boundary. UCCNC runtime parity is an optional
-controller-specific evidence tier, not a user-provided output or M5 completion
-gate; leave it `not_evaluated` unless a documented per-move trace becomes
-available. The [runtime-scope correction](REVIEW.md#m5-controller-runtime-evidence-scope---2026-09-26)
-records the reopening criterion. Production output waits for
-the user's actual machine profile and setup; add other controller adapters
-against named fixtures rather than assuming universal G-code compatibility.
+**M5 portability gate implemented:** The
+[M5 implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet)
+now has a second named Grbl v1.1 output fixture, a one-program manual pause,
+mixed manual/automatic transition policies, a fixed-work-origin table-derived
+`G43.1` fixture and full decoded nonidentity-datum job. The same source-bound
+T1/T3 verifier audits both dialects; the mixed fixture additionally checks
+safe return travel and synthetic external changer effects. Four named Grbl
+tests reject unknown stops/macros, stale length state, changed effects and
+wrong datum mapping. UCCNC and Grbl runtime parity remain optional
+controller-specific evidence tiers; leave them `not_evaluated` until exact
+traces exist. The [runtime-scope correction](REVIEW.md#m5-controller-runtime-evidence-scope---2026-09-26)
+records the reopening criterion. Production output waits for the user's actual
+machine profile and setup; add other controller adapters only against named
+fixtures.
 See the [M5 runbook](DEVELOPMENT.md#m5-uccnc-output-and-automatic-evidence)
 and [scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24).
 M1 fixes the route criterion: each candidate's actual emitted motion earns
@@ -686,7 +697,11 @@ Region MOPs and framework paths into an edit-aware strategy choice with
 area/volume reporting. Bounded native-MOP normalization and strategy selection
 are M4 components; the accepted edited curved/rounded posts now close the
 bounded combined output gate. Unsupported native motion remains unselectable.
-Backlog 7 needs a separate Manual-tab fixture; 8-10 are complete.
+**Next project increment:** backlog 7's separate Manual-tab fixture is the
+highest-value bounded remaining capability. It exercises an independent native
+authoring gap after the M5 automated gate. Reopen controller work when a real
+machine profile, exact interpreter trace or a new named dialect requirement is
+available. Backlog 8-10 are complete.
 Defer geometry outside the six-milestone supported domain, optimization and
 the detached/policy
 [stage 3 package move](structure_spec.md#package-organization-decision-and-migration-plan)

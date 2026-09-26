@@ -80,11 +80,11 @@ def compare_motion(decoded, intended, *, initial_cam_tip,
                    translation_xyz_mm=(0, 0, 0)):
     """Check every decoded endpoint and role, then return actual CAM motion."""
     if len(decoded.moves) != len(intended):
-        raise ValueError("UCCNC missing or extra motion")
+        raise ValueError("M5 missing or extra motion")
     if decoded.rpm != RPM or not _near(
             _unshift(decoded.moves[0].start, translation_xyz_mm),
             initial_cam_tip):
-        raise ValueError("UCCNC spindle or initial tip differs")
+        raise ValueError("M5 spindle or initial tip differs")
     actual = []
     for index, (got, want) in enumerate(zip(decoded.moves, intended)):
         feed = 0 if want.role == "rapid" else (
@@ -94,10 +94,10 @@ def compare_motion(decoded, intended, *, initial_cam_tip,
         if (got.g != (0 if want.role == "rapid" else 1) or
                 got.feed != feed or not _near(start, want.start) or
                 not _near(end, want.end)):
-            raise ValueError(f"UCCNC motion {index} differs from intended path")
+            raise ValueError(f"M5 motion {index} differs from intended path")
         actual.append(v_region.VMotion(want.role, start, end))
     if not _near(actual[-1].end, initial_cam_tip):
-        raise ValueError("UCCNC end tip differs from handoff position")
+        raise ValueError("M5 end tip differs from handoff position")
     return tuple(actual)
 
 
@@ -181,12 +181,11 @@ def _decoded_v_plan(plan, actual, start):
     return decoded_plan
 
 
-def _result(plan, prior, start, t1_data, t3_data, translation):
-    initial_work = _shift(start, translation)
-    t1 = decode_program(t1_data, initial_tip=initial_work)
-    t3 = decode_program(t3_data, initial_tip=initial_work)
+def audit_decoded_pair(plan, prior, start, t1, t3,
+                       translation=(0, 0, 0)):
+    """Shared M5 motion and stock audit for independently decoded stages."""
     if (t1.tool_label, t3.tool_label) != ("T1", "T3"):
-        raise ValueError("UCCNC installed-tool file identity or order changed")
+        raise ValueError("M5 installed-tool stage identity or order changed")
     actual_t1 = compare_motion(t1, _prior_as_vmotion(prior),
                                initial_cam_tip=start,
                                translation_xyz_mm=translation)
@@ -202,7 +201,7 @@ def _result(plan, prior, start, t1_data, t3_data, translation):
     final_volume = v_region.volume_bounds(rest)
     if (final_area[2] >= 1e-7 or final_area[1] > 2 or
             final_volume[1] > 80):
-        raise ValueError("decoded UCCNC stock or residual budget failed")
+        raise ValueError("decoded M5 stock or residual budget failed")
     return {
         "document_fidelity": {"status": "pass",
                               "scope": "M4 source hash and semantic plan"},
@@ -228,6 +227,13 @@ def _result(plan, prior, start, t1_data, t3_data, translation):
         "physical_setup": {"status": "not_evaluated",
                            "reason": "tool installation and touch-off are operator assertions"},
     }
+
+
+def _result(plan, prior, start, t1_data, t3_data, translation):
+    initial_work = _shift(start, translation)
+    t1 = decode_program(t1_data, initial_tip=initial_work)
+    t3 = decode_program(t3_data, initial_tip=initial_work)
+    return audit_decoded_pair(plan, prior, start, t1, t3, translation)
 
 
 def _expected_manifest(m4_path, plan, prior, start, programs):

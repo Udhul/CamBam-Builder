@@ -4,9 +4,10 @@ Only the declared absolute metric XYZ G0/G1 subset has modeled effects.
 Unknown words, modal changes, macros and tool commands fail closed.
 """
 
-from dataclasses import dataclass
 import math
 import re
+
+from .m5_decoded import DecodedMove, DecodedProgram
 
 
 _NUMBER = r"[+-]?(?:\d+(?:\.\d+)?|\.\d+)"
@@ -15,25 +16,6 @@ _MOVE = re.compile(
 _SPINDLE = re.compile(rf"^M3 S({_NUMBER})$")
 _HEADER = re.compile(r"^\( M5 UCCNC split-file v1 TOOL (T[1-9][0-9]*) G54 \)$")
 _STARTUP = ("G21", "G90", "G17", "G61", "G40", "G49", "G54")
-
-
-@dataclass(frozen=True)
-class DecodedMove:
-    g: int
-    feed: float
-    start: tuple
-    end: tuple
-
-
-@dataclass(frozen=True)
-class DecodedProgram:
-    tool_label: str
-    startup: tuple
-    rpm: float
-    moves: tuple
-    end_position: tuple
-    spindle_stopped: bool
-    program_ended: bool
 
 
 def _value(word):

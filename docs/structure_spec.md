@@ -38,6 +38,7 @@ are outside that runtime package list.
 | `cambam_builder/native/reader.py` | XML parsing, entity reconstruction, ID mapping and deferred parent/MOP linking | Import defaults, malformed data and round-trip reconstruction |
 | `cambam_builder/integrations/cambam/` | Native `.cb` input/attachment, M2 curved candidates, actual posted MOP-series normalization and bounded posted-stock comparison; depends on native model and detached CAM values | Bridge between native documents, generated motion and CamBam output; no source model ownership |
 | `cambam_builder/integrations/direct_*.py` | Bounded headless V and RC01 reference-dialect writers, parsed-output audits and evidence manifests | Output adapters; consume detached plans/traces and preserve their target verifiers |
+| `cambam_builder/integrations/{uccnc_m5,uccnc_reader,grbl_m5_reader,m5_portability,m5_decoded}.py` | Bounded controller fixture emission, independent complete-byte dialect decoding, common decoded-stage values and shared T1/T3 stock audit | Consume the detached M4 plan; no controller syntax in `cam_core` |
 | `cambam_builder/__init__.py` | Public alias and version | Import surface and version metadata |
 | `cambam_builder/mcp_adapter/` | Optional local stdio launcher, SDK protocol boundary, volatile documents, retry ledger, schema validation and workspace I/O | [MCP contract](MCP_CONTRACT.md); `server.py` owns wire behavior, `service.py` owns application state, `paths.py` owns filesystem policy |
 
@@ -57,7 +58,7 @@ is a compatibility/import surface, not the default home for new behavior.
 | `cam_core/` | Document-independent geometry, tool/motion values, stock and verification predicates, numerical bounds. No `.cb`, MOP, MCP or controller knowledge. | Inward-only foundation; may use declared numerical backends. |
 | `cam_extensions/` | Optional policy and generated strategies: machining recommendations/pass planning, rest machining, V-carving, combined strategies and bounded reference jobs. RC01's exact recipe is a reference job, not a generic core primitive. | Depends on `cam_core`; no native model or XML imports. |
 | `integrations/cambam/` | Explicit normalization from native intent, candidate document attachment, CamBam-posted motion readers and output evidence. RC01's current adapter and reader live here. | Depends on native, core and extensions; validates changes after lowering. |
-| `integrations/` controller adapters (M5 planned) | Dialect/profile capability checks, emission, independent decoding and setup/transition effect normalization. Introduce a controller subpackage only with its first working slice. | Depends on detached values; direct output must not require native XML or a CamBam private helper. |
+| `integrations/` controller adapters (M5 bounded fixtures) | Dialect/profile capability checks, emission, independent decoding and setup/transition effect normalization. UCCNC and Grbl v1.1 fixtures currently live directly here; a subpackage needs measured breadth. | Depends on detached values; direct output must not require native XML or a CamBam private helper. |
 | `mcp_adapter/` | Optional client protocol, document sessions and workspace transport. | Calls the owners above; does not own their domain rules. |
 
 Current root files classified by that target map:
@@ -209,7 +210,7 @@ remain active owners until their staged migration.
 
 ### Mediation invariants and evidence contract
 
-**Design contract, 2026-09-26; first M5 split-file slice implemented.** These rules apply
+**Design contract, 2026-09-26; bounded M5 portability fixtures implemented.** These rules apply
 at native/core/controller boundaries. They do not widen the currently verified
 fixed-axis milling domain or promise universal controller/kinematics support.
 
@@ -227,7 +228,7 @@ means no *additional* program-to-work conversion; it never means ignoring a
 native origin or applying it twice to an already posted path. Reject unsupported
 mapping for the requested analysis/output while retaining the native document.
 Stock placement and effective work/tool offsets participate in the same frame
-composition. The first M5 slice supports explicit translations, with no inferred
+composition. The bounded M5 fixtures support explicit translations, with no inferred
 translation from stock metadata. General rotations/kinematics need another
 named capability and fixture.
 
@@ -280,7 +281,7 @@ separately from stock/access/residual `not_evaluated`; parsing alone grants
 no stock certificate.
 
 `integrations.m4_curved_workflow.load_selected_plan` exposes the accepted
-source-bound rounded raster plan, supplied T1 trace and initial tip to the first
+source-bound rounded raster plan, supplied T1 trace and initial tip to both
 controller adapter. `cam_core.v_region.complete_motion` assembles safe travel
 around the detached V plan. `integrations.uccnc_m5` emits separate T1/T3 files
 for one declared G54, metric, absolute, exact-stop, no-length-compensation
@@ -290,9 +291,18 @@ profile/setup, ordered tool handoff and file hashes. Its auditor compares every
 decoded move to the intended path within 0.000051 mm, reconstructs T1 stock and
 T3 rounded V paths from decoded coordinates, then computes section and volume
 bounds on that decoded chain. The per-tool installation/touch-off conditions
-remain explicit assumptions. Generic native MOP generation, other controller
-dialects, controller runtime parity and physical machine acceptance are outside
-this first slice.
+remain explicit assumptions. `integrations.grbl_m5_reader` separately decodes
+the bounded Grbl v1.1 whole-program subset, including ordered `M0` pauses and
+per-stage `G49`/`G43.1` state. `integrations.m5_portability` verifies manual
+and mixed-policy fixtures with the same `uccnc_m5.audit_decoded_pair`
+stock/access/residual audit; a final safe T1 stage and synthetic changer
+effect travel are checked without inferring physical completion. The manual
+fixture resolves a +4.5 mm CAM surface through a declared -4.5 mm work map;
+the mixed fixture uses fixed G54 and external table-derived length values.
+`integrations.m5_decoded` owns only shared decoded-stage values; dialect
+readers do not depend on one another. Generic native MOP generation, further
+controller dialects, controller runtime parity and physical machine acceptance
+are outside this bounded fixture set.
 
 ### Directional analytic stock section bounds
 

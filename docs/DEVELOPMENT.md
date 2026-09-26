@@ -1591,6 +1591,57 @@ this Windows environment, and LinuxCNC cannot stand in for UCCNC-specific
 macro or offset behavior. Actual UCCNC production limits, offsets, tools,
 workholding and M6 behavior remain separate inputs from the user's machine.
 
+### M5 Grbl portability and transition fixtures
+
+The [recorded synthetic bundle](../output/m5-portability-20260926-01/handoff.json)
+contains `manual.nc`, `mixed.nc`, `mixed-changer.json` and a pinned handoff.
+Build into a **new** ignored directory, or audit the recorded one, from the
+repository root with the declared interpreter:
+
+```powershell
+$ProjectPython = '.\.venv\Scripts\python.exe'
+& $ProjectPython -m cambam_builder.integrations.m5_portability output/m5-portability-NEW --m4-manifest output/m4-edited-curved-20260925-02/comparison/comparison.json
+& $ProjectPython -m cambam_builder.integrations.m5_portability output/m5-portability-NEW/handoff.json
+& $ProjectPython -m unittest tests.test_m5_portability tests.test_uccnc_m5 -v
+```
+
+The adapter reads the same detached M4 rounded-raster plan and synthetic T1
+prior as the UCCNC pair. The separate strict Grbl reader consumes every byte of
+each whole program, including G21/G90/G17/G94/G61/G40/G49/G54 startup,
+per-stage spindle, feed, G0/G1, G43.1 or G49 length state, M5, M0 and M30.
+The [official Grbl v1.1 supported-code list](https://github.com/gnea/grbl/blob/master/README.md)
+includes `M0` and dynamic `G43.1`, but no `M6`; the
+[realtime command guide](https://github.com/gnea/grbl/blob/master/doc/markdown/commands.md)
+documents cycle start/resume after M0. In this fixture, stage comments are
+identities for the offline auditor, not controller tool-install commands.
+Each M0 requires the declared external completion and safe-tip state before
+resume. Unknown blocks, altered pause/offset state or undeclared motion block
+the offline claim. `$32=0` spindle mode, a fixed G54 work origin and an RPM
+range containing 12000 are setup assertions, not measured machine settings.
+
+`manual.nc` tests one in-program **operator** T1-to-T3 handoff. Its synthetic
+resolved CAM surface is +4.5 mm while the work surface is zero; the explicitly
+declared -4.5 mm CAM-to-work Z map is inverted over all 444 decoded T1/T3
+moves before the same source-bound stock audit. An unchanged or double-shifted
+emitted path fails. `mixed.nc` tests manual T1-to-T3 and modeled automatic
+T3-to-T1 transitions in one program, with fixed G54 and externally supplied
+tool-table lengths 2/3/2 mm expressed via Grbl `G43.1`. Grbl has no native
+tool-table or automatic changer claim here: the table and changer belong to
+the synthetic host setup. The independently read `mixed-changer.json` declares
+three safe, spindle-off tip-travel segments, T3/T1 installation and length
+registration; the last T1 stage contains two separately decoded safe rapid
+moves. Its completion and return state are assumptions. The checker rejects
+changed or missing effect bytes, even if the handoff is edited, and does not
+infer installation from `M0` alone.
+
+Both fixtures replay decoded T1 stock into decoded rounded T3 motion. Each has
+61 T1 moves, 383 T3 moves, 30 T1 cuts, Z=-1 mm final remaining-area upper
+1.526323 mm2 and eight-slab final volume upper 42.675342 mm3; the mixed
+fixture also has two safe T1 return moves. Runtime parity and physical setup
+are `not_evaluated`. Manual visual inspection adds no per-move evidence here.
+Use the user's actual controller, sender, offset and changer configuration
+only after a separate production profile and machine acceptance exist.
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not

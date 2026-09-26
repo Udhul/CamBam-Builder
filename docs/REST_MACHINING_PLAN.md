@@ -49,11 +49,12 @@ remain required. Do not claim physical machining without real setup acceptance.
 | M2: curved Region rest and endmill cleanup | On a native annulus and a mixed line/arc concave Region with a hole, derive pure rest from supplied prior motion and produce complete smaller-endmill entry/cut/link/retract paths. Preserve analytic source identity; validate arc topology, conservative access/protection and independently bounded residual/overcut through approximation and emitted motion. Strict native reimport, visible preview, actual explicit post and stock replay must pass; include a curved narrow-access rejection and translated/reflected frame case. | **Accepted for the bounded annulus, mixed and reflected synthetic jobs via exact explicit motion.** All three actual Default posts pass ordered motion and stock replay; their native Engrave preview posts separately match the final T2 centerlines. The user confirmed curved preview visibility. CustomScript proves post transport, not independent CamBam path planning; neither route is physical machining acceptance. |
 | M3: V cleanup and edge tracing | On the polygonal target and at least one accepted curved target, generate pointed, flat-tip and tangent spherical/conical rounded-tip variable-depth paths, depth-capped/wide-area additional passes, and boundary/corner cleanup around concavity and holes. Check tool-profile continuity, full cutter occupancy, access, protected material, residual and infeasible/partial results between vertices and around arcs. Strict native preview and actual explicit post must be audited; Engrave remains inspection-only unless its whole post passes. | **Accepted for the bounded capped inward V recess.** The user saw geometry and V paths in all seven previews. All seven corrected actual preview posts match centerlines with +5 mm XY rapid links; all seven corrected explicit posts pass complete T1/T3 stock, access and residual audits. Pointed, flat and rounded profiles cover letter and annulus; mixed rounded and curved rejection pass. Flat-pocket strategy selection remains M4 work. |
 | M4: composed workflow and edits | One reopened/edited native source runs rest analysis, alternative endmill/V strategy comparison, selected ordered operations and stock-dependent cleanup without hidden session state. Normalize complete actual emitted motion from any supported native CamBam MOP or ordered MOP series as prior-stock authority, with explicit rejection of unsupported motion; calculate remaining area and volume by stage. Include a curved target and rounded-tip strategy in the accepted comparison; prove one contour-parallel offset fill candidate alongside the raster proof input through the same stock verifier. Allow manual or planned chaining of safe native MOPs, custom Region MOPs and exact framework paths. Relevant edits invalidate source, path and post claims; unchanged cosmetic edits retain valid evidence. The same accepted plan is available through native preview/explicit output and a parsed, stock-replayed direct reference program. | **Accepted for the bounded edited annulus.** The reopened 2.1 mm hole, T1-only partial endmill route and rounded raster/contour-offset finishes pass shared stock and direct reference audits. The user saw source primitives and Engrave toolpaths in both previews. Both actual preview posts match centerlines and both actual explicit Default posts pass complete T1/T3 motion and stock audits; the area-first selector chooses raster while offset also meets the fixed budgets. The bounded linear native-MOP normalizer rejects unsupported arc/unsafe motion; generic curved native Pocket planning is not certified. |
-| M5: first controller output | Lower the accepted M4 plan through a declared controller profile with explicit units, coordinate/datum mapping, tools, feeds, spindle, entry/link/retract and end roles; independently decode every emitted program or command stream and replay its actual coordinates with stock carried across program boundaries. Keep tool-change intent, measurement/offset method, execution method and dialect separate. Prove manual and automatic transition contracts, stockless explicit-MOP import, an explicitly requested nonidentity datum map, and two distinct controller dialect fixtures. Report stock-dependent checks as unavailable when no stock model is supplied; physical changer behavior remains machine-specific acceptance. | **Open.** UCCNC is the first output fixture; the user's machine profile is pending. LinuxCNC and Grbl expose materially different tool-change command sets and are candidates for the second dialect fixture. Existing ASCII reference output is not a controller profile. |
+| M5: first controller output | Lower the accepted M4 plan through a declared controller profile with explicit units, coordinate/datum mapping, tools, feeds, spindle, entry/link/retract and end roles; independently decode every emitted program or command stream and replay its actual coordinates with stock carried across program boundaries. Keep tool-change intent, measurement/offset method, execution method and dialect separate. Prove manual and automatic transition contracts, stockless explicit-MOP import, an explicitly requested nonidentity datum map, and two distinct controller dialect fixtures. Report stock-dependent checks as unavailable when no stock model is supplied; physical changer behavior remains machine-specific acceptance. | **Automated gate implemented; bounded acceptance unrecorded.** UCCNC split files and Grbl v1.1 one-program manual/mixed-policy fixtures pass the common decoded stock verifier. Automatic changer effects are synthetic asserted host behavior. Runtime and physical machine setup are `not_evaluated`; the user's production profile is pending. |
 
-This is **five accepted milestones and one remaining milestone**, not a time or
-effort percentage. M4's bounded edited curved composition and direct/native
-output gates are accepted; M5 controller output remains open.
+This is **five accepted milestones and one implemented automated gate awaiting
+bounded acceptance**, not a time or effort percentage. M4's edited curved
+composition and direct/native output gates are accepted. M5's controller
+runtime and physical setup remain separately unassessed.
 
 ### M5 controller coverage and automatic evidence - 2026-09-26
 
@@ -174,8 +175,8 @@ defines `M0` as a resumable stop and `M6` as a configurable macro call;
 documents both manual and automatic `M6` behavior and requires a separate
 `G43` for tool-length offset; the official
 [Grbl v1.1 command list](https://github.com/gnea/grbl/blob/master/README.md)
-includes `M0` but no `M6`. These are M5 output contracts, not implemented
-controller adapters yet.
+includes `M0` but no `M6`. The bounded UCCNC and Grbl fixture adapters now
+implement only their declared subsets and assumptions.
 
 The accepted M4 `rounded_raster` fixture remains the first output oracle:
 source SHA-256 `bb34bc2113a081adc530962ecf5c3ce2b63ba77aeb61f941d525150284d3fb8e`,
@@ -307,6 +308,22 @@ the settled contract remain the worker's responsibility. M5 stays open until
 its portability gate also passes. This sequence matters now because preserving
 source semantics and independently auditing output are prerequisites for useful
 controller flexibility, whereas adding dialects first would replicate defects.
+
+**Portability implementation, 2026-09-26.** Step 3 now emits one-program
+Grbl v1.1 manual and mixed-policy fixtures from the accepted M4 source-bound
+plan. An independent strict reader decodes every Grbl stage and M0 boundary;
+both T1/T3 pairs feed the same decoded stock/access/residual verifier as the
+UCCNC fixture. The manual fixture resolves CAM surface +4.5 mm to work
+surface 0 through a declared -4.5 mm Z map and checks the full decoded job.
+The mixed fixture uses fixed G54, external table-derived `G43.1` values of
+2/3/2 mm, manual T1-to-T3 and synthetic external automatic T3-to-T1 change,
+including three safe host travel segments and a decoded two-move T1 return.
+The host effect is an asserted fixture, not observed machine behavior. Unknown
+Grbl commands, changed M0, tool order, length state, datum coordinates and
+missing or altered host effects fail closed. The [runbook](DEVELOPMENT.md#m5-grbl-portability-and-transition-fixtures)
+and [dated evidence](REVIEW.md#m5-grbl-portability-and-transition-policies---2026-09-26)
+own commands and results. Production machine and exact runtime evidence remain
+separate reopening conditions.
 
 The user-approved curved/rounded scope adds one whole-outcome milestone to the
 earlier polygonal plan; it does not create an open-ended sequence of arc or tip
