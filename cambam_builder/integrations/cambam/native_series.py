@@ -2,9 +2,9 @@
 
 This adapter admits one enabled, non-nested millimetre Part with uniquely named
 enabled MOPs and explicitly numbered cylindrical endmills. It retains posted
-G0/G1/G2/G3 motion in file order. Only planar G0/G1 motion can be lowered to
-the current core replay Trace; arcs and ramps need a separate continuous-sweep
-proof. Parsing alone never grants stock or access authority: callers must replay
+G0/G1/G2/G3 motion in file order. Level XY arcs lower through a bounded
+continuous-sweep enclosure; ramps still need a separate all-height proof.
+Parsing alone never grants stock or access authority: callers must replay
 the lowered trace against their independently normalized target and tool lengths.
 """
 
@@ -188,12 +188,13 @@ class NativeSeries:
         return True
 
     def to_trace(self, targets, cutting_lengths_mm, entry_modes):
-        """Lower a linear series to core replay with explicit entry intent.
+        """Lower supported planar motion with explicit entry intent.
 
         ``targets`` maps each MOP name to an independently normalized core
         Target. ``entry_modes`` maps each name to ``virgin`` or ``cleared``.
         Every low travel and cleared descent is then checked by core replay.
-        This method does not discretize arcs or infer a rounded/pointed cutter.
+        Level XY arcs retain their center/direction for bounded continuous
+        replay; no rounded or pointed cutter is inferred.
         """
         names = {stage.name for stage in self.stages}
         if (set(targets) != names or set(entry_modes) != names or
@@ -225,13 +226,17 @@ class NativeSeries:
                     raise ValueError(f"line {item.line}: nonpositive spindle speed")
                 lowered.append(replay.Event(item.kind, item.tool, item.position))
                 continue
-            if item.g not in (0, 1):
-                raise ValueError(f"line {item.line}: posted arc needs continuous sweep proof")
+            if item.g not in (0, 1, 2, 3):
+                raise ValueError(f"line {item.line}: unsupported posted interpolation")
             a, b = item.start, item.end
             low = min(a[2], b[2])
-            if item.g == 1 and low < 0 and item.feed <= 0:
+            if item.g in (1, 2, 3) and low < 0 and item.feed <= 0:
                 raise ValueError(f"line {item.line}: nonpositive cutting feed")
-            if item.g == 0:
+            if item.g in (2, 3):
+                if (a[2] != b[2] or a[2] >= 0 or item.center is None):
+                    raise ValueError(f"line {item.line}: posted arc needs level stock cut")
+                role = "cut"
+            elif item.g == 0:
                 if low < 0 and a[:2] != b[:2]:
                     raise ValueError(f"line {item.line}: low XY rapid is unsupported")
                 role = ("rapid" if low >= 0 else
@@ -248,7 +253,13 @@ class NativeSeries:
                 role = "retract"
             else:
                 raise ValueError(f"line {item.line}: unresolved stationary feed")
-            lowered.append(replay.Motion(role, item.tool, item.operation, a, b, item.feed))
+            if item.g in (2, 3):
+                lowered.append(replay.ArcMotion(role, item.tool,
+                                                item.operation, a, b,
+                                                item.feed, item.g, item.center))
+            else:
+                lowered.append(replay.Motion(role, item.tool,
+                                             item.operation, a, b, item.feed))
         return replay.Trace(self.evidence_fingerprint, "native-default-mm", self.initial_position,
                             operations, tuple(lowered))
 

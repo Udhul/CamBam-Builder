@@ -53,11 +53,14 @@ def _cut_polygon(cuts, depth, *, radial_error=0):
     inflation = 1 / math.cos(math.pi / (4 * QUAD_SEGS))
     for cut in cuts:
         if cut.bottom <= -depth:
-            key = (cut.tool.radius, min(cut.a, cut.b), max(cut.a, cut.b))
+            key = (cut.tool.radius, cut.path_error_mm,
+                   min(cut.a, cut.b), max(cut.a, cut.b))
             if key in seen:
                 continue
             seen.add(key)
-            radius = cut.tool.radius + radial_error
+            radius = (cut.tool.radius + radial_error +
+                      (cut.path_error_mm if radial_error > 0 else
+                       -cut.path_error_mm))
             if radius <= 0:
                 continue
             if radial_error > 0:

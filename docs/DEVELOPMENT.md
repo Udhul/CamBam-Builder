@@ -1764,6 +1764,63 @@ source/post rejection, forged RPM and mismatched V source rejection. The
 [review evidence](REVIEW.md#native-posted-predecessor-and-generated-v-cleanup---2026-09-26)
 records the actual-post hashes and acceptance scope.
 
+### Safe native G2/G3 hybrid evidence case
+
+The ignored [source](../output/native-arc-hybrid-20260926-01/source.cb) is the
+unchanged straight-edge M1 letter Region with a triangular hole (SHA-256
+`be092ec2827810ca0c47f6bc7a9a901a2d9fa2d609b096599261995bf1e5947f`).
+The [candidate](../output/native-arc-hybrid-20260926-01/native-arc-predecessor.cb)
+(SHA-256 `10f07eab32c7af0f30288f834969df945be17c599c4e7e37317e9eb6fddd2e01`)
+retains one enabled T1 Pocket, a 5 mm cylindrical endmill, 2 mm inward
+roughing clearance, one Z=-2 mm level, +5 mm clearance, CW 12000 rpm and
+F60/F300 mm/min. Its T2 Pocket was removed. The fixed initial program tip
+assumption is (-30,-10,+5) mm, matching the candidate's safe footer. These
+are synthetic verification settings, not a machining recommendation.
+
+To supply the external observation, open the exact candidate in CamBam Plus
+1.0, confirm millimetres and **Default** postprocessor, generate its single
+enabled `NATIVE T1 arc Pocket` toolpath, and post it to
+`output/native-arc-hybrid-20260926-01/native-arc-predecessor.nc`. Keep both
+`.cb` files unchanged. The `.nc` must be the actual complete CamBam post; a
+hand-edited or extracted prior file does not pass this gate. Report whether
+CamBam posted successfully and any error. No physical cut is requested.
+
+After the actual post is present, run from the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe output/native-arc-hybrid-20260926-01/finish.py
+```
+
+The script requires at least one actual G2/G3 cut, exact source/candidate/post
+binding, a single safe-return native stage, level arcs with bounded radius
+error, no unproved low rapid/ramp, and a source-bound generated rounded T3 V
+finish. It writes two UCCNC files, independently decodes them and replays
+decoded native and generated stock. Pass is `ordered_output_pass`,
+`stock_access_residual.status = pass`, final Z=-1 mm residual upper area below
+the native prior lower area, and protected overcut upper below 0.01 mm².
+The handoff records exact post and output hashes. A failure should be retained
+with its first exception and complete `.nc`; repair requires a new candidate
+and post, not an edited NC. The original M1 two-Pocket post is specifically
+excluded because its T2 stock-dependent entries failed access.
+
+Synthetic coverage before the actual post is:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_native_arc_replay tests.test_native_v_hybrid tests.test_native_series tests.test_native_series_audit tests.test_ordered_job tests.test_ordered_dialects -q
+```
+
+It checks G2/G3 center-preserving UCCNC/Grbl decoding, source-bound hybrid
+stock, changed arc output, continuous protected-boundary rejection, helix
+rejection and an independent semicircular swept-area oracle. The actual
+CamBam post now exists at the named path with SHA-256
+`663e4348c221ca089a9b2aa775a88b9f93bb3ec53ccc545466bdd6ca11335d03`.
+The finished [handoff](../output/native-arc-hybrid-20260926-01/ordered-uccnc/handoff.json)
+contains 55/1,168 decoded T1/T3 moves, including eleven native G3 cuts.
+The Z=-1 mm prior/final residual intervals are 366.03554-366.04387 /
+3.79242-5.28194 mm² with zero modeled protected overcut. The first run
+returned `ordered_output_pass`. Later runs re-audit the existing exact bytes;
+a changed post needs a new output directory and fresh evidence.
+
 ### Layered 3D stock and waterline evidence
 
 Install the declared optional planar backend with `uv sync --extra planar`,

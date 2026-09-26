@@ -207,6 +207,64 @@ class Motion:
 
 
 @dataclass(frozen=True)
+class ArcMotion:
+    """One level XY arc with an absolute center and exact posted endpoints."""
+
+    role: str
+    tool: str
+    operation: str
+    start: tuple
+    end: tuple
+    feed: float
+    g: int
+    center: tuple
+
+    def __post_init__(self):
+        _xyz(self.start)
+        _xyz(self.end)
+        if (self.role != "cut" or self.g not in (2, 3) or
+                type(self.center) is not tuple or len(self.center) != 2 or
+                any(type(v) not in (int, float) or not math.isfinite(v)
+                    for v in self.center) or self.start[:2] == self.end[:2] or
+                self.start[2] != self.end[2] or self.start[2] >= 0 or
+                type(self.feed) not in (int, float) or not math.isfinite(self.feed)
+                or self.feed <= 0):
+            raise ValueError("unsupported planar cutting arc")
+
+
+def arc_segments(start, end, center, g, *, sagitta_mm=0.0001):
+    """Enclose a continuous posted XY arc by chords and a radial error bound."""
+    if g not in (2, 3) or start[:2] == end[:2] or start[2] != end[2]:
+        raise ValueError("unsupported planar arc geometry")
+    cx, cy = center
+    r0 = math.hypot(start[0] - cx, start[1] - cy)
+    r1 = math.hypot(end[0] - cx, end[1] - cy)
+    if (not math.isfinite(r0 + r1) or r0 <= 0 or
+            abs(r0 - r1) > 0.001 or not 0 < sagitta_mm <= 0.0001):
+        raise ValueError("arc radius or numeric bound unresolved")
+    a0 = math.atan2(start[1] - cy, start[0] - cx)
+    a1 = math.atan2(end[1] - cy, end[0] - cx)
+    sweep = ((a1 - a0) % (2 * math.pi) if g == 3 else
+             -((a0 - a1) % (2 * math.pi)))
+    max_step = 2 * math.acos(max(-1.0, 1 - sagitta_mm / max(r0, r1)))
+    if max_step <= 0:
+        raise ValueError("arc exceeds numeric resolution")
+    count = max(1, math.ceil(abs(sweep) / max_step))
+    if count > 16384:
+        raise ValueError("arc exceeds subdivision limit")
+    points = [start[:2]]
+    for index in range(1, count):
+        t = index / count
+        angle = a0 + sweep * t
+        radius = r0 + (r1 - r0) * t
+        points.append((cx + radius * math.cos(angle),
+                       cy + radius * math.sin(angle)))
+    points.append(end[:2])
+    # Includes endpoint-radius mismatch and floating endpoint reconstruction.
+    return tuple(zip(points, points[1:])), abs(r0 - r1) + 2 * sagitta_mm + 1e-8
+
+
+@dataclass(frozen=True)
 class Event:
     kind: str
     tool: str
@@ -268,6 +326,7 @@ class Sweep:
     b: tuple
     bottom: float
     bottom_start: float = None
+    path_error_mm: float = 0.0
 
     def radius_at(self, depth):
         if self.bottom_start is not None:
@@ -283,7 +342,9 @@ class Sweep:
                                          -self.bottom_start, -self.bottom,
                                          x, y, depth)
         radius = self.radius_at(depth)
-        return radius is not None and _distance2((x, y), self.a, self.b) <= radius ** 2
+        return (radius is not None and radius > self.path_error_mm and
+                _distance2((x, y), self.a, self.b) <=
+                (radius - self.path_error_mm) ** 2)
 
 
 def _safe_cut(sweep, target):
@@ -297,7 +358,8 @@ def _safe_cut(sweep, target):
         region = ShapelyPolygon(target.region_shell, target.region_holes)
         line = Point(a) if a == b else LineString((a, b))
         if (not region.covers(line) or
-                line.distance(region.boundary) < sweep.tool.radius - 1e-9):
+                line.distance(region.boundary) <
+                sweep.tool.radius + sweep.path_error_mm - 1e-9):
             raise ValueError(f"cut crosses original polygonal Region boundary: {a} to {b}")
         return
     if target.polygon:
@@ -332,12 +394,13 @@ def _safe_cut(sweep, target):
                 not 0 < (end_depth - start_depth) / (b[0] - a[0]) < 1):
             raise ValueError("cut crosses tapered cone target or tool limit")
         return
-    if a[0] != b[0] and a[1] != b[1]:
+    if a[0] != b[0] and a[1] != b[1] and not sweep.path_error_mm:
         raise ValueError("replay supports axis-aligned stock cuts")
     if sweep.bottom < -target.depth or -sweep.bottom > sweep.tool.cutting_length:
         raise ValueError("cut exceeds target depth or cutting length")
     x0, y0, x1, y1 = target.bounds
-    r = sweep.tool.radius if sweep.tool.kind == "cylinder" else -sweep.bottom
+    r = (sweep.tool.radius + sweep.path_error_mm if
+         sweep.tool.kind == "cylinder" else -sweep.bottom)
     if any(not (x0 + r <= x <= x1 - r and y0 + r <= y <= y1 - r)
            for x, y in (a, b)):
         raise ValueError("cut crosses protected target")
@@ -360,7 +423,10 @@ def _covered(cuts, move, tool):
         for prior in reversed(cuts):
             if prior.tool.kind != "cylinder" or prior.bottom > low:
                 continue
-            margin = prior.tool.radius - tool.radius
+            if (a == b and a in (prior.a, prior.b) and
+                    prior.tool.radius >= tool.radius):
+                return True
+            margin = prior.tool.radius - prior.path_error_mm - tool.radius
             if margin >= 0 and all(_distance2(p, prior.a, prior.b) <= margin ** 2
                                    for p in (a, b)):
                 return True
@@ -423,7 +489,7 @@ def replay(trace, *, expected_source):
             else:
                 running = False
             continue
-        if type(item) is not Motion or item.start != at or not running or item.tool != active:
+        if type(item) not in (Motion, ArcMotion) or item.start != at or not running or item.tool != active:
             raise ValueError(f"move {index}: discontinuity or inactive tool")
         op = operations.get(item.operation)
         if op is None or op.tool.name != active:
@@ -432,7 +498,17 @@ def replay(trace, *, expected_source):
             if last_operation is not None:
                 prefixes.append((last_operation, len(cuts)))
             last_operation = op.name
-        if item.role in ("rapid", "approach"):
+        if type(item) is ArcMotion:
+            if op.tool.kind != "cylinder":
+                raise ValueError(f"move {index}: arc needs cylindrical cutter")
+            segments, error = arc_segments(item.start, item.end, item.center,
+                                           item.g)
+            for a, b in segments:
+                sweep = Sweep(op.name, op.tool, a, b, item.end[2],
+                              path_error_mm=error)
+                _safe_cut(sweep, op.target)
+                cuts.append(sweep)
+        elif item.role in ("rapid", "approach"):
             if min(item.start[2], item.end[2]) < 0:
                 raise ValueError(f"move {index}: low rapid/approach")
         elif item.role in ("entry", "cut"):

@@ -14,6 +14,8 @@ import re
 _NUMBER = r"[+-]?(?:\d+(?:\.\d+)?|\.\d+)"
 _MOVE = re.compile(
     rf"^(G0|G1)(?: F({_NUMBER}))? X({_NUMBER}) Y({_NUMBER}) Z({_NUMBER})$")
+_ARC = re.compile(
+    rf"^(G2|G3)(?: F({_NUMBER}))? X({_NUMBER}) Y({_NUMBER}) Z({_NUMBER}) I({_NUMBER}) J({_NUMBER})$")
 _SPINDLE = re.compile(rf"^M3 S({_NUMBER})$")
 _OFFSET = re.compile(rf"^G43\.1 Z({_NUMBER})$")
 _TOOL = r"T[1-9][0-9]*"
@@ -30,6 +32,7 @@ class DecodedMove:
     feed: float
     start: tuple
     end: tuple
+    center: tuple = None
 
 
 @dataclass(frozen=True)
@@ -111,7 +114,19 @@ def _motion_lines(stage, translation, initial_tip):
         rounded_end = tuple(float(_number(v)) for v in _add(end, translation))
         if rounded_end == rounded_at:
             raise ValueError("controller motion vanishes after rounding")
-        if motion.role in ("rapid", "rapid_retract"):
+        if getattr(motion, "arc_g", 0):
+            if motion.role != "cut" or motion.center is None:
+                raise ValueError("unsupported controller arc role")
+            feed = _value(motion.feed)
+            if feed <= 0 or float(_number(feed)) <= 0:
+                raise ValueError("positive arc feed required")
+            offsets = tuple(c - s for c, s in zip(motion.center,
+                                                   motion.start[:2]))
+            lines.append(f"G{motion.arc_g} F{_number(feed)} " +
+                         _xyz(_add(end, translation)) +
+                         " I" + _number(offsets[0]) +
+                         " J" + _number(offsets[1]))
+        elif motion.role in ("rapid", "rapid_retract"):
             if motion.feed not in (0, 0.0, None):
                 raise ValueError("rapid cannot carry feed")
             lines.append("G0 " + _xyz(_add(end, translation)))
@@ -197,20 +212,34 @@ def _lines(data):
 
 def _read_motion(line, at, feed):
     match = _MOVE.fullmatch(line)
+    arc = False
+    if match is None:
+        match = _ARC.fullmatch(line)
+        arc = match is not None
     if match is None:
         raise ValueError("unsupported NC motion word")
-    g = 0 if match.group(1) == "G0" else 1
+    g = int(match.group(1)[1:])
     supplied = match.group(2)
     if g == 0 and supplied is not None:
         raise ValueError("rapid carries feed")
-    if g == 1:
+    if g in (1, 2, 3):
         feed = _value(supplied) if supplied is not None else feed
         if feed is None or feed <= 0:
             raise ValueError("feed move has no positive feed")
     end = tuple(_value(match.group(i)) for i in (3, 4, 5))
     if end == at:
         raise ValueError("zero-length NC motion")
-    return DecodedMove(g, 0 if g == 0 else feed, at, end), feed
+    center = None
+    if arc:
+        if end[:2] == at[:2] or end[2] != at[2]:
+            raise ValueError("unsupported controller arc geometry")
+        center = (at[0] + _value(match.group(6)),
+                  at[1] + _value(match.group(7)))
+        r0 = math.hypot(at[0] - center[0], at[1] - center[1])
+        r1 = math.hypot(end[0] - center[0], end[1] - center[1])
+        if r0 <= 0 or abs(r0 - r1) > 0.001:
+            raise ValueError("controller arc radius mismatch")
+    return DecodedMove(g, 0 if g == 0 else feed, at, end, center), feed
 
 
 def _read_spindle(line):

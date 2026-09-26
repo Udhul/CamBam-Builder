@@ -1,5 +1,67 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Safe native G2/G3 hybrid evidence - 2026-09-26
+
+**Accepted bounded actual-post and offline hybrid result.** The previous accepted hybrid
+uses one real CamBam T1 linear Profile followed by generated rounded T3 V
+cleanup. The retained M1 two-Pocket Default post does contain native G3 arcs,
+but its twelve T2 stock-dependent entries fail access. It cannot certify a
+native arc predecessor. The new ignored
+[case](../output/native-arc-hybrid-20260926-01/) keeps the original M1
+straight-edge letter Region source (SHA-256
+`be092ec2827810ca0c47f6bc7a9a901a2d9fa2d609b096599261995bf1e5947f`)
+and prepares a single enabled T1 Pocket candidate (SHA-256
+`10f07eab32c7af0f30288f834969df945be17c599c4e7e37317e9eb6fddd2e01`).
+It removes T2, limits T1 to one Z=-2 mm level and adds 2 mm inward roughing
+clearance. Strict reimport confirms the same native Region identity and
+geometry. The user's fresh CamBam Plus 1.0 Default post supplies the native
+observation below.
+
+The ordered contract now retains level XY G2/G3 direction and absolute center
+through native normalization, UCCNC/Grbl lowering and separate decoding.
+Replay subdivides each continuous arc at 0.0001 mm sagitta and carries the
+endpoint-radius mismatch plus 0.00020001 mm chord/numeric margin into
+protected-material and residual enclosures. Helices, ramps, low XY rapids and
+unresolved arc radii reject. The synthetic one-stage native arc plus generated
+V finish passes both decoded dialects and source binding; changing the output
+I/J center rejects. A long arc that crosses the target and a helical arc reject.
+An independent open semicircle cutter-tube oracle, `pi*(2*R*r+r^2)` for
+R=3 mm and r=0.5 mm, lies between the inner/outer replay footprints with
+under 0.02 mm2 interval width.
+The prior accepted linear hybrid handoff re-audits unchanged, preserving its
+v1 fingerprint and 70.48014-70.48024 / 1.33759-1.98689 mm2 Z=-1 bounds.
+
+The user posted the exact candidate through CamBam Plus 1.0 Default. The
+complete `native-arc-predecessor.nc` SHA-256 is
+`663e4348c221ca089a9b2aa775a88b9f93bb3ec53ccc545466bdd6ca11335d03`.
+It has one T1 MOP section, 55 posted moves, eleven G3 cuts, a single Z=-2 mm
+level, vertical entries from Z=+1, no low XY rapid, no ramp or helix, and a
+safe Z=+5 return to the assumed (-30,-10) setup position. Strict native
+normalization binds the unchanged source/candidate/post and tool/section order.
+The prepared [finish gate](DEVELOPMENT.md#safe-native-g2g3-hybrid-evidence-case)
+produced `ordered_output_pass` and a
+[two-stage handoff](../output/native-arc-hybrid-20260926-01/ordered-uccnc/handoff.json).
+Its UCCNC T1/T3 files have SHA-256
+`eddd3c3a8dcd58b698c558b001b450f798d49fbf42f3d88bfb97446efda1b0de`
+and `59c69462c2d4bceec5664a6c1316e79310ce83109e89edb9f9a0def01353afb3`.
+Independent decoding matches all 55 native and 1,168 generated V moves.
+The native stage yields 1,066 cylindrical cut elements, including arc chords.
+At Z=-1 mm, native prior residual is 366.03554-366.04387 mm2; final residual
+is 3.79242-5.28194 mm2, so the generated finish demonstrably removes new
+stock even across the bounds. Modeled protected overcut upper is zero.
+Prior/final volume intervals are 695.71836-768.98639 /
+0-149.24094 mm3. These are conditional GEOS bounds for the bounded source
+and declared tool; the initial tip and operator T3 installation remain
+assumptions. Controller runtime, physical setup and machining are unassessed.
+The actual bundle was re-audited against its exact bytes after the final code
+change and returned the same `ordered_output_pass` and stock intervals.
+The focused native/ordered suite passed 30 tests; a translated Grbl arc hybrid
+also passed as a separate targeted test. The broader shared replay/geometry/
+native/output suite passed 57 tests. `compileall -q` for package, tests and the
+ignored case, plus `git diff --check`, passed. No further CamBam/manual check
+adds evidence to this bounded posted-byte replay. The worktree remains
+uncommitted and is ready to commit after review.
+
 ## Sloped surface and ball cutter evidence - 2026-09-26
 
 **Accepted offline engineering slice.** `tests.test_surface3d.synthetic_job`

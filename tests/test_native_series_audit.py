@@ -191,7 +191,7 @@ class NativeSeriesAuditTests(unittest.TestCase):
                 self.assertEqual((replanned.status, replanned.chosen),
                                  ("selected", "native"))
 
-    def test_unsafe_access_and_arcs_never_acquire_stage_certificates(self):
+    def test_unsafe_access_rejected_and_level_arc_audited(self):
         with tempfile.TemporaryDirectory() as folder:
             directory = Path(folder)
             candidate, post, series, args = self.make_case(
@@ -203,9 +203,9 @@ class NativeSeriesAuditTests(unittest.TestCase):
                             encoding="utf-8")
             series = normalize_native_series(candidate, candidate, post,
                                              initial_position=(5, 5, 5))
-            with self.assertRaisesRegex(ValueError, "arc needs continuous sweep proof"):
-                audit_linear_native_series(series, candidate, candidate, post,
-                                           **args)
+            audited = audit_linear_native_series(
+                series, candidate, candidate, post, **args)
+            self.assertGreater(len(audited.stock.cuts), 3)
 
     def test_substituted_larger_target_cannot_receive_stock_certificate(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -567,8 +567,12 @@ active increment after each outcome.
   predecessor stock, residual gain and protected area pass. Re-audit rejects
   an edited source. The [runbook](DEVELOPMENT.md#native-posted-predecessor-and-generated-v-cleanup)
   names the files and command; [review evidence](REVIEW.md#native-posted-predecessor-and-generated-v-cleanup---2026-09-26)
-  records hashes, bounds and the external observation. Broader native
-  algorithms and unsupported arcs/cycles remain capability work.
+  records hashes, bounds and the external observation. A fresh single-depth
+  native Region Pocket post with eleven G3 cuts now passes the decoded UCCNC
+  native/generated hybrid stock gate. The bounded level-arc path also passes
+  synthetic Grbl checks. The [arc review](REVIEW.md#safe-native-g2g3-hybrid-evidence---2026-09-26)
+  records exact hashes and bounds. Helices, cycles and broader native
+  algorithms remain capability work.
 - **Surface/volume foundation and contour following:** create a synthetic 3D
   target/stock corpus with analytic references, protected/thin features and
   non-nested residuals. Evaluate representation error, conservative free space,

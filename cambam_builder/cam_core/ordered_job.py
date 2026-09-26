@@ -47,12 +47,14 @@ def verify_safe_travel(points, *, fixture_top_z_mm=0):
     return True
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False)
 class JobMove:
     role: str
     start: tuple
     end: tuple
     feed: float = 0.0
+    arc_g: int = 0
+    center: tuple = None
 
     def __post_init__(self):
         if self.role not in ("rapid", "rapid_retract", "approach", "entry",
@@ -65,6 +67,23 @@ class JobMove:
                 (self.feed != 0 if self.role in ("rapid", "rapid_retract")
                  else self.feed <= 0)):
             raise ValueError("invalid ordered motion/feed")
+        if self.arc_g:
+            if (self.arc_g not in (2, 3) or self.role != "cut" or
+                    type(self.center) is not tuple or len(self.center) != 2 or
+                    any(type(v) not in (int, float) or not math.isfinite(v)
+                        for v in self.center) or self.start[:2] == self.end[:2] or
+                    self.start[2] != self.end[2] or self.start[2] >= 0):
+                raise ValueError("unsupported ordered planar cutting arc")
+        elif self.center is not None:
+            raise ValueError("arc center without ordered arc")
+
+    def __repr__(self):
+        # Preserve v1 linear-job fingerprints while arc geometry gets its own
+        # source-bound representation in newly constructed jobs.
+        base = (f"JobMove(role={self.role!r}, start={self.start!r}, "
+                f"end={self.end!r}, feed={self.feed!r}")
+        return (base + ")" if not self.arc_g else
+                base + f", arc_g={self.arc_g!r}, center={self.center!r})")
 
 
 @dataclass(frozen=True)
@@ -242,13 +261,21 @@ def _observed_stage(stage, decoded, translation):
     for index, (got, want) in enumerate(zip(decoded.moves, stage.motions)):
         start = tuple(round(a - b, 7) for a, b in zip(got.start, translation))
         end = tuple(round(a - b, 7) for a, b in zip(got.end, translation))
-        if (got.g != (0 if want.role in ("rapid", "rapid_retract") else 1) or
+        expected_g = (want.arc_g or
+                      (0 if want.role in ("rapid", "rapid_retract") else 1))
+        center = (None if got.center is None else
+                  tuple(round(a - b, 7) for a, b in zip(
+                      got.center, translation[:2])))
+        if (got.g != expected_g or
+                ((center is None) != (want.center is None)) or
+                (center is not None and not _near(center, want.center)) or
                 abs(got.feed - want.feed) > 1e-9 or
                 not _near(start, want.start) or not _near(end, want.end)):
             raise ValueError(f"decoded stage {stage.id} motion {index} differs")
         # The decoded feed is checked above. Retain the resolved numeric type
         # so a legacy trace fingerprint does not change for 60 versus 60.0.
-        actual.append(JobMove(want.role, start, end, want.feed))
+        actual.append(JobMove(want.role, start, end, want.feed,
+                              want.arc_g, center))
     if not _near(actual[-1].end, stage.motions[-1].end):
         raise ValueError("decoded stage lacks safe return")
     return tuple(actual)
@@ -265,8 +292,14 @@ def _replay_endmills(job, stages, motions):
         items.append(replay.Event("spindle_start", stage.tool_id, at))
         for motion in observed:
             role = "retract" if motion.role == "rapid_retract" else motion.role
-            items.append(replay.Motion(role, stage.tool_id, stage.id,
-                                       motion.start, motion.end, motion.feed))
+            if motion.arc_g:
+                items.append(replay.ArcMotion(role, stage.tool_id, stage.id,
+                                              motion.start, motion.end,
+                                              motion.feed, motion.arc_g,
+                                              motion.center))
+            else:
+                items.append(replay.Motion(role, stage.tool_id, stage.id,
+                                           motion.start, motion.end, motion.feed))
             at = motion.end
         items.append(replay.Event("spindle_stop", stage.tool_id, at))
         trace = replay.Trace(job.source_fingerprint, job.program_frame,

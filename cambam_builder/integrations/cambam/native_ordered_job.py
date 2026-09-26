@@ -1,4 +1,4 @@
-"""Adapt a strictly normalized native linear series to an ordered job.
+"""Adapt a strictly normalized native planar series to an ordered job.
 
 The native source and Default post remain separate immutable inputs. This
 adapter accepts only already parsed, replayable per-MOP safe-return stages.
@@ -50,8 +50,9 @@ class NativeBinding:
                 raise ValueError("native ordered stage identity differs from post")
             for move, source in zip(stage.motions, posted):
                 if (move.start != source.start or move.end != source.end or
-                        (0 if move.role in ("rapid", "rapid_retract") else 1)
-                        != source.g or
+                        (move.arc_g or (0 if move.role in
+                         ("rapid", "rapid_retract") else 1)) != source.g or
+                        move.center != source.center or
                         move.feed != (0 if source.g == 0 else source.feed)):
                     raise ValueError("native ordered motion differs from post")
         if job.stock_present:
@@ -120,10 +121,14 @@ def from_native_series(series, *, targets, cutting_lengths_mm, entry_modes,
         elif item.operation != operation:
             raise ValueError("native spindle stage contains multiple MOPs")
         role = "rapid_retract" if source.g == 0 and item.role == "retract" else item.role
-        if source.g != (0 if role in ("rapid", "rapid_retract") else 1):
+        expected_g = (source.g if source.g in (2, 3) and role == "cut" else
+                      0 if role in ("rapid", "rapid_retract") else 1)
+        if source.g != expected_g:
             raise ValueError("native G mode requires an unsupported motion role")
         moves.append(ordered_job.JobMove(role, item.start, item.end,
-                                         0 if source.g == 0 else item.feed))
+                                         0 if source.g == 0 else item.feed,
+                                         source.g if source.g in (2, 3) else 0,
+                                         source.center))
         at = item.end
     if running or not stages or len(stages) != len(series.stages):
         raise ValueError("native series has incomplete stages")

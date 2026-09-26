@@ -205,7 +205,7 @@ M30
                         normalize_native_series(candidate, candidate, post,
                                                 initial_position=(5, 5, 5))
 
-    def test_lowering_rejects_unproved_arc_and_low_xy_rapid(self):
+    def test_lowering_accepts_bounded_level_arc_and_rejects_low_xy_rapid(self):
         with tempfile.TemporaryDirectory() as folder:
             candidate, post = self.make_case(Path(folder))
             target = replay.Target("opening", (0, 0, 10, 10), 1)
@@ -217,12 +217,40 @@ M30
                             encoding="utf-8")
             series = normalize_native_series(candidate, candidate, post,
                                              initial_position=(5, 5, 5))
-            with self.assertRaisesRegex(ValueError, "arc needs"):
-                series.to_trace(*args)
+            trace = series.to_trace(*args)
+            self.assertTrue(any(type(item) is replay.ArcMotion
+                                for item in trace.items))
+            self.assertGreater(len(replay.replay(
+                trace, expected_source=series.evidence_fingerprint).cuts), 3)
             post.write_text(text.replace("G1 F240 X7", "G0 X7"), encoding="utf-8")
             series = normalize_native_series(candidate, candidate, post,
                                              initial_position=(5, 5, 5))
             with self.assertRaisesRegex(ValueError, "low XY rapid"):
+                series.to_trace(*args)
+
+    def test_arc_replay_rejects_protected_sweep_and_helix(self):
+        with tempfile.TemporaryDirectory() as folder:
+            candidate, post = self.make_case(Path(folder))
+            target = replay.Target("opening", (0, 0, 10, 10), 1)
+            args = ({"FIRST": target, "SECOND": target},
+                    {"T1": 2, "T2": 2},
+                    {"FIRST": "virgin", "SECOND": "cleared"})
+            base = post.read_text(encoding="utf-8")
+            post.write_text(base.replace("G1 F240 X7",
+                                         "G2 F240 X7 Y5 I1 J15"),
+                            encoding="utf-8")
+            series = normalize_native_series(candidate, candidate, post,
+                                             initial_position=(5, 5, 5))
+            trace = series.to_trace(*args)
+            with self.assertRaisesRegex(ValueError, "protected target"):
+                replay.replay(trace,
+                              expected_source=series.evidence_fingerprint)
+            post.write_text(base.replace("G1 F240 X7",
+                                         "G2 F240 X7 Y5 Z-2 I1 J0"),
+                            encoding="utf-8")
+            series = normalize_native_series(candidate, candidate, post,
+                                             initial_position=(5, 5, 5))
+            with self.assertRaisesRegex(ValueError, "needs level stock cut"):
                 series.to_trace(*args)
 
     def test_nonpositive_feed_or_spindle_never_lowers_to_stock_trace(self):

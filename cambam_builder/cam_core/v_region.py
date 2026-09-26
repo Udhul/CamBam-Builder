@@ -203,7 +203,8 @@ def with_prior(plan, prior_trace):
     for cut in stock.cuts:
         depth = -cut.bottom
         line = LineString((cut.a, cut.b)) if cut.a != cut.b else Point(cut.a)
-        required = cut.tool.radius + depth * plan.tool.tangent
+        required = (cut.tool.radius + cut.path_error_mm +
+                    depth * plan.tool.tangent)
         if (cut.tool != op.tool or not 0 < depth <= plan.target.cap_depth or
                 not plan.target.safe.covers(line) or
                 line.distance(boundary) + 1e-8 < required + plan.margin_mm * 0.5):
@@ -429,8 +430,11 @@ def section_report(result, depth, *, final=True):
     for cut in prior_cuts:
         if -cut.bottom >= depth:
             line = LineString((cut.a, cut.b)) if cut.a != cut.b else Point(cut.a)
-            inner.append(line.buffer(max(0, cut.tool.radius - 1e-6), quad_segs=32))
-            outer.append(line.buffer(cut.tool.radius + 1e-6, quad_segs=32))
+            inner.append(line.buffer(max(0, cut.tool.radius -
+                                         cut.path_error_mm - 1e-6),
+                                     quad_segs=32))
+            outer.append(line.buffer(cut.tool.radius + cut.path_error_mm +
+                                     1e-6, quad_segs=32))
     for path in plan.paths if final else ():
         for a, b in zip(path.points, path.points[1:]):
             low, high = min(a[2], b[2]), max(a[2], b[2])

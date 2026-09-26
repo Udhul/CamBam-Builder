@@ -5,12 +5,13 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from cambam_builder.cam_core import replay, v_region
+from cambam_builder.cam_core import ordered_job, replay, v_region
 from cambam_builder.integrations.cambam.native_ordered_job import (
     NativeBinding, from_native_v,
 )
 from cambam_builder.integrations.cambam.native_series import normalize_native_series
 from cambam_builder.integrations.ordered_output import audit_bundle, write_bundle
+from cambam_builder.integrations.ordered_dialects import decode
 from cambam_builder.native.reader import read_cambam_bytes
 from tests import test_native_series as native_fixture
 
@@ -33,6 +34,70 @@ M30
 
 
 class NativeVHybridTests(unittest.TestCase):
+    def test_native_arc_predecessor_roundtrips_continuously_in_both_dialects(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            candidate, post = native_fixture.NativeSeriesTests().make_case(root)
+            project = read_cambam_bytes(candidate.read_bytes())
+            self.assertTrue(project.remove_mop(project.list_mops()[1].internal_id))
+            project.get_part("Part").stock_thickness = 2
+            project.list_mops()[0].target_depth = -2
+            project.save(str(candidate))
+            source = root / "source.cb"
+            original = read_cambam_bytes(candidate.read_bytes())
+            self.assertTrue(original.remove_mop(original.list_mops()[0].internal_id))
+            original.save(str(source))
+            post.write_text(POST.replace("G1 F240 X6",
+                                         "G2 F240 X6 Y5 I0.5 J0"),
+                            encoding="utf-8")
+            setup = {"units": "mm", "postprocessor": "Default"}
+            series = normalize_native_series(source, candidate, post,
+                                             initial_position=(5, 5, 5),
+                                             setup=setup)
+            target = replay.Target(
+                "opening", (0, 0, 10, 10), 2,
+                region_shell=((0, 0), (10, 0), (10, 10), (0, 10)))
+            plan = v_region.plan(
+                v_region.VTarget.polygon(series.evidence_fingerprint,
+                                         target.region_shell, (), 2),
+                v_region.VProfile("rounded", 60, 0.5, 4, 3),
+                stepover_mm=2, xy_step_mm=1, safe_z=5)
+            binding = NativeBinding(series, source, candidate, post, setup)
+            for dialect, boundary in (("uccnc", "split"),
+                                      ("grbl", "pause")):
+                with self.subTest(dialect=dialect):
+                    job = from_native_v(series, plan, target=target,
+                                        cutting_length_mm=2, tool_id="T3",
+                                        boundary=boundary)
+                    if dialect == "grbl":
+                        job = replace(job, translation_xyz_mm=(2, 3, 0))
+                    output = root / dialect
+                    report = write_bundle(output, job, dialect,
+                                          source_binding=binding)
+                    self.assertEqual(report["stock_access_residual"]["status"],
+                                     "pass")
+                    self.assertEqual(report["motion_equivalence"]["status"],
+                                     "pass")
+                    self.assertEqual(report,
+                                     audit_bundle(output / "handoff.json", job,
+                                                  source_binding=binding))
+                    if dialect == "uccnc":
+                        nc = output / "stage-1.nc"
+                        exact = nc.read_bytes()
+                        self.assertIn(b"G2 F240 X6 Y5 Z-2 I0.5 J0", exact)
+                        nc.write_bytes(exact.replace(b"I0.5 J0", b"I0.5 J1"))
+                        tampered = (nc.read_bytes(),
+                                    (output / "stage-2.nc").read_bytes())
+                        with self.assertRaisesRegex(ValueError, "motion .*differs"):
+                            ordered_job.audit(job, decode(
+                                tampered, dialect,
+                                initial_work_tip=job.initial_tip),
+                                dialect=dialect)
+                        with self.assertRaisesRegex(ValueError, "bytes changed"):
+                            audit_bundle(output / "handoff.json", job,
+                                         source_binding=binding)
+                        nc.write_bytes(exact)
+
     def test_native_prefix_generated_v_and_edit_invalidation(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

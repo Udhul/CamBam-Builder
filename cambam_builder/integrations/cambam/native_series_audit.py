@@ -1,9 +1,10 @@
-"""Linear native MOP-series stock audit over one planar cylindrical target.
+"""Native MOP-series stock audit over one planar cylindrical target.
 
 Every stage reuses core motion replay and a bounded polygonal sweep oracle.
 This bridge accepts a common straight-edge Region (with holes) or rectangle,
-declared section depths and an overcut budget. It does not certify arc motion,
-controller trajectories, physical cutter error or a rounded V profile.
+declared section depths and an overcut budget. Level XY arc cuts use the core
+bounded continuous-sweep enclosure. It does not certify controller trajectories,
+physical cutter error or a rounded V profile.
 """
 
 from dataclasses import dataclass

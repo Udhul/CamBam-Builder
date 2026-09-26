@@ -417,14 +417,19 @@ one generated terminal V plan to the same source and stock. It replays the
 complete native post before admitting the V plan. `NativeBinding` checks the
 native stage against its unchanged source/candidate/post and the V target against
 the original planar source target. A fresh native post is required after a
-candidate edit. This hybrid route accepts only the supported linear native
-motion and one cylinder before the terminal V finish.
+candidate edit. This hybrid route accepts one supported planar native cylinder
+before the terminal V finish. Level XY G2/G3 cuts are representable; the
+single-depth native Pocket G3 fixture has a fresh accepted CamBam post and
+decoded hybrid stock audit. Other native arc operations require their own gate.
 CamBam's vertical G0 retract is represented as `rapid_retract`: the output
 retains G0, while stock replay applies the same cleared-column proof as a
 feed retract. A low XY rapid still fails the native normalizer.
 
 `ordered_dialects.render/decode` lowers and independently reads complete
-UCCNC split files or one Grbl v1.1 program for the supported G0/G1 subset.
+UCCNC split files or one Grbl v1.1 program for supported G0/G1 and level XY
+G2/G3 cuts with relative I/J centers. Both readers preserve the decoded center,
+direction, endpoints and feed. The auditor compares them with the native post
+and replays the decoded arc rather than the planned source center.
 Tool IDs, stage count, RPM, feeds, endpoints and translation are caller values.
 Grbl length-state changes move displayed work Z at stationary machine position;
 the adapter emits and decodes a real compensating rapid before the stage, and
@@ -447,9 +452,19 @@ model and clear the supplied flat fixture-top plane. Runtime and physical setup
 remain `not_evaluated`. Re-audit after a native edit requires a freshly
 normalized source/job; an old bundle's fingerprint cannot certify it.
 
+For a level cylindrical arc, `replay.arc_segments` encloses the continuous
+centerline by chords with at most 0.0001 mm sagitta, plus the posted endpoint
+radius mismatch and a numeric margin. Outer cutter radius uses that path error
+for protected-boundary checks; inner radius uses it for removed-stock and
+residual-upper checks. Source arc endpoints are exact replay endpoints. Curved
+rapid travel, helical/ramped arcs, full-circle same-XY words and unresolved arc
+radius fail closed. GEOS buffer/Boolean results remain conditional numerical
+evidence, not a physical controller trajectory guarantee. Linear `JobMove`
+representation preserves existing v1 job fingerprints.
+
 The earlier geometry domain remains planar fixed-axis cylindrical replay
 and one terminal rounded-V finish; the separate stepped-volume contract below
-extends the same decoded boundary. Native G2/G3, generic native Pocket/Profile
+extends the same decoded boundary. Generic native Pocket/Profile
 path reproduction, multiple endmill predecessors before V, arbitrary macros,
 non-flat fixtures, rotations/kinematics and controller runtime parity require
 named extensions. The [ordered-job packet](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification)
@@ -1421,8 +1436,8 @@ from the modal motion fingerprint. Every G0/G1/G2/G3 item and tool/spindle
 event is retained with its MOP section; unsupported words, cycles, absent or
 reordered sections, tool mismatches and unbound setup fail. A parsed post
 alone has no stock authority. The retained actual M1 Pocket post normalizes as
-two ordered sections but its arcs and previously observed unsafe entries do
-not acquire a replay certificate from this parser.
+two ordered sections but its previously observed unsafe T2 entries do not
+acquire a replay certificate from this parser.
 
 For a source with no MOP intent, the source evidence key normalizes original
 primitive UUID/world geometry, Part stock and millimetre units. Document-title
@@ -1430,14 +1445,17 @@ and other presentation-only edits that leave that snapshot unchanged retain
 the candidate/post certificate; geometry or stock edits invalidate it. A
 source containing any MOP still requires exact source bytes because its MOP
 intent lacks a semantic edit classifier. Candidate and actual post bytes are
-always exact-hash guarded. The bounded linear audit also requires each native
+always exact-hash guarded. The bounded planar audit also requires each native
 MOP to target the same original Rect or straight Region geometry and floor;
 a caller-supplied larger target cannot manufacture safe stock clearance.
 
-`NativeSeries.to_trace` lowers only bounded G0/G1 linear motion on supported
-XY Pocket/Profile/Engrave stages into the shared ordered replay model. Arcs,
-ramps and low XY rapids have no lowering until continuous occupancy and access
-proofs exist. `native_series_audit.audit_linear_native_series` rechecks the
+`NativeSeries.to_trace` lowers bounded G0/G1 motion and level XY G2/G3
+cylindrical cuts on supported XY Pocket/Profile/Engrave stages into the shared
+ordered replay model. Arc centers, direction and posted radius mismatch are
+retained; the continuous-sweep enclosure is specified above. Ramps, helical
+arcs and low XY rapids still have no certified lowering.
+`native_series_audit.audit_linear_native_series` (its historical API name)
+rechecks the
 source/candidate/post bytes, binds one source target and supplied cutting
 lengths/entry modes, replays each complete prefix and reports section residual
 area intervals, integrated volume intervals and inflated protected-overcut

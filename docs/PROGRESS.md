@@ -7,7 +7,24 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**Current entry point - 2026-09-26 sloped ball-surface evidence:** one
+**Accepted 2026-09-26 safe native arc hybrid:** the bounded
+level XY G2/G3 path now preserves direction/center through the native,
+UCCNC/Grbl and ordered replay boundaries. Synthetic native-arc plus generated
+rounded-V jobs pass independent decoded stock checks in both dialects;
+protected sweep and helix counterexamples reject. The user posted the
+source-bound, single-T1 Pocket
+[candidate](../output/native-arc-hybrid-20260926-01/native-arc-predecessor.cb)
+through CamBam Plus 1.0 Default. Its eleven G3 cuts and the generated rounded
+T3 finish pass complete decoded UCCNC stock/access replay. The Z=-1 mm
+native/final residual intervals are 366.03554-366.04387 /
+3.79242-5.28194 mm2 with zero modeled protected overcut. This closes the
+actual-post and offline stock gate for one level native Region Pocket;
+controller runtime, tool installation and physical machining remain
+unassessed. The [runbook](DEVELOPMENT.md#safe-native-g2g3-hybrid-evidence-case)
+and [review](REVIEW.md#safe-native-g2g3-hybrid-evidence---2026-09-26) own
+the files, hashes, limits and results.
+
+**Prior 2026-09-26 sloped ball-surface evidence:** one
 4 x 2 mm affine floor descending from 1 to 2 mm now has exact contact,
 section and target-volume oracles plus a ball-end straight-pass volume oracle.
 Two decoded UCCNC/Grbl stages pass protected-plane, cutting-length,
@@ -95,13 +112,13 @@ See the [contract](structure_spec.md#bounded-layered-3d-stock-and-waterline-evid
 [runbook](DEVELOPMENT.md#layered-3d-stock-and-waterline-evidence) and
 [dated evidence](REVIEW.md#layered-3d-stock-and-waterline-evidence---2026-09-26).
 
-**Next priority, backlog 6:** select a safe actual CamBam G2/G3 native post
-and normalize its continuous arc motion through the existing ordered hybrid
-boundary. Retained M1 Pocket posts have unsafe entries and cannot establish
-this gate; choose a bounded safe native case and require its fresh post and
-decoded stock/access replay before claiming hybrid arc support. This is the
-next useful distinct capability because current native-normalized hybrid jobs
-accept only linear motion. Reopen surface backend selection for a named
+**Next priority, backlog 6:** add one bounded holder/fixture occupancy case
+to decoded ordered stock evidence, using an explicit synthetic setup and a
+collision counterexample. Cutter-only access is now covered for native arcs,
+stepped volume and sloped ball passes; holder/fixture clearance is the common
+remaining safety gap and matters more than another native arc shape or helix
+fixture. Keep controller-runtime claims separate. Reopen surface backend
+selection for a named
 curved/overhanging target, holder/fixture requirement, or residual tolerance
 that the affine-plane and conservative-cell case cannot meet. Manual-tab
 authoring remains lower priority until the requested before/after native
@@ -116,8 +133,10 @@ to concrete product choices or external observations. See
 [review correction](REVIEW.md#framework-direction-and-engineering-acceptance---2026-09-26).
 Manual-tab authoring remains deferred: it needs a native before/after fixture
 and contributes less to the current shared-core objective. The sloped
-ball-surface slice is an offline engineering result; a fresh session can take
-the distinct safe native-arc case without relying on conversation context.
+ball-surface slice is an offline engineering result. The actual native arc
+hybrid is now accepted for its bounded offline scope; its source, post and
+output handoff remain retained as evidence. The holder/fixture task has a
+distinct scope and needs no pending arc decision.
 The dated entries below retain development history.
 
 **2026-09-23 execution architecture refinement (backlog 6).** The user's context
@@ -1713,7 +1732,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    [ordered-job packet](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification)
    is implemented for its bounded offline domain and closes the M5 synthetic
    native order/edit evidence gap. The actual native Profile plus generated V
-   hybrid is now accepted. The next 3D foundation follows the
+   hybrid and the bounded actual native G3 Pocket/rounded-V hybrid are accepted.
+   The stepped-volume and sloped-ball foundations also now pass decoded offline
+   gates. Further capability directions follow the
    [capability progression](REST_MACHINING_PLAN.md#subsequent-capability-progression).
    Historical entries below retain earlier stage limits; they do not permanently
    restrict the framework to RC01 or a fixed-axis sample workflow.
