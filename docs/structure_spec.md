@@ -71,7 +71,8 @@ Current root files classified by that target map:
 | `cam_core/rc01.py` | Current pure reference implementation; exact recipe later in `cam_extensions/reference_jobs/`, reusable verifier/motion values stay in `cam_core/` |
 | `__init__.py`, `cambam_entities.py` | Root public/compatibility facade; implementations move behind it |
 
-This is one distribution, not a plugin architecture. Under a package, use the
+The current delivery is one distribution. Strategy/backend extension interfaces
+do not require a discovery registry or additional distribution now. Under a package, use the
 domain name (`project.py`, `region.py`, `stock.py`, `rest.py`, `vcarve.py`) rather
 than repeating its package prefix. Keep `cambam_` only where a root compatibility
 name or a cross-system adapter needs to identify CamBam explicitly. The pure
@@ -111,6 +112,89 @@ in the same increment. Remaining root detached and policy modules are authoritat
 until a separately justified migration; the target table does not imply capabilities
 or imports that already exist.
 
+### Framework direction and extension principles
+
+**User intent and engineering direction, 2026-09-26.** Build a reusable CAM
+framework with strong, editable CamBam interchange, its own machining analysis
+and path calculation, and supported combinations of native and generated work.
+V-carving and combined rest machining drive the current implementation. Surface
+and volume contour following, additional machining methods and versioned CamBam
+behavior compatibility are intended extensions. The user's current machine and
+manual workflow supply test cases, not the framework's capability ceiling.
+
+The tables above identify present owners; this section defines the target
+contracts. A completed reference job does not imply these contracts are all
+implemented. The existing [small shared model](REST_MACHINING_PLAN.md#small-shared-model)
+and [target/stock semantics](REST_MACHINING_PLAN.md#canonical-target-construction-and-uncertainty)
+remain the design basis. Progress and the next implementation slice belong in
+[PROGRESS](PROGRESS.md#active-work-and-next-priority).
+
+Keep these responsibilities distinct so that improving one method does not
+require replacing the framework:
+
+| Responsibility | Durable boundary |
+| --- | --- |
+| Design and operation intent | Preserve native CAD/MOP identity and raw states; normalize only supported semantics into explicit units, frames, target/protected geometry, tools and constraints. Native authoring remains useful independently of framework path support. |
+| Path generation | Interchangeable strategies propose geometric tool poses and cutting passes. Raster, contour offsets, V tracing, future surface following and supplied native motion share the supported plan/evidence contracts, without requiring identical algorithms or paths. |
+| Sequence, entry and links | A separate planning responsibility completes candidate passes with feasible access and dependencies. Callers may supply order or request scheduling; reordered or changed motion needs fresh stock/access evidence. |
+| Stock and geometric queries | Target geometry, remaining material and fixtures have separate identities. Section, containment, cutter contact, sweep and residual queries declare representation and error limits. Strategies request capabilities, not a particular polygon or voxel storage layout. |
+| Verification | Evaluate actual continuous motion and state transitions against target, stock, tool/holder and setup constraints. Accept supplied/generated motion without trusting the generator's own completion claim; retain independent analytic or alternative-reference checks. |
+| Output and execution | Adapters lower semantic motion and state to CamBam carriers, controller commands or external transport. Decode and normalize the final output and any declared external effects before granting route-specific evidence. |
+| Workflow | Library calls support analysis, planning, attachment and export independently. Applications and agents compose them; no mandatory file sequence, live session, GUI, MCP client or approval loop belongs in the machining core. |
+
+**Path geometry and machine trajectory are separate.** CAM methods decide
+where the tool should cut; ordering/link policies connect those cuts; feed
+scheduling, acceleration, jerk, controller blending and machine kinematics
+determine time-dependent execution. A future offline dynamics provider may
+evaluate or propose timing under declared machine limits. It must not become a
+dependency for pure geometry/rest analysis or tie every strategy to one motion
+controller. Record permitted path deviation and recheck its effect on material
+and clearance when smoothing or controller blending changes geometry.
+[LinuxCNC's trajectory guide](https://linuxcnc.org/docs/stable/html/user/user-concepts.html)
+illustrates why programmed coordinates and feed alone do not describe actual
+timing or corner following; this is a design distinction, not a LinuxCNC
+dependency.
+
+**Represent capabilities without making current shortcuts universal.** The
+present fixed-axis XYZ and planar/section methods are legitimate initial
+capabilities. Their positive-depth convention, one-cylinder predecessor,
+T1/T3 labels, safe point, file names, feeds and sample dimensions must not become
+public job invariants. Explicit frames, tool geometry and ordered stage identity
+belong in inputs. Future curves/poses, tools or operation effects require defined
+semantics and a capable evaluator; unsupported combinations return a precise
+diagnostic while native source remains usable. Unknown effects cannot be silently
+dropped or treated as zero motion.
+
+**Use more than one geometric representation when the problem requires it.**
+Planar sets and depth sections remain effective for their supported domain.
+Surface contact, general solids and evolving volume stock may need different
+backends. A height field cannot represent every overhang or disconnected vertical
+interval; a surface model alone does not represent remaining material. Choose a
+backend from representative jobs, conservative error/occupancy requirements,
+performance and maintenance evidence. Keep conversion error and source identity
+explicit. Reuse established kernels and auditable algorithms where they fit;
+own machining semantics and verification. Extensibility does not require writing
+every geometry primitive here or introducing a speculative plugin registry.
+
+**CamBam compatibility has named levels.** Preserve documents; resolve supported
+operation intent; compare resulting geometry/removal and process semantics; and,
+where required, reproduce a versioned native path behavior. Each has separate
+tests. Equivalent final shape alone cannot certify safe entries or the same
+intermediate stock. Exact native path/order replication remains a supported
+development objective when a named compatibility case needs it, without becoming
+a condition imposed on innovative strategies. A native motion provider is an
+adapter and requires actual motion authority; it is not a core dependency.
+
+**Promote abstractions by demonstrated reuse.** Implement the common contract
+across direct inputs, native normalization and at least two distinct consumers
+before declaring it stable. Keep fixture orchestration and process values in
+examples/tests, and verification algorithms outside controller-specific modules.
+Use small typed values and narrow callable interfaces, with declared capabilities,
+versioned provenance and deterministic diagnostics. Geometric paths, stock
+certificates, artifact lineage and observed execution are distinct records.
+Capability limits protect honest evidence; they do not justify rejecting a new
+workflow merely because a sample script did not use it.
+
 ### Data flow and relationship boundaries
 
 1. Callers create and mutate entities through `CamBamProject`. UUIDs key the
@@ -146,7 +230,8 @@ implemented general XYZ generator, route optimizer or postprocessor.
 The [execution architecture proposal](REST_MACHINING_PLAN.md#execution-architecture-refinement---2026-09-23)
 defines a document-independent motion/stock core with separate strategies,
 verification and CamBam/direct-G-code output adapters. Bounded M1-M4 slices
-implement this separation; general controller output remains M5 work. Native-MOP authoring remains
+implement this separation; M5 adds named controller fixtures, while a reusable
+job-level execution API remains subsequent work. Native-MOP authoring remains
 independently useful. Execution authority, manual-edit invalidation, output
 acceptance and delivery decisions belong to that active plan; no future
 API or native path-equivalence claim is implied by this specification entry.
@@ -282,7 +367,7 @@ no stock certificate.
 
 `integrations.m4_curved_workflow.load_selected_plan` exposes the accepted
 source-bound rounded raster plan, supplied T1 trace and initial tip to both
-controller adapter. `cam_core.v_region.complete_motion` assembles safe travel
+controller fixtures. `cam_core.v_region.complete_motion` assembles safe travel
 around the detached V plan. `integrations.uccnc_m5` emits separate T1/T3 files
 for one declared G54, metric, absolute, exact-stop, no-length-compensation
 profile; `integrations.uccnc_reader` independently decodes its strict G0/G1
@@ -299,8 +384,13 @@ stock/access/residual audit; a final safe T1 stage and synthetic changer
 effect travel are checked without inferring physical completion. The manual
 fixture resolves a +4.5 mm CAM surface through a declared -4.5 mm work map;
 the mixed fixture uses fixed G54 and external table-derived length values.
-`integrations.m5_decoded` owns only shared decoded-stage values; dialect
-readers do not depend on one another. Generic native MOP generation, further
+`integrations.m5_decoded` owns shared decoded-stage values, still containing
+G-code numbers/startup words rather than a complete core semantic state model.
+The Grbl fixture checks fixed offset values and assumes each stage's registered
+tip; the synthetic host effect is validated against its pinned writer model.
+These limits motivate the
+[ordered-job packet](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification).
+Dialect readers do not depend on one another. Generic native MOP generation, further
 controller dialects, controller runtime parity and physical machine acceptance
 are outside this bounded fixture set.
 

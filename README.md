@@ -5,6 +5,14 @@ A Python framework for building CamBam CAD/CAM files. The modern package exposes
 I/O. It is work in progress; round-trip fidelity and CamBam acceptance are not
 established for all supported entities.
 
+The intended framework combines faithful, editable CamBam interchange with an
+independent CAM core for toolpaths, evolving stock and rest analysis. Native and
+framework-generated machining can be composed through explicit motion evidence.
+Path strategies, geometry/stock backends and controller adapters have separate
+contracts so future surface/volume methods can extend the same foundation. See
+the [framework direction](docs/structure_spec.md#framework-direction-and-extension-principles)
+for the design and its current implementation limits.
+
 Start with the [documentation map](docs/README.md), then the relevant topic:
 
 - [Development and verification](docs/DEVELOPMENT.md)

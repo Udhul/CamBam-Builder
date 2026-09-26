@@ -7,9 +7,11 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**Current entry point - 2026-09-26 M5 automated portability gate:** M1-M4 retain
-their bounded acceptance; M5 implementation has passed its declared offline
-gate, with bounded user acceptance still unrecorded (5 of 6 accepted). Stockless Part import/save/reopen
+**Current entry point - 2026-09-26 framework direction review:** M0-M4 retain
+their bounded acceptance. M5's named UCCNC/Grbl fixtures pass their offline
+engineering gate; no abstract user sign-off is required. Full M5 packet closure
+still needs the disabled/reordered native-MOP evidence identified by review.
+Stockless Part import/save/reopen
 now preserves absence through copy/transfer and MCP edits, without changing
 explicit MOP Z values. The accepted M4 rounded-raster route now emits separate
 T1/T3 UCCNC files with strict independent decoding and decoded T1-to-T3 stock,
@@ -17,15 +19,16 @@ rounded-cutter, access and residual checks. The synthetic
 [handoff and files](../output/m5-uccnc-20260926-02/handoff.json) pass the first
 level-1 output gate; physical setup and UCCNC runtime parity remain unassessed.
 The [Grbl portability bundle](../output/m5-portability-20260926-01/handoff.json)
-now proves the second dialect, a full in-program manual handoff with a -4.5 mm
+exercises the second dialect, an in-program manual fixture with a -4.5 mm
 declared CAM-to-work Z map, and a mixed manual/synthetic-automatic T1/T3/T1
-fixture with fixed G54 and declared dynamic length offsets. Its separate
+fixture with fixed G54 and declared length-offset values. Its separate
 Grbl reader feeds the same decoded T1/T3 stock verifier; the safe final T1
-stage and asserted external changer travel are checked too. Unknown pause,
+stage and asserted external changer travel have separate fixture checks. Unknown pause,
 macro, offset, tool and changed effect behavior fail closed. The automatic
 effect is a synthetic host contract, not observed Grbl or physical changer
 behavior. [Dated evidence](REVIEW.md#m5-grbl-portability-and-transition-policies---2026-09-26)
-owns exact hashes and results.
+owns exact hashes and results. General effective-tip/offset composition and an
+independently evaluated changer state model are not established by these tests.
 The [mediation contract](structure_spec.md#mediation-invariants-and-evidence-contract)
 defines source, frame, state and evidence ownership; the
 [review evidence](REVIEW.md#m5-mediation-architecture-review---2026-09-26)
@@ -35,9 +38,28 @@ Part and explicit MOP Z values in CamBam Plus 1.0 and supplied a fresh
 [Default post](../output/m5-stockless-acceptance-20260926-01/framework-roundtrip.nc).
 Its parsed positive-Z path reaches Z2 without an inferred shift; see the
 [dated native acceptance](REVIEW.md#m5-stockless-actual-cambam-post-acceptance---2026-09-26).
-Runtime/physical acceptance remains outstanding. No visual review can improve
-the offline per-move evidence; production setup acceptance requires a real
-machine profile and tool-change/offset effects.
+Runtime/physical acceptance remains outstanding. No user validation or new G-code
+is required for the present engineering review.
+
+**Next priority, backlog 6:** implement
+[reusable ordered jobs and verification](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification).
+Promote the working proofs into a caller-supplied job contract, common stock/state
+audit and adapter boundary. Exercise both existing strategies, different inputs,
+actual repeated-tool cutting stages, native enabled/order edits and explicit
+frame/transition effects. This also closes the specific remaining M5 packet
+case. Preserve successful fixture evidence; do not mistake another hardcoded
+example for architectural reuse.
+
+The user reaffirmed native CamBam interchange, independent calculation, hybrid
+native/generated jobs and future volume/surface methods as the product direction.
+Engineering owns technical decisions and evidence; user questions are limited
+to concrete product choices or external observations. See
+[framework principles](structure_spec.md#framework-direction-and-extension-principles),
+[acceptance ownership](WORKFLOW.md#acceptance-ownership) and the
+[review correction](REVIEW.md#framework-direction-and-engineering-acceptance---2026-09-26).
+Manual-tab authoring remains deferred: it needs a native before/after fixture
+and contributes less to the current shared-core objective. No user input blocks
+the next job-contract increment; a fresh session can use the documented packet.
 The dated entries below retain development history.
 
 **2026-09-23 execution architecture refinement (backlog 6).** The user's context
@@ -675,13 +697,13 @@ and [dated finding](REVIEW.md#m5-controller-evidence-route-correction---2026-09-
 The first synthetic UCCNC file pair now has a decoded level-1 audit; no runtime
 acceptance exists and the milestone count stays 5 of 6.
 
-**M5 portability gate implemented:** The
+**M5 named portability fixtures implemented; engineering scope clarified below:** The
 [M5 implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet)
 now has a second named Grbl v1.1 output fixture, a one-program manual pause,
 mixed manual/automatic transition policies, a fixed-work-origin table-derived
 `G43.1` fixture and full decoded nonidentity-datum job. The same source-bound
 T1/T3 verifier audits both dialects; the mixed fixture additionally checks
-safe return travel and synthetic external changer effects. Four named Grbl
+safe return travel and pinned synthetic external changer assumptions. Four named Grbl
 tests reject unknown stops/macros, stale length state, changed effects and
 wrong datum mapping. UCCNC and Grbl runtime parity remain optional
 controller-specific evidence tiers; leave them `not_evaluated` until exact
@@ -697,15 +719,18 @@ Region MOPs and framework paths into an edit-aware strategy choice with
 area/volume reporting. Bounded native-MOP normalization and strategy selection
 are M4 components; the accepted edited curved/rounded posts now close the
 bounded combined output gate. Unsupported native motion remains unselectable.
-**Next project increment:** backlog 7's separate Manual-tab fixture is the
-highest-value bounded remaining capability. It exercises an independent native
-authoring gap after the M5 automated gate. Reopen controller work when a real
-machine profile, exact interpreter trace or a new named dialect requirement is
-available. Backlog 8-10 are complete.
-Defer geometry outside the six-milestone supported domain, optimization and
+**Priority correction after architectural review:** the
+[ordered-job increment](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification)
+remains in backlog 6 and precedes Manual-tab authoring. It removes demonstrated
+fixture coupling and supplies the foundation for native/generated composition
+and later 3D methods. M5's native disable/reorder case remains an explicit
+engineering obligation; no user sign-off supplies that missing evidence. Real
+machine profiles and exact runtime traces still reopen separate production and
+runtime gates. Backlog 7 remains deferred; 8-10 are complete.
+For this next ordered-job increment, defer geometry outside the existing supported domain, optimization and
 the detached/policy
 [stage 3 package move](structure_spec.md#package-organization-decision-and-migration-plan)
-unless a scorecard gate requires them. Reopen the accepted triangle only if its
+unless an acceptance case requires them. Reopen the accepted triangle only if its
 source, supplied prior, tool/setup or post changes.
 
 The [clarified output direction](REST_MACHINING_PLAN.md#programmatic-execution-requirement)
@@ -1626,6 +1651,13 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    The broader design covers general combined-tool region and paired-inlay
    workflows, with caller-supplied tools/catalog integration. The first detached
    nominal planar runtime increment is now implemented.
+   **Current continuation, 2026-09-26:** use the
+   [ordered-job packet](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification)
+   to turn the M0-M5 reference implementations into reusable capabilities and
+   close the remaining M5 order/edit evidence. Subsequent native composition and
+   volume methods follow the [capability progression](REST_MACHINING_PLAN.md#subsequent-capability-progression).
+   Historical entries below retain earlier stage limits; they do not permanently
+   restrict the framework to RC01 or a fixed-axis sample workflow.
    The [planar backend decision](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
    selects Shapely/GEOS for the design. Adversarial acceptance and the
    [internal value/error contract](REST_MACHINING_PLAN.md#internal-planar-value-and-error-contract)

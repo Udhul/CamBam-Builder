@@ -1,5 +1,67 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Framework direction and engineering acceptance - 2026-09-26
+
+The user clarified that they can supply practical workflow and program facts,
+while the engineering agent must assess architecture, algorithms and evidence.
+The earlier request to approve the abstract M5 summary was unnecessary. No new
+G-code or manual validation is required to judge its offline fixture results.
+This correction does not record a user observation of a controller or machine.
+
+**Assessment:** the native/core/strategy/adapter direction remains appropriate.
+The implementation is a collection of useful verified reference capabilities,
+not yet a general job engine. Preserve those results and make the next increment
+demonstrate reuse. The user's intended scope includes faithful CamBam interchange,
+independent path calculation, hybrid native/generated machining, versioned native
+behavior compatibility and future volume contour methods. Their present equipment
+and experience do not narrow those framework requirements.
+
+Repository review at clean commit `470967e`, including a separate read-only
+reviewer, found these concrete limits:
+
+| Evidence | Engineering conclusion |
+| --- | --- |
+| `integrations/m5_portability.py::build_bundle`, `audit_bundle` and `_audit_program` always select M4 raster and fixed T1/T3(/T1), feeds/offsets/setup. | Both named controller examples pass; a new caller-supplied job and strategy interchange are not yet demonstrated. |
+| `integrations/grbl_m5_reader.py::decode_job` collects length values separately and starts each stage from the same supplied tip. | Offset-number checking is conditional on assumed tip registration. It does not calculate general effective-tip state across offsets, installation and resume. |
+| `m5_portability.py::decode_changer` requires equality to `_changer_model` and its serialization, then checks fixed Z+5 travel. | This proves pinned fixture consistency and above-stock travel under assumptions. It is not an independent general changer-effects interpreter or stock/fixture replay of arbitrary extra travel. |
+| `m5_decoded.py` exposes `g` and raw startup words; Grbl calls the common auditor and helpers in `uccnc_m5`. | Reuse exists, but the representation and verification ownership still need a semantic shared boundary outside a named controller. |
+| `tests/test_m5_portability.py` covers T1/T3/T1 with only two rapid moves in the last stage; inspected native-series/M4/M5 suites do not supply the packet's named disabled/reordered native-MOP end-to-end case. | Keep that acceptance obligation open. Altered fixture labels and hashes cannot substitute for proving changed enabled selection, predecessor stock and replanning. |
+
+**Disposition:** accept the named offline fixture evidence by engineering, keep
+runtime and physical facts unassessed, and remove the artificial user-signoff
+blocker. Full M5 packet closure still has the specific native order/edit evidence
+gap above. Generalized transition/frame evaluation belongs in the next coherent
+[job-contract increment](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification),
+which also closes that case. The earlier recommendation to switch to Manual
+Profile tabs is superseded: reusable job/state/stock boundaries contribute more
+directly to the user's stated objective and are prerequisites for wider methods.
+
+The [architecture owner](structure_spec.md#framework-direction-and-extension-principles)
+now distinguishes design intent, path strategy, linking/scheduling, stock queries,
+verification, output and machine dynamics. Native algorithms and generated methods
+can share evidence contracts without becoming the same planner. Current planar
+and fixed-axis restrictions remain honest capability limits, not permanent design
+restrictions. A future surface/volume backend must be justified by measurable
+geometry/error/performance needs. The next implementation uses existing kernels
+and multiple consumers before expanding geometry or adding infrastructure.
+
+This round changes documentation and development guidance only. Code, generated
+artifacts and previously recorded numerical results are unchanged. Review used
+repository definitions/callers/tests and official
+[LinuxCNC trajectory concepts](https://linuxcnc.org/docs/stable/html/user/user-concepts.html)
+and [OpenCAMLib contact-method descriptions](https://opencamlib.readthedocs.io/en/latest/)
+as supporting examples; the architecture recommendations are our engineering
+synthesis, not claims that those projects validate this framework. No new runtime
+test or machine check was needed. Documentation verification passed
+`git diff --check` and a deterministic check of all 26 added/changed local Markdown
+links and heading targets. The second read-only review found one stale description
+of answered product decisions, corrected before completion.
+
+Reopen direction only for a conflicting product
+requirement or measured failure of these boundaries; implementation evidence and
+remaining capabilities continue to be assessed normally. No user question blocks
+the next packet.
+
 ## M5 Grbl portability and transition policies - 2026-09-26
 
 The [recorded portability bundle](../output/m5-portability-20260926-01/handoff.json)
@@ -34,13 +96,15 @@ final T1 safe stage has no cuts; external travel stays at Z+5. Grbl and UCCNC
 runtime parity, physical tool installation, host completion, fixture collision
 and production process acceptance remain `not_evaluated`.
 
-The M5 **offline portability implementation gate** is complete for this
-bounded source and two named dialect subsets. Bounded user acceptance has not
-been recorded. No visual comparison of 444 moves adds evidence to the decoded
-audit. Reopen when source/prior/plan, setup map, tool table, profile, emitted
+The M5 **named offline fixture gate** passes for this source and two dialect
+subsets. The subsequent engineering review above accepts that bounded evidence
+without requiring abstract user approval and identifies the remaining packet
+case. No visual comparison of 444 moves replaces its decoded audit. Reopen this
+fixture evidence when source/prior/plan, setup map, tool table, profile, emitted
 bytes, reader, effect model or verifier changes, or when an exact controller
-trace or actual production machine profile becomes available. The next
-project increment is backlog 7's separate Manual-tab fixture; see
+trace or actual production machine profile becomes available. The earlier
+recommendation to switch to Manual tabs is superseded by the job-contract
+increment; see
 [current priority](PROGRESS.md#active-work-and-next-priority).
 
 Verification with `.venv\Scripts\python.exe`: full unittest discovery passed

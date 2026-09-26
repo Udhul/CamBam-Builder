@@ -1627,10 +1627,14 @@ emitted path fails. `mixed.nc` tests manual T1-to-T3 and modeled automatic
 T3-to-T1 transitions in one program, with fixed G54 and externally supplied
 tool-table lengths 2/3/2 mm expressed via Grbl `G43.1`. Grbl has no native
 tool-table or automatic changer claim here: the table and changer belong to
-the synthetic host setup. The independently read `mixed-changer.json` declares
+the synthetic host setup. The strictly read `mixed-changer.json` declares
 three safe, spindle-off tip-travel segments, T3/T1 installation and length
 registration; the last T1 stage contains two separately decoded safe rapid
-moves. Its completion and return state are assumptions. The checker rejects
+moves. Its completion and return state are assumptions. This reader compares
+against the same pinned effect model used by the fixture writer; it does not
+independently derive arbitrary changer motion or compose machine/tool offsets.
+Length values are checked against the table and each stage's registered tip is
+assumed. The checker rejects
 changed or missing effect bytes, even if the handoff is edited, and does not
 infer installation from `M0` alone.
 
@@ -1638,7 +1642,12 @@ Both fixtures replay decoded T1 stock into decoded rounded T3 motion. Each has
 61 T1 moves, 383 T3 moves, 30 T1 cuts, Z=-1 mm final remaining-area upper
 1.526323 mm2 and eight-slab final volume upper 42.675342 mm3; the mixed
 fixture also has two safe T1 return moves. Runtime parity and physical setup
-are `not_evaluated`. Manual visual inspection adds no per-move evidence here.
+are `not_evaluated`. The report's phrase "complete decoded Grbl program and
+transitions" is conditional on these fixed transition assumptions; it is not
+general machine-state simulation. No manual sign-off or new G-code is required
+to close the named offline fixture gate. The
+[engineering review](REVIEW.md#framework-direction-and-engineering-acceptance---2026-09-26)
+records the remaining native order/edit case and reusable state-model work.
 Use the user's actual controller, sender, offset and changer configuration
 only after a separate production profile and machine acceptance exist.
 

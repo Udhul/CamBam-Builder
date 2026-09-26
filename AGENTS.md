@@ -17,6 +17,16 @@
 - Use judgment for safe, reversible details and state material assumptions. Ask
   only when a missing decision changes architecture, product behavior, acceptance,
   destructive actions or expensive work; continue independent authorized work.
+- Own engineering and architecture judgments within the user's product intent.
+  Ask the user for concrete desired behavior, workflow facts or observations they
+  can supply; do not ask them to approve abstractions, algorithms or test logs as
+  a substitute for technical review. Engineering acceptance may close an offline
+  gate when its evidence is sufficient; user validation is required only for a
+  named unanswered product choice or external observation. Follow
+  [acceptance ownership](docs/WORKFLOW.md#acceptance-ownership).
+  Fixture limits and the user's current machine/workflow are evidence boundaries,
+  not permanent framework constraints; apply the
+  [framework direction](docs/structure_spec.md#framework-direction-and-extension-principles).
 - Keep project facts in their documentation owner, identified by the topic map.
   Update `docs/PROGRESS.md` when priority or completion changes; preserve useful failure
   evidence and reopening criteria. Do not create a competing wiki or backlog.

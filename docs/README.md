@@ -5,10 +5,10 @@ Read this map after the root README; follow only the relevant owner.
 | Topic | Authoritative home | Boundary |
 | --- | --- | --- |
 | Agent operational rules | [AGENTS.md](../AGENTS.md) | Compact mandatory context |
-| Current architecture, package organization preference/migration plan, code ownership and intended domain relationships | [structure_spec.md](structure_spec.md#package-organization-decision-and-migration-plan) | Section 0: implemented owners and staged target; remaining sections: domain design |
+| Framework direction, current architecture, package migration, code ownership and intended domain relationships | [structure_spec.md](structure_spec.md#framework-direction-and-extension-principles) | Section 0 distinguishes implemented owners, extension principles and staged target; remaining sections: domain design |
 | Current baseline, priority, backlog, blockers | [PROGRESS.md](PROGRESS.md) | Single status surface; pending items live here |
 | Development commands and troubleshooting | [DEVELOPMENT.md](DEVELOPMENT.md) | Setup, checks and artifact handling |
-| Delegation, lifecycle and handoff | [WORKFLOW.md](WORKFLOW.md) | Reusable working procedures |
+| Delegation, lifecycle, acceptance ownership and handoff | [WORKFLOW.md](WORKFLOW.md) | Engineering closure versus concrete user observations; reusable working procedures |
 | Model selection and cost-aware routing | [MODEL_ROUTING.md](MODEL_ROUTING.md) | Reusable risk model for main-thread and worker selection |
 | Review evidence and rejected approaches | [REVIEW.md](REVIEW.md) | Dated findings, acceptance evidence and reopening conditions; not a second backlog |
 | Local MCP requirements and delivery outline | [MCP_PLAN.md](MCP_PLAN.md) | Increment scope/acceptance; priority stays in PROGRESS |

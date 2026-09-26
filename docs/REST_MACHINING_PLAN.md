@@ -1,15 +1,18 @@
 # Future rest machining and V-cutter paths
 
-Status: **bounded core and native/explicit output bridge accepted; v1 scope
-includes curved Regions and rounded V tips by user decision on 2026-09-24;
-remaining completion milestones are open**.
+Status: **M0-M4 bounded outcomes accepted; M5 named output fixtures pass their
+offline engineering gate. Full packet closure still needs the ordered native-MOP
+edit case identified in the 2026-09-26 review. The next development phase promotes
+these proofs into reusable job and verification capabilities.**
 Requested 2026-09-08 and expanded 2026-09-22/23. Priority belongs only to [PROGRESS.md](PROGRESS.md#remaining-backlog-in-order).
 This document owns the problem, proposed outcomes, technical reasoning and future
 acceptance criteria. Only the explicitly marked bounded slices claim implementation;
 none authorize machine execution.
-The five original outcomes below are retained. The current design proposal and
-unresolved product decisions are in [Design refinement](#design-refinement---2026-09-22)
-and the latest [execution architecture refinement](#execution-architecture-refinement---2026-09-23).
+The five original outcomes below are retained. Historical design refinements and
+decisions are in [Design refinement](#design-refinement---2026-09-22)
+and the [execution architecture refinement](#execution-architecture-refinement---2026-09-23).
+The current direction and next implementation packet are in
+[From reference jobs to reusable CAM capabilities](#from-reference-jobs-to-reusable-cam-capabilities).
 The [first generated acceptance job](#first-generated-acceptance-job-rc01)
 now gives user-accepted synthetic inputs and separate standalone/native acceptance gates.
 
@@ -49,12 +52,12 @@ remain required. Do not claim physical machining without real setup acceptance.
 | M2: curved Region rest and endmill cleanup | On a native annulus and a mixed line/arc concave Region with a hole, derive pure rest from supplied prior motion and produce complete smaller-endmill entry/cut/link/retract paths. Preserve analytic source identity; validate arc topology, conservative access/protection and independently bounded residual/overcut through approximation and emitted motion. Strict native reimport, visible preview, actual explicit post and stock replay must pass; include a curved narrow-access rejection and translated/reflected frame case. | **Accepted for the bounded annulus, mixed and reflected synthetic jobs via exact explicit motion.** All three actual Default posts pass ordered motion and stock replay; their native Engrave preview posts separately match the final T2 centerlines. The user confirmed curved preview visibility. CustomScript proves post transport, not independent CamBam path planning; neither route is physical machining acceptance. |
 | M3: V cleanup and edge tracing | On the polygonal target and at least one accepted curved target, generate pointed, flat-tip and tangent spherical/conical rounded-tip variable-depth paths, depth-capped/wide-area additional passes, and boundary/corner cleanup around concavity and holes. Check tool-profile continuity, full cutter occupancy, access, protected material, residual and infeasible/partial results between vertices and around arcs. Strict native preview and actual explicit post must be audited; Engrave remains inspection-only unless its whole post passes. | **Accepted for the bounded capped inward V recess.** The user saw geometry and V paths in all seven previews. All seven corrected actual preview posts match centerlines with +5 mm XY rapid links; all seven corrected explicit posts pass complete T1/T3 stock, access and residual audits. Pointed, flat and rounded profiles cover letter and annulus; mixed rounded and curved rejection pass. Flat-pocket strategy selection remains M4 work. |
 | M4: composed workflow and edits | One reopened/edited native source runs rest analysis, alternative endmill/V strategy comparison, selected ordered operations and stock-dependent cleanup without hidden session state. Normalize complete actual emitted motion from any supported native CamBam MOP or ordered MOP series as prior-stock authority, with explicit rejection of unsupported motion; calculate remaining area and volume by stage. Include a curved target and rounded-tip strategy in the accepted comparison; prove one contour-parallel offset fill candidate alongside the raster proof input through the same stock verifier. Allow manual or planned chaining of safe native MOPs, custom Region MOPs and exact framework paths. Relevant edits invalidate source, path and post claims; unchanged cosmetic edits retain valid evidence. The same accepted plan is available through native preview/explicit output and a parsed, stock-replayed direct reference program. | **Accepted for the bounded edited annulus.** The reopened 2.1 mm hole, T1-only partial endmill route and rounded raster/contour-offset finishes pass shared stock and direct reference audits. The user saw source primitives and Engrave toolpaths in both previews. Both actual preview posts match centerlines and both actual explicit Default posts pass complete T1/T3 motion and stock audits; the area-first selector chooses raster while offset also meets the fixed budgets. The bounded linear native-MOP normalizer rejects unsupported arc/unsafe motion; generic curved native Pocket planning is not certified. |
-| M5: first controller output | Lower the accepted M4 plan through a declared controller profile with explicit units, coordinate/datum mapping, tools, feeds, spindle, entry/link/retract and end roles; independently decode every emitted program or command stream and replay its actual coordinates with stock carried across program boundaries. Keep tool-change intent, measurement/offset method, execution method and dialect separate. Prove manual and automatic transition contracts, stockless explicit-MOP import, an explicitly requested nonidentity datum map, and two distinct controller dialect fixtures. Report stock-dependent checks as unavailable when no stock model is supplied; physical changer behavior remains machine-specific acceptance. | **Automated gate implemented; bounded acceptance unrecorded.** UCCNC split files and Grbl v1.1 one-program manual/mixed-policy fixtures pass the common decoded stock verifier. Automatic changer effects are synthetic asserted host behavior. Runtime and physical machine setup are `not_evaluated`; the user's production profile is pending. |
+| M5: first controller output | Lower the accepted M4 plan through a declared controller profile with explicit units, coordinate/datum mapping, tools, feeds, spindle, entry/link/retract and end roles; independently decode every emitted program or command stream and replay its actual coordinates with stock carried across program boundaries. Keep tool-change intent, measurement/offset method, execution method and dialect separate. Prove manual and automatic transition contracts, stockless explicit-MOP import, an explicitly requested nonidentity datum map, and two distinct controller dialect fixtures. Report stock-dependent checks as unavailable when no stock model is supplied; physical changer behavior remains machine-specific acceptance. | **Named offline fixtures accepted by engineering; packet closure has a specific coverage gap.** UCCNC and Grbl cutting stages pass decoded stock checks. Offset values and synthetic host effects are pinned assumptions, not general state/kinematics simulation. The disabled/reordered native-MOP case still needs named end-to-end evidence in the next job-contract increment. No abstract user sign-off is required. Runtime/physical setup remain `not_evaluated`. |
 
-This is **five accepted milestones and one implemented automated gate awaiting
-bounded acceptance**, not a time or effort percentage. M4's edited curved
-composition and direct/native output gates are accepted. M5's controller
-runtime and physical setup remain separately unassessed.
+This is **five fully accepted milestones plus the M5 named fixture gate accepted
+by engineering**. The open item is technical coverage, not user approval of an
+abstract result. Closing these bounded milestones will not by itself establish
+a general CAM engine. Runtime and physical setup remain separate evidence gates.
 
 ### M5 controller coverage and automatic evidence - 2026-09-26
 
@@ -295,7 +298,7 @@ Acceptance cases must be named tests with independent expected values:
 | Native candidate, preview and direct output | Native source remains editable; each execution route earns evidence from its own complete output. No duplicate execution of source and replacement MOPs. |
 | Second dialect and manual/automatic policies | Same detached plan/verifier, separate decoding and setup effects; no controller names or G/M-code branching in core. |
 
-**Worker boundary and stop.** The next implementation unit covers steps 1-2,
+**Original worker boundary and stop (retained as history).** The first implementation unit covers steps 1-2,
 including its applicable rejection cases; step 3 is the subsequent portability
 unit within M5. First reproduce the stock defect, then add regressions and the
 working UCCNC slice. Use the runbook's existing native/M4 tests plus new M5
@@ -308,6 +311,8 @@ the settled contract remain the worker's responsibility. M5 stays open until
 its portability gate also passes. This sequence matters now because preserving
 source semantics and independently auditing output are prerequisites for useful
 controller flexibility, whereas adding dialects first would replicate defects.
+Those named fixtures now exist; the current scope and remaining evidence belong
+to the [reusable ordered-job packet](#next-implementation-packet-reusable-ordered-jobs-and-verification).
 
 **Portability implementation, 2026-09-26.** Step 3 now emits one-program
 Grbl v1.1 manual and mixed-policy fixtures from the accepted M4 source-bound
@@ -450,6 +455,123 @@ Engrave interpretation; it does not make CamBam's Engrave operation the
 execution route. **M2 passes its bounded gate.** Physical setup remains
 unverified.
 
+## From reference jobs to reusable CAM capabilities
+
+**Engineering direction after the user's clarification, 2026-09-26.** Support
+faithful CamBam authoring and interchange, independent machining calculation,
+and combinations of native and generated methods. The
+[framework principles](structure_spec.md#framework-direction-and-extension-principles)
+own the long-term boundaries. The user's current workflow supplies context; it
+does not limit the design to manual changes, particular tools, one planner or a
+fixed export sequence. Engineering chooses algorithms and contracts and checks
+them. No further user design approval or G-code generation is needed this round.
+
+The reference jobs provide useful evidence for geometry preservation, V-cutter
+occupancy, stock dependence and decoded output on named inputs. They do not yet
+provide a general caller-supplied job API. `m5_portability` loads only the M4
+raster fixture, matches offsets to constants, and checks changer bytes against
+the same model used to write that effect. The next step must prove reuse and
+state semantics across different inputs. Another hardcoded controller example
+or a package-only migration would not achieve it.
+
+### Next implementation packet: reusable ordered jobs and verification
+
+**Outcome:** a caller supplies a supported ordered machining job, chooses an
+existing strategy or supplies motion, and receives independently checked output
+and stock evidence through the same API. Changing dimensions, tool IDs, feeds,
+frame or stage order must not require editing a fixture renderer. This packet
+also closes the outstanding M5 disabled/reordered native-MOP case; keep that
+case open until its new evidence exists.
+
+**Owners and scope:** `cam_core` owns semantic job/motion/state and verification
+contracts; `cam_extensions` owns strategy selection and convenience composition;
+`integrations/cambam` normalizes native sources and retains editability;
+controller integrations own syntax, offset normalization and modeled external
+effects. Extract the common auditor from `uccnc_m5` behind this boundary while
+preserving proved geometry evaluators. Use the existing fixed-axis endmill and
+V capabilities. This is an executable reuse increment, not a general workflow
+engine or a replacement geometry kernel.
+
+Implement a small ordered job/stage contract with resolved tools, explicit frames
+and units, semantic motions/events, source revisions and stock-prefix dependencies.
+Represent rapid/feed motion, spindle state, tool/offset changes, pause/completion
+conditions and external travel semantically; raw G/M words stay in dialect readers.
+A stage is not defined by its tool number or a source comment. Keep transition
+assumptions separate from decoded program facts and runtime observations. Carry
+state across boundaries instead of resetting each stage to one supplied tip.
+Bind algorithm/profile/effect-model versions and numerical policy into evidence.
+
+**Acceptance cases with independent expected values:**
+
+1. Run direct-Python and supported native-normalized input through the shared
+   contract. Use the edited annulus and one different supported target from the
+   existing corpus; change tool IDs, feeds and safe endpoints. Preserve native
+   originals and source mappings. Stockless import still permits supported motion
+   comparison and leaves stock-dependent checks unassessed.
+2. Pass both raster and contour-offset candidates through the same caller-selected
+   generation/verification and UCCNC/Grbl output interfaces. Shared validation
+   must not call a selected generator to infer missing output. Each emitted route
+   earns its own certificate from its decoded motion.
+3. Exercise a three-stage repeated-tool sequence with actual cutting in each
+   stage using a supported stock evaluator, in addition to the endmill/V pair.
+   Disable or reorder a native predecessor: old dependent evidence must fail,
+   and explicit replanning/replay must establish the resulting enabled order.
+   A final two-rapid return to T1 does not prove this cutting-stock case.
+4. Check identity, an explicit nonidentity datum and fixed-origin length setup
+   using separately calculated physical tip positions before and after a change.
+   Different valid offsets can produce the same cut; erroneous offset/map
+   composition must fail even when NC XYZ values look unchanged. An offset state
+   change and actual compensating motion are distinct events; apply documented
+   dialect semantics rather than adding offsets blindly.
+5. Exercise split and in-program manual policies and one synthetic automatic
+   effect through ordered state validation. Independently decoded extra travel
+   enters the same geometry/access checks where applicable, with explicit fixture
+   and stock data. Reject missing state, low travel, stale stock, invalid resume
+   tip and unmodeled effects. Completion remains an external assertion until
+   actual runtime evidence exists.
+6. Preserve existing native and M0-M5 regression evidence, source freshness and
+   fail-closed behavior. Test the shared contract and both consumers; verify
+   package imports outside the source tree if owners move. Native GUI validation
+   is needed only if emitted native behavior changes; prepare exact artifacts
+   and concrete observations before requesting it.
+
+**Stop:** both output routes consume caller-supplied jobs in this supported
+domain, the cases above pass, and no shared validator depends on M4 fixture paths,
+T1/T3 names, a selected raster algorithm or an emitter's expected bytes. Remaining
+geometry/backend limits are explicit capabilities. Do not expand this packet
+into arbitrary macros, new 3D algorithms or machine control.
+
+### Subsequent capability progression
+
+These are dependency directions, not additional completed milestones or a second
+priority list. [PROGRESS](PROGRESS.md#active-work-and-next-priority) selects the
+active increment after each outcome.
+
+- **Native and generated machining in one job:** extend native motion authority,
+  source edits and cleanup attachment against a named combination. Preserve native
+  MOPs and select one executable authority per stage. An exact framework carrier
+  does not establish native Pocket/Profile algorithm parity. Add needed arcs/cycles
+  through explicit interpolation/state contracts, not silent flattening.
+- **Surface/volume foundation and contour following:** create a synthetic 3D
+  target/stock corpus with analytic references, protected/thin features and
+  non-nested residuals. Evaluate representation error, conservative free space,
+  runtime and memory before selecting surface/solid and stock backends. Demonstrate
+  a surface-following or waterline candidate and subsequent rest operation through
+  the same job/evidence boundary. Surface contact alone cannot verify remaining
+  stock, holder clearance or access.
+- **Additional methods and optimization:** medial/contact tracing, adaptive
+  clearing, tool combinations and improved entry/link methods consume the same
+  target/stock capabilities and independently checked motion. Rank feasible
+  candidates under declared objectives; label timing/load estimates by their
+  actual machine/process assumptions.
+
+Existing libraries can inform primitives or comparison oracles without owning
+our workflow. [OpenCAMLib's drop/push-cutter methods](https://opencamlib.readthedocs.io/en/latest/)
+are examples of cutter/surface contact and waterline construction to evaluate
+when the 3D packet starts. This is not a dependency selection or a stock-verifier
+endorsement. The existing [algorithm ownership policy](#algorithm-ownership-and-dependency-policy)
+requires platform, numerical, licensing and maintenance evaluation.
+
 ## Programmatic execution requirement
 
 The framework must calculate supported geometry and paths programmatically and
@@ -516,8 +638,10 @@ It refines the detached-core proposal below, not a replacement implementation.
   before machining. Preserve this workflow alongside future headless execution.
 - Explore an independent toolpath/stock core, reusable beyond rest and V-carving,
   with eventual direct G-code output and alternative generators/optimizers.
-  Exact replication of CamBam path shapes/order is not a requirement expressed
-  here. Future shape-following 3D routing is an extension interest, not current scope.
+  At that date exact replication of CamBam path shapes/order was not required.
+  The 2026-09-26 clarification establishes versioned native-behavior compatibility
+  and future shape-following volume methods as intended extensions, developed
+  against named evidence rather than a promise of universal native equivalence.
 
 The detached geometry/cutter/stock design, generated-motion evidence, native versus
 explicit-path adapters and extensible strategies were already proposed. The new
@@ -563,7 +687,8 @@ all feed, spindle, tool-change, rapid and program-state semantics.
 For native interoperability distinguish three claims: document fidelity, equivalent
 machining intent/result within declared tolerances, and identical trajectories.
 The first remains a library concern; the second is the useful future acceptance
-goal. The third is optional compatibility research, not the default design target.
+goal. The third needs a named versioned compatibility target; it must be possible
+to develop such a provider without requiring every independent strategy to copy it.
 
 ### Accepted integration requirement - 2026-09-23
 
@@ -2205,7 +2330,7 @@ semantics and algorithms regardless of how low-level operations are provided:
 | Responsibility | Proposed ownership |
 | --- | --- |
 | Cutter profiles, target evaluators, rest/stock semantics and error budgets | Implement and maintain here. |
-| Feasible-pose constraints, tool combinations, strategies, entry/link policies | Implement and maintain here; no opaque third-party CAM engine. |
+| Feasible-pose constraints, tool combinations, strategies, entry/link policies | Own semantics and independent verification here. Implement strategies or adapt auditable providers with declared capabilities; an external engine must not become the sole correctness authority or a mandatory dependency for all methods. |
 | Analytic line/arc distances, profile inversion, simple sweeps and adaptive subdivision | Prefer small in-repository implementations with analytic checks. |
 | General polygon overlay/offset topology and segment Voronoi construction | Evaluate established packages first using adversarial acceptance and maintenance evidence; own bounded gaps if needed. |
 | Numeric arrays and acceleration | NumPy or justified low-level support; not a substitute for robust geometric predicates. |
