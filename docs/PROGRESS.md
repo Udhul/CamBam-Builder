@@ -7,6 +7,21 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**Current entry point - 2026-09-26 architecture review:** M1-M4 retain their
+bounded acceptance; M5 is still open (5 of 6). The
+[M5 implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet)
+now fixes the next unit: preserve stockless native round trips, then deliver
+the split T1/T3 UCCNC slice with independent decoding and stock replay for
+both tools. A reproduced import/save defect invents Part stock; it is a
+prerequisite fix, not an accepted limitation to carry into M5. The subsequent
+portability unit uses Grbl v1.1 and manual/automatic transition fixtures.
+The [mediation contract](structure_spec.md#mediation-invariants-and-evidence-contract)
+defines source, frame, state and evidence ownership; the
+[review evidence](REVIEW.md#m5-mediation-architecture-review---2026-09-26)
+records the implementation gaps. This is a documentation/review outcome;
+controller implementation and runtime/physical acceptance remain outstanding.
+The dated entries below retain development history.
+
 **2026-09-23 execution architecture refinement (backlog 6).** The user's context
 preserves today's `.cb` -> native toolpath/G-code workflow while exploring an
 independent shared CAM core and eventual direct G-code output. At that point,
@@ -642,7 +657,9 @@ and [dated finding](REVIEW.md#m5-controller-evidence-route-correction---2026-09-
 No controller file or runtime acceptance exists; the milestone count stays
 5 of 6.
 
-**Next priority:** emit separate T1/T3 UCCNC files for the selected M4 route,
+**Next priority:** execute the [M5 implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet):
+first preserve absent native stock through import/save/reopen, then
+emit separate T1/T3 UCCNC files for the selected M4 route,
 with a declared per-tool setup and checked T1-stock-to-T3 handoff; then
 independently decode and stock-replay every emitted move on Windows. Prove
 stockless explicit-MOP import without changing its Z settings or inventing a
@@ -651,7 +668,7 @@ Prove one explicitly requested
 nonidentity datum map and an alternative fixed-work-origin/tool-table setup
 through the decoded audit. Prove a
 declared in-program manual handoff, a modeled automatic-changer fixture and a
-second dialect such as Grbl v1.1 against the same plan/audit, while rejecting
+second dialect Grbl v1.1 against the same plan/audit, while rejecting
 unknown `M6`, stop and macro behavior. Seek machine-readable UCCNC runtime
 evidence before claiming exact controller parity. Production output waits for
 the user's actual machine profile and setup; add other controller adapters
@@ -1651,7 +1668,7 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    `cambam_builder.cam_core.rc01` and `tests/test_rc01.py` now own the accepted nominal
    generated motion, whole-height stock/access replay, rational per-slab rest
    intervals and negative variants. New detached CAM features use the
-   [package boundary](structure_spec.md#execution-boundary-and-future-cam-core)
+   [package boundary](structure_spec.md#execution-boundary-and-detached-cam-core)
    before native adapters are added. See the [implemented contract](structure_spec.md#rc01-generated-motion-and-full-height-replay)
    and [dated checks](REVIEW.md#rc01-standalone-generated-sequence---2026-09-23).
    GEOS residual-location topology still lacks formal numeric interval proof;

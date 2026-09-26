@@ -64,7 +64,8 @@ or assumed human/machine changer. A controller adapter declares its supported
 command set, version and setup; a transition policy declares how each tool
 change is carried out. Another adapter must be able to lower the same plan
 without changing the planner or stock verifier. Unsupported or unresolved
-behavior fails closed. The user's UCCNC `M6` pauses for a manual change, but
+behavior blocks the dependent execution/evidence claim, not native import.
+The user's UCCNC `M6` pauses for a manual change, but
 its exact macro, machine version and physical limits remain production inputs.
 The previous LinuxCNC-only simulation selection is superseded.
 
@@ -128,8 +129,10 @@ controller-output claim.
 
 Keep tool transitions as controller-neutral plan events with the old/new tool,
 safe pre/post tip states, spindle/coolant state, stock lineage, clearance
-requirement, required tool-length/offset state and confirmed success or abort.
-No cutting motion may resume after an unconfirmed or failed change. Select the
+requirement, required tool-length/offset state and completion/abort conditions.
+Offline evidence is conditional on these setup assertions; it does not confirm
+physical installation. Execution may resume only after the required conditions
+are satisfied. Select the
 **actor** (operator or automatic changer), **program boundary** (pause in one
 program or separate programs), and **measurement/offset method** independently
 for each transition.
@@ -234,6 +237,74 @@ policy and dialect choice without pretending to certify every controller.
 Record runtime-parity evidence separately. Further adapters need their named
 dialect and fixture; physical acceptance needs the user's real machine
 limits, offsets, tools, workholding and process inputs.
+
+#### M5 implementation packet
+
+**Architecture review, 2026-09-26.** Keep the native/core/strategy/adapter
+separation and caller-owned workflows. Apply the normative
+[mediation invariants](structure_spec.md#mediation-invariants-and-evidence-contract)
+at every boundary. This packet fixes implementation order and acceptance;
+it adds no milestone and does not mark M5 implemented.
+
+1. **Preserve native input before using it as evidence.** Fix the reproduced
+   stockless Part round-trip defect in `native/reader.py`, `cam.py` and
+   `writer.py`: absent stock must survive save/reopen, distinct from explicit
+   stock and newly authored default stock. Inspect copy/clone/transfer behavior
+   when representing presence; do not infer absence from dimensions. Include
+   stock presence in `integrations/cambam/native_series.py` freshness where
+   stock semantics are used. Explicit MOP settings and raw parameter states
+   remain unchanged. Test separate caller-supplied stock without mutating the
+   native source. Existing tests proving MOP values survive are insufficient.
+2. **Prove one complete controller output slice.** Use the accepted M4
+   `rounded_raster` plan, explicit per-tool setup and ordered T1/T3 UCCNC files.
+   Add detached setup/transition/evidence values only as exercised here;
+   dialect syntax, parsing and macro effects belong to `integrations/`.
+   Extract only the shared assembly needed to remove direct-output reliance
+   on CamBam private helpers; do not move the entire M1-M4 implementation.
+   Decode final bytes independently, normalize declared frames/offsets, and
+   replay **both decoded T1 and decoded T3** for access, occupancy, residual
+   and volume. The current M4 audit exact-compares its renderer but uses
+   planned V motion for final bounds; that shortcut is not an M5 auditor.
+   Deliver two files, a versioned setup/handoff manifest, per-capability
+   evidence and an executable audit command in the runbook.
+3. **Prove the extension points before M5 closure.** Use **Grbl v1.1** as the
+   second named dialect fixture, with explicit supported subset/settings,
+   same plan and shared verifier. Add an in-program manual transition and a
+   synthetic automatic-change effect contract (including added travel and
+   length registration); these need not be real machine macros. Exercise
+   mixed transition policies, a fixed work-origin/tool-table setup, and the
+   explicit nonidentity datum fixture. LinuxCNC `rs274` is an optional later
+   independent interpreter check; no Docker/WSL prerequisite is introduced.
+   Runtime parity and physical acceptance retain separate evidence status.
+
+Acceptance cases must be named tests with independent expected values:
+
+| Case | Required outcome |
+| --- | --- |
+| No Part or Machining stock; explicit MOP Z values | Import/save/reopen preserves absence, identity and parameter states; no invented stock/shift; stock checks `not_evaluated` without a separate model. |
+| Explicit MOP Z=4.5; identity mapping; optional stock edited | Authored/program Z stays 4.5. Stock-dependent evidence becomes stale; no automatic datum translation. |
+| `Auto`/inherited value without resolving context | Preserve source; report unresolved dependent path. Never substitute a convenient default or assert a universal Auto formula across MOP types. |
+| Declared program surface +4.5 to work surface 0 | Decoded -4.5 translation inverts to the intended path; unchanged/double-shifted output fails. Unsupported native origin/nesting remains importable but unanalyzed. |
+| Changed T3 coordinate; permitted post rounding | Compare against predeclared tolerance and replay actual rounded coordinates for every cutter. No planned-path stock substitution. |
+| Missing, altered, reordered or stale file/handoff | Reject job evidence; T3 consumes the decoded T1 stock with matching setup/source lineage. |
+| Bare T selection, pause, unknown macro or offset | No invented installed tool/completion; unsupported effects block certification. Declared transition postconditions appear as assumptions, never observed facts. |
+| T1/T3/T1 or disabled/reordered MOP | Preserve execution order/enabled selection; regrouping needs replanning and fresh predecessor-stock evidence. |
+| Native candidate, preview and direct output | Native source remains editable; each execution route earns evidence from its own complete output. No duplicate execution of source and replacement MOPs. |
+| Second dialect and manual/automatic policies | Same detached plan/verifier, separate decoding and setup effects; no controller names or G/M-code branching in core. |
+
+**Worker boundary and stop.** The next implementation unit covers steps 1-2,
+including its applicable rejection cases; step 3 is the subsequent portability
+unit within M5. First reproduce the stock defect, then add regressions and the
+working UCCNC slice. Use the runbook's existing native/M4 tests plus new M5
+tests; add exact new commands when implemented. Stop when this unit's artifacts,
+decoded stock evidence and negative cases pass, with runtime/physical checks
+explicitly unassessed. Do not solve arbitrary controller macros, native path
+generation, multiaxis kinematics or a general workflow engine. Return any need
+to change these semantics to architecture review; implementation details within
+the settled contract remain the worker's responsibility. M5 stays open until
+its portability gate also passes. This sequence matters now because preserving
+source semantics and independently auditing output are prerequisites for useful
+controller flexibility, whereas adding dialects first would replicate defects.
 
 The user-approved curved/rounded scope adds one whole-outcome milestone to the
 earlier polygonal plan; it does not create an open-ended sequence of arc or tip

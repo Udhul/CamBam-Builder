@@ -1432,6 +1432,18 @@ retains the four exact NC hashes and area/volume evidence.
 
 ### M5 UCCNC output and automatic evidence
 
+Follow the [implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet)
+and [mediation invariants](structure_spec.md#mediation-invariants-and-evidence-contract).
+Start with the reproduced stockless Part persistence defect, recorded with
+synthetic files and a replay command in the
+[architecture review](REVIEW.md#m5-mediation-architecture-review---2026-09-26).
+Inspect saved XML for **absence of Stock**, not only unchanged MOP values.
+After that fix, run `test_mop_parameters.py`, `test_mop_roundtrip.py`,
+`test_native_series.py` and affected copy/clone/transfer tests with the declared
+interpreter; broaden to the full suite for a shared Part/persistence change.
+The implementation must add executable M5 commands and negative tests here;
+this runbook currently specifies acceptance, not an existing controller CLI.
+
 The user selected UCCNC for production. The [M5 evidence contract](REST_MACHINING_PLAN.md#m5-controller-coverage-and-automatic-evidence---2026-09-26)
 keeps the plan and verifier controller-neutral, with one declared dialect/setup
 per output adapter. The accepted source and first selected route remain under
@@ -1457,7 +1469,9 @@ calling `M6`. Its installed tool and registered tip datum are explicit handoff
 preconditions; the file cannot verify that the operator actually touched off.
 Decode both final NC files with a separate strict reader, compare all ordered
 events/coordinates including setup and end roles, and replay the decoded T1
-motion into T3's initial stock. Apply the M4 stock,
+motion into T3's initial stock, then replay decoded T3 motion too. Do not reuse
+the M4 audit's planned V paths to certify rounded or transformed output.
+Apply the M4 stock,
 access, rounded-cutter, residual and volume checks to the chained job.
 Reject controller commands, transforms or handoff states whose effects are
 unknown. This automated gate is the precise whole-program check; no manual
@@ -1507,7 +1521,7 @@ reject requests for unverified policies and include an explicit failure test
 for a missing or altered second file or mismatched handoff setup.
 After the split-file gate, use the same source-bound plan for a bounded
 one-file manual-stop policy, a declared automatic-changer effect fixture, and
-a second named controller dialect. Grbl v1.1 is a useful second fixture because
+a second named controller dialect, Grbl v1.1, selected because
 its documented commands include `M0` but omit `M6`; a LinuxCNC fixture can
 exercise its configured manual/automatic `M6` and separate `G43` rule. Decode
 each emitted stream and its handoff events, then run the same whole-job stock

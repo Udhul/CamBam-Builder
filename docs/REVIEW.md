@@ -1,5 +1,65 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## M5 mediation architecture review - 2026-09-26
+
+The user requested an architecture review before delegating M5 implementation.
+The native/core/strategy/adapter separation and caller-owned orchestration remain
+appropriate. The review found a concrete persistence defect and several bounded
+M4 assumptions that must not become generic controller contracts:
+
+- `native/reader.py::_reconstruct_part` supplies 100 x 100 x 12.5 default dimensions
+  for absent Part stock; `Part.to_xml` emits them and `writer.py` preserves only
+  an existing stock element. The synthetic
+  [source](../output/m5-stockless-repro-c1a0d47edcba4d18a697a2c63c9609d2/stockless-source.cb)
+  has zero Stock elements; its
+  [saved result](../output/m5-stockless-repro-c1a0d47edcba4d18a697a2c63c9609d2/stockless-roundtrip.cb)
+  has one Part Stock with PMin `(0,0,-12.5)`, PMax `(100,100,0)`.
+  Explicit StockSurface 4.5, TargetDepth 2 and ClearancePlane 8 retain their
+  `Value` states. MachiningOptions stock remains absent. Thus the earlier
+  passing MOP-state tests did not establish stockless document fidelity.
+- `integrations/m4_curved_workflow.py::_audit_direct_text` exact-compares its
+  reference renderer, decodes the stream and builds decoded T1 stock, but
+  `v_region.with_prior` retains planned V motion for final stock bounds.
+  Its bounded exact-match claim stands. M5 needs decoded T3 replay as well,
+  especially for coordinate rounding, transforms and post-added motion.
+- `integrations/cambam/rc01_post.py::read_default_post` assigns the current
+  tool on a T word and models M6 as immediate change. This bounded reference
+  reader must not become a generic controller state machine unchanged.
+  LinuxCNC explicitly separates selected tool, M6 installation and G43 length
+  compensation in its [M-code documentation](https://www.linuxcnc.org/docs/html/gcode/m-code.html).
+- Native-series zero-surface/single-Part/known-tool restrictions are analysis
+  capability bounds, not native import rules. Native origins/transform context,
+  program-to-work mapping and machine offsets need separate named frames.
+  Missing stock, unresolved intent, unsupported execution and failed verification
+  need separate outcomes. Offline transition assumptions cannot prove physical
+  installation or successful tool measurement.
+
+The resulting [mediation invariants](structure_spec.md#mediation-invariants-and-evidence-contract)
+and [implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet)
+settle ownership, evidence status, order/freshness, negative cases and stopping
+conditions. First preserve native absence, then implement the UCCNC split-file
+slice; next prove Grbl v1.1 and manual/automatic policy fixtures. Additional
+controller/runtime provisioning and broad package refactoring are deferred until
+these gates or a named consumer need them. No universal controller certification
+or physical safety claim follows from this review.
+
+Reproduce the persistence defect from the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe -c "from pathlib import Path; from cambam_builder.native.reader import read_cambam_bytes; d=Path('output/m5-stockless-repro-c1a0d47edcba4d18a697a2c63c9609d2'); read_cambam_bytes((d/'stockless-source.cb').read_bytes()).save(str(d/'stockless-roundtrip.cb'))"
+```
+
+Verification: the review independently inspected both parsed XML trees and
+confirmed the values above. `& .\.venv\Scripts\python.exe -m unittest discover
+-s tests -p test_mop_parameters.py` passes all **18 tests**, demonstrating the
+missing stock-presence assertion; no regression/fix is claimed. Documentation
+diff whitespace and newly added local links were checked. No runtime code was
+changed, controller run performed or production setup accepted. Manual visual
+validation adds no evidence for this persistence defect or design-only change.
+M1-M4 remain accepted in their bounded domain and M5 remains open. The contracts
+and next unit are persisted, making this a fresh-session breakpoint for an
+implementation worker; semantic contract changes still need architecture review.
+
 ## M5 controller evidence route correction - 2026-09-26
 
 The user identified UCCNC as the production controller, required the output

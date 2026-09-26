@@ -57,6 +57,7 @@ is a compatibility/import surface, not the default home for new behavior.
 | `cam_core/` | Document-independent geometry, tool/motion values, stock and verification predicates, numerical bounds. No `.cb`, MOP, MCP or controller knowledge. | Inward-only foundation; may use declared numerical backends. |
 | `cam_extensions/` | Optional policy and generated strategies: machining recommendations/pass planning, rest machining, V-carving, combined strategies and bounded reference jobs. RC01's exact recipe is a reference job, not a generic core primitive. | Depends on `cam_core`; no native model or XML imports. |
 | `integrations/cambam/` | Explicit normalization from native intent, candidate document attachment, CamBam-posted motion readers and output evidence. RC01's current adapter and reader live here. | Depends on native, core and extensions; validates changes after lowering. |
+| `integrations/` controller adapters (M5 planned) | Dialect/profile capability checks, emission, independent decoding and setup/transition effect normalization. Introduce a controller subpackage only with its first working slice. | Depends on detached values; direct output must not require native XML or a CamBam private helper. |
 | `mcp_adapter/` | Optional client protocol, document sessions and workspace transport. | Calls the owners above; does not own their domain rules. |
 
 Current root files classified by that target map:
@@ -133,7 +134,7 @@ The reader's `PRIMITIVE_TAG_TO_CLASS` and `MOP_TAG_TO_CLASS` are the executable
 supported-tag inventory, not a claim of complete CamBam coverage. Consult those
 maps and corresponding entity encoders before adding a type.
 
-### Execution boundary and future CAM core
+### Execution boundary and detached CAM core
 
 The current document pipeline authors native geometry/MOP instructions and exports
 `.cb`; CamBam then generates toolpaths and posts G-code. Document fidelity is not
@@ -142,8 +143,9 @@ below do not change that execution boundary: supplied section motions are not an
 implemented general XYZ generator, route optimizer or postprocessor.
 
 The [execution architecture proposal](REST_MACHINING_PLAN.md#execution-architecture-refinement---2026-09-23)
-defines a future document-independent motion/stock core with separate strategies,
-verification and CamBam/direct-G-code output adapters. Native-MOP authoring remains
+defines a document-independent motion/stock core with separate strategies,
+verification and CamBam/direct-G-code output adapters. Bounded M1-M4 slices
+implement this separation; general controller output remains M5 work. Native-MOP authoring remains
 independently useful. Execution authority, manual-edit invalidation, output
 acceptance and delivery decisions belong to that active plan; no future
 API or native path-equivalence claim is implied by this specification entry.
@@ -189,8 +191,9 @@ unresolved until sufficient source or actual-post evidence exists. Generated
 rest paths require a caller-supplied initial-stock model and prior-motion
 evidence even when the native project has no stock object.
 Tool changes are plan events with old/new tool, safe pre/post tip, spindle,
-effective offset, stock-lineage and confirmed completion/abort requirements.
-A failed or unconfirmed change cannot resume cutting. A per-transition policy
+effective offset, stock-lineage and completion/abort requirements. Static
+verification records assumed postconditions; actual execution needs satisfied
+conditions before cutting resumes. A per-transition policy
 selects manual or automatic actor, in-program or split-program handoff, and
 tool measurement/offset method. The controller adapter maps the policy to
 supported commands, macros or sender actions and rejects unknown effects.
@@ -203,6 +206,67 @@ Parts for separate posting, but each final post and cross-file stock handoff
 still needs an audit.
 Existing root-level `stock`, `planar` and machining modules
 remain active owners until their staged migration.
+
+### Mediation invariants and evidence contract
+
+**Design contract, 2026-09-26; M5 implementation pending.** These rules apply
+at native/core/controller boundaries. They do not widen the currently verified
+fixed-axis milling domain or promise universal controller/kinematics support.
+
+| Representation | Authority and required boundary behavior |
+| --- | --- |
+| Native document | Owns authored intent, identity, ordering, enabled state and parameter states. Preserve absent stock and `Auto`/`Default`/explicit values; a resolved value must not silently replace its authored state. Preserve unsupported content through existing XML fidelity mechanisms and report any fidelity limit separately from execution support. |
+| Normalized input / generated plan | Owns explicit units, frames, tool geometry, resolved inputs and ordered intended motion. Record which source/setup resolved each value. Native MOP parameters alone do not reproduce CamBam's path algorithm. |
+| Emitted artifact / decoded trace | Final bytes and declared external effects own posted-motion evidence. Independently decode all files, startup/end travel and transitions; replay every tool's actual decoded path. A planned path or preview cannot supply missing posted motion. |
+| Runtime / physical setup | Telemetry or an attributable operator/machine assertion owns observed installation, measurement and completion. Offline verification proves behavior conditional on declared setup; it cannot manufacture an observation. |
+
+**Frames.** Name drawing/entity, resolved program, controller work and machine
+frames separately. Resolve native transforms, machining origins and nesting
+where supported before applying a program-to-work map. Identity by default
+means no *additional* program-to-work conversion; it never means ignoring a
+native origin or applying it twice to an already posted path. Reject unsupported
+mapping for the requested analysis/output while retaining the native document.
+Stock placement and effective work/tool offsets participate in the same frame
+composition. The first M5 slice supports explicit translations, with no inferred
+translation from stock metadata. General rotations/kinematics need another
+named capability and fixture.
+
+**Order and transitions.** Keep operation identity and predecessor dependencies
+through file splitting, Part attachment and tool changes. T1/T3/T1 remains that
+order; grouping all T1 operations together is a scheduling change requiring new
+stock/access evidence. Selecting a tool, installing it and establishing its
+effective offset are separate states. A pause or file boundary does not prove
+any of them. A transition records required pre/post conditions, modeled travel
+and effects, and the source of any observed completion. Static analysis may
+continue under explicit postcondition assumptions, recorded in its result;
+execution release requires those conditions to be satisfied by the caller's
+operator/machine workflow. The library need not become a machine-control service.
+
+**Results.** Return evidence per capability (document fidelity, input resolution,
+motion equivalence, stock/access/residual, runtime parity), with status, scope,
+reason, assumptions and input/artifact fingerprints. Distinguish `pass`, `fail`,
+`not_evaluated` and `unsupported`; unresolved inputs prevent the dependent check.
+Never collapse these into an unqualified `safe` or `valid` flag. Missing stock
+leaves import and supported path comparison available. Unknown macro effects
+block motion certification, even when the macro text can be preserved natively.
+
+**Freshness and numbers.** Bind evidence to source, enabled operation order,
+resolved setup/frame, tools, incoming stock/prior trace, profile/macro effects,
+emitted bytes, verifier version and numerical policy. A dependent edit invalidates
+that evidence. Conservatively invalidate when dependencies are unknown; a
+cosmetic edit may retain semantic evidence only where normalization proves it.
+Record linear/angular/rounding and stock-bound tolerances with units before
+testing. Motion matching within tolerance does not authorize stock replay of
+the planned coordinates: use decoded coordinates, including allowed rounding.
+Do not derive the reader's expected values by calling the emitter, or infer
+cut/access roles from comments without checked operation/segment correspondence.
+
+Use small immutable records at these boundaries and the existing callable
+strategy/adapter pattern. Persist a versioned, hash-bound evidence manifest for
+reproducible audits. Introduce only fields exercised by the current slice; no
+plugin registry, workflow engine or generalized native path interpreter is
+required. The [M5 implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet)
+owns the sequence, negative cases and stopping conditions.
 
 ### Directional analytic stock section bounds
 
