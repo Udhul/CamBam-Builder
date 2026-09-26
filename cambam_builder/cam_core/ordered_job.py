@@ -98,7 +98,7 @@ class Stage:
     motions: tuple
     rpm: float
     offset_mm: float = 0.0
-    operation: object = None          # replay.Operation or volume3d.VolumeOperation
+    operation: object = None          # replay, volume3d or surface3d operation
     v_plan: object = None             # v_region.VPlan for terminal V finish
     source_revision: str = ""
     transition: object = None
@@ -124,11 +124,12 @@ class Stage:
                     (op.name != self.id or op.tool.name != self.tool_id)):
                 raise ValueError("stage endmill operation identity differs")
             if type(op) is not replay.Operation:
-                from . import volume3d
-                if type(op) is not volume3d.VolumeOperation:
+                from . import surface3d, volume3d
+                if type(op) not in (volume3d.VolumeOperation,
+                                    surface3d.SurfaceOperation):
                     raise ValueError("unsupported stage operation")
                 if op.name != self.id or op.tool_id != self.tool_id:
-                    raise ValueError("stage volume operation identity differs")
+                    raise ValueError("stage operation identity differs")
         if self.v_plan is not None and type(self.v_plan) is not v_region.VPlan:
             raise ValueError("stage V plan required")
         at = self.motions[0].start
@@ -145,6 +146,11 @@ class Stage:
             return None
         from . import volume3d
         return self.operation if type(self.operation) is volume3d.VolumeOperation else None
+
+    @property
+    def surface_operation(self):
+        from . import surface3d
+        return self.operation if type(self.operation) is surface3d.SurfaceOperation else None
 
 
 @dataclass(frozen=True)
@@ -389,6 +395,15 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
     if not job.stock_present:
         report["stock_access_residual"] = {"status": "not_evaluated",
                                            "reason": "no supplied initial stock"}
+        return report
+    if all(s.surface_operation is not None for s in job.stages):
+        from . import surface3d
+        report["stock_access_residual"] = surface3d.replay_stages(
+            job.stages, actual)
+        return report
+    if any(s.surface_operation is not None for s in job.stages):
+        report["stock_access_residual"] = {"status": "unsupported",
+                                           "reason": "mixed surface stock evaluators"}
         return report
     if all(s.volume_operation is not None for s in job.stages):
         from . import volume3d

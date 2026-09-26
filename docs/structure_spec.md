@@ -28,7 +28,7 @@ are outside that runtime package list.
 | `cambam_builder/cambam_entities.py` and nine old root module paths | Compatibility/discovery imports of canonical native objects; no native implementation remains at root | Preserve public and documented direct imports; implementation modules import owners directly |
 | `cambam_builder/native/transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
 | `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy, remaining-section bounds and supplied section-motion verification | Horizontal cuts and explicit travel inside rectangular stock/target; no generated or native path integration |
-| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns ordered XYZ/cut-sweep values, `ordered_job.py` owns caller-supplied stage/state and decoded stock auditing, `volume3d.py` owns bounded layered 3D stock, and `curved_region.py` owns bounded circular-arc access/rest approximation | Exact nominal and curved endmill stock, a stepped-volume evidence slice, analytic slot and placed mixed trace; no native entity, XML, MCP or machine-output dependency |
+| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns ordered XYZ/cut-sweep values, `ordered_job.py` owns caller-supplied stage/state and decoded stock auditing, `volume3d.py` owns bounded layered 3D stock, `surface3d.py` owns affine-plane ball contact/stock, and `curved_region.py` owns bounded circular-arc access/rest approximation | Exact nominal and curved endmill stock, stepped-volume and sloped-ball evidence slices, analytic slot and placed mixed trace; no native entity, XML, MCP or machine-output dependency |
 | `cambam_builder/cam_extensions/strategy.py` | Deterministic selection among separately audited ordered routes, including partial and infeasible outcomes | Policy over evidence records; no XML or native entity dependency |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
@@ -493,6 +493,40 @@ volume and low storage avoid the columns' boundary error and cost; this does
 not select a general freeform surface or solid backend. See the
 [runbook](DEVELOPMENT.md#layered-3d-stock-and-waterline-evidence) and
 [evidence](REVIEW.md#layered-3d-stock-and-waterline-evidence---2026-09-26).
+
+### Bounded sloped surface and ball cutter evidence
+
+`cam_core.surface3d` owns one affine height field within rectangular Z=0 stock:
+the requested floor is `Z=-(intercept+slope*x)`. Its exact target volume is
+rectangle area times center depth; horizontal section area follows the plane
+crossing. For a ball of radius `r`, the tip path at center X is
+`Z=f(X)+r*(sqrt(1+slope²)-1)+clearance`; tangent contact occurs at
+`X-r*slope/sqrt(1+slope²)`. A straight Y pass spanning the stock has an
+independent swept-volume oracle when its disk fits inside X and its ball center
+stays below Z=0: `Y_length*(-2*r*center_Z+pi*r²/2)`.
+
+`ordered_job.Stage` carries `SurfaceOperation`; stages with this one target
+replay independently decoded UCCNC or Grbl XYZ moves. Ball occupancy uses the
+lowest spherical envelope of every straight center move, with the vertical
+shank filling to the stock top. A plane-offset inequality at both endpoints
+of each linear move proves no penetration of the infinite protected plane.
+`cleared_descent` requires an earlier stage's same-XY vertical entry with at
+least the new radius and depth; this is a bounded prior-sweep witness. Cutting
+length places the unmodeled holder start above Z=0, and the report gives its
+minimum clearance. Motion outside the rectangular stock is clipped from
+material accounting; external fixtures are not modeled.
+
+Remaining target volume is enclosed by XY cells. At a cell center, virtual
+ball radii `r ± half_cell_diagonal` bound occupancy throughout the cell;
+affine floor depth is bounded by its X edges. A bracket error term encloses
+the unexamined maximum along each XYZ segment. These bounds include contact
+and boundary uncertainty and are deliberately wider than the exact-plane
+target volume. Floating arithmetic and decoded-coordinate precision limit
+formal guarantees. The slope case selects exact affine contact/protection
+plus conservative cells for stock; it does not select a general mesh, signed
+distance, curved surface or holder backend. See the
+[runbook](DEVELOPMENT.md#sloped-surface-and-ball-cutter-evidence) and
+[evidence](REVIEW.md#sloped-surface-and-ball-cutter-evidence---2026-09-26).
 
 ### Directional analytic stock section bounds
 

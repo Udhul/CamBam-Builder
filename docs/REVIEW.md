@@ -1,5 +1,54 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Sloped surface and ball cutter evidence - 2026-09-26
+
+**Accepted offline engineering slice.** `tests.test_surface3d.synthetic_job`
+uses 4 x 2 x 3 mm stock and the non-prismatic floor
+`Z=-(1+0.25*X)`. Exact target removal volume is 12 mm³, and target section
+areas at depths 0.5/1.5 mm are 8/4 mm². A radius-0.5 mm ball has analytic
+plane contact at `X_center-r*slope/sqrt(1+slope²)`, with a 0.001 mm vertical
+allowance in the supplied path. The first edge-to-edge Y pass has a separate
+closed-form removal volume of 2.252621756993033 mm³; its 9.747378243006967
+mm³ residual lies inside the cell enclosure.
+
+Both UCCNC split and Grbl in-program routes independently decode the
+same two-stage job. The first stage has two ball sweeps; the dependent
+stage descends through its prior cleared column and replays four more sweeps
+(one cleared descent and three new cutting segments). At 0.125 mm
+cell pitch, first/final residual intervals are 9.02725–10.50402 and
+3.50399–6.85051 mm³. The first lower bound exceeds the final upper bound,
+so the dependent stage removes new stock even at this coarse resolution.
+Decoded endpoint plane-offset checks give zero protected-plane penetration;
+minimum holder-start height over stock is 0.7664 mm at the deepest cut. The
+holder body itself is not modeled. Omitting the predecessor rejects the
+cleared descent; a deeper slope cut, short cutting length, edited source and
+changed emitted bytes also reject. Stockless output remains explicitly
+unevaluated.
+
+| Representation | Target-volume interval, mm³ | Elements | Diagnostic elapsed, ms | Python peak bytes |
+| --- | ---: | ---: | ---: | ---: |
+| Exact affine plane | 12–12 | 1 | 0.043 | 72 |
+| 0.25 mm conservative XY cells | 11.75–12.25 | 128 | 1.429 | 896 |
+| 0.125 mm conservative XY cells | 11.875–12.125 | 512 | 2.883 | 592 |
+
+The cell enclosure expands/erodes ball radius by half the cell diagonal and
+bounds the continuous segment optimizer's remaining bracket. Timing varies by
+host, and `tracemalloc` reports Python allocations only. The exact plane is
+the appropriate contact and protected-material representation for this
+fixture; cells are retained for conservative evolving stock. This one slope
+does not justify a general signed-distance/mesh backend. Reopen that choice
+when a curved or overhanging target, holder/fixture geometry, or a required
+residual tolerance cannot be represented or bounded by a named section case.
+The model clips occupancy to rectangular stock and has floating arithmetic
+limits. No CamBam GUI check adds evidence to detached synthetic output;
+physical holder and controller runtime remain unassessed.
+
+Verification: `tests.test_surface3d tests.test_volume3d tests.test_ordered_job
+tests.test_ordered_dialects tests.test_uccnc_m5` passed 21 tests. The
+[contract](structure_spec.md#bounded-sloped-surface-and-ball-cutter-evidence)
+and [runbook](DEVELOPMENT.md#sloped-surface-and-ball-cutter-evidence) own the
+reusable behavior and command.
+
 ## Layered 3D stock and waterline evidence - 2026-09-26
 
 **Offline engineering result.** `tests.test_volume3d.synthetic_job` defines

@@ -7,7 +7,21 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**Current entry point - 2026-09-26 reusable ordered-job increment:** M0-M4
+**Current entry point - 2026-09-26 sloped ball-surface evidence:** one
+4 x 2 mm affine floor descending from 1 to 2 mm now has exact contact,
+section and target-volume oracles plus a ball-end straight-pass volume oracle.
+Two decoded UCCNC/Grbl stages pass protected-plane, cutting-length,
+prior-cleared entry and conservative residual-volume checks. The first/final
+0.125 mm cell intervals are 9.02725–10.50402 / 3.50399–6.85051 mm³;
+the dependent stage demonstrably removes new stock. Exact affine contact
+with conservative XY cells is sufficient for this fixture, so no general
+mesh/signed-distance backend is selected. [Contract](structure_spec.md#bounded-sloped-surface-and-ball-cutter-evidence),
+[runbook](DEVELOPMENT.md#sloped-surface-and-ball-cutter-evidence), and
+[dated evidence](REVIEW.md#sloped-surface-and-ball-cutter-evidence---2026-09-26)
+state its bounds. Holder body, external fixtures and runtime remain outside
+this offline evidence.
+
+**Prior 2026-09-26 reusable ordered-job increment:** M0-M4
 retain their bounded acceptance. M5's named UCCNC/Grbl fixtures and the new
 caller-supplied ordered-job UCCNC/Grbl routes pass their offline engineering
 gate; no abstract user sign-off is required. The specific disabled/reordered
@@ -81,16 +95,17 @@ See the [contract](structure_spec.md#bounded-layered-3d-stock-and-waterline-evid
 [runbook](DEVELOPMENT.md#layered-3d-stock-and-waterline-evidence) and
 [dated evidence](REVIEW.md#layered-3d-stock-and-waterline-evidence---2026-09-26).
 
-**Next priority, backlog 6:** one non-prismatic surface with an analytic
-contact/volume oracle and a ball-end cutter, measured against a conservative
-representation and replayed through the same ordered boundary. The stepped
-fixture proves stage/stock composition but cannot bound cutter contact on a
-sloped surface or holder clearance. A single sloped surface case will decide
-whether an adaptive section or signed-distance/mesh backend is justified;
-stop after that comparison and one dependent pass. Native G2/G3 hybrid
-normalization also has concrete retained posts, but its unsafe M1 Pocket
-entries require a separately selected safe native case. Manual-tab authoring
-remains lower priority until the requested before/after native fixture exists.
+**Next priority, backlog 6:** select a safe actual CamBam G2/G3 native post
+and normalize its continuous arc motion through the existing ordered hybrid
+boundary. Retained M1 Pocket posts have unsafe entries and cannot establish
+this gate; choose a bounded safe native case and require its fresh post and
+decoded stock/access replay before claiming hybrid arc support. This is the
+next useful distinct capability because current native-normalized hybrid jobs
+accept only linear motion. Reopen surface backend selection for a named
+curved/overhanging target, holder/fixture requirement, or residual tolerance
+that the affine-plane and conservative-cell case cannot meet. Manual-tab
+authoring remains lower priority until the requested before/after native
+fixture exists.
 
 The user reaffirmed native CamBam interchange, independent calculation, hybrid
 native/generated jobs and future volume/surface methods as the product direction.
@@ -100,9 +115,9 @@ to concrete product choices or external observations. See
 [acceptance ownership](WORKFLOW.md#acceptance-ownership) and the
 [review correction](REVIEW.md#framework-direction-and-engineering-acceptance---2026-09-26).
 Manual-tab authoring remains deferred: it needs a native before/after fixture
-and contributes less to the current shared-core objective. The layered 3D
-evidence slice is an offline engineering result; a fresh session can take the
-distinct non-prismatic surface case without relying on conversation context.
+and contributes less to the current shared-core objective. The sloped
+ball-surface slice is an offline engineering result; a fresh session can take
+the distinct safe native-arc case without relying on conversation context.
 The dated entries below retain development history.
 
 **2026-09-23 execution architecture refinement (backlog 6).** The user's context

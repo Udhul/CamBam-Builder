@@ -1794,6 +1794,33 @@ defines the supported shape/motion boundary; the
 [review](REVIEW.md#layered-3d-stock-and-waterline-evidence---2026-09-26)
 owns the measured result and limits.
 
+### Sloped surface and ball cutter evidence
+
+Run the detached regression from the repository root with the declared Python:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_surface3d -v
+```
+
+The fixture makes a 4 x 2 x 3 mm stock with a floor descending from 1 to
+2 mm. A radius-0.5 mm ball follows one edge-to-edge Y pass, then a dependent
+XYZ pass enters through its prior cleared column and crosses the slope. The
+regression checks the analytic 12 mm³ target and section oracle, tangent
+contact, an independent straight-pass volume formula, conservative cell
+bounds, decoded UCCNC/Grbl replay, protected-plane and cutting-length
+rejections, missing predecessor, stale source and changed output bytes.
+Inspect the live representation and replay measurements with:
+
+```powershell
+& .\.venv\Scripts\python.exe -c "from tests.test_surface3d import synthetic_job; from cambam_builder.cam_core.surface3d import compare_representations; from cambam_builder.integrations.ordered_output import emit; import pprint; j=synthetic_job(); pprint.pp(compare_representations(j.stages[0].surface_operation.target)); pprint.pp(emit(j,'uccnc')[1]['stock_access_residual'])"
+```
+
+Timing and Python peak allocations are diagnostic, with no fixed threshold.
+The calculation is synthetic and detached; a CamBam GUI check adds no
+evidence. The [contract](structure_spec.md#bounded-sloped-surface-and-ball-cutter-evidence)
+and [review](REVIEW.md#sloped-surface-and-ball-cutter-evidence---2026-09-26)
+define the bounded claim and measured result.
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not

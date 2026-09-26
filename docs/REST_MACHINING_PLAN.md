@@ -586,6 +586,17 @@ active increment after each outcome.
   [contract](structure_spec.md#bounded-layered-3d-stock-and-waterline-evidence)
   and [evidence](REVIEW.md#layered-3d-stock-and-waterline-evidence---2026-09-26)
   record numerical limits and remaining freeform/holder work.
+
+  **Accepted bounded slope slice, 2026-09-26:** an affine floor and radius-0.5
+  mm ball have independent contact, section, target-volume and straight-pass
+  swept-volume oracles. Two decoded ordered stages check protected-plane
+  clearance, cutting length, prior-cleared descent and conservative residual
+  intervals; the dependent pass demonstrably removes more stock. Exact plane
+  contact with conservative XY cells suffices for this fixture, so general
+  curved/solid and holder backends remain unselected. The
+  [contract](structure_spec.md#bounded-sloped-surface-and-ball-cutter-evidence)
+  and [evidence](REVIEW.md#sloped-surface-and-ball-cutter-evidence---2026-09-26)
+  record its scope and reopening criterion.
 - **Additional methods and optimization:** medial/contact tracing, adaptive
   clearing, tool combinations and improved entry/link methods consume the same
   target/stock capabilities and independently checked motion. Rank feasible
