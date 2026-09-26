@@ -55,14 +55,15 @@ class JobMove:
     feed: float = 0.0
 
     def __post_init__(self):
-        if self.role not in ("rapid", "approach", "entry",
+        if self.role not in ("rapid", "rapid_retract", "approach", "entry",
                             "cleared_descent", "cut", "retract"):
             raise ValueError("unsupported ordered motion role")
         _xyz(self.start)
         _xyz(self.end)
         if (self.start == self.end or type(self.feed) not in (int, float) or
                 not math.isfinite(self.feed) or
-                (self.feed != 0 if self.role == "rapid" else self.feed <= 0)):
+                (self.feed != 0 if self.role in ("rapid", "rapid_retract")
+                 else self.feed <= 0)):
             raise ValueError("invalid ordered motion/feed")
 
 
@@ -222,7 +223,7 @@ def _observed_stage(stage, decoded, translation):
     for index, (got, want) in enumerate(zip(decoded.moves, stage.motions)):
         start = tuple(round(a - b, 7) for a, b in zip(got.start, translation))
         end = tuple(round(a - b, 7) for a, b in zip(got.end, translation))
-        if (got.g != (0 if want.role == "rapid" else 1) or
+        if (got.g != (0 if want.role in ("rapid", "rapid_retract") else 1) or
                 abs(got.feed - want.feed) > 1e-9 or
                 not _near(start, want.start) or not _near(end, want.end)):
             raise ValueError(f"decoded stage {stage.id} motion {index} differs")
@@ -244,7 +245,8 @@ def _replay_endmills(job, stages, motions):
             active = stage.tool_id
         items.append(replay.Event("spindle_start", stage.tool_id, at))
         for motion in observed:
-            items.append(replay.Motion(motion.role, stage.tool_id, stage.id,
+            role = "retract" if motion.role == "rapid_retract" else motion.role
+            items.append(replay.Motion(role, stage.tool_id, stage.id,
                                        motion.start, motion.end, motion.feed))
             at = motion.end
         items.append(replay.Event("spindle_stop", stage.tool_id, at))

@@ -1692,6 +1692,78 @@ not change native document emission. The
 [implemented contract](structure_spec.md#reusable-ordered-job-output-and-verification)
 names the supported geometry and transition limits.
 
+### Native posted predecessor and generated V cleanup
+
+The prepared local fixture is
+`output/hybrid-native-v-20260926-01/source.cb` with one 12 by 12 mm source
+rectangle and matching `native-predecessor.cb` with one enabled T1 Inside
+Profile MOP. It declares a 2 mm cylindrical endmill, 2 mm inward roughing
+clearance, Z=-2 mm floor, +5 mm clearance, CW 12000 rpm and F60/F240 mm/min.
+The assumed initial program-frame tip is (-2,-2,+5) mm, since the Default
+post does not encode its pre-start XY position.
+The generated terminal T3 plan is a 60-degree rounded-tip V tool with a
+0.5 mm spherical tip radius and 2 mm capped depth. These values are synthetic
+verification inputs, not machining recommendations. Source and candidate are
+strictly reimported and retain the same primitive identity, geometry and Part
+stock. The V plan has 13 paths and a `partial` finite-stepover result.
+
+The user posted the candidate in CamBam Plus 1.0; the retained
+[actual native post](../output/hybrid-native-v-20260926-01/native-predecessor.nc)
+passed the final offline gate. To reproduce the external step, open
+[native-predecessor.cb](../output/hybrid-native-v-20260926-01/native-predecessor.cb)
+in CamBam Plus 1.0. Select **Default** postprocessor and millimetres, generate
+the `NATIVE T1 inset Profile` toolpath, and post that enabled MOP to
+`output/hybrid-native-v-20260926-01/native-predecessor.nc`. Keep the exact
+candidate/source files. The post must be actual CamBam output from that file;
+an edited or synthesized NC file does not satisfy this gate. A safe source
+bound result requires only G0/G1 planar motion, one T1 section, no low XY rapid
+or ramp, entry/access replay, and a +5 mm safe return. A rejected post is useful
+evidence: report the first error and retain its NC file for candidate repair.
+
+From the repository root, re-audit the retained post and output bundle with:
+
+```powershell
+& .\.venv\Scripts\python.exe output/hybrid-native-v-20260926-01/finish.py
+```
+
+The script normalizes and hash-binds the original source, native candidate and
+actual Default post; derives a V plan from the same 12 mm square; verifies that
+the posted T1 cylinder fits the capped V target; and writes two independently
+decoded UCCNC stage files under `ordered-uccnc/`. It succeeds only with
+`ordered_output_pass` and `stock_access_residual.status = pass`, a Z=-1 mm
+final residual upper bound below the prior lower bound, and less than
+0.001 mm² protected overcut upper area. It prints the actual section/volume
+bounds and [handoff](../output/hybrid-native-v-20260926-01/ordered-uccnc/handoff.json).
+The first run writes the bundle; later runs re-audit its exact bytes. A changed
+post needs a fresh output directory and job evidence. The offline transition
+still assumes an installed T3. Controller runtime and physical machining
+remain unassessed.
+
+The accepted actual post has one T1 section with 8 linear moves, including a
+vertical G0 retract verified against already cleared stock. The two decoded
+UCCNC stages have 8/221 moves and five cylindrical cuts. Their Z=-1 mm
+prior/final residual intervals are 70.48014297–70.48023554 /
+1.33758636–1.98688732 mm², with zero protected overcut. The separate actual
+source-edit probe was run once with:
+
+```powershell
+& .\.venv\Scripts\python.exe output/hybrid-native-v-20260926-01/check_edit.py
+```
+
+It confirmed that widening a copied source to 13 mm rejects the unchanged
+bundle. The original source, candidate, post and handoff stay untouched.
+
+The focused synthetic regression and adjacent ordered/native gate are:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_native_v_hybrid tests.test_ordered_job tests.test_ordered_dialects tests.test_native_series tests.test_native_series_audit -q
+```
+
+The synthetic regression checks two decoded stages, stock replay, changed
+source/post rejection, forged RPM and mismatched V source rejection. The
+[review evidence](REVIEW.md#native-posted-predecessor-and-generated-v-cleanup---2026-09-26)
+records the actual-post hashes and acceptance scope.
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not

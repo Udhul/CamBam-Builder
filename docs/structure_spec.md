@@ -412,6 +412,16 @@ document and posted trace remain separate. Native output and re-audit require
 `NativeBinding`, which rechecks those three current files; a supplied stale job
 cannot certify an edited source. Direct Python V plans use
 `ordered_job.from_prior_v` with either existing raster or offset strategy.
+For one native cylindrical stage, `native_ordered_job.from_native_v` can attach
+one generated terminal V plan to the same source and stock. It replays the
+complete native post before admitting the V plan. `NativeBinding` checks the
+native stage against its unchanged source/candidate/post and the V target against
+the original planar source target. A fresh native post is required after a
+candidate edit. This hybrid route accepts only the supported linear native
+motion and one cylinder before the terminal V finish.
+CamBam's vertical G0 retract is represented as `rapid_retract`: the output
+retains G0, while stock replay applies the same cleared-column proof as a
+feed retract. A low XY rapid still fails the native normalizer.
 
 `ordered_dialects.render/decode` lowers and independently reads complete
 UCCNC split files or one Grbl v1.1 program for the supported G0/G1 subset.

@@ -560,6 +560,15 @@ active increment after each outcome.
   MOPs and select one executable authority per stage. An exact framework carrier
   does not establish native Pocket/Profile algorithm parity. Add needed arcs/cycles
   through explicit interpolation/state contracts, not silent flattening.
+
+  **Accepted bounded slice, 2026-09-26:** one actual CamBam Default linear
+  Profile post and a generated rounded V finish now share a source-bound
+  ordered UCCNC job. The decoded stage motion, five native cuts, V-safe
+  predecessor stock, residual gain and protected area pass. Re-audit rejects
+  an edited source. The [runbook](DEVELOPMENT.md#native-posted-predecessor-and-generated-v-cleanup)
+  names the files and command; [review evidence](REVIEW.md#native-posted-predecessor-and-generated-v-cleanup---2026-09-26)
+  records hashes, bounds and the external observation. Broader native
+  algorithms and unsupported arcs/cycles remain capability work.
 - **Surface/volume foundation and contour following:** create a synthetic 3D
   target/stock corpus with analytic references, protected/thin features and
   non-nested residuals. Evaluate representation error, conservative free space,

@@ -1,5 +1,70 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Native posted predecessor and generated V cleanup - 2026-09-26
+
+**Accepted offline and actual-post slice.** The native bridge joins one complete
+normalized cylindrical `NativeSeries` stage to a terminal generated V plan.
+The original source target and stock are bound through `NativeBinding`;
+emitted UCCNC files are decoded and replayed, with native stock used by the V
+verifier. The 12 mm square
+source and Inside Profile candidate strictly reimport and preserve primitive
+identity, geometry and Part stock. The generated V plan has 13 paths and a
+`partial` finite-stepover result. The user reported posting the prepared
+candidate in CamBam Plus 1.0; the retained NC names that candidate and
+`Default`, has the enabled `NATIVE T1 inset Profile` section, and uses only
+G0/G1 motion. No visual toolpath or controller observation was reported.
+
+The first audit rejected the actual line-19 vertical `G0 Z5` retract because
+the ordered adapter only carried feed retract. Core replay already requires a
+cleared column for this travel, so `rapid_retract` now keeps G0 on output and
+maps to that same replay role. The corrected native-to-V audit and repeat
+hash-bound re-audit both returned `ordered_output_pass`. The two decoded
+UCCNC stages have 8/221 moves; native stock has five cuts. At Z=-1 mm the
+prior residual interval is 70.48014297–70.48023554 mm² and the final interval
+is 1.33758636–1.98688732 mm², with zero protected overcut. Prior eight-slab
+volume bounds are 135.6154–148.1387 mm³; final bounds are 0–29.2011 mm³.
+The comparison is conditional on the existing GEOS bounds and declared
+flat-stock/tool assumptions, including the program-frame initial tip
+(-2,-2,+5) mm. A copied source widened from 12 to 13 mm makes
+the unchanged actual-post bundle fail with `native series source geometry or
+stock changed`.
+
+The first UCCNC file is a semantic re-emission of all eight native posted
+motions; the second file uses the generated
+V plan. The decoder compares each against its selected stage authority before
+stock replay. The original Default NC remains a separate retained input.
+
+The retained artifacts have these SHA-256 values:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `source.cb` | `85369fb8006f955b0f62b08e747822e7f650990391643b9afcbafdd7aec365d` |
+| `native-predecessor.cb` | `00df3fd6a55b4c08d764805675825be0e2c47909d7fd8ce1d9ffe37b5691d508` |
+| Actual `native-predecessor.nc` | `33a82200befdbf798635ca57d3222df51730a623636631de3bbe38d811365e66` |
+| `ordered-uccnc/handoff.json` | `5f709bd54d6972f70fa18a73457eeba99ee06563229c9cb7674f8da5133ebf58` |
+| UCCNC `stage-1.nc` / `stage-2.nc` | `993dff5aedc0cdb7d604c89dc27391bd1fc3144bc2e73909c4d2fc3ca0525f04` / `a2c459dd3b29ecb6fba3d2c9a7b992429ffd68a8c6809a50b10dab4712bdf594` |
+
+The synthetic one-MOP regression also rejects edited source/post, wrong V
+source, a forged native RPM and unsupported stage count. The final actual-post
+bundle has a separate edited-source probe. The [runbook](DEVELOPMENT.md#native-posted-predecessor-and-generated-v-cleanup)
+owns exact commands. Runtime, physical tool installation and machine behavior
+remain unassessed.
+
+Final verification: the focused native/ordered suite passed 27 tests; the
+broader ordered/native/M4/M5 suite passed 36 tests after `rapid_retract` was
+added. The actual-post build and repeated bundle re-audit returned
+`ordered_output_pass`; the copied-source edit returned the expected rejection.
+Focused syntax compilation and `git diff --check` passed. The worktree is
+uncommitted and ready to commit after review.
+
+The retained actual M1 native Pocket post has arcs and known unsafe T2 access;
+the retained RC01 native rough post has ramps/arcs and separate motion findings.
+The accepted M3/M4 T1 posts transport generated exact motion through CamBam,
+so they do not prove a CamBam-generated cylindrical predecessor. None earns
+the proposed hybrid's native stock authority. The bounded candidate uses one
+Inside Profile with inward clearance. Its actual post establishes the bounded
+hybrid's native predecessor authority.
+
 ## Reusable ordered jobs and verification - 2026-09-26
 
 **Engineering outcome:** the bounded offline ordered-job packet is implemented.

@@ -56,14 +56,26 @@ manual boundaries and a synthetic automatic travel effect have checked offline
 state and fail-closed cases. Exact limits and results are in the
 [review](REVIEW.md#reusable-ordered-jobs-and-verification---2026-09-26).
 
-**Next priority, backlog 6:** demonstrate
+**Accepted hybrid increment, backlog 6:**
 [native and generated machining in one job](REST_MACHINING_PLAN.md#subsequent-capability-progression).
-Use one actual native posted cylindrical predecessor and a generated V cleanup
-on the same source/stock, with one executable authority per stage and decoded
-cross-route stock evidence. This matters now because the ordered boundary is
-implemented, while the present native and V proofs are still separate
-compositions. Stop after one source-bound end-to-end hybrid and its edit
-invalidation; broader native algorithms and volume methods remain later work.
+The user posted the prepared T1 Inside Profile through CamBam Plus 1.0 Default.
+Its complete G0/G1 stream and a generated T3 rounded V finish now occupy one
+source-bound job. Two UCCNC stage files independently decode and replay with
+five native cylindrical cuts, Z=-1 mm prior/final residual intervals of
+70.48014–70.48024 / 1.33759–1.98689 mm², zero protected overcut and an
+edited-source rejection. The [runbook](DEVELOPMENT.md#native-posted-predecessor-and-generated-v-cleanup)
+and [review](REVIEW.md#native-posted-predecessor-and-generated-v-cleanup---2026-09-26)
+own exact files, checks and limits. Runtime and physical setup remain unassessed.
+
+**Next priority, backlog 6:** the
+[surface/volume foundation and contour-following increment](REST_MACHINING_PLAN.md#subsequent-capability-progression).
+Build one synthetic 3D target/stock with analytic references, a protected thin
+feature and a non-nested residual, then compare conservative representation,
+runtime and memory before selecting a surface/solid stock backend. Put one
+surface-following or waterline candidate and a dependent rest stage through
+the existing ordered evidence boundary. This addresses a distinct framework
+need beyond the accepted planar hybrid; stop after one bounded 3D evidence
+slice rather than expanding native algorithm families or controller profiles.
 
 The user reaffirmed native CamBam interchange, independent calculation, hybrid
 native/generated jobs and future volume/surface methods as the product direction.
@@ -73,8 +85,8 @@ to concrete product choices or external observations. See
 [acceptance ownership](WORKFLOW.md#acceptance-ownership) and the
 [review correction](REVIEW.md#framework-direction-and-engineering-acceptance---2026-09-26).
 Manual-tab authoring remains deferred: it needs a native before/after fixture
-and contributes less to the current shared-core objective. No user input blocks
-the next hybrid increment; a fresh session can use the documented progression.
+and contributes less to the current shared-core objective. The hybrid increment
+is accepted, and a fresh session can take the distinct 3D foundation slice.
 The dated entries below retain development history.
 
 **2026-09-23 execution architecture refinement (backlog 6).** The user's context
@@ -1669,8 +1681,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    **Current continuation, 2026-09-26:** the
    [ordered-job packet](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification)
    is implemented for its bounded offline domain and closes the M5 synthetic
-   native order/edit evidence gap. The next hybrid native/generated job and
-   later volume methods follow the [capability progression](REST_MACHINING_PLAN.md#subsequent-capability-progression).
+   native order/edit evidence gap. The actual native Profile plus generated V
+   hybrid is now accepted. The next 3D foundation follows the
+   [capability progression](REST_MACHINING_PLAN.md#subsequent-capability-progression).
    Historical entries below retain earlier stage limits; they do not permanently
    restrict the framework to RC01 or a fixed-axis sample workflow.
    The [planar backend decision](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)

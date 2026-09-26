@@ -104,14 +104,14 @@ def _motion_lines(stage, translation, initial_tip):
     rounded_at = _add(initial_tip, translation)
     for motion in motions:
         if _tip(motion.start) != at or motion.role not in (
-                "rapid", "approach", "entry", "cleared_descent",
+                "rapid", "rapid_retract", "approach", "entry", "cleared_descent",
                 "cut", "retract"):
             raise ValueError("noncontinuous or unsupported controller motion")
         end = _tip(motion.end)
         rounded_end = tuple(float(_number(v)) for v in _add(end, translation))
         if rounded_end == rounded_at:
             raise ValueError("controller motion vanishes after rounding")
-        if motion.role == "rapid":
+        if motion.role in ("rapid", "rapid_retract"):
             if motion.feed not in (0, 0.0, None):
                 raise ValueError("rapid cannot carry feed")
             lines.append("G0 " + _xyz(_add(end, translation)))

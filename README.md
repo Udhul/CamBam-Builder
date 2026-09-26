@@ -44,7 +44,9 @@ synthetic T1/T3 pair. A Grbl v1.1 portability fixture now checks in-program
 manual and modeled automatic transitions through the same stock verifier;
 the reusable ordered-job API now accepts caller-supplied stages, raster or
 offset V plans, and supported native-normalized linear motion for UCCNC or
-Grbl output with decoded stock evidence. Runtime and physical setup are
+Grbl output with decoded stock evidence. One actual CamBam-posted linear
+Profile predecessor and generated rounded-V cleanup now pass together in a
+source-bound two-stage UCCNC job. Runtime and physical setup are
 unassessed. See the
 [current status](docs/PROGRESS.md#active-work-and-next-priority).
 
