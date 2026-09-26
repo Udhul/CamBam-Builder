@@ -1430,6 +1430,46 @@ native Pocket planning, a controller dialect or physical machining. The
 [dated acceptance](REVIEW.md#m4-edited-curved-actual-output-acceptance---2026-09-26)
 retains the four exact NC hashes and area/volume evidence.
 
+### M5 UCCNC output and automatic evidence
+
+The user selected UCCNC for production. The [M5 evidence contract](REST_MACHINING_PLAN.md#m5-controller-coverage-and-automatic-evidence---2026-09-26)
+keeps the plan and verifier controller-neutral, with one declared dialect/setup
+per output adapter. The accepted source and first selected route remain under
+`output/m4-edited-curved-20260925-02/comparison/`; its raster
+`direct-reference.nc` has 450 ordered events/moves from a declared
+(-17,-17,+5) mm initial tip. It is an oracle for comparison, not a UCCNC file.
+
+For the first Windows-side UCCNC gate, create a unique ignored `output/m5-uccnc-.../`
+bundle with an isolated test profile whose `M6` pauses for manual tool change,
+plus its exact resume-position and offset assumptions. Pin
+source, prior, profile, macro, output and audit hashes. Decode the emitted NC
+with a separate strict reader and compare all ordered events/coordinates,
+including added setup, tool-change and end roles. Replay that decoded stream
+through the M4 stock, access, rounded-cutter, residual and volume checks.
+Reject controller commands, transforms or macro effects whose motion is
+unknown. This automated gate is the precise whole-program check; no manual
+visual comparison of hundreds of moves is requested.
+
+`C:\UCCNC\UCCNC.exe` is installed locally. CNCdrive documents an unlicensed
+Windows demo mode, but the installed `Profiles\Macro_Default\M6.txt` is an
+example automatic changer that commands `G53` movements and hardware actions.
+Do not run the M4 two-tool file with that macro as a harmless test. A separate
+demo load may check UCCNC compatibility only after a safe isolated profile is
+prepared; a screenshot or a 25 Hz position sample is not exact path evidence.
+The installed plugin sample has no confirmed export of every interpreted move.
+For the user's production workflow, keep the two-tool file's manual `M6`
+transition explicit and require a declared tip/resume state after the change.
+A later per-tool-file route can instead audit each file and their stock-dependent
+handoff; automatic tool changers need their own macro-motion evidence. Neither
+alternative changes the core plan or stock verifier.
+
+LinuxCNC's optional command-line `rs274` interpreter can provide an additional
+machine-readable check for a shared command subset if a Linux runner is later
+provisioned. No Docker executable or accessible WSL distribution was found in
+this Windows environment, and LinuxCNC cannot stand in for UCCNC-specific
+macro or offset behavior. Actual UCCNC production limits, offsets, tools,
+workholding and M6 behavior remain separate inputs from the user's machine.
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not

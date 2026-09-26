@@ -605,10 +605,34 @@ and limits are in the [dated acceptance](REVIEW.md#m4-edited-curved-actual-outpu
 The synthetic T1 remains a proof fixture, CustomScript proves literal-motion
 transport, and neither generic curved native MOP planning nor controller or
 physical machining is certified.
-**Next priority:** select one M5 controller dialect and setup, lower the
-accepted M4 route, then parse and replay its actual controller file before
-user simulation or controlled acceptance.
-See the [runbook](DEVELOPMENT.md#m4-edited-curved-rounded-tip-comparison-and-output-gate)
+
+**2026-09-26 M5 controller direction corrected (backlog 6):** The user will
+use UCCNC for production and requires extensible support for LinuxCNC and
+other named controllers. The previous LinuxCNC-only simulation selection is
+superseded. UCCNC is the first output profile to develop for the accepted M4
+rounded raster route; the core plan, independent final-file parser and stock
+replay must not depend on it. The local UCCNC installation and CNCdrive's
+Windows demo mode offer a compatibility test, but no exact machine-readable
+UCCNC trajectory export has been established. The bundled M6 example adds
+machine-coordinate moves, so its behavior cannot be inferred from the NC
+file alone. The user's actual UCCNC workflow pauses at `M6` for a manual tool
+change; a one-file manual-pause route is the first test case. Other controllers
+may use automatic changers or split per-tool files with explicit handoffs.
+LinuxCNC `rs274` can later provide an independent command-line
+interpreter check of a shared subset, not UCCNC execution authority. See the
+[M5 evidence contract](REST_MACHINING_PLAN.md#m5-controller-coverage-and-automatic-evidence---2026-09-26)
+and [dated finding](REVIEW.md#m5-controller-evidence-route-correction---2026-09-26).
+No controller file or runtime acceptance exists; the milestone count stays
+5 of 6.
+
+**Next priority:** declare an isolated UCCNC software profile with a manual
+`M6` pause and explicit resume state, emit the selected M4 route, then
+independently decode and stock-replay
+every emitted move on Windows. Seek machine-readable UCCNC runtime evidence
+before claiming exact controller parity. Production output waits for the user's
+actual machine profile and setup; add other controller adapters against named
+fixtures rather than assuming universal G-code compatibility.
+See the [M5 runbook](DEVELOPMENT.md#m5-uccnc-output-and-automatic-evidence)
 and [scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24).
 M1 fixes the route criterion: each candidate's actual emitted motion earns
 its own stock/access certificate. M4 then composes native MOP series, custom

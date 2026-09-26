@@ -49,11 +49,82 @@ remain required. Do not claim physical machining without real setup acceptance.
 | M2: curved Region rest and endmill cleanup | On a native annulus and a mixed line/arc concave Region with a hole, derive pure rest from supplied prior motion and produce complete smaller-endmill entry/cut/link/retract paths. Preserve analytic source identity; validate arc topology, conservative access/protection and independently bounded residual/overcut through approximation and emitted motion. Strict native reimport, visible preview, actual explicit post and stock replay must pass; include a curved narrow-access rejection and translated/reflected frame case. | **Accepted for the bounded annulus, mixed and reflected synthetic jobs via exact explicit motion.** All three actual Default posts pass ordered motion and stock replay; their native Engrave preview posts separately match the final T2 centerlines. The user confirmed curved preview visibility. CustomScript proves post transport, not independent CamBam path planning; neither route is physical machining acceptance. |
 | M3: V cleanup and edge tracing | On the polygonal target and at least one accepted curved target, generate pointed, flat-tip and tangent spherical/conical rounded-tip variable-depth paths, depth-capped/wide-area additional passes, and boundary/corner cleanup around concavity and holes. Check tool-profile continuity, full cutter occupancy, access, protected material, residual and infeasible/partial results between vertices and around arcs. Strict native preview and actual explicit post must be audited; Engrave remains inspection-only unless its whole post passes. | **Accepted for the bounded capped inward V recess.** The user saw geometry and V paths in all seven previews. All seven corrected actual preview posts match centerlines with +5 mm XY rapid links; all seven corrected explicit posts pass complete T1/T3 stock, access and residual audits. Pointed, flat and rounded profiles cover letter and annulus; mixed rounded and curved rejection pass. Flat-pocket strategy selection remains M4 work. |
 | M4: composed workflow and edits | One reopened/edited native source runs rest analysis, alternative endmill/V strategy comparison, selected ordered operations and stock-dependent cleanup without hidden session state. Normalize complete actual emitted motion from any supported native CamBam MOP or ordered MOP series as prior-stock authority, with explicit rejection of unsupported motion; calculate remaining area and volume by stage. Include a curved target and rounded-tip strategy in the accepted comparison; prove one contour-parallel offset fill candidate alongside the raster proof input through the same stock verifier. Allow manual or planned chaining of safe native MOPs, custom Region MOPs and exact framework paths. Relevant edits invalidate source, path and post claims; unchanged cosmetic edits retain valid evidence. The same accepted plan is available through native preview/explicit output and a parsed, stock-replayed direct reference program. | **Accepted for the bounded edited annulus.** The reopened 2.1 mm hole, T1-only partial endmill route and rounded raster/contour-offset finishes pass shared stock and direct reference audits. The user saw source primitives and Engrave toolpaths in both previews. Both actual preview posts match centerlines and both actual explicit Default posts pass complete T1/T3 motion and stock audits; the area-first selector chooses raster while offset also meets the fixed budgets. The bounded linear native-MOP normalizer rejects unsupported arc/unsafe motion; generic curved native Pocket planning is not certified. |
-| M5: one controller output | Select one named controller dialect and setup, lower the M4 plan with declared units, tools, feeds, spindle, entry/link/retract and end roles, parse its actual file independently and replay the emitted coordinates. Record machine-specific limits and user simulation/controlled acceptance separately. | **Open; needs controller selection.** Existing ASCII reference dialect is verified but is not a controller profile. |
+| M5: first controller output | Lower the accepted M4 plan through one declared controller profile with explicit units, tools, feeds, spindle, entry/link/retract and end roles; independently parse the emitted file and replay its actual coordinates. Preserve a controller-neutral plan and separate, fail-closed output profiles so more controllers can be added. Record controller-runtime and physical acceptance separately. | **Open.** UCCNC is the first production dialect to develop; the machine profile is pending. LinuxCNC is a possible independent interpreter and later output profile. Existing ASCII reference output is not a controller profile. |
 
 This is **five accepted milestones and one remaining milestone**, not a time or
 effort percentage. M4's bounded edited curved composition and direct/native
 output gates are accepted; M5 controller output remains open.
+
+### M5 controller coverage and automatic evidence - 2026-09-26
+
+The user will use **UCCNC** for production and requires an architecture that can
+add LinuxCNC and other controllers without changing core planning or stock
+verification. One profile is the first bounded M5 implementation, not a global
+controller restriction or a claim that every G-code dialect is interchangeable.
+Each named controller/version/setup gets its own supported command subset and
+explicit units, coordinate frame, tool-offset, M6/macro, spindle, feed and end
+behavior. Unsupported or unresolved behavior fails closed. UCCNC is the first
+output target. In the user's setup `M6` stops for a **manual tool change**;
+the exact profile/macro, machine version and physical limits are still needed
+before production acceptance. The previous LinuxCNC-only
+simulation selection is superseded.
+
+Keep tool transitions as plan events with explicit pre/post tip state and stock
+lineage. A profile may lower one event to a manual `M6` pause, a declared
+automatic-change macro with all added travel modeled, or a split between
+per-tool NC files with a checked handoff. The first M5 slice uses one UCCNC
+file and a manual `M6` pause. A split-file route is a subsequent adapter case,
+not an assumption that all users change tools manually. For either route,
+physical tool measurement, re-zero and resume position are operator/setup
+facts that software must not infer from the NC file.
+
+The accepted M4 `rounded_raster` fixture remains the first output oracle:
+source SHA-256 `bb34bc2113a081adc530962ecf5c3ce2b63ba77aeb61f941d525150284d3fb8e`,
+24 x 24 x 4 mm stock at top Z=0, declared initial/tool-change/end tip
+`(-17,-17,+5)` mm, T1 cylindrical endmill and T3 rounded V cutter, S12000,
+F60 entry and F300 cut/retract. Its 450-item reference stream spans tip X
+`[-17,8.7667]`, Y `[-17,8.729]`, Z `[-2,5]` mm. These are synthetic process
+values and a supplied synthetic T1 stock fixture, not production parameters.
+The first controller profile must declare how the work frame and initial tip
+state are established; a posted file cannot infer them.
+
+Automatic evidence has distinct levels:
+
+1. **File and geometry:** rederive the source-bound plan, emit a controller
+   file, decode its complete bytes with an independently written strict modal
+   reader, compare every ordered tool/spindle/feed/rapid/cut/entry/link/retract
+   event and endpoint, then replay the *decoded* motion through the existing
+   stock, access, cutter-occupancy, section and volume gates. Include post-added
+   motion and coordinate rounding. Pin source, prior, profile, macro/offset
+   assumptions and output hashes. This runs on Windows and supplies numeric
+   whole-program evidence without a visual inspection.
+2. **Controller interpreter:** where an actual controller or independent
+   interpreter exposes machine-readable canonical moves, compare that trace
+   against the decoded file and replay it as another authority. LinuxCNC's
+   [stand-alone `rs274` interpreter](https://linuxcnc.org/docs/stable/html/code/rs274.html)
+   is a plausible command-line cross-check for an explicitly shared command
+   subset; a Linux runtime has not been provisioned here, and passing LinuxCNC
+   cannot certify UCCNC-specific M6, offsets or macros.
+3. **UCCNC runtime and physical setup:** CNCdrive documents a
+   [Windows demo mode](https://cncdrive.com/UCCNC.html) and plugin interface.
+   The locally installed public plugin sample exposes loaded G-code lines and
+   sampled position fields, but no verified exact trajectory export was found.
+   Its sample callback runs at 25 Hz, so sampled positions cannot certify
+   every segment. Investigate a bounded machine-readable UCCNC trace route
+   before claiming exact runtime parity. Demo loading or a toolpath screenshot
+   can catch gross interpretation mistakes, but neither replaces level 1 or
+   establishes physical safety.
+
+The installed `Macro_Default/M6.txt` example contains additional `G53` tool
+change moves and hardware actions; it does not represent the user's manual
+change profile. Pin the selected manual `M6` behavior or use an isolated
+simulation fixture with declared pause/resume semantics. No installed default
+profile is a production recommendation. The first M5 increment stops when one
+UCCNC file passes level 1 with an explicit setup and unsupported commands
+rejected; record runtime-parity evidence separately. A later controller adapter
+is justified by its named dialect and fixture, while physical acceptance needs
+the user's real machine limits, offsets, tools, workholding and process inputs.
+
 The user-approved curved/rounded scope adds one whole-outcome milestone to the
 earlier polygonal plan; it does not create an open-ended sequence of arc or tip
 subtasks. M1 establishes polygonal endmill cleanup, M2 extends rest/endmill

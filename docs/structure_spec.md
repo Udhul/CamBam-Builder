@@ -160,7 +160,18 @@ under the [organization plan](#package-organization-decision-and-migration-plan)
 Neither owner imports `CamBamProject`, native CAD/MOP entities, XML I/O or MCP.
 Native `.cb` input/output and future controller posting use explicit adapters
 outside those packages; adapters normalize source data and separately validate
-emitted motion. Existing root-level `stock`, `planar` and machining modules
+emitted motion. UCCNC is the user's production controller and the first direct
+output target. A controller-neutral ordered plan and stock verifier feed
+separate declared output profiles for UCCNC, LinuxCNC and later named dialects;
+each adapter owns only its supported command and setup semantics. An independent
+reader must decode each final controller file back to ordered motion before
+stock replay. An interpreter or controller runtime trace, when available,
+supplies a separate execution-level check and cannot certify another dialect.
+Tool changes are plan events: an output profile may implement a manual `M6`
+pause, a verified automatic macro, or a handoff between per-tool files, with
+explicit pre/post setup state and stock lineage. The user's UCCNC profile uses
+the manual-pause form; it is not a restriction on other consumers.
+Existing root-level `stock`, `planar` and machining modules
 remain active owners until their staged migration.
 
 ### Directional analytic stock section bounds

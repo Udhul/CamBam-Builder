@@ -1,5 +1,70 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## M5 controller evidence route correction - 2026-09-26
+
+The user identified UCCNC as the production controller, required the output
+architecture to admit LinuxCNC and other controller adapters, and rejected
+visual inspection as proof of a complete path. This supersedes the initial
+LinuxCNC-only selection below. The first M5 output target is now UCCNC with
+an isolated software profile; the actual machine version/profile remains
+unspecified. The user clarified that their `M6` stops for manual tool change.
+They also described separate files per tool as an option and want the
+framework to admit different controller and tool-change workflows. The first
+bounded route is one file with a declared manual pause/resume state; later
+profiles can lower the same transition to a verified macro or split-file
+handoff.
+The controller-independent proof is a strict independent parse of the final NC
+file followed by the same full stock/access/cutter/residual replay already used
+for M4. A controller-runtime claim additionally needs a machine-readable
+execution trace or another demonstrated interpreter authority. A screenshot
+cannot substitute for that trace.
+
+[CNCdrive's UCCNC product page](https://cncdrive.com/UCCNC.html) confirms
+Windows support, a license-free simulation mode and a plugin interface.
+Read-only local inspection found `C:\UCCNC\UCCNC.exe`, the bundled
+`Profiles\Macro_Default\M6.txt`, `Documentation\Macro_capability_detailed.htm`
+and C# plugin sample. The sample M6 commands `G53` machine-coordinate tool
+changer travel and hardware actions, so it cannot be assumed to preserve the
+M4 setup point. The public sample exposes source G-code lines and current
+position fields; its `Loop_event` runs every 40 ms. Inspection of the installed
+public `Plugininterface.Entry` method names found no exact trajectory export.
+This is a bounded negative finding for the installed interface, not proof that
+no UCCNC version or custom integration could supply one. Reopen that route
+with a documented or tested per-move export.
+
+LinuxCNC documents a [stand-alone `rs274` command-line interpreter](https://linuxcnc.org/docs/stable/html/code/rs274.html)
+with a tool-table option and output file. It is a plausible extra independent
+oracle for shared G-code syntax, but cannot certify UCCNC-specific macros or
+offsets. The local Windows environment has no `docker` or `rs274` command;
+`wsl --list --quiet` did not expose an accessible distribution. No Linux
+runner or UCCNC runtime trace was executed in this review.
+
+## M5 initial LinuxCNC simulation selection (superseded) - 2026-09-26
+
+This was a documentation-only candidate chosen before the user supplied the
+production controller and Windows evidence requirement. Its LinuxCNC-specific
+setup values are not adopted as a UCCNC profile.
+
+The first controller target is LinuxCNC 2.9.10 RS274/NGC in a three-axis
+AXIS simulation with manual T1/T3 changes. This is an implementation selection
+for the accepted M4 rounded raster route; it is not a user-reported simulator
+or machine acceptance. The retained M4 fixture details remain in the
+[current M5 evidence contract](REST_MACHINING_PLAN.md#m5-controller-coverage-and-automatic-evidence---2026-09-26).
+LinuxCNC's [M6 documentation](https://linuxcnc.org/docs/html/gcode/m-code.html)
+is the reason to pin the chosen INI/tool table: M6 may move axes and does not
+apply a new tool-length offset. The [G43 documentation](https://www.linuxcnc.org/docs/html/gcode/tool-compensation.html)
+specifies the subsequent length-offset behavior.
+
+Read-only parsing of the retained, hash-pinned M4 raster reference with its
+declared initial (-17,-17,+5) mm tip yielded 450 items, no reader warnings,
+T1/T3 changes at that setup point, X `[-17,8.7667]`, Y `[-17,8.729]`,
+Z `[-2,5]` mm and feed values 60/300 mm/min. The selected route already passed
+its M4 direct and actual CamBam Default output gates. The reference program
+does not encode G54, G43, machine limits or an incoming machine position; it
+cannot be relabeled as the LinuxCNC controller file. The copied simulator
+configuration, independent controller parser, emitted program, actual
+simulator observation and any physical setup remain outstanding.
+
 ## M4 edited curved actual output acceptance - 2026-09-26
 
 The user exported all four CamBam Plus 1.0 Default-mm NC files from the
