@@ -1,5 +1,51 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Layered 3D stock and waterline evidence - 2026-09-26
+
+**Offline engineering result.** `tests.test_volume3d.synthetic_job` defines
+8 x 6 mm stock to Z=-3, a 2 x 4 mm pocket to Z=-1 and a disjoint 2.6 x 4 mm
+pocket to Z=-2. The 0.4 x 4 mm rib between them is protected through the
+full stock height. Analytic removal volume is `2*4*1 + 2.6*4*2 = 28.8 mm³`;
+section areas at depths 0.5 and 1.5 mm are 18.4 and 10.4 mm². Two disconnected
+target pockets produce a non-nested residual. A T1 radius-0.2 mm flat cutter
+follows the left/right floor contours at Z=-1/-2. A T2 radius-0.18 mm cutter
+rasters their interiors; its first descent in each pocket must fit the T1
+cleared contour at full depth. Both tools have 2.5 mm declared cutting length,
+leaving 0.5 mm above the stock surface at the deepest cut. Holder shape and
+external fixtures are not modeled.
+
+Both UCCNC split and Grbl in-program policies decode every emitted G0/G1
+move and pass the same stage-by-stage stock evaluator. The T1 prefix has 15
+cut sweeps, residual volume 15.5522–15.5593 mm³ and zero protected overcut;
+the T2 prefix has 39 cumulative cuts, 0.5624–0.5714 mm³ residual and zero
+protected overcut. At the 0–1 mm slab, T1 leaves four disconnected
+components. The independent capsule formula `2rL + pi*r²` lies between the
+inner/outer polygon buffers, with under 0.001 mm² gap for the checked 2 mm
+segment. Omitting T1 rejects the T2 `cleared_descent`; a motion into the rib,
+changed source fingerprint and changed output bytes also reject. A stockless
+job retains motion equivalence but reports stock `not_evaluated`.
+
+One local representation comparison (wall time varies by host):
+
+| Representation | Removal-volume interval, mm³ | Elapsed, ms | Python peak bytes | Elements |
+| --- | ---: | ---: | ---: | ---: |
+| Exact rectangular prisms | 28.8–28.8 | 0.336 | 1,969 | 2 |
+| 0.25 mm conservative XY columns | 28.0–30.0 | 421.582 | 66,617 | 768 |
+| 0.125 mm conservative XY columns | 28.0–29.0 | 1,582.392 | 210,529 | 3,072 |
+
+The benchmark measures Python allocations only; GEOS native memory is not
+included, so the exact numbers are diagnostic. The prism sections are the
+chosen evaluator for this orthogonal fixture. Shapely Boolean results and
+24-segment-per-quadrant circular sweeps have a declared 1e-7 mm² area tolerance
+and no formal floating-topology proof. This fixture establishes stepped-volume
+stock, protected material, access and dependent rest through decoded output;
+it does not establish continuous surface contact, ball-cutter occupancy,
+arbitrary mesh/solid stock, physical holder clearance or controller runtime.
+No CamBam GUI check adds evidence to this detached direct-Python slice.
+Verification: `tests.test_volume3d` passed 3 tests after the final evaluator
+edit; the ordered/native/M4/M5 regression group passed 39 tests. Focused
+compilation and whitespace checks passed. The worktree remains uncommitted.
+
 ## Native posted predecessor and generated V cleanup - 2026-09-26
 
 **Accepted offline and actual-post slice.** The native bridge joins one complete

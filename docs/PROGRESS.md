@@ -67,15 +67,30 @@ edited-source rejection. The [runbook](DEVELOPMENT.md#native-posted-predecessor-
 and [review](REVIEW.md#native-posted-predecessor-and-generated-v-cleanup---2026-09-26)
 own exact files, checks and limits. Runtime and physical setup remain unassessed.
 
-**Next priority, backlog 6:** the
-[surface/volume foundation and contour-following increment](REST_MACHINING_PLAN.md#subsequent-capability-progression).
-Build one synthetic 3D target/stock with analytic references, a protected thin
-feature and a non-nested residual, then compare conservative representation,
-runtime and memory before selecting a surface/solid stock backend. Put one
-surface-following or waterline candidate and a dependent rest stage through
-the existing ordered evidence boundary. This addresses a distinct framework
-need beyond the accepted planar hybrid; stop after one bounded 3D evidence
-slice rather than expanding native algorithm families or controller profiles.
+**Completed offline evidence slice, backlog 6:** the
+[layered 3D stock and waterline increment](REST_MACHINING_PLAN.md#subsequent-capability-progression)
+uses an 8 x 6 x 3 mm stock, two stepped pockets, an untouched 0.4 mm rib and
+disconnected residual. A T1 contour stage and T2 interior rest stage pass
+independently decoded UCCNC/Grbl ordered output. The T2 cleared descent is
+accepted only through T1 stock; omitting T1 or crossing the rib fails.
+Analytic removal volume is 28.8 mm³. Final residual is bounded at
+0.5624–0.5714 mm³ with zero modeled protected overcut. The exact rectangular
+prism section backend is selected for this fixture after measured comparison
+with conservative XY columns; no general freeform/solid backend is selected.
+See the [contract](structure_spec.md#bounded-layered-3d-stock-and-waterline-evidence),
+[runbook](DEVELOPMENT.md#layered-3d-stock-and-waterline-evidence) and
+[dated evidence](REVIEW.md#layered-3d-stock-and-waterline-evidence---2026-09-26).
+
+**Next priority, backlog 6:** one non-prismatic surface with an analytic
+contact/volume oracle and a ball-end cutter, measured against a conservative
+representation and replayed through the same ordered boundary. The stepped
+fixture proves stage/stock composition but cannot bound cutter contact on a
+sloped surface or holder clearance. A single sloped surface case will decide
+whether an adaptive section or signed-distance/mesh backend is justified;
+stop after that comparison and one dependent pass. Native G2/G3 hybrid
+normalization also has concrete retained posts, but its unsafe M1 Pocket
+entries require a separately selected safe native case. Manual-tab authoring
+remains lower priority until the requested before/after native fixture exists.
 
 The user reaffirmed native CamBam interchange, independent calculation, hybrid
 native/generated jobs and future volume/surface methods as the product direction.
@@ -85,8 +100,9 @@ to concrete product choices or external observations. See
 [acceptance ownership](WORKFLOW.md#acceptance-ownership) and the
 [review correction](REVIEW.md#framework-direction-and-engineering-acceptance---2026-09-26).
 Manual-tab authoring remains deferred: it needs a native before/after fixture
-and contributes less to the current shared-core objective. The hybrid increment
-is accepted, and a fresh session can take the distinct 3D foundation slice.
+and contributes less to the current shared-core objective. The layered 3D
+evidence slice is an offline engineering result; a fresh session can take the
+distinct non-prismatic surface case without relying on conversation context.
 The dated entries below retain development history.
 
 **2026-09-23 execution architecture refinement (backlog 6).** The user's context

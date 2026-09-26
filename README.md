@@ -46,8 +46,10 @@ the reusable ordered-job API now accepts caller-supplied stages, raster or
 offset V plans, and supported native-normalized linear motion for UCCNC or
 Grbl output with decoded stock evidence. One actual CamBam-posted linear
 Profile predecessor and generated rounded-V cleanup now pass together in a
-source-bound two-stage UCCNC job. Runtime and physical setup are
-unassessed. See the
+source-bound two-stage UCCNC job. A separate synthetic stepped-volume case
+replays decoded waterline and dependent rest cuts with a protected thin rib and
+conservative residual-volume bounds. Runtime, physical setup and freeform
+surfaces remain unassessed. See the
 [current status](docs/PROGRESS.md#active-work-and-next-priority).
 
 For development, install the environment with `uv sync`, then run the

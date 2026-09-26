@@ -1,8 +1,8 @@
 """Small, controller-neutral ordered machining job and decoded-motion audit.
 
-The supported stock evaluators are cylindrical endmill replay and one terminal
-rounded-V finish after a single cylindrical predecessor. Other stage mixes
-remain explicit capability limits; source/posted-motion comparison still works.
+Stock evaluators cover cylindrical replay, one terminal rounded-V finish after
+one cylindrical predecessor, and bounded layered 3D flat-endmill stages.
+Other mixes remain explicit capability limits.
 """
 
 from dataclasses import dataclass, replace
@@ -98,7 +98,7 @@ class Stage:
     motions: tuple
     rpm: float
     offset_mm: float = 0.0
-    operation: object = None          # replay.Operation for cylindrical stock
+    operation: object = None          # replay.Operation or volume3d.VolumeOperation
     v_plan: object = None             # v_region.VPlan for terminal V finish
     source_revision: str = ""
     transition: object = None
@@ -118,11 +118,17 @@ class Stage:
                 or (self.transition is not None and
                     type(self.transition) is not Transition)):
             raise ValueError("invalid ordered stage")
-        if (self.operation is not None and
-                (type(self.operation) is not replay.Operation or
-                 self.operation.name != self.id or
-                 self.operation.tool.name != self.tool_id)):
-            raise ValueError("stage endmill operation identity differs")
+        if self.operation is not None:
+            op = self.operation
+            if (type(op) is replay.Operation and
+                    (op.name != self.id or op.tool.name != self.tool_id)):
+                raise ValueError("stage endmill operation identity differs")
+            if type(op) is not replay.Operation:
+                from . import volume3d
+                if type(op) is not volume3d.VolumeOperation:
+                    raise ValueError("unsupported stage operation")
+                if op.name != self.id or op.tool_id != self.tool_id:
+                    raise ValueError("stage volume operation identity differs")
         if self.v_plan is not None and type(self.v_plan) is not v_region.VPlan:
             raise ValueError("stage V plan required")
         at = self.motions[0].start
@@ -132,6 +138,13 @@ class Stage:
             at = motion.end
         if self.motions[0].start[2] <= 0 or at[2] <= 0:
             raise ValueError("stage needs safe start and end tips")
+
+    @property
+    def volume_operation(self):
+        if self.operation is None or type(self.operation) is replay.Operation:
+            return None
+        from . import volume3d
+        return self.operation if type(self.operation) is volume3d.VolumeOperation else None
 
 
 @dataclass(frozen=True)
@@ -376,6 +389,15 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
     if not job.stock_present:
         report["stock_access_residual"] = {"status": "not_evaluated",
                                            "reason": "no supplied initial stock"}
+        return report
+    if all(s.volume_operation is not None for s in job.stages):
+        from . import volume3d
+        report["stock_access_residual"] = volume3d.replay_stages(
+            job.stages, actual)
+        return report
+    if any(s.volume_operation is not None for s in job.stages):
+        report["stock_access_residual"] = {"status": "unsupported",
+                                           "reason": "mixed volume stock evaluators"}
         return report
     endmill_count = next((i for i, s in enumerate(job.stages)
                           if s.v_plan is not None), len(job.stages))

@@ -28,7 +28,7 @@ are outside that runtime package list.
 | `cambam_builder/cambam_entities.py` and nine old root module paths | Compatibility/discovery imports of canonical native objects; no native implementation remains at root | Preserve public and documented direct imports; implementation modules import owners directly |
 | `cambam_builder/native/transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
 | `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy, remaining-section bounds and supplied section-motion verification | Horizontal cuts and explicit travel inside rectangular stock/target; no generated or native path integration |
-| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns ordered XYZ/cut-sweep values, `ordered_job.py` owns caller-supplied stage/state and decoded stock auditing, and `curved_region.py` owns bounded circular-arc access/rest approximation | Exact nominal and curved endmill stock, analytic slot and placed mixed trace; no native entity, XML, MCP or machine-output dependency |
+| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns ordered XYZ/cut-sweep values, `ordered_job.py` owns caller-supplied stage/state and decoded stock auditing, `volume3d.py` owns bounded layered 3D stock, and `curved_region.py` owns bounded circular-arc access/rest approximation | Exact nominal and curved endmill stock, a stepped-volume evidence slice, analytic slot and placed mixed trace; no native entity, XML, MCP or machine-output dependency |
 | `cambam_builder/cam_extensions/strategy.py` | Deterministic selection among separately audited ordered routes, including partial and infeasible outcomes | Policy over evidence records; no XML or native entity dependency |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
@@ -447,13 +447,52 @@ model and clear the supplied flat fixture-top plane. Runtime and physical setup
 remain `not_evaluated`. Re-audit after a native edit requires a freshly
 normalized source/job; an old bundle's fingerprint cannot certify it.
 
-The implemented geometry domain remains planar fixed-axis cylindrical replay
-and one terminal rounded-V finish. Native G2/G3, generic native Pocket/Profile
+The earlier geometry domain remains planar fixed-axis cylindrical replay
+and one terminal rounded-V finish; the separate stepped-volume contract below
+extends the same decoded boundary. Native G2/G3, generic native Pocket/Profile
 path reproduction, multiple endmill predecessors before V, arbitrary macros,
 non-flat fixtures, rotations/kinematics and controller runtime parity require
 named extensions. The [ordered-job packet](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification)
 and [verification](REVIEW.md#reusable-ordered-jobs-and-verification---2026-09-26)
 record the acceptance scope.
+
+### Bounded layered 3D stock and waterline evidence
+
+`cam_core.volume3d` represents rectangular initial stock from Z=0 downward,
+an immutable union of disjoint rectangular removal prisms, and a declared
+protected rectangle. A `VolumeOperation` names a flat cylindrical cutter,
+cutting length and waterline/rest role. `ordered_job.Stage` can carry that
+operation; two or more such stages share one target and pass independently
+decoded UCCNC/Grbl motion to `replay_stages`. The job and prefix fingerprints
+bind the target, tool and stages. No native 3D Surface MOP or continuous mesh
+is inferred from these values.
+
+The supported 3D moves are safe Z-positive rapids, vertical feed entries and
+retracts, horizontal constant-Z cuts and vertical `cleared_descent`. Cutter
+occupancy is a circular swept section at every affected depth. The evaluator
+splits stock at each target and cut depth, unions all prior decoded cuts, and
+reports conservative per-slab residual area and whole-volume intervals. A
+cleared descent requires its complete outer cutter footprint to lie within
+the predecessor stages' inner cleared sweep at every relevant depth. Each
+outer cut sweep must stay inside the original target, protecting the thin rib.
+Cut depth cannot exceed tool cutting length. The fixture has no modeled holder
+shape; its declared cutting length leaves the holder above Z=0 at every cut.
+
+Shapely's 24-segment-per-quadrant buffer is an inscribed cutter bound. An
+enlarged buffer by `1/cos(pi/96)` supplies the outer footprint. The
+inscribed sagitta is about 0.0005354 times cutter radius; the outer radius
+enlargement is about 0.0005357 times cutter radius. An independent capsule formula
+checks that area lies between the two buffers. GEOS Boolean operations are
+floating-point calculations, so these are conservative geometric models
+subject to a 1e-7 mm² topology/area tolerance, not formal interval proofs.
+`compare_representations` measures exact prism sections against 0.25/0.125 mm
+XY columns whose wholly covered/intersected cells bound volume. It reports
+wall time and Python peak allocations, excluding native GEOS memory. The
+two-prism section backend is chosen for this bounded target because its exact
+volume and low storage avoid the columns' boundary error and cost; this does
+not select a general freeform surface or solid backend. See the
+[runbook](DEVELOPMENT.md#layered-3d-stock-and-waterline-evidence) and
+[evidence](REVIEW.md#layered-3d-stock-and-waterline-evidence---2026-09-26).
 
 ### Directional analytic stock section bounds
 

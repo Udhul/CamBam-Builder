@@ -576,6 +576,16 @@ active increment after each outcome.
   a surface-following or waterline candidate and subsequent rest operation through
   the same job/evidence boundary. Surface contact alone cannot verify remaining
   stock, holder clearance or access.
+
+  **Implemented bounded evidence slice, 2026-09-26:** the two-level rectangular
+  pocket target, protected 0.4 mm rib, contour stage and smaller-tool rest stage
+  pass independently decoded ordered output and conservative layered stock
+  replay. The rest stage's cleared descent fails without the predecessor.
+  Exact prism sections outperform the measured conservative XY columns on this
+  target; the comparison does not select a general 3D backend. The
+  [contract](structure_spec.md#bounded-layered-3d-stock-and-waterline-evidence)
+  and [evidence](REVIEW.md#layered-3d-stock-and-waterline-evidence---2026-09-26)
+  record numerical limits and remaining freeform/holder work.
 - **Additional methods and optimization:** medial/contact tracing, adaptive
   clearing, tool combinations and improved entry/link methods consume the same
   target/stock capabilities and independently checked motion. Rank feasible

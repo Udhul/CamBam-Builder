@@ -1764,6 +1764,36 @@ source/post rejection, forged RPM and mismatched V source rejection. The
 [review evidence](REVIEW.md#native-posted-predecessor-and-generated-v-cleanup---2026-09-26)
 records the actual-post hashes and acceptance scope.
 
+### Layered 3D stock and waterline evidence
+
+Install the declared optional planar backend with `uv sync --extra planar`,
+then run the reusable synthetic regression from the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_volume3d -v
+```
+
+It builds two stepped rectangular removal prisms in 8 x 6 x 3 mm stock,
+checks the analytic 28.8 mm³ target volume and two section areas, compares
+exact-prism and conservative XY-column representation, and audits T1 waterline
+followed by T2 rest through independently decoded UCCNC and Grbl output.
+The test checks the capsule sweep against an independent analytic area,
+disconnected residual, final volume bounds, protected rib, missing predecessor,
+changed source/output bytes and stockless evidence. Timing and Python peak
+memory are diagnostic; no fixed performance threshold is asserted. A direct
+snapshot for inspection can be printed with:
+
+```powershell
+& .\.venv\Scripts\python.exe -c "from tests.test_volume3d import synthetic_job; from cambam_builder.cam_core.volume3d import compare_representations; from cambam_builder.integrations.ordered_output import emit; import pprint; j=synthetic_job(); pprint.pp(compare_representations(j.stages[0].volume_operation.target)); pprint.pp(emit(j,'uccnc')[1]['stock_access_residual'])"
+```
+
+The result is detached and synthetic: no native document or controller setup
+is changed, so manual CamBam validation adds no evidence. The
+[contract](structure_spec.md#bounded-layered-3d-stock-and-waterline-evidence)
+defines the supported shape/motion boundary; the
+[review](REVIEW.md#layered-3d-stock-and-waterline-evidence---2026-09-26)
+owns the measured result and limits.
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not
