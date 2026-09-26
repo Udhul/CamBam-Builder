@@ -99,6 +99,31 @@ Reopen this acceptance if the native source, MOP parameters, actual post,
 declared initial-tip setup or parser changes; other stockless MOP types and
 `Auto` resolution still need their own evidence.
 
+## M5 controller runtime evidence scope - 2026-09-26
+
+The user clarified that UCCNC is one possible G-code interpreter/trajectory
+planner and drives its motion-controller hardware; they cannot be expected to
+provide a second trajectory-output file from it. The generated T1/T3 NC files
+and their independent decoder/stock replay are framework output evidence,
+not an observation of UCCNC execution. [CNCdrive documents UCCNC's G-code
+execution, motion-controller support, plugin interface and demo mode](https://www.cncdrive.com/UCCNC.html).
+The earlier read-only inspection of the installed public plugin sample found
+loaded G-code lines and sampled positions, but no verified exact per-move
+trajectory export. This does not prove that no version or private integration
+can expose one; it makes such a trace an optional future evidence source,
+not a user artifact or M5 gate.
+
+M5's portable completion path is source-bound plan -> final emitted command
+stream -> independent dialect decoder -> decoded stock/access/cutter replay,
+with distinct dialect and transition-policy fixtures. A UCCNC demo load can
+check limited compatibility if a safe isolated profile is available, but its
+viewer or sampled positions cannot certify every interpreted segment. Exact
+UCCNC runtime parity remains `not_evaluated` unless a documented or tested
+per-move interface appears. Physical machine travel and cutting need separate
+machine-specific acceptance. Reopen the runtime-trace investigation only with
+such an interface or a concrete production requirement; do not stall the
+controller-neutral M5 portability unit on it.
+
 ## M5 mediation architecture review - 2026-09-26
 
 The user requested an architecture review before delegating M5 implementation.

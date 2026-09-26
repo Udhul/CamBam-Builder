@@ -213,10 +213,12 @@ Automatic evidence has distinct levels:
    The locally installed public plugin sample exposes loaded G-code lines and
    sampled position fields, but no verified exact trajectory export was found.
    Its sample callback runs at 25 Hz, so sampled positions cannot certify
-   every segment. Investigate a bounded machine-readable UCCNC trace route
-   before claiming exact runtime parity. Demo loading or a toolpath screenshot
-   can catch gross interpretation mistakes, but neither replaces level 1 or
-   establishes physical safety.
+   every segment. A per-move UCCNC runtime trace is not an expected user
+   artifact or an M5 completion gate. If a documented or tested exact trace
+   interface later becomes available, compare it as separate optional runtime
+   evidence; until then mark runtime parity `not_evaluated`. Demo loading or a
+   toolpath screenshot can catch gross interpretation mistakes, but neither
+   replaces level 1 nor establishes physical safety.
 
 The installed `Macro_Default/M6.txt` example contains additional `G53` tool
 change moves and hardware actions; it does not represent the user's manual

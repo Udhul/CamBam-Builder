@@ -1553,6 +1553,12 @@ Do not run the M4 two-tool file with that macro as a harmless test. A separate
 demo load may check UCCNC compatibility only after a safe isolated profile is
 prepared; a screenshot or a 25 Hz position sample is not exact path evidence.
 The installed plugin sample has no confirmed export of every interpreted move.
+No UCCNC motion-output file is expected from the user. Keep exact UCCNC
+runtime parity `not_evaluated` unless a documented or tested per-move trace
+route appears; do not make that research a prerequisite for the portable M5
+emitted-program gate. The framework audits its own final NC bytes before they
+reach any controller. A demo load can add a bounded compatibility observation,
+but sampled screen positions cannot replace complete decoded-motion evidence.
 The user's manual `M6` profile is a possible one-file implementation after
 its exact pause, offset and resume behavior is pinned. A controller-specific
 `M0` stop block between MOPs is another implementation; its script and

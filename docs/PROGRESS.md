@@ -671,8 +671,11 @@ declared in-program manual handoff, a modeled automatic-changer fixture and a
 mixed-policy transition, while rejecting unknown `M6`, stop and macro behavior.
 Add the fixed-work-origin/tool-table setup and a full decoded nonidentity-datum
 job fixture; the current map unit test proves translation and mismatch rejection
-only at the move-comparison boundary. Seek machine-readable UCCNC runtime
-evidence before claiming exact controller parity. Production output waits for
+only at the move-comparison boundary. UCCNC runtime parity is an optional
+controller-specific evidence tier, not a user-provided output or M5 completion
+gate; leave it `not_evaluated` unless a documented per-move trace becomes
+available. The [runtime-scope correction](REVIEW.md#m5-controller-runtime-evidence-scope---2026-09-26)
+records the reopening criterion. Production output waits for
 the user's actual machine profile and setup; add other controller adapters
 against named fixtures rather than assuming universal G-code compatibility.
 See the [M5 runbook](DEVELOPMENT.md#m5-uccnc-output-and-automatic-evidence)
