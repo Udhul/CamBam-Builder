@@ -1439,16 +1439,38 @@ per output adapter. The accepted source and first selected route remain under
 `direct-reference.nc` has 450 ordered events/moves from a declared
 (-17,-17,+5) mm initial tip. It is an oracle for comparison, not a UCCNC file.
 
-For the first Windows-side UCCNC gate, create a unique ignored `output/m5-uccnc-.../`
-bundle with an isolated test profile whose `M6` pauses for manual tool change,
-plus its exact resume-position and offset assumptions. Pin
-source, prior, profile, macro, output and audit hashes. Decode the emitted NC
-with a separate strict reader and compare all ordered events/coordinates,
-including added setup, tool-change and end roles. Replay that decoded stream
-through the M4 stock, access, rounded-cutter, residual and volume checks.
-Reject controller commands, transforms or macro effects whose motion is
+For the first Windows-side UCCNC gate, create a unique ignored
+`output/m5-uccnc-.../` bundle with **T1 and T3 files** and an ordered handoff
+manifest. Start from the accepted M4 rounded-raster source/plan. In this
+synthetic setup, declare G54, metric absolute XY-plane exact-stop motion, no
+active tool-length compensation, one unchanged XY datum and work Z=0 at the
+physical stock top for each installed tool. Its CAM stock top is also Z=0, so
+the CAM-to-work Z mapping is identity. This models the user's manual
+surface-touch-off method as a **per-tool work-coordinate setup**, without
+assuming that the touch-off writes a tool-length table entry. Pin the safe
+initial tip `(-17,-17,+5)` mm, stock/fixture identity, tool geometry,
+required T1-to-T3 order, source, prior, profile and output hashes. The test
+setup is synthetic and must not be copied to a machine. Each file must set
+its own modal state, run one tool's motion, stop the spindle and end without
+calling `M6`. Its installed tool and registered tip datum are explicit handoff
+preconditions; the file cannot verify that the operator actually touched off.
+Decode both final NC files with a separate strict reader, compare all ordered
+events/coordinates including setup and end roles, and replay the decoded T1
+motion into T3's initial stock. Apply the M4 stock,
+access, rounded-cutter, residual and volume checks to the chained job.
+Reject controller commands, transforms or handoff states whose effects are
 unknown. This automated gate is the precise whole-program check; no manual
 visual comparison of hundreds of moves is requested.
+
+Add a nonzero-datum fixture before generalizing the output adapter: set CAM
+stock top to `+4.5 mm` while the physical surface is assigned work Z=0. The
+posted Z must shift by `-4.5 mm`, and inverse-mapped decoded motion must give
+the same tip-to-stock sweeps and residuals. Reject unchanged CAM Z output for
+that touch-off, a stale per-tool datum, or simultaneous touch-off and tool
+compensation that applies the length correction twice. A separate declared
+tool-table/preset fixture should retain a fixed work origin and apply the
+appropriate controller length offset; it must pass the same inverse-mapped
+audit. These are setup alternatives, not changes to the CAM plan.
 
 `C:\UCCNC\UCCNC.exe` is installed locally. CNCdrive documents an unlicensed
 Windows demo mode, but the installed `Profiles\Macro_Default\M6.txt` is an
@@ -1457,11 +1479,30 @@ Do not run the M4 two-tool file with that macro as a harmless test. A separate
 demo load may check UCCNC compatibility only after a safe isolated profile is
 prepared; a screenshot or a 25 Hz position sample is not exact path evidence.
 The installed plugin sample has no confirmed export of every interpreted move.
-For the user's production workflow, keep the two-tool file's manual `M6`
-transition explicit and require a declared tip/resume state after the change.
-A later per-tool-file route can instead audit each file and their stock-dependent
-handoff; automatic tool changers need their own macro-motion evidence. Neither
-alternative changes the core plan or stock verifier.
+The user's manual `M6` profile is a possible one-file implementation after
+its exact pause, offset and resume behavior is pinned. A controller-specific
+`M0` stop block between MOPs is another implementation; its script and
+post-stop tool/offset state must be decoded and verified before use. Neither
+command is the framework's tool-change API. A transition policy chooses the
+operator or automatic changer, one or several programs, and the measurement
+and offset method; the dialect adapter owns command syntax and configuration.
+An automatic changer fixture needs declared tool, tip, offset and extra-motion
+effects, with physical changer acceptance kept separate. CamBam Parts can
+group MOPs by tool and post separate files, but their actual posts still need
+the same ordered file and chained-stock audit. Do not silently treat a stop,
+macro or file boundary as verified tool installation. The first gate should
+reject requests for unverified policies and include an explicit failure test
+for a missing or altered second file or mismatched handoff setup.
+After the split-file gate, use the same source-bound plan for a bounded
+one-file manual-stop policy, a declared automatic-changer effect fixture, and
+a second named controller dialect. Grbl v1.1 is a useful second fixture because
+its documented commands include `M0` but omit `M6`; a LinuxCNC fixture can
+exercise its configured manual/automatic `M6` and separate `G43` rule. Decode
+each emitted stream and its handoff events, then run the same whole-job stock
+audit. Reject altered stop blocks, unmodeled changer motion and any transition
+without a declared post-change tool, offset and resume state. This is the M5
+proof of policy and dialect selection; no synthetic fixture certifies a
+physical changer or the user's UCCNC macro.
 
 LinuxCNC's optional command-line `rs274` interpreter can provide an additional
 machine-readable check for a shared command subset if a Linux runner is later

@@ -3,18 +3,45 @@
 ## M5 controller evidence route correction - 2026-09-26
 
 The user identified UCCNC as the production controller, required the output
-architecture to admit LinuxCNC and other controller adapters, and rejected
+architecture to admit other controller adapters, and rejected
 visual inspection as proof of a complete path. This supersedes the initial
 LinuxCNC-only selection below. The first M5 output target is now UCCNC with
 an isolated software profile; the actual machine version/profile remains
 unspecified. The user clarified that their `M6` stops for manual tool change.
-They also described separate files per tool as an option and want the
-framework to admit different controller and tool-change workflows. The first
-bounded route is one file with a declared manual pause/resume state; later
-profiles can lower the same transition to a verified macro or split-file
-handoff.
+They also described a G-code stop between MOPs or separate files/Parts per
+tool, and want different controller and tool-change workflows. The first
+bounded route is now **two files, one per tool**, with an explicit setup and
+stock-dependent handoff. This avoids depending on the installed sample M6
+macro. The user further clarified that UCCNC is only their setup: the
+framework must support both operator and automatic tool changes across
+controllers. The plan therefore separates tool-change intent, actor,
+program boundary, measurement/offset method and controller syntax. CNCdrive's
+[UCCNC manual](https://www.cncdrive.com/UCCNC/UCCNC_usersmanual.pdf)
+defines `M0` as a resumable program stop and `M6` as a configurable macro
+call. LinuxCNC's [M-code documentation](https://linuxcnc.org/docs/html/gcode/m-code.html)
+supports manual and automatic `M6` configurations, warns that tool-change
+motion may occur, and says tool-length offset needs separate `G43`. The
+official [Grbl v1.1 command list](https://github.com/gnea/grbl/blob/master/README.md)
+includes `M0` and omits `M6`. Thus `M0`/`M6` cannot be core transition types;
+their effects belong to named dialect/setup profiles. Neither a stop nor a
+split file proves that the operator installed or
+measured the next tool; both need a setup assertion. CamBam's
+[Part G-code workflow](https://www.cambam.info/doc/plus/cam/CAMPart.htm)
+supports native per-Part export, but each resulting post must pass the
+complete ordered-motion and chained-stock audit.
+The user described their actual per-tool Z setup: retract, install the new
+tool, touch its tip to the stock surface and set work Z=0. This establishes
+an effective tip-to-surface datum for that setup, but is not necessarily a
+tool-table length offset. LinuxCNC distinguishes
+[setting a work-coordinate value at the current position](https://www.linuxcnc.org/docs/scratch/html/gcode/g-code.html)
+from [updating a tool table and applying `G43`](https://www.linuxcnc.org/docs/html/gcode/tool-compensation.html).
+For the accepted M4 fixture, CAM stock top and this work-surface Z are both 0.
+That coincidence cannot be generalized: CAM stock top +4.5 and work-surface
+Z0 need a -4.5 post translation (or a different touch-off value). A fixture
+with this difference and a separate tool-table method are now required M5
+evidence; no physical touch-off was observed here.
 The controller-independent proof is a strict independent parse of the final NC
-file followed by the same full stock/access/cutter/residual replay already used
+files followed by the same full stock/access/cutter/residual replay already used
 for M4. A controller-runtime claim additionally needs a machine-readable
 execution trace or another demonstrated interpreter authority. A screenshot
 cannot substitute for that trace.

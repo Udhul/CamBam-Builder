@@ -49,7 +49,7 @@ remain required. Do not claim physical machining without real setup acceptance.
 | M2: curved Region rest and endmill cleanup | On a native annulus and a mixed line/arc concave Region with a hole, derive pure rest from supplied prior motion and produce complete smaller-endmill entry/cut/link/retract paths. Preserve analytic source identity; validate arc topology, conservative access/protection and independently bounded residual/overcut through approximation and emitted motion. Strict native reimport, visible preview, actual explicit post and stock replay must pass; include a curved narrow-access rejection and translated/reflected frame case. | **Accepted for the bounded annulus, mixed and reflected synthetic jobs via exact explicit motion.** All three actual Default posts pass ordered motion and stock replay; their native Engrave preview posts separately match the final T2 centerlines. The user confirmed curved preview visibility. CustomScript proves post transport, not independent CamBam path planning; neither route is physical machining acceptance. |
 | M3: V cleanup and edge tracing | On the polygonal target and at least one accepted curved target, generate pointed, flat-tip and tangent spherical/conical rounded-tip variable-depth paths, depth-capped/wide-area additional passes, and boundary/corner cleanup around concavity and holes. Check tool-profile continuity, full cutter occupancy, access, protected material, residual and infeasible/partial results between vertices and around arcs. Strict native preview and actual explicit post must be audited; Engrave remains inspection-only unless its whole post passes. | **Accepted for the bounded capped inward V recess.** The user saw geometry and V paths in all seven previews. All seven corrected actual preview posts match centerlines with +5 mm XY rapid links; all seven corrected explicit posts pass complete T1/T3 stock, access and residual audits. Pointed, flat and rounded profiles cover letter and annulus; mixed rounded and curved rejection pass. Flat-pocket strategy selection remains M4 work. |
 | M4: composed workflow and edits | One reopened/edited native source runs rest analysis, alternative endmill/V strategy comparison, selected ordered operations and stock-dependent cleanup without hidden session state. Normalize complete actual emitted motion from any supported native CamBam MOP or ordered MOP series as prior-stock authority, with explicit rejection of unsupported motion; calculate remaining area and volume by stage. Include a curved target and rounded-tip strategy in the accepted comparison; prove one contour-parallel offset fill candidate alongside the raster proof input through the same stock verifier. Allow manual or planned chaining of safe native MOPs, custom Region MOPs and exact framework paths. Relevant edits invalidate source, path and post claims; unchanged cosmetic edits retain valid evidence. The same accepted plan is available through native preview/explicit output and a parsed, stock-replayed direct reference program. | **Accepted for the bounded edited annulus.** The reopened 2.1 mm hole, T1-only partial endmill route and rounded raster/contour-offset finishes pass shared stock and direct reference audits. The user saw source primitives and Engrave toolpaths in both previews. Both actual preview posts match centerlines and both actual explicit Default posts pass complete T1/T3 motion and stock audits; the area-first selector chooses raster while offset also meets the fixed budgets. The bounded linear native-MOP normalizer rejects unsupported arc/unsafe motion; generic curved native Pocket planning is not certified. |
-| M5: first controller output | Lower the accepted M4 plan through one declared controller profile with explicit units, tools, feeds, spindle, entry/link/retract and end roles; independently parse the emitted file and replay its actual coordinates. Preserve a controller-neutral plan and separate, fail-closed output profiles so more controllers can be added. Record controller-runtime and physical acceptance separately. | **Open.** UCCNC is the first production dialect to develop; the machine profile is pending. LinuxCNC is a possible independent interpreter and later output profile. Existing ASCII reference output is not a controller profile. |
+| M5: first controller output | Lower the accepted M4 plan through a declared controller profile with explicit units, coordinate/datum mapping, tools, feeds, spindle, entry/link/retract and end roles; independently decode every emitted program or command stream and replay its actual coordinates with stock carried across program boundaries. Keep tool-change intent, measurement/offset method, execution method and dialect separate. Prove manual and automatic transition contracts, a nonzero CAM stock-top mapping, and two distinct controller dialect fixtures through the same fail-closed audit; physical changer behavior remains machine-specific acceptance. Record controller-runtime and physical acceptance separately. | **Open.** UCCNC is the first output fixture; the user's machine profile is pending. LinuxCNC and Grbl expose materially different tool-change command sets and are candidates for the second dialect fixture. Existing ASCII reference output is not a controller profile. |
 
 This is **five accepted milestones and one remaining milestone**, not a time or
 effort percentage. M4's bounded edited curved composition and direct/native
@@ -57,26 +57,99 @@ output gates are accepted; M5 controller output remains open.
 
 ### M5 controller coverage and automatic evidence - 2026-09-26
 
-The user will use **UCCNC** for production and requires an architecture that can
-add LinuxCNC and other controllers without changing core planning or stock
-verification. One profile is the first bounded M5 implementation, not a global
-controller restriction or a claim that every G-code dialect is interchangeable.
-Each named controller/version/setup gets its own supported command subset and
-explicit units, coordinate frame, tool-offset, M6/macro, spindle, feed and end
-behavior. Unsupported or unresolved behavior fails closed. UCCNC is the first
-output target. In the user's setup `M6` stops for a **manual tool change**;
-the exact profile/macro, machine version and physical limits are still needed
-before production acceptance. The previous LinuxCNC-only
-simulation selection is superseded.
+The user will use **UCCNC** for production; that is a development fixture and
+production preference, not the framework's target boundary. The core represents
+ordered cutting, tools, setup and stock handoffs without a controller command
+or assumed human/machine changer. A controller adapter declares its supported
+command set, version and setup; a transition policy declares how each tool
+change is carried out. Another adapter must be able to lower the same plan
+without changing the planner or stock verifier. Unsupported or unresolved
+behavior fails closed. The user's UCCNC `M6` pauses for a manual change, but
+its exact macro, machine version and physical limits remain production inputs.
+The previous LinuxCNC-only simulation selection is superseded.
 
-Keep tool transitions as plan events with explicit pre/post tip state and stock
-lineage. A profile may lower one event to a manual `M6` pause, a declared
-automatic-change macro with all added travel modeled, or a split between
-per-tool NC files with a checked handoff. The first M5 slice uses one UCCNC
-file and a manual `M6` pause. A split-file route is a subsequent adapter case,
-not an assumption that all users change tools manually. For either route,
-physical tool measurement, re-zero and resume position are operator/setup
+The core's Z contract is the **physical cutting tip relative to the CAM stock
+and fixture**, in a named CAM frame with an explicit stock-top elevation and
+tool-tip datum. A setup maps that frame to the controller work frame, including
+units, axis direction, XY/WCS origin and the Z value assigned to the physical
+stock surface. The map is not inferred from a file name, controller display or
+the convention that stock top equals zero. Each output profile declares the
+active work offset, tool-length compensation state and method by which the
+new tool's tip is registered. Re-touching Z on the stock surface, probing a
+fixed setter, applying a preset tool-table length and other methods are
+alternative ways to establish the same required tip-to-stock relationship.
+The measurement reference may be stock top, stock bottom, a fixture surface
+or a tool setter; it must still be accessible and physically unchanged at the
+handoff. A surface removed by an earlier operation cannot serve as an
+unexamined touch-off reference.
+The core specifies that relationship and the required post-change state; the
+adapter owns controller commands and the operator/machine owns the actual
+measurement. A controller's work-coordinate touch-off need not update its
+tool-length table, and combining both methods without a declared composition
+can apply the correction twice. See LinuxCNC's separate
+[work-coordinate setting](https://www.linuxcnc.org/docs/scratch/html/gcode/g-code.html)
+and [tool compensation](https://www.linuxcnc.org/docs/html/gcode/tool-compensation.html)
+interfaces.
+
+For a simple same-axis Z translation, post
+`z_work = z_cam + (z_work_at_stock_top - z_cam_stock_top)` and invert this map before stock
+replay. If CAM stock top is `+4.5 mm` and the operator sets work Z to `0` at
+that surface, the post must subtract `4.5 mm` from the CAM Z coordinates.
+Alternatively the operator may assign work Z `+4.5 mm` at the surface with an
+identity post. Emitting unchanged CAM coordinates while touching the surface
+to work Z `0` is a datum error and must be rejected. The actual transform may
+also include nontrivial XY placement or orientation; support only declared,
+auditable transforms. Keep a single stock/fixture identity and the same
+physical cut positions across all tools even when the controller's numeric
+work offset or active tool-length offset changes between files.
+
+Keep tool transitions as controller-neutral plan events with the old/new tool,
+safe pre/post tip states, spindle/coolant state, stock lineage, clearance
+requirement, required tool-length/offset state and confirmed success or abort.
+No cutting motion may resume after an unconfirmed or failed change. Select the
+**actor** (operator or automatic changer), **program boundary** (pause in one
+program or separate programs), and **measurement/offset method** independently
+for each transition.
+The controller adapter then maps that policy to its commands, controller
+configuration or external operator workflow. An `M0` pause alone does not
+install a tool; an `M6` alone does not establish a length offset. An automatic
+changer may add motion outside the NC file, which needs a pinned effect model,
+completion signal and machine-specific acceptance. Unknown motion, offset
+changes or resume state cannot be silently treated as zero-effect transitions.
+
+The first Windows proof uses **separate T1 and T3 UCCNC files** with a checked
+manual handoff. Its synthetic CAM stock top and work-surface Z are both `0`,
+so the chosen Z map is identity. The operator installs and measures each tool
+before its file starts; neither file calls an unverified `M6` macro. This also permits CamBam
+Part-per-tool export where native MOPs are used. The T3 file consumes the
+decoded T1 stock result, not a fresh-stock assumption. Both files need explicit
+modal startup, tool/setup identity, safe initial-tip precondition,
+spindle/feeds and end state. The handoff manifest names their order, the same
+source, XY work datum, stock and fixture, the required per-tool Z registration
+method, effective offset state, CAM-to-work map, and allowed start point. A file
+alone cannot establish that the operator met these preconditions.
+
+The planned execution modes are `manual_change` and `automatic_change`; a
+manual change may use a controller's declared tool-change command, a declared
+program stop block or a split-file handoff. An automatic change may use a
+controller tool-change command, macro, or external tool changer only when its
+pre/post tool, tip, offset and added-travel effects are modeled and checked.
+The dialect profile owns the actual command syntax and whether a host/sender
+must pause or load the next file. Policies may differ between transitions in
+one job. Same-tool MOPs can be grouped into CamBam Parts and posted separately;
+the actual posts still require complete file and chained-stock audits.
+Physical tool installation, measurement and resume remain operator/machine
 facts that software must not infer from the NC file.
+
+This separation is required by real controller differences: CNCdrive's
+[UCCNC manual](https://www.cncdrive.com/UCCNC/UCCNC_usersmanual.pdf)
+defines `M0` as a resumable stop and `M6` as a configurable macro call;
+[LinuxCNC's M-code manual](https://linuxcnc.org/docs/html/gcode/m-code.html)
+documents both manual and automatic `M6` behavior and requires a separate
+`G43` for tool-length offset; the official
+[Grbl v1.1 command list](https://github.com/gnea/grbl/blob/master/README.md)
+includes `M0` but no `M6`. These are M5 output contracts, not implemented
+controller adapters yet.
 
 The accepted M4 `rounded_raster` fixture remains the first output oracle:
 source SHA-256 `bb34bc2113a081adc530962ecf5c3ce2b63ba77aeb61f941d525150284d3fb8e`,
@@ -90,23 +163,27 @@ state are established; a posted file cannot infer them.
 
 Automatic evidence has distinct levels:
 
-1. **File and geometry:** rederive the source-bound plan, emit a controller
-   file, decode its complete bytes with an independently written strict modal
-   reader, compare every ordered tool/spindle/feed/rapid/cut/entry/link/retract
-   event and endpoint, then replay the *decoded* motion through the existing
+1. **Emitted program and geometry:** rederive the source-bound plan, emit every
+   program or command stream, decode its complete bytes with an independent
+   reader for that dialect. Compare every ordered tool, spindle, feed, rapid,
+   cut, entry, link and retract event and endpoint; then replay the *decoded*
+   motion through the existing
    stock, access, cutter-occupancy, section and volume gates. Include post-added
-   motion and coordinate rounding. Pin source, prior, profile, macro/offset
-   assumptions and output hashes. This runs on Windows and supplies numeric
-   whole-program evidence without a visual inspection.
+   motion and coordinate rounding. For split output, verify each file and the
+   ordered T1-to-T3 stock handoff as one job. Pin source, prior, transition
+   policy, profile, macro/stop/offset assumptions and output hashes. This runs
+   on Windows and supplies numeric whole-program evidence without visual
+   inspection.
 2. **Controller interpreter:** where an actual controller or independent
    interpreter exposes machine-readable canonical moves, compare that trace
-   against the decoded file and replay it as another authority. LinuxCNC's
+   against the decoded stream and replay it as another authority. LinuxCNC's
    [stand-alone `rs274` interpreter](https://linuxcnc.org/docs/stable/html/code/rs274.html)
    is a plausible command-line cross-check for an explicitly shared command
    subset; a Linux runtime has not been provisioned here, and passing LinuxCNC
    cannot certify UCCNC-specific M6, offsets or macros.
-3. **UCCNC runtime and physical setup:** CNCdrive documents a
-   [Windows demo mode](https://cncdrive.com/UCCNC.html) and plugin interface.
+3. **Target-controller runtime and physical setup:** For the first UCCNC
+   fixture, CNCdrive documents a [Windows demo mode](https://cncdrive.com/UCCNC.html)
+   and plugin interface.
    The locally installed public plugin sample exposes loaded G-code lines and
    sampled position fields, but no verified exact trajectory export was found.
    Its sample callback runs at 25 Hz, so sampled positions cannot certify
@@ -117,13 +194,21 @@ Automatic evidence has distinct levels:
 
 The installed `Macro_Default/M6.txt` example contains additional `G53` tool
 change moves and hardware actions; it does not represent the user's manual
-change profile. Pin the selected manual `M6` behavior or use an isolated
-simulation fixture with declared pause/resume semantics. No installed default
-profile is a production recommendation. The first M5 increment stops when one
-UCCNC file passes level 1 with an explicit setup and unsupported commands
-rejected; record runtime-parity evidence separately. A later controller adapter
-is justified by its named dialect and fixture, while physical acceptance needs
-the user's real machine limits, offsets, tools, workholding and process inputs.
+change profile. No installed default profile is a production recommendation.
+The first M5 increment stops when the two selected UCCNC files, their setup
+declarations and chained stock replay pass level 1, and unknown commands or
+handoff states are rejected. A transformed nonzero stock-top fixture must
+produce the same physical tip/stock replay after inverse mapping; an unchanged
+post with a mismatched touch-off datum must fail. M5's portability gate then
+uses the same plan and
+auditor for a second named dialect fixture, plus a declared in-program manual
+transition and a bounded automatic-changer contract. The automatic fixture
+checks tool/offset/return effects without claiming physical ATC acceptance.
+An unsupported `M6`, stop script, macro or offset must fail closed. This proves
+policy and dialect choice without pretending to certify every controller.
+Record runtime-parity evidence separately. Further adapters need their named
+dialect and fixture; physical acceptance needs the user's real machine
+limits, offsets, tools, workholding and process inputs.
 
 The user-approved curved/rounded scope adds one whole-outcome milestone to the
 earlier polygonal plan; it does not create an open-ended sequence of arc or tip

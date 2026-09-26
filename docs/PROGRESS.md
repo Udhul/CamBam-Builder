@@ -607,31 +607,48 @@ transport, and neither generic curved native MOP planning nor controller or
 physical machining is certified.
 
 **2026-09-26 M5 controller direction corrected (backlog 6):** The user will
-use UCCNC for production and requires extensible support for LinuxCNC and
-other named controllers. The previous LinuxCNC-only simulation selection is
-superseded. UCCNC is the first output profile to develop for the accepted M4
-rounded raster route; the core plan, independent final-file parser and stock
-replay must not depend on it. The local UCCNC installation and CNCdrive's
-Windows demo mode offer a compatibility test, but no exact machine-readable
+use UCCNC for production, while the framework must admit other controllers
+and both manual and automatic tool changes. The previous LinuxCNC-only
+simulation selection is superseded. UCCNC is the first output fixture for the
+accepted M4 rounded raster route, not a core dependency. The core plan and
+stock replay remain controller-neutral; each output adapter declares its
+dialect, setup, command/transport capabilities and transition effects. The
+local UCCNC installation and CNCdrive's Windows demo mode offer a compatibility
+test, but no exact machine-readable
 UCCNC trajectory export has been established. The bundled M6 example adds
 machine-coordinate moves, so its behavior cannot be inferred from the NC
 file alone. The user's actual UCCNC workflow pauses at `M6` for a manual tool
-change; a one-file manual-pause route is the first test case. Other controllers
-may use automatic changers or split per-tool files with explicit handoffs.
-LinuxCNC `rs274` can later provide an independent command-line
-interpreter check of a shared subset, not UCCNC execution authority. See the
+change. The first test case now uses separate T1/T3 files and a declared
+stock-dependent handoff, avoiding reliance on the installed sample M6 macro.
+The transition policy independently selects operator or automatic changer,
+in-program or split-program handoff, and measurement/offset method. `M6`, an
+`M0` stop block and a changer macro are controller-specific implementations,
+not core tool-change types. CamBam Parts can group same-tool MOPs for separate
+posting. The user's own manual method retracts Z, changes tool, touches the
+new tip to the stock surface and sets work Z=0. This is valid for the first
+M4 fixture because its CAM stock top is Z=0 and the declared setup uses no
+active tool-length compensation. The core must instead carry the physical
+tip-to-stock datum and an explicit CAM-to-work transform: a different CAM
+stock-top elevation or tool-table workflow must not silently inherit Z=0.
+Unknown scripts, motion, datum or offset effects fail closed. LinuxCNC
+`rs274` can later provide an independent command-line interpreter check of a
+shared subset, not UCCNC execution authority. See the
 [M5 evidence contract](REST_MACHINING_PLAN.md#m5-controller-coverage-and-automatic-evidence---2026-09-26)
 and [dated finding](REVIEW.md#m5-controller-evidence-route-correction---2026-09-26).
 No controller file or runtime acceptance exists; the milestone count stays
 5 of 6.
 
-**Next priority:** declare an isolated UCCNC software profile with a manual
-`M6` pause and explicit resume state, emit the selected M4 route, then
-independently decode and stock-replay
-every emitted move on Windows. Seek machine-readable UCCNC runtime evidence
-before claiming exact controller parity. Production output waits for the user's
-actual machine profile and setup; add other controller adapters against named
-fixtures rather than assuming universal G-code compatibility.
+**Next priority:** emit separate T1/T3 UCCNC files for the selected M4 route,
+with a declared per-tool setup and checked T1-stock-to-T3 handoff; then
+independently decode and stock-replay every emitted move on Windows. Prove a
+nonzero CAM stock-top translation and an alternative fixed-work-origin/
+tool-table setup through the same inverse-mapped stock audit. Prove a
+declared in-program manual handoff, a modeled automatic-changer fixture and a
+second dialect such as Grbl v1.1 against the same plan/audit, while rejecting
+unknown `M6`, stop and macro behavior. Seek machine-readable UCCNC runtime
+evidence before claiming exact controller parity. Production output waits for
+the user's actual machine profile and setup; add other controller adapters
+against named fixtures rather than assuming universal G-code compatibility.
 See the [M5 runbook](DEVELOPMENT.md#m5-uccnc-output-and-automatic-evidence)
 and [scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24).
 M1 fixes the route criterion: each candidate's actual emitted motion earns

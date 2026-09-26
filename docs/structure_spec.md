@@ -160,17 +160,37 @@ under the [organization plan](#package-organization-decision-and-migration-plan)
 Neither owner imports `CamBamProject`, native CAD/MOP entities, XML I/O or MCP.
 Native `.cb` input/output and future controller posting use explicit adapters
 outside those packages; adapters normalize source data and separately validate
-emitted motion. UCCNC is the user's production controller and the first direct
-output target. A controller-neutral ordered plan and stock verifier feed
-separate declared output profiles for UCCNC, LinuxCNC and later named dialects;
-each adapter owns only its supported command and setup semantics. An independent
-reader must decode each final controller file back to ordered motion before
-stock replay. An interpreter or controller runtime trace, when available,
-supplies a separate execution-level check and cannot certify another dialect.
-Tool changes are plan events: an output profile may implement a manual `M6`
-pause, a verified automatic macro, or a handoff between per-tool files, with
-explicit pre/post setup state and stock lineage. The user's UCCNC profile uses
-the manual-pause form; it is not a restriction on other consumers.
+emitted motion. The controller-neutral ordered plan and stock verifier feed
+capability-declared output adapters. An adapter owns one named dialect,
+transport and setup, such as UCCNC, LinuxCNC or Grbl; the core does not assume
+that every controller accepts the same G-code or even a file. UCCNC is the
+user's production controller and first output fixture, not an architecture
+dependency. An independent reader must decode every emitted command stream
+back to ordered motion and state before stock replay. An interpreter or
+controller runtime trace, when available, supplies a separate execution-level
+check and cannot certify another dialect.
+The core motion uses a physical tool-tip datum in a named CAM frame tied to
+stock and fixture geometry. A setup provides an explicit CAM-to-controller
+work-frame transform, including the CAM stock-top elevation and the work Z
+assigned to that physical surface. The profile declares work-coordinate and
+tool-length compensation state; an adapter transforms emitted coordinates and
+the verifier inverts that map before stock replay. A nonzero stock top or a
+new tool must not silently reset this relationship. Work-coordinate touch-off,
+tool-table length compensation, probing and preset tools are distinct ways to
+establish the required effective tip datum, not core motion types.
+Tool changes are plan events with old/new tool, safe pre/post tip, spindle,
+effective offset, stock-lineage and confirmed completion/abort requirements.
+A failed or unconfirmed change cannot resume cutting. A per-transition policy
+selects manual or automatic actor, in-program or split-program handoff, and
+tool measurement/offset method. The controller adapter maps the policy to
+supported commands, macros or sender actions and rejects unknown effects.
+Different transitions in one job may use different policies. The first UCCNC
+slice uses separate per-tool files with a checked manual handoff. The user's
+manual `M6` form remains a supported policy once its macro/resume behavior is
+declared. Automatic changer effects must be modeled and checked, with physical
+changer acceptance kept separate. Same-tool CamBam MOPs may be grouped in
+Parts for separate posting, but each final post and cross-file stock handoff
+still needs an audit.
 Existing root-level `stock`, `planar` and machining modules
 remain active owners until their staged migration.
 
