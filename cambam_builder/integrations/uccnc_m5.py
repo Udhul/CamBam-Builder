@@ -5,17 +5,15 @@ file starts. They contain no M6 or pause macro. Physical completion remains
 an external condition, never an observation inferred from NC text.
 """
 
-from dataclasses import replace
 import hashlib
 import json
 import math
 from pathlib import Path
 
-from shapely.geometry import Point
-
-from ..cam_core import replay, v_region
+from ..cam_core import ordered_job, replay, v_region
 from . import m4_curved_workflow as m4
 from .uccnc_reader import decode_program
+from . import ordered_dialects
 
 
 FORMAT = "m5-uccnc-split-v1"
@@ -118,87 +116,23 @@ def _prior_as_vmotion(prior):
                  for item in _prior_moves(prior))
 
 
-def _decoded_prior(prior, actual):
-    wanted = _prior_moves(prior)
-    if len(actual) != len(wanted):
-        raise ValueError("T1 decoded length changed")
-    observed = tuple(replace(item, start=motion.start, end=motion.end,
-                             feed=0 if item.role == "rapid" else
-                             ENTRY_FEED if item.role == "entry" else CUT_FEED)
-                     for item, motion in zip(wanted, actual))
-    ending = actual[-1].end
-    trace = replace(prior, items=(
-        replay.Event("tool_change", "T1", prior.initial_position),
-        replay.Event("spindle_start", "T1", prior.initial_position),
-        *observed, replay.Event("spindle_stop", "T1", ending)))
-    replay.replay(trace, expected_source=prior.source_fingerprint)
-    return trace
-
-
-def _decoded_v_plan(plan, actual, start):
-    intended = v_region.complete_motion(plan, start)
-    if len(actual) != len(intended):
-        raise ValueError("T3 decoded length changed")
-    prefix = int(intended[0].role == "rapid")
-    middle = actual[prefix:prefix + len(plan.motions)]
-    if len(middle) != len(plan.motions):
-        raise ValueError("T3 decoded path incomplete")
-    paths, points = [], None
-    for move in middle:
-        if move.role == "rapid":
-            if points is not None:
-                raise ValueError("T3 rapid inside low path")
-        elif move.role == "entry":
-            if points is not None:
-                raise ValueError("T3 entry before retract")
-            points = [(move.end[0], move.end[1], -move.end[2])]
-        elif move.role == "cut":
-            if points is None:
-                raise ValueError("T3 cut without entry")
-            points.append((move.end[0], move.end[1], -move.end[2]))
-        elif move.role == "retract":
-            if points is None or len(points) < 2:
-                raise ValueError("T3 retract without cut")
-            if len(paths) >= len(plan.paths):
-                raise ValueError("T3 extra path")
-            paths.append(v_region.VPath(plan.paths[len(paths)].role,
-                                        tuple(points)))
-            points = None
-    if points is not None or len(paths) != len(plan.paths):
-        raise ValueError("T3 path count changed")
-    decoded_plan = replace(plan, paths=tuple(paths), motions=tuple(middle))
-    v_region.verify(decoded_plan)
-    if v_region._motions(decoded_plan.paths, decoded_plan.safe_z) != middle:
-        raise ValueError("T3 decoded path has an unmodeled link")
-    for path in decoded_plan.paths:
-        x, y, depth = path.points[0]
-        point = Point(x, y)
-        if (not decoded_plan.target.safe.covers(point) or
-                point.distance(decoded_plan.target.safe.boundary) +
-                1e-8 < decoded_plan.tool.radius(depth) +
-                decoded_plan.margin_mm * 0.5):
-            raise ValueError("T3 entry cutter crosses protected boundary")
-    return decoded_plan
-
-
 def audit_decoded_pair(plan, prior, start, t1, t3,
                        translation=(0, 0, 0)):
-    """Shared M5 motion and stock audit for independently decoded stages."""
-    if (t1.tool_label, t3.tool_label) != ("T1", "T3"):
-        raise ValueError("M5 installed-tool stage identity or order changed")
-    actual_t1 = compare_motion(t1, _prior_as_vmotion(prior),
-                               initial_cam_tip=start,
-                               translation_xyz_mm=translation)
-    actual_t3 = compare_motion(t3, v_region.complete_motion(plan, start),
-                               initial_cam_tip=start,
-                               translation_xyz_mm=translation)
-    decoded_prior = _decoded_prior(prior, actual_t1)
-    decoded_plan = _decoded_v_plan(plan, actual_t3, start)
-    rest = v_region.with_prior(decoded_plan, decoded_prior)
-    prior_area = v_region.section_report(rest, 1, final=False)
-    final_area = v_region.section_report(rest, 1)
-    prior_volume = v_region.volume_bounds(rest, final=False)
-    final_volume = v_region.volume_bounds(rest)
+    """Compatibility report backed by the controller-neutral ordered audit."""
+    job = ordered_job.from_prior_v(
+        plan, prior, start, tool_id="T3", rpm=RPM,
+        entry_feed=ENTRY_FEED, cut_feed=CUT_FEED,
+        translation_xyz_mm=translation, boundary="split")
+    stages = tuple(ordered_dialects.DecodedStage(
+        program.tool_label, 0.0, program.rpm, program.moves, (), False,
+        program.end_position, True, "G49") for program in (t1, t3))
+    decoded = ordered_dialects.DecodedJob(stages, t3.end_position, t1.startup)
+    common = ordered_job.audit(job, decoded, dialect="uccnc")
+    stock = common["stock_access_residual"]
+    if stock["status"] != "pass":
+        raise ValueError("decoded M5 stock evaluator unsupported")
+    final_area = stock["section_1_mm2"]
+    final_volume = stock["volume_mm3"]
     if (final_area[2] >= 1e-7 or final_area[1] > 2 or
             final_volume[1] > 80):
         raise ValueError("decoded M5 stock or residual budget failed")
@@ -210,18 +144,18 @@ def audit_decoded_pair(plan, prior, start, t1, t3,
         "motion_equivalence": {"status": "pass",
                                "scope": "both complete UCCNC files",
                                "tolerance_mm": TOLERANCE_MM,
-                               "t1_moves": len(actual_t1),
-                               "t3_moves": len(actual_t3)},
+                               "t1_moves": len(t1.moves),
+                               "t3_moves": len(t3.moves)},
         "stock_access_residual": {
             "status": "pass",
             "scope": "decoded T1 stock carried into decoded T3 rounded V paths",
-            "t1_cuts": len(rest.prior_stock.cuts),
-            "prior_section_1_mm2": prior_area,
+            "t1_cuts": stock["cuts_by_prefix"][0],
+            "prior_section_1_mm2": stock["prior_section_1_mm2"],
             "final_section_1_mm2": final_area,
-            "prior_volume_mm3": prior_volume,
+            "prior_volume_mm3": stock["prior_volume_mm3"],
             "final_volume_mm3": final_volume,
-            "decoded_t1_fingerprint": decoded_prior.motion_fingerprint,
-            "decoded_t3_plan_fingerprint": decoded_plan.fingerprint},
+            "decoded_t1_fingerprint": stock["decoded_prior_fingerprint"],
+            "decoded_t3_plan_fingerprint": stock["decoded_v_plan_fingerprint"]},
         "runtime_parity": {"status": "not_evaluated",
                            "reason": "no complete UCCNC interpreter trace"},
         "physical_setup": {"status": "not_evaluated",

@@ -7,10 +7,13 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-**Current entry point - 2026-09-26 framework direction review:** M0-M4 retain
-their bounded acceptance. M5's named UCCNC/Grbl fixtures pass their offline
-engineering gate; no abstract user sign-off is required. Full M5 packet closure
-still needs the disabled/reordered native-MOP evidence identified by review.
+**Current entry point - 2026-09-26 reusable ordered-job increment:** M0-M4
+retain their bounded acceptance. M5's named UCCNC/Grbl fixtures and the new
+caller-supplied ordered-job UCCNC/Grbl routes pass their offline engineering
+gate; no abstract user sign-off is required. The specific disabled/reordered
+native-MOP case now has synthetic Default-post source/order invalidation and
+fresh T1/T2/T1 cutting-stock replay evidence. It is not a new observed CamBam
+post or controller-runtime claim.
 Stockless Part import/save/reopen
 now preserves absence through copy/transfer and MCP edits, without changing
 explicit MOP Z values. The accepted M4 rounded-raster route now emits separate
@@ -41,14 +44,26 @@ Its parsed positive-Z path reaches Z2 without an inferred shift; see the
 Runtime/physical acceptance remains outstanding. No user validation or new G-code
 is required for the present engineering review.
 
-**Next priority, backlog 6:** implement
-[reusable ordered jobs and verification](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification).
-Promote the working proofs into a caller-supplied job contract, common stock/state
-audit and adapter boundary. Exercise both existing strategies, different inputs,
-actual repeated-tool cutting stages, native enabled/order edits and explicit
-frame/transition effects. This also closes the specific remaining M5 packet
-case. Preserve successful fixture evidence; do not mistake another hardcoded
-example for architectural reuse.
+**Completed offline increment, backlog 6:** the
+[reusable ordered-job packet](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification)
+now has a caller-supplied semantic job, shared decoded motion/stock auditor,
+strict UCCNC/Grbl output and a native-series adapter. Edited-annulus and
+rectangular targets use raster/offset plans, variable tools/feeds/frames and
+both dialects. A native-normalized T1/T2/T1 sequence cuts new stock in each
+stage; disabled/reordered native MOPs invalidate old evidence and require a
+fresh post/replay. Fixed-origin length correction, real compensation motion,
+manual boundaries and a synthetic automatic travel effect have checked offline
+state and fail-closed cases. Exact limits and results are in the
+[review](REVIEW.md#reusable-ordered-jobs-and-verification---2026-09-26).
+
+**Next priority, backlog 6:** demonstrate
+[native and generated machining in one job](REST_MACHINING_PLAN.md#subsequent-capability-progression).
+Use one actual native posted cylindrical predecessor and a generated V cleanup
+on the same source/stock, with one executable authority per stage and decoded
+cross-route stock evidence. This matters now because the ordered boundary is
+implemented, while the present native and V proofs are still separate
+compositions. Stop after one source-bound end-to-end hybrid and its edit
+invalidation; broader native algorithms and volume methods remain later work.
 
 The user reaffirmed native CamBam interchange, independent calculation, hybrid
 native/generated jobs and future volume/surface methods as the product direction.
@@ -59,7 +74,7 @@ to concrete product choices or external observations. See
 [review correction](REVIEW.md#framework-direction-and-engineering-acceptance---2026-09-26).
 Manual-tab authoring remains deferred: it needs a native before/after fixture
 and contributes less to the current shared-core objective. No user input blocks
-the next job-contract increment; a fresh session can use the documented packet.
+the next hybrid increment; a fresh session can use the documented progression.
 The dated entries below retain development history.
 
 **2026-09-23 execution architecture refinement (backlog 6).** The user's context
@@ -1651,11 +1666,11 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    The broader design covers general combined-tool region and paired-inlay
    workflows, with caller-supplied tools/catalog integration. The first detached
    nominal planar runtime increment is now implemented.
-   **Current continuation, 2026-09-26:** use the
+   **Current continuation, 2026-09-26:** the
    [ordered-job packet](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification)
-   to turn the M0-M5 reference implementations into reusable capabilities and
-   close the remaining M5 order/edit evidence. Subsequent native composition and
-   volume methods follow the [capability progression](REST_MACHINING_PLAN.md#subsequent-capability-progression).
+   is implemented for its bounded offline domain and closes the M5 synthetic
+   native order/edit evidence gap. The next hybrid native/generated job and
+   later volume methods follow the [capability progression](REST_MACHINING_PLAN.md#subsequent-capability-progression).
    Historical entries below retain earlier stage limits; they do not permanently
    restrict the framework to RC01 or a fixed-axis sample workflow.
    The [planar backend decision](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)

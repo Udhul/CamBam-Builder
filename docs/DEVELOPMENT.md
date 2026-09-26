@@ -1651,6 +1651,47 @@ records the remaining native order/edit case and reusable state-model work.
 Use the user's actual controller, sender, offset and changer configuration
 only after a separate production profile and machine acceptance exist.
 
+### Reusable ordered-job output and verification
+
+The caller builds `cam_core.ordered_job.Job` directly or adapts an existing
+`v_region.VPlan` and `replay.Trace` with `from_prior_v(plan, prior, safe_tip,
+boundary="split"|"pause")`. A strictly normalized linear CamBam Default
+`NativeSeries` can use `integrations.cambam.native_ordered_job.from_native_series`
+with explicit targets, tool cutting lengths and entry modes. Recheck the
+`NativeSeries` source/candidate/post freshness after a native edit and create a
+new job. Pass `NativeBinding(series, source_path, candidate_path, post_path)`
+to `emit`, `write_bundle` and `audit_bundle` for native jobs so current source
+bytes are checked each time; the old output bundle remains pinned to its old
+source. Jobs without a
+supplied initial-stock model use `stock_present=False` and receive motion
+comparison with stock evidence `not_evaluated`.
+
+`integrations.ordered_output.emit(job, "uccnc"|"grbl")` returns complete NC
+byte strings and independently decoded evidence. `write_bundle(new_directory,
+job, dialect)` writes `handoff.json` and one NC file per UCCNC stage or one
+whole Grbl file; `audit_bundle(handoff_path, current_job)` rechecks final bytes,
+job/prefix fingerprints and the declared numerical policy. A synthetic host
+transition additionally needs caller-supplied UTF-8 JSON effect bytes keyed by
+stage ID; its format is `ordered-effect-v1` with stage/tool/model and ordered
+`travel_program_tip_xyz_mm`. Manual completion, installed tools, fixed G54,
+offset values and physical fixture setup remain explicit assumptions.
+
+From the repository root, the focused final-tree gate is:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_ordered_job tests.test_ordered_dialects tests.test_native_series tests.test_native_series_audit tests.test_uccnc_m5 tests.test_m5_portability tests.test_m4_curved_workflow -q
+```
+
+These tests build an edited annulus and a different rectangular target, route
+both raster and offset V candidates through both output dialects, verify a
+native-normalized T1/T2/T1 cutting sequence, and reject changed source/order,
+program bytes, length state and external effects. The native order edit uses a
+synthetic CamBam Default post; it proves source/order/stock invalidation, not a
+new observed CamBam post. No GUI check is required because this increment does
+not change native document emission. The
+[implemented contract](structure_spec.md#reusable-ordered-job-output-and-verification)
+names the supported geometry and transition limits.
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not

@@ -1,5 +1,69 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Reusable ordered jobs and verification - 2026-09-26
+
+**Engineering outcome:** the bounded offline ordered-job packet is implemented.
+`cam_core.ordered_job` owns immutable source-bound jobs, stages, transitions,
+semantic moves, prefix fingerprints and a controller-neutral decoded-motion
+auditor. `integrations.ordered_dialects` owns separate strict UCCNC split and
+Grbl v1.1 whole-program readers/writers; `integrations.ordered_output` owns
+versioned hash-bound manifests, complete-file re-audit and independently
+decoded synthetic host effects. The native bridge maps a strict `NativeSeries`
+and explicit replay setup into the same job. `NativeBinding` rechecks current
+source/candidate/post bytes at emission and re-audit. The original M5 fixture APIs and
+their evidence remain available through a compatibility wrapper over the
+shared auditor. Both recorded M5 handoffs re-audit to their original reports.
+
+The tests exercise a newly edited annulus through both accepted raster/offset
+plans and both dialects, plus a separate rectangular direct-Python target
+with changed tool ID, RPM, feed and datum. Neither shared auditor nor stock
+verifier reads M4 fixture paths or calls the selected generator. Decoded
+cylindrical stages feed `replay`; a decoded rounded-V finish feeds `v_region`.
+The same native-normalized T1/T2/T1 source also emits and replays through both
+controller routes: 2, 3 and 5 cumulative cylindrical cuts, with each stage
+removing a separately checked new-stock point. Disabling the first native MOP
+or reversing document order invalidates old source/post evidence. Fresh
+synthetic Default posts establish enabled order and new prefixes of 2/4 or
+2/4/6 cuts; old strategy evidence cannot certify the changed source. This
+closes the named M5 **offline** order/edit gap. It does not assert a new actual
+CamBam post observation.
+
+The Grbl reader carries length state across stages and decodes a real G0
+compensation move after G43.1/G49 changes. The shared audit checks decoded
+offset values, physical tip from declared length and offset, actual stage
+motion, and travel above the supplied flat fixture-top plane. An unmodeled
+compensation, wrong offset/length, unsafe travel, missing external effect,
+invalid resume tip, changed program bytes or stale job fingerprint fails.
+The sign used for a stationary-machine offset change follows
+[Grbl's documented `WPos = MPos - WCO` relation](https://github.com/gnea/grbl/blob/master/doc/markdown/interface.md),
+where WCO includes the dynamic tool-length offset; a changed offset therefore
+changes displayed work Z before a compensating machine move.
+Manual split and pause completion and synthetic automatic completion are
+listed as assumptions. A stockless native-normalized source retains document
+and output-motion evidence while stock is `not_evaluated`; unsupported stock
+stage combinations report `unsupported`. Runtime parity and physical setup
+remain `not_evaluated`.
+
+Verification: the focused ordered-job/dialect tests and the native/M4/M5
+regression gate in the [runbook](DEVELOPMENT.md#reusable-ordered-job-output-and-verification)
+passed: 35 combined tests and 11 focused tests on the final edits. Both recorded M5 bundles
+also re-audited to `bounded_m5_uccnc_split_pass` and
+`bounded_m5_portability_pass` after moving their shared audit. Syntax compilation and
+`git diff --check` passed; untracked files were also compiled and imported.
+An optional `uv build` check could not initialize its default cache under the
+workspace sandbox; with a workspace-local cache it could not fetch declared
+`setuptools>=77.0` and `wheel` because network access was denied. No package
+build result is claimed for this increment. The new modules live in existing
+declared packages, so the package metadata did not change; rerun the build
+when build dependencies are locally available.
+No native document writer or CamBam carrier changed, so another GUI check
+would not add evidence for this increment. Reopen this offline gate if a
+supported dialect command, state transition or source edit bypasses the
+decoded audit. General native generated-motion composition, G2/G3, arbitrary
+fixtures/macros, full controller runtime and physical-machine behavior remain
+separate work. The next project increment is one actual native-posted
+cylindrical predecessor plus generated V cleanup in a single source-bound job.
+
 ## Framework direction and engineering acceptance - 2026-09-26
 
 The user clarified that they can supply practical workflow and program facts,
@@ -35,6 +99,8 @@ gap above. Generalized transition/frame evaluation belongs in the next coherent
 which also closes that case. The earlier recommendation to switch to Manual
 Profile tabs is superseded: reusable job/state/stock boundaries contribute more
 directly to the user's stated objective and are prerequisites for wider methods.
+The later [ordered-job result](#reusable-ordered-jobs-and-verification---2026-09-26)
+closes that offline gap; this paragraph records the pre-implementation finding.
 
 The [architecture owner](structure_spec.md#framework-direction-and-extension-principles)
 now distinguishes design intent, path strategy, linking/scheduling, stock queries,

@@ -42,7 +42,10 @@ file. Their strict millimetre dialect is not a machine controller profile.
 The first bounded UCCNC profile emits an independently decoded, stock-replayed
 synthetic T1/T3 pair. A Grbl v1.1 portability fixture now checks in-program
 manual and modeled automatic transitions through the same stock verifier;
-runtime and physical setup are unassessed. See the
+the reusable ordered-job API now accepts caller-supplied stages, raster or
+offset V plans, and supported native-normalized linear motion for UCCNC or
+Grbl output with decoded stock evidence. Runtime and physical setup are
+unassessed. See the
 [current status](docs/PROGRESS.md#active-work-and-next-priority).
 
 For development, install the environment with `uv sync`, then run the

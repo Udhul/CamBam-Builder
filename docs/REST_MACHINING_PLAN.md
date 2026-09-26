@@ -476,6 +476,14 @@ or a package-only migration would not achieve it.
 
 ### Next implementation packet: reusable ordered jobs and verification
 
+**Implemented for the bounded offline domain, 2026-09-26.** The
+[implemented contract](structure_spec.md#reusable-ordered-job-output-and-verification),
+[runbook](DEVELOPMENT.md#reusable-ordered-job-output-and-verification) and
+[review evidence](REVIEW.md#reusable-ordered-jobs-and-verification---2026-09-26)
+record the result. The packet below remains the acceptance definition; future
+capability work follows the progression after it. Native disabled/order
+evidence uses a synthetic Default post and is not a new CamBam observation.
+
 **Outcome:** a caller supplies a supported ordered machining job, chooses an
 existing strategy or supplies motion, and receives independently checked output
 and stock evidence through the same API. Changing dimensions, tool IDs, feeds,

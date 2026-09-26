@@ -28,7 +28,7 @@ are outside that runtime package list.
 | `cambam_builder/cambam_entities.py` and nine old root module paths | Compatibility/discovery imports of canonical native objects; no native implementation remains at root | Preserve public and documented direct imports; implementation modules import owners directly |
 | `cambam_builder/native/transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
 | `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy, remaining-section bounds and supplied section-motion verification | Horizontal cuts and explicit travel inside rectangular stock/target; no generated or native path integration |
-| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns shared ordered XYZ/cut-sweep values and `curved_region.py` owns bounded circular-arc access/rest approximation | Exact nominal and curved endmill stock, analytic slot and placed mixed trace; no native entity, XML, MCP or machine-output dependency |
+| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns ordered XYZ/cut-sweep values, `ordered_job.py` owns caller-supplied stage/state and decoded stock auditing, and `curved_region.py` owns bounded circular-arc access/rest approximation | Exact nominal and curved endmill stock, analytic slot and placed mixed trace; no native entity, XML, MCP or machine-output dependency |
 | `cambam_builder/cam_extensions/strategy.py` | Deterministic selection among separately audited ordered routes, including partial and infeasible outcomes | Policy over evidence records; no XML or native entity dependency |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
@@ -39,6 +39,7 @@ are outside that runtime package list.
 | `cambam_builder/integrations/cambam/` | Native `.cb` input/attachment, M2 curved candidates, actual posted MOP-series normalization and bounded posted-stock comparison; depends on native model and detached CAM values | Bridge between native documents, generated motion and CamBam output; no source model ownership |
 | `cambam_builder/integrations/direct_*.py` | Bounded headless V and RC01 reference-dialect writers, parsed-output audits and evidence manifests | Output adapters; consume detached plans/traces and preserve their target verifiers |
 | `cambam_builder/integrations/{uccnc_m5,uccnc_reader,grbl_m5_reader,m5_portability,m5_decoded}.py` | Bounded controller fixture emission, independent complete-byte dialect decoding, common decoded-stage values and shared T1/T3 stock audit | Consume the detached M4 plan; no controller syntax in `cam_core` |
+| `cambam_builder/integrations/{ordered_dialects,ordered_output}.py` and `integrations/cambam/native_ordered_job.py` | Reusable strict UCCNC/Grbl lowering and independent decoding, hash-bound output audit, and supported native-series-to-job mapping | Controller bytes/effects stay outside `cam_core`; native input retains its source/post freshness contract |
 | `cambam_builder/__init__.py` | Public alias and version | Import surface and version metadata |
 | `cambam_builder/mcp_adapter/` | Optional local stdio launcher, SDK protocol boundary, volatile documents, retry ledger, schema validation and workspace I/O | [MCP contract](MCP_CONTRACT.md); `server.py` owns wire behavior, `service.py` owns application state, `paths.py` owns filesystem policy |
 
@@ -380,7 +381,8 @@ remain explicit assumptions. `integrations.grbl_m5_reader` separately decodes
 the bounded Grbl v1.1 whole-program subset, including ordered `M0` pauses and
 per-stage `G49`/`G43.1` state. `integrations.m5_portability` verifies manual
 and mixed-policy fixtures with the same `uccnc_m5.audit_decoded_pair`
-stock/access/residual audit; a final safe T1 stage and synthetic changer
+stock/access/residual audit, now a compatibility wrapper over
+`cam_core.ordered_job.audit`; a final safe T1 stage and synthetic changer
 effect travel are checked without inferring physical completion. The manual
 fixture resolves a +4.5 mm CAM surface through a declared -4.5 mm work map;
 the mixed fixture uses fixed G54 and external table-derived length values.
@@ -393,6 +395,55 @@ These limits motivate the
 Dialect readers do not depend on one another. Generic native MOP generation, further
 controller dialects, controller runtime parity and physical machine acceptance
 are outside this bounded fixture set.
+
+### Reusable ordered-job output and verification
+
+**Implemented bounded contract, 2026-09-26.**
+`cam_core.ordered_job` accepts immutable `Job`, `Stage`, `JobMove` and
+`Transition` values. A job names its source revision, ordered operation IDs,
+resolved tools, explicit program-to-G54 translation, units, stock availability,
+per-stage spindle/feed and length state, and predecessor fingerprints. Stages
+may end at a different safe tip; the next stage begins there. A transition
+declares manual split or in-program pause, or a synthetic host effect and its
+expected travel. Completion tokens are assumptions, not observed events.
+Native `NativeSeries` can be mapped through `native_ordered_job.from_native_series`
+after strict source/candidate/post normalization and replay; its original
+document and posted trace remain separate. Native output and re-audit require
+`NativeBinding`, which rechecks those three current files; a supplied stale job
+cannot certify an edited source. Direct Python V plans use
+`ordered_job.from_prior_v` with either existing raster or offset strategy.
+
+`ordered_dialects.render/decode` lowers and independently reads complete
+UCCNC split files or one Grbl v1.1 program for the supported G0/G1 subset.
+Tool IDs, stage count, RPM, feeds, endpoints and translation are caller values.
+Grbl length-state changes move displayed work Z at stationary machine position;
+the adapter emits and decodes a real compensating rapid before the stage, and
+the common auditor checks the effective physical tip from declared tool length
+and offset. UCCNC split uses G49 and an asserted registered tip at each file
+boundary. A pause or stage comment does not install a tool. Unknown commands,
+missing compensation, changed offsets and unsupported boundary policies fail.
+
+`ordered_output.emit/audit_files/write_bundle/audit_bundle` bind versioned
+profile, numerical policy, job/source and prefix fingerprints, final program
+hashes and any external-effect hashes. The controller-neutral auditor compares
+every decoded move to intended motion within 0.000051 mm, then replays actual
+decoded cylindrical cuts stage by stage or one cylindrical predecessor plus a
+terminal decoded rounded-V plan. It reuses `replay` and `v_region` geometry
+evaluators and never calls the selected generator to fill absent decoded
+motion. A stockless job can retain source and motion comparison while stock
+evidence is `not_evaluated`; an unsupported stock stage mix is `unsupported`.
+Synthetic external travel is independently decoded and must match the declared
+model and clear the supplied flat fixture-top plane. Runtime and physical setup
+remain `not_evaluated`. Re-audit after a native edit requires a freshly
+normalized source/job; an old bundle's fingerprint cannot certify it.
+
+The implemented geometry domain remains planar fixed-axis cylindrical replay
+and one terminal rounded-V finish. Native G2/G3, generic native Pocket/Profile
+path reproduction, multiple endmill predecessors before V, arbitrary macros,
+non-flat fixtures, rotations/kinematics and controller runtime parity require
+named extensions. The [ordered-job packet](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification)
+and [verification](REVIEW.md#reusable-ordered-jobs-and-verification---2026-09-26)
+record the acceptance scope.
 
 ### Directional analytic stock section bounds
 
