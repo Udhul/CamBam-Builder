@@ -1095,6 +1095,49 @@ with rounded-tip comparison and direct reference output remains the full M4
 gate; [the milestone scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
 owns its acceptance.
 
+### Edited curved rounded-tip composition and offset fill
+
+`cam_core.v_region.plan` supports `raster` and `offset` fill patterns after the
+same cap-depth shell/hole contours. Offset fill erodes the feasible cutter-center
+Region by successive half-step and full-step distances, traces every resulting
+outer/hole ring separately, and returns to safe Z between rings. Both patterns
+use the same `_depth_path`, continuous full-height occupancy `verify`, source-bound
+`with_prior` replay and conservative section/volume reports. The pattern enters
+the plan fingerprint; the default raster fingerprint remains compatible with
+the accepted M3 evidence. Offset topology and the finite path budget fail
+closed rather than introducing low links through holes.
+
+`integrations.m4_curved_workflow` compares one reopened, MOP-free curved annulus
+source with a tangent spherical/conical T3 rounded tip. It copies that source
+and one supplied T1 trace into a fresh, source-hash-bound bundle; an explicitly
+requested synthetic T1 trace is available solely as a proof fixture. Both fill
+routes produce separate strict-reimported native XYZ Engrave previews and
+T1/T3 Drill/CustomScript explicit candidates through the M3 carrier. Each also
+produces a complete G21/G90/G61/G17 direct reference program. A third, T1-only
+direct file gives the partial endmill alternative its own complete output. Every direct file
+is parsed independently, compared item by item including tools, spindle,
+feeds and coordinates, and its posted T1 prefix is replayed through the shared
+stock verifier before the same V occupancy and residual bounds are checked.
+The direct dialect is a reference format, not a controller profile.
+
+The comparison has three alternatives on the **same inward V target**:
+T1 endmill only, T1 plus rounded raster, and T1 plus rounded offset. The
+endmill-only route is explicitly partial and independently parsed/replayed;
+it is not compared with the distinct
+square-wall flat-floor target of M2. Each rounded route gets an ordered
+two-stage `StageAudit` only after its complete actual Default explicit post,
+actual preview centerlines, and parsed direct file pass. The actual prior
+prefix is checked before the V stage receives stock authority. Selection
+requires section Z=-1 upper remaining area at most 2 mm², eight-slab volume
+upper at most 80 mm³, and zero nominal protected overcut under the conditional
+GEOS model. Manual selection cannot override a missing or failed native post
+for either rounded route.
+The MOP-free source's original primitive UUID/world geometry and Part stock
+form a semantic edit key: a document-title change retains evidence, while
+an arc, hole, stock or setup change invalidates it. Candidate and direct file
+bytes remain exact-hash guarded. This is a bounded edited annulus workflow,
+not generic curved native MOP replay or physical machining acceptance.
+
 ### RC01 selected posted-motion stock authority
 
 `integrations/cambam/rc01_stock_authority.py` supplies a bounded caller-selected

@@ -1352,6 +1352,68 @@ outside the checkout. All three module paths resolved inside the installed
 wheel target. This checks package inclusion and import, not a clean dependency
 resolution or all supported Python versions.
 
+### M4 edited curved rounded-tip comparison and output gate
+
+`output/m4-edited-curved-20260925-02/` is the retained validation bundle.
+`create_source.py` reopens the accepted M3 annulus source, enlarges its analytic
+circular hole from radius 2 to 2.1 mm while preserving the Region UUID,
+and writes `edited-source.cb`. The outer radius is 9 mm; Part stock remains
+X/Y `[-12,12]` mm, thickness 4 mm and top Z=0. The nested `comparison/`
+contains exact copies of the edited source and an explicitly synthetic,
+source-bound T1 proof trace. This T1 raster is a stock fixture, not a
+recommended roughing recipe. Each `raster/` and `offset/` child has native
+preview/explicit `.cb` candidates, `expected-motion.json`, and its own
+parsed, stock-replayed `direct-reference.nc`. The complete T1-only
+`comparison/endmill-direct.nc` is the partial alternative. The offset fill follows nested
+contours around both annulus boundaries; the raster fill uses horizontal rows.
+The direct output is a strict millimetre reference dialect, not controller NC.
+
+From the repository root, run the focused implementation gate and recheck all three
+retained direct files:
+
+```powershell
+& $ProjectPython -m unittest tests.test_m4_curved_workflow tests.test_v_region tests.test_native_v_region tests.test_strategy_selection -v
+$Comparison = 'output/m4-edited-curved-20260925-02/comparison'
+& $ProjectPython -c "from cambam_builder.integrations.m4_curved_workflow import audit_direct, audit_endmill_direct; p='output/m4-edited-curved-20260925-02/comparison/comparison.json'; print(audit_endmill_direct(p)['status']); print(audit_direct(p,'raster')['status']); print(audit_direct(p,'offset')['status'])"
+```
+
+For actual CamBam Plus 1.0 acceptance, open each of the four native files:
+`comparison/raster/preview/m3-preview.cb`,
+`comparison/offset/preview/m3-preview.cb`,
+`comparison/raster/explicit/m3-explicit.cb`, and
+`comparison/offset/explicit/m3-explicit.cb`. The two previews should visibly
+show the 9/2.1 mm annulus and, respectively, horizontal rows and concentric
+offset rings. The explicit Drill/CustomScript toolpath display may omit literal
+cuts, as in M3; its complete NC is the execution evidence. Generate toolpaths
+and export each with **Default** post / **Default mm** profile to `m3-preview.nc`
+or `m3-explicit.nc` beside its `.cb`. Use separate files; do not overwrite the
+M3 accepted posts. Report whether both visible previews match those patterns,
+and provide the four exported NC files. Audit them with:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.m4_curved_workflow audit `
+  "$Comparison/comparison.json" `
+  --source 'output/m4-edited-curved-20260925-02/edited-source.cb' `
+  --raster-preview "$Comparison/raster/preview/m3-preview.nc" `
+  --offset-preview "$Comparison/offset/preview/m3-preview.nc" `
+  --raster-post "$Comparison/raster/explicit/m3-explicit.nc" `
+  --offset-post "$Comparison/offset/explicit/m3-explicit.nc"
+```
+
+Pass requires both `m3_v_preview_centerlines_match`, both
+`bounded_m3_v_post_pass`, both `bounded_m4_direct_pass`, the
+`bounded_m4_endmill_direct_pass` baseline, and a `selected`
+strategy. The raster/offset previews contain 25/8 paths and 307/283 cut
+segments on this edited source. The direct programs contain 450/375 ordered
+items. Their Z=-1 mm final residual upper bounds are 1.52633/1.53003 mm²,
+with eight-slab volume upper bounds 42.676/41.509 mm³; nominal protected
+overcut must remain zero. The endmill-only prior remains partial at Z=-1
+with 103.32511 mm² upper residual. Any extra/missing move, shallow crossover,
+changed source/candidate bytes or stock result fails. The test suite's
+constructed Default posts validate the reader and selector only; the four
+actual user exports and preview observation are still required for M4 native
+acceptance. Physical/controller acceptance belongs to M5.
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not

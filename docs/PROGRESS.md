@@ -523,9 +523,10 @@ and [checks](DEVELOPMENT.md#native-mop-series-normalization-and-strategy-selecti
 The new package built as wheel/sdist, and the installed wheel imported its
 new modules from outside the checkout. This does not verify all supported
 Python versions or CamBam physical execution.
-**M4 remains open** pending a reopened edited curved combined job,
-contour-parallel offset fill and parsed direct reference output. The M3
-rounded-tip geometry and native output gates are now accepted.
+At that building-block checkpoint, M4 still lacked a reopened edited curved
+combined job, contour-parallel offset fill and parsed direct reference output;
+the later candidate checkpoint below supplies them. The M3 rounded-tip
+geometry and native output gates were already accepted.
 
 **2026-09-25 M3 implementation checkpoint (backlog 6):** The bounded 2 mm
 capped inward V recess on the accepted A01 letter and M2 annulus now has
@@ -569,17 +570,35 @@ prior and plan fingerprints with the seven visually accepted previews.
 controller and physical machining acceptance remain separate. Exact NC hashes,
 limits and reopening criteria are in the
 [dated acceptance](REVIEW.md#m3-corrected-native-output-acceptance---2026-09-25).
-**Next priority:** implement M4 edited composition on a curved target with a
-rounded-tip route and one contour-parallel offset fill candidate alongside
-the raster proof input, then audit the complete native and direct outputs.
-See the [runbook](DEVELOPMENT.md#m3-region-v-paths-and-native-output-gate) and
-[scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24).
+**2026-09-25 M4 edited curved candidate checkpoint (backlog 6):** One reopened
+annulus source with its circular hole edited to radius 2.1 mm now drives
+source-bound T1 prior analysis and alternative rounded-tip raster/contour-offset
+V routes. Both fills pass the same continuous cutter, shared prior-stock,
+section-residual and volume verifier. Each route has strict native preview and
+explicit candidates plus a separately parsed and stock-replayed complete T1/T3
+direct reference file. A complete parsed T1-only direct program also gives the
+partial endmill baseline its own output. The endmill-only prior and both rounded finishes enter
+edit-aware stage comparison; title-only source edits retain evidence, while
+geometry/stock changes invalidate it. All three direct files pass their automated
+gate, and synthetic Default posts test native parsing and selection. The
+retained A/B bundle and exact CamBam steps are in the
+[runbook](DEVELOPMENT.md#m4-edited-curved-rounded-tip-comparison-and-output-gate);
+the [contract](structure_spec.md#edited-curved-rounded-tip-composition-and-offset-fill)
+owns scope and limits. **M4 remains open** until the user inspects both actual
+previews, exports their four Default-mm NC files, and the complete actual
+preview/explicit posts pass. This is not independent curved native Pocket
+planning or controller acceptance.
+**Next priority:** complete the prepared M4 CamBam A/B validation and record
+the actual post/selection evidence; reopen the affected route if CamBam emits
+extra or unsafe motion. Do not advance to M5 on synthetic posts alone.
+See the [runbook](DEVELOPMENT.md#m4-edited-curved-rounded-tip-comparison-and-output-gate)
+and [scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24).
 M1 fixes the route criterion: each candidate's actual emitted motion earns
 its own stock/access certificate. M4 then composes native MOP series, custom
 Region MOPs and framework paths into an edit-aware strategy choice with
 area/volume reporting. Bounded native-MOP normalization and strategy selection
-are now M4 components; they cannot claim M4 acceptance without an
-edited combined curved/rounded-tip job, offset fill and direct output evidence.
+are M4 components; the edited curved/rounded candidates and direct output now
+exist, but fresh actual native posts are still required.
 Backlog 7 needs a separate Manual-tab fixture; 8-10 are complete.
 Defer geometry outside the six-milestone supported domain, optimization and
 the detached/policy

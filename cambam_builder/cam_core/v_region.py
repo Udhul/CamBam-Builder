@@ -159,11 +159,14 @@ class VPlan:
     stepover_mm: float
     status: str
     reason: str
+    fill_pattern: str = "raster"
 
     @property
     def fingerprint(self):
         values = (self.target.fingerprint, self.tool, self.paths, self.motions,
                   self.safe_z, self.margin_mm, self.stepover_mm, self.status)
+        if self.fill_pattern != "raster":
+            values += (self.fill_pattern,)
         return hashlib.sha256(repr(values).encode("utf-8")).hexdigest()
 
 
@@ -276,8 +279,9 @@ def _motions(paths, safe_z):
 
 
 def plan(target, tool, *, stepover_mm=1.0, xy_step_mm=1.0,
-         margin_mm=0.01, safe_z=2.0, max_paths=1000):
-    """Trace both boundaries at the cap and fill wide areas with varying-Z rows."""
+         margin_mm=0.01, safe_z=2.0, max_paths=1000,
+         fill_pattern="raster"):
+    """Trace cap boundaries and fill with varying-Z rows or offset contours."""
     if type(target) is not VTarget or type(tool) is not VProfile:
         raise ValueError("V Region target and tool required")
     stepover_mm = _finite(stepover_mm, "stepover")
@@ -287,7 +291,8 @@ def plan(target, tool, *, stepover_mm=1.0, xy_step_mm=1.0,
     if (stepover_mm <= 0 or xy_step_mm <= 0 or margin_mm <= 1e-5 or
             safe_z <= 0 or type(max_paths) is not int or max_paths <= 0 or
             target.cap_depth > tool.cutting_length or
-            tool.radius(target.cap_depth) > tool.maximum_radius):
+            tool.radius(target.cap_depth) > tool.maximum_radius or
+            fill_pattern not in ("raster", "offset")):
         raise ValueError("V path controls exceed tool/setup limits")
     cap = target.cap_depth
     deep = target.safe.buffer(-(tool.radius(cap) + margin_mm), quad_segs=32)
@@ -296,7 +301,8 @@ def plan(target, tool, *, stepover_mm=1.0, xy_step_mm=1.0,
                                    quad_segs=32)
     if reachable.is_empty:
         result = VPlan(target, tool, (), (), safe_z, margin_mm, stepover_mm,
-                       "infeasible", "no positive-depth cutter center fits")
+                       "infeasible", "no positive-depth cutter center fits",
+                       fill_pattern)
         verify(result)
         return result
     paths = []
@@ -306,34 +312,56 @@ def plan(target, tool, *, stepover_mm=1.0, xy_step_mm=1.0,
             candidate = _depth_path(target, tool, xy, cap, margin_mm, "edge")
             if candidate is not None:
                 paths.append(candidate)
-    xmin, ymin, xmax, ymax = reachable.bounds
-    if math.ceil((ymax - ymin) / stepover_mm) > max_paths:
-        raise ValueError("V fill row budget exceeded")
-    row = ymin + stepover_mm / 2
-    while row < ymax:
-        horizontal = LineString(((xmin - 1, row), (xmax + 1, row)))
-        for line in _segments(reachable.intersection(horizontal)):
-            if line.length < xy_step_mm / 10:
-                continue
-            candidate = _depth_path(target, tool, _sample(line, xy_step_mm),
-                                    cap, margin_mm, "fill")
-            if candidate is not None:
-                paths.append(candidate)
-        if len(paths) > max_paths:
-            raise ValueError("V path budget exceeded")
-        row += stepover_mm
+    if fill_pattern == "raster":
+        xmin, ymin, xmax, ymax = reachable.bounds
+        if math.ceil((ymax - ymin) / stepover_mm) > max_paths:
+            raise ValueError("V fill row budget exceeded")
+        row = ymin + stepover_mm / 2
+        while row < ymax:
+            horizontal = LineString(((xmin - 1, row), (xmax + 1, row)))
+            for line in _segments(reachable.intersection(horizontal)):
+                if line.length < xy_step_mm / 10:
+                    continue
+                candidate = _depth_path(target, tool, _sample(line, xy_step_mm),
+                                        cap, margin_mm, "fill")
+                if candidate is not None:
+                    paths.append(candidate)
+            if len(paths) > max_paths:
+                raise ValueError("V path budget exceeded")
+            row += stepover_mm
+    else:
+        inset = stepover_mm / 2
+        # Every ring comes from a smaller center region. Disconnected islands
+        # and holes stay separate, so no low feed bridges protected stock.
+        for _ in range(max_paths):
+            offset = reachable.buffer(-inset, quad_segs=32)
+            if offset.is_empty:
+                break
+            for polygon in _polygons(offset):
+                for ring in (polygon.exterior,) + tuple(polygon.interiors):
+                    candidate = _depth_path(target, tool,
+                        _sample(LineString(ring.coords), xy_step_mm),
+                        cap, margin_mm, "fill")
+                    if candidate is not None:
+                        paths.append(candidate)
+            if len(paths) > max_paths:
+                raise ValueError("V path budget exceeded")
+            inset += stepover_mm
+        else:
+            raise ValueError("V offset fill budget exceeded")
     status = "partial" if paths else "infeasible"
     reason = ("finite stepover and finite tip leave measured residual" if paths else
               "no admissible positive-depth path")
     result = VPlan(target, tool, tuple(paths), _motions(paths, safe_z),
-                   safe_z, margin_mm, stepover_mm, status, reason)
+                   safe_z, margin_mm, stepover_mm, status, reason, fill_pattern)
     verify(result)
     return result
 
 
 def verify(result):
     """Check the full profile between vertices and complete ordered motion."""
-    if type(result) is not VPlan or result.status not in ("partial", "infeasible"):
+    if (type(result) is not VPlan or result.status not in ("partial", "infeasible") or
+            result.fill_pattern not in ("raster", "offset")):
         raise ValueError("invalid V plan")
     if result.motions != _motions(result.paths, result.safe_z):
         raise ValueError("V motion differs from paths")
@@ -406,13 +434,13 @@ def section_report(result, depth, *, final=True):
     return (lower, upper, outer_sweep.difference(safe).area)
 
 
-def volume_bounds(result, slabs=8):
+def volume_bounds(result, slabs=8, *, final=True):
     """Conservative geometric slab bounds for remaining V-target volume."""
     if type(slabs) is not int or slabs <= 0:
         raise ValueError("positive integer V volume slabs required")
     plan = result.plan if type(result) is VRest else result
     levels = [plan.target.cap_depth * i / slabs for i in range(slabs + 1)]
-    sections = [section_report(result, t) for t in levels]
+    sections = [section_report(result, t, final=final) for t in levels]
     target_safe = [plan.target.section(t, plan.tool.tangent).area for t in levels]
     target_outer = [plan.target.section(t, plan.tool.tangent, outer=True).area
                     for t in levels]

@@ -1,5 +1,53 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## M4 edited curved A/B implementation checkpoint - 2026-09-25
+
+The accepted M3 annulus source was reopened and its analytic circular hole
+changed from radius 2 to 2.1 mm without changing the original Region UUID or
+Part stock. The resulting strict native source and deterministic generator are
+retained under `output/m4-edited-curved-20260925-02/`. A new, explicitly
+synthetic source-bound T1 prior was generated because the old accepted prior
+cannot authorize cuts after that geometry edit. The M4 bundle compares that
+endmill-only stock prefix with rounded-tip raster and contour-offset finishes
+on the same inward V recess. This avoids comparing incompatible flat-floor
+and V targets as if their residuals meant the same thing.
+
+Both routes use the same 2 mm cap, T3 rounded 60-degree/0.5 mm spherical tip,
+1 mm fill step, 0.01 mm center margin, +5 mm links, and the M3 full-height
+occupancy and source-bound T1 verifier. The offset route traces 8 separate
+paths/283 cut segments around the two curved boundaries; raster uses 25
+paths/307 segments. Both rounded direct-reference programs parse with complete
+T1/T3 tool, spindle, feed and motion sequences and replay the observed prior
+coordinates. A separate complete T1-only direct program parses and replays
+as the partial baseline. Raster/offset Z=-1 upper residuals are 1.526323/1.530029 mm²;
+eight-slab volume upper bounds are 42.675341/41.508764 mm³. Both nominal
+protected-overcut upper areas are zero. The endmill-only prior Z=-1 upper
+residual is 103.325103 mm². The finite-fill results remain partial within
+the fixed M4 selection budgets of 2 mm² and 80 mm³.
+
+The integration regression edits the native source, proves geometry edits
+invalidate evidence while title-only edits retain it, strict-reimports both native
+candidates, checks all three direct files, and selects rounded routes only when
+their constructed
+Default preview and explicit posts pass. A tampered offset direct file removes
+that route while the passing raster route remains selectable. Constructed posts
+exercise the parser and selector; they are not CamBam output evidence.
+The [runbook](DEVELOPMENT.md#m4-edited-curved-rounded-tip-comparison-and-output-gate)
+names the four fresh CamBam exports and visible preview observations required
+to close this checkpoint. Reopen the offset generator or candidate carrier if
+CamBam inserts feed crossovers, changes literal motion, or loses a displayed
+ring; a changed source geometry, stock, tool or prior requires fresh evidence.
+The repository suite passed 452 tests with one existing Windows privilege skip
+before the final T1-only direct-output refinement. The final focused M4/M3,
+native-series and strategy run passed 29 tests in 70.626 seconds; the retained
+three direct files were re-audited successfully. `compileall`, tracked
+`git diff --check`, and the untracked text whitespace check passed. The final
+tree has not received a second broad suite run after that local refinement.
+The retained actual M3 annulus-rounded preview and explicit posts were also
+re-audited after the new fill-pattern field: they still returned
+`m3_v_preview_centerlines_match` and `bounded_m3_v_post_pass` with their
+previous SHA-256 values, confirming default-raster fingerprint compatibility.
+
 ## M3 corrected native output acceptance - 2026-09-25
 
 The user exported all seven corrected preview and seven corrected explicit

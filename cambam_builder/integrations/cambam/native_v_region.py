@@ -47,10 +47,11 @@ def _source(source_bytes, case, cap_depth):
     return project, region, target, start
 
 
-def _plan(source_bytes, case, tool, cap_depth, stepover_mm):
+def _plan(source_bytes, case, tool, cap_depth, stepover_mm,
+          fill_pattern="raster"):
     _, _, target, start = _source(source_bytes, case, cap_depth)
     raw = v_region.plan(target, tool, stepover_mm=stepover_mm,
-                        safe_z=start[2])
+                        safe_z=start[2], fill_pattern=fill_pattern)
     if raw.status != "partial":
         raise ValueError("M3 source has no admissible V path")
     # The accepted CamBam Default post uses four decimal places for coordinates.
@@ -321,7 +322,8 @@ def _check_candidate(data, source_bytes, case, kind, plan, moves, start, tool,
 
 
 def build_workflow(directory, *, case="letter", tool=None, cap_depth=2,
-                   stepover_mm=1, source_path=None, prior_path=None):
+                   stepover_mm=1, source_path=None, prior_path=None,
+                   fill_pattern="raster"):
     """Create one profile/source pair in a new ignored output directory."""
     tool = (v_region.VProfile("pointed", 90, 0, 4, 3)
             if tool is None else tool)
@@ -341,7 +343,8 @@ def build_workflow(directory, *, case="letter", tool=None, cap_depth=2,
     else:
         m2.synthetic_source(case).save(str(source))
     source_bytes = source.read_bytes()
-    plan, start = _plan(source_bytes, case, tool, cap_depth, stepover_mm)
+    plan, start = _plan(source_bytes, case, tool, cap_depth, stepover_mm,
+                        fill_pattern)
     supplied = (None if prior_path is None else
                 json.loads(Path(prior_path).read_text(encoding="utf-8")))
     prior_trace = _prior_trace(source_bytes, plan, start, supplied)
@@ -377,6 +380,8 @@ def build_workflow(directory, *, case="letter", tool=None, cap_depth=2,
         "postprocessor": "Default", "profile": "Default mm",
         "post_status": "pending_actual_CamBam_post",
     }
+    if fill_pattern != "raster":
+        manifest["fill_pattern"] = fill_pattern
     (directory / "expected-motion.json").write_text(
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return manifest
@@ -396,7 +401,8 @@ def audit_post(manifest_path, posted_path):
         raise ValueError("M3 source changed")
     tool = v_region.VProfile(**manifest["tool"])
     plan, start = _plan(source_bytes, manifest["case"], tool,
-                        manifest["cap_depth"], manifest["stepover_mm"])
+                        manifest["cap_depth"], manifest["stepover_mm"],
+                        manifest.get("fill_pattern", "raster"))
     prior_trace = _prior_trace(source_bytes, plan, start,
         json.loads(prior_file.read_text(encoding="utf-8")))
     rest = v_region.with_prior(plan, prior_trace)
@@ -512,7 +518,8 @@ def audit_preview(manifest_path, posted_path):
         raise ValueError("M3 preview source or candidate changed")
     tool = v_region.VProfile(**manifest["tool"])
     plan, start = _plan(source_bytes, manifest["case"], tool,
-                        manifest["cap_depth"], manifest["stepover_mm"])
+                        manifest["cap_depth"], manifest["stepover_mm"],
+                        manifest.get("fill_pattern", "raster"))
     prior_trace = _prior_trace(source_bytes, plan, start,
         json.loads(prior_file.read_text(encoding="utf-8")))
     if plan.fingerprint != manifest["plan_fingerprint"]:
@@ -576,6 +583,8 @@ if __name__ == "__main__":
                        default="pointed")
     build.add_argument("--source")
     build.add_argument("--prior")
+    build.add_argument("--fill", choices=("raster", "offset"),
+                       default="raster")
     for name in ("audit", "preview"):
         check = sub.add_parser(name)
         check.add_argument("manifest")
@@ -589,7 +598,8 @@ if __name__ == "__main__":
         }
         report = build_workflow(args.directory, case=args.case,
                                 tool=profiles[args.profile],
-                                source_path=args.source, prior_path=args.prior)
+                                source_path=args.source, prior_path=args.prior,
+                                fill_pattern=args.fill)
     elif args.command == "audit":
         report = audit_post(args.manifest, args.posted)
     else:
