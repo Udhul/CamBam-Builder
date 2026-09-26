@@ -1,5 +1,49 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## M4 edited curved actual output acceptance - 2026-09-26
+
+The user exported all four CamBam Plus 1.0 Default-mm NC files from the
+unchanged `output/m4-edited-curved-20260925-02/comparison/` bundle. They saw
+the source primitives and Engrave toolpaths directly on the generated Plines
+in both preview documents. The edited source SHA-256 is
+`bb34bc2113a081adc530962ecf5c3ce2b63ba77aeb61f941d525150284d3fb8e`;
+its MOP-free geometry/stock semantic key is
+`056a9ecc7272d6618a7879ced826dd89364fcc61c80dc1b2e242d1a2c44188eb`.
+The direct T1-only, rounded raster and rounded offset programs independently
+parse and stock-replay with SHA-256 values
+`bd1a337cdf39227c2f438ed12c588009afe19ce88751708863a892ee36112817`,
+`a69fd2b133847658ab941f791f6ec40d6fe76cdf9c4773dd69e9e7bf1efa8cfa`
+and `28646d16c6109192f798e4a2d4a4a8f770a6d30b85722f4de4585f5c17f2fac8`.
+
+| Rounded route | Preview NC SHA-256 | Explicit NC SHA-256 | Explicit items | Z=-1 mm residual interval, mm² | Eight-slab volume upper, mm³ |
+| --- | --- | --- | ---: | ---: | ---: |
+| Raster | `df6345926a6f52712baaae6b7b46802b30e60013f9bcd30f5649b1cfde0c6de1` | `13b1c91907229117b8773498323c4147ec8fc5b9aa2a3a11fec2a3af1aa9aa4f` | 450 | 1.320415–1.526323 | 42.675341 |
+| Offset | `4220b661d5f986b5b761d147b946f3a34e28873016908a06b5bb5182cbfd6e03` | `94a48a5262d36267ff61c3ec40facfc298c20fb17db05ac5522a68d8f2284af` | 375 | 1.389679–1.530029 | 41.508764 |
+
+Both actual preview posts returned `m3_v_preview_centerlines_match`; both
+actual explicit posts returned `bounded_m3_v_post_pass`. These checks cover
+the complete T1/T3 tool, spindle, feed and coordinate sequence, exact
+source/candidate hashes, prior-stock replay, V profile occupancy and safe
+links. Both rounded routes have zero nominal protected overcut and meet the
+fixed 2 mm² area and 80 mm³ volume budgets. The area-first policy selects
+`rounded_raster`; `rounded_offset` remains feasible. The complete T1-only
+direct route is partial at 103.325103 mm² Z=-1 upper residual and
+216.995376 mm³ volume upper. This closes M4 for the bounded edited annulus,
+raising the six-milestone scorecard to 5 accepted, 1 remaining.
+
+The T1 raster is synthetic stock proof, not a production roughing recipe.
+The explicit Drill/CustomScript post verifies literal-motion transport; its
+CamBam toolpath display is not the motion authority. No independent native
+Pocket planning, controller dialect or physical machining is accepted.
+Reopen this evidence when the source geometry/stock, prior, rounded tool,
+candidate, post, or selection budgets change. The next milestone is M5's one
+named controller/setup and parsed actual controller output.
+On committed implementation `9e75873`, the post-commit focused M4/M3 and
+strategy regression passed 17 tests in 81.172 seconds. `main` is an ancestor
+of the feature branch and `git diff --check main...HEAD` passed. The acceptance
+documentation in this round is still uncommitted, so this is not a
+merge-readiness conclusion.
+
 ## M4 edited curved A/B implementation checkpoint - 2026-09-25
 
 The accepted M3 annulus source was reopened and its analytic circular hole

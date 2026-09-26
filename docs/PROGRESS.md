@@ -584,21 +584,38 @@ gate, and synthetic Default posts test native parsing and selection. The
 retained A/B bundle and exact CamBam steps are in the
 [runbook](DEVELOPMENT.md#m4-edited-curved-rounded-tip-comparison-and-output-gate);
 the [contract](structure_spec.md#edited-curved-rounded-tip-composition-and-offset-fill)
-owns scope and limits. **M4 remains open** until the user inspects both actual
-previews, exports their four Default-mm NC files, and the complete actual
-preview/explicit posts pass. This is not independent curved native Pocket
-planning or controller acceptance.
-**Next priority:** complete the prepared M4 CamBam A/B validation and record
-the actual post/selection evidence; reopen the affected route if CamBam emits
-extra or unsafe motion. Do not advance to M5 on synthetic posts alone.
+owns scope and limits. At this candidate checkpoint, M4 awaited visual
+inspection and the four actual Default-mm preview/explicit posts recorded
+below. This did not establish independent curved native Pocket planning or
+controller acceptance.
+**2026-09-26 M4 actual CamBam A/B acceptance (backlog 6):** The user exported
+both preview and both explicit Default-mm NC files and confirmed that both
+previews showed the source primitives and Engrave toolpaths on the generated
+Plines. Both actual preview posts match every planned centerline; both actual
+T1/T3 explicit posts pass complete ordered tool, spindle, feed and motion
+comparison, source/candidate hashes, prior stock replay, full-height V cutter
+occupancy, access and residual checks. Raster/offset explicit streams contain
+450/375 items. Their Z=-1 mm residual upper bounds are 1.526323/1.530029 mm²
+with zero nominal protected overcut; eight-slab volume upper bounds are
+42.675341/41.508764 mm³. Both rounded routes meet the fixed 2 mm² and
+80 mm³ budgets; the area-first selector chooses `rounded_raster`. The
+complete endmill-only direct route remains safe but partial. Exact post hashes
+and limits are in the [dated acceptance](REVIEW.md#m4-edited-curved-actual-output-acceptance---2026-09-26).
+**M4 is accepted for the bounded edited annulus; the epic count is 5 of 6.**
+The synthetic T1 remains a proof fixture, CustomScript proves literal-motion
+transport, and neither generic curved native MOP planning nor controller or
+physical machining is certified.
+**Next priority:** select one M5 controller dialect and setup, lower the
+accepted M4 route, then parse and replay its actual controller file before
+user simulation or controlled acceptance.
 See the [runbook](DEVELOPMENT.md#m4-edited-curved-rounded-tip-comparison-and-output-gate)
 and [scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24).
 M1 fixes the route criterion: each candidate's actual emitted motion earns
 its own stock/access certificate. M4 then composes native MOP series, custom
 Region MOPs and framework paths into an edit-aware strategy choice with
 area/volume reporting. Bounded native-MOP normalization and strategy selection
-are M4 components; the edited curved/rounded candidates and direct output now
-exist, but fresh actual native posts are still required.
+are M4 components; the accepted edited curved/rounded posts now close the
+bounded combined output gate. Unsupported native motion remains unselectable.
 Backlog 7 needs a separate Manual-tab fixture; 8-10 are complete.
 Defer geometry outside the six-milestone supported domain, optimization and
 the detached/policy

@@ -1410,9 +1410,25 @@ with eight-slab volume upper bounds 42.676/41.509 mm³; nominal protected
 overcut must remain zero. The endmill-only prior remains partial at Z=-1
 with 103.32511 mm² upper residual. Any extra/missing move, shallow crossover,
 changed source/candidate bytes or stock result fails. The test suite's
-constructed Default posts validate the reader and selector only; the four
-actual user exports and preview observation are still required for M4 native
-acceptance. Physical/controller acceptance belongs to M5.
+constructed Default posts validate the reader and selector only. The user
+subsequently supplied all four actual exports and the preview observation;
+their result follows. Physical/controller acceptance belongs to M5.
+
+**2026-09-26 actual CamBam Plus 1.0 acceptance.** The user saw the source
+primitives and Engrave toolpaths directly on the generated Plines in both
+preview documents. All four actual Default-mm NC files pass their separate
+source-bound audits. The direct T1-only, raster and offset programs still
+return `bounded_m4_endmill_direct_pass` and two
+`bounded_m4_direct_pass` results. Use the audit command above to reproduce:
+
+Both rounded routes pass zero nominal protected overcut, the 2 mm² area and
+80 mm³ volume upper budgets, and the same edit-aware selector. Its area-first
+policy chooses `rounded_raster`; `rounded_offset` remains a fully audited
+feasible alternative. The endmill-only direct route is safe but partial.
+The result accepts this bounded edited annulus workflow; it does not certify
+native Pocket planning, a controller dialect or physical machining. The
+[dated acceptance](REVIEW.md#m4-edited-curved-actual-output-acceptance---2026-09-26)
+retains the four exact NC hashes and area/volume evidence.
 
 ### Isolated planar backend evaluation
 
