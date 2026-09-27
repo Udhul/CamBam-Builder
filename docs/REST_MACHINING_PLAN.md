@@ -679,6 +679,40 @@ minimal `.cb` and exact inspection/post criteria before asking the user for
 the actual Default `.nc`; use a supplied real Pocket instead if it meets the
 same bounded criteria.
 
+**Prepared fixture (2026-09-27):** the exact local
+[`packet2-helical-pocket.cb`](../output/packet2-helical-pocket-20260927-01/packet2-helical-pocket.cb)
+has SHA-256 `f53d0221a0a841af9ccb0d2bc1af1607f8b5161535466a7cce7e0a59393f0e03`.
+It is a single enabled `PACKET2_NATIVE_T1_HELICAL_POCKET` on a diameter-24 mm
+circle centered at (20,20), with 40 x 40 x 4 mm stock, top Z=0 and pocket
+bottom Z=-2. T1 is a 6 mm endmill; the Pocket pins 1 mm radial roughing
+allowance, 1 mm depth increments, 0.4 stepover, 20-degree Spiral lead,
+G17/XY work plane, +5 mm clearance, F60/F240 mm/min and CW S12000.
+The Default millimetre post, Standard-mm style and Default-mm tool library are
+explicit. The safe footer retracts to Z=+5, returns to (-5,-5), then stops
+the spindle. The declared initial tip for offline replay is (-5,-5,+5).
+These values define synthetic evidence, not a machining recommendation.
+The intended generated T2 is a 2 mm endmill that removes some of the native
+residual within the same circular target; it is not a second native MOP.
+
+**Exact external post gate:** open that unchanged source in CamBam Plus 1.0,
+confirm millimetres/Default and the single enabled Pocket, regenerate its
+toolpath, and inspect whether the entry descends while moving around the
+circle. Post the complete program with the Default processor to
+[`packet2-helical-pocket.nc`](../output/packet2-helical-pocket-20260927-01/packet2-helical-pocket.nc)
+beside the source, without editing either file. The post must identify this
+candidate and Default, contain a G21/G90 preamble, the named Pocket and T1,
+reach Z=-1 and -2, and end with the declared safe footer and M30. Arc motion
+requires G17 with relative I/J centres and endpoint-radius mismatch at most
+0.001 mm; unsupported cycles, planes or unresolved modal state fail intake.
+A helical
+entry needs verified curved XY motion with changing Z: a G2/G3 arc with Z
+change, or a multi-segment G1 approximation of that curve corroborated by
+CamBam's toolpath view. A spiral XML setting, level arc, vertical plunge or
+single diagonal ramp alone does not meet the gate. Retain the complete post
+even if it misses these criteria; report whether CamBam generated a visible
+helical entry and any post error. [The runbook](DEVELOPMENT.md#packet-2-helical-pocket-native-post-preparation)
+gives the short operator steps and local source check.
+
 **Bounded result and acceptance:** inspect the actual post's interpolation
 first. If it contains a Z-changing G2/G3 helix, add that explicit plane,
 center/sweep and Z-motion form to the native reader and decoded stock/access

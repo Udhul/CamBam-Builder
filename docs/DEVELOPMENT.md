@@ -1802,6 +1802,40 @@ because these exact B/C sources and posts already passed the native gate.
 The T3 split file assumes operator installation and initial positioning;
 controller runtime and physical holding are unassessed.
 
+### Packet 2 helical Pocket native post preparation
+
+The ignored [candidate](../output/packet2-helical-pocket-20260927-01/packet2-helical-pocket.cb)
+is the exact one-Pocket source described in the
+[packet 2 plan](REST_MACHINING_PLAN.md#2-native-pocket-with-helical-entry-and-generated-cleanup).
+Its SHA-256 is `f53d0221a0a841af9ccb0d2bc1af1607f8b5161535466a7cce7e0a59393f0e03`.
+The one-off [generator/inspector](../output/packet2-helical-pocket-20260927-01/generate.py)
+creates the candidate only when it is absent, then checks the saved XML and
+strict reimport without replacing existing bytes. From the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe output/packet2-helical-pocket-20260927-01/generate.py
+(Get-FileHash output/packet2-helical-pocket-20260927-01/packet2-helical-pocket.cb -Algorithm SHA256).Hash
+```
+
+In CamBam Plus 1.0, open the exact `.cb`, confirm the circle and one enabled
+`PACKET2_NATIVE_T1_HELICAL_POCKET` with a Spiral lead, millimetres and the
+Default post. Regenerate toolpaths with Ctrl+T. Inspect the entry path in the
+CamBam toolpath view for curved XY travel while Z descends. Post with Ctrl+W,
+saving the **complete, unedited** Default output beside the source as
+[`packet2-helical-pocket.nc`](../output/packet2-helical-pocket-20260927-01/packet2-helical-pocket.nc).
+Send back that `.nc` and report whether the helical entry was visible or any
+toolpath/post error occurred. A screenshot is optional; the complete NC is
+needed to inspect its interpolation and stock/access motion. Do not run it on
+a machine. If CamBam shows no helix, still retain the post and report the
+observation so the replacement-fixture request can be based on actual output.
+
+The intake criteria are the complete matching Default post, one T1 Pocket,
+Z=-1/-2 depth evidence, safe return and M30, and a genuine Z-descending
+curved XY entry as specified in the packet 2 plan. The exact source hash is
+checked again before accepting the post. Do not infer helix or stock removal
+from the XML lead setting. Native decoding, dependent T2 cleanup and stock
+replay begin only after the post form has been observed.
+
 ### Safe native G2/G3 hybrid evidence case
 
 The ignored [source](../output/native-arc-hybrid-20260926-01/source.cb) is the

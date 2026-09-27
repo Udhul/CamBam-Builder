@@ -7004,3 +7004,27 @@ controller/physical acceptance remain separate. No implementation, new
 fixture or post was performed in this planning round. Reopen the sequence
 only for a user priority change or a proven prerequisite that blocks the
 active packet; record that evidence before changing the next task.
+
+## Packet 2 helical Pocket source preparation — 2026-09-27
+
+The one-off [generator](../output/packet2-helical-pocket-20260927-01/generate.py)
+created the exact [candidate](../output/packet2-helical-pocket-20260927-01/packet2-helical-pocket.cb)
+with SHA-256 `f53d0221a0a841af9ccb0d2bc1af1607f8b5161535466a7cce7e0a59393f0e03`.
+The first generator invocation wrote the `.cb` but its final target-identity
+assertion failed because the reader returns target UUIDs. The inspector was
+corrected to resolve each UUID; its second invocation passed on the unchanged
+candidate. Inspection found one enabled Pocket and one diameter-24 mm Circle,
+the pinned Default millimetre document settings, the T1 6 mm tool, 1 mm
+roughing allowance, Spiral lead at 20 degrees, two 1 mm levels to Z=-2 and
+the explicit safe footer. Strict reimport retained the Pocket lead, allowance
+and sole target. The candidate was not regenerated or edited after hashing.
+
+This is XML/source preparation only. No CamBam toolpath or Default post of
+this candidate has been observed. The actual `.nc`, its interpolation, full
+native stock/access replay and generated T2 cleanup remain pending. The
+[packet criteria](REST_MACHINING_PLAN.md#2-native-pocket-with-helical-entry-and-generated-cleanup)
+and [runbook](DEVELOPMENT.md#packet-2-helical-pocket-native-post-preparation)
+own the next observation and exact source-bound post request. If CamBam
+does not emit a genuine helix for this source, retain the complete post and
+request a replacement fixture based on that observation; the XML Spiral
+setting does not establish native motion.
