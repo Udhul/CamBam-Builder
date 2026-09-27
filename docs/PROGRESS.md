@@ -160,12 +160,14 @@ and [review](REVIEW.md#fresh-writer-cambam-default-post-acceptance---2026-09-27)
 own exact files, hashes and the narrow contour/post bound. No further fixture
 or UI report is needed for this accepted slice.
 
-**Next priority selection:** choose one named machining job or integration
-consumer that exposes a remaining [backlog 6 capability](REST_MACHINING_PLAN.md#subsequent-capability-progression).
-The adjacent Manual variants have no native evidence; backlog 5 transport
-needs a remote-PC use case, and the planned 8-10 increments are completed.
-The named job should determine the next bounded implementation and acceptance
-gate. Until then, there is no active implementation increment.
+**Next priority, backlog 6 packet 1:** implement the tabbed cutout with one
+generated interior operation using the already accepted Manual B/C sources
+and actual posts. Prove the four/five retained bridges, source-bound ordered
+stock replay and rejection of invalidated or unsafe stage evidence. No new
+CamBam post is needed for unchanged B/C inputs. The user selected the
+[five ordered job packets](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27)
+for successive fresh sessions. Complete and record each packet's bounded
+acceptance before promoting the next; do not repeat this priority choice.
 
 Do not expand occupancy to non-box fixtures or select a
 general surface backend without a named job that needs them; reopen for a
@@ -1784,10 +1786,26 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    hybrid and the bounded actual native G3 Pocket/rounded-V hybrid are accepted.
    The stepped-volume, sloped-ball and bounded holder/fixture foundations also
    pass decoded offline gates, including actual source-bound linear and G3
-   native/generated setups. Further capability directions follow the
-   [capability progression](REST_MACHINING_PLAN.md#subsequent-capability-progression).
-   Historical entries below retain earlier stage limits; they do not permanently
-   restrict the framework to RC01 or a fixed-axis sample workflow.
+   native/generated setups. The next user-selected work follows the
+   [ordered job packets](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27).
+   This order is a priority decision, not a claim that each job depends on
+   the prior job's implementation.
+
+   | Packet | Status | Bounded outcome |
+   | --- | --- | --- |
+   | [1](REST_MACHINING_PLAN.md#1-tabbed-cutout-with-an-interior-operation) | **Next session** | Tabbed cutout plus generated interior operation; retained-bridge and ordered-stock evidence. |
+   | [2](REST_MACHINING_PLAN.md#2-native-pocket-with-helical-entry-and-generated-cleanup) | Queued | Native Pocket helical entry plus generated cleanup; actual post and decoded stock evidence. |
+   | [3](REST_MACHINING_PLAN.md#3-curved-3d-ball-cutter-finish-and-rest) | Queued | Analytic curved 3D ball-cutter finish and dependent rest. |
+   | [4](REST_MACHINING_PLAN.md#4-paired-v-carve-inlay) | Queued | Paired tapered V-carve inlay with declared clearance and assembly checks. |
+   | [5](REST_MACHINING_PLAN.md#5-direct-controller-program-for-a-fully-generated-job) | Queued | Fully generated RC01 job through a bounded controller profile, reusing existing UCCNC/Grbl output. |
+
+   After a packet's implementation, checks and any required external post are
+   accepted, update this table, record evidence in `REVIEW.md`, and start the
+   next packet in a new session. A pending external observation keeps its
+   packet active. Packet 5 ends this sequence; select later work against a
+   new named need. Historical entries below retain earlier stage limits; they
+   do not permanently restrict the framework to RC01 or a fixed-axis sample
+   workflow.
    The [planar backend decision](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
    selects Shapely/GEOS for the design. Adversarial acceptance and the
    [internal value/error contract](REST_MACHINING_PLAN.md#internal-planar-value-and-error-contract)

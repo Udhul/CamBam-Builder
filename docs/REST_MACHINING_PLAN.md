@@ -551,9 +551,9 @@ into arbitrary macros, new 3D algorithms or machine control.
 
 ### Subsequent capability progression
 
-These are dependency directions, not additional completed milestones or a second
-priority list. [PROGRESS](PROGRESS.md#active-work-and-next-priority) selects the
-active increment after each outcome.
+These are dependency directions. The user-selected ordered packets below turn
+five of them into bounded jobs; [PROGRESS](PROGRESS.md#active-work-and-next-priority)
+alone owns their live status and active priority.
 
 - **Native and generated machining in one job:** extend native motion authority,
   source edits and cleanup attachment against a named combination. Preserve native
@@ -627,6 +627,125 @@ active increment after each outcome.
   target/stock capabilities and independently checked motion. Rank feasible
   candidates under declared objectives; label timing/load estimates by their
   actual machine/process assumptions.
+
+### Ordered next-session job packets (selected 2026-09-27)
+
+The user selected **1 through 5 in this order** after the Manual Profile tab
+writer passed its CamBam Default-post gate. This is a priority sequence, not a
+claim that each job technically depends on the previous one. Start a fresh
+session for packet 1. At the start of each later session, read the active row
+in [PROGRESS](PROGRESS.md#remaining-backlog-in-order), this packet's criteria,
+and the prior packet's accepted evidence; do not redo accepted checks without
+a relevant change. The user has already chosen the order. Engineering chooses
+the implementation within each named job and prepares any required CamBam
+validation files before requesting an external post.
+
+Finish one packet at a time. Close it only when the bounded implementation,
+required automated checks and any named external observation pass. Put the
+implemented contract in `structure_spec.md`, exact checks and hashes in
+`REVIEW.md`, repeatable commands in `DEVELOPMENT.md`, and mark that packet
+complete and the next one active in `PROGRESS.md`. Then stop for a fresh
+session. If a required post or product fact is still missing, leave the
+current packet active, retain its prepared artifacts, and resume it before
+advancing. These packets do not authorize machine execution.
+
+#### 1. Tabbed cutout with an interior operation
+
+**Job:** use the accepted 60 x 30 mm native Manual Square Profile B/C files
+and their actual Default posts as the final cutout stage after one generated
+shallow straight interior V-groove placed well inside the contour. Reuse the
+accepted bounded V-path/tool model rather than selecting a new strategy.
+The Profile has four or five 9 mm compensated gaps and leaves 1 mm of stock
+thickness under each tab. This is a retained-part stock and stage-ordering
+result, not another tab XML authoring increment.
+
+**Bounded result and acceptance:** decode the complete actual B/C posts as
+source-bound motion, add one deterministic interior generated path, and replay
+both stages against a declared stock/target. Independently check the expected
+four/five surviving bridges and that the cutout is not treated as empty or
+released stock; check a removed/misplaced tab and changed source/post fail or
+invalidate dependent evidence. Swapping stage order must invalidate the old
+certificate; fresh replay decides whether that new order is safe. Include the
+generated operation's entry, link and retract in decoded replay. Use the existing B/C
+posts without asking the user to repost unchanged files. Stop when both jobs
+and rejection cases pass; leave arbitrary part shapes, tab styles, clamps and
+physical workholding outside this slice. **Next fresh session: packet 2.**
+
+#### 2. Native Pocket with helical entry and generated cleanup
+
+**Job:** one CamBam Plus 1.0 Pocket with a posted helical entry, followed by
+one generated smaller-tool cleanup on the same source-bound stock. Prepare a
+minimal `.cb` and exact inspection/post criteria before asking the user for
+the actual Default `.nc`; use a supplied real Pocket instead if it meets the
+same bounded criteria.
+
+**Bounded result and acceptance:** inspect the actual post's interpolation
+first. If it contains a Z-changing G2/G3 helix, add that explicit plane,
+center/sweep and Z-motion form to the native reader and decoded stock/access
+replay; retain a linearized helix only if that is the evidenced post form.
+Verify the full native prefix and generated cleanup, residual gain, protected
+stock and source-edit invalidation. Reject unsupported cycles, planes or
+unresolved setup rather than flattening or inventing motion. If no genuine
+helical entry can be obtained, keep packet 2 open with the observed post and
+a precise replacement-fixture request. Stop after one accepted native entry
+form and dependent cleanup; general native Pocket parity remains outside.
+**Next fresh session: packet 3.**
+
+#### 3. Curved 3D ball-cutter finish and rest
+
+**Job:** advance the accepted affine-slope ball-cutter and stepped-volume
+evidence to one analytic, non-overhanging curved target. Use a shallow
+spherical-bowl reference if no user part is supplied, with two ordered ball
+passes: a larger-tool finish and smaller-tool rest pass, with an explicit
+protected rim.
+
+**Bounded result and acceptance:** define independent surface contact,
+section and volume references before selecting the representation and
+tolerances. Generate and decode both stages, prove that the second removes
+remaining stock, bound conservative residual and protected overcut, and check
+entry/access and tool-body clearance for the declared simple setup. Vary at
+least one curvature or tool dimension and reject stale prior-stock evidence.
+Stop at this analytic target; freeform meshes, overhangs and a universal 3D
+backend require separate evidence. **Next fresh session: packet 4.**
+
+#### 4. Paired V-carve inlay
+
+**Job:** generate one matched tapered male/female inlay pair from a shared
+design contour, a declared assembly frame, one supported V-cutter profile and
+caller-supplied nominal clearance. Use a synthetic reference with zero and
+one positive clearance for engineering acceptance; ask for the user's fit
+preference only if applying the result to a specific physical inlay.
+
+**Bounded result and acceptance:** derive both targets and operations without
+losing their separate stock states. Use an independent cross-section/assembly
+oracle for intended contact, declared gap and collision; decode a supported
+output route for both operations and replay their stock/residual results.
+Reject inconsistent registration, impossible clearance, changed tool geometry
+and stale paired evidence. If native CamBam emission changes, prepare actual
+posts before claiming that output route. Stop at one bounded tapered pair;
+production glue gap, material behavior and physical fit are separate.
+**Next fresh session: packet 5.**
+
+#### 5. Direct controller program for a fully generated job
+
+**Job:** take the nominal generated RC01 rough/cleanup sequence through a
+declared UCCNC output profile so the selected job has no CamBam posting step.
+First audit the existing caller-supplied UCCNC/Grbl ordered-job emitters and
+the RC01 reference-dialect output; implement only the missing adapter or
+source binding. Use the existing bounded synthetic UCCNC setup unless the
+user supplies a different controller and its exact setup before this packet.
+
+**Bounded result and acceptance:** emit complete program bytes for both
+generated stages, independently decode every command and transition, and
+replay the decoded motion against the same access, process, stock and residual
+oracles. Bind tool, datum, transition policy, source and output hashes; reject
+altered files, unsupported commands and unresolved handoff state. If the
+current public ordered-job route already satisfies this job, close with the
+end-to-end regression and evidence instead of another post engine. Stop at
+offline level-1 output for this named controller profile. Target-controller
+runtime, real machine limits and physical cuts remain separate gates.
+**Next fresh session:** reassess the [remaining backlog](PROGRESS.md#remaining-backlog-in-order)
+against a new named need; do not auto-extend these five packets.
 
 Existing libraries can inform primitives or comparison oracles without owning
 our workflow. [OpenCAMLib's drop/push-cutter methods](https://opencamlib.readthedocs.io/en/latest/)

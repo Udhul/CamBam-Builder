@@ -6896,3 +6896,25 @@ positions or a physical cut; neither is required for this source-bound
 interchange acceptance. No acceptance is inferred for transformed,
 curved, reversed or multi-target Manual Profiles, another postprocessor,
 controller runtime or machining on a physical machine.
+
+## Ordered post-Manual CAM jobs — 2026-09-27
+
+After the Manual Profile tab output gate closed, the user chose five jobs in
+priority order for bounded implementation in successive fresh sessions:
+tabbed cutout with interior detail, native helical Pocket plus generated
+cleanup, curved 3D ball-cutter rest, paired V-carve inlay, and a fully generated
+controller-profile job. The [execution packets](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27)
+define each fixture, acceptance boundary and next-session handoff;
+[PROGRESS](PROGRESS.md#active-work-and-next-priority) owns live statuses.
+The order is the user's product priority, not a fabricated technical dependency.
+
+Existing B/C native tab sources and actual posts make packet 1 independently
+actionable without another CamBam fixture. Packet 2 requires a real post of
+the prepared helical-entry source before native-motion acceptance. The
+existing synthetic UCCNC/Grbl ordered-job emitters and reference-dialect RC01
+output mean packet 5 begins with a capability audit and adds only a missing
+end-to-end RC01 controller route. Offline output acceptance and actual
+controller/physical acceptance remain separate. No implementation, new
+fixture or post was performed in this planning round. Reopen the sequence
+only for a user priority change or a proven prerequisite that blocks the
+active packet; record that evidence before changing the next task.
