@@ -1,4 +1,4 @@
-"""Bounded continuous tool-body occupancy for decoded straight ordered motion.
+"""Bounded continuous tool-body occupancy for decoded ordered motion.
 
 Tools are coaxial cylinders above the programmed tip. Stock is conservatively
 treated as its entire initial box for non-cutting components; this deliberately
@@ -8,8 +8,11 @@ does not credit cavities made by earlier cuts. Fixtures are closed boxes.
 from dataclasses import dataclass
 import math
 
+from . import replay
+
 
 VERSION = "bounded-tool-occupancy-v1"
+ARC_VERSION = "bounded-tool-occupancy-v2-planar-arcs"
 GEOMETRY_TOLERANCE_MM = 1e-9
 
 
@@ -135,7 +138,7 @@ def _at(a, b, t):
 
 
 def verify(setup, stages, decoded_moves):
-    """Reject any continuous straight band/box intersection in decoded motion."""
+    """Reject continuous straight or supported level-arc band/box intersections."""
     if (type(setup) is not OccupancySetup or
             len(stages) != len(decoded_moves)):
         raise ValueError("occupancy setup and decoded stages required")
@@ -143,12 +146,22 @@ def verify(setup, stages, decoded_moves):
     if set(tools) != {stage.tool_id for stage in stages}:
         raise ValueError("occupancy tool list differs from ordered stages")
     checked = 0
+    checked_arcs = 0
+    maximum_arc_error = 0.0
     minimum_fixture_clearance = math.inf
     minimum_stock_clearance = math.inf
     for stage, moves in zip(stages, decoded_moves):
         for move in moves:
             if move.arc_g:
-                raise ValueError("arc tool-body occupancy unsupported")
+                # The stock replay uses this same bounded arc enclosure. Each
+                # chord is within error of the continuous center path, so its
+                # rectangle distance minus error is a clearance lower bound.
+                segments, arc_error = replay.arc_segments(
+                    move.start, move.end, move.center, move.arc_g)
+                checked_arcs += 1
+                maximum_arc_error = max(maximum_arc_error, arc_error)
+            else:
+                segments, arc_error = None, 0.0
             checked += 1
             for band in tools[stage.tool_id].bands:
                 boxes = setup.fixtures + (() if band.kind == "cutter" else
@@ -158,8 +171,15 @@ def verify(setup, stages, decoded_moves):
                                                   band, box)
                     if interval is None:
                         continue
-                    a, b = (_at(move.start, move.end, t) for t in interval)
-                    clearance = _segment_rect_distance(a, b, box.bounds) - band.radius_mm
+                    if segments is None:
+                        a, b = (_at(move.start, move.end, t) for t in interval)
+                        distance = _segment_rect_distance(a, b, box.bounds)
+                    else:
+                        # Supported arcs are level, so axial overlap is the
+                        # whole sweep. The arc helper rejects ramps/helices.
+                        distance = min(_segment_rect_distance(a, b, box.bounds)
+                                       for a, b in segments)
+                    clearance = distance - band.radius_mm - arc_error
                     if clearance <= GEOMETRY_TOLERANCE_MM:
                         label = "stock" if box is setup.stock else f"fixture {box.name}"
                         raise ValueError(f"{band.kind} collision with {label}")
@@ -169,8 +189,14 @@ def verify(setup, stages, decoded_moves):
                     else:
                         minimum_fixture_clearance = min(
                             minimum_fixture_clearance, clearance)
-    return {"status": "pass", "scope": "decoded straight stage tool-body and box occupancy",
-            "model": VERSION, "checked_moves": checked,
+    return {"status": "pass", "scope": (
+                "decoded straight and planar-arc stage tool-body and box occupancy"
+                if checked_arcs else "decoded straight stage tool-body and box occupancy"),
+            "model": ARC_VERSION if checked_arcs else VERSION,
+            "checked_moves": checked,
+            **({"checked_arcs": checked_arcs,
+                "maximum_arc_enclosure_mm": maximum_arc_error}
+               if checked_arcs else {}),
             "fixture_count": len(setup.fixtures),
             "minimum_fixture_clearance_mm": (
                 None if math.isinf(minimum_fixture_clearance) else

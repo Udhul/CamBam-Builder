@@ -47,8 +47,8 @@ offset V plans, and supported native-normalized linear motion for UCCNC or
 Grbl output with decoded stock evidence. One actual CamBam-posted linear
 Profile predecessor and generated rounded-V cleanup now pass together in a
 source-bound two-stage UCCNC job. A fresh CamBam G3 Pocket post and generated
-rounded-V finish now pass a bounded continuous-sweep, decoded two-stage UCCNC
-stock gate. A separate synthetic stepped-volume case
+rounded-V finish now pass bounded decoded two-stage UCCNC stock and continuous
+tool-body/box occupancy gates. A separate synthetic stepped-volume case
 replays decoded waterline and dependent rest cuts with a protected thin rib and
 conservative residual-volume bounds. A bounded sloped-plane ball-cutter case
 checks analytic contact and volume against decoded, conservative two-stage

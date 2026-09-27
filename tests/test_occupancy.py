@@ -4,10 +4,12 @@ from dataclasses import replace
 import math
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import unittest
 
+from cambam_builder.cam_core.ordered_job import JobMove
 from cambam_builder.cam_core.occupancy import (
-    Box, OccupancySetup, ToolBand, ToolBody,
+    Box, OccupancySetup, ToolBand, ToolBody, verify,
 )
 from cambam_builder.integrations.ordered_output import audit_bundle, emit, write_bundle
 from tests.test_surface3d import synthetic_job
@@ -30,6 +32,36 @@ def with_setup(job, *, fixture_y=-0.9, holder_radius=0.8):
 
 
 class OccupancyTests(unittest.TestCase):
+    def test_planar_arc_holder_hits_between_clear_endpoints(self):
+        body = ToolBody("T1", (
+            ToolBand("cutter", 0, 3, 0.5),
+            ToolBand("shank", 3, 3.5, 0.5),
+            ToolBand("holder", 3.5, 6, 0.8)))
+        stage = SimpleNamespace(tool_id="T1")
+        for direction, side in ((3, 1), (2, -1)):
+            with self.subTest(direction=direction):
+                move = JobMove("cut", (3, 0, -2), (-3, 0, -2), 100,
+                               direction, (0, 0))
+                safe_y = (4.1, 4.4) if side > 0 else (-4.4, -4.1)
+                collision_y = (3.7, 4.0) if side > 0 else (-4.0, -3.7)
+                safe = OccupancySetup("program", Box("stock", (-5, -5, -2, 5, 5, 0)),
+                    (Box("clamp", (-0.1, safe_y[0], 1.6, 0.1,
+                                   safe_y[1], 2.5)),),
+                    (body,))
+                result = verify(safe, (stage,), ((move,),))
+                self.assertEqual(result["checked_arcs"], 1)
+                self.assertGreater(result["minimum_fixture_clearance_mm"], 0.2)
+                clamp = safe.fixtures[0]
+                collided = replace(safe, fixtures=(Box("clamp", (
+                    clamp.bounds[0], collision_y[0],
+                    clamp.bounds[2], clamp.bounds[3],
+                    collision_y[1], clamp.bounds[5])),))
+                for x in (3, -3):
+                    self.assertGreater(math.hypot(abs(x) - 0.1, 3.7), 0.8)
+                with self.assertRaisesRegex(ValueError,
+                                            "holder collision with fixture clamp"):
+                    verify(collided, (stage,), ((move,),))
+
     def test_decoded_continuous_holder_and_fixture_clearance(self):
         for dialect, boundary in (("uccnc", "split"), ("grbl", "pause")):
             with self.subTest(dialect=dialect):

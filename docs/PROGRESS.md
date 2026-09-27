@@ -137,18 +137,29 @@ state the setup, source hashes and limits. No new CamBam observation is needed
 because the native source, candidate and actual post are unchanged. Physical
 installation and controller runtime remain unassessed.
 
-**Next priority, backlog 6:** extend continuous body/box occupancy to the
-already accepted actual level-G3 Pocket plus generated finish, with a declared
-setup and an arc-interior clamp counterexample. That named native trace is the
-most consequential current gap: the reusable checker rejects arcs, leaving
-the accepted arc hybrid with cutter-only stock evidence. Limit the increment
-to supported planar arcs and one source-bound decoded job; retain the same
-conservative stock and stage-transition boundaries. Defer non-box fixtures,
-general surfaces and controller runtime until a named target or trace requires
-them. Manual-tab authoring still needs a native before/after fixture and has
-lower current impact. Reopen surface backend selection for a named curved or
-overhanging target, non-box fixture, or residual tolerance these bounded
-methods cannot meet.
+**Accepted offline G3 source-bound occupancy slice, backlog 6:** the retained
+actual level-G3 Pocket and generated rounded V finish now share a declared
+stock, raised clamp and T1/T3 body setup. All 1,223 independently decoded
+UCCNC moves, including eleven native G3 cuts, pass continuous body/box and
+unchanged stock replay. Moving only the clamp invalidates the handoff and
+causes a native G3 holder collision inside the arc, after twenty clear moves
+and with both arc endpoints clear. The [contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy),
+[runbook](DEVELOPMENT.md#source-bound-g3-nativegenerated-occupancy-case)
+and [evidence](REVIEW.md#source-bound-g3-nativegenerated-occupancy---2026-09-27)
+own the bound, exact hashes and setup. The accepted source and actual post
+are unchanged; no new CamBam observation is needed. Physical installation,
+stage-transition travel and controller runtime remain unassessed.
+
+**Next priority, backlog 7:** obtain one native CamBam Plus 1.0 before/after
+Manual Profile holding-tab fixture, then implement fresh authoring against its
+observed point collection and toolpath behavior. This is the next concrete
+user-facing capability after the named linear and G3 hybrid occupancy gaps
+closed. Its native encoding is still unknown, so the fixture is a prerequisite
+to implementation. Do not expand occupancy to non-box fixtures or select a
+general surface backend without a named job that needs them; reopen for a
+curved/overhanging target, unsupported fixture or residual tolerance these
+bounded methods cannot meet. The [remaining backlog](#remaining-backlog-in-order)
+states the A/B evidence needed.
 
 The user reaffirmed native CamBam interchange, independent calculation, hybrid
 native/generated jobs and future volume/surface methods as the product direction.
@@ -157,13 +168,12 @@ to concrete product choices or external observations. See
 [framework principles](structure_spec.md#framework-direction-and-extension-principles),
 [acceptance ownership](WORKFLOW.md#acceptance-ownership) and the
 [review correction](REVIEW.md#framework-direction-and-engineering-acceptance---2026-09-26).
-Manual-tab authoring remains deferred: it needs a native before/after fixture
-and contributes less to the current shared-core objective. The sloped
+Manual-tab authoring is the next evidence-dependent increment: it needs a native
+before/after fixture. The sloped
 ball-surface slice is an offline engineering result. The actual native arc
 hybrid is accepted for its bounded offline scope; its source, post and output
 handoff remain retained as evidence. The synthetic holder/fixture and first
-source-bound linear hybrid occupancy increments are closed; arc-interior
-occupancy is a separate scope.
+source-bound linear and G3 hybrid occupancy increments are closed.
 The dated entries below retain development history.
 
 **2026-09-23 execution architecture refinement (backlog 6).** The user's context
@@ -1761,8 +1771,8 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    native order/edit evidence gap. The actual native Profile plus generated V
    hybrid and the bounded actual native G3 Pocket/rounded-V hybrid are accepted.
    The stepped-volume, sloped-ball and bounded holder/fixture foundations also
-   pass decoded offline gates, including one actual source-bound linear
-   native/generated setup. Further capability directions follow the
+   pass decoded offline gates, including actual source-bound linear and G3
+   native/generated setups. Further capability directions follow the
    [capability progression](REST_MACHINING_PLAN.md#subsequent-capability-progression).
    Historical entries below retain earlier stage limits; they do not permanently
    restrict the framework to RC01 or a fixed-axis sample workflow.

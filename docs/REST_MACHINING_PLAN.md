@@ -618,8 +618,10 @@ active increment after each outcome.
   between clear endpoints, and invalidates the prior handoff. The
   [runbook](DEVELOPMENT.md#source-bound-nativegenerated-occupancy-case) and
   [review](REVIEW.md#source-bound-nativegenerated-occupancy---2026-09-27)
-  retain the exact setup, hashes and limits. A bounded level-arc extension is
-  the next named gap; controller runtime and non-box fixtures remain deferred.
+  retain the exact setup, hashes and limits. The later
+  [G3 occupancy result](REVIEW.md#source-bound-g3-nativegenerated-occupancy---2026-09-27)
+  closes the named level-arc gap on the actual Pocket hybrid. Controller
+  runtime and non-box fixtures remain deferred.
 - **Additional methods and optimization:** medial/contact tracing, adaptive
   clearing, tool combinations and improved entry/link methods consume the same
   target/stock capabilities and independently checked motion. Rank feasible

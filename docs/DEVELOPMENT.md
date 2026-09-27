@@ -1936,6 +1936,37 @@ accepted hybrid output. Physical setup and controller runtime require their
 own observations. [Evidence](REVIEW.md#source-bound-nativegenerated-occupancy---2026-09-27)
 records hashes and measured clearance.
 
+### Source-bound G3 native/generated occupancy case
+
+The retained [CamBam Default G3 Pocket post](../output/native-arc-hybrid-20260926-01/native-arc-predecessor.nc),
+[candidate](../output/native-arc-hybrid-20260926-01/native-arc-predecessor.cb)
+and [source](../output/native-arc-hybrid-20260926-01/source.cb) are unchanged.
+Run the ignored [verification script](../output/native-arc-body-20260927-01/verify.py)
+from the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe output/native-arc-body-20260927-01/verify.py
+& .\.venv\Scripts\python.exe -m unittest tests.test_occupancy tests.test_native_v_hybrid tests.test_native_arc_replay -q
+```
+
+The script binds one `native-default-mm` program-frame initial stock box
+X=[-24,24], Y=[0,60], Z=[-2,0] mm to both stages. T1 uses a radius-2.5 mm
+cutter and shank; T3 uses its rounded V profile's largest radius over 3 mm.
+Both cutter bands span tip+0 to +3 mm, shanks +3 to +3.5 mm and radius-2.28 mm
+holders +3.5 to +6 mm. A declared raised clamp is X=[-0.1,0.1],
+Y=[-5.0,-4.6], Z=[3.6,4.0] mm. These synthetic dimensions are test inputs,
+not measured physical installation. The script re-audits the [handoff](../output/native-arc-body-20260927-01/ordered-uccnc/handoff.json)
+against exact source, candidate, post and stage bytes on repeat runs. Pass
+requires 1,223 decoded moves, eleven native G3 cuts, body and stock passes,
+and unchanged residual bounds. Moving only the clamp to Y=[50.5,50.9] mm
+invalidates the old handoff and makes the T1 holder intersect G3 move 20
+inside the arc; every prior native move and both arc endpoints clear, while
+the cutter/shank remain below the clamp. The [contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy)
+and [review](REVIEW.md#source-bound-g3-nativegenerated-occupancy---2026-09-27)
+own the numerical bound and results. No new CamBam posting step adds evidence
+because the native source and complete actual post are unchanged. Physical
+setup, transition travel and controller runtime remain separate observations.
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not

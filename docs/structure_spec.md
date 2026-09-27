@@ -575,14 +575,21 @@ For every decoded straight stage move, the checker restricts the XY center
 segment to the parameter interval where a band overlaps a box in Z. It then
 compares the exact segment-to-rectangle distance with the band's radius;
 touching within 1e-9 mm rejects. This covers entries, cuts, retracts and rapids
-between endpoints. An attached setup rejects arcs and modeled or decoded
-transition travel until a corresponding continuous body check exists. The
-bounded evidence uses side clamps outside the stock on the sloped-ball and
-linear native/generated jobs; it does not represent tool body above the
-declared holder top, clamps of other shapes, fixture uncertainty, machine
-kinematics or controller runtime. The [synthetic runbook](DEVELOPMENT.md#bounded-holder-and-fixture-occupancy),
-[source-bound runbook](DEVELOPMENT.md#source-bound-nativegenerated-occupancy-case)
-and [review](REVIEW.md#source-bound-nativegenerated-occupancy---2026-09-27)
+between endpoints. For supported level XY G2/G3 cuts, it uses the same bounded
+arc subdivision as stock replay. The minimum chord-to-box distance minus the
+arc's endpoint-radius/chord error and the band radius is a conservative
+clearance lower bound for the continuous sweep. The arc model reports its
+count and largest enclosure error separately; the straight-only v1 report
+remains unchanged. Helices, unresolved arcs and modeled or decoded transition
+travel still reject. The actual G3 Pocket plus generated V case uses a
+declared raised box outside the cutting envelope; moving that box into a G3
+holder sweep rejects between clear arc endpoints. The bounded evidence does
+not represent tool body above the declared holder top, clamps of other shapes,
+fixture uncertainty, machine kinematics or controller runtime. The
+[synthetic runbook](DEVELOPMENT.md#bounded-holder-and-fixture-occupancy),
+[linear source-bound runbook](DEVELOPMENT.md#source-bound-nativegenerated-occupancy-case),
+[G3 source-bound runbook](DEVELOPMENT.md#source-bound-g3-nativegenerated-occupancy-case)
+and [G3 review](REVIEW.md#source-bound-g3-nativegenerated-occupancy---2026-09-27)
 record the fixtures and results.
 
 ### Directional analytic stock section bounds

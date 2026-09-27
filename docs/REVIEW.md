@@ -1,5 +1,60 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Source-bound G3 native/generated occupancy - 2026-09-27
+
+**Accepted by offline engineering for the retained actual-post G3 hybrid.**
+The unchanged CamBam Plus 1.0 Default T1 Pocket source, candidate and complete
+post remain the native motion authority; their SHA-256 values are recorded in
+the [accepted arc review](#safe-native-g2g3-hybrid-evidence---2026-09-26).
+Adding one declared program-frame occupancy setup changes the ordered job and
+prefix fingerprints, while both UCCNC stage files retain SHA-256
+`eddd3c3a8dcd58b698c558b001b450f798d49fbf42f3d88bfb97446efda1b0de`
+and `59c69462c2d4bceec5664a6c1316e79310ce83109e89edb9f9a0def01353afb3`.
+The new [handoff](../output/native-arc-body-20260927-01/ordered-uccnc/handoff.json)
+has SHA-256 `8d243f283111e95b788891ef214183db384421ddf0d17b83e8b16646f64a92d4`.
+The ignored [verifier](../output/native-arc-body-20260927-01/verify.py)
+reconstructs and re-audits those exact bytes.
+
+The declared initial stock is X=[-24,24], Y=[0,60], Z=[-2,0] mm. A raised
+clamp is X=[-0.1,0.1], Y=[-5.0,-4.6], Z=[3.6,4.0] mm. Both bodies have
+tip-relative cutter to +3 mm, shank to +3.5 mm, and radius-2.28 mm holder
+to +6 mm; T1 cutter/shank radius is 2.5 mm and T3's is the rounded V maximum
+radius at its 3 mm cutting length. These are declared synthetic setup values.
+The independent UCCNC decoder matches 55 native and 1,168 generated moves,
+including eleven native G3 cuts. All 1,223 moves pass body/box occupancy and
+the unchanged stock/access replay. Minimum reported modeled fixture clearance
+is 10.81888466 mm. The largest conservative arc centerline enclosure is
+0.000245304 mm, including endpoint-radius mismatch and chord error. Shank
+and holder do not overlap initial stock in Z. The unchanged Z=-1 mm
+native/final residual intervals are 366.03554-366.04387 /
+3.79242-5.28194 mm2 with zero modeled protected overcut.
+
+Moving only the clamp to Y=[50.5,50.9] mm changes the job fingerprint and
+makes the prior handoff stale. The moved setup passes the first twenty
+independently decoded native moves, then rejects a holder collision on native
+G3 move 20. Both endpoints clear the holder radius and the cutter/shank bands
+remain below the raised clamp. Auditing the whole changed source-bound job
+rejects the same collision. Thus the counterexample exercises the interior
+of an actual posted arc, not an endpoint or generated-stage failure.
+
+The reusable checker also passes synthetic CW and CCW semicircle cases and
+rejects their between-endpoint holder collisions. It uses replay's bounded
+arc chords and subtracts the enclosure from the chord/box distance, rather
+than treating chords as the exact body path. Helices and stage-transition
+motion still fail closed. The [contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy)
+and [runbook](DEVELOPMENT.md#source-bound-g3-nativegenerated-occupancy-case)
+own the reusable behavior. No new CamBam GUI observation is needed because
+native source and post bytes are unchanged. Physical installation, box
+geometry uncertainty, transition motion and controller runtime remain outside
+this result.
+
+Verification: the source-bound verifier passed on bundle creation and on
+exact-byte re-audit; 37 adjacent ordered/native/stock/M5 tests passed before
+the final test readability edit, and the final six occupancy tests passed.
+Package, test and ignored verifier compilation, tracked `git diff --check`
+and ignored verifier trailing-space inspection passed. The worktree is
+uncommitted and ready to commit, not merge-ready.
+
 ## Source-bound native/generated occupancy - 2026-09-27
 
 **Accepted by offline engineering for one linear actual-post hybrid.** The
@@ -44,8 +99,9 @@ reproduction command and setup.
 
 The earlier 3D-only setup restriction was removed only for supported planar
 replay and terminal V stages. Curved stages still fail closed at occupancy;
-level-arc support is the next named gap because an actual source-bound G3
-hybrid exists. Transition travel, non-box fixtures, physical tool dimensions,
+level-arc support was the next named gap because an actual source-bound G3
+hybrid exists; the [later G3 result](#source-bound-g3-nativegenerated-occupancy---2026-09-27)
+closes it. Transition travel, non-box fixtures, physical tool dimensions,
 controller runtime and machine behavior are not established here. No new
 CamBam GUI observation is needed because no native document or post changed.
 Final verification: the adjacent native/ordered/M5 gate passed 39 tests after
