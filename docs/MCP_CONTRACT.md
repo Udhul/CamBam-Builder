@@ -486,7 +486,10 @@ encoding. These are not interchangeable coordinate systems:
   each point must clear its edge corners and other tab gaps. The writer resolves
   the native primitive ID, perimeter fraction and outward normal. Supported
   imported native Manual points inspect as XY pairs; other native collections
-  remain opaque and preserve-only.
+  retain their opaque fields. Save/export remaps known tab parent references to
+  current geometry IDs. An unresolved or reassigned parent rejects serialization
+  until explicit replacement points are supplied; inspection does not report the
+  previous points as valid for a reassigned target.
 - The native enum token is `VCutter` (`ToolProfiles.VCutter`), although CamBam's UI
   displays “V-Cutter” and some prose documentation says “Vcutter”. An Engrave MOP
   still follows the selected curve or Text outlines at its ordinary depth settings;

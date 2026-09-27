@@ -500,6 +500,10 @@ def _read_cambam_root(
 
             # Native CamBam primitive references are authoritative.  Framework
             # identity metadata never supplies or overrides this relationship.
+            mop._xml_target_primitive_bindings = {
+                xml_id: xml_id_to_primitive_uuid[xml_id] for xml_id in xml_ids
+                if xml_id in xml_id_to_primitive_uuid
+            }
             try:
                 project.set_mop_targets(mop.internal_id, resolved_primitive_uuids)
             except (TypeError, ValueError) as exc:

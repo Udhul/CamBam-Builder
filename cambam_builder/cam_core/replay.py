@@ -98,7 +98,10 @@ class Target:
     region_holes: tuple = ()
 
     def __post_init__(self):
-        if (not self.name or len(self.bounds) != 4 or
+        if (any(type(value) is not tuple for value in (
+                self.bounds, self.island, self.cone_spine, self.polygon,
+                self.region_shell, self.region_holes)) or
+                not self.name or len(self.bounds) != 4 or
                 any(not math.isfinite(float(v)) for v in self.bounds) or
                 not self.bounds[0] < self.bounds[2] or
                 not self.bounds[1] < self.bounds[3] or

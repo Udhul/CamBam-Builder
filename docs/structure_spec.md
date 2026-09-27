@@ -231,8 +231,9 @@ implemented general XYZ generator, route optimizer or postprocessor.
 The [execution architecture proposal](REST_MACHINING_PLAN.md#execution-architecture-refinement---2026-09-23)
 defines a document-independent motion/stock core with separate strategies,
 verification and CamBam/direct-G-code output adapters. Bounded M1-M4 slices
-implement this separation; M5 adds named controller fixtures, while a reusable
-job-level execution API remains subsequent work. Native-MOP authoring remains
+implement this separation; M5 adds named controller fixtures, and the bounded
+[ordered-job API](#reusable-ordered-job-output-and-verification) now composes
+caller-supplied stages. Native-MOP authoring remains
 independently useful. Execution authority, manual-edit invalidation, output
 acceptance and delivery decisions belong to that active plan; no future
 API or native path-equivalence claim is implied by this specification entry.
@@ -246,7 +247,11 @@ The detached implementation has `cambam_builder.cam_core`. Reusable
 toolpath/stock values and verification belong there; optional rest machining,
 V-carving, combined strategies and policy planning belong in `cam_extensions`
 under the [organization plan](#package-organization-decision-and-migration-plan).
-Neither owner imports `CamBamProject`, native CAD/MOP entities, XML I/O or MCP.
+Neither owner directly imports `CamBamProject`, native CAD/MOP entities, XML I/O
+or MCP. One current layering exception is `cam_core.inlay.audit_pair`, which
+imports `integrations.ordered_output.audit_files` locally to orchestrate two
+program audits. Its assembly and stock calculations remain in the core; this
+convenience function is workflow, not a reusable controller-independent kernel.
 Native `.cb` input/output and future controller posting use explicit adapters
 outside those packages; adapters normalize source data and separately validate
 emitted motion. The controller-neutral ordered plan and stock verifier feed
@@ -293,6 +298,82 @@ Parts for separate posting, but each final post and cross-file stock handoff
 still needs an audit.
 Existing root-level `stock`, `planar` and machining modules
 remain active owners until their staged migration.
+
+### Capability and public API boundary map
+
+Session 1 review baseline: `d38d8acf46be68c27c2c1e109761667b5e8babfb`, with
+the review repairs recorded in [REVIEW](REVIEW.md#branch-review-session-1---2026-09-27).
+This map states implemented contracts, not mathematical certification. Direct
+Python submodule functions below are caller entry points even when absent from
+the root exports. Private helpers and exact reference recipes are distinguished
+explicitly. Detailed numerical domains remain in the linked contracts below;
+the initial behavior-to-test matrix and audit gaps belong in REVIEW.
+
+| Capability / entry points | Owner and dependencies | Supported domain and exclusions | Status, evidence and extension seam |
+| --- | --- | --- | --- |
+| Document creation, mutation, XML: `CBProject`, `native.reader.read_cambam_bytes`, `native.writer.serialize_cambam_bytes` | `native.project/core/cad/region/cam/reader/writer/transfer/transformations`; NumPy transforms | Mutable CAD/MOP intent, typed supported XML fields, UUID relationships; no toolpath parity from XML success. Old root imports resolve to canonical objects; same-version snapshots only. | Public native API; identity and synthetic round-trip tests plus bounded CamBam observations. Add entity/field semantics here, never to an output adapter. Manual-tab parent references follow geometry ID renumbering. |
+| Native intent versus actual motion: `native_variable_v.normalize_bytes`, `native_series.normalize_native_series`, `NativeSeries.to_trace` | `integrations.cambam`; native owners and replay | Explicit supported units/frames/tools, one bounded Part and supported MOP/post subset. Intent can normalize without proving removal; actual post parsing still requires replay. Unsupported effects and unresolved setup reject. | Public bounded adapters; source/candidate/post and setup freshness. No native algorithm parity beyond specifically observed cases. Extend normalization and emitted-motion evidence together. |
+| Planar geometry/access: `planar.RegionSet`, `ErrorBudget`, `PlanarFrame`, `feasible_centers` | Root `planar`; private `_planar_shapely` adapter | Nominal planar regions, analytic primitives and optional pinned GEOS operations; explicit mm/inch input frames, millimetre results and uncertainty. Native curves require an adapter. | Public bounded foundation; analytic and conditional numerical evidence. Missing backend/capability is diagnostic, not clearance. Backend seam stays private. |
+| Section stock: `stock.SectionTarget`, `SectionMotionPath`, `verify_section_motion`, `compose_target_rest_bounds` | Root `stock`; exact rational section geometry | Rectangular stock/target and supplied disk-sweep section motion; explicit section depth and units. Not an XYZ generator or a general solid engine. | Public analytic/conditional foundation. RC01 consumes it; future representations must preserve enclosure directions. |
+| Ordered motion/stock: `replay.ToolProfile`, `Target`, `Operation`, `Trace`, `replay` | `cam_core.replay`; optional Shapely for Region targets | Fixed-axis cylinders and 90-degree pointed cones; bounded linear, XY arc and descending helix cuts. Positive target depth below Z=0; negative cutting Z. No general ramps, rising arcs or arbitrary cutter bodies. | Public detached supplied-motion API, no generator required. Target sequences are immutable tuples; constructors and replay enforce different gates. Add supported sweep models here, process rules remain separate. |
+| Cutter/contact/3D evidence: `v_region.VProfile`, `surface3d.contact_tip_z/bowl_contact_tip_z/replay_stages`, `volume3d.LayeredTarget/replay_stages` | `cam_core`; analytic profiles/contact and conservative cells/layers | Pointed/flat/rounded V; ball on an affine plane or spherical bowl; bounded axis-aligned stepped targets. Explicit pitch/error bounds, no overhang/freeform claim. | Public bounded kernels, not a general 3D backend. Direct analytic references and decoded-job evidence; S2 audits numerical guarantees. |
+| Non-cutting occupancy: `occupancy.ToolBody`, `OccupancySetup`, `verify` | `cam_core.occupancy` and replay segments | Fixed-axis cylindrical tool bands and axis-aligned stock/fixture boxes; continuous supported travel, separate cutter/shank/holder checks. Unsupported transition motion rejects when occupancy is requested. | Public bounded verification. Cutting-stock pass alone says nothing about holder/fixture clearance. Extend for a named unsupported fixture/job. |
+| Primary V: `vcarve.generate_slot/verify_slot`, `tapered_vcarve.generate/verify`, `v_region.plan/verify/section_report/volume_bounds` | Current `cam_core` strategy modules and replay; Region planner requires Shapely | Slot and increasing-X straight variable-depth families use pointed 90-degree cones; Region planner accepts polygon/curved bounds and pointed/flat/rounded profiles, raster/offset fills. No roughing predecessor needed to plan or analyze. Finite-tool residual is partial; no fitting center yields infeasible. | Public bounded machining capabilities. Target/profile/strategy are separate values; no GUI, files or fixture IDs required. General rest smoothing and globally optimal paths are not implemented. |
+| Rest analysis/generation: `convex_rest.generate`, `polygon_rest.generate`, `curved_region.approximate/generate`, `v_region.with_prior` | Current `cam_core`; replayed supplied predecessor, target and cutter | Convex/straight/curved planar domains with explicit numerical envelopes. A source/motion fingerprint is required where exposed. `with_prior` requires one complete cylindrical operation on the same target; earlier overcut is not forgiven by later removal. | Public bounded strategies and stock queries. Cleared-overlap/path fitting is distinct from changing target edges; generic conditional smoothing remains an extension. |
+| Reference jobs: `rc01.generate/verify`, `mixed.verify_mixed`, `inlay.generate/assembly/audit_pair` | Current `cam_core`; section/replay/profile values; paired audit also calls output integration | RC01 nominal rectangle/island/process recipe; mixed RC01/slot recipe; circular pointed-V receiver/plug family with independent stocks. Reference dimensions/tool recipes are not generic framework invariants. | Public reference conveniences with bounded offline evidence. Keep reusable geometry/stock separate; move orchestration when a concrete caller requires it. `audit_pair` is the explicit layering exception above. |
+| Recommendation/pass policy: root `machining_calculations`, `machining_recommendations`, `machining_planning` | Formula kernel, immutable contexts, pluggable recommendation strategy | Unit-explicit inputs, feed/RPM/range constraints and through-cut pass planning. No toolpath generation, stock clearance or curated material authority. | Existing public APIs, unchanged owners followed as dependencies. A candidate recommendation is not a stock certificate. |
+| Route selection: `cam_extensions.strategy.select_strategy` | Detached policy over caller-supplied `StageAudit` and residual bounds | Checks source/predecessor chain, required gates and completeness; ranks feasible then safe partial candidates by upper residual area, volume and declared tie order. Manual choice cannot select an unsafe candidate. | Public supplied-candidate ranking, not bundle search, cutting-time optimization or independent validation of caller assertions. No global optimum claim. |
+| Caller-owned execution: `ordered_job.Job/Stage/Transition`, `from_prior_v`, `audit` | `cam_core.ordered_job`; replay, V and bounded 3D evaluators | Caller labels/tools/order/feed/RPM; resolved mm/G54 translation. All-cylinder, one cylinder then terminal V, homogeneous bounded layered/surface/inlay sequences have distinct evaluators. Primary Region V alone may be emitted but ordered stock evidence is `unsupported`. | Public bounded composition. `audit` consumes already-decoded values; `ordered_output` is the complete-byte/native-binding authority. Unsupported mixtures must not be read as stock success. |
+| Native/generated composition: `native_ordered_job.from_native_series/from_native_v`, `NativeBinding.check` | Native integration to detached ordered job | Repeated tools and supported native stage order; one native cylinder plus source-bound V finish. `from_native_circle_cleanup` is specifically the diameter-24/depth-2/T1-T2 observed recipe. | Public bounded adapter plus named reference helper. Source/current-post binding is required at output; no mandatory global document session. |
+| Output and evidence: `ordered_dialects.render/decode`, `ordered_output.emit/audit_files/write_bundle/audit_bundle`; `direct_variable_v`/`direct_rc01` | `integrations`; core values, strict independent decoders | UCCNC split and Grbl pause profiles, explicit offset/transition effects, 4/6 decimal coordinates. Older `direct_*` writers use a strict reference dialect, not machine profiles. File helpers have fixed artifacts; in-memory emit/decode do not require them. | Public output adapters and bounded reference conveniences. `direct_rc01` reuses the CamBam Default-post reader; it is not fully independent of that adapter package. Runtime/physical setup remain unassessed. |
+| Agent protocol: document/MOP tools and schema | `mcp_adapter.service/schema/server/paths`; native project and existing planning owners | Volatile document sessions, validated requests and workspace transport. No exposure of arbitrary detached CAM/replay/controller entry points through MCP. | Public versioned tool contract, separate from direct Python API. Mirror supported native authoring changes in schema/service/tests; do not relocate machining truth into protocol handlers. |
+
+**Common caller contract.** Native document units follow the document and may
+include unresolved `Auto` properties; detached CAM uses millimetres, mm/min and
+RPM with stock top Z=0 unless an explicit adapter resolves a frame. Do not pass
+native target-depth words straight to a positive-depth target constructor.
+Region `VPath` uses positive penetration, while its `VMotion` uses negative tip Z.
+Stock bounds describe the initial material; the target describes permitted
+removal/protected boundaries. Matching bounding boxes alone is not target parity.
+Shared field names do not make native MOPs, recommendation `ToolProfile`, replay
+`ToolProfile` and `VProfile` interchangeable. Each entry point validates its own
+supported cutter model.
+
+Native projects and MCP document registries are mutable. Detached values use
+frozen dataclasses/tuples; frozen containers are not a security boundary against
+deliberate `object.__setattr__` or forged evidence. `StageAudit` is a caller-supplied
+assertion, not an opaque certificate. Recompute derived plans/audits after source,
+tool, target, order or setup changes. Output reports are mutable dictionaries:
+retain the source/bytes and re-audit, rather than editing a report into a pass.
+`planar` exposes structured diagnostics; most CAM contract failures raise
+`ValueError`, and file APIs can additionally raise I/O/parse errors. A `partial`
+plan, `unsupported` stock evaluator, `not_evaluated` gate and failed check are
+different outcomes. File emission success or an outer `ordered_output_pass`
+does not turn every nested gate into a pass.
+
+**Detached trace.** `tapered_vcarve.generate(TaperedRequest(...))` validates a
+caller target/tool and returns a plan without document state or predecessor.
+`trace_for` supplies detached operations/events/motions; `replay.replay` accepts
+that supplied trace independently, and `TaperedResult` measures residual.
+`output_trace` adds the bounded reference process/setup. `direct_variable_v.render`
+lowers it; its text audit parses complete output, compares semantic moves and
+replays decoded stock. `build_program`/`audit_program` add optional native input
+and file hashes. The fixed reference start/feed/tool are adapter limits, not
+requirements of primary V planning. A separate reusable generated route is
+`v_region.plan` + supplied cylindrical `Trace` -> `ordered_job.from_prior_v` ->
+`ordered_output.emit` -> independent decode -> `ordered_job.audit` -> replay and
+V residual; caller tool names and translations are exercised by ordered-job tests.
+
+**Native plus generated trace.** `normalize_native_series(source, candidate,
+post, setup=...)` binds native intent and actual posted motion. `to_trace` and
+`from_native_v` replay the cylinder and check the generated V target/source;
+the resulting job is detached. `ordered_output.emit/write_bundle` requires
+`NativeBinding.check`, decodes emitted bytes, compares each move and replays
+decoded predecessor stock before measuring the decoded V finish. `audit_bundle`
+rechecks current source/post/setup and complete bytes. The caller owns file
+selection/order and physical tool installation; neither native MOP intent nor
+the transition completion token proves actual execution. Analysis-only callers
+may stop before attachment/output; supplied-motion callers may start at replay.
 
 ### Mediation invariants and evidence contract
 
@@ -2400,8 +2481,14 @@ tab width, with nonoverlapping gaps. The writer orders records by perimeter
 fraction, resolves the actual primitive XML ID, derives its outward normal,
 and writes all Manual scalar settings alongside the sibling collection.
 Recognized imported records inspect as XY positions without rewriting their
-native template. Unrecognized imported collections remain opaque and preserved;
-switching away from an imported Manual method remains unsupported. The native
+native template. Unrecognized imported collections retain their opaque fields;
+known `Tabs/HoldingTab/ParentEntityID` references are remapped from the imported
+native ID through primitive UUID identity to the current export ID, including
+copy/transfer UUID remapping. Unknown or reassigned parent references reject
+export with a replacement-points diagnostic; preservation must not silently
+detach tabs or attach them to another target. Inspection likewise does not
+report the old points as valid after target reassignment.
+Switching away from an imported Manual method remains unsupported. The native
 posts establish Square lifts and Triangle ramps for this contour. Fresh B/C
 Square output now has its own accepted CamBam Default posts: every machine
 command matches the corresponding native B/C post after comments are removed.

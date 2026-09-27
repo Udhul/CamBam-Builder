@@ -67,6 +67,28 @@ def _native(root, order=("FIRST", "SECOND", "THIRD"), boundary="split"):
 
 
 class OrderedJobTests(unittest.TestCase):
+    def test_primary_v_plan_does_not_imply_supported_ordered_stock(self):
+        target = v_region.VTarget.polygon(
+            "standalone-v", ((0, 0), (6, 0), (6, 6), (0, 6)), (), 1)
+        plan = v_region.plan(target, v_region.VProfile("pointed", 90, 0, 3, 2),
+                             stepover_mm=2, xy_step_mm=1, safe_z=3)
+        self.assertEqual(plan.status, "partial")
+        self.assertTrue(plan.paths)
+        start = (-2, -2, 3)
+        moves = tuple(JobMove(m.role, m.start, m.end,
+                              0 if m.role == "rapid" else 100)
+                      for m in v_region.complete_motion(plan, start))
+        stage = Stage("primary-v", "T41", moves, 11000, v_plan=plan,
+                      source_revision=plan.fingerprint)
+        job = Job(target.source_id, (stage,), start)
+        _, report = emit(job, "uccnc")
+        self.assertEqual(report["motion_equivalence"]["status"], "pass")
+        self.assertEqual(report["stock_access_residual"], {
+            "status": "unsupported",
+            "reason": "V stock requires one endmill predecessor"})
+        self.assertEqual(report["runtime_parity"]["status"], "not_evaluated")
+        self.assertEqual(report["physical_setup"]["status"], "not_evaluated")
+
     def test_edited_annulus_selected_strategies_share_output_contract(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

@@ -302,6 +302,11 @@ def _copy_tree(source: "CamBamProject", root: "Identifiable", target: "CamBamPro
         clone = deepcopy(entity)
         clone.internal_id = uuid_map[entity.internal_id]
         clone.user_identifier = id_map_names.get(entity.user_identifier, entity.user_identifier)
+        if isinstance(clone, Mop) and hasattr(clone, '_xml_target_primitive_bindings'):
+            clone._xml_target_primitive_bindings = {
+                xml_id: uuid_map.get(target_id, target_id)
+                for xml_id, target_id in clone._xml_target_primitive_bindings.items()
+            }
         if isinstance(clone, Primitive):
             clone.groups = sorted(group_names_map.get(name, name) for name in primitive_groups[entity.internal_id])
             if entity.internal_id == root_id:

@@ -8,12 +8,75 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from cambam_builder import CBProject
-from cambam_builder.cambam_reader import read_cambam_file
-from cambam_builder.cambam_writer import save_cambam_file
+from cambam_builder.cambam_reader import read_cambam_file, read_cambam_bytes
+from cambam_builder.cambam_writer import save_cambam_file, serialize_cambam_bytes
 
 
 class MopRoundTripTests(unittest.TestCase):
     """Synthetic MOP fixture with duplicate display names and two parts."""
+
+    def manual_tab_source(self, *, opaque=False):
+        project = CBProject("manual-tab-remapping")
+        layer = project.add_layer("Geometry")
+        outline = project.add_pline(layer, [(10, 10), (70, 10), (70, 40), (10, 40)],
+                                    closed=True, identifier="outline")
+        part = project.add_part("Part")
+        project.add_profile_mop(
+            part, [outline], identifier="manual", profile_side="Outside",
+            target_depth=-3, stock_surface=0, tool_diameter=3,
+            roughing_clearance=0, tab_method="Manual", tab_width=6, tab_height=1,
+            tab_min_tabs=4, tab_max_tabs=4,
+            manual_tab_points=[(40, 10), (70, 25), (40, 40), (10, 33)],
+        )
+        root = ET.fromstring(serialize_cambam_bytes(project))
+        root.find("./layers/layer/objects/*").set("id", "7")
+        profile = root.find("./parts/part/machineops/profile")
+        profile.find("primitive/prim").text = "7"
+        for parent in profile.findall("Tabs/HoldingTab/ParentEntityID"):
+            parent.text = "7"
+        if opaque:
+            ET.SubElement(profile.find("Tabs/HoldingTab"), "VendorField",
+                          {"mode": "opaque"}).text = "preserve me"
+        return read_cambam_bytes(ET.tostring(root), source_name="manual-tabs.cb")
+
+    def test_imported_manual_tab_parent_ids_follow_roundtrip_and_copy(self):
+        for opaque in (False, True):
+            with self.subTest(opaque=opaque):
+                project = self.manual_tab_source(opaque=opaque)
+                copied = CBProject("copy")
+                project.copy_primitive_tree("outline", copied, preserve_ids=False)
+                for current in (project, copied):
+                    for _ in range(2):
+                        content = serialize_cambam_bytes(current)
+                        root = ET.fromstring(content)
+                        profile = root.find("./parts/part/machineops/profile")
+                        self.assertEqual("1", profile.findtext("primitive/prim"))
+                        self.assertEqual(["1"] * 4, [node.text for node in
+                            profile.findall("Tabs/HoldingTab/ParentEntityID")])
+                        vendor = profile.find("Tabs/HoldingTab/VendorField")
+                        if opaque:
+                            self.assertEqual(("preserve me", {"mode": "opaque"}),
+                                             (vendor.text, vendor.attrib))
+                        else:
+                            self.assertIsNone(vendor)
+                        current = read_cambam_bytes(content, source_name="roundtrip.cb")
+                        points = current.get_mop("manual").inspected_manual_tab_points(current)
+                        self.assertEqual(None if opaque else [
+                            (40, 10), (70, 25), (40, 40), (10, 33)], points)
+
+    def test_imported_manual_tabs_reject_reassigned_or_unknown_parent(self):
+        project = self.manual_tab_source()
+        replacement = project.add_pline("Geometry", [(10, 10), (70, 10),
+            (70, 40), (10, 40)], closed=True, identifier="replacement")
+        project.set_mop_targets("manual", [replacement])
+        self.assertIsNone(project.get_mop("manual").inspected_manual_tab_points(project))
+        with self.assertRaisesRegex(ValueError, "Manual tab parent"):
+            serialize_cambam_bytes(project)
+        project = self.manual_tab_source()
+        project.get_mop("manual")._xml_template.find(
+            "Tabs/HoldingTab/ParentEntityID").text = "999"
+        with self.assertRaisesRegex(ValueError, "Manual tab parent"):
+            serialize_cambam_bytes(project)
 
     def make_project(self):
         project = CBProject("mop-identity-regression")

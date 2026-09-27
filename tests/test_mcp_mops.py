@@ -1072,6 +1072,13 @@ class MopBreadthTests(unittest.TestCase):
                 [tab.findtext("ParametricPoint")
                  for tab in profile.findall("Tabs/HoldingTab")],
             )
+            # A native editor may assign nonsequential IDs; export must remap
+            # both the MOP target and tab parents when the writer uses ID 1.
+            root.find("./layers/layer/objects/*").set("id", "7")
+            profile.find("primitive/prim").text = "7"
+            for parent in profile.findall("Tabs/HoldingTab/ParentEntityID"):
+                parent.text = "7"
+            ET.ElementTree(root).write(self.root / "manual.cb", encoding="utf-8")
             reopened = await self.call("document_open", self.args(
                 path="manual.cb", units="mm"))
             self.assertTrue(reopened["ok"], reopened)
@@ -1082,6 +1089,19 @@ class MopBreadthTests(unittest.TestCase):
             self.assertEqual([[40, 10], [70, 25], [40, 40], [10, 33]],
                              record["parameters"]["manual_tab_points"])
             self.assertNotIn("Tabs", record["unsupported_fields"])
+            remapped = await self.call("document_save", self.args(
+                document=reopened["document"], expected_revision=0, path="remapped.cb"))
+            self.assertTrue(remapped["ok"], remapped)
+            remapped_root = ET.parse(self.root / "remapped.cb").getroot()
+            self.assertEqual(["1"] * 4, [node.text for node in remapped_root.findall(
+                "./parts/part/machineops/profile/Tabs/HoldingTab/ParentEntityID")])
+            reopened_again = await self.call("document_open", self.args(
+                path="remapped.cb", units="mm"))
+            self.assertTrue(reopened_again["ok"], reopened_again)
+            records_again = await self.inspect_records(reopened_again["document"])
+            self.assertEqual([[40, 10], [70, 25], [40, 40], [10, 33]],
+                next(item for item in records_again if item.get("identifier") == "manual")
+                ["parameters"]["manual_tab_points"])
 
             ET.SubElement(profile.find("Tabs/HoldingTab"), "VendorField").text = "keep"
             ET.ElementTree(root).write(self.root / "manual-extra.cb", encoding="utf-8")

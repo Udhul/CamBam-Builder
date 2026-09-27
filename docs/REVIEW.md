@@ -7423,3 +7423,421 @@ discovery limit. No behavioral tests were run for this documentation-only change
 The amendment is ready to commit. Suggested commit: `docs: require behavioral
 test adequacy throughout branch review`. A fresh session remains appropriate for
 session 1; the full mandate is persisted and no external input is pending.
+
+## Branch review session 1 - 2026-09-27
+
+**Scope:** capability boundaries, public contracts, complete diff allocation and
+the initial behavior-to-test matrix. Reviewed branch
+`feat/rest-machining-and-vcarving` at
+`d38d8acf46be68c27c2c1e109761667b5e8babfb` against local `main`/merge base
+`18dbb9950f3065e95df0ee645a25361d45e63b30`: 90 commits, 163 changed paths,
+47,897 insertions and 7,282 deletions. Initial worktree clean. The planning
+snapshot was two commits older. Review repairs below are an uncommitted overlay;
+the reviewed revision is not a claim about a remote branch or final delivery.
+
+The [capability/API map](structure_spec.md#capability-and-public-api-boundary-map)
+now separates native document intent, actual posted motion, reusable geometry
+and stock, generated strategies, supplied-route policy and output/protocol
+orchestration. It includes caller units/signs/frames, mutable native state versus
+detached values, partial/unsupported outcomes, freshness and call order. The
+detached tapered-V and native-cylinder/generated-V traces identify the authority
+at every step. No global session, GUI, fixture label or file sequence is required
+for detached planning/replay; named reference writers and native freshness
+bindings have narrower requirements. Primary V planning exists independently
+of roughing; ordered Region-V stock verification currently needs one cylindrical
+predecessor. Candidate ranking is not bundle generation or cost optimization.
+Generic conditional rest smoothing and freeform geometry are not implemented.
+
+### Findings and dispositions
+
+**BR-1-001 — delivery blocker, high consequence: imported Manual-tab references
+did not follow exported entity IDs.** Owners: `native.cam.ProfileMop` template
+serialization, `native.reader._read_cambam_root`, `native.transfer._copy_tree`.
+Trigger: a valid synthetic closed Pline and its Profile/tab parents use native
+ID 7; export assigns ID 1. Before repair the Profile target became 1 while all
+four tab parents remained 7, and recognized Manual points became uninspectable
+after reimport. This breaks supported identity/interchange and can detach holding
+tabs from their intended geometry. It invalidates the generalized Manual-tab
+round-trip claim when IDs change, not the unchanged accepted native/post bytes.
+The reader now retains native-ID-to-primitive-UUID provenance; serialization
+rewrites only known parent IDs through current targets, retaining opaque fields.
+Copy/transfer remaps the provenance UUIDs. Unknown or reassigned parents reject
+with an explicit-replacement diagnostic rather than silently attaching tabs to
+different geometry. Regression criterion: ID 7 -> 1, both direct and copied
+documents, repeated XML round trips, opaque-field preservation, MCP save/reopen,
+and rejection of unknown/reassigned parents. Two new native tests failed before
+repair (three subtest failures); repaired checks and final totals are below.
+
+**BR-1-002 — contract defect, medium consequence: mutable replay target inputs
+failed late.** Owner: `cam_core.replay.Target.__post_init__`. Constructing
+`b=[0,0,10,10]; t=Target('t', b, 1)` succeeded; `t.contains(5,5,.5)` changed
+from true to false after `b[2]=1`. A nominally frozen target therefore retained
+caller-owned mutable geometry. Successful replay subsequently hashes targets,
+so this input fails with `TypeError` rather than yielding a valid stock result;
+no stale-certificate bypass was demonstrated. The repair requires tuple geometry
+collections at construction, matching existing XYZ/ring contracts, and raises
+`ValueError` early. Valid tuple values and fingerprints retain their behavior.
+Regression criterion: mutable/empty-list variants of every target collection
+reject at construction, with valid tuple neighbors and valid replay. The
+existing tests did not exercise this admission boundary.
+
+**BR-1-003 — documentation defect, medium consequence: current API and evidence
+scope were obscured.** `structure_spec` still called the ordered-job API future
+work and described output independence without its exceptions. The new map and
+corrected execution paragraph describe the implemented API and distinguish
+primary V planning from ordered stock verification. New
+`OrderedJobTests.test_primary_v_plan_does_not_imply_supported_ordered_stock`
+checks a caller-named one-stage primary V plan: motion passes, stock is explicitly
+`unsupported`, and runtime/setup remain `not_evaluated`. Existing two-stage
+tests supply the nearby supported case. This corrects the contract, not an
+algorithm or controller claim.
+
+**BR-1-004 — architecture gap, bounded and nonblocking:**
+`cam_core.inlay.audit_pair` locally imports `integrations.ordered_output.audit_files`;
+`integrations.direct_rc01` imports the CamBam Default-post reader. These are real
+dependency exceptions, not evidence of a fully isolated core/output architecture.
+Independent inlay `generate`, `assembly` and decoded stock `replay_stages` remain
+usable without invoking `audit_pair`, and the reader has no GUI requirement.
+No supported consumer was found unable to calculate because of these helpers.
+Document the exceptions now; defer relocation to the existing package-layout
+backlog until a second paired-output consumer, independently packaged core, or
+new dialect needs it. Session 4 still audits the helpers' output/freshness
+behavior. No registry, backend or package shuffle is justified by this finding.
+
+### Initial behavior-to-test matrix
+
+IDs are stable review rows. Test names below are exact methods qualified by their
+`tests.test_*` module; class names may be omitted where unambiguous. The source
+column identifies the intended contract, not the implementation as its own oracle.
+**Adequate** means the named boundary is controlled, not exhaustive certification.
+**Partial** means inspected assertions provide evidence but the named numerical,
+strategy or misuse audit remains due in its owning session. No partially reviewed
+algorithm is accepted merely because the session-1 suites pass. **Untested** rows
+are scoped extensions outside delivered claims, with reopening criteria.
+
+| ID / behavior, source and API | Domain / boundary partitions; forbidden outcome | Tests and actual assertions | Oracle provenance and plausible fault sensitivity | Adequacy / missing evidence and owning session |
+| --- | --- | --- | --- | --- |
+| BT-01 Native owner identity; architecture package migration; root facades and `native.*` | Old/new imports and varied import order, Region/MOP/stock references; forbid distinct class identities or changed UUID targets | `test_entity_module_boundaries.test_facade_reexports_canonical_owner_classes`, `test_clean_process_imports_succeed_in_varied_orders`; `test_native_owner_migration.test_region_mop_reference_and_stock_offset_survive_two_roundtrips_and_snapshot`: `is` identity, explicit XML PMin `2.5,-3.0,-5.0`, target ID and UUID equality over two round trips | Identity assertions and independently specified XML values; catches facade shadow classes and stock-frame sign errors. Round trips alone would miss symmetric reader/writer mistakes | Adequate for migration boundary; full field/native parity outside this slice, S4 interchange/S5 installed package |
+| BT-02 Manual-tab geometry identity; MOP parameter contract and BR-1-001; `ProfileMop.to_xml_element` | Source ID 7 -> output ID 1, copied UUIDs, opaque payloads, reassigned/unknown parents; forbid detached or silently retargeted tabs | New `test_mop_roundtrip.test_imported_manual_tab_parent_ids_follow_roundtrip_and_copy` asserts all four parent IDs, repeated round trips and opaque attribute/text retention; `test_imported_manual_tabs_reject_reassigned_or_unknown_parent`; strengthened `test_mcp_mops` Manual authoring save/reopen | Synthetic source ID deliberately differs from writer assignment; exact parent/target relationship is independently observable XML. Fails on original behavior, not merely a golden byte change | Adequate for repaired reference boundary; geometry mutation and physical tab retention stay S4/previous native observation scope |
+| BT-03 Stock absent versus zero stock; architecture execution boundary; native Part and ordered reports | Explicit coordinates without Stock, unresolved Auto, cloning/copy; forbid inventing stock or shifting explicit Z from stock top | `test_stockless_native.test_stockless_import_save_reopen_preserves_explicit_mop_and_raw_state`, `test_stockless_auto_states_stay_unresolved_and_authored`, `test_explicit_zero_and_new_default_stock_remain_present`; `test_ordered_job.test_stockless_native_series_keeps_motion_without_stock_claim` checks source/motion pass and stock `not_evaluated` | Explicit source property/state assertions and nested report statuses; catches default-stock invention. Stockless byte round trip is compatibility, not motion proof | Partial; all Auto/frame/tool combinations and bypass callers S4 |
+| BT-04 Analytic feasible centers; architecture detached planar core; `planar.feasible_centers` | Rectangle/circle radius just below/on/above exact fit, line/point feasible sets, mm/inch and rigid frame; forbid epsilon-erasing exact fit or claiming stock removal | `test_planar.AnalyticTests.test_exact_and_nextafter_rectangle_dimensions`, `test_exact_and_nextafter_circle_dimensions`, `test_exact_mixed_units_and_rigid_placement`, `test_invalid_and_certified_requests`: exact dimensionality/coordinates and rejection statuses | Rational size/fit expectations independent of backend; detects wrong unit scale and epsilon collapse | Partial; selected boundary strong, extreme coordinates/rotation/refinement S2 |
+| BT-05 Topology and uncertainty; same source; `normalize/union/difference/nominal_area_erosion` | Holes, disconnected components, contact, malformed rings, frame mismatch; forbid silent topology repair, hole loss or empty-area/empty-feasibility conflation | `test_planar.NominalTests.test_hole_and_split_topology`: areas 64/80, one hole/two components; `test_strict_input_admission`, `test_contact_and_unrepresentable_output`, `test_empty_area_is_not_general_feasibility`, `test_budget_certification_and_backend_failure_atomicity` | Scalar geometry plus explicit topology counts; mocked backend failure tests error handling only. Counts would catch dropped holes but not every thin-feature deformation | Partial; near-touching multiple holes, error propagation and backend conversion S2 |
+| BT-06 Optional dependency and input ownership; same source; planar values/imports | Analytic API without Shapely, mutable input lists, mismatched frame/Z; forbid eager optional backend or aliased inputs | `test_planar.AnalyticTests.test_optional_import_and_analytic_without_shapely` isolates process with Shapely blocked; `test_input_ownership` mutates caller lists and checks tuples/frozen values; `NominalTests.test_conversion_loss_and_owned_value_admission` | Process import and mutation are independent boundary oracles; detects eager backend/alias regressions | Adequate for selected planar boundary; explicit V/curved/volume submodules require Shapely, full installed absent/present matrix S5 |
+| BT-07 Conditional section removal; architecture directional section bounds; `stock.bound_horizontal_sweep/compose_target_rest_bounds` | Disk/line sweep, radius/position uncertainty, exact contact, zero/lower-dimensional guarantee; forbid swapped inner/outer bounds or optimistic residual | `test_stock.StockBoundsTests.test_exact_sweep_and_rest_area` brackets `48+4*pi`, width `<.00034`; `test_uncertainty_envelopes_and_independent_actual_sweeps`, `test_contact_and_exact_rejection_beyond_boundary`, `test_empty_and_lower_dimensional_guarantees`; `ComposedStockTests.test_prefix_monotonicity_order_and_empty` | Capsule formula and explicit disk/strip membership independent; sampled perturbations corroborate rather than prove all uncertainty | Partial; arithmetic/composition/refinement audit S2; no arbitrary-orientation claim |
+| BT-08 Supplied section access; same source; `stock.verify_section_motion` | Contiguous cut/travel paths, cutting/cleared/outside entry, protected island; forbid clearance from future or merely possible removal | `test_stock.SectionMotionTests.test_cut_entry_travel_and_smaller_tool_cleanup`, `test_uncleared_connector_and_island_crossing_rejected`, `test_uncertainty_and_collapsed_guarantee_control_access`, `test_disconnected_motion_and_invalid_entry_rejected`: specific access rejection and valid neighboring route | Handcrafted geometry, no generator oracle; catches ignored connector and wrong stock prefix | Partial; complete entry/order combinations S2/S4 |
+| BT-09 Immutable supplied XYZ replay; shared replay contract and BR-1-002; `Target/Trace/replay` | Tuple targets, ordered tools/events, stale source, low rapid, missing entry; forbid late mutable geometry or stale/unsupported stock success | New `test_replay_contracts` constructor/replay regressions; `test_mixed_replay.test_both_tools_share_source_order_and_stock_prefixes`, `test_changed_source_or_reordered_motion_fails_closed`, `test_low_link_and_missing_tool_event_fail_closed`, `test_shared_cone_target_guard_rejects_wall_overcut` | Direct input mutation and explicit rejection; mixed recipe otherwise shares generator/verifier assumptions | Adequate repaired admission; partial replay math/identity/misuse pending S2/S4 |
+| BT-10 Arc/helix stock; ordered-job arc contract; `replay.ArcMotion/arc_segments` | G2/G3 level/descending XY, depth clipping, unsupported rising/full-circle; forbid whole-helix removal at unreached depth or underestimated tube | `test_native_arc_replay.test_helix_section_clip_and_unsupported_forms` checks opposite ends at depth .75; `test_semicircular_cutter_tube_encloses_analytic_area` brackets `pi*(2*3*.5+.5**2)`, width `<.02`; native hybrid tests tamper center | Independent analytic tube area and point membership, but polygon enclosure uses production helpers; wrong clipping or arc center is detectable | Partial; arc direction/radius mismatch/numerical limits S2, dialect semantics S4 |
+| BT-11 Primary V and finite-tool completion; architecture slot/straight/Region V contracts; `generate_slot`, `tapered_vcarve.generate`, `v_region.plan` | No predecessor; full/capped depth, edited spine/tool, pointed/flat/rounded joins, narrow access; forbid false complete removal or required roughing workflow | `test_vcarve_slot.test_capped_slot_has_extra_paths_and_genuine_floor_rest`, `test_independent_row_integration_agrees_between_sections`; `test_variable_vcarve.test_edited_straight_groove_and_tool_have_independent_section_oracle`: five depths within .0005 of independent row integration; `test_v_region.test_profile_join_inverse_and_full_height_occupancy`, `test_narrow_curved_access_reports_infeasible` | Independent row integration/join constants; Region residual budgets also use production reporting and are not alone an independent correctness oracle | Partial; profile math S2, wide/capped/floor/corner strategy variations S3 |
+| BT-12 V protected material and prior stock; Region V contract; `verify/with_prior` | Segment interiors, hole crossing, slope limit, current versus stale/overcut cylinder predecessor; forbid endpoint-only gouge checks or forgiving prior overcut | `test_v_region.test_between_vertex_gouge_and_tampered_motion_fail` checks protected-Region, motion and slope messages; `test_source_bound_prior_stock_and_v_finish_gain` checks final upper residual below prior lower, stale source and capped-target rejection | Deliberate segment/hole counterexamples detect high-consequence faults; generated positive case prevents reject-all. Private `_motions` is used only to isolate geometry rejection from motion-consistency rejection | Partial; continuous numerical proof S2, target/result coverage and conditional overlap S3, freshness S4 |
+| BT-13 Rest across target families; convex/M1/M2 contracts; `convex_rest/polygon_rest/curved_region.generate` | Convex/nonconvex/holed/curved targets, smaller tools, supplied multiple prior cuts, narrow access; forbid path crossing protected edges or ignoring predecessor | `test_convex_rest.test_pure_rest_and_ordered_cleanup_against_independent_sections`; `test_polygon_rest.test_independent_area_limits_and_original_boundary`, `test_two_ordered_prior_operations_contribute_to_rest_stock`; `test_curved_rest.test_annulus_analytic_source_and_bounded_stock`, `test_curved_narrow_access_rejected` | Independent convex sections/annulus areas coexist with production residual helpers; total area alone cannot prove topology preservation | Partial; inspect assertions/oracles fully and vary tools/order/thin topology S2/S3 |
+| BT-14 Policy over audited routes; native-series strategy contract; `select_strategy` | Supplied alternatives, tie/manual choice, stale/missing gates, partial/infeasible; forbid selecting unsafe lower-cost/residual route | `test_strategy_selection.test_feasible_ranking_uses_area_volume_then_declared_tie_order`, `test_mixed_ordered_stages_require_exact_predecessor`, `test_stale_unsafe_and_incomplete_routes_cannot_win_or_be_manually_chosen`, `test_safe_partial_and_no_audited_route_report_distinct_results`: exact choice/status, reasons and per-stage residuals | Hand-authored residuals and chains independent of machining generator. Combined bad-gate case checks reason count but individual missing-gate faults deserve S3 scrutiny | Adequate basic ranking contract; partial composition/candidate-domain audit S3; evidence records remain trusted caller assertions |
+| BT-15 Reusable generated ordered output; ordered-job contract; `from_prior_v/emit` | Different rectangle/edited annulus, T7/T19/T23, raster/offset, translation and two dialects; primary V alone unsupported stock | `test_ordered_job.test_two_existing_v_strategies_two_dialects_and_different_target` checks two versus one files, decoded prefix `(2,)`, cross-dialect section equality; new `test_primary_v_plan_does_not_imply_supported_ordered_stock` checks exact qualified result | Decoded byte comparison plus stock replay; cross-dialect equality can share the same geometric error and is not independent stock proof | Adequate capability distinction; partial numerical/output audit S2/S4 |
+| BT-16 Native/generated and repeated-tool composition; same source/native normalization; `NativeBinding/from_native_v/from_native_series` | Native cylinder then V, T1/T2/T1, source/target/tool/post edits; forbid intent replacing post or stale native evidence | `test_native_v_hybrid.test_native_prefix_generated_v_and_edit_invalidation`, `test_native_arc_predecessor_roundtrips_continuously_in_both_dialects`; `test_ordered_job.test_repeated_tool_native_source_through_both_outputs_and_freshness`: prefixes `(2,3,5)`, changed tool/source/bytes and absent binding reject | Synthetic full posts and independent XML identity; retained observed CamBam posts support only their unchanged scope. No native algorithm parity inferred | Partial; systematic edit/order/stock/source pairing misuse S4 |
+| BT-17 Surface/volume stock; layered and plane/bowl contracts; `volume3d/surface3d.replay_stages` | Stepped prisms/protected rib, affine slope, spherical bowl/rim, smaller-tool rest; forbid gouge or predecessor-free descent | `test_volume3d.test_cutter_sweep_brackets_independent_capsule_formula`, `test_analytic_geometry_representation_and_decoded_rest`; `test_surface3d.test_analytic_contact_target_and_straight_pass`, `test_decoded_ball_stock_and_dependent_pass`; `test_spherical_bowl.test_independent_bowl_contact_section_and_volume_references`, `test_protected_rim_contact_prior_stock_and_stale_curvature` | Independent capsule/prism/sphere formulas and tangent distances; some residual expectations reuse production analytic helpers | Partial; sign, tiny/near-limit geometry, interval convergence and contact partitions S2, dependent strategy S3 |
+| BT-18 Separate paired stocks and assembly; circular inlay contract; `inlay.generate/assembly/audit_pair` | Zero/.1 clearance, registration/flip/tool changes, both dialects; forbid using one stock for both or claiming physical fit | `test_paired_inlay.test_exact_cross_section_and_insertion_oracle` asserts explicit radii/areas and clearance + `(0.9-insertion)*.5`; `test_both_stock_states_from_complete_decoded_programs` checks separate stocks, residual/overcut `<.002`, decoded gap within .00011; changed program/hash tests | Analytic radii/gap arithmetic independent of path output, plus shared production replay. Byte and assembly oracles serve different claims | Partial; model partitions and paired-candidate generality S2/S3, changed-byte audit S4; physical fit unassessed |
+| BT-19 Continuous non-cutting occupancy; occupancy contract; `occupancy.verify` | Clear endpoints with middle collision, both arc directions, frame/setup changes and nearby smaller holder; forbid endpoint/cutter-only clearance | `test_occupancy.test_holder_hits_fixture_between_clear_endpoints`, `test_planar_arc_holder_hits_between_clear_endpoints`, `test_nonidentity_work_translation_uses_program_frame_setup`, `test_changed_setup_invalidates_written_evidence`; native hybrid verifies every stage move checked | Hand-derived fixture positions and endpoint distances independently expose endpoint-only bug; nearby valid holder prevents reject-all | Partial; contact tolerance/Z overlap partitions S2, transition effects S4 |
+| BT-20 Complete output/offset/evidence gates; ordered-output and RC01 controller contracts; `audit_files/audit_bundle` | Source/order/hash/length/extra travel/unknown commands, 4 versus 6 decimals; forbid a hash or writer round trip substituting for stock proof | `test_ordered_job.test_offset_physical_tip_and_decoded_extra_travel`, `test_synthetic_external_effect_must_match_and_clear_fixture`; `test_rc01_controller.test_four_decimal_writer_is_insufficient_for_nominal_island`; `test_direct_rc01.test_changed_feed_and_forged_hash_cannot_inherit_acceptance` | Changed commands and false-offset counterexamples plus decoded replay; writer/reader common-mode assumptions still require S4 audit | Partial; full-byte grammar, raw low-level audit provenance, effects and freshness bypass S4 |
+| BT-21 Unimplemented search/smoothing/freeform extensions; framework direction and backlog 6 | Automatic tool-bundle search, global optimum, generic rest smoothing preserving protected edges, arbitrary surfaces/non-box fixtures | No test establishes these capabilities; successful named jobs do not fill the gap | No correctness oracle or implemented claim; do not relabel offsets as smoothing or candidate ranking as search | Untested extensions; S3 assesses actual consumer need against backlog; reopen only for named job/quality requirement outside bounded contracts |
+
+Required test layers follow from these rows: constructors/value ownership and
+analytic primitives (S2), generated target/stock outcomes and supported alternate
+tools/order (S3), actual decoded bytes and edit/effect misuse (S4), then installed
+packages/optional dependencies and integrated regression (S5). Native identity
+and public boundary repairs close in S1. Counts are execution evidence only.
+
+Critical fault sensitivity already exercised in the focused S1 run includes the
+between-vertex/hole gouge, removed V motion, wrong predecessor source, mutated
+arc center, effective-offset mismatch and missing external-effect cases named
+above. These negative cases isolate specified faults with nearby valid cases;
+no mutation-testing dependency was added. No numerical tolerance was loosened,
+no golden output regenerated, and no physical acceptance was inferred.
+
+### Coverage ledger and complete allocation
+
+All allocation rows below refer to the revision/base above plus explicitly named
+S1 repairs. Allocation is not inspected implementation. A primary future session
+owns the complete algorithm/byte diff even when S1 traced its API. S5 reconciles
+all final paths, migrations/deletions and new repairs against the final branch.
+
+| S1 inspected group (all members named) | Symbols, callers/tests and disposition |
+| --- | --- |
+| `cambam_builder/__init__.py`; `cambam_builder/cambam_entities.py`; `cambam_builder/cad_entities.py`; `cambam_builder/cam_entities.py`; `cambam_builder/entity_core.py`; `cambam_builder/region.py`; `cambam_builder/cad_transformations.py`; `cambam_builder/cambam_project.py`; `cambam_builder/cambam_reader.py`; `cambam_builder/cambam_writer.py`; `cambam_builder/cambam_transfer.py`; `cambam_builder/native/__init__.py` | Facade exports/canonical native identity; entity boundary and migration tests. Compatibility boundary inspected; migrated native behavior follows native rows. |
+| `cambam_builder/native/core.py`; `cambam_builder/native/cad.py`; `cambam_builder/native/region.py`; `cambam_builder/native/transformations.py`; `cambam_builder/native/project.py`; `cambam_builder/native/cam.py`; `cambam_builder/native/reader.py`; `cambam_builder/native/writer.py`; `cambam_builder/native/transfer.py` | Owner migration/imports and changed stock/tab contracts, writer target assignment, reader reference resolution, copied UUIDs; BT-01/02/03. BR-1-001 repaired. This is migration/API review, not re-certification of every unchanged native method. |
+| `cambam_builder/planar.py`; `cambam_builder/_planar_shapely.py`; `cambam_builder/stock.py`; `cambam_builder/cam_core/replay.py`; `cambam_builder/cam_core/occupancy.py`; `cambam_builder/cam_core/volume3d.py`; `cambam_builder/cam_core/surface3d.py` | Public values/import directions, constructor domains, frame/stock distinctions and selected test assertions BT-04..10/17/19. BR-1-002 repaired; math/algorithms remain S2. |
+| `cambam_builder/cam_core/__init__.py`; `cambam_builder/cam_extensions/__init__.py`; `cambam_builder/integrations/__init__.py`; `cambam_builder/integrations/cambam/__init__.py`; `pyproject.toml` | Explicit lazy submodules, package declarations, NumPy required and pinned optional Shapely/MCP extras. Package/install execution remains S5. |
+| `cambam_builder/cam_core/vcarve.py`; `cambam_builder/cam_core/tapered_vcarve.py`; `cambam_builder/cam_core/v_region.py`; `cambam_builder/cam_core/rc01.py`; `cambam_builder/cam_core/inlay.py`; `cambam_builder/cam_extensions/strategy.py` | Primary planning and partial/infeasible states, reference recipe limits, supplied audit ranking, `inlay.audit_pair` outward dependency; BT-11/12/14/18/21. Entrypoint bodies and selected callers inspected; full strategy audit S3. |
+| `cambam_builder/cam_core/ordered_job.py`; `cambam_builder/integrations/ordered_output.py`; `cambam_builder/integrations/cambam/native_ordered_job.py`; `cambam_builder/integrations/direct_variable_v.py`; `cambam_builder/integrations/direct_rc01.py` | Detached/native traces, evaluator dispatch, source binding, output parsing/replay and file convenience assumptions; BT-15/16/20. API traced, complete output/freshness audit S4. |
+| `cambam_builder/mcp_adapter/contract_v1.schema.json`; `cambam_builder/mcp_adapter/paths.py`; `cambam_builder/mcp_adapter/schema.py`; `cambam_builder/mcp_adapter/server.py`; `cambam_builder/mcp_adapter/service.py` | Changed imports/native stock/tab mirroring, `manual_tab_points`, inspection and schema/service tests. No new CAM execution tool implied. Native/MCP boundary checked; filesystem/protocol misuse S4. |
+
+Tests explicitly inspected are named in BT-01..20 and the execution record. The
+remaining fixture, documentation and helper-tool paths are allocated below; no
+claim of substantive byte/provenance review is made for them in S1.
+
+<!-- BR-S1-ALLOCATION -->
+
+Inventory reconciliation: **163 committed-diff paths + 2 newly affected paths = 165 allocated paths**, each with one primary session. `tests/test_mop_roundtrip.py` is newly changed by S1; `tests/test_replay_contracts.py` is a new untracked regression. S1 documentation amendments remain part of S5 final consistency reconciliation.
+
+#### Allocation S1: Migration/native/API boundary (reviewed as scoped above)
+
+44 paths:
+
+- `cambam_builder/__init__.py`
+- `cambam_builder/cad_entities.py`
+- `cambam_builder/cad_transformations.py`
+- `cambam_builder/cam_core/__init__.py`
+- `cambam_builder/cam_entities.py`
+- `cambam_builder/cam_extensions/__init__.py`
+- `cambam_builder/cambam_entities.py`
+- `cambam_builder/cambam_project.py`
+- `cambam_builder/cambam_reader.py`
+- `cambam_builder/cambam_transfer.py`
+- `cambam_builder/cambam_writer.py`
+- `cambam_builder/entity_core.py`
+- `cambam_builder/integrations/__init__.py`
+- `cambam_builder/integrations/cambam/__init__.py`
+- `cambam_builder/mcp_adapter/contract_v1.schema.json`
+- `cambam_builder/mcp_adapter/paths.py`
+- `cambam_builder/mcp_adapter/schema.py`
+- `cambam_builder/mcp_adapter/server.py`
+- `cambam_builder/mcp_adapter/service.py`
+- `cambam_builder/native/__init__.py`
+- `cambam_builder/native/cad.py`
+- `cambam_builder/native/cam.py`
+- `cambam_builder/native/core.py`
+- `cambam_builder/native/project.py`
+- `cambam_builder/native/reader.py`
+- `cambam_builder/native/region.py`
+- `cambam_builder/native/transfer.py`
+- `cambam_builder/native/transformations.py`
+- `cambam_builder/native/writer.py`
+- `cambam_builder/region.py`
+- `tests/test_entity_module_boundaries.py`
+- `tests/test_mcp_authoring.py`
+- `tests/test_mcp_mop_inspection.py`
+- `tests/test_mcp_mop_parity.py`
+- `tests/test_mcp_mops.py`
+- `tests/test_mop_context.py`
+- `tests/test_mop_parameters.py`
+- `tests/test_mop_roundtrip.py`
+- `tests/test_native_owner_migration.py`
+- `tests/test_parent_roundtrip.py`
+- `tests/test_parity_bake_failures.py`
+- `tests/test_rect_bake_defect.py`
+- `tests/test_replay_contracts.py`
+- `tests/test_stockless_native.py`
+
+#### Allocation S2: Foundation mathematics and numerical guarantees (pending)
+
+19 paths:
+
+- `cambam_builder/_planar_shapely.py`
+- `cambam_builder/cam_core/curved_region.py`
+- `cambam_builder/cam_core/occupancy.py`
+- `cambam_builder/cam_core/replay.py`
+- `cambam_builder/cam_core/surface3d.py`
+- `cambam_builder/cam_core/volume3d.py`
+- `cambam_builder/planar.py`
+- `cambam_builder/stock.py`
+- `tests/test_mixed_replay.py`
+- `tests/test_native_arc_replay.py`
+- `tests/test_occupancy.py`
+- `tests/test_planar.py`
+- `tests/test_rest_vcarve_acceptance_fixtures.py`
+- `tests/test_spherical_bowl.py`
+- `tests/test_stock.py`
+- `tests/test_surface3d.py`
+- `tests/test_volume3d.py`
+- `tools/evaluate_planar_adversarial.py`
+- `tools/evaluate_shapely.py`
+
+#### Allocation S3: Machining strategies and policy (pending)
+
+18 paths:
+
+- `cambam_builder/cam_core/convex_rest.py`
+- `cambam_builder/cam_core/inlay.py`
+- `cambam_builder/cam_core/mixed.py`
+- `cambam_builder/cam_core/polygon_rest.py`
+- `cambam_builder/cam_core/rc01.py`
+- `cambam_builder/cam_core/tapered_vcarve.py`
+- `cambam_builder/cam_core/v_region.py`
+- `cambam_builder/cam_core/vcarve.py`
+- `cambam_builder/cam_extensions/strategy.py`
+- `tests/test_convex_rest.py`
+- `tests/test_curved_rest.py`
+- `tests/test_paired_inlay.py`
+- `tests/test_polygon_rest.py`
+- `tests/test_rc01.py`
+- `tests/test_strategy_selection.py`
+- `tests/test_v_region.py`
+- `tests/test_variable_vcarve.py`
+- `tests/test_vcarve_slot.py`
+
+#### Allocation S4: Execution, evidence and misuse (pending)
+
+51 paths:
+
+- `cambam_builder/cam_core/ordered_job.py`
+- `cambam_builder/integrations/cambam/cone_script.py`
+- `cambam_builder/integrations/cambam/native_convex_rest.py`
+- `cambam_builder/integrations/cambam/native_curved_rest.py`
+- `cambam_builder/integrations/cambam/native_ordered_job.py`
+- `cambam_builder/integrations/cambam/native_polygon_rest.py`
+- `cambam_builder/integrations/cambam/native_series.py`
+- `cambam_builder/integrations/cambam/native_series_audit.py`
+- `cambam_builder/integrations/cambam/native_v_region.py`
+- `cambam_builder/integrations/cambam/native_variable_v.py`
+- `cambam_builder/integrations/cambam/optimizer_corpus.py`
+- `cambam_builder/integrations/cambam/rc01_adapter.py`
+- `cambam_builder/integrations/cambam/rc01_native_post.py`
+- `cambam_builder/integrations/cambam/rc01_post.py`
+- `cambam_builder/integrations/cambam/rc01_script.py`
+- `cambam_builder/integrations/cambam/rc01_stock_authority.py`
+- `cambam_builder/integrations/cambam/tabbed_cutout.py`
+- `cambam_builder/integrations/cambam/variable_cone_engrave.py`
+- `cambam_builder/integrations/cambam/variable_cone_script.py`
+- `cambam_builder/integrations/direct_rc01.py`
+- `cambam_builder/integrations/direct_variable_v.py`
+- `cambam_builder/integrations/grbl_m5_reader.py`
+- `cambam_builder/integrations/m4_curved_workflow.py`
+- `cambam_builder/integrations/m5_decoded.py`
+- `cambam_builder/integrations/m5_portability.py`
+- `cambam_builder/integrations/ordered_dialects.py`
+- `cambam_builder/integrations/ordered_output.py`
+- `cambam_builder/integrations/rc01_controller.py`
+- `cambam_builder/integrations/uccnc_m5.py`
+- `cambam_builder/integrations/uccnc_reader.py`
+- `tests/test_cone_script.py`
+- `tests/test_direct_rc01.py`
+- `tests/test_direct_variable_v.py`
+- `tests/test_m4_curved_workflow.py`
+- `tests/test_m5_portability.py`
+- `tests/test_native_convex_rest.py`
+- `tests/test_native_series.py`
+- `tests/test_native_series_audit.py`
+- `tests/test_native_v_hybrid.py`
+- `tests/test_native_v_region.py`
+- `tests/test_native_variable_v.py`
+- `tests/test_optimizer_corpus.py`
+- `tests/test_ordered_dialects.py`
+- `tests/test_ordered_job.py`
+- `tests/test_rc01_controller.py`
+- `tests/test_rc01_native.py`
+- `tests/test_rc01_stock_authority.py`
+- `tests/test_tabbed_cutout.py`
+- `tests/test_uccnc_m5.py`
+- `tests/test_variable_cone_engrave.py`
+- `tests/test_variable_cone_script.py`
+
+#### Allocation S5: Final delivery, docs, packaging and historical fixtures (pending)
+
+33 paths:
+
+- `.gitignore`
+- `AGENTS.md`
+- `README.md`
+- `docs/BRANCH_REVIEW_PLAN.md`
+- `docs/DEVELOPMENT.md`
+- `docs/MCP_CONTRACT.md`
+- `docs/PROGRESS.md`
+- `docs/README.md`
+- `docs/REST_MACHINING_PLAN.md`
+- `docs/REVIEW.md`
+- `docs/WORKFLOW.md`
+- `docs/structure_spec.md`
+- `pyproject.toml`
+- `tests/fixtures/optimizer_corpus/atlas-legacy.cb`
+- `tests/fixtures/optimizer_corpus/atlas-legacy.nc`
+- `tests/fixtures/optimizer_corpus/atlas-new.cb`
+- `tests/fixtures/optimizer_corpus/atlas-new.nc`
+- `tests/fixtures/optimizer_corpus/links-legacy.cb`
+- `tests/fixtures/optimizer_corpus/links-legacy.nc`
+- `tests/fixtures/optimizer_corpus/links-new.cb`
+- `tests/fixtures/optimizer_corpus/links-new.nc`
+- `tests/fixtures/optimizer_corpus/manifest.json`
+- `tests/fixtures/optimizer_corpus/observations.json`
+- `tests/fixtures/rc01_native_stock/N-native-cleanup.cb`
+- `tests/fixtures/rc01_native_stock/N-native-cleanup.nc`
+- `tests/fixtures/rc01_native_stock/N-rough.cb`
+- `tests/fixtures/rc01_native_stock/N-rough.nc`
+- `tests/fixtures/rc01_native_stock/comparison.json`
+- `tests/fixtures/rc01_native_stock/evidence.json`
+- `tests/fixtures/rc01_native_stock/paired_evidence.json`
+- `tests/fixtures/rc01_native_stock/setup.json`
+- `tests/fixtures/rc01_native_stock/source.cb`
+- `tests/fixtures/rest_vcarve_acceptance.json`
+
+### Session 1 verification and acceptance
+
+Verification interpreter: `.venv/Scripts/python.exe`, Python 3.13.5, NumPy 2.5.3,
+Shapely 2.1.2 and MCP 2.2.0. Session artifacts live under ignored
+`output/branch-review-session1-20260927-01/` and
+`output/branch-review-native-20260927-01/`; the inputs, defects and regression
+criteria above remain reproducible without those directories.
+
+Focused commands/results (all from repository root):
+
+- `.venv/Scripts/python.exe -m unittest tests.test_ordered_job tests.test_native_v_hybrid tests.test_v_region tests.test_variable_vcarve tests.test_vcarve_slot tests.test_strategy_selection tests.test_paired_inlay -v`:
+  34 tests passed before the final boundary additions; this run establishes the
+  named S1 traces and existing fault-sensitivity cases, not final-tree closure.
+- `.venv/Scripts/python.exe -m unittest tests.test_mop_roundtrip tests.test_mop_parameters tests.test_copy_transfer -v`:
+  42 tests passed after BR-1-001. The two new native regressions failed before
+  repair with three subtest failures. The strengthened
+  `tests.test_mcp_mops.MopBreadthTests.test_manual_profile_tab_points_author_and_reject_invalid_positions`
+  passed separately after repair (one test).
+- `.venv/Scripts/python.exe -m unittest tests.test_replay_contracts tests.test_mixed_replay tests.test_native_arc_replay tests.test_occupancy -v`:
+  16 tests passed after BR-1-002. Its four-test regression module produced eight
+  subtest failures and one error on the old constructor, then passed with the
+  tuple guard. Explicit valid supplied motion checks membership and stock, so
+  constructor rejection alone cannot satisfy the regression.
+- `.venv/Scripts/python.exe -m compileall -q cambam_builder legacy_cambam_builder`
+  and the runbook `CBProject('smoke')` import/construct assertion passed.
+- `.venv/Scripts/python.exe output/branch-review-session1-20260927-01/finalize_inventory.py`:
+  exact path reconciliation passed (S1 44, S2 19, S3 18, S4 51, S5 33); new
+  section links/qualified matrix test IDs and untracked-text whitespace checked
+  with zero errors. New regression source was inspected. No ignored `.cb`/`.nc`
+  outside `output/` was enumerated; `.pytest_cache/` remains unreadable, the same
+  discovery limitation as the planning round. No existing artifacts were deleted.
+- `git diff --check` passed. Final committed-branch/package gates belong to S5;
+  no merge-readiness conclusion is inherited from these working-tree checks.
+
+The interrupted worker's full-suite log has no completion footer and supplies
+no pass evidence. A new full discovery run on the final runtime/test tree is the
+closure gate; its outcome is recorded below.
+
+**Final automated verification:**
+`.venv/Scripts/python.exe -m unittest discover -s tests -v` completed **521
+tests in 558.040 seconds, OK (skipped=1)** on the final runtime/test tree. The
+skip is `test_mcp_documents.DocumentTests.test_symlink_rejection`: Windows
+symlink privilege unavailable; junction/reparse tests still run. The redirected
+PowerShell wrapper returned 1 because native stderr was wrapped as
+`NativeCommandError`, including successful unittest progress. A successful
+Python stderr-only probe reproduced wrapper status 1, and explicitly propagating
+`$LASTEXITCODE` returned 0. This is not a unittest failure; the full runner's
+completion footer was inspected rather than treating shell status as evidence.
+The final focused command
+`.venv/Scripts/python.exe -m unittest tests.test_replay_contracts tests.test_mop_roundtrip tests.test_ordered_job.OrderedJobTests.test_primary_v_plan_does_not_imply_supported_ordered_stock -q`
+also passed **12 tests**, with explicit `exit $LASTEXITCODE` yielding 0.
+No runtime/test edits followed these checks.
+
+**Acceptance and stopping condition:** session 1 is implemented, automated checks
+complete and **accepted by engineering** for its API/ownership boundary scope.
+The native parent-ID repair and tuple-admission defect have failing-before and
+passing-after evidence; the initial matrix and complete path allocation are
+durable. No new user observation is needed: referential integrity and constructor
+admission are directly observable offline, and no new native tab algorithm or
+machine behavior is claimed. Existing accepted source/post bytes retain only
+their original scope. Numerical guarantees, complete strategy composition,
+output misuse resistance and installed-package delivery remain pending sessions
+2-5; the full suite is not a substitute for those reviews.
+
+No stage, commit, publish or merge was performed. These changes are **ready to
+commit**, not merge-ready. Suggested commit:
+`fix: close session 1 API review and preserve tab references`.
+This is a good fresh-session breakpoint: the local contract review and its
+repairs are coherent, with no pending result or product decision. Overall branch
+review is one of five sessions complete. Session 2 has distinct mathematical
+scope and higher value now than another bounded job or package relocation because
+all later claims depend on its geometry/stock foundations. Next: complete
+[session 2](PROGRESS.md#branch-review-session-queue), audit its allocated paths
+and BT-04..10/17..19, and refine their boundary/oracle evidence.

@@ -234,13 +234,19 @@ remain unassessed. The five selected packets are complete.
 
 ### Branch review session queue
 
-**Next priority: session 1 of the five-session branch engineering and delivery
-review against `main`.** The [review plan](BRANCH_REVIEW_PLAN.md) preserves the
+**Session 1 accepted by engineering; next priority: session 2 of the five-session
+branch engineering and delivery review against `main`.** The [review plan](BRANCH_REVIEW_PLAN.md) preserves the
 2026-09-27 request: assess native/extended separation, core versus workflow
 responsibilities, reusable geometry/stock foundations, primary V-carving,
 rest/tool-bundle strategies and conditional smoothing, mathematical assumptions,
-API relationships and misuse hazards before final delivery. Planning is complete;
-substantive review and branch acceptance are pending.
+API relationships and misuse hazards before final delivery. Session 1 has
+implemented the [capability/API map](structure_spec.md#capability-and-public-api-boundary-map),
+complete allocation of 163 branch paths plus two newly affected test paths, and
+the [initial 21-row behavior-to-test matrix](REVIEW.md#initial-behavior-to-test-matrix).
+Manual-tab parent-ID remapping and replay target tuple admission are repaired;
+full discovery completed with 521 tests, zero failures and one Windows
+symlink-privilege skip. Sessions 2-5 and branch
+acceptance remain pending.
 
 **Test adequacy is required in every session:** map intended behavior to tests,
 audit independent oracles and assertion strength, and identify missing core,
@@ -251,8 +257,8 @@ must close alongside final branch gates; a green suite alone is insufficient.
 
 | Session | Outcome and execution packet | State |
 | --- | --- | --- |
-| 1 | [Capability boundaries and public API contracts](BRANCH_REVIEW_PLAN.md#session-1-capability-boundaries-and-public-api-contracts) | Next: allocate the complete diff and establish evidence-backed capability/API ownership |
-| 2 | [Geometry, topology and numerical foundations](BRANCH_REVIEW_PLAN.md#session-2-geometry-topology-and-numerical-foundations) | Pending session 1 |
+| 1 | [Capability boundaries and public API contracts](BRANCH_REVIEW_PLAN.md#session-1-capability-boundaries-and-public-api-contracts) | Accepted by engineering 2026-09-27; automated checks complete, uncommitted and ready to commit. [Findings and coverage](REVIEW.md#branch-review-session-1---2026-09-27) |
+| 2 | [Geometry, topology and numerical foundations](BRANCH_REVIEW_PLAN.md#session-2-geometry-topology-and-numerical-foundations) | Next: audit BT-04..10, BT-17..19 and allocated foundations, then refine numerical oracles and boundary tests |
 | 3 | [Machining strategies, rest behavior and reuse](BRANCH_REVIEW_PLAN.md#session-3-machining-strategies-rest-behavior-and-reuse) | Pending session 2 |
 | 4 | [Execution safety, evidence and misuse resistance](BRANCH_REVIEW_PLAN.md#session-4-execution-safety-evidence-and-misuse-resistance) | Pending session 3 |
 | 5 | [Integrated regression and delivery decision](BRANCH_REVIEW_PLAN.md#session-5-integrated-regression-and-delivery-decision) | Pending sessions 1-4 and final branch gates |
@@ -263,6 +269,13 @@ Repair demonstrated defects; assess missing foundations against supported claims
 and intended consumers, and defer justified extensions with reopening criteria
 in the existing backlog. Reference-job success does not establish general
 framework support. [Planning evidence](REVIEW.md#branch-review-programme-planning---2026-09-27).
+Session 1 requires no new CamBam or physical observation: the repaired identity
+and constructor boundaries are directly testable offline. Existing native/post
+acceptance remains limited to its unchanged source bytes. Primary V planning
+does not require a predecessor, while ordered Region-V stock evidence currently
+does; session 3 assesses that composition limit. Session 2 matters next because
+all strategies and output claims depend on correct geometry, enclosure directions
+and stock mathematics; adding another reference job would not establish them.
 
 The
 [M0-M5 scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
@@ -2038,6 +2051,13 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    the output semantics settled. Promote root detached/policy modules only when
    the next capability consumer fixes the shared abstraction boundary; a package
    move alone does not close the general rest/V-carve gap.
+
+   Session-1 finding [BR-1-004](REVIEW.md#findings-and-dispositions) records two
+   current exceptions: `cam_core.inlay.audit_pair` calls the output adapter,
+   and the direct RC01 reference writer reuses the CamBam Default-post reader.
+   Detached calculation remains available. Reopen orchestration relocation for
+   a second paired-output consumer, an independently packaged core, or a dialect
+   requirement that this coupling obstructs; do not migrate solely for naming.
 
    **Implementation stopping condition:** RC01 passes its independent continuous
    motion, stock, process and residual checks, reports expected finite-tool residual

@@ -791,6 +791,8 @@ class ProfileMop(Mop):
                 or any(child.tag != 'HoldingTab' for child in tabs)
                 or len(targets) != 1 or len(native_ids) != 1):
             return None
+        if getattr(self, '_xml_target_primitive_bindings', {}).get(native_ids[0]) != targets[0]:
+            return None
         target = project.get_primitive(targets[0])
         if not isinstance(target, Pline) or not target.closed:
             return None
@@ -847,6 +849,33 @@ class ProfileMop(Mop):
             return None
         return result if result else None
 
+    def _remap_imported_tab_parents(
+            self, native: ET.Element, project: "CamBamProject",
+            resolved_primitive_xml_ids: List[int]) -> None:
+        """Rebind native tab references without interpreting opaque tab payloads."""
+        tabs = native.find('Tabs')
+        if tabs is None:
+            return
+        targets = project.get_mop_targets(self)
+        if len(targets) != len(resolved_primitive_xml_ids):
+            raise ValueError("Manual tab parent mapping requires every resolved target ID")
+        output_ids = dict(zip(targets, resolved_primitive_xml_ids))
+        bindings = getattr(self, '_xml_target_primitive_bindings', {})
+        for tab in tabs.findall('HoldingTab'):
+            parents = tab.findall('ParentEntityID')
+            if len(parents) != 1:
+                raise ValueError("Manual tab parent must be one known primitive reference")
+            try:
+                source_id = int(parents[0].text)
+                target_id = bindings[source_id]
+                output_id = output_ids[target_id]
+            except (TypeError, ValueError, KeyError):
+                raise ValueError(
+                    "Manual tab parent is unresolved or its target was reassigned; "
+                    "supply explicit replacement tab points"
+                ) from None
+            parents[0].text = str(output_id)
+
     def to_xml_element(self, project: "CamBamProject", resolved_primitive_xml_ids: List[int]) -> ET.Element:
         self._validate_lead_encoding()
         dirty = getattr(self, "_xml_dirty_parameters", set())
@@ -888,6 +917,8 @@ class ProfileMop(Mop):
                     native.remove(previous)
                 native.insert(insertion, self._manual_tabs_element(
                     project, resolved_primitive_xml_ids[0]))
+            else:
+                self._remap_imported_tab_parents(native, project, resolved_primitive_xml_ids)
             return native
         mop_elem = ET.Element("profile", {"Enabled": str(self.enabled).lower()})
         self._add_common_mop_elements(mop_elem, project, resolved_primitive_xml_ids)
