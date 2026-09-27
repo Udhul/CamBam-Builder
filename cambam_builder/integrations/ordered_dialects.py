@@ -68,14 +68,14 @@ def _value(raw):
     return value
 
 
-def _number(value):
+def _number(value, decimals=4):
     if type(value) not in (int, float):
         raise ValueError("numeric NC value required")
     value = _value(value)
-    rounded = round(value, 4)
+    rounded = round(value, decimals)
     if not rounded:
         return "0"
-    return format(rounded, ".4f").rstrip("0").rstrip(".")
+    return format(rounded, f".{decimals}f").rstrip("0").rstrip(".")
 
 
 def _tip(tip):
@@ -88,8 +88,9 @@ def _add(left, right):
     return tuple(a + b for a, b in zip(left, right))
 
 
-def _xyz(point):
-    return " ".join(axis + _number(value) for axis, value in zip("XYZ", point))
+def _xyz(point, decimals=4):
+    return " ".join(axis + _number(value, decimals)
+                    for axis, value in zip("XYZ", point))
 
 
 def _tool(tool):
@@ -98,7 +99,7 @@ def _tool(tool):
     return tool
 
 
-def _motion_lines(stage, translation, initial_tip):
+def _motion_lines(stage, translation, initial_tip, coordinate_decimals):
     motions = stage.motions
     if not motions:
         raise ValueError("empty controller stage")
@@ -111,7 +112,8 @@ def _motion_lines(stage, translation, initial_tip):
                 "cut", "retract"):
             raise ValueError("noncontinuous or unsupported controller motion")
         end = _tip(motion.end)
-        rounded_end = tuple(float(_number(v)) for v in _add(end, translation))
+        rounded_end = tuple(float(_number(v, coordinate_decimals))
+                            for v in _add(end, translation))
         if rounded_end == rounded_at:
             raise ValueError("controller motion vanishes after rounding")
         if getattr(motion, "arc_g", 0):
@@ -123,25 +125,31 @@ def _motion_lines(stage, translation, initial_tip):
             offsets = tuple(c - s for c, s in zip(motion.center,
                                                    motion.start[:2]))
             lines.append(f"G{motion.arc_g} F{_number(feed)} " +
-                         _xyz(_add(end, translation)) +
-                         " I" + _number(offsets[0]) +
-                         " J" + _number(offsets[1]))
+                         _xyz(_add(end, translation), coordinate_decimals) +
+                         " I" + _number(offsets[0], coordinate_decimals) +
+                         " J" + _number(offsets[1], coordinate_decimals))
         elif motion.role in ("rapid", "rapid_retract"):
             if motion.feed not in (0, 0.0, None):
                 raise ValueError("rapid cannot carry feed")
-            lines.append("G0 " + _xyz(_add(end, translation)))
+            lines.append("G0 " + _xyz(_add(end, translation),
+                                       coordinate_decimals))
         else:
             feed = _value(motion.feed)
             if feed <= 0 or float(_number(feed)) <= 0:
                 raise ValueError("positive feed required")
-            lines.append("G1 F" + _number(feed) + " " + _xyz(_add(end, translation)))
+            lines.append("G1 F" + _number(feed) + " " +
+                         _xyz(_add(end, translation), coordinate_decimals))
         at, rounded_at = end, rounded_end
     return lines
 
 
-def render(job, dialect):
+def render(job, dialect, *, coordinate_decimals=4):
     """Return complete program bytes, one per stage for UCCNC, one for Grbl."""
     dialect = _dialect(dialect)
+    if type(coordinate_decimals) is not int or coordinate_decimals not in (4, 6):
+        raise ValueError("unsupported controller coordinate precision")
+    if dialect != "uccnc" and coordinate_decimals != 4:
+        raise ValueError("six-decimal coordinates need the UCCNC profile")
     start = _tip(job.initial_tip)
     translation = _tip(job.translation_xyz_mm)
     if not job.stages:
@@ -179,12 +187,16 @@ def render(job, dialect):
             if delta:
                 safe = _add(stage_start, translation)
                 shifted = (safe[0], safe[1], safe[2] - delta)
-                if tuple(float(_number(v)) for v in shifted) != tuple(
-                        float(_number(v)) for v in safe):
-                    lines.append("G0 " + _xyz(safe))
+                rounded_shifted = tuple(float(_number(v, coordinate_decimals))
+                                        for v in shifted)
+                rounded_safe = tuple(float(_number(v, coordinate_decimals))
+                                     for v in safe)
+                if rounded_shifted != rounded_safe:
+                    lines.append("G0 " + _xyz(safe, coordinate_decimals))
             lines.append("M3 S" + _number(rpm))
             previous_offset = float(_number(offset))
-        lines.extend(_motion_lines(stage, translation, stage_start))
+        lines.extend(_motion_lines(stage, translation, stage_start,
+                                   coordinate_decimals))
         previous_end = _tip(stage.motions[-1].end)
         lines.append("M5")
         if dialect == "uccnc":

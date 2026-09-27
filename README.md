@@ -57,7 +57,10 @@ checks analytic contact and volume against decoded, conservative two-stage
 stock replay. A shallow spherical-bowl ball finish/rest case adds a protected
 rim, a dependent smaller tool and a declared side-clamp/body check. A bounded
 circular paired V-carve inlay now checks separate plug/receiver stock, decoded
-output and analytic assembly at zero or positive radial clearance. Runtime,
+output and analytic assembly at zero or positive radial clearance. The fully
+generated nominal RC01 T1/T2 rough/cleanup job also emits two complete
+six-decimal UCCNC programs with decoded all-height RC01 stock and process
+evidence; its tool handoff remains a declared offline assumption. Runtime,
 physical setup and freeform surfaces remain unassessed.
 See the
 [current status](docs/PROGRESS.md#active-work-and-next-priority).

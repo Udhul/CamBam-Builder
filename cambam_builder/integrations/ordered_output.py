@@ -120,9 +120,10 @@ def audit_files(job, dialect, files, *, effects=None,
 
 
 def emit(job, dialect, *, effects=None, fixture_top_z_mm=0,
-         source_binding=None):
+         source_binding=None, coordinate_decimals=4):
     """Return program bytes and independently checked offline evidence."""
-    files = ordered_dialects.render(job, dialect)
+    files = ordered_dialects.render(job, dialect,
+                                    coordinate_decimals=coordinate_decimals)
     report = audit_files(job, dialect, files, effects=effects,
                          fixture_top_z_mm=fixture_top_z_mm,
                          source_binding=source_binding)
@@ -130,14 +131,15 @@ def emit(job, dialect, *, effects=None, fixture_top_z_mm=0,
 
 
 def write_bundle(directory, job, dialect, *, effects=None, fixture_top_z_mm=0,
-                 source_binding=None):
+                 source_binding=None, coordinate_decimals=4):
     """Write a new versioned bundle; audit it again from its final bytes."""
     directory = Path(directory)
     if directory.exists():
         raise ValueError("ordered output directory must be new")
     files, _ = emit(job, dialect, effects=effects,
                     fixture_top_z_mm=fixture_top_z_mm,
-                    source_binding=source_binding)
+                    source_binding=source_binding,
+                    coordinate_decimals=coordinate_decimals)
     names = tuple(f"stage-{i + 1}.nc" for i in range(len(files)))
     directory.mkdir(parents=True)
     for name, data in zip(names, files):
@@ -157,7 +159,7 @@ def write_bundle(directory, job, dialect, *, effects=None, fixture_top_z_mm=0,
         "source_fingerprint": job.source_fingerprint,
         "prefix_fingerprints": job.prefixes,
         "verifier": ordered_job.VERSION,
-        "numerical": {"coordinate_decimals": 4,
+        "numerical": {"coordinate_decimals": coordinate_decimals,
                       "match_tolerance_mm": ordered_job.MATCH_TOLERANCE_MM,
                       "fixture_top_z_mm": fixture_top_z_mm},
         "programs": [{"stage_ids": [stage.id for stage in job.stages]
@@ -187,7 +189,8 @@ def audit_bundle(manifest_path, job, *, source_binding=None):
             manifest.get("verifier") != ordered_job.VERSION):
         raise ValueError("stale ordered output setup or source")
     numerical = manifest.get("numerical", {})
-    if (numerical.get("coordinate_decimals") != 4 or
+    if (type(numerical.get("coordinate_decimals")) is not int or
+            numerical["coordinate_decimals"] not in (4, 6) or
             numerical.get("match_tolerance_mm") !=
             ordered_job.MATCH_TOLERANCE_MM or
             type(numerical.get("fixture_top_z_mm")) not in (int, float)):
@@ -223,6 +226,10 @@ def audit_bundle(manifest_path, job, *, source_binding=None):
                                                for row in programs),
                          fixture_top_z_mm=numerical["fixture_top_z_mm"],
                          source_binding=source_binding)
+    if files != ordered_dialects.render(
+            job, dialect,
+            coordinate_decimals=numerical["coordinate_decimals"]):
+        raise ValueError("ordered output differs from declared precision")
     if json.loads(json.dumps(report)) != manifest.get("evidence"):
         raise ValueError("ordered output evidence changed")
     return {"status": "ordered_output_pass", "manifest_sha256":

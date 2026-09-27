@@ -809,6 +809,20 @@ runtime, real machine limits and physical cuts remain separate gates.
 **Next fresh session:** reassess the [remaining backlog](PROGRESS.md#remaining-backlog-in-order)
 against a new named need; do not auto-extend these five packets.
 
+**Accepted bounded offline result (2026-09-27):** the exact nominal RC01
+T1/T2 generated trace now emits two complete UCCNC programs through the
+existing ordered-job profile. Six-decimal output preserves the protected
+island endpoint that four-decimal output rounded into the island. Both files
+independently decode and pass ordered stock replay plus RC01's stricter
+continuous-height access, tool-component, process and three-slab residual
+checks. Source motion, transition assertion, numerical policy, handoff and
+output bytes are hash-bound; edits and unsupported commands reject. The
+[packet 5 evidence](REVIEW.md#packet-5-generated-rc01-uccnc-output---2026-09-27)
+records exact values and limits. No CamBam post or manual validation is needed
+for this synthetic offline gate. UCCNC runtime and physical use remain open.
+The five selected packets are complete; a fresh session should reassess the
+remaining backlog against a named need.
+
 Existing libraries can inform primitives or comparison oracles without owning
 our workflow. [OpenCAMLib's drop/push-cutter methods](https://opencamlib.readthedocs.io/en/latest/)
 are examples of cutter/surface contact and waterline construction to evaluate

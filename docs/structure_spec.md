@@ -1492,6 +1492,38 @@ rest intervals. The separate GEOS residual-location check has sub-micrometre
 polygon sagitta but no formal numeric topology enclosure. This is bounded
 headless output evidence, not CamBam, controller or physical acceptance.
 
+### Bounded generated RC01 UCCNC output
+
+`integrations.rc01_controller` adapts exactly `rc01.generate(rc01.Job())` to
+the public `ordered_job.Job` stages: T1 roughing, then T2 cleanup. The source
+job and generated motion fingerprints bind both stages, their cylindrical
+operations, tool dimensions, feeds, RPM, datum and drawing frame. The T2 stage
+uses a split-file operator transition at the declared setup tip
+(-10,-10,+5) mm. Its completion token is an explicit offline assertion of
+installed T2 and registered tip; neither the token nor the NC header observes
+the controller or operator. The UCCNC profile uses G54, G49 and an external
+initial-tip assumption. No fixture or tool-change travel is emitted.
+
+The ordered UCCNC writer now accepts either its original four-decimal
+coordinate policy or a six-decimal policy selected by the caller. RC01
+requires six decimals: four-decimal rounding of the generated island-adjacent
+endpoint X14.341687 to X14.3417 crosses protected material. Feed/RPM rendering is
+unchanged. The handoff records the chosen numerical policy and hashes both
+complete files; audit checks the canonical rendering and independently decodes
+all commands, tool/spindle states, stage boundaries, feeds and coordinates.
+After the shared decoded cylindrical stock replay, the RC01 adapter feeds the
+decoded coordinates and feeds to `rc01.verify`. That second check retains
+continuous-height tool component, stock-dependent access, process and
+rough/final three-slab residual obligations. Roles and RC01 process events are
+reconstructed only after the strict ordered comparison of the decoded stream.
+The separate `rc01-evidence.json` binds source motion, ordered job, handoff
+bytes and RC01's decoded certificate. Altered files, commands, source, precision
+or transition token reject. The accepted result is offline controller-dialect
+output for this synthetic job; runtime state, physical tools/fixtures and
+machining suitability have no acceptance. See the
+[runbook](DEVELOPMENT.md#packet-5-generated-rc01-uccnc-output) and
+[evidence](REVIEW.md#packet-5-generated-rc01-uccnc-output---2026-09-27).
+
 ### RC01 native input and comparison candidates
 
 `cambam_builder.integrations.cambam.rc01_adapter` owns the bounded `.cb` adapter. `synthetic_source()`

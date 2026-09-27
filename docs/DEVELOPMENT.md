@@ -1028,6 +1028,39 @@ This is a strict reference dialect under the declared initial tip position
 selected. Manual CamBam
 validation adds no evidence to this headless output gate.
 
+### Packet 5 generated RC01 UCCNC output
+
+The nominal generated RC01 rough/cleanup job now uses the existing bounded
+split-file UCCNC profile. Run from the repository root, replacing `NEW` with
+a unique ignored `output/` directory name:
+
+```powershell
+& .\.venv\Scripts\python.exe -m cambam_builder.integrations.rc01_controller build output/packet5-rc01-uccnc-NEW
+& .\.venv\Scripts\python.exe -m cambam_builder.integrations.rc01_controller audit output/packet5-rc01-uccnc-NEW/rc01-evidence.json
+& .\.venv\Scripts\python.exe -m unittest tests.test_rc01_controller tests.test_ordered_job tests.test_ordered_dialects tests.test_rc01 tests.test_direct_rc01 -q
+```
+
+`stage-1.nc` and `stage-2.nc` are complete T1/T2 programs. The handoff's
+`numerical.coordinate_decimals` is six because four-place rounding crosses
+the protected island in this exact generated job. The UCCNC stage boundary
+assumes an operator installs T2 and registers its tip at (-10,-10,+5) mm;
+`offline-synthetic-operator-state` is a declared test assertion, not observed
+controller state. Both files assume the initial registered T1 tip at that
+point, G54, zero tool-length offset/G49, fixed mm coordinates and the
+synthetic RC01 tools, feeds and stock. The adapter accepts a caller-supplied
+`--transition-token` for a distinct declared setup; provide the same token
+when re-auditing. It neither drives UCCNC nor validates a physical setup.
+
+`handoff.json` binds both NC SHA-256 values and the controller/numerical
+policy. `rc01-evidence.json` additionally binds the RC01 source/motion,
+handoff hash and decoded all-height rough/final certificate. The audit
+independently decodes every command and rejects changed output, unsupported
+commands, changed source, precision or transition state. The retained
+[session evidence](../output/packet5-rc01-uccnc-20260927-01/rc01-evidence.json)
+provides one synthetic offline output bundle; its durable bounds and hashes
+are in the [review](REVIEW.md#packet-5-generated-rc01-uccnc-output---2026-09-27).
+No CamBam post or GUI check adds evidence to this fully generated job.
+
 ### RC01 native input and A/B/C comparison preparation
 
 From the repository root, use a new unique ignored directory (the example name

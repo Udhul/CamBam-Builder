@@ -7249,3 +7249,72 @@ passed four tests after its last assertion edit. The full
 The UCCNC session generator wrote and re-audited both complete part bundles
 for each clearance. An ignored-file audit found no new `.cb`/`.nc` files
 outside `output/`; pre-existing tracked historical fixtures are unchanged.
+
+## Packet 5 generated RC01 UCCNC output — 2026-09-27
+
+**Accepted bounded offline engineering result.** The nominal
+`rc01.generate(rc01.Job())` source emits 2,945 ordered items, including
+2,939 motions, from/to the declared (-10,-10,+5) mm tip. Its T1/T2 stages
+contain 1,186 / 1,753 motions. The existing ordered UCCNC route produces two
+complete G54/G49 split programs. The earlier reference-dialect output is a
+comparison oracle, not a controller profile. Four-place output of the source
+endpoint X14.341687 rounded to X14.3417 into the protected island and failed stock replay;
+six-place UCCNC output preserves the exact generated decimal coordinates.
+The existing reader independently decoded every program line, tool/spindle
+state, motion, feed and split boundary. The ordered stock replay passed with
+474 / 1,218 cumulative cutting sweeps; its 0.000051 mm motion-comparison
+tolerance alone is not the RC01 stock certificate. The RC01 all-height verifier
+then replayed **decoded** coordinates and feeds, including T1-cleared T2
+descent, tool cutting length/shank/holder, stock, protected island and process
+limits. Each of the three open depth slabs has rough rest
+[7.775010615955999, 7.787678472024001] mm² and final rest
+[0.9214411294439999, 0.9263453527720001] mm². Rough/final volume intervals
+are [23.325031847867997, 23.363035416072] /
+[2.7643233883319995, 2.7790360583160005] mm³. Finite-tool completion is
+partial. The rational area coordinate enclosure is 0.000000001 mm;
+the residual-location polygon sagitta is 0.000000882412 mm, while GEOS
+topology has no formal numeric interval proof.
+
+The RC01 job fingerprint is
+`1d7c3e93e8b45cd8df9ff31a12ff120e413043156bbc42fe9494caa19295b2c6`;
+generated motion fingerprint is
+`39fde4a4c04295d50c7e53875478445cd5881eb9784f0c00d8ef676c4d89ffbd`;
+ordered-job fingerprint is
+`16e7880fd67173a868d92ce4a50533988abf203f0cd766246f2950b413e81700`.
+The complete T1/T2 NC SHA-256 values are
+`41e420fec9901b8ee41a185746f289bad8f3d2590f491dacabb65bcaa4ddb41d` /
+`d6468a2315a14cd3aafa7564e3845666b8b3f20ad461fcde2455cb49e195efa2`;
+the handoff SHA-256 is
+`6878c75ba5fa1e7e38f2e5f51445b492d05bf270cbf40fb952e68714ccd33f54`.
+The ignored [RC01 evidence](../output/packet5-rc01-uccnc-20260927-01/rc01-evidence.json)
+and [ordered handoff](../output/packet5-rc01-uccnc-20260927-01/handoff.json)
+retain the local programs. The hashes and bounds above describe the accepted
+case without relying on those ignored files.
+
+Changed program bytes, an unsupported G91 motion, changed source fingerprint
+and a different transition token reject; default four-place output fails the
+protected-island replay. The T2 tool installation and re-registration at the
+setup tip are **declared synthetic operator state**, not observed handoff
+telemetry. Incoming T1 tip, G54 datum, G49 zero length offset, coolant-off
+state, tools, workholding and test-only cutting process are supplied setup
+assumptions. The offline result establishes a controller-dialect program and
+decoded motion/stock evidence for this named profile. It does not establish
+UCCNC runtime compatibility or safe physical machining. No CamBam post or
+manual GUI check would add evidence to the fully generated offline gate.
+Reopen when a real machine/setup is specified, a controller runtime trace is
+available, or another named job needs output precision or transition behavior
+beyond this profile. The [contract](structure_spec.md#bounded-generated-rc01-uccnc-output)
+and [runbook](DEVELOPMENT.md#packet-5-generated-rc01-uccnc-output) own the
+repeatable behavior.
+
+Verification from the repository root: the focused RC01 controller, ordered
+job/dialect, RC01 core and direct-reference modules passed 21 tests. The
+final controller module passed two tests after its last assertion edit.
+The full `.venv\Scripts\python.exe -m unittest discover -s tests -q` suite
+passed 514 tests with one skip; its verbose negative-fixture output is local
+under `output/packet5-check-20260927-01/`. The retained controller evidence
+also re-audited with 2,939 decoded motions after the final code change.
+`compileall -q` of changed Python files and `git diff --check` passed. The
+untracked source whitespace check found no trailing whitespace; the ignored
+`.cb`/`.nc` check under `tests/` and `demos/` found no candidates. The
+worktree is uncommitted and ready for user review/commit, not merge-ready.

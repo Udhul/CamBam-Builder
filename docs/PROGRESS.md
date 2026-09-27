@@ -214,8 +214,25 @@ tool geometry and edited output reject. The [contract](structure_spec.md#bounded
 [evidence](REVIEW.md#packet-4-paired-v-carve-inlay---2026-09-27)
 own exact bounds, hashes and limits. The synthetic detached pair needs no
 CamBam post or user fit preference. Physical assembly, plunge/process
-behavior and controller runtime remain unassessed. **Next priority: packet 5,
-the fully generated RC01 controller job.**
+behavior and controller runtime remain unassessed.
+
+**Accepted offline, backlog 6 packet 5:** the exact nominal generated RC01
+T1 roughing and T2 cleanup now emit two complete UCCNC programs through the
+existing ordered-job route. Six-decimal coordinates preserve an island
+tangent that the default four-decimal route rounds into protected material.
+Both independently decoded files pass ordered stock replay and RC01's
+continuous-height access, component, process and three-depth residual gates.
+The output and source motion, transition assertion and numerical policy are
+bound by the handoff and RC01 evidence files. Rough/final rest remains
+7.7750106–7.7876785 / 0.9214411–0.9263454 mm² in each open depth slab,
+with partial finite-tool completion. The [contract](structure_spec.md#bounded-generated-rc01-uccnc-output),
+[runbook](DEVELOPMENT.md#packet-5-generated-rc01-uccnc-output) and
+[evidence](REVIEW.md#packet-5-generated-rc01-uccnc-output---2026-09-27)
+own exact hashes and limits. The synthetic split handoff asserts T2
+installation and tip registration; controller runtime and physical setup
+remain unassessed. **The five selected packets are complete. Next priority:
+reassess the [remaining backlog](#remaining-backlog-in-order) for a named
+user need before choosing another implementation packet.**
 
 Do not expand occupancy to non-box fixtures or select a
 general surface backend without a named job that needs them; reopen for an
@@ -1834,7 +1851,7 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    hybrid and the bounded actual native G3 Pocket/rounded-V hybrid are accepted.
    The stepped-volume, sloped-ball and bounded holder/fixture foundations also
    pass decoded offline gates, including actual source-bound linear and G3
-   native/generated setups. The next user-selected work follows the
+   native/generated setups. The user-selected work followed the
    [ordered job packets](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27).
    This order is a priority decision, not a claim that each job depends on
    the prior job's implementation.
@@ -1845,7 +1862,7 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    | [2](REST_MACHINING_PLAN.md#2-native-pocket-with-helical-entry-and-generated-cleanup) | **Accepted offline 2026-09-27** | Actual G2 helical Pocket post and generated T2 cleanup pass decoded stock and source binding. |
    | [3](REST_MACHINING_PLAN.md#3-curved-3d-ball-cutter-finish-and-rest) | **Accepted offline 2026-09-27** | Analytic spherical-bowl ball finish and dependent rest with protected rim and body clearance. |
    | [4](REST_MACHINING_PLAN.md#4-paired-v-carve-inlay) | **Accepted offline 2026-09-27** | Separate decoded tapered receiver/plug stocks, analytic insertion, zero/0.1 mm clearance and stale-evidence rejection. |
-   | [5](REST_MACHINING_PLAN.md#5-direct-controller-program-for-a-fully-generated-job) | **Next session** | Fully generated RC01 job through a bounded controller profile, reusing existing UCCNC/Grbl output. |
+   | [5](REST_MACHINING_PLAN.md#5-direct-controller-program-for-a-fully-generated-job) | **Accepted offline 2026-09-27** | Fully generated RC01 T1/T2 job through six-decimal UCCNC output and decoded RC01 stock replay. |
 
    After a packet's implementation, checks and any required external post are
    accepted, update this table, record evidence in `REVIEW.md`, and start the
@@ -1865,7 +1882,8 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    Keep ordinary native-MOP export alongside a proposed shared motion core and
    separate CamBam/direct-post adapters. One bounded reference-dialect direct
    V output is implemented after the first useful native plus explicit V
-   workflow. Controller-specific posting and other MOPs remain future scope.
+   workflow. A bounded UCCNC output profile now covers the nominal generated
+   RC01 job; other controller/job combinations remain named future work.
 
    #### Next detached stock/rest increment
 
@@ -1937,9 +1955,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    CustomScript `.cb` did: its revised CamBam Default post passed exact
    emitted-sequence and continuous stock/access/process/rest replay for all
    2,945 items. This closes one alternate explicit E output slice, not the
-   original XYZ/Engrave parity or native Pocket N. The user retains CamBam
-   posting for RC01; direct RC01 posting stays later. Never infer vertical
-   clearance from fixed-Z evidence.
+   original XYZ/Engrave parity or native Pocket N. This was the CamBam route's
+   status before the later bounded [direct UCCNC output](#active-work-and-next-priority).
+   Never infer vertical clearance from fixed-Z evidence.
 
    **Bounded pointed-cone explicit output accepted 2026-09-24.** The 12 x 4 mm
    full-depth V slot has one accepted Default/Default mm CustomScript post.
