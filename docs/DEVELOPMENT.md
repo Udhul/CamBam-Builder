@@ -1906,6 +1906,36 @@ states the represented shapes and excluded transition motion. The
 [review](REVIEW.md#bounded-holder-and-fixture-occupancy---2026-09-27)
 owns measured results and limits.
 
+### Source-bound native/generated occupancy case
+
+The retained [actual Default Profile post](../output/hybrid-native-v-20260926-01/native-predecessor.nc),
+[native candidate](../output/hybrid-native-v-20260926-01/native-predecessor.cb)
+and [source](../output/hybrid-native-v-20260926-01/source.cb) are unchanged.
+Run the ignored [verification script](../output/hybrid-body-20260927-01/verify.py)
+from the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe output/hybrid-body-20260927-01/verify.py
+& .\.venv\Scripts\python.exe -m unittest tests.test_native_v_hybrid tests.test_occupancy -v
+```
+
+The script reconstructs the native-bound T1 Profile and generated T3 rounded V
+job, then declares one `native-default-mm` program-frame stock box
+X/Y=[0,12], Z=[-2,0] mm. The side clamp is X=[5.5,5.6],
+Y=[-3.0,-2.6], Z=[3.6,4.0] mm. T1 has tip-relative cutter/shank radii
+1 mm and T3 has radius 2.020725942 mm; both cutters span +0 to +3 mm,
+shanks +3 to +3.5 mm and radius-2.28 mm holders +3.5 to +6 mm. These are
+declared synthetic bodies and fixture, not measured installation evidence.
+The script re-audits the [new handoff](../output/hybrid-body-20260927-01/ordered-uccnc/handoff.json)
+against current source/candidate/post bytes on repeat runs. Pass requires
+229 decoded moves, stock and occupancy passes, and changed-setup rejection.
+Moving only the clamp to Y=[-1.922,-1.522] mm makes the T3 holder hit it
+inside a cut whose endpoints and cutter clear; a radius-2.1 mm holder passes
+the same changed clamp. The original two stage program bytes remain the
+accepted hybrid output. Physical setup and controller runtime require their
+own observations. [Evidence](REVIEW.md#source-bound-nativegenerated-occupancy---2026-09-27)
+records hashes and measured clearance.
+
 ### Isolated planar backend evaluation
 
 The original Shapely experiment remains development-only. Its runners do not

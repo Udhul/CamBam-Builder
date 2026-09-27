@@ -450,16 +450,31 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
         bodies = {tool.tool_id: tool for tool in setup.tools}
         for stage in job.stages:
             op = stage.surface_operation or stage.volume_operation
-            if op is None:
-                raise ValueError("tool-body occupancy requires bounded 3D operation")
-            target = op.target
-            x0, y0, x1, y1 = target.stock_xy
-            if setup.stock.bounds != (x0, y0, -target.stock_depth_mm,
-                                       x1, y1, 0):
+            if op is not None:
+                target = op.target
+                x0, y0, x1, y1 = target.stock_xy
+                stock_depth = target.stock_depth_mm
+                cutter_radius = op.radius_mm
+                cutting_length = op.cutting_length_mm
+            elif type(stage.operation) is replay.Operation:
+                target = stage.operation.target
+                x0, y0, x1, y1 = target.bounds
+                stock_depth = target.depth
+                cutter_radius = stage.operation.tool.radius
+                cutting_length = stage.operation.tool.cutting_length
+            elif stage.v_plan is not None:
+                plan = stage.v_plan
+                x0, y0, x1, y1 = plan.target.safe.bounds
+                stock_depth = plan.target.cap_depth
+                cutter_radius = plan.tool.radius(plan.tool.cutting_length)
+                cutting_length = plan.tool.cutting_length
+            else:
+                raise ValueError("tool-body occupancy requires supported stock operation")
+            if setup.stock.bounds != (x0, y0, -stock_depth, x1, y1, 0):
                 raise ValueError("occupancy stock differs from stage target")
             body = bodies.get(stage.tool_id)
-            if body is None or (body.bands[0].radius_mm < op.radius_mm or
-                                body.bands[0].top_mm < op.cutting_length_mm):
+            if body is None or (body.bands[0].radius_mm < cutter_radius or
+                                body.bands[0].top_mm < cutting_length):
                 raise ValueError("occupancy cutter differs from stage tool")
         report["tool_fixture_occupancy"] = occupancy.verify(
             setup, job.stages, actual)

@@ -6,6 +6,9 @@ import tempfile
 import unittest
 
 from cambam_builder.cam_core import ordered_job, replay, v_region
+from cambam_builder.cam_core.occupancy import (
+    Box, OccupancySetup, ToolBand, ToolBody,
+)
 from cambam_builder.integrations.cambam.native_ordered_job import (
     NativeBinding, from_native_v,
 )
@@ -34,6 +37,83 @@ M30
 
 
 class NativeVHybridTests(unittest.TestCase):
+    def test_planar_hybrid_decoded_body_setup_and_stale_rejection(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            candidate, post = native_fixture.NativeSeriesTests().make_case(root)
+            project = read_cambam_bytes(candidate.read_bytes())
+            self.assertTrue(project.remove_mop(project.list_mops()[1].internal_id))
+            project.get_part("Part").stock_thickness = 2
+            project.list_mops()[0].target_depth = -2
+            project.list_mops()[0].depth_increment = 2
+            project.save(str(candidate))
+            source = root / "source.cb"
+            original = read_cambam_bytes(candidate.read_bytes())
+            self.assertTrue(original.remove_mop(original.list_mops()[0].internal_id))
+            original.save(str(source))
+            post.write_text(POST, encoding="utf-8")
+            native_setup = {"units": "mm", "postprocessor": "Default"}
+            series = normalize_native_series(source, candidate, post,
+                                             initial_position=(5, 5, 5),
+                                             setup=native_setup)
+            target = replay.Target(
+                "opening", (0, 0, 10, 10), 2,
+                region_shell=((0, 0), (10, 0), (10, 10), (0, 10)))
+            plan = v_region.plan(
+                v_region.VTarget.polygon(series.evidence_fingerprint,
+                                         target.region_shell, (), 2),
+                v_region.VProfile("rounded", 60, 0.5, 4, 3),
+                stepover_mm=2, xy_step_mm=1, safe_z=5)
+            job = from_native_v(series, plan, target=target,
+                                cutting_length_mm=2, tool_id="T3")
+            binding = NativeBinding(series, source, candidate, post,
+                                    native_setup)
+            v_radius = plan.tool.radius(plan.tool.cutting_length)
+            bodies = (
+                ToolBody("T1", (ToolBand("cutter", 0, 3, 2),
+                                ToolBand("shank", 3, 3.5, 2),
+                                ToolBand("holder", 3.5, 6, 2.28))),
+                ToolBody("T3", (ToolBand("cutter", 0, 3, v_radius),
+                                ToolBand("shank", 3, 3.5, v_radius),
+                                ToolBand("holder", 3.5, 6, 2.28))),
+            )
+            occupancy_setup = OccupancySetup(
+                job.program_frame,
+                Box("initial stock", (0, 0, -2, 10, 10, 0)),
+                (Box("side clamp", (4.5, -3, 3.6, 5.5, -2.6, 4)),),
+                bodies)
+            job = replace(job, occupancy_setup=occupancy_setup)
+            report = write_bundle(root / "body", job, "uccnc",
+                                  source_binding=binding)
+            self.assertEqual(report["tool_fixture_occupancy"]["status"], "pass")
+            self.assertEqual(report["tool_fixture_occupancy"]["checked_moves"],
+                             sum(len(s.motions) for s in job.stages))
+            self.assertEqual(report["stock_access_residual"]["status"], "pass")
+            self.assertEqual(audit_bundle(root / "body" / "handoff.json", job,
+                                          source_binding=binding), report)
+            changed = replace(job, occupancy_setup=replace(
+                occupancy_setup, fixtures=(Box("side clamp",
+                (4.5, -0.9, 3.6, 5.5, -0.5, 4)),)))
+            self.assertNotEqual(job.fingerprint, changed.fingerprint)
+            with self.assertRaisesRegex(ValueError, "stale"):
+                audit_bundle(root / "body" / "handoff.json", changed,
+                             source_binding=binding)
+            with self.assertRaisesRegex(ValueError, "holder collision"):
+                write_bundle(root / "collision", changed, "uccnc",
+                             source_binding=binding)
+            short = replace(bodies[1], bands=(
+                ToolBand("cutter", 0, 3, v_radius - 0.01),
+                bodies[1].bands[1], bodies[1].bands[2]))
+            with self.assertRaisesRegex(ValueError, "occupancy cutter differs"):
+                write_bundle(root / "understated", replace(
+                    job, occupancy_setup=replace(occupancy_setup,
+                    tools=(bodies[0], short))), "uccnc", source_binding=binding)
+            with self.assertRaisesRegex(ValueError, "occupancy stock differs"):
+                write_bundle(root / "wrong-stock", replace(
+                    job, occupancy_setup=replace(occupancy_setup,
+                    stock=Box("initial stock", (0, 0, -3, 10, 10, 0)))),
+                    "uccnc", source_binding=binding)
+
     def test_native_arc_predecessor_roundtrips_continuously_in_both_dialects(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

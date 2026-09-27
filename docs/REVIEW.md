@@ -1,5 +1,59 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Source-bound native/generated occupancy - 2026-09-27
+
+**Accepted by offline engineering for one linear actual-post hybrid.** The
+previously user-posted CamBam Plus 1.0 Default T1 Inside Profile remains the
+native motion authority. The same source/candidate/post bytes and generated
+rounded T3 finish are rebound through `NativeBinding`, emitted as two UCCNC
+files and independently decoded. Adding a declared `native-default-mm`
+occupancy setup changes the job and prefix fingerprints, while the stage NC
+hashes remain unchanged. The new handoff binds source, setup and output.
+
+Stock is X/Y=[0,12], Z=[-2,0] mm. A rectangular side clamp is
+X=[5.5,5.6], Y=[-3.0,-2.6], Z=[3.6,4.0] mm. Both tool bodies have a
+tip-relative cutter from +0 to +3 mm, shank to +3.5 mm and radius-2.28 mm
+holder to +6 mm. T1 cutter/shank radii are 1 mm; T3's are
+2.020725942 mm, the rounded profile's largest radius over its 3 mm cutting
+length. The common auditor now checks these planar replay/V envelopes against
+the same initial stock and checks all continuous decoded fixture occupancy.
+No removed-stock cavity is credited to the shank or holder.
+
+The 8 native and 221 generated moves pass motion, stock and body gates.
+Minimum modeled fixture clearance is 1.0479 mm; shank/holder never overlap
+the initial stock box in Z, so no stock-clearance minimum is reported. The
+unchanged Z=-1 mm prior/final residual intervals are
+70.48014297-70.48023554 / 1.33758636-1.98688732 mm2, with zero modeled
+protected overcut. Moving only the clamp to Y=[-1.922,-1.522] mm makes the
+T3 holder collide along a straight V cut at Y=0.7279449 mm while both cut
+endpoints and the smaller cutter radius clear it. A 2.1 mm holder passes the
+same changed fixture. The moved fixture changes the job fingerprint and an
+old handoff rejects as stale. An understated V cutter band also rejects.
+
+The source/candidate/actual post SHA-256 values remain those in the
+[accepted hybrid record](#native-posted-predecessor-and-generated-v-cleanup---2026-09-26).
+The new [handoff](../output/hybrid-body-20260927-01/ordered-uccnc/handoff.json)
+has SHA-256 `52787e6f7f9c4557bbed385e674d72e9e8a08a743e41e4736a8207d1d149dc53`;
+its two stage files retain SHA-256
+`993dff5aedc0cdb7d604c89dc27391bd1fc3144bc2e73909c4d2fc3ca0525f04`
+and `a2c459dd3b29ecb6bfa3d2c9a7b992429ffd68a8c6809a50b10dab4712bdf594`.
+The ignored [verification script](../output/hybrid-body-20260927-01/verify.py)
+reconstructs and re-audits the bundle and both counterexamples. The
+[runbook](DEVELOPMENT.md#source-bound-nativegenerated-occupancy-case) owns the
+reproduction command and setup.
+
+The earlier 3D-only setup restriction was removed only for supported planar
+replay and terminal V stages. Curved stages still fail closed at occupancy;
+level-arc support is the next named gap because an actual source-bound G3
+hybrid exists. Transition travel, non-box fixtures, physical tool dimensions,
+controller runtime and machine behavior are not established here. No new
+CamBam GUI observation is needed because no native document or post changed.
+Final verification: the adjacent native/ordered/M5 gate passed 39 tests after
+the last regression edit; the exact actual-post script passed on bundle
+creation and repeat hash-bound re-audit. The ignored verifier compiled and
+passed trailing-space inspection; tracked `git diff --check` passed. The
+worktree is uncommitted and ready to commit, not merge-ready.
+
 ## Bounded holder and fixture occupancy - 2026-09-27
 
 **Offline engineering result.** The reusable `tests.test_occupancy` case

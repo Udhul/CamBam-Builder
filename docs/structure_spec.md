@@ -550,7 +550,7 @@ distance or curved surface backend. See the
 
 `cam_core.occupancy` checks an optional `ordered_job.Job.occupancy_setup`
 after independent UCCNC/Grbl decoding and motion comparison. The setup names
-the program frame, the same Z=0 initial stock box as each bounded 3D stage,
+the program frame, the same Z=0 initial stock box as each supported stage,
 closed fixture boxes and one coaxial tool body per stage tool. Each body has
 contiguous tip-relative cutter, shank and holder cylinders. The cutter cylinder
 conservatively encloses the operation radius and cutting length; it may cut
@@ -560,18 +560,30 @@ removed by earlier stages. Setup, tool and fixture changes invalidate the job
 and prefix fingerprints. Jobs without a setup retain their earlier fingerprints
 and have no tool-body/fixture clearance result.
 
+The setup stock must match each stage's bounded 3D stock, planar replay target
+bounds/depth, or terminal V target bounds/cap depth. A planar cylinder's cutter
+band encloses its resolved tool radius and cutting length. A V band's radius
+encloses the profile radius at its cutting length and reaches at least that
+length, thereby enclosing all its smaller cross-sections. Native source/post
+binding remains a separate required gate for a native job. The accepted linear
+Profile plus generated rounded V case uses one declared program-frame stock
+and side clamp across both stages; its unchanged actual Default post and two
+decoded UCCNC files pass stock and body checks. The new setup changes job
+fingerprints without changing the source/post or stage program bytes.
+
 For every decoded straight stage move, the checker restricts the XY center
 segment to the parameter interval where a band overlaps a box in Z. It then
 compares the exact segment-to-rectangle distance with the band's radius;
 touching within 1e-9 mm rejects. This covers entries, cuts, retracts and rapids
 between endpoints. An attached setup rejects arcs and modeled or decoded
 transition travel until a corresponding continuous body check exists. The
-bounded evidence uses a side clamp outside the stock and the existing sloped
-ball stages; it does not represent tool body above the declared holder top,
-clamps of other shapes, fixture uncertainty, machine kinematics or controller
-runtime. The [runbook](DEVELOPMENT.md#bounded-holder-and-fixture-occupancy)
-and [review](REVIEW.md#bounded-holder-and-fixture-occupancy---2026-09-27)
-record the fixture and result.
+bounded evidence uses side clamps outside the stock on the sloped-ball and
+linear native/generated jobs; it does not represent tool body above the
+declared holder top, clamps of other shapes, fixture uncertainty, machine
+kinematics or controller runtime. The [synthetic runbook](DEVELOPMENT.md#bounded-holder-and-fixture-occupancy),
+[source-bound runbook](DEVELOPMENT.md#source-bound-nativegenerated-occupancy-case)
+and [review](REVIEW.md#source-bound-nativegenerated-occupancy---2026-09-27)
+record the fixtures and results.
 
 ### Directional analytic stock section bounds
 

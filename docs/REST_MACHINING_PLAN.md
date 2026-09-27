@@ -608,9 +608,18 @@ active increment after each outcome.
   endpoints rejects although the cutter clears. Setup changes invalidate job
   evidence. The [contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy)
   and [review](REVIEW.md#bounded-holder-and-fixture-occupancy---2026-09-27)
-  state the conservative initial-stock and fixture-shape limits. The next
-  source-bound native/generated setup case is prioritized in
-  [PROGRESS](PROGRESS.md#active-work-and-next-priority).
+  state the conservative initial-stock and fixture-shape limits.
+
+  **Accepted source-bound occupancy slice, 2026-09-27:** the existing actual
+  CamBam linear Profile post and generated rounded V finish now share one
+  declared program-frame stock, side clamp and T1/T3 body setup. All 229
+  independently decoded UCCNC stage moves pass continuous body/box and prior
+  stock replay; moving only the clamp rejects a holder collision on a V cut
+  between clear endpoints, and invalidates the prior handoff. The
+  [runbook](DEVELOPMENT.md#source-bound-nativegenerated-occupancy-case) and
+  [review](REVIEW.md#source-bound-nativegenerated-occupancy---2026-09-27)
+  retain the exact setup, hashes and limits. A bounded level-arc extension is
+  the next named gap; controller runtime and non-box fixtures remain deferred.
 - **Additional methods and optimization:** medial/contact tracing, adaptive
   clearing, tool combinations and improved entry/link methods consume the same
   target/stock capabilities and independently checked motion. Rank feasible
