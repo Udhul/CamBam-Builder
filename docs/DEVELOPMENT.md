@@ -3001,26 +3001,25 @@ It has `MinimumTabs=MaximumTabs=5`, as the user observed was needed; B and D
 use `4/4`. The [review](REVIEW.md#manual-profile-tab-native-fixture---2026-09-27)
 records hashes and point/order evidence.
 
-**Fresh writer acceptance:** open
+**Fresh writer acceptance completed 2026-09-27.** The user opened
 [B-fresh-manual.cb](../output/manual-tabs-20260927-01/B-fresh-manual.cb) and
 [C-fresh-manual.cb](../output/manual-tabs-20260927-01/C-fresh-manual.cb) in CamBam
-Plus 1.0. Keep millimetres and the **Default** postprocessor. In each file,
-generate the Profile toolpath and inspect the MOP and drawing. B must stay
+Plus 1.0 and generated [B](../output/manual-tabs-20260927-01/B-fresh-manual.nc)
+and [C](../output/manual-tabs-20260927-01/C-fresh-manual.nc) Default posts.
+Their complete machine-command streams match native B/C exactly after CamBam
+comments are removed; the [review](REVIEW.md#fresh-writer-cambam-default-post-acceptance---2026-09-27)
+records hashes and scope. No further file creation is needed for this gate.
+For repeatable inspection, B must stay
 `Tab Method=Manual`, `MinimumTabs=MaximumTabs=4`, and show four tabs at
 `(40,10)`, `(70,25)`, `(40,40)`, `(10,33)` mm. C must stay Manual, use `5/5`,
 and add `(10,17)` mm on the left edge, giving two left-edge tabs. Point
 placement tolerance is 0.01 mm. Both use Square width 6 mm, height 1 mm,
-target depth `-3` mm, and tab top `-2` mm. Save only if CamBam requires it to
-post; generate **Default** G-code in this folder as `B-fresh-manual.nc` and
-`C-fresh-manual.nc`. On the bottom-depth pass, B must lift over four tab gaps
-and C over five, including the two separate left-edge gaps. Do not run these
-posts on a machine. Report for each file whether it opened without repair,
-retained Manual/count/positions after toolpath generation, and posted. If one
-fails, report the first mismatch and keep its file and any post for analysis.
-No further hand-edited native `.cb` is requested.
+target depth `-3` mm, and tab top `-2` mm. On the bottom-depth pass, B lifts
+over four tab gaps and C over five, including the two separate left-edge gaps.
+These are validation posts, not physical machining acceptance.
 
 For post comparison, the native B bottom pass has `Z=-2` gap traversals
 `X35.5→44.5` at `Y8.5`, `Y20.5→29.5` at `X71.5`, `X44.5→35.5` at `Y41.5`,
 and `Y37.5→28.5` at `X8.5`. Native C adds `Y21.5→12.5` at `X8.5`.
-The fresh Default posts should match those endpoints within 0.01 mm and
-return to `Z=-3` after each gap. Comments, file names and timestamps may differ.
+The accepted fresh Default posts match those endpoints exactly and return to
+`Z=-3` after each gap. Comments, file names and timestamps differ.

@@ -150,17 +150,23 @@ own the bound, exact hashes and setup. The accepted source and actual post
 are unchanged; no new CamBam observation is needed. Physical installation,
 stage-transition travel and controller runtime remain unassessed.
 
-**Next priority, backlog 7:** validate the fresh Manual Profile tab writer in
-CamBam Plus 1.0 using the prepared B/C files. The user supplied the native
-Square/Triangle and moved/added/removed sequence with Default posts. The
-five-tab C save was recovered from a CamBam backup after its main `.cb` had
-already returned to four tabs. The bounded core and MCP authoring/inspection
-contract now reproduces the native B/C tab records offline. The
-[runbook](DEVELOPMENT.md#manual-profile-holding-tab-native-fixture) names the
-two fresh candidates, positions and required CamBam observations; the
-[review](REVIEW.md#manual-profile-tab-native-fixture---2026-09-27) owns the
-source hashes and limitations. Actual CamBam toolpaths/posts from these fresh
-candidates remain the acceptance gate.
+**Accepted 2026-09-27, backlog 7:** bounded Manual Profile holding-tab
+authoring and inspection now have native B/C output acceptance. The user
+posted the unchanged fresh B/C sources through CamBam Plus 1.0 Default; all
+53/57 machine-command lines match the native moved/added references in order,
+including four/five final-depth tab lifts. Core and MCP author/save/reopen
+checks cover the shared writer. The [runbook](DEVELOPMENT.md#manual-profile-holding-tab-native-fixture)
+and [review](REVIEW.md#fresh-writer-cambam-default-post-acceptance---2026-09-27)
+own exact files, hashes and the narrow contour/post bound. No further fixture
+or UI report is needed for this accepted slice.
+
+**Next priority selection:** choose one named machining job or integration
+consumer that exposes a remaining [backlog 6 capability](REST_MACHINING_PLAN.md#subsequent-capability-progression).
+The adjacent Manual variants have no native evidence; backlog 5 transport
+needs a remote-PC use case, and the planned 8-10 increments are completed.
+The named job should determine the next bounded implementation and acceptance
+gate. Until then, there is no active implementation increment.
+
 Do not expand occupancy to non-box fixtures or select a
 general surface backend without a named job that needs them; reopen for a
 curved/overhanging target, unsupported fixture or residual tolerance these
@@ -174,8 +180,8 @@ to concrete product choices or external observations. See
 [framework principles](structure_spec.md#framework-direction-and-extension-principles),
 [acceptance ownership](WORKFLOW.md#acceptance-ownership) and the
 [review correction](REVIEW.md#framework-direction-and-engineering-acceptance---2026-09-26).
-Manual-tab authoring is the next evidence-dependent increment: it needs a native
-before/after fixture. The sloped
+Manual-tab authoring now has accepted native before/after and fresh posted
+evidence. The sloped
 ball-surface slice is an offline engineering result. The actual native arc
 hybrid is accepted for its bounded offline scope; its source, post and output
 handoff remain retained as evidence. The synthetic holder/fixture and first
@@ -1910,19 +1916,19 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    infrastructure and general 3D stock until a named consumer or RC01 gate shows why
    the bounded workflow cannot meet its requirements.
 
-7. **Active MCP/core capability: author Manual Profile holding-tab positions.**
+7. **Completed 2026-09-27: author Manual Profile holding-tab positions.**
    Native Square/Triangle/B/C/D saves and Default posts establish the bounded
    point collection, coordinate frame and move/add/remove order. Fresh direct-core
    and MCP authoring now accept explicit drawing XY tab positions for one root,
    flat, straight, counterclockwise closed Pline and Outside Profile, with
    Square/Triangle style and count/spacing checks. Recognized imported native
-   positions inspect as XY while their templates remain preserved. The writer's
-   fresh B/C `<Tabs>` records match native saves offline. The remaining gate is
-   to open and post the [fresh B/C candidates](DEVELOPMENT.md#manual-profile-holding-tab-native-fixture)
-   in CamBam Plus 1.0 and compare their toolpaths/posts to native B/C. Stop when
-   this bounded native fixture round-trips and the authored equivalent reproduces
-   its tab lifts; leave curved, reversed, transformed and multi-target variants
-   evidence-bound.
+   positions inspect as XY while their templates remain preserved. The fresh
+   B/C `<Tabs>` records match native saves, and the user's CamBam Plus 1.0
+   Default posts of those unchanged files match all native B/C machine commands
+   and four/five tab lifts exactly. This closes the bounded Square-output gate;
+   the core/MCP XML authoring contract is also tested. Fresh Triangle output and
+   curved, reversed, transformed or multi-target variants remain evidence-bound.
+   [Acceptance](REVIEW.md#fresh-writer-cambam-default-post-acceptance---2026-09-27).
 8. **Future MOP semantic, native-export and framework/MCP parity audit.** Perform this
    as three bounded increments after the current SpiralMill prompt-free acceptance;
    do not treat every CamBam feature found as automatically in scope for

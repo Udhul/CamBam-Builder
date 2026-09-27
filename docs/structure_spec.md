@@ -2214,10 +2214,12 @@ and writes all Manual scalar settings alongside the sibling collection.
 Recognized imported records inspect as XY positions without rewriting their
 native template. Unrecognized imported collections remain opaque and preserved;
 switching away from an imported Manual method remains unsupported. The native
-posts establish Square lifts and Triangle ramps for this contour. Fresh
-framework output still requires its separate CamBam post comparison before
-native output acceptance; transformed, curved, reversed and multi-target
-Manual Profiles remain outside this bound.
+posts establish Square lifts and Triangle ramps for this contour. Fresh B/C
+Square output now has its own accepted CamBam Default posts: every machine
+command matches the corresponding native B/C post after comments are removed.
+This proves native output for the observed rectangular slice. Fresh Triangle,
+transformed, curved, reversed and multi-target Manual Profiles remain outside
+that output-acceptance bound.
 
 An untouched imported lead/tab subtree retains its container/leaf states, cached
 text, unknown children, and independent lead-out. Editing a modeled nested leaf

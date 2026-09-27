@@ -6858,10 +6858,10 @@ and [C candidate](../output/manual-tabs-20260927-01/C-fresh-manual.cb) have SHA-
 `1D5A6D7A984CCA8EF5D7539EC68FBCBFA17477ADBE31738663A2924D90490D27`
 and `35B36611AB4CF9AB98322406B98E24D2642EF71E0C7BCBF3BB550DF688A6AE98`.
 Core export and MCP author/save/reopen/inspection tests cover this bounded
-representation. Actual CamBam opening, toolpaths and Default posts for these
-fresh files remain unobserved; that comparison, not XML parity alone, is the
-remaining acceptance gate. Reopen the contract for another contour orientation,
-transformation, curved segment, multiple targets or another tab mode only with
+representation. Before the external check below, actual CamBam opening and
+Default posts for these fresh files remained unobserved. Reopen the contract
+for another contour orientation, transformation, curved segment, multiple
+targets or another tab mode only with
 native point/post evidence for that case.
 
 Verification: native Square/Triangle scalar and `Tabs` preservation passed;
@@ -6871,5 +6871,28 @@ tab records. The repository `unittest discover -s tests -v` run passed 499
 tests with one existing platform skip. After the final imported-collection
 inspection guard, the MCP suite passed 88 tests with one skip and the focused
 core MOP-parameter suite passed 19 tests. `compileall`, schema JSON parsing and
-`git diff --check` passed. CamBam has not yet opened or posted the fresh B/C
-candidates, so this is implementation and offline verification closure only.
+`git diff --check` passed. These checks established implementation and offline
+verification before the fresh CamBam posts were supplied.
+
+### Fresh writer CamBam Default-post acceptance — 2026-09-27
+
+The user posted the unchanged [fresh B source](../output/manual-tabs-20260927-01/B-fresh-manual.cb)
+and [fresh C source](../output/manual-tabs-20260927-01/C-fresh-manual.cb)
+through CamBam Plus 1.0 with the Default postprocessor. Their source SHA-256
+values still match the prepared candidates above. The resulting
+[B post](../output/manual-tabs-20260927-01/B-fresh-manual.nc) has SHA-256
+`8EBB6D30C3CAE613FD0CCA9A3EF2ADA99DB3535B1537224E40BF72727DC8D3C9`;
+the [C post](../output/manual-tabs-20260927-01/C-fresh-manual.nc) has SHA-256
+`F51D810D97227094DF42177566CE87E3061B1641ED0D5BC1E5B4A7816A9B7A1F`.
+After excluding only CamBam comment lines and blanks, all 53 B machine-command
+lines equal the native `B-moved.nc` lines in order, and all 57 C lines equal
+the native `C-added.nc` lines in order. B has four bottom-depth rapid lifts
+from `Z=-3` to `Z=-2`; C has five, including both separate left-edge gaps.
+Every cutting, arc, feed, spindle, tool-change and clearance command matches
+the corresponding native post. The source XML retains Manual, `4/4` or `5/5`,
+and the exact native point collection. This closes the bounded fresh-writer
+CamBam output gate. The user did not separately report the displayed UI tab
+positions or a physical cut; neither is required for this source-bound
+interchange acceptance. No acceptance is inferred for transformed,
+curved, reversed or multi-target Manual Profiles, another postprocessor,
+controller runtime or machining on a physical machine.
