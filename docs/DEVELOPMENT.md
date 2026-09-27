@@ -1770,7 +1770,17 @@ Packet 1 reuses the accepted
 [B and C Manual sources and actual Default posts](../output/manual-tabs-20260927-01/)
 unchanged. The source's 80 x 50 x 3 mm Part stock contains a 60 x 30 mm
 Outside Profile. The generated T3 path cuts one 0.5 mm deep straight interior
-groove before the T1 Profile. The one-off script creates or re-audits the
+groove before the T1 Profile.
+
+The four exact B/C `.cb`/`.nc` inputs for the packet-specific regression live
+in ignored `output/tabbed-cutout-20260927-04/fixtures/`. Their hashes are
+asserted against the accepted originals in
+`output/manual-tabs-20260927-01/`. On a checkout without these one-off
+inputs, `tests.test_tabbed_cutout` skips its four actual-post checks; copy the
+accepted files into that ignored fixture directory to rerun them. No `.cb`
+or `.nc` fixture is tracked for this packet.
+
+The one-off script creates or re-audits the
 [B](../output/tabbed-cutout-20260927-04/B/handoff.json) and
 [C](../output/tabbed-cutout-20260927-04/C/handoff.json) offline bundles:
 

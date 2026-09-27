@@ -12,7 +12,10 @@ from cambam_builder.integrations.cambam.tabbed_cutout import (
 )
 
 
-FIXTURES = Path(__file__).parent / "fixtures" / "tabbed_cutout"
+FIXTURES = (Path(__file__).resolve().parents[1] / "output" /
+            "tabbed-cutout-20260927-04" / "fixtures")
+FIXTURE_NAMES = ("B-fresh-manual.cb", "B-fresh-manual.nc",
+                 "C-fresh-manual.cb", "C-fresh-manual.nc")
 ACCEPTED_HASHES = {
     "B": ("1d5a6d7a984cca8ef5d7539ec68fbcbfa17477adbe31738663a2924d90490d27",
           "8ebb6d30c3cae613fd0cca9a3ef2ada99db3535b1537224e40bf72727dc8d3c9"),
@@ -21,6 +24,8 @@ ACCEPTED_HASHES = {
 }
 
 
+@unittest.skipUnless(all((FIXTURES / name).is_file() for name in FIXTURE_NAMES),
+                     "accepted B/C one-off inputs are absent from ignored output")
 class TabbedCutoutTests(unittest.TestCase):
     def _case(self, root, name, count):
         source = root / f"{name}-fresh-manual.cb"

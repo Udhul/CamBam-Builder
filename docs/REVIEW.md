@@ -8,8 +8,12 @@ SHA-256 values are `1D5A6D7A984CCA8EF5D7539EC68FBCBFA17477ADBE31738663A2924D9049
 and `8EBB6D30C3CAE613FD0CCA9A3EF2ADA99DB3535B1537224E40BF72727DC8D3C9`;
 the C values are `35B36611AB4CF9AB98322406B98E24D2642EF71E0C7BCBF3BB550DF688A6AE98`
 and `F51D810D97227094DF42177566CE87E3061B1641ED0D5BC1E5B4A7816A9B7A1F`.
-The exact source/post pairs are retained as regression fixtures under
-`tests/fixtures/tabbed_cutout/`. No new native post was requested or inferred.
+The exact source/post pairs for the packet-specific regression are retained
+only in ignored `output/tabbed-cutout-20260927-04/fixtures/`; their hashes
+match the accepted originals in `output/manual-tabs-20260927-01/`. The
+tracked test harness skips the four actual-post checks when those one-off
+inputs are absent from a fresh checkout. No `.cb` or `.nc` fixture is tracked,
+and no new native post was requested or inferred.
 
 `integrations.cambam.tabbed_cutout` decodes the complete 46/50-move B/C posts
 through `NativeSeries` and replays 855/858 cylindrical sweep segments, including
@@ -64,6 +68,13 @@ tests.test_v_region -q` passed 27 tests. `compileall` on the new module/test
 and `git diff --check` passed; intended untracked source/test text was also
 checked for trailing whitespace. No external CamBam or controller run was
 performed in this packet.
+
+After the user chose to keep one-off `.cb` inputs out of tracked directories,
+the four exact B/C source/post copies were moved to ignored
+`output/tabbed-cutout-20260927-04/fixtures/`. SHA-256 comparison against the
+accepted originals passed for all four files. The tracked harness now reads
+that directory and skips when it is absent; its four actual-post tests passed
+from the moved inputs. `git status --short` shows no untracked fixture folder.
 
 Engineering accepts this bounded offline stock and stage-order gate. The
 existing actual posts are sufficient external evidence; no additional
