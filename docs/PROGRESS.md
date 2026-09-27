@@ -232,7 +232,32 @@ own exact hashes and limits. The synthetic split handoff asserts T2
 installation and tip registration; controller runtime and physical setup
 remain unassessed. The five selected packets are complete.
 
-**Next priority: bounded rest/V branch delivery review.** The
+### Branch review session queue
+
+**Next priority: session 1 of the five-session branch engineering and delivery
+review against `main`.** The [review plan](BRANCH_REVIEW_PLAN.md) preserves the
+2026-09-27 request: assess native/extended separation, core versus workflow
+responsibilities, reusable geometry/stock foundations, primary V-carving,
+rest/tool-bundle strategies and conditional smoothing, mathematical assumptions,
+API relationships and misuse hazards before final delivery. Planning is complete;
+substantive review and branch acceptance are pending.
+
+| Session | Outcome and execution packet | State |
+| --- | --- | --- |
+| 1 | [Capability boundaries and public API contracts](BRANCH_REVIEW_PLAN.md#session-1-capability-boundaries-and-public-api-contracts) | Next: allocate the complete diff and establish evidence-backed capability/API ownership |
+| 2 | [Geometry, topology and numerical foundations](BRANCH_REVIEW_PLAN.md#session-2-geometry-topology-and-numerical-foundations) | Pending session 1 |
+| 3 | [Machining strategies, rest behavior and reuse](BRANCH_REVIEW_PLAN.md#session-3-machining-strategies-rest-behavior-and-reuse) | Pending session 2 |
+| 4 | [Execution safety, evidence and misuse resistance](BRANCH_REVIEW_PLAN.md#session-4-execution-safety-evidence-and-misuse-resistance) | Pending session 3 |
+| 5 | [Integrated regression and delivery decision](BRANCH_REVIEW_PLAN.md#session-5-integrated-regression-and-delivery-decision) | Pending sessions 1-4 and final branch gates |
+
+Each session records coverage/findings in REVIEW and updates this queue with the
+exact next task. Retain unfinished sessions as active instead of skipping gates.
+Repair demonstrated defects; assess missing foundations against supported claims
+and intended consumers, and defer justified extensions with reopening criteria
+in the existing backlog. Reference-job success does not establish general
+framework support. [Planning evidence](REVIEW.md#branch-review-programme-planning---2026-09-27).
+
+The
 [M0-M5 scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
 is 6/6 accepted for its stated offline domain; the later five job packets are
 also accepted. On `feat/rest-machining-and-vcarving`, review the exact
@@ -242,8 +267,9 @@ commit, and repair only demonstrated delivery defects. Stop when the branch
 is merge-ready under [delivery rules](WORKFLOW.md#verification-and-handoff-checklist)
 or a specific failing gate is recorded. The user performs the merge. This is
 a delivery increment, not a sixth job packet or a new machining feature.
-No new CamBam post or user validation is required for the accepted offline
-jobs. UCCNC runtime, physical machining, failed native Pocket role parity,
+No new CamBam post or user validation is presently required for the accepted
+offline jobs; a demonstrated defect may reopen its affected acceptance scope.
+UCCNC runtime, physical machining, failed native Pocket role parity,
 general freeform geometry, non-box fixtures and the deferred package migration
 have separate [reopening criteria](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27)
 or named-need gates; they do not hold the bounded epic open.

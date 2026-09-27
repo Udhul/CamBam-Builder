@@ -7354,3 +7354,45 @@ accepted evidence were checked against their owners; `git diff --check` passed.
 No runtime behavior or native output changed, so no new CamBam observation or
 automated behavior test adds evidence to this status correction. The correction
 remains uncommitted; the delivery audit must use the eventual committed `HEAD`.
+
+## Branch review programme planning - 2026-09-27
+
+The user broadened the delivery review to examine capability ownership, reusable
+foundations, primary V-carving/rest policy, numerical assumptions, API composition
+and foreseeable misuse. The [five-session plan](BRANCH_REVIEW_PLAN.md) owns scopes
+and gates; the [PROGRESS queue](PROGRESS.md#branch-review-session-queue) owns state.
+This planning round makes no algorithm-correctness or merge-readiness finding.
+
+Read-only Git discovery found clean `feat/rest-machining-and-vcarving` at
+`69988f76cd3ce2627ffd17be1b83183052c7fa98`, local `main` and merge base at
+`18dbb9950f3065e95df0ee645a25361d45e63b30`, 88 branch commits and 162 changed
+files (47,417 insertions, 7,282 deletions). The stat includes historical tracked
+CAM fixtures; the prior closure note's statement that the branch added no
+`.cb`/`.nc` files is not a valid whole-branch hygiene conclusion. Session 5 must
+inspect those fixtures' authorization/provenance and reusable value explicitly;
+no fixture was removed or newly authorized by this planning round.
+
+The plan requires complete diff coverage, stable findings with counterexamples,
+independent mathematical checks, explicit claim/evidence boundaries and final
+package/branch gates. It separates demonstrated delivery defects from extension
+gaps; bounded fixtures do not establish general framework support, while a general
+feature wishlist does not justify speculative implementation during delivery.
+Existing architecture and CAM plans remain the owners of lasting contracts.
+
+Only documentation changed. Session 1 is the next substantive task;
+no fresh CamBam observation or behavior test is needed to accept the review plan.
+Verification used Python 3.13.5 via `.venv/Scripts/python.exe`:
+`python output/branch-review-plan-20260927-01/validate_docs.py` checked all four
+changed documents' new local links (18 targets/anchors) and the untracked plan's
+trailing whitespace with zero errors. `git diff --check` passed for tracked edits;
+the tracked diff and complete new plan were inspected. Git enumerated no ignored
+`.cb`/`.nc` paths outside `output/`, but warned that `.pytest_cache/` was unreadable;
+this is a discovery limit, not a complete branch artifact-hygiene certification.
+The only untracked delivery candidate is `docs/BRANCH_REVIEW_PLAN.md`. Supporting
+validator/results stay under the unique ignored output directory.
+
+The planning increment is ready to commit, not merge-ready; substantive review
+and final branch gates remain pending. Suggested commit: `docs: plan five-session
+rest/V engineering and delivery review`. A fresh session is recommended for
+session 1 because the mandate, acceptance rules and progression are now durable;
+no unanswered product decision or pending external result blocks that start.
