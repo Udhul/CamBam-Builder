@@ -154,12 +154,14 @@ stage-transition travel and controller runtime remain unassessed.
 Manual Profile holding-tab fixture, then implement fresh authoring against its
 observed point collection and toolpath behavior. This is the next concrete
 user-facing capability after the named linear and G3 hybrid occupancy gaps
-closed. Its native encoding is still unknown, so the fixture is a prerequisite
+closed. The synthetic Automatic-tab [seed and exact native capture steps](DEVELOPMENT.md#manual-profile-holding-tab-native-fixture)
+are prepared; CamBam-created A/B/C/D `.cb` files and Default posts are pending.
+Its native encoding is still unknown, so the fixture is a prerequisite
 to implementation. Do not expand occupancy to non-box fixtures or select a
 general surface backend without a named job that needs them; reopen for a
 curved/overhanging target, unsupported fixture or residual tolerance these
 bounded methods cannot meet. The [remaining backlog](#remaining-backlog-in-order)
-states the A/B evidence needed.
+states the native sequence needed.
 
 The user reaffirmed native CamBam interchange, independent calculation, hybrid
 native/generated jobs and future volume/surface methods as the product direction.
@@ -1904,14 +1906,17 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    infrastructure and general 3D stock until a named consumer or RC01 gate shows why
    the bounded workflow cannot meet its requirements.
 
-7. **Deferred MCP/core capability: author Manual Profile holding-tab positions.**
+7. **Active MCP/core capability: author Manual Profile holding-tab positions.**
    Current automatic authoring covers width, height, minimum/maximum count, distance,
    size threshold, the constrained lead-in flag and Square/Triangle/Skip style.
    Imported native Manual tabs remain inspectable and round-trip preserved, while
-   fresh Manual authoring is rejected. Reopen only with a CamBam Plus 1.0 A/B fixture
-   saved before and after moving/adding/removing tabs, so the exact native point
-   collection, coordinate frame, identity/order behavior and generated toolpaths can
-   be modeled and round-trip tested without inventing vendor XML.
+   fresh Manual authoring is rejected. The [fixture procedure](DEVELOPMENT.md#manual-profile-holding-tab-native-fixture)
+   starts from a prepared Automatic seed and requests native saves after moving,
+   adding and removing tabs, with matching Default posts. Capture and inspect
+   those files first; then model the observed point collection, coordinate frame,
+   identity/order behavior and toolpaths, and implement/test fresh direct-core and
+   MCP authoring. Stop when the bounded native fixture round-trips and an authored
+   equivalent reproduces its toolpaths; leave other Manual variants evidence-bound.
 8. **Future MOP semantic, native-export and framework/MCP parity audit.** Perform this
    as three bounded increments after the current SpiralMill prompt-free acceptance;
    do not treat every CamBam feature found as automatically in scope for
