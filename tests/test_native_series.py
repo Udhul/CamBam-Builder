@@ -228,7 +228,7 @@ M30
             with self.assertRaisesRegex(ValueError, "low XY rapid"):
                 series.to_trace(*args)
 
-    def test_arc_replay_rejects_protected_sweep_and_helix(self):
+    def test_arc_replay_rejects_protected_sweep_and_rising_arc(self):
         with tempfile.TemporaryDirectory() as folder:
             candidate, post = self.make_case(Path(folder))
             target = replay.Target("opening", (0, 0, 10, 10), 1)
@@ -246,11 +246,11 @@ M30
                 replay.replay(trace,
                               expected_source=series.evidence_fingerprint)
             post.write_text(base.replace("G1 F240 X7",
-                                         "G2 F240 X7 Y5 Z-2 I1 J0"),
+                                         "G2 F240 X7 Y5 Z0 I1 J0"),
                             encoding="utf-8")
             series = normalize_native_series(candidate, candidate, post,
                                              initial_position=(5, 5, 5))
-            with self.assertRaisesRegex(ValueError, "needs level stock cut"):
+            with self.assertRaisesRegex(ValueError, "level or descending stock cut"):
                 series.to_trace(*args)
 
     def test_nonpositive_feed_or_spindle_never_lowers_to_stock_trace(self):

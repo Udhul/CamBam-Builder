@@ -704,8 +704,7 @@ candidate and Default, contain a G21/G90 preamble, the named Pocket and T1,
 reach Z=-1 and -2, and end with the declared safe footer and M30. Arc motion
 requires G17 with relative I/J centres and endpoint-radius mismatch at most
 0.001 mm; unsupported cycles, planes or unresolved modal state fail intake.
-A helical
-entry needs verified curved XY motion with changing Z: a G2/G3 arc with Z
+A helical entry needs verified curved XY motion with changing Z: a G2/G3 arc with Z
 change, or a multi-segment G1 approximation of that curve corroborated by
 CamBam's toolpath view. A spiral XML setting, level arc, vertical plunge or
 single diagonal ramp alone does not meet the gate. Retain the complete post
@@ -724,6 +723,14 @@ helical entry can be obtained, keep packet 2 open with the observed post and
 a precise replacement-fixture request. Stop after one accepted native entry
 form and dependent cleanup; general native Pocket parity remains outside.
 **Next fresh session: packet 3.**
+
+**Accepted bounded result (2026-09-27):** the user observed the Circle Pocket
+toolpath and supplied its complete Default post. It contains ten descending G2
+entry moves. The actual source/post and generated T2 stage now pass the
+source-bound decoded UCCNC stock and section gates; exact checks and limits are
+in the [packet 2 evidence](REVIEW.md#packet-2-helical-pocket-and-generated-cleanup---2026-09-27).
+Packet 3 is the next fresh-session work. This does not establish generic
+Pocket parity or a controller/physical acceptance.
 
 #### 3. Curved 3D ball-cutter finish and rest
 

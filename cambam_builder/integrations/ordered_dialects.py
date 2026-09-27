@@ -231,7 +231,7 @@ def _read_motion(line, at, feed):
         raise ValueError("zero-length NC motion")
     center = None
     if arc:
-        if end[:2] == at[:2] or end[2] != at[2]:
+        if end[:2] == at[:2] or end[2] > at[2]:
             raise ValueError("unsupported controller arc geometry")
         center = (at[0] + _value(match.group(6)),
                   at[1] + _value(match.group(7)))

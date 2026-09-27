@@ -208,7 +208,7 @@ class Motion:
 
 @dataclass(frozen=True)
 class ArcMotion:
-    """One level XY arc with an absolute center and exact posted endpoints."""
+    """One XY arc, optionally descending in Z, with exact posted endpoints."""
 
     role: str
     tool: str
@@ -226,15 +226,18 @@ class ArcMotion:
                 type(self.center) is not tuple or len(self.center) != 2 or
                 any(type(v) not in (int, float) or not math.isfinite(v)
                     for v in self.center) or self.start[:2] == self.end[:2] or
-                self.start[2] != self.end[2] or self.start[2] >= 0 or
+                self.start[2] > 0 or self.end[2] >= 0 or
+                self.end[2] > self.start[2] or
                 type(self.feed) not in (int, float) or not math.isfinite(self.feed)
                 or self.feed <= 0):
             raise ValueError("unsupported planar cutting arc")
 
 
-def arc_segments(start, end, center, g, *, sagitta_mm=0.0001):
+def arc_segments(start, end, center, g, *, sagitta_mm=0.0001,
+                 allow_helix=False):
     """Enclose a continuous posted XY arc by chords and a radial error bound."""
-    if g not in (2, 3) or start[:2] == end[:2] or start[2] != end[2]:
+    if (g not in (2, 3) or start[:2] == end[:2] or
+            (start[2] != end[2] and not allow_helix)):
         raise ValueError("unsupported planar arc geometry")
     cx, cy = center
     r0 = math.hypot(start[0] - cx, start[1] - cy)
@@ -328,6 +331,20 @@ class Sweep:
     bottom_start: float = None
     path_error_mm: float = 0.0
 
+    def section_segment(self, depth):
+        """Return the part of a descending cylindrical sweep reaching depth."""
+        if self.bottom > -depth:
+            return None
+        if self.bottom_start is None or self.bottom_start <= -depth:
+            return self.a, self.b
+        if self.tool.kind != "cylinder":
+            return self.a, self.b
+        if not self.bottom_start > self.bottom:
+            raise ValueError("unsupported variable-depth section")
+        t = (self.bottom_start + depth) / (self.bottom_start - self.bottom)
+        start = tuple(a + t * (b - a) for a, b in zip(self.a, self.b))
+        return start, self.b
+
     def radius_at(self, depth):
         if self.bottom_start is not None:
             raise ValueError("variable-depth sweep has no single section radius")
@@ -338,9 +355,15 @@ class Sweep:
 
     def contains(self, x, y, depth):
         if self.bottom_start is not None:
-            return _affine_cone_contains(self.a, self.b,
-                                         -self.bottom_start, -self.bottom,
-                                         x, y, depth)
+            if self.tool.kind == "pointed_cone":
+                return _affine_cone_contains(self.a, self.b,
+                                             -self.bottom_start, -self.bottom,
+                                             x, y, depth)
+            segment = self.section_segment(depth)
+            return (segment is not None and
+                    self.tool.radius > self.path_error_mm and
+                    _distance2((x, y), *segment) <=
+                    (self.tool.radius - self.path_error_mm) ** 2)
         radius = self.radius_at(depth)
         return (radius is not None and radius > self.path_error_mm and
                 _distance2((x, y), self.a, self.b) <=
@@ -351,7 +374,9 @@ def _safe_cut(sweep, target):
     a, b = sweep.a, sweep.b
     if target.region_shell:
         from shapely.geometry import LineString, Point, Polygon as ShapelyPolygon
-        if (sweep.tool.kind != "cylinder" or sweep.bottom_start is not None or
+        if (sweep.tool.kind != "cylinder" or
+                (sweep.bottom_start is not None and
+                 not sweep.bottom < sweep.bottom_start <= 0) or
                 sweep.bottom < -target.depth or
                 -sweep.bottom > sweep.tool.cutting_length):
             raise ValueError("unsupported polygonal Region cut/tool depth")
@@ -423,11 +448,15 @@ def _covered(cuts, move, tool):
         for prior in reversed(cuts):
             if prior.tool.kind != "cylinder" or prior.bottom > low:
                 continue
-            if (a == b and a in (prior.a, prior.b) and
+            section = prior.section_segment(-low)
+            if section is None:
+                continue
+            prior_a, prior_b = section
+            if (a == b and a in (prior_a, prior_b) and
                     prior.tool.radius >= tool.radius):
                 return True
             margin = prior.tool.radius - prior.path_error_mm - tool.radius
-            if margin >= 0 and all(_distance2(p, prior.a, prior.b) <= margin ** 2
+            if margin >= 0 and all(_distance2(p, prior_a, prior_b) <= margin ** 2
                                    for p in (a, b)):
                 return True
     else:
@@ -502,10 +531,12 @@ def replay(trace, *, expected_source):
             if op.tool.kind != "cylinder":
                 raise ValueError(f"move {index}: arc needs cylindrical cutter")
             segments, error = arc_segments(item.start, item.end, item.center,
-                                           item.g)
-            for a, b in segments:
-                sweep = Sweep(op.name, op.tool, a, b, item.end[2],
-                              path_error_mm=error)
+                                           item.g, allow_helix=True)
+            for number, (a, b) in enumerate(segments):
+                z0 = item.start[2] + (item.end[2] - item.start[2]) * number / len(segments)
+                z1 = item.start[2] + (item.end[2] - item.start[2]) * (number + 1) / len(segments)
+                sweep = Sweep(op.name, op.tool, a, b, z1,
+                              z0 if z0 != z1 else None, path_error_mm=error)
                 _safe_cut(sweep, op.target)
                 cuts.append(sweep)
         elif item.role in ("rapid", "approach"):

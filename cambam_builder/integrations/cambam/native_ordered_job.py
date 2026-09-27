@@ -28,7 +28,10 @@ class NativeBinding:
         native_count = len(self.series.stages)
         hybrid = (len(job.stages) == native_count + 1 and native_count == 1 and
                   job.stages[-1].v_plan is not None and job.stock_present)
-        if len(job.stages) != native_count and not hybrid:
+        circle_cleanup = (len(job.stages) == native_count + 1 and
+                          native_count == 1 and job.stock_present and
+                          job.stages[-1].id == "circle-cleanup")
+        if len(job.stages) != native_count and not hybrid and not circle_cleanup:
             raise ValueError("native ordered stage count differs from post")
         spindle = tuple(item.rpm for item in self.series.items
                         if type(item) is PostedEvent and
@@ -74,6 +77,9 @@ class NativeBinding:
                         not Polygon(targets[0].region_shell,
                                     targets[0].region_holes).equals(shape)):
                     raise ValueError("generated V stage differs from native source")
+            if circle_cleanup and job.stages[-1] != _circle_cleanup_stage(
+                    job.stages[0], targets[0], self.series.evidence_fingerprint):
+                raise ValueError("generated circle cleanup differs from native source")
         return True
 
 
@@ -174,6 +180,75 @@ def from_native_v(series, plan, *, target, cutting_length_mm,
         transition=ordered_job.Transition(
             "operator", boundary, tool_id, start,
             "operator-confirmed-installation"))
+    return ordered_job.Job(series.evidence_fingerprint, (first, second),
+                           native.initial_tip, program_frame=native.program_frame,
+                           source_kind="native")
+
+
+def _circle_cleanup_stage(first, target, source_fingerprint):
+    """One 2 mm contour after a full-depth native circular predecessor."""
+    import math
+
+    if (type(target) is not replay.Target or not target.region_shell or
+            target.region_holes or first.operation.target != target or
+            first.operation.tool.kind != "cylinder" or
+            first.operation.tool.radius != 3 or target.depth != 2):
+        raise ValueError("bounded native circle predecessor required")
+    x0, y0, x1, y1 = target.bounds
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    radius = (x1 - x0) / 2
+    if y1 - y0 != 2 * radius or radius != 12:
+        raise ValueError("bounded diameter-24 target required")
+    candidates = [move.end for move in first.motions if move.arc_g and
+                  move.end[2] == -target.depth]
+    if not candidates:
+        raise ValueError("native Pocket lacks deepest circular cut")
+    anchor = max(candidates, key=lambda p: math.hypot(p[0] - cx, p[1] - cy))
+    radial = math.hypot(anchor[0] - cx, anchor[1] - cy)
+    if not 7.9 <= radial <= 8.1:
+        raise ValueError("native Pocket outer cleared anchor differs")
+    angle = math.atan2(anchor[1] - cy, anchor[0] - cx)
+    path_radius = radius - 1.01
+    contour = tuple((round(cx + path_radius * math.cos(angle - i * math.pi / 2), 4),
+                     round(cy + path_radius * math.sin(angle - i * math.pi / 2), 4),
+                     -target.depth) for i in range(4))
+    start = first.motions[-1].end
+    high = (anchor[0], anchor[1], start[2])
+    low = (anchor[0], anchor[1], -target.depth)
+    moves = []
+    if start != high:
+        moves.append(ordered_job.JobMove("rapid", start, high))
+    moves.extend((ordered_job.JobMove("cleared_descent", high, low, 60),
+                  ordered_job.JobMove("cut", low, contour[0], 240)))
+    for a, b in zip(contour, contour[1:] + contour[:1]):
+        moves.append(ordered_job.JobMove("cut", a, b, 240, 2, (cx, cy)))
+    top = (contour[0][0], contour[0][1], start[2])
+    moves.append(ordered_job.JobMove("rapid_retract", contour[0], top))
+    if top != start:
+        moves.append(ordered_job.JobMove("rapid", top, start))
+    return ordered_job.Stage(
+        "circle-cleanup", "T2", tuple(moves), 12000,
+        operation=replay.Operation("circle-cleanup",
+                                   replay.ToolProfile("T2", "cylinder", 1, 3),
+                                   target),
+        source_revision=source_fingerprint,
+        transition=ordered_job.Transition(
+            "operator", "split", "T2", start,
+            "operator-confirmed-installation"))
+
+
+def from_native_circle_cleanup(series, target):
+    """Join the observed one-Pocket T1 post and bounded generated T2 ring."""
+    if (type(series) is not NativeSeries or len(series.stages) != 1 or
+            series.stages[0].kind != "PocketMop" or
+            series.stages[0].target_ids != (target.name,)):
+        raise ValueError("one native Circle Pocket required")
+    native = from_native_series(
+        series, targets={series.stages[0].name: target},
+        cutting_lengths_mm={"T1": 3},
+        entry_modes={series.stages[0].name: "virgin"})
+    first = native.stages[0]
+    second = _circle_cleanup_stage(first, target, series.evidence_fingerprint)
     return ordered_job.Job(series.evidence_fingerprint, (first, second),
                            native.initial_tip, program_frame=native.program_frame,
                            source_kind="native")

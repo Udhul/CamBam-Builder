@@ -1,9 +1,10 @@
 """Native MOP-series stock audit over one planar cylindrical target.
 
 Every stage reuses core motion replay and a bounded polygonal sweep oracle.
-This bridge accepts a common straight-edge Region (with holes) or rectangle,
-declared section depths and an overcut budget. Level XY arc cuts use the core
-bounded continuous-sweep enclosure. It does not certify controller trajectories,
+The generic audit accepts a common straight-edge Region (with holes) or
+rectangle, declared section depths and an overcut budget. The separate
+``circle_target`` helper binds a native Circle to an inscribed section target
+for the bounded helical Pocket job. It does not certify controller trajectories,
 physical cutter error or a rounded V profile.
 """
 
@@ -13,7 +14,7 @@ import math
 from pathlib import Path
 
 from ...cam_core import polygon_rest, replay
-from ...native.cad import Rect
+from ...native.cad import Circle, Rect
 from ...native.reader import read_cambam_bytes
 from ...native.region import Region
 from ...cam_extensions.strategy import (
@@ -45,6 +46,32 @@ class NativeSeriesAudit:
         if not isinstance(name, str) or not name:
             raise ValueError("alternative name required")
         return Alternative(name, tuple(stage.evidence for stage in self.stages))
+
+
+CIRCLE_SEGMENTS = 256
+
+
+def circle_target(source_path, name, depth_mm):
+    """Conservative inscribed section target for one native planar Circle."""
+    source = read_cambam_bytes(Path(source_path).read_bytes(),
+                               source_name="circle target source")
+    circle = source.get_primitive(name)
+    if type(circle) is not Circle:
+        raise ValueError("native circle target required")
+    geometry = circle.get_absolute_coordinates_xyz()
+    cx, cy, z = (float(value) for value in geometry["center"])
+    radius = float(geometry["diameter"]) / 2
+    if z != 0 or not math.isfinite(radius) or radius <= 0:
+        raise ValueError("planar positive-radius native Circle required")
+    # The slight inward scale keeps floating trigonometric vertices inside
+    # the analytic Circle. Its maximum radial deficit is bounded below.
+    inner = radius * (1 - 1e-9)
+    shell = tuple((cx + inner * math.cos(2 * math.pi * i / CIRCLE_SEGMENTS),
+                   cy + inner * math.sin(2 * math.pi * i / CIRCLE_SEGMENTS))
+                  for i in range(CIRCLE_SEGMENTS))
+    return replay.Target(name, (cx - radius, cy - radius,
+                                cx + radius, cy + radius), depth_mm,
+                         region_shell=shell)
 
 
 def _polygon_target(target):
@@ -84,8 +111,13 @@ def _bind_source_target(source_path, candidate_path, series, target):
         source_region = Polygon([(x, y) for x, y, _, _ in rings[0]],
                                 [[(x, y) for x, y, _, _ in ring]
                                  for ring in rings[1:]])
+    elif type(primitive) is Circle:
+        expected = circle_target(source_path, target.name, target.depth)
+        if target != expected:
+            raise ValueError("replay target differs from native Circle enclosure")
+        source_region = polygon_rest._geometry(expected)
     else:
-        raise ValueError("native source target must be Rect or straight Region")
+        raise ValueError("native source target must be Rect, Circle or straight Region")
     supplied_region = polygon_rest._geometry(target)
     if (not source_region.is_valid or source_region.is_empty or
             not source_region.equals(supplied_region) or

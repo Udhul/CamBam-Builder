@@ -72,7 +72,8 @@ class JobMove:
                     type(self.center) is not tuple or len(self.center) != 2 or
                     any(type(v) not in (int, float) or not math.isfinite(v)
                         for v in self.center) or self.start[:2] == self.end[:2] or
-                    self.start[2] != self.end[2] or self.start[2] >= 0):
+                    self.start[2] > 0 or self.end[2] >= 0 or
+                    self.end[2] > self.start[2]):
                 raise ValueError("unsupported ordered planar cutting arc")
         elif self.center is not None:
             raise ValueError("arc center without ordered arc")

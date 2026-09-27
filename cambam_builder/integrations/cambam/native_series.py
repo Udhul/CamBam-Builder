@@ -2,8 +2,9 @@
 
 This adapter admits one enabled, non-nested millimetre Part with uniquely named
 enabled MOPs and explicitly numbered cylindrical endmills. It retains posted
-G0/G1/G2/G3 motion in file order. Level XY arcs lower through a bounded
-continuous-sweep enclosure; ramps still need a separate all-height proof.
+G0/G1/G2/G3 motion in file order. Level and descending XY arcs lower through a
+bounded continuous-sweep enclosure; straight ramps still need a separate
+all-height proof.
 Parsing alone never grants stock or access authority: callers must replay
 the lowered trace against their independently normalized target and tool lengths.
 """
@@ -193,8 +194,8 @@ class NativeSeries:
         ``targets`` maps each MOP name to an independently normalized core
         Target. ``entry_modes`` maps each name to ``virgin`` or ``cleared``.
         Every low travel and cleared descent is then checked by core replay.
-        Level XY arcs retain their center/direction for bounded continuous
-        replay; no rounded or pointed cutter is inferred.
+        Level and descending XY arcs retain their center/direction and Z for
+        bounded continuous replay; no rounded or pointed cutter is inferred.
         """
         names = {stage.name for stage in self.stages}
         if (set(targets) != names or set(entry_modes) != names or
@@ -233,8 +234,9 @@ class NativeSeries:
             if item.g in (1, 2, 3) and low < 0 and item.feed <= 0:
                 raise ValueError(f"line {item.line}: nonpositive cutting feed")
             if item.g in (2, 3):
-                if (a[2] != b[2] or a[2] >= 0 or item.center is None):
-                    raise ValueError(f"line {item.line}: posted arc needs level stock cut")
+                if (a[2] > 0 or b[2] >= 0 or b[2] > a[2] or
+                        item.center is None):
+                    raise ValueError(f"line {item.line}: posted arc needs level or descending stock cut")
                 role = "cut"
             elif item.g == 0:
                 if low < 0 and a[:2] != b[:2]:

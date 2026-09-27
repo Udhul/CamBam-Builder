@@ -7028,3 +7028,69 @@ own the next observation and exact source-bound post request. If CamBam
 does not emit a genuine helix for this source, retain the complete post and
 request a replacement fixture based on that observation; the XML Spiral
 setting does not establish native motion.
+
+## Packet 2 helical Pocket and generated cleanup — 2026-09-27
+
+The user opened the prepared Circle Pocket in CamBam Plus 1.0, saw the
+toolpath circles lift between increments with a spiral lead, and supplied the
+complete [Default post](../output/packet2-helical-pocket-20260927-01/packet2-helical-pocket.nc).
+The unchanged source/post pair is retained as a reusable
+[regression fixture](../tests/fixtures/helical_pocket/). Their SHA-256 values
+are respectively `f53d0221a0a841af9ccb0d2bc1af1607f8b5161535466a7cce7e0a59393f0e03`
+and `af2208d1019af5684d082dd62ce5f148b1a63667f71c151a720cfbcb88fb0978`.
+Strict normalization found the matching candidate title, Default and
+absolute-mm preamble, one T1 Pocket section, G17, CW S12000, Z=-1/-2,
+the explicit safe return, M5 and M30. It retained all 67 posted moves: 34
+G2 arcs, including ten Z-descending G2 entries with relative I/J centers.
+No cycle, unsupported plane or unresolved modal word occurred. The declared
+incoming tip is (-5,-5,+5) mm; the post itself does not encode that state.
+
+The bounded T2 generator uses a 2 mm cylinder, one cleared descent at the
+native full-depth R8 mm centerline, a radial link and four clockwise quadrant
+arcs at centerline R10.99 mm. It returns to the same +5 mm safe tip. The
+source binder checks exact current source/post bytes, the Circle target and
+floor, all 67 native moves and the deterministic T2 stage. The local
+[handoff](../output/packet2-helical-pocket-20260927-01/ordered-uccnc-01/handoff.json)
+SHA-256 is `aa25e535c71a3f6e111148de6102264a76cb81aa74424a96298c132972c8ff80`.
+The two independently decoded UCCNC stage files contain 67/9 moves and have
+SHA-256 `c1a64bac822e291bcdb8d95fe849012a33878f131beefe5b0f87869527db3ac4`
+and `ebe3f40fc8119586d764fae8945b62681a96db4fe0eaa56ca617924b43d96c6f`.
+Their ordered decoded replay passes with 4004/4745 cumulative cut chords.
+
+The source Circle's exact R12 mm area is 452.38934 mm². The conservative
+256-gon replay target has 0.04542 mm² less area; this known approximation is
+included in the section comparison. The independent nominal R11 native
+allowance ring is `pi*(12²-11²) = 72.25663 mm²`.
+
+| Depth | Native residual interval | Final residual interval | Inflated protected overcut |
+| --- | --- | --- | --- |
+| Z=-1 mm | 72.19792–72.22993 mm² | 0.69652–0.72822 mm² | 0 mm² |
+| Z=-2 mm | 72.19800–72.22996 mm² | 0.69652–0.72822 mm² | 0 mm² |
+
+Both sections pass native-versus-analytic deviation below 0.1 mm²,
+interval width below 0.05 mm², final upper residual below 1 mm²,
+residual gain above 70 mm² and protected overcut upper below 0.01 mm².
+The result is conditional on the fixed stock top/datum, declared T1/T2
+cutting length and GEOS swept-section arithmetic. The regression rejects a
+changed source, unsupported G18 post, forged T2 feed and edited stage bytes.
+The synthetic helix section check confirms shallow/deep clipping and rejects
+rising arcs and unbounded helix volume integration. No controller runtime,
+physical cut, tool-body/fixture occupancy or general Pocket strategy is
+certified; the next named job is packet 3.
+
+Verification from the repository root: `python -m unittest` with
+`tests.test_native_helix_pocket`, `tests.test_native_series`,
+`tests.test_native_series_audit`, `tests.test_native_arc_replay`,
+`tests.test_native_v_hybrid`, `tests.test_ordered_job`,
+`tests.test_ordered_dialects`, `tests.test_polygon_rest` and
+`tests.test_occupancy` passed 45 tests. Full
+`python -m unittest discover -s tests -q` passed 506 tests with one skip.
+After the final cylinder-section guard edit, the four focused helix/native
+modules passed 17 tests; the local `finish.py` re-audited the existing bundle
+and returned `ordered_output_pass` with unchanged hashes and section values.
+`python -m compileall -q cambam_builder tests/test_native_helix_pocket.py`
+and `git diff --check` passed. The new test text was inspected separately
+because the working diff check excludes untracked files. The packet stops at
+this observed entry form and dependent cleanup. Reopen it for a different
+posted interpolation, a Circle size or target outside the pinned fixture,
+helical volume, body/fixture clearance or actual controller/physical evidence.

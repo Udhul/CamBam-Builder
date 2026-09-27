@@ -173,13 +173,17 @@ record the fixture, numerical bounds, hashes and limits. The prior actual
 CamBam posts meet the external gate; no new post or user validation is needed.
 Physical holding and controller runtime remain unassessed.
 
-**Active, backlog 6 packet 2, pending CamBam observation:** the bounded
-[one-Pocket source and exact post criteria](REST_MACHINING_PLAN.md#2-native-pocket-with-helical-entry-and-generated-cleanup)
-are prepared and locally reimported. Obtain its actual CamBam Plus 1.0
-Default post and inspect whether the entry is a Z-changing arc or a verified
-linearized helix. Then add only that observed form to native decoding and
-ordered stock/access replay before generated cleanup. Keep packet 2 open if
-no genuine helix post can be obtained. The user already
+**Accepted offline, backlog 6 packet 2:** the user observed the circular Pocket
+toolpath and supplied the actual CamBam Plus 1.0 Default post. Ten descending
+G2 entries, the complete 67-move native prefix and a generated 9-move T2 ring
+cleanup pass source-bound independent decoded UCCNC replay. At Z=-1 and -2,
+native residual is 72.198-72.230 mm², then 0.697-0.728 mm², with zero
+modeled protected overcut. The [bounded contract](structure_spec.md#bounded-native-helical-circle-pocket-and-generated-cleanup),
+[runbook](DEVELOPMENT.md#packet-2-helical-pocket-native-post-preparation) and
+[evidence](REVIEW.md#packet-2-helical-pocket-and-generated-cleanup---2026-09-27)
+own its actual source/post hashes, checks and limits. Controller runtime and
+physical machining remain unassessed. **Next priority: packet 3, a bounded
+curved 3D ball-cutter finish/rest case.** The user already
 selected the [five ordered job packets](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27)
 in priority order; do not repeat that choice.
 
@@ -1808,8 +1812,8 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    | Packet | Status | Bounded outcome |
    | --- | --- | --- |
    | [1](REST_MACHINING_PLAN.md#1-tabbed-cutout-with-an-interior-operation) | **Accepted offline 2026-09-27** | B/C actual posts, generated V groove, four/five retained bridges and source-bound ordered stock evidence. |
-   | [2](REST_MACHINING_PLAN.md#2-native-pocket-with-helical-entry-and-generated-cleanup) | **Active; source prepared, actual post pending** | Native Pocket helical entry plus generated cleanup; actual post and decoded stock evidence. |
-   | [3](REST_MACHINING_PLAN.md#3-curved-3d-ball-cutter-finish-and-rest) | Queued | Analytic curved 3D ball-cutter finish and dependent rest. |
+   | [2](REST_MACHINING_PLAN.md#2-native-pocket-with-helical-entry-and-generated-cleanup) | **Accepted offline 2026-09-27** | Actual G2 helical Pocket post and generated T2 cleanup pass decoded stock and source binding. |
+   | [3](REST_MACHINING_PLAN.md#3-curved-3d-ball-cutter-finish-and-rest) | **Next session** | Analytic curved 3D ball-cutter finish and dependent rest. |
    | [4](REST_MACHINING_PLAN.md#4-paired-v-carve-inlay) | Queued | Paired tapered V-carve inlay with declared clearance and assembly checks. |
    | [5](REST_MACHINING_PLAN.md#5-direct-controller-program-for-a-fully-generated-job) | Queued | Fully generated RC01 job through a bounded controller profile, reusing existing UCCNC/Grbl output. |
 

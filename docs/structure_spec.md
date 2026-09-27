@@ -420,14 +420,15 @@ the original planar source target. A fresh native post is required after a
 candidate edit. This hybrid route accepts one supported planar native cylinder
 before the terminal V finish. Level XY G2/G3 cuts are representable; the
 single-depth native Pocket G3 fixture has a fresh accepted CamBam post and
-decoded hybrid stock audit. Other native arc operations require their own gate.
+decoded hybrid stock audit. The bounded Circle Pocket route below also admits
+posted descending G2 helices and a generated cylindrical cleanup.
 CamBam's vertical G0 retract is represented as `rapid_retract`: the output
 retains G0, while stock replay applies the same cleared-column proof as a
 feed retract. A low XY rapid still fails the native normalizer.
 
 `ordered_dialects.render/decode` lowers and independently reads complete
-UCCNC split files or one Grbl v1.1 program for supported G0/G1 and level XY
-G2/G3 cuts with relative I/J centers. Both readers preserve the decoded center,
+UCCNC split files or one Grbl v1.1 program for supported G0/G1 and level or
+descending XY G2/G3 cuts with relative I/J centers. Both readers preserve the decoded center,
 direction, endpoints and feed. The auditor compares them with the native post
 and replays the decoded arc rather than the planned source center.
 Tool IDs, stage count, RPM, feeds, endpoints and translation are caller values.
@@ -452,13 +453,15 @@ model and clear the supplied flat fixture-top plane. Runtime and physical setup
 remain `not_evaluated`. Re-audit after a native edit requires a freshly
 normalized source/job; an old bundle's fingerprint cannot certify it.
 
-For a level cylindrical arc, `replay.arc_segments` encloses the continuous
+For a cylindrical arc, `replay.arc_segments` encloses the continuous
 centerline by chords with at most 0.0001 mm sagitta, plus the posted endpoint
 radius mismatch and a numeric margin. Outer cutter radius uses that path error
 for protected-boundary checks; inner radius uses it for removed-stock and
-residual-upper checks. Source arc endpoints are exact replay endpoints. Curved
-rapid travel, helical/ramped arcs, full-circle same-XY words and unresolved arc
-radius fail closed. GEOS buffer/Boolean results remain conditional numerical
+residual-upper checks. A descending Z helix uses linear Z interpolation along
+each arc chord; section stock starts only where the tip reaches that depth.
+Source arc endpoints are exact replay endpoints. Curved rapid travel, rising
+arcs, straight ramps, full-circle same-XY words and unresolved arc radius fail
+closed. GEOS buffer/Boolean results remain conditional numerical
 evidence, not a physical controller trajectory guarantee. Linear `JobMove`
 representation preserves existing v1 job fingerprints.
 
@@ -470,6 +473,33 @@ non-flat fixtures, rotations/kinematics and controller runtime parity require
 named extensions. The [ordered-job packet](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification)
 and [verification](REVIEW.md#reusable-ordered-jobs-and-verification---2026-09-26)
 record the acceptance scope.
+
+### Bounded native helical Circle Pocket and generated cleanup
+
+The accepted CamBam Plus 1.0 Default post for one diameter-24 mm Circle Pocket
+contains ten Z-descending G2 entries and level G2 circles at Z=-1 and -2.
+`native_series` preserves every posted endpoint, relative-I/J center, direction,
+feed, Z and safe return. Core replay admits level and descending XY arcs only
+when their radius closes within 0.001 mm, the cutter stays inside the protected
+target and depth/cutting length resolve. The clipped variable-depth cylindrical
+sweeps keep partial helix cuts out of deeper sections. Integrated volume for a
+helical cylinder still rejects until a bounded depth integrator exists.
+
+`native_series_audit.circle_target` binds the source Circle's analytic world
+center/radius to a deterministic 256-vertex inscribed polygon. The polygon is a
+conservative protected boundary; its radial deficit is at most
+`r * (1 - cos(pi/256)) + r*1e-9`, and its area deficit is reported against the
+analytic circle. This approximation does not claim exact curved topology.
+`native_ordered_job.from_native_circle_cleanup` first replays the complete T1
+post, then generates one T2 2 mm cutter contour from a proven full-depth T1
+anchor. The T2 entry must descend through prior cleared stock, its radial link
+and four G2 quadrants are replayed, and it returns to the original safe tip.
+`NativeBinding` recomputes the exact T2 stage and checks unchanged source/post
+bytes, Circle geometry, floor and native prefix before UCCNC output or audit.
+The offline bundle decodes both stage files and checks the same source-bound
+stock. Tool installation, external stage travel, controller runtime, physical
+holding, helix body occupancy, arbitrary Circle sizes and general native
+Pocket parity are outside this fixture.
 
 ### Bounded Manual-tab cutout with interior V operation
 
@@ -1546,11 +1576,13 @@ always exact-hash guarded. The bounded planar audit also requires each native
 MOP to target the same original Rect or straight Region geometry and floor;
 a caller-supplied larger target cannot manufacture safe stock clearance.
 
-`NativeSeries.to_trace` lowers bounded G0/G1 motion and level XY G2/G3
+`NativeSeries.to_trace` lowers bounded G0/G1 motion and level or descending XY G2/G3
 cylindrical cuts on supported XY Pocket/Profile/Engrave stages into the shared
 ordered replay model. Arc centers, direction and posted radius mismatch are
-retained; the continuous-sweep enclosure is specified above. Ramps, helical
-arcs and low XY rapids still have no certified lowering.
+retained; the continuous-sweep enclosure is specified above. Straight ramps,
+rising arcs and low XY rapids still have no certified lowering. The helical
+Circle Pocket has its separate source-bound section audit above; the generic
+planar native-series audit below remains a straight-target, level-volume gate.
 `native_series_audit.audit_linear_native_series` (its historical API name)
 rechecks the
 source/candidate/post bytes, binds one source target and supplied cutting

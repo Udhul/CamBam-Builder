@@ -52,9 +52,11 @@ def _cut_polygon(cuts, depth, *, radial_error=0):
     seen = set()
     inflation = 1 / math.cos(math.pi / (4 * QUAD_SEGS))
     for cut in cuts:
-        if cut.bottom <= -depth:
+        section = cut.section_segment(depth)
+        if section is not None:
+            a, b = section
             key = (cut.tool.radius, cut.path_error_mm,
-                   min(cut.a, cut.b), max(cut.a, cut.b))
+                   min(a, b), max(a, b))
             if key in seen:
                 continue
             seen.add(key)
@@ -65,7 +67,7 @@ def _cut_polygon(cuts, depth, *, radial_error=0):
                 continue
             if radial_error > 0:
                 radius *= inflation
-            shapes.append(_line(cut.a, cut.b).buffer(radius, quad_segs=QUAD_SEGS))
+            shapes.append(_line(a, b).buffer(radius, quad_segs=QUAD_SEGS))
     return unary_union(shapes) if shapes else GeometryCollection()
 
 
@@ -83,6 +85,9 @@ def _areas(target, cuts, depth):
 
 def _volume(target, cuts):
     """Integrate the flat-cylinder section intervals between cut-tip levels."""
+    if any(cut.bottom_start is not None and
+           cut.tool.kind == "cylinder" for cut in cuts):
+        raise ValueError("helical volume needs bounded depth integration")
     levels = sorted({0.0, float(target.depth)} |
                     {-cut.bottom for cut in cuts if 0 < -cut.bottom < target.depth})
     lower = upper = 0.0

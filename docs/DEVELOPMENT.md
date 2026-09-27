@@ -1804,6 +1804,7 @@ controller runtime and physical holding are unassessed.
 
 ### Packet 2 helical Pocket native post preparation
 
+This post gate passed; the steps below preserve the exact reproduction path.
 The ignored [candidate](../output/packet2-helical-pocket-20260927-01/packet2-helical-pocket.cb)
 is the exact one-Pocket source described in the
 [packet 2 plan](REST_MACHINING_PLAN.md#2-native-pocket-with-helical-entry-and-generated-cleanup).
@@ -1834,7 +1835,34 @@ Z=-1/-2 depth evidence, safe return and M30, and a genuine Z-descending
 curved XY entry as specified in the packet 2 plan. The exact source hash is
 checked again before accepting the post. Do not infer helix or stock removal
 from the XML lead setting. Native decoding, dependent T2 cleanup and stock
-replay begin only after the post form has been observed.
+replay were gated on observing the post form.
+
+The user supplied the complete actual Default post and observed the spiral
+toolpath. The unchanged source/post are retained in the reusable
+[`tests/fixtures/helical_pocket/`](../tests/fixtures/helical_pocket/) corpus,
+with SHA-256 `f53d0221a0a841af9ccb0d2bc1af1607f8b5161535466a7cce7e0a59393f0e03`
+and `af2208d1019af5684d082dd62ce5f148b1a63667f71c151a720cfbcb88fb0978`.
+The local one-off [finish script](../output/packet2-helical-pocket-20260927-01/finish.py)
+verifies those exact bytes, builds one generated T2 ring cleanup, writes or
+re-audits the [UCCNC bundle](../output/packet2-helical-pocket-20260927-01/ordered-uccnc-01/handoff.json),
+and reports two section intervals and protected overcut. It never posts or
+edits the CamBam source. From the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_native_helix_pocket -q
+& .\.venv\Scripts\python.exe output/packet2-helical-pocket-20260927-01/finish.py
+```
+
+The regression uses the tracked actual pair and independently decodes both
+generated stage files, so a fresh checkout can reproduce the offline gate
+without the ignored local script. The script retains the ignored bundle; later invocations
+audit its existing bytes and fail if they changed. The section checks require
+native residual within 0.1 mm² of the analytic 72.2566 mm² allowance ring,
+interval widths under 0.05 mm², final residual upper below 1 mm², section
+gain over 70 mm² and protected overcut below 0.01 mm² at Z=-1 and -2. The
+inscribed 256-gon target loses only 0.04542 mm² versus the analytic Circle.
+Volume integration, tool-body occupancy through the helix and machine runtime
+are not certified by this route.
 
 ### Safe native G2/G3 hybrid evidence case
 
