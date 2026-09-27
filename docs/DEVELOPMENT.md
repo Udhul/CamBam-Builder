@@ -2982,32 +2982,39 @@ native records; use the fixed version baseline above. The
 [official holding-tab guide](https://www.cambam.info/doc/1.0/cam/holding-tabs.html)
 describes dragging, adding and removing tabs with the Profile selected.
 
-In CamBam Plus 1.0, keep drawing units in millimetres and select the **Default**
-postprocessor. Save each `.cb` in the seed directory with the names below and
-generate its matching `.nc` with Default. These posts are observation files only;
-do not run them on a machine. Regenerate the Profile toolpath after each edit,
-even if drag refresh is enabled. Keep the same Pline, Part, MOP and all scalar
-settings across the four saves.
+**Observed 2026-09-27:** the user opened the seed in CamBam Plus 1.0, saw four
+Automatic tabs and posted [its Default output](../output/manual-tabs-20260927-01/seed-automatic.nc).
+CamBam-saved [Manual Square](../output/manual-tabs-20260927-01/tabs-manually-placed-square.cb)
+and [Manual Triangle](../output/manual-tabs-20260927-01/tabs-manually-placed-triangle.cb)
+each contain four valid centered points and a matching Default post. Their
+native point encoding and posted tab lifts are recorded in the
+[review](REVIEW.md#manual-profile-tab-native-fixture---2026-09-27). The
+isolated move/add/remove sequence below remains the requested evidence for
+point editing and order.
 
-1. Open the seed, select `manual-tab-fixture`, generate its toolpath and confirm
-   four valid tab rectangles on straight edges, with no red-cross markers. Save
-   as `A-native-automatic.cb` and post `A-native-automatic.nc`.
-2. Drag **one** tab along its straight edge by roughly 8-12 mm, clear of
-   corners and other tabs. Confirm Tab Method becomes Manual and four tabs
-   remain. Save `B-moved.cb` and post `B-moved.nc`.
-3. With the Profile still selected, right-click an unused straight-edge point
+In CamBam Plus 1.0, keep drawing units in millimetres and select the **Default**
+postprocessor. Start from `tabs-manually-placed-square.cb`. Save each new `.cb`
+in the same folder and generate its matching `.nc` with Default. These posts
+are observation files only; do not run them on a machine. Regenerate the
+Profile toolpath after each edit, even if drag refresh is enabled. Keep the
+same Pline, Part, MOP and all scalar settings across the three saves.
+
+1. Drag **one** of the four tabs along its straight edge by roughly 8-12 mm,
+   clear of corners and other tabs. Confirm Tab Method stays Manual and four
+   tabs remain. Save `B-moved.cb` and post `B-moved.nc`.
+2. With the Profile still selected, right-click an unused straight-edge point
    clear of corners and choose **Holding Tabs > Add Tab**. Confirm five valid
    tabs. Save `C-added.cb` and post `C-added.nc`.
-4. Right-click the newly added tab and choose **Holding Tabs > Remove Tab**.
+3. Right-click the newly added tab and choose **Holding Tabs > Remove Tab**.
    Confirm four tabs in the B positions. Save `D-removed.cb` and post
    `D-removed.nc`.
 
-Pass requires all four files to reopen without repair; A must remain Automatic,
-B/C/D Manual; B moves only one tab, C adds one, and D removes that new tab.
+Pass requires all three files to reopen without repair and remain Manual; B
+moves only one tab, C adds one, and D removes that new tab.
 The posted toolpaths must show the corresponding changed tab-lift location or
 count on their bottom-depth passes: target depth `-3` mm and tab top `-2` mm.
-If the seed does not show four valid tabs, or CamBam cannot complete a step,
-stop at the first failing file and report the observed UI behavior. Return the
+If CamBam cannot complete a step, stop at the first failing file and report
+the observed UI behavior. Return the
 native `.cb` and `.nc` files, plus which edge was edited and whether each file
 reopened, showed the expected method/count and posted successfully. Engineering
 will then inspect XML deltas, point coordinates/order and posts before defining

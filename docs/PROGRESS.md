@@ -150,14 +150,18 @@ own the bound, exact hashes and setup. The accepted source and actual post
 are unchanged; no new CamBam observation is needed. Physical installation,
 stage-transition travel and controller runtime remain unassessed.
 
-**Next priority, backlog 7:** obtain one native CamBam Plus 1.0 before/after
-Manual Profile holding-tab fixture, then implement fresh authoring against its
-observed point collection and toolpath behavior. This is the next concrete
+**Next priority, backlog 7:** complete the native CamBam Plus 1.0
+Manual Profile holding-tab move/add/remove sequence, then implement fresh
+authoring against its observed point collection and toolpath behavior. This is
+the next concrete
 user-facing capability after the named linear and G3 hybrid occupancy gaps
-closed. The synthetic Automatic-tab [seed and exact native capture steps](DEVELOPMENT.md#manual-profile-holding-tab-native-fixture)
-are prepared; CamBam-created A/B/C/D `.cb` files and Default posts are pending.
-Its native encoding is still unknown, so the fixture is a prerequisite
-to implementation. Do not expand occupancy to non-box fixtures or select a
+closed. The user opened the [Automatic seed](DEVELOPMENT.md#manual-profile-holding-tab-native-fixture)
+and supplied Default posts plus native Manual Square/Triangle saves. Their
+four centered positions establish the `<Tabs>` record and the difference in
+posted lifts; the [review](REVIEW.md#manual-profile-tab-native-fixture---2026-09-27)
+owns the exact evidence. Isolated moved/added/removed saves and posts remain
+pending to establish point editing and order before full authoring closure.
+Do not expand occupancy to non-box fixtures or select a
 general surface backend without a named job that needs them; reopen for a
 curved/overhanging target, unsupported fixture or residual tolerance these
 bounded methods cannot meet. The [remaining backlog](#remaining-backlog-in-order)
@@ -1911,10 +1915,11 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    size threshold, the constrained lead-in flag and Square/Triangle/Skip style.
    Imported native Manual tabs remain inspectable and round-trip preserved, while
    fresh Manual authoring is rejected. The [fixture procedure](DEVELOPMENT.md#manual-profile-holding-tab-native-fixture)
-   starts from a prepared Automatic seed and requests native saves after moving,
-   adding and removing tabs, with matching Default posts. Capture and inspect
-   those files first; then model the observed point collection, coordinate frame,
-   identity/order behavior and toolpaths, and implement/test fresh direct-core and
+   now has Automatic, Manual Square and Manual Triangle outputs from CamBam
+   Plus 1.0. Native saves after one move, add and remove, with matching Default
+   posts, remain pending. Capture and inspect those files; then model the
+   observed point collection, coordinate frame, identity/order behavior and
+   toolpaths, and implement/test fresh direct-core and
    MCP authoring. Stop when the bounded native fixture round-trips and an authored
    equivalent reproduces its toolpaths; leave other Manual variants evidence-bound.
 8. **Future MOP semantic, native-export and framework/MCP parity audit.** Perform this

@@ -6782,3 +6782,48 @@ passed. The final actual explicit audit returned
 The original source/posted NC hashes were unchanged. No controller or machine
 acceptance was performed. Some files are staged by external work and have
 additional unstaged edits; no staging or commit was done in this round.
+
+## Manual Profile tab native fixture — 2026-09-27
+
+The user opened the [framework Automatic seed](../output/manual-tabs-20260927-01/seed-automatic.cb)
+in CamBam Plus 1.0, observed four Automatic tabs, and generated its
+[Default post](../output/manual-tabs-20260927-01/seed-automatic.nc). The tabs
+were evenly spaced around the perimeter but not centered on the four edges;
+that is the intended Automatic baseline, not a failed Manual request. The
+seed `.cb` and `.nc` SHA-256 values are respectively
+`0F5125664D0291277A4A6D27B74FB2A0185900A10E4B33FAEC1F8E1D948C30D4`
+and `D8D4CBB62AE31D5909480DAA9025DC1DB9EEEA34278659447E586E8C0218CF`.
+
+The user also supplied CamBam-saved
+[Manual Square](../output/manual-tabs-20260927-01/tabs-manually-placed-square.cb)
+and [Manual Triangle](../output/manual-tabs-20260927-01/tabs-manually-placed-triangle.cb)
+files with matching [Square](../output/manual-tabs-20260927-01/tabs-manually-placed-square.nc)
+and [Triangle](../output/manual-tabs-20260927-01/tabs-manually-placed-triangle.nc)
+Default posts. Their `.cb` SHA-256 values are
+`9F413B64711A7E43076EFF3E4B53A68D21DB90724DF5709B367DCB47E9351BF3`
+and `581452D34C81062CCE4B5A1FF3A14D4538FF2DD28081F3B3EB6E72FD52FBDB88`;
+the `.nc` values are
+`A48555802CC980E52AA0B7E460B2E8D889D471CC9E82D23560D96EE631B0C122`
+and `6ADCAA4B93ED5FF4D4315ECDD881C5AEF92467CF6193A004E0A507640ACB1BC9`.
+
+Both native Manual files contain `HoldingTabs/TabMethod=Manual` and a sibling
+`Tabs` collection of four `HoldingTab` records. Every record has
+`ParentEntityID=1` and `NormalInverted=false`. Their `ParametricPoint`
+values are `1/6`, `5/12`, `2/3`, `11/12`; multiplying by the 180 mm source
+perimeter maps them to `(40,10)`, `(70,25)`, `(40,40)`, `(10,25)` mm. Their
+normals are respectively `(0,-1)`, `(1,0)`, `(0,1)`, `(-1,0)`, outward from
+this counterclockwise contour. This establishes the coordinate interpretation
+for this one straight, closed Pline, not for transformed, curved, reversed or
+multi-target Profiles. The Square and Triangle collections are identical;
+their style differs. The final-depth Square post has four rapid lifts to
+`Z=-2` over 9 mm compensated gaps, while Triangle uses feed ramps to the
+same top height at the same four locations. Both return to `Z=-3`.
+
+The existing framework reader/writer reopened each actual native Manual
+`.cb` and saved it under a separate ignored `-roundtrip.cb` name. XML comparison
+found its `HoldingTabs` and `Tabs` subtrees unchanged in both outputs. This is
+preservation evidence only; fresh authoring is still rejected. The two files
+share the same point list, so they do not establish how one move, insertion or
+deletion affects point order or identity. The [runbook](DEVELOPMENT.md#manual-profile-holding-tab-native-fixture)
+requests isolated B/C/D saves and posts from the Square file before that
+authoring/editing contract is closed.
