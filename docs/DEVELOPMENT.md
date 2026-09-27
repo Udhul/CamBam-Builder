@@ -1804,7 +1804,7 @@ controller runtime and physical holding are unassessed.
 
 ### Packet 2 helical Pocket native post preparation
 
-This post gate passed; the steps below preserve the exact reproduction path.
+This post gate passed; the steps below describe the local source/post workflow.
 The ignored [candidate](../output/packet2-helical-pocket-20260927-01/packet2-helical-pocket.cb)
 is the exact one-Pocket source described in the
 [packet 2 plan](REST_MACHINING_PLAN.md#2-native-pocket-with-helical-entry-and-generated-cleanup).
@@ -1838,9 +1838,9 @@ from the XML lead setting. Native decoding, dependent T2 cleanup and stock
 replay were gated on observing the post form.
 
 The user supplied the complete actual Default post and observed the spiral
-toolpath. The unchanged source/post are retained in the reusable
-[`tests/fixtures/helical_pocket/`](../tests/fixtures/helical_pocket/) corpus,
-with SHA-256 `f53d0221a0a841af9ccb0d2bc1af1607f8b5161535466a7cce7e0a59393f0e03`
+toolpath. The unchanged source/post remain only in the ignored local
+`output/packet2-helical-pocket-20260927-01/` directory, with SHA-256
+`f53d0221a0a841af9ccb0d2bc1af1607f8b5161535466a7cce7e0a59393f0e03`
 and `af2208d1019af5684d082dd62ce5f148b1a63667f71c151a720cfbcb88fb0978`.
 The local one-off [finish script](../output/packet2-helical-pocket-20260927-01/finish.py)
 verifies those exact bytes, builds one generated T2 ring cleanup, writes or
@@ -1849,14 +1849,16 @@ and reports two section intervals and protected overcut. It never posts or
 edits the CamBam source. From the repository root:
 
 ```powershell
-& .\.venv\Scripts\python.exe -m unittest tests.test_native_helix_pocket -q
+& .\.venv\Scripts\python.exe -m unittest tests.test_native_arc_replay tests.test_native_series -q
 & .\.venv\Scripts\python.exe output/packet2-helical-pocket-20260927-01/finish.py
 ```
 
-The regression uses the tracked actual pair and independently decodes both
-generated stage files, so a fresh checkout can reproduce the offline gate
-without the ignored local script. The script retains the ignored bundle; later invocations
-audit its existing bytes and fail if they changed. The section checks require
+The tracked tests generate synthetic helix inputs for the reusable parser and
+section-replay behavior. The local script requires the exact session source/post;
+it independently decodes both generated stage files and retains the ignored
+bundle. Later invocations audit its existing bytes and fail if they changed.
+A fresh checkout can run the generic tests, while exact post acceptance requires
+the original source/post bytes or a new user post. The section checks require
 native residual within 0.1 mm² of the analytic 72.2566 mm² allowance ring,
 interval widths under 0.05 mm², final residual upper below 1 mm², section
 gain over 70 mm² and protected overcut below 0.01 mm² at Z=-1 and -2. The
@@ -2222,11 +2224,26 @@ only under `output/mop-core-validation-1roowlbtpza/`, refuses a source/output
 collision, and checks C versus D semantically. Production toolpaths remain
 outside the automated evidence.
 
-Keep reusable synthetic fixtures and expected results with authored tests.
-Use a unique task directory under ignored `output/` for disposable diagnostics,
-generated XML and verbose logs; do not overwrite previous runs. Durable evidence
-must include reproduction inputs/steps and commands in the review or tests so a
-fresh checkout can reproduce it without ignored files. Local logs are supplementary.
+Keep reusable synthetic cases and expected results in authored tests; generate
+their `.cb`/`.nc` inputs at test time. Put all session inputs and results, including
+user posts, generated XML, exact copies, one-off scripts, bundles and verbose logs,
+in a unique task directory under ignored `output/`; do not overwrite previous
+runs or place them in tracked folders. Versioned `.cb`/`.nc` bytes require explicit
+user authorization under [AGENTS.md](../AGENTS.md). Record parameters, hashes,
+observations, numeric findings, acceptance limits and reopening criteria in the
+tracked review/contract owner. A fresh checkout must understand the conclusion
+without ignored files; replay of an actual user post requires its original bytes
+or a new post. The root `.gitignore` blocks ordinary adds of new `.cb`/`.nc`
+files, while previously tracked byte fixtures remain tracked until separately
+reviewed. Before handoff, inspect `git status --short` and check for any ignored
+`.cb`/`.nc` files accidentally left under `tests/` or `demos/`:
+
+```powershell
+git ls-files --others --ignored --exclude-standard -- tests/ demos/ |
+    Select-String '\.(cb|nc)$'
+```
+
+Local logs are supplementary.
 Remove only temporary artifacts created by that task when authorized; never infer
 that an ignored directory is safe to clear. Inspect each exit status separately:
 PowerShell can continue after a native command fails.

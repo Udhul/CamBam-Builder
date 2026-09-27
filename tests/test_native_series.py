@@ -228,6 +228,30 @@ M30
             with self.assertRaisesRegex(ValueError, "low XY rapid"):
                 series.to_trace(*args)
 
+    def test_lowering_accepts_descending_posted_helix(self):
+        with tempfile.TemporaryDirectory() as folder:
+            candidate, post = self.make_case(Path(folder))
+            text = POST.replace("G1 F60 Z-1\nG1 F240 X7",
+                                "G1 F60 Z0\nG2 F240 X7 Y5 Z-1 I1 J0", 1)
+            text = text.replace("G1 F60 Z5\nM5\nT2",
+                                "G1 F240 X5 Y5\nG1 F60 Z5\nM5\nT2", 1)
+            post.write_text(text, encoding="utf-8")
+            series = normalize_native_series(candidate, candidate, post,
+                                             initial_position=(5, 5, 5))
+            target = replay.Target("opening", (0, 0, 10, 10), 1)
+            trace = series.to_trace(
+                {"FIRST": target, "SECOND": target},
+                {"T1": 2, "T2": 2},
+                {"FIRST": "virgin", "SECOND": "cleared"},
+            )
+            helices = [item for item in trace.items
+                       if type(item) is replay.ArcMotion and
+                       item.end[2] < item.start[2]]
+            self.assertEqual(len(helices), 1)
+            stock = replay.replay(trace,
+                                  expected_source=series.evidence_fingerprint)
+            self.assertTrue(stock.removed_contains(7, 5, 0.5))
+
     def test_arc_replay_rejects_protected_sweep_and_rising_arc(self):
         with tempfile.TemporaryDirectory() as folder:
             candidate, post = self.make_case(Path(folder))

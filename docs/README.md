@@ -32,8 +32,10 @@ Runtime module ownership and data flow live in
   existing contents without authorization. In particular, `output/` must never own
   durable project documentation, history, audit results, contracts or backlog state;
   record those in the tracked topic owner under `docs/` (or reusable tests/source)
-  even when ignored artifacts provide supporting evidence. User input files are
-  private data.
+  even when ignored artifacts provide supporting evidence. Session `.cb`/`.nc`
+  inputs and posts stay under ignored `output/`, including exact validation copies;
+  tracked tests generate synthetic inputs at run time. User input files are private
+  data.
 
 No issue tracker, CI configuration, pre-existing decision log or dedicated test suite
 was found during initial discovery. This documentation now provides a review record.

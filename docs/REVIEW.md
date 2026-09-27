@@ -7034,8 +7034,8 @@ setting does not establish native motion.
 The user opened the prepared Circle Pocket in CamBam Plus 1.0, saw the
 toolpath circles lift between increments with a spiral lead, and supplied the
 complete [Default post](../output/packet2-helical-pocket-20260927-01/packet2-helical-pocket.nc).
-The unchanged source/post pair is retained as a reusable
-[regression fixture](../tests/fixtures/helical_pocket/). Their SHA-256 values
+The unchanged source/post pair remains only in the ignored local
+`output/packet2-helical-pocket-20260927-01/` directory. Their SHA-256 values
 are respectively `f53d0221a0a841af9ccb0d2bc1af1607f8b5161535466a7cce7e0a59393f0e03`
 and `af2208d1019af5684d082dd62ce5f148b1a63667f71c151a720cfbcb88fb0978`.
 Strict normalization found the matching candidate title, Default and
@@ -7071,14 +7071,16 @@ Both sections pass native-versus-analytic deviation below 0.1 mm²,
 interval width below 0.05 mm², final upper residual below 1 mm²,
 residual gain above 70 mm² and protected overcut upper below 0.01 mm².
 The result is conditional on the fixed stock top/datum, declared T1/T2
-cutting length and GEOS swept-section arithmetic. The regression rejects a
-changed source, unsupported G18 post, forged T2 feed and edited stage bytes.
-The synthetic helix section check confirms shallow/deep clipping and rejects
-rising arcs and unbounded helix volume integration. No controller runtime,
+cutting length and GEOS swept-section arithmetic. The packet-specific local
+check rejected a changed source, unsupported G18 post, forged T2 feed and
+edited stage bytes. Tracked synthetic tests cover descending-arc lowering,
+section clipping, rising arcs and unbounded helix volume integration. The
+exact post acceptance can be rerun only while the original local source/post
+bytes are available, or after a new user post. No controller runtime,
 physical cut, tool-body/fixture occupancy or general Pocket strategy is
 certified; the next named job is packet 3.
 
-Verification from the repository root: `python -m unittest` with
+Verification at the original gate from the repository root: `python -m unittest` with
 `tests.test_native_helix_pocket`, `tests.test_native_series`,
 `tests.test_native_series_audit`, `tests.test_native_arc_replay`,
 `tests.test_native_v_hybrid`, `tests.test_ordered_job`,
@@ -7089,8 +7091,23 @@ After the final cylinder-section guard edit, the four focused helix/native
 modules passed 17 tests; the local `finish.py` re-audited the existing bundle
 and returned `ordered_output_pass` with unchanged hashes and section values.
 `python -m compileall -q cambam_builder tests/test_native_helix_pocket.py`
-and `git diff --check` passed. The new test text was inspected separately
-because the working diff check excludes untracked files. The packet stops at
+and `git diff --check` passed at that gate. The original packet test was later
+retired because it depended on untracked `.cb`/`.nc` files under `tests/`;
+the exact copies in that directory were removed. The session-only files and
+the durable numeric evidence above remain in their respective owners.
+After this correction, the two self-contained native arc/series modules passed
+13 tests. The ignored `finish.py` re-audited the unchanged source, post and
+bundle: `ordered_output_pass`, ten descending G2 moves, 67/9 stage moves,
+4004/4745 cumulative cut chords and the same two residual/overcut intervals.
+Full `python -m unittest discover -s tests -q` passed 505 tests with one skip.
+`compileall` and `git diff --check` passed; an ignored-file audit found no
+untracked `.cb`/`.nc` files under `tests/` or `demos/`. The root `.gitignore`
+now guards new `.cb`/`.nc` files from ordinary Git adds. Thirteen older byte
+fixtures remain tracked in the optimizer and RC01 corpora; this correction
+does not change those existing test contracts. Review that older set only if
+the project chooses to retire all versioned byte fixtures, with replacement
+tests and evidence prepared first.
+The packet stops at
 this observed entry form and dependent cleanup. Reopen it for a different
 posted interpolation, a Circle size or target outside the pinned fixture,
 helical volume, body/fixture clearance or actual controller/physical evidence.

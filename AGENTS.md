@@ -84,14 +84,28 @@
   decision, relevant evidence and recommended option. Do not leave preparation
   for the user to request. Record their reported acceptance and its scope; do not
   repeat accepted checks unless a relevant change invalidates the evidence.
-- Keep one-off validation files, generators and verbose logs in a unique ignored
-  `output/<task>-<unique>/` directory; run scripts from the repository root with
-  the declared interpreter. Retain fixtures/generators in the git tree only when
-  reusable regressions or repeatable acceptance justify maintenance. Keep durable
-  criteria/results in their documentation owner, not a second status file. Preserve
-  pending validation artifacts until the user finishes. After acceptance, remove
-  or archive only task-owned temporary files within existing cleanup authorization;
-  never sweep `output/` or remove user-modified inputs. Verify absolute paths before
-  moving/deleting, and update links/commands when retiring a tracked helper.
+- Put session inputs and results in a unique ignored `output/<task>-<unique>/`
+  directory, including generated or user-supplied `.cb`/`.nc` files, exact copies,
+  posts, bundles, one-off generators, validators and logs. Never place these files
+  in `tests/`, `demos/` or another tracked directory even temporarily. Do not add
+  `.cb`/`.nc` files to the branch by default; a specific versioned byte fixture
+  requires explicit user authorization after its reusable value and maintenance
+  cost are established. Tracked tests should use self-contained synthetic inputs
+  generated at test time when they protect a reusable behavior. Run local scripts
+  from the repository root with the declared interpreter.
+- Keep durable parameters, input hashes, observations, numeric results, limits,
+  acceptance scope and reopening criteria in their documentation owner. Local
+  `output/` links may aid the current session, but the documented conclusion must
+  remain understandable when those files are unavailable in a fresh checkout.
+  Before handoff, inspect `git status --short`, untracked candidates and ignored
+  `.cb`/`.nc` files outside `output/`; remove accidental tracked-folder copies
+  and dependencies on ignored session files. The root `.gitignore` protects new
+  `.cb`/`.nc` files from ordinary Git adds; already tracked historical fixtures
+  require a separate deliberate review.
+  Preserve pending validation artifacts until the user finishes. After acceptance,
+  remove or archive only task-owned temporary files within existing cleanup
+  authorization; never sweep `output/` or remove user-modified inputs. Verify
+  absolute paths before moving/deleting, and update links/commands when retiring
+  a tracked helper.
 - Do not stage, unstage, commit, publish or destructively clean up without explicit
   authorization. Keep verbose logs and disposable results local.
