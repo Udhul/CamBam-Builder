@@ -1764,6 +1764,34 @@ source/post rejection, forged RPM and mismatched V source rejection. The
 [review evidence](REVIEW.md#native-posted-predecessor-and-generated-v-cleanup---2026-09-26)
 records the actual-post hashes and acceptance scope.
 
+### Manual-tab cutout and interior V evidence
+
+Packet 1 reuses the accepted
+[B and C Manual sources and actual Default posts](../output/manual-tabs-20260927-01/)
+unchanged. The source's 80 x 50 x 3 mm Part stock contains a 60 x 30 mm
+Outside Profile. The generated T3 path cuts one 0.5 mm deep straight interior
+groove before the T1 Profile. The one-off script creates or re-audits the
+[B](../output/tabbed-cutout-20260927-04/B/handoff.json) and
+[C](../output/tabbed-cutout-20260927-04/C/handoff.json) offline bundles:
+
+```powershell
+& .\.venv\Scripts\python.exe output/tabbed-cutout-20260927-04/verify.py
+& .\.venv\Scripts\python.exe -m unittest tests.test_tabbed_cutout -v
+```
+
+Expect `B pass` with four bridges and `C pass` with five, each having 6 mm
+minimum ideal centerline stock width and `retained_part_connected=True`.
+Both reports list all decoded generated entry/link/retract moves, 46/50
+posted native moves, section stock remaining after each stage at depths
+0.25/2.5 mm, and pinned source/post/program hashes. Re-audit reads the final
+generated NC and original native files anew. A source/post/program edit or
+stage reorder invalidates the old handoff. A freshly generated reversed
+order is a separate, independently checked offline result; it does not
+rewrite the accepted forward-order bundle. No new CamBam post adds evidence
+because these exact B/C sources and posts already passed the native gate.
+The T3 split file assumes operator installation and initial positioning;
+controller runtime and physical holding are unassessed.
+
 ### Safe native G2/G3 hybrid evidence case
 
 The ignored [source](../output/native-arc-hybrid-20260926-01/source.cb) is the

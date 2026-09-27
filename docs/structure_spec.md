@@ -471,6 +471,54 @@ named extensions. The [ordered-job packet](REST_MACHINING_PLAN.md#next-implement
 and [verification](REVIEW.md#reusable-ordered-jobs-and-verification---2026-09-26)
 record the acceptance scope.
 
+### Bounded Manual-tab cutout with interior V operation
+
+`integrations.cambam.tabbed_cutout` binds one accepted 60 x 30 mm straight
+Pline Outside Profile, its 80 x 50 x 3 mm Part stock, 6 mm wide/1 mm high
+Manual Square tabs and the complete actual CamBam Default post. The B and C
+fixtures have four and
+five source tab records. The native series parser checks the source/post
+identity and every G0/G1/G3 motion; `cam_core.replay` checks the 3 mm
+cylindrical tool's access and all cut sweeps. CamBam's tab traversal is a
+vertical G0 lift to Z=-2, a 9 mm XY G1 feed across previously cleared stock,
+then a G1 descent to Z=-3. The feed traversal is retained as posted motion;
+no missing bottom-depth cut is inferred from the XML alone.
+
+The generated operation is one 60-degree pointed V path from (25,25) to
+(55,25) at Z=-0.5, bounded by a 30.6 x 0.6 mm straight groove
+`v_region.VTarget`. `v_region.verify` checks the complete cutter envelope.
+A split UCCNC T3 file
+includes a high XY approach, entry, cut, retract and high return. The
+independent decoder checks all five moves against the resolved job, and the
+decoded path is reverified. The original T1 Default post remains the final
+cutout file; this adapter records an offline stage order and operator tool
+installation/positioning assumption, not an executable combined program.
+The Default post does not encode its pre-start XY; this fixture declares the
+initial T1/T3 program-frame tip at (0,0,+5) mm.
+
+At Z=-0.25 and Z=-2.5, both stages' swept removal is replayed on the same
+80 x 50 mm stock section in declared order. The shallow V operation removes
+no stock at the deeper section. The native Profile's enlarged buffer cover
+bounds possible protected-part overlap by 0.2 mm2, including numerical
+enclosure at a nominally tangent boundary. Its swept removal must remain
+disjoint from the interior V sweep. At Z=-2.5, source tab positions
+must match exactly four or five posted 9 mm raised traversals. An 8 mm radial
+cross-section through each gap remains stock, and the central part and outer
+stock must lie in one connected component. The ideal 3 mm tool and 9 mm
+centerline gap leave 6 mm at each bridge centerline. These are conditional
+GEOS section and connectivity checks for the bounded flat fixture, not a
+physical holding-strength estimate.
+
+The versioned handoff binds source/post/program hashes, decoded native and V
+motion, stage order and per-section stock prefixes. Changed bytes or a changed
+order invalidate its certificate; a reverse order needs a fresh generated
+file and replay. This case-specific verifier covers V before Profile, which
+the generic `ordered_job` stock evaluator still reports as unsupported.
+Arbitrary contours, tab shapes, fixtures, stage-transition travel and
+controller or machine behavior require separate evidence. See the
+[runbook](DEVELOPMENT.md#manual-tab-cutout-and-interior-v-evidence) and
+[accepted result](REVIEW.md#manual-tab-cutout-and-interior-v-evidence---2026-09-27).
+
 ### Bounded layered 3D stock and waterline evidence
 
 `cam_core.volume3d` represents rectangular initial stock from Z=0 downward,

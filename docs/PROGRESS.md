@@ -160,14 +160,26 @@ and [review](REVIEW.md#fresh-writer-cambam-default-post-acceptance---2026-09-27)
 own exact files, hashes and the narrow contour/post bound. No further fixture
 or UI report is needed for this accepted slice.
 
-**Next priority, backlog 6 packet 1:** implement the tabbed cutout with one
-generated interior operation using the already accepted Manual B/C sources
-and actual posts. Prove the four/five retained bridges, source-bound ordered
-stock replay and rejection of invalidated or unsafe stage evidence. No new
-CamBam post is needed for unchanged B/C inputs. The user selected the
-[five ordered job packets](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27)
-for successive fresh sessions. Complete and record each packet's bounded
-acceptance before promoting the next; do not repeat this priority choice.
+**Accepted offline, backlog 6 packet 1:** the unchanged actual B/C Manual
+Profile posts and one generated interior V operation now form source-bound
+ordered cutout jobs. Complete native and generated motion replays leave four
+or five 6 mm ideal centerline bridges; the 60 x 30 mm part remains connected
+to outer stock at the bottom section. Source/post/program edits and stale
+stage order reject; a freshly replayed reverse order has a separate
+certificate. The [contract](structure_spec.md#bounded-manual-tab-cutout-with-interior-v-operation),
+[runbook](DEVELOPMENT.md#manual-tab-cutout-and-interior-v-evidence) and
+[dated evidence](REVIEW.md#manual-tab-cutout-and-interior-v-evidence---2026-09-27)
+record the fixture, numerical bounds, hashes and limits. The prior actual
+CamBam posts meet the external gate; no new post or user validation is needed.
+Physical holding and controller runtime remain unassessed.
+
+**Next priority, backlog 6 packet 2:** obtain and inspect one actual CamBam
+Plus 1.0 Pocket post with a genuine helical entry, then add the observed
+interpolation form to native decoding and ordered stock/access replay before
+generated cleanup. Prepare the bounded `.cb` and exact post criteria first;
+keep packet 2 open if no real helix post can be obtained. The user already
+selected the [five ordered job packets](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27)
+in priority order; do not repeat that choice.
 
 Do not expand occupancy to non-box fixtures or select a
 general surface backend without a named job that needs them; reopen for a
@@ -1793,8 +1805,8 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 
    | Packet | Status | Bounded outcome |
    | --- | --- | --- |
-   | [1](REST_MACHINING_PLAN.md#1-tabbed-cutout-with-an-interior-operation) | **Next session** | Tabbed cutout plus generated interior operation; retained-bridge and ordered-stock evidence. |
-   | [2](REST_MACHINING_PLAN.md#2-native-pocket-with-helical-entry-and-generated-cleanup) | Queued | Native Pocket helical entry plus generated cleanup; actual post and decoded stock evidence. |
+   | [1](REST_MACHINING_PLAN.md#1-tabbed-cutout-with-an-interior-operation) | **Accepted offline 2026-09-27** | B/C actual posts, generated V groove, four/five retained bridges and source-bound ordered stock evidence. |
+   | [2](REST_MACHINING_PLAN.md#2-native-pocket-with-helical-entry-and-generated-cleanup) | **Next session** | Native Pocket helical entry plus generated cleanup; actual post and decoded stock evidence. |
    | [3](REST_MACHINING_PLAN.md#3-curved-3d-ball-cutter-finish-and-rest) | Queued | Analytic curved 3D ball-cutter finish and dependent rest. |
    | [4](REST_MACHINING_PLAN.md#4-paired-v-carve-inlay) | Queued | Paired tapered V-carve inlay with declared clearance and assembly checks. |
    | [5](REST_MACHINING_PLAN.md#5-direct-controller-program-for-a-fully-generated-job) | Queued | Fully generated RC01 job through a bounded controller profile, reusing existing UCCNC/Grbl output. |
