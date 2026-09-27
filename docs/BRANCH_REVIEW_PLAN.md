@@ -70,6 +70,72 @@ semantics in [REST_MACHINING_PLAN](REST_MACHINING_PLAN.md), procedures in
 For unfamiliar external algorithms or controller semantics, verify against primary
 documentation and record version/relevance. Analogy is not compatibility proof.
 
+## Test adequacy across all five sessions
+
+The review must answer: **would these tests detect a plausible implementation
+that violates intended behavior, or do they merely preserve today's output?**
+Passing tests establish only what their inputs, oracles and assertions can detect.
+Review existing tests and identify missing tests alongside each capability; do not
+defer this judgment to the final full-suite run. Include unchanged tests where a
+changed contract depends on them. Test counts and line/branch coverage are discovery
+tools, not acceptance criteria for behavioral correctness.
+
+Maintain a behavior-to-test matrix in REVIEW alongside the coverage ledger. Each
+row records the intended behavior and authoritative source, owning API/capability,
+valid domain and boundary partitions, forbidden outcome, existing test IDs and
+assertions, oracle provenance/independence, missing cases, plausible defect the
+test should detect, and adequacy disposition. Live repairs/priorities stay in
+PROGRESS. Derive expectations from product intent, accepted contracts, mathematical
+invariants or independently observed native behavior before comparing code output.
+If sources conflict, resolve the contract explicitly; current behavior is not its
+own specification. Separate characterization of existing behavior from correctness
+and compatibility tests, and identify intentional compatibility requirements.
+
+| Review dimension | Required evidence |
+| --- | --- |
+| Core and native contracts | Direct tests of geometry/math/topology, stock, transforms, identity and interchange, including supported-domain boundaries and unsupported-input diagnostics. Higher-level happy paths cannot replace these invariants. |
+| Extended capabilities | Observable target fidelity, residual/coverage, feasible tool selection, primary V behavior, rest overlap/smoothing and partial/infeasible outcomes. Check results rather than private call sequences or incidental path ordering unless order is contractual. |
+| Outliers and degeneracy | Nominal, just-inside/on/just-outside limits, empty and disconnected geometry, thin features, numerical extremes and malformed/non-finite inputs where relevant. Include both valid unusual inputs and invalid ones. |
+| Combinations and state | Native/generated stages, tool profiles, stock/predecessors, order/repetition, units/frames, topology, output dialects and backend availability. Select interactions by failure mechanisms, use pairwise coverage where useful, and add higher-order cases for coupled hazards; explain omitted combinations. |
+| End-to-end and isolation | Public calls through actual serialization/decoding/replay, plus focused owner tests; deterministic generated fixtures, fresh state, no dependency on test order, hidden local artifacts or mock acceptance. |
+
+Audit expected-value construction and assertion strength. Look for production
+helpers reused to compute expected answers, writer/reader errors that cancel in a
+round trip, generator and verifier sharing the same faulty assumption, and golden
+outputs copied from an unvalidated run. Independent analytic references, separately
+derived invariants and source-bound native observations can provide stronger
+oracles; each still needs a stated domain. A snapshot is useful for a justified
+byte-compatibility contract, but is not by itself a machining-correctness oracle.
+
+Challenge weak assertions (nonempty output, no exception, success flags, broad
+exception catches, only total area when topology matters), tolerances broad enough
+to hide defects, missing lower/upper bounds, vacuous loops, skips/expected failures,
+over-mocking and tests that never reach their intended rejection condition. Verify
+negative tests fail for the intended cause and leave state unchanged where required;
+pair them with a nearby valid case to detect implementations that reject everything.
+Never loosen a tolerance or regenerate a golden result solely to make code pass;
+require an independent error budget or an explicitly corrected contract.
+
+For high-consequence invariants and suspected weak tests, demonstrate sensitivity
+with a bounded counterexample or controlled fault injection: wrong sign/units,
+dropped hole, omitted predecessor, bypassed freshness/clearance check, changed arc
+direction or rounding intrusion, as applicable. Record which assertion detects it.
+An existing negative case counts only if it exercises that defect. Where injection
+adds evidence, use isolated task-owned copies under `output/`; do not mutate the
+working source concurrently or introduce a mutation-testing dependency by default.
+Surviving faults require a stronger test or an explained equivalent/unreachable
+case. Add deterministic regression tests for demonstrated reusable gaps, showing
+failure on the defective behavior and success after repair where feasible.
+
+**Adequacy gate:** classify each reviewed behavior as adequately controlled,
+partially controlled, untested or asserted against a disputed expectation, with
+specific evidence. Required claims with inadequate evidence remain open even when
+the full suite is green. Address material gaps during the owning session; defer
+only with a justified scope/claim limit and reopening criterion. The final review
+must say which behaviors the suite protects, what it could still miss, and which
+tests were added, strengthened or retired and why. Do not imply exhaustive coverage
+of every input or composition.
+
 ## Session 1: Capability boundaries and public API contracts
 
 **Outcome:** an evidence-backed capability/dependency map, complete diff coverage
@@ -111,6 +177,8 @@ diff paths allocated; boundary defects reproduced or explicitly unresolved;
 architecture docs corrected. Use focused boundary, migration, round-trip and
 relevant MCP checks for repairs. This defines what sessions 2-4 will challenge;
 it does not certify algorithms.
+Establish the behavior-to-test matrix and required test layers from the capability
+map, including contract sources and combinations to audit in sessions 2-4.
 
 **Next session task:** audit geometry, topology, stock mathematics and numerical
 guarantees against the session 1 contracts.
@@ -158,6 +226,8 @@ disposition; counterexamples have regression coverage; reusable gaps have concre
 consumers/owners. Run focused planar, stock, replay, surface/volume and occupancy
 suites as applicable. A missing formal proof is not automatically a defect when
 the exposed contract accurately bounds what is established.
+Audit mathematical test oracles and assertion sensitivity, including topology,
+boundary partitions and numerical tolerances, and update the test matrix.
 
 **Next session task:** evaluate strategies, primary V-carving, tool selection and
 rest smoothing using the audited primitives and limits.
@@ -199,6 +269,8 @@ non-default supported variations check composability and independent material
 results; counterexamples reject or repairs pass focused suites. Prioritize gaps
 in the existing backlog with reopening criteria. Do not create another job packet
 merely to increase example count.
+Assess strategy tests across capabilities, outliers and meaningful compositions;
+require target/stock assertions independent of the selected recipe's own output.
 
 **Next session task:** test execution adapters, state/evidence invalidation and
 foreseeable API misuse against the audited machining contracts.
@@ -240,6 +312,8 @@ occupancy and affected MCP suites. For necessary external evidence, first prepar
 and inspect synthetic artifacts and precise pass/fail steps under
 [acceptance ownership](WORKFLOW.md#acceptance-ownership). Do not repeat unchanged
 accepted posts or request a general machining trial for offline closure.
+Demonstrate that safety/freshness tests detect plausible wrong behavior, with
+nearby valid cases and independently decoded end-to-end checks where applicable.
 
 **Next session task:** resolve delivery findings, reconcile complete diff coverage
 and run final branch/package gates against `main`.
@@ -263,6 +337,10 @@ Use clean wheel/sdist installs and imports/tests outside the checkout as the
 runbook prescribes. Record interpreter/dependency versions, test/skip counts,
 commands, artifact inspection and unavailable gates. Earlier package tests do not
 prove this branch's new modules install/run. Skips cannot replace required evidence.
+
+Reconcile the behavior-to-test matrix as well as file coverage. Resolve material
+oracle/coverage gaps; explicitly report residual blind spots and why deferred cases
+do not undermine the delivered claims. A green suite alone cannot close this gate.
 
 Summarize findings by consequence, verified repairs, remaining limits and capability
 gaps. Give an explicit judgment on native/extended separation, API usability,

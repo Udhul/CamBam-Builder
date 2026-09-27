@@ -7396,3 +7396,30 @@ and final branch gates remain pending. Suggested commit: `docs: plan five-sessio
 rest/V engineering and delivery review`. A fresh session is recommended for
 session 1 because the mandate, acceptance rules and progression are now durable;
 no unanswered product decision or pending external result blocks that start.
+
+### Test adequacy mandate added - 2026-09-27
+
+The user's follow-up requires evaluating whether tests establish intended behavior
+or merely encode the implementation's existing output. The review plan now makes
+test adequacy a gate in all five sessions, with a behavior-to-test matrix derived
+from authoritative contracts, independent oracle checks, assertion/tolerance review,
+core and extended capability coverage, outliers and risk-selected combinations.
+Critical tests must demonstrate sensitivity to plausible faults; nearby valid cases
+also guard against implementations that reject everything. Characterization and
+byte-compatibility tests retain their legitimate roles without being mistaken for
+independent correctness evidence. Missing material evidence stays open despite a
+green suite. No tests or algorithms were evaluated in this documentation amendment.
+
+Session 1 remains next, now including the initial behavior-to-test matrix. No
+runtime change or new user observation is required. This amendment does not inherit
+or establish branch merge-readiness after the preceding planning commit.
+
+Validation: `git diff --check` passed; the three-document diff was inspected.
+A deterministic check via `.venv/Scripts/python.exe -` verified the new local
+heading link with zero errors; its result is retained in
+`output/branch-review-test-plan-20260927-01/validation.json`. No ignored CAM paths
+outside `output/` were enumerated, with the same unreadable `.pytest_cache/`
+discovery limit. No behavioral tests were run for this documentation-only change.
+The amendment is ready to commit. Suggested commit: `docs: require behavioral
+test adequacy throughout branch review`. A fresh session remains appropriate for
+session 1; the full mandate is persisted and no external input is pending.

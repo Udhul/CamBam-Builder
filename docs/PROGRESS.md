@@ -242,6 +242,13 @@ rest/tool-bundle strategies and conditional smoothing, mathematical assumptions,
 API relationships and misuse hazards before final delivery. Planning is complete;
 substantive review and branch acceptance are pending.
 
+**Test adequacy is required in every session:** map intended behavior to tests,
+audit independent oracles and assertion strength, and identify missing core,
+extended, boundary/outlier and combination coverage. Demonstrate that critical
+tests detect plausible defects rather than simply reproduce current output. The
+[test-adequacy gate](BRANCH_REVIEW_PLAN.md#test-adequacy-across-all-five-sessions)
+must close alongside final branch gates; a green suite alone is insufficient.
+
 | Session | Outcome and execution packet | State |
 | --- | --- | --- |
 | 1 | [Capability boundaries and public API contracts](BRANCH_REVIEW_PLAN.md#session-1-capability-boundaries-and-public-api-contracts) | Next: allocate the complete diff and establish evidence-backed capability/API ownership |
