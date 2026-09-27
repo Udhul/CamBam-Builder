@@ -1,8 +1,8 @@
-"""Bounded planar-slope stock and ball-end motion evidence.
+"""Bounded analytic height-field stock and ball-end motion evidence.
 
-The exact plane supplies contact and protected-material tests. XY cells bound
-remaining volume for decoded straight XYZ ball-center sweeps. No mesh, holder
-shape, or material outside the declared rectangular stock is represented.
+Exact affine or spherical-bowl surfaces supply contact and protected-material
+tests. XY cells bound remaining volume for decoded straight XYZ ball-center
+sweeps. No mesh or material outside the declared rectangular stock is represented.
 """
 
 from dataclasses import dataclass
@@ -13,8 +13,10 @@ import tracemalloc
 
 
 VERSION = "sloped-ball-v1"
+BOWL_VERSION = "spherical-bowl-ball-v1"
 ACCESS_MATCH_TOLERANCE_MM = 0.00006  # decoded G-code coordinates use 4 decimals
 PLANE_TOLERANCE_MM = 0.0
+BOWL_TOLERANCE_MM = 0.0
 
 
 def _number(value):
@@ -62,6 +64,64 @@ class SlopedTarget:
 
 
 @dataclass(frozen=True)
+class SphericalBowlTarget:
+    """Spherical-cap recess with a protected flat rim inside rectangular stock."""
+
+    stock_xy: tuple
+    stock_depth_mm: float
+    center_xy: tuple
+    rim_radius_mm: float
+    depth_mm: float
+
+    def __post_init__(self):
+        v = self.stock_xy
+        c = self.center_xy
+        if (type(v) is not tuple or len(v) != 4 or
+                not all(_number(n) for n in v) or
+                v[0] >= v[2] or v[1] >= v[3] or
+                type(c) is not tuple or len(c) != 2 or
+                not all(_number(n) for n in c) or
+                not all(_number(n) for n in
+                        (self.stock_depth_mm, self.rim_radius_mm,
+                         self.depth_mm)) or
+                self.stock_depth_mm <= 0 or self.rim_radius_mm <= 0 or
+                not 0 < self.depth_mm < min(self.stock_depth_mm,
+                                             self.rim_radius_mm) or
+                c[0] - self.rim_radius_mm <= v[0] or
+                c[0] + self.rim_radius_mm >= v[2] or
+                c[1] - self.rim_radius_mm <= v[1] or
+                c[1] + self.rim_radius_mm >= v[3]):
+            raise ValueError("invalid spherical bowl and protected rim")
+
+    @property
+    def sphere_radius_mm(self):
+        return (self.rim_radius_mm ** 2 + self.depth_mm ** 2) / (2 * self.depth_mm)
+
+    @property
+    def rim_plane_offset_mm(self):
+        return self.sphere_radius_mm - self.depth_mm
+
+    def depth_at(self, x, y):
+        radial = math.hypot(x - self.center_xy[0], y - self.center_xy[1])
+        if radial >= self.rim_radius_mm:
+            return 0.0
+        return math.sqrt(self.sphere_radius_mm ** 2 - radial ** 2) - self.rim_plane_offset_mm
+
+    @property
+    def target_volume_mm3(self):
+        r, h = self.rim_radius_mm, self.depth_mm
+        return math.pi * h * (3 * r * r + h * h) / 6
+
+    def section_area_mm2(self, depth):
+        if not _number(depth) or depth < 0 or depth > self.stock_depth_mm:
+            raise ValueError("section outside stock")
+        if depth >= self.depth_mm:
+            return 0.0
+        return math.pi * max(0.0, self.sphere_radius_mm ** 2 -
+                            (self.rim_plane_offset_mm + depth) ** 2)
+
+
+@dataclass(frozen=True)
 class SurfaceOperation:
     name: str
     tool_id: str
@@ -76,7 +136,7 @@ class SurfaceOperation:
                 not _number(self.radius_mm) or self.radius_mm <= 0 or
                 not _number(self.cutting_length_mm) or
                 self.cutting_length_mm <= 0 or
-                type(self.target) is not SlopedTarget):
+                type(self.target) not in (SlopedTarget, SphericalBowlTarget)):
             raise ValueError("invalid ball surface operation")
 
 
@@ -94,6 +154,21 @@ def contact_tip_z(target, radius_mm, x, *, clearance_mm=0):
 def contact_x(target, radius_mm, center_x):
     """Exact point of tangent contact on the infinite plane."""
     return center_x - radius_mm * target.slope / math.sqrt(1 + target.slope ** 2)
+
+
+def bowl_contact_tip_z(target, radius_mm, x, y, *, clearance_mm=0):
+    """Safe ball-tip Z from the exact concentric-sphere contact offset."""
+    if (type(target) is not SphericalBowlTarget or
+            not all(_number(v) for v in (radius_mm, x, y, clearance_mm)) or
+            radius_mm <= 0 or radius_mm >= target.rim_radius_mm or
+            clearance_mm < 0):
+        raise ValueError("invalid bowl contact query")
+    radial = math.hypot(x - target.center_xy[0], y - target.center_xy[1])
+    if radial > target.rim_radius_mm - radius_mm:
+        raise ValueError("ball center enters protected rim")
+    offset_radius = target.sphere_radius_mm - radius_mm
+    return (target.rim_plane_offset_mm - radius_mm -
+            math.sqrt(offset_radius ** 2 - radial ** 2) + clearance_mm)
 
 
 def straight_pass_volume_mm3(target, radius_mm, center_x, tip_z):
@@ -158,29 +233,51 @@ def _cells(target, pitch):
         left, right = x0 + ix * pitch, min(x1, x0 + (ix + 1) * pitch)
         for iy in range(ny):
             bottom, top = y0 + iy * pitch, min(y1, y0 + (iy + 1) * pitch)
+            if type(target) is SlopedTarget:
+                design_low = min(target.depth_at(left), target.depth_at(right))
+                design_high = max(target.depth_at(left), target.depth_at(right))
+            else:
+                cx, cy = target.center_xy
+                near_x = max(left - cx, 0, cx - right)
+                near_y = max(bottom - cy, 0, cy - top)
+                far_x = max(abs(left - cx), abs(right - cx))
+                far_y = max(abs(bottom - cy), abs(top - cy))
+                near_r = math.hypot(near_x, near_y)
+                far_r = math.hypot(far_x, far_y)
+                design_low = target.depth_at(cx + far_r, cy)
+                design_high = target.depth_at(cx + near_r, cy)
             yield ((left + right) / 2, (bottom + top) / 2,
                    math.hypot(right - left, top - bottom) / 2,
                    (right - left) * (top - bottom),
-                   min(target.depth_at(left), target.depth_at(right)),
-                   max(target.depth_at(left), target.depth_at(right)))
+                   design_low, design_high)
 
 
-def _residual(target, cuts, pitch):
-    low = high = 0.0
+def _residual(target, cuts, pitch, *, prior_count=0):
+    low = high = gain_lower = 0.0
     cells = 0
     for x, y, delta, area, design_low, design_high in _cells(target, pitch):
-        cut_low = max((_point_depth((x, y), a, b, max(0.0, radius - delta))
-                       for a, b, radius in cuts), default=0.0)
-        cut_high = max((_point_depth((x, y), a, b, radius + delta, upper=True)
-                        for a, b, radius in cuts), default=0.0)
+        cut_low = cut_high = prior_high = 0.0
+        for index, (a, b, radius) in enumerate(cuts):
+            cut_low = max(cut_low, _point_depth(
+                (x, y), a, b, max(0.0, radius - delta)))
+            upper = _point_depth((x, y), a, b, radius + delta, upper=True)
+            cut_high = max(cut_high, upper)
+            if index < prior_count:
+                prior_high = max(prior_high, upper)
         low += area * max(0.0, design_low - cut_high)
         high += area * max(0.0, design_high - cut_low)
+        if prior_count:
+            # On this same cell the new removed depth is at least the final
+            # lower removal minus the prior upper removal. Subtracting whole
+            # job intervals would lose this local correlation.
+            gain_lower += area * max(0.0,
+                min(design_low, cut_low) - min(design_high, prior_high))
         cells += 1
-    return (low, high), cells
+    return (low, high), gain_lower, cells
 
 
 def replay_stages(stages, decoded_moves, *, pitch_mm=0.125):
-    """Check decoded ball motion, prior access, plane safety and stock bounds."""
+    """Check decoded ball motion, prior access, surface safety and stock bounds."""
     if (not stages or len(stages) != len(decoded_moves) or
             any(type(s.surface_operation) is not SurfaceOperation for s in stages)
             or not _number(pitch_mm) or pitch_mm <= 0):
@@ -192,6 +289,7 @@ def replay_stages(stages, decoded_moves, *, pitch_mm=0.125):
     holder_clearance = math.inf
     for stage, moves in zip(stages, decoded_moves):
         op = stage.surface_operation
+        prior_count = len(cuts)
         stage_entries = []
         for move in moves:
             a, b = move.start, move.end
@@ -219,34 +317,44 @@ def replay_stages(stages, decoded_moves, *, pitch_mm=0.125):
                     tip_z <= b[2] + ACCESS_MATCH_TOLERANCE_MM
                     for xy, tip_z, radius in prior_entries):
                 raise ValueError("uncleared descent lacks predecessor ball sweep")
-            # A linear center path above the plane's ball offset cannot touch
-            # protected material. Endpoints suffice because both are affine.
             for point in (a, b):
-                if point[2] < contact_tip_z(target, op.radius_mm, point[0]) - PLANE_TOLERANCE_MM:
-                    raise ValueError("ball enters protected slope")
+                if type(target) is SlopedTarget:
+                    if point[2] < contact_tip_z(target, op.radius_mm, point[0]) - PLANE_TOLERANCE_MM:
+                        raise ValueError("ball enters protected slope")
+                else:
+                    safe_tip = bowl_contact_tip_z(target, op.radius_mm,
+                                                   point[0], point[1])
+                    if point[2] < safe_tip - BOWL_TOLERANCE_MM:
+                        raise ValueError("ball enters protected bowl")
             center_a = (a[0], a[1], a[2] + op.radius_mm)
             center_b = (b[0], b[1], b[2] + op.radius_mm)
             cuts.append((center_a, center_b, op.radius_mm))
             if move.role == "entry":
                 stage_entries.append((a[:2], b[2], op.radius_mm))
         prior_entries.extend(stage_entries)
-        interval, count = _residual(target, cuts, pitch_mm)
+        interval, gain_lower, count = _residual(target, cuts, pitch_mm,
+                                                prior_count=prior_count)
         reports.append({"stage": stage.id, "cuts": len(cuts),
                         "residual_volume_mm3": interval,
+                        "newly_removed_volume_lower_mm3": gain_lower,
                         "protected_overcut_upper_mm3": 0.0,
                         "minimum_holder_clearance_mm": holder_clearance,
                         "cells": count})
-    return {"status": "pass", "scope": "decoded planar slope and ball sweeps",
-            "model": VERSION, "pitch_mm": pitch_mm,
+    bowl = type(target) is SphericalBowlTarget
+    return {"status": "pass", "scope": (
+                "decoded spherical bowl and ball sweeps" if bowl else
+                "decoded planar slope and ball sweeps"),
+            "model": BOWL_VERSION if bowl else VERSION, "pitch_mm": pitch_mm,
             "access_match_tolerance_mm": ACCESS_MATCH_TOLERANCE_MM,
-            "plane_tolerance_mm": PLANE_TOLERANCE_MM,
+            **({"bowl_tolerance_mm": BOWL_TOLERANCE_MM} if bowl else
+               {"plane_tolerance_mm": PLANE_TOLERANCE_MM}),
             "target_volume_mm3": target.target_volume_mm3,
             "prefixes": tuple(reports)}
 
 
 def compare_representations(target, pitches=(0.25, 0.125)):
-    """Time exact plane volume against conservative cell volume enclosures."""
-    if (type(target) is not SlopedTarget or not pitches or
+    """Time exact analytic volume against conservative cell enclosures."""
+    if (type(target) not in (SlopedTarget, SphericalBowlTarget) or not pitches or
             any(not _number(p) or p <= 0 for p in pitches)):
         raise ValueError("target and positive pitches required")
 
@@ -260,7 +368,8 @@ def compare_representations(target, pitches=(0.25, 0.125)):
         return result, round(elapsed, 3), peak
 
     exact, elapsed, peak = measured(lambda: target.target_volume_mm3)
-    rows = [{"representation": "exact_affine_plane",
+    rows = [{"representation": ("exact_affine_plane" if type(target) is SlopedTarget
+                               else "exact_spherical_cap"),
              "volume_interval_mm3": (exact, exact),
              "elapsed_ms": elapsed, "python_peak_bytes": peak,
              "elements": 1}]

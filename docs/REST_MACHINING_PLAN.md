@@ -729,8 +729,8 @@ toolpath and supplied its complete Default post. It contains ten descending G2
 entry moves. The actual source/post and generated T2 stage now pass the
 source-bound decoded UCCNC stock and section gates; exact checks and limits are
 in the [packet 2 evidence](REVIEW.md#packet-2-helical-pocket-and-generated-cleanup---2026-09-27).
-Packet 3 is the next fresh-session work. This does not establish generic
-Pocket parity or a controller/physical acceptance.
+Packet 3 followed this closure and its accepted result appears below. This
+does not establish generic Pocket parity or a controller/physical acceptance.
 
 #### 3. Curved 3D ball-cutter finish and rest
 
@@ -748,6 +748,16 @@ entry/access and tool-body clearance for the declared simple setup. Vary at
 least one curvature or tool dimension and reject stale prior-stock evidence.
 Stop at this analytic target; freeform meshes, overhangs and a universal 3D
 backend require separate evidence. **Next fresh session: packet 4.**
+
+**Accepted bounded result (2026-09-27):** the radius-2 mm spherical bowl with
+protected flat rim, generated radius-0.8/0.25 mm ball stages, and declared
+side clamp passes independently decoded UCCNC/Grbl stock, access and
+tool-body checks. Exact spherical-cap contact/section/volume references and
+conservative cell residual/gain bounds are in the
+[packet 3 evidence](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest---2026-09-27).
+No native CamBam post or manual validation adds evidence to this detached
+case. Packet 4 is the next fresh-session work; this does not establish a
+general surface backend or physical/controller acceptance.
 
 #### 4. Paired V-carve inlay
 

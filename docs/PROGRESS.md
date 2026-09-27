@@ -182,14 +182,29 @@ modeled protected overcut. The [bounded contract](structure_spec.md#bounded-nati
 [runbook](DEVELOPMENT.md#packet-2-helical-pocket-native-post-preparation) and
 [evidence](REVIEW.md#packet-2-helical-pocket-and-generated-cleanup---2026-09-27)
 own its actual source/post hashes, checks and limits. Controller runtime and
-physical machining remain unassessed. **Next priority: packet 3, a bounded
-curved 3D ball-cutter finish/rest case.** The user already
+physical machining remain unassessed.
+
+**Completed offline, backlog 6 packet 3:** a synthetic radius-2 mm,
+depth-0.8 mm spherical-bowl target with protected flat rim now has exact
+contact, section and 5.29463 mm³ volume references. Generated radius-0.8 mm
+T1 finish and radius-0.25 mm T2 rest stages independently decode through
+UCCNC and Grbl. At 0.125 mm cells, the final residual is enclosed by
+0.08655–2.30749 mm³ and a same-cell lower bound proves at least
+0.0192558 mm³ new T2 removal, with zero modeled protected overcut. The
+declared side-clamp/body setup passes continuous clearance. Missing prior
+stock, rim intrusion, deeper cut, edited source and output bytes reject.
+The [contract](structure_spec.md#bounded-spherical-bowl-ball-finish-and-rest),
+[runbook](DEVELOPMENT.md#packet-3-spherical-bowl-ball-finish-and-rest) and
+[evidence](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest---2026-09-27)
+own exact bounds and limits. The synthetic detached job needs no CamBam
+post; controller and physical acceptance remain unassessed. **Next priority:
+packet 4, a paired V-carve inlay.** The user already
 selected the [five ordered job packets](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27)
 in priority order; do not repeat that choice.
 
 Do not expand occupancy to non-box fixtures or select a
-general surface backend without a named job that needs them; reopen for a
-curved/overhanging target, unsupported fixture or residual tolerance these
+general surface backend without a named job that needs them; reopen for an
+overhanging or other unsupported target, fixture or residual tolerance these
 bounded methods cannot meet. The [remaining backlog](#remaining-backlog-in-order)
 states the native sequence needed.
 
@@ -1813,8 +1828,8 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    | --- | --- | --- |
    | [1](REST_MACHINING_PLAN.md#1-tabbed-cutout-with-an-interior-operation) | **Accepted offline 2026-09-27** | B/C actual posts, generated V groove, four/five retained bridges and source-bound ordered stock evidence. |
    | [2](REST_MACHINING_PLAN.md#2-native-pocket-with-helical-entry-and-generated-cleanup) | **Accepted offline 2026-09-27** | Actual G2 helical Pocket post and generated T2 cleanup pass decoded stock and source binding. |
-   | [3](REST_MACHINING_PLAN.md#3-curved-3d-ball-cutter-finish-and-rest) | **Next session** | Analytic curved 3D ball-cutter finish and dependent rest. |
-   | [4](REST_MACHINING_PLAN.md#4-paired-v-carve-inlay) | Queued | Paired tapered V-carve inlay with declared clearance and assembly checks. |
+   | [3](REST_MACHINING_PLAN.md#3-curved-3d-ball-cutter-finish-and-rest) | **Accepted offline 2026-09-27** | Analytic spherical-bowl ball finish and dependent rest with protected rim and body clearance. |
+   | [4](REST_MACHINING_PLAN.md#4-paired-v-carve-inlay) | **Next session** | Paired tapered V-carve inlay with declared clearance and assembly checks. |
    | [5](REST_MACHINING_PLAN.md#5-direct-controller-program-for-a-fully-generated-job) | Queued | Fully generated RC01 job through a bounded controller profile, reusing existing UCCNC/Grbl output. |
 
    After a packet's implementation, checks and any required external post are

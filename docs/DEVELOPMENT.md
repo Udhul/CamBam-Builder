@@ -1980,6 +1980,39 @@ evidence. The [contract](structure_spec.md#bounded-sloped-surface-and-ball-cutte
 and [review](REVIEW.md#sloped-surface-and-ball-cutter-evidence---2026-09-26)
 define the bounded claim and measured result.
 
+### Packet 3 spherical-bowl ball finish and rest
+
+Run the detached synthetic regression from the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_spherical_bowl tests.test_surface3d tests.test_occupancy tests.test_ordered_job tests.test_ordered_dialects -q
+```
+
+`tests.test_spherical_bowl.synthetic_job` creates a 5 x 5 x 2 mm rectangular
+stock, a radius-2 mm spherical-cap recess of depth 0.8 mm, and a protected
+flat rim. T1 radius-0.8 mm ball follows three sampled finish strokes. T2
+radius-0.25 mm ball descends through T1's center entry, then makes a
+three-turn sampled rest path. Both stages include full entry, retract and
+travel motion. A declared side clamp and coaxial cutter/shank/holder bands
+are checked on every decoded move. The regression emits and independently
+decodes UCCNC split files and a Grbl pause program, then checks exact contact,
+section and volume references, conservative stock/gain bounds, rim and body
+protection, prior access, curvature/source edits and output-byte invalidation.
+
+Inspect the bounded measurements with:
+
+```powershell
+& .\.venv\Scripts\python.exe -c "from tests.test_spherical_bowl import synthetic_job; from cambam_builder.cam_core.surface3d import compare_representations; from cambam_builder.integrations.ordered_output import emit; import pprint; j=synthetic_job(); pprint.pp(compare_representations(j.stages[0].surface_operation.target)); r=emit(j,'uccnc')[1]; pprint.pp(r['stock_access_residual']); pprint.pp(r['tool_fixture_occupancy'])"
+```
+
+At 0.125 mm cells, the final residual is enclosed by 0.08655-2.30749 mm³
+and newly removed material has a separate 0.01925 mm³ conservative lower
+bound. The broader interval reflects cell uncertainty; it is not a finish
+tolerance. The setup is synthetic and detached, so a CamBam GUI post adds no
+evidence. The [contract](structure_spec.md#bounded-spherical-bowl-ball-finish-and-rest)
+and [review](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest---2026-09-27)
+state the represented shapes, numerical basis and remaining limits.
+
 ### Bounded holder and fixture occupancy
 
 Run the reusable synthetic case from the repository root:

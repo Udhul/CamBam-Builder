@@ -28,7 +28,7 @@ are outside that runtime package list.
 | `cambam_builder/cambam_entities.py` and nine old root module paths | Compatibility/discovery imports of canonical native objects; no native implementation remains at root | Preserve public and documented direct imports; implementation modules import owners directly |
 | `cambam_builder/native/transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
 | `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy, remaining-section bounds and supplied section-motion verification | Horizontal cuts and explicit travel inside rectangular stock/target; no generated or native path integration |
-| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns ordered XYZ/cut-sweep values, `ordered_job.py` owns caller-supplied stage/state and decoded stock auditing, `volume3d.py` owns bounded layered 3D stock, `surface3d.py` owns affine-plane ball contact/stock, `occupancy.py` owns bounded tool-body/box clearance, and `curved_region.py` owns bounded circular-arc access/rest approximation | Exact nominal and curved endmill stock, stepped-volume, sloped-ball and holder/fixture evidence slices; no native entity, XML, MCP or machine-output dependency |
+| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns ordered XYZ/cut-sweep values, `ordered_job.py` owns caller-supplied stage/state and decoded stock auditing, `volume3d.py` owns bounded layered 3D stock, `surface3d.py` owns affine-plane and spherical-bowl ball contact/stock, `occupancy.py` owns bounded tool-body/box clearance, and `curved_region.py` owns bounded circular-arc access/rest approximation | Exact nominal and curved endmill stock, stepped-volume, analytic sloped/bowl ball and holder/fixture evidence slices; no native entity, XML, MCP or machine-output dependency |
 | `cambam_builder/cam_extensions/strategy.py` | Deterministic selection among separately audited ordered routes, including partial and infeasible outcomes | Policy over evidence records; no XML or native entity dependency |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
@@ -623,6 +623,41 @@ plus conservative cells for stock; it does not select a general mesh, signed
 distance or curved surface backend. See the
 [runbook](DEVELOPMENT.md#sloped-surface-and-ball-cutter-evidence) and
 [evidence](REVIEW.md#sloped-surface-and-ball-cutter-evidence---2026-09-26).
+
+### Bounded spherical-bowl ball finish and rest
+
+`cam_core.surface3d.SphericalBowlTarget` adds one non-overhanging spherical-cap
+recess inside rectangular Z=0 stock. The rim circle is strictly inside the
+stock rectangle; the rest of the top plane is protected. For rim radius `R`,
+depth `h` with `0<h<R`, and sphere radius `S=(R²+h²)/(2h)`, target depth at
+radial position `q<=R` is `sqrt(S²-q²)-(S-h)` and zero outside. Exact target
+volume is `pi*h*(3R²+h²)/6`; the section at depth `d<h` is the disk with
+area `pi*(S²-(S-h+d)²)`. These formulas are independent references for the
+conservative XY-column representation and decoded stock replay.
+
+For a ball of radius `r<R`, the concentric-sphere contact offset gives tip
+height `(S-h)-r-sqrt((S-r)²-rho²)` at center radius `rho`. Below-stock
+cutting centers must satisfy `rho<=R-r`, keeping the whole ball footprint
+inside the recess and leaving the flat rim protected. The admissible center
+disk and offset surface are convex, so straight decoded chords between safe
+endpoints remain inside that disk and above the protected surface. The
+synthetic path adds 0.001 mm vertical clearance to accommodate four-decimal
+output; replay permits zero geometric penetration. Entries and cutting
+length use the existing ball-stage access rules; the dependent smaller ball
+descends at the prior larger ball's center entry. The optional body/box gate
+checks cutter, shank, holder and a declared side clamp continuously on decoded
+motion.
+
+XY cells enclose target depth using their nearest/farthest radius and bound
+ball occupancy using radius erosion/expansion and the segment optimizer's
+bracket. A new local gain lower bound compares final lower removal with prior
+upper removal in each same cell. This can prove positive rest cutting even
+when whole-volume prior/final residual intervals overlap. The selected
+representation is exact spherical contact and section references plus
+conservative cells for evolving stock; no freeform mesh, overhang, general
+surface offset, real holder installation or controller runtime is claimed.
+See the [packet 3 runbook](DEVELOPMENT.md#packet-3-spherical-bowl-ball-finish-and-rest)
+and [evidence](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest---2026-09-27).
 
 ### Bounded tool-body and fixture occupancy
 

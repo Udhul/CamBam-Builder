@@ -7078,7 +7078,7 @@ section clipping, rising arcs and unbounded helix volume integration. The
 exact post acceptance can be rerun only while the original local source/post
 bytes are available, or after a new user post. No controller runtime,
 physical cut, tool-body/fixture occupancy or general Pocket strategy is
-certified; the next named job is packet 3.
+certified; packet 3 followed and is recorded below.
 
 Verification at the original gate from the repository root: `python -m unittest` with
 `tests.test_native_helix_pocket`, `tests.test_native_series`,
@@ -7111,3 +7111,70 @@ The packet stops at
 this observed entry form and dependent cleanup. Reopen it for a different
 posted interpolation, a Circle size or target outside the pinned fixture,
 helical volume, body/fixture clearance or actual controller/physical evidence.
+
+## Packet 3 spherical-bowl ball finish and rest — 2026-09-27
+
+**Accepted bounded offline engineering result.** The self-contained
+`tests.test_spherical_bowl.synthetic_job` uses 5 x 5 x 2 mm Z=0 stock, a
+radius-2 mm, depth-0.8 mm spherical-cap recess centered at (0,0), and a
+protected flat rim. Its analytic sphere radius is 2.9 mm and cap volume is
+5.29463081885 mm³. The independent section oracle gives area `pi*R²` at
+depth zero and `pi*(S²-(S-h+d)²)` below it; direct ball-center/contact
+distance checks confirm the exact concentric-sphere offset. Exact cap
+contact, sections and volume were selected before evaluating 0.25/0.125 mm
+conservative XY columns. Their target-volume intervals are respectively
+4.24016–6.43037 and 4.75726–5.85608 mm³, enclosing the exact value.
+
+The generated T1 radius-0.8 mm ball has three sampled finish strokes and
+a central entry. T2 radius-0.25 mm uses that cleared center for its descent
+and makes a three-turn rest path. Cutting-center radius plus ball radius is
+at most the 2 mm rim radius; the path has 0.001 mm contact clearance and
+decoded replay allows zero protected-surface penetration. Both UCCNC split
+and Grbl pause output independently decode 152 total moves, including
+entries, cuts, retracts and rapids. The UCCNC two-file handoff SHA-256 is
+`3f8cc19f62cdb7ecda6dc5dfa28c03a92992af345215390a512620482f5e69f2`;
+its T1/T2 file hashes are
+`ecdd68c9b7ddb0f5ffc11d1c61a45b71cdc9510dc8425affa7b94606ac103fee` /
+`ca54d9edbf08e7b26bd523f64042c9fe24f0ad8880c51a99127ca7e4f136cd77`.
+The Grbl handoff/program hashes are
+`450df631debaa628aa047496eb6f5f93d137bb55ec1e448982c1b269a6ccb840` /
+`d6166693ac72574b086f0830a1a397cecccf002ba8cd45f2d66b5ec3813adb68`.
+The ignored [local bundle](../output/packet3-bowl-20260927-01/ordered-uccnc/handoff.json)
+and [generator](../output/packet3-bowl-20260927-01/emit_fixture.py) retain the
+exact bytes and repeatable audit while available.
+
+At 0.125 mm pitch (1,600 cells), T1/final residual intervals are
+0.17870–2.50256 / 0.08655–2.30749 mm³. Their overlap limits any claim from
+whole-job interval subtraction. A same-cell prior-upper/final-lower comparison
+instead proves at least **0.0192558 mm³** newly removed by T2. Both stages
+report zero modeled protected overcut and a 1.201 mm minimum cutting-length
+clearance above stock. A declared side clamp with tip-relative cutter,
+shank and holder bands passes all 152 continuous decoded moves with 1.3 mm
+minimum modeled fixture clearance. The bands never axially overlap initial
+stock outside the cutter, so the stock-clearance field is null.
+
+Missing T1 rejects T2's cleared descent. A ball center crossing the rim,
+deeper-than-contact cut, changed curvature (even with the same source string)
+and edited emitted bytes reject or invalidate evidence. Recomputed depth-0.7 mm
+curvature passes the same bounded checker with a new fingerprint. This is one
+synthetic, shallow,
+non-overhanging bowl and one simple side-clamp setup. The loose final residual
+interval is a conservative evidence bound, not a surface finish guarantee.
+Freeform surfaces, overhangs, arbitrary fixtures, physical tool installation,
+controller runtime and a physical cut remain outside this result. A CamBam
+GUI post adds no evidence to the fully generated detached job. Reopen the
+surface/backend choice for a named target or tolerance the analytic cap and
+cell bounds cannot represent or resolve.
+
+Verification from the repository root: `python -m unittest` on
+`tests.test_spherical_bowl`, `tests.test_surface3d`, `tests.test_occupancy`,
+`tests.test_ordered_job` and `tests.test_ordered_dialects` passed 23 tests;
+the full `python -m unittest discover -s tests -q` suite passed 508 tests
+with one skip. The final focused packet module passed three tests after its
+temporary output was moved under ignored `output/`. `compileall -q` for the
+package and packet test, `git diff --check`, and a separate whitespace check
+of the untracked packet test passed. The local generator independently
+re-audited both output bundles. The
+[contract](structure_spec.md#bounded-spherical-bowl-ball-finish-and-rest)
+and [runbook](DEVELOPMENT.md#packet-3-spherical-bowl-ball-finish-and-rest)
+own behavior and repeatable commands. Packet 4 is the next selected job.
