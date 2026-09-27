@@ -27,6 +27,7 @@ from cambam_builder.region import Region
 
 
 IDENTITY_FIELDS = {"internal_id", "user_identifier", "name"}
+COMPOSITE_FIELDS = {"manual_tab_points"}
 PROTOCOL_FIELDS = {
     "workspace_id", "document", "expected_revision", "request_id",
     "identifier", "part", "targets",
@@ -46,6 +47,7 @@ PARITY = {
             "profile_side", "corner_overcut", "tab_method", "tab_width",
             "tab_height", "tab_min_tabs", "tab_max_tabs", "tab_distance",
             "tab_size_threshold", "tab_use_leadins", "tab_style",
+            "manual_tab_points",
         },
         "pinned": {
             "spindle_direction", "velocity_mode", "work_plane",
@@ -167,11 +169,11 @@ class McpMopParityTests(unittest.TestCase):
             with self.subTest(family=family):
                 modeled_parameters = (
                     contract["author"] | contract["pinned"] | contract["excluded"]
-                ) - {"enabled"}
+                ) - {"enabled"} - COMPOSITE_FIELDS
                 self.assertEqual(common | subtype_policies[family], modeled_parameters)
 
     def test_author_classification_matches_closed_tool_inputs(self):
-        aliases = {"profile": {"side": "profile_side"}}
+        aliases = {"profile": {"side": "profile_side", "tab_points": "manual_tab_points"}}
         for family, contract in PARITY.items():
             with self.subTest(family=family):
                 properties = set(

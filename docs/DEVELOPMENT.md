@@ -2914,9 +2914,9 @@ CannedCycle-only PeckDistance/RetractHeight/Dwell and unused CustomScript entire
 Confirm CamBam opens without asking to revert those irrelevant fields. A nonzero
 LeadOutLength requires DrillLeadOut true, and a positive centerward length must not
 exceed the effective hole radius.
-Manual tab authoring is not part of this check: imported native Manual tabs are
-preserve-only and fresh direct-core/MCP authoring must reject them rather than emit an
-incomplete points collection. Reverse the open Pline in a separate copy and confirm its
+Manual tab authoring is not part of this earlier Drill/open-Pline check; use the
+[current Manual fixture](#manual-profile-holding-tab-native-fixture) for its
+bounded authoring contract. Reverse the open Pline in a separate copy and confirm its
 Inside/Outside physical side swaps; this is why the adapter reports
 `VertexOrderRelative`. Do not generate production G-code. Report each property and
 toolpath check separately; automated XML round trips do not replace this native CAM
@@ -2988,35 +2988,39 @@ CamBam-saved [Manual Square](../output/manual-tabs-20260927-01/tabs-manually-pla
 and [Manual Triangle](../output/manual-tabs-20260927-01/tabs-manually-placed-triangle.cb)
 each contain four valid centered points and a matching Default post. Their
 native point encoding and posted tab lifts are recorded in the
-[review](REVIEW.md#manual-profile-tab-native-fixture---2026-09-27). The
-isolated move/add/remove sequence below remains the requested evidence for
-point editing and order.
+[review](REVIEW.md#manual-profile-tab-native-fixture---2026-09-27).
 
-In CamBam Plus 1.0, keep drawing units in millimetres and select the **Default**
-postprocessor. Start from `tabs-manually-placed-square.cb`. Save each new `.cb`
-in the same folder and generate its matching `.nc` with Default. These posts
-are observation files only; do not run them on a machine. Regenerate the
-Profile toolpath after each edit, even if drag refresh is enabled. Keep the
-same Pline, Part, MOP and all scalar settings across the three saves.
+The user completed the native move/add/remove sequence in
+[B](../output/manual-tabs-20260927-01/B-moved.cb),
+[C](../output/manual-tabs-20260927-01/C-added.cb), and
+[D](../output/manual-tabs-20260927-01/D-removed.cb), with matching Default posts.
+C's `.nc` contains five tab lifts, but its main `.cb` is a later four-tab save.
+The five-tab CamBam backup was copied without changing the source to
+[C-added-recovered.cb](../output/manual-tabs-20260927-01/C-added-recovered.cb).
+It has `MinimumTabs=MaximumTabs=5`, as the user observed was needed; B and D
+use `4/4`. The [review](REVIEW.md#manual-profile-tab-native-fixture---2026-09-27)
+records hashes and point/order evidence.
 
-1. Drag **one** of the four tabs along its straight edge by roughly 8-12 mm,
-   clear of corners and other tabs. Confirm Tab Method stays Manual and four
-   tabs remain. Save `B-moved.cb` and post `B-moved.nc`.
-2. With the Profile still selected, right-click an unused straight-edge point
-   clear of corners and choose **Holding Tabs > Add Tab**. Confirm five valid
-   tabs. Save `C-added.cb` and post `C-added.nc`.
-3. Right-click the newly added tab and choose **Holding Tabs > Remove Tab**.
-   Confirm four tabs in the B positions. Save `D-removed.cb` and post
-   `D-removed.nc`.
+**Fresh writer acceptance:** open
+[B-fresh-manual.cb](../output/manual-tabs-20260927-01/B-fresh-manual.cb) and
+[C-fresh-manual.cb](../output/manual-tabs-20260927-01/C-fresh-manual.cb) in CamBam
+Plus 1.0. Keep millimetres and the **Default** postprocessor. In each file,
+generate the Profile toolpath and inspect the MOP and drawing. B must stay
+`Tab Method=Manual`, `MinimumTabs=MaximumTabs=4`, and show four tabs at
+`(40,10)`, `(70,25)`, `(40,40)`, `(10,33)` mm. C must stay Manual, use `5/5`,
+and add `(10,17)` mm on the left edge, giving two left-edge tabs. Point
+placement tolerance is 0.01 mm. Both use Square width 6 mm, height 1 mm,
+target depth `-3` mm, and tab top `-2` mm. Save only if CamBam requires it to
+post; generate **Default** G-code in this folder as `B-fresh-manual.nc` and
+`C-fresh-manual.nc`. On the bottom-depth pass, B must lift over four tab gaps
+and C over five, including the two separate left-edge gaps. Do not run these
+posts on a machine. Report for each file whether it opened without repair,
+retained Manual/count/positions after toolpath generation, and posted. If one
+fails, report the first mismatch and keep its file and any post for analysis.
+No further hand-edited native `.cb` is requested.
 
-Pass requires all three files to reopen without repair and remain Manual; B
-moves only one tab, C adds one, and D removes that new tab.
-The posted toolpaths must show the corresponding changed tab-lift location or
-count on their bottom-depth passes: target depth `-3` mm and tab top `-2` mm.
-If CamBam cannot complete a step, stop at the first failing file and report
-the observed UI behavior. Return the
-native `.cb` and `.nc` files, plus which edge was edited and whether each file
-reopened, showed the expected method/count and posted successfully. Engineering
-will then inspect XML deltas, point coordinates/order and posts before defining
-fresh core/MCP authoring and tests. Preserve these source files until that
-assessment is recorded.
+For post comparison, the native B bottom pass has `Z=-2` gap traversals
+`X35.5→44.5` at `Y8.5`, `Y20.5→29.5` at `X71.5`, `X44.5→35.5` at `Y41.5`,
+and `Y37.5→28.5` at `X8.5`. Native C adds `Y21.5→12.5` at `X8.5`.
+The fresh Default posts should match those endpoints within 0.01 mm and
+return to `Z=-3` after each gap. Comments, file names and timestamps may differ.

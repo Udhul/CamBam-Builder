@@ -63,8 +63,9 @@ see the [development runbook](docs/DEVELOPMENT.md#environment-and-setup).
 The optional local MCP server exposes thirty-seven document, planning and authoring
 tools for AI clients, including verified geometry authoring (Rect, Circle,
 Arc, Pline, Points, Text, Region), Profile/Pocket/Engrave/Drill MOPs with
-target replacement, open-Pline Profile side diagnostics, automatic Profile holding
-tabs, Text-targeted Profile/Pocket/Engrave, signed Profile/Pocket/Engrave roughing
+target replacement, open-Pline Profile side diagnostics, automatic and bounded
+point-authored Manual Profile holding tabs, Text-targeted Profile/Pocket/Engrave,
+signed Profile/Pocket/Engrave roughing
 clearance, CannedCycle and SpiralMill CW/CCW Drill authoring, and VCutter-path
 engraving, similarity transforms with baking, and parent/group/copy
 relationships including cross-document subtree copy and transfer between two

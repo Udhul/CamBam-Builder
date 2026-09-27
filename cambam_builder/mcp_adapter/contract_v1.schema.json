@@ -997,6 +997,17 @@
         "tab_size_threshold": { "$ref": "#/$defs/Number" },
         "tab_use_leadins": { "type": "boolean" },
         "tab_style": { "type": "string" },
+        "manual_tab_points": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/Number" },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 1,
+          "maxItems": 1000
+        },
         "stepover_feedrate": { "type": "string" },
         "region_fill_style": { "type": "string" },
         "finish_stepover": { "$ref": "#/$defs/Number" },
@@ -2902,9 +2913,21 @@
         },
         "tab_method": {
           "type": "string",
-          "enum": ["None", "Automatic"],
+          "enum": ["None", "Automatic", "Manual"],
           "default": "None",
-          "description": "Automatic distributes holding tabs from the bounded settings; Manual placement is not exposed."
+          "description": "Automatic distributes tabs; Manual requires explicit tab_points on one root, identity-posed, flat straight closed counterclockwise Pline with Outside Profile and zero roughing clearance."
+        },
+        "tab_points": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/Number" },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 1,
+          "maxItems": 1000,
+          "description": "Manual-only drawing XY positions, each on a straight edge clear of corners; count must be within tab_min_tabs/tab_max_tabs."
         },
         "tab_width": {
           "$ref": "#/$defs/Positive",

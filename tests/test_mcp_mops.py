@@ -1034,6 +1034,68 @@ class MopBreadthTests(unittest.TestCase):
 
         self.run_async(test)
 
+    def test_manual_profile_tab_points_author_and_reject_invalid_positions(self):
+        async def test():
+            handle = await self.create("manual-tabs")
+            outline = await self.call("geometry_add_pline", self.args(
+                document=handle, expected_revision=0, identifier="outline",
+                layer="Geometry", closed=True,
+                points=[{"x": 10, "y": 10}, {"x": 70, "y": 10},
+                        {"x": 70, "y": 40}, {"x": 10, "y": 40}],
+            ))
+            self.assertTrue(outline["ok"], outline)
+            target = outline["data"]["entity_id"]
+            base = dict(document=handle, expected_revision=1, part="Part",
+                        targets=[target], side="Outside", tab_method="Manual",
+                        tab_min_tabs=4, tab_max_tabs=4, tab_width=6,
+                        tab_height=1, **self.mop_arguments(target_depth=-3))
+            missing = await self.call("machining_add_profile", self.args(
+                identifier="missing", **base))
+            self.assertEqual("tab_points", missing["error"]["field"])
+            off_edge = await self.call("machining_add_profile", self.args(
+                identifier="off-edge", tab_points=[[40, 11], [70, 25],
+                                                   [40, 40], [10, 33]], **base))
+            self.assertEqual("tab_points", off_edge["error"]["field"])
+            added = await self.call("machining_add_profile", self.args(
+                identifier="manual", tab_points=[[40, 10], [70, 25],
+                                                 [40, 40], [10, 33]], **base))
+            self.assertTrue(added["ok"], added)
+            saved = await self.call("document_save", self.args(
+                document=handle, expected_revision=2, path="manual.cb"))
+            self.assertTrue(saved["ok"], saved)
+            root = ET.parse(self.root / "manual.cb").getroot()
+            profile = root.find("./parts/part/machineops/profile")
+            self.assertEqual("Manual", profile.findtext("HoldingTabs/TabMethod"))
+            self.assertEqual(
+                ["0.166666666666667", "0.416666666666667",
+                 "0.666666666666667", "0.872222222222222"],
+                [tab.findtext("ParametricPoint")
+                 for tab in profile.findall("Tabs/HoldingTab")],
+            )
+            reopened = await self.call("document_open", self.args(
+                path="manual.cb", units="mm"))
+            self.assertTrue(reopened["ok"], reopened)
+            records = await self.inspect_records(reopened["document"])
+            record = next(record for record in records
+                          if record.get("identifier") == "manual")
+            self.assertEqual("Manual", record["parameters"]["tab_method"])
+            self.assertEqual([[40, 10], [70, 25], [40, 40], [10, 33]],
+                             record["parameters"]["manual_tab_points"])
+            self.assertNotIn("Tabs", record["unsupported_fields"])
+
+            ET.SubElement(profile.find("Tabs/HoldingTab"), "VendorField").text = "keep"
+            ET.ElementTree(root).write(self.root / "manual-extra.cb", encoding="utf-8")
+            opaque = await self.call("document_open", self.args(
+                path="manual-extra.cb", units="mm"))
+            self.assertTrue(opaque["ok"], opaque)
+            opaque_records = await self.inspect_records(opaque["document"])
+            opaque_record = next(item for item in opaque_records
+                                 if item.get("identifier") == "manual")
+            self.assertNotIn("manual_tab_points", opaque_record["parameters"])
+            self.assertIn("Tabs", opaque_record["unsupported_fields"])
+
+        self.run_async(test)
+
     def test_text_vcutter_engrave_and_automatic_profile_tabs_round_trip(self):
         async def test():
             handle = await self.create("engrave-tabs")

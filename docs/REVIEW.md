@@ -6821,9 +6821,55 @@ same top height at the same four locations. Both return to `Z=-3`.
 
 The existing framework reader/writer reopened each actual native Manual
 `.cb` and saved it under a separate ignored `-roundtrip.cb` name. XML comparison
-found its `HoldingTabs` and `Tabs` subtrees unchanged in both outputs. This is
-preservation evidence only; fresh authoring is still rejected. The two files
-share the same point list, so they do not establish how one move, insertion or
-deletion affects point order or identity. The [runbook](DEVELOPMENT.md#manual-profile-holding-tab-native-fixture)
-requests isolated B/C/D saves and posts from the Square file before that
-authoring/editing contract is closed.
+found its `HoldingTabs` and `Tabs` subtrees unchanged in both outputs. That
+established template preservation before the fresh authoring increment.
+
+The user supplied [B-moved.cb](../output/manual-tabs-20260927-01/B-moved.cb)
+and [post](../output/manual-tabs-20260927-01/B-moved.nc),
+[C-added.cb](../output/manual-tabs-20260927-01/C-added.cb) and
+[post](../output/manual-tabs-20260927-01/C-added.nc), and
+[D-removed.cb](../output/manual-tabs-20260927-01/D-removed.cb) and
+[post](../output/manual-tabs-20260927-01/D-removed.nc). Their SHA-256 pairs
+respectively are `9E5B1BE6190DC569AF3807C91574E3CAAA6088EA85197029CD53D2F23E9A9C9D` /
+`9C89B18F6A5AEB1E9D27FD0AB1F894C64500B63D44A1962BF61BEC7C56CF7485`,
+`23CD9C06EA67384E006B0E8EE239A5320A811A89190C02B1331A22DD2CEF26FB` /
+`F341BABA8D55EF1E07392A28FF25E3D3996CBD4B88458A9F477070035F5CD2D1`, and
+`32F21A6F21200E985C97F604073E36D0F3F718AF877D1A33FBA22D062AAD5D3D` /
+`F14DEFEABAC7BD23DC5DE1D3FC572013694E606EEAA6D50F40D1F608045F8D83`.
+The user reported all initial edges tabbed; B moved the left-edge tab from
+`(10,25)` to `(10,33)`, C added `(10,17)` on that edge, and D removed it.
+They set minimum/maximum counts to `5/5` for C and back to `4/4` for D.
+
+The main C `.cb` was saved after the five-tab post: it contains four points and
+`4/4`, whereas the C `.nc` has five distinct final-depth lifts. CamBam's
+`D-removed.cb.b2` contains the earlier five-point `5/5` state; a byte-identical
+copy at [C-added-recovered.cb](../output/manual-tabs-20260927-01/C-added-recovered.cb)
+has SHA-256 `124AB5F6AC62DB0C63A6A06B0B5BC4AFDD4ECFDAD14187CC03A70DDE72274E24`.
+The added point has perimeter fraction `0.961111111111111`; B's moved point has
+`0.872222222222222`. Both use outward normal `(-1,0)` and native entity ID 1.
+Native B/D keep four final-depth lifts; C's post adds a fifth 9 mm lift over
+the left edge, with top `Z=-2` and bottom `Z=-3`.
+
+Fresh direct-core and imported-Automatic-to-Manual B/C candidates were generated
+locally. Their Manual scalar values and ordered `Tabs` records match the native
+B and recovered C records, including parent ID, perimeter fractions and normals.
+The direct-core [B candidate](../output/manual-tabs-20260927-01/B-fresh-manual.cb)
+and [C candidate](../output/manual-tabs-20260927-01/C-fresh-manual.cb) have SHA-256
+`1D5A6D7A984CCA8EF5D7539EC68FBCBFA17477ADBE31738663A2924D90490D27`
+and `35B36611AB4CF9AB98322406B98E24D2642EF71E0C7BCBF3BB550DF688A6AE98`.
+Core export and MCP author/save/reopen/inspection tests cover this bounded
+representation. Actual CamBam opening, toolpaths and Default posts for these
+fresh files remain unobserved; that comparison, not XML parity alone, is the
+remaining acceptance gate. Reopen the contract for another contour orientation,
+transformation, curved segment, multiple targets or another tab mode only with
+native point/post evidence for that case.
+
+Verification: native Square/Triangle scalar and `Tabs` preservation passed;
+the native Square/B/recovered-C/D collections decoded to the expected XY lists;
+all four generated B/C candidates matched native ordered Manual scalars and
+tab records. The repository `unittest discover -s tests -v` run passed 499
+tests with one existing platform skip. After the final imported-collection
+inspection guard, the MCP suite passed 88 tests with one skip and the focused
+core MOP-parameter suite passed 19 tests. `compileall`, schema JSON parsing and
+`git diff --check` passed. CamBam has not yet opened or posted the fresh B/C
+candidates, so this is implementation and offline verification closure only.

@@ -150,17 +150,17 @@ own the bound, exact hashes and setup. The accepted source and actual post
 are unchanged; no new CamBam observation is needed. Physical installation,
 stage-transition travel and controller runtime remain unassessed.
 
-**Next priority, backlog 7:** complete the native CamBam Plus 1.0
-Manual Profile holding-tab move/add/remove sequence, then implement fresh
-authoring against its observed point collection and toolpath behavior. This is
-the next concrete
-user-facing capability after the named linear and G3 hybrid occupancy gaps
-closed. The user opened the [Automatic seed](DEVELOPMENT.md#manual-profile-holding-tab-native-fixture)
-and supplied Default posts plus native Manual Square/Triangle saves. Their
-four centered positions establish the `<Tabs>` record and the difference in
-posted lifts; the [review](REVIEW.md#manual-profile-tab-native-fixture---2026-09-27)
-owns the exact evidence. Isolated moved/added/removed saves and posts remain
-pending to establish point editing and order before full authoring closure.
+**Next priority, backlog 7:** validate the fresh Manual Profile tab writer in
+CamBam Plus 1.0 using the prepared B/C files. The user supplied the native
+Square/Triangle and moved/added/removed sequence with Default posts. The
+five-tab C save was recovered from a CamBam backup after its main `.cb` had
+already returned to four tabs. The bounded core and MCP authoring/inspection
+contract now reproduces the native B/C tab records offline. The
+[runbook](DEVELOPMENT.md#manual-profile-holding-tab-native-fixture) names the
+two fresh candidates, positions and required CamBam observations; the
+[review](REVIEW.md#manual-profile-tab-native-fixture---2026-09-27) owns the
+source hashes and limitations. Actual CamBam toolpaths/posts from these fresh
+candidates remain the acceptance gate.
 Do not expand occupancy to non-box fixtures or select a
 general surface backend without a named job that needs them; reopen for a
 curved/overhanging target, unsupported fixture or residual tolerance these
@@ -1911,17 +1911,18 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    the bounded workflow cannot meet its requirements.
 
 7. **Active MCP/core capability: author Manual Profile holding-tab positions.**
-   Current automatic authoring covers width, height, minimum/maximum count, distance,
-   size threshold, the constrained lead-in flag and Square/Triangle/Skip style.
-   Imported native Manual tabs remain inspectable and round-trip preserved, while
-   fresh Manual authoring is rejected. The [fixture procedure](DEVELOPMENT.md#manual-profile-holding-tab-native-fixture)
-   now has Automatic, Manual Square and Manual Triangle outputs from CamBam
-   Plus 1.0. Native saves after one move, add and remove, with matching Default
-   posts, remain pending. Capture and inspect those files; then model the
-   observed point collection, coordinate frame, identity/order behavior and
-   toolpaths, and implement/test fresh direct-core and
-   MCP authoring. Stop when the bounded native fixture round-trips and an authored
-   equivalent reproduces its toolpaths; leave other Manual variants evidence-bound.
+   Native Square/Triangle/B/C/D saves and Default posts establish the bounded
+   point collection, coordinate frame and move/add/remove order. Fresh direct-core
+   and MCP authoring now accept explicit drawing XY tab positions for one root,
+   flat, straight, counterclockwise closed Pline and Outside Profile, with
+   Square/Triangle style and count/spacing checks. Recognized imported native
+   positions inspect as XY while their templates remain preserved. The writer's
+   fresh B/C `<Tabs>` records match native saves offline. The remaining gate is
+   to open and post the [fresh B/C candidates](DEVELOPMENT.md#manual-profile-holding-tab-native-fixture)
+   in CamBam Plus 1.0 and compare their toolpaths/posts to native B/C. Stop when
+   this bounded native fixture round-trips and the authored equivalent reproduces
+   its tab lifts; leave curved, reversed, transformed and multi-target variants
+   evidence-bound.
 8. **Future MOP semantic, native-export and framework/MCP parity audit.** Perform this
    as three bounded increments after the current SpiralMill prompt-free acceptance;
    do not treat every CamBam feature found as automatically in scope for

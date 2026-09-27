@@ -6,9 +6,13 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 import json
 import logging
+import math
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, TYPE_CHECKING
 
+import numpy as np
+
 from .core import CamBamEntity
+from .cad import Pline
 
 if TYPE_CHECKING:
     from .project import CamBamProject
@@ -220,28 +224,28 @@ MOP_PROFILE_FIELD_POLICIES: Dict[str, MopSubtypeFieldEncodingPolicy] = {
     'tab_method': MopSubtypeFieldEncodingPolicy(
         ('HoldingTabs', 'TabMethod'), leaf_state=False),
     'tab_width': MopSubtypeFieldEncodingPolicy(
-        ('HoldingTabs', 'Width'), requirements=(('tab_method', ('Automatic',)),),
+        ('HoldingTabs', 'Width'), requirements=(('tab_method', ('Automatic', 'Manual')),),
         leaf_state=False),
     'tab_height': MopSubtypeFieldEncodingPolicy(
-        ('HoldingTabs', 'Height'), requirements=(('tab_method', ('Automatic',)),),
+        ('HoldingTabs', 'Height'), requirements=(('tab_method', ('Automatic', 'Manual')),),
         leaf_state=False),
     'tab_min_tabs': MopSubtypeFieldEncodingPolicy(
-        ('HoldingTabs', 'MinimumTabs'), requirements=(('tab_method', ('Automatic',)),),
+        ('HoldingTabs', 'MinimumTabs'), requirements=(('tab_method', ('Automatic', 'Manual')),),
         leaf_state=False),
     'tab_max_tabs': MopSubtypeFieldEncodingPolicy(
-        ('HoldingTabs', 'MaximumTabs'), requirements=(('tab_method', ('Automatic',)),),
+        ('HoldingTabs', 'MaximumTabs'), requirements=(('tab_method', ('Automatic', 'Manual')),),
         leaf_state=False),
     'tab_distance': MopSubtypeFieldEncodingPolicy(
-        ('HoldingTabs', 'TabDistance'), requirements=(('tab_method', ('Automatic',)),),
+        ('HoldingTabs', 'TabDistance'), requirements=(('tab_method', ('Automatic', 'Manual')),),
         leaf_state=False),
     'tab_size_threshold': MopSubtypeFieldEncodingPolicy(
-        ('HoldingTabs', 'SizeThreshold'), requirements=(('tab_method', ('Automatic',)),),
+        ('HoldingTabs', 'SizeThreshold'), requirements=(('tab_method', ('Automatic', 'Manual')),),
         leaf_state=False),
     'tab_use_leadins': MopSubtypeFieldEncodingPolicy(
-        ('HoldingTabs', 'UseLeadIns'), requirements=(('tab_method', ('Automatic',)),),
+        ('HoldingTabs', 'UseLeadIns'), requirements=(('tab_method', ('Automatic', 'Manual')),),
         leaf_state=False),
     'tab_style': MopSubtypeFieldEncodingPolicy(
-        ('HoldingTabs', 'TabStyle'), requirements=(('tab_method', ('Automatic',)),),
+        ('HoldingTabs', 'TabStyle'), requirements=(('tab_method', ('Automatic', 'Manual')),),
         leaf_state=False),
 }
 
@@ -670,7 +674,7 @@ class ProfileMop(Mop):
     final_depth_increment: Optional[float] = 0.0 # If > 0, amount for final pass
     cut_ordering: str = 'DepthFirst' # 'DepthFirst', 'LevelFirst'
     # Holding Tabs parameters
-    tab_method: str = 'None' # 'None', 'Automatic'; imported native Manual is preserve-only
+    tab_method: str = 'None' # 'None', 'Automatic', bounded 'Manual'
     tab_width: float = 6.0
     tab_height: float = 1.5
     tab_min_tabs: int = 3
@@ -679,17 +683,181 @@ class ProfileMop(Mop):
     tab_size_threshold: float = 4.0 # Min shape size for tabs
     tab_use_leadins: bool = False
     tab_style: str = 'Square' # 'Square', 'Triangle', 'Skip'
+    manual_tab_points: Optional[List[Tuple[float, float]]] = None
+
+    def _manual_tab_records(self, project: "CamBamProject") -> List[Tuple[float, float, float]]:
+        """Map drawing XY points to CamBam's observed perimeter fraction and normal."""
+        targets = project.get_mop_targets(self)
+        if len(targets) != 1 or project.get_mop_target_group(self) is not None:
+            raise ValueError("Manual tabs require one explicit closed Pline target")
+        target = project.get_primitive(targets[0])
+        if not isinstance(target, Pline) or not target.closed:
+            raise ValueError("Manual tabs require one closed Pline target")
+        if (project.get_parent_of_primitive(target) is not None
+                or not np.allclose(target.get_total_transform(), np.eye(3), rtol=0, atol=1e-12)
+                or abs(target.get_total_z_offset()) > 1e-12):
+            raise ValueError("Manual tabs require a root Pline with identity pose")
+        vertices = target._validated_vertices()
+        if len(vertices) < 3 or any(abs(vertex.bulge) > 1e-12 or abs(vertex.z) > 1e-12
+                                    for vertex in vertices):
+            raise ValueError("Manual tabs require a flat straight-segment Pline")
+        if self.profile_side != 'Outside' or self.roughing_clearance != 0:
+            raise ValueError("Manual tabs currently require an Outside Profile with zero clearance")
+        if self.tab_style not in ('Square', 'Triangle') or self.tab_use_leadins:
+            raise ValueError("Manual tabs currently require Square/Triangle and no tab lead-ins")
+        diameter = self._get_effective_param('tool_diameter', project)
+        if (diameter is None or not math.isfinite(float(diameter)) or float(diameter) <= 0
+                or not math.isfinite(self.tab_width) or self.tab_width <= 0
+                or not math.isfinite(self.tab_height) or self.tab_height <= 0):
+            raise ValueError("Manual tabs require positive finite tool diameter, width and height")
+        if (self.target_depth is None or not math.isfinite(self.target_depth)
+                or self.target_depth + self.tab_height > self.stock_surface):
+            raise ValueError("Manual tab top must be at or below stock surface")
+        points = self.manual_tab_points
+        if points is None or not 1 <= len(points) <= 1000:
+            raise ValueError("Manual tabs require 1..1000 explicit XY points")
+        if not self.tab_min_tabs <= len(points) <= self.tab_max_tabs:
+            raise ValueError("Manual tab point count must be within minimum/maximum tabs")
+
+        xy = [(vertex.x, vertex.y) for vertex in vertices]
+        segments = []
+        perimeter = 0.0
+        signed_area_twice = 0.0
+        for start, end in zip(xy, xy[1:] + xy[:1]):
+            dx, dy = end[0] - start[0], end[1] - start[1]
+            length = math.hypot(dx, dy)
+            if length <= 1e-9:
+                raise ValueError("Manual tab target has a zero-length edge")
+            segments.append((start, dx, dy, length, perimeter))
+            perimeter += length
+            signed_area_twice += start[0] * end[1] - end[0] * start[1]
+        if signed_area_twice <= 1e-9 or not math.isfinite(perimeter):
+            raise ValueError("Manual tabs require a counterclockwise closed Pline")
+
+        half_gap = (self.tab_width + float(diameter)) / 2.0
+        records = []
+        for index, point in enumerate(points):
+            if len(point) != 2:
+                raise ValueError(f"Manual tab point {index} must be an XY pair")
+            x, y = float(point[0]), float(point[1])
+            if not math.isfinite(x) or not math.isfinite(y):
+                raise ValueError(f"Manual tab point {index} must be finite")
+            candidates = []
+            for start, dx, dy, length, prefix in segments:
+                along = ((x - start[0]) * dx + (y - start[1]) * dy) / length
+                cross = abs((x - start[0]) * dy - (y - start[1]) * dx) / length
+                if cross <= 1e-6 and half_gap - 1e-9 <= along <= length - half_gap + 1e-9:
+                    candidates.append(((prefix + along) / perimeter, dy / length, -dx / length))
+            if len(candidates) != 1:
+                raise ValueError(f"Manual tab point {index} must lie clear of corners on one edge")
+            records.append(candidates[0])
+        records.sort(key=lambda item: item[0])
+        distances = [record[0] * perimeter for record in records]
+        for before, after in zip(distances, distances[1:] + [distances[0] + perimeter]):
+            if after - before < 2.0 * half_gap - 1e-9:
+                raise ValueError("Manual tab gaps overlap")
+        return records
+
+    def _manual_tabs_element(self, project: "CamBamProject", primitive_id: int) -> ET.Element:
+        tabs = ET.Element('Tabs')
+        def number(value: float) -> str:
+            return '0' if abs(value) < 1e-12 else format(value, '.15g')
+        for fraction, nx, ny in self._manual_tab_records(project):
+            tab = ET.SubElement(tabs, 'HoldingTab')
+            ET.SubElement(tab, 'NormalInverted').text = 'false'
+            ET.SubElement(tab, 'ParentEntityID').text = str(primitive_id)
+            ET.SubElement(tab, 'ParametricPoint').text = number(fraction)
+            normal = ET.SubElement(tab, 'Normal')
+            ET.SubElement(normal, 'X').text = number(nx)
+            ET.SubElement(normal, 'Y').text = number(ny)
+        return tabs
+
+    def inspected_manual_tab_points(
+            self, project: "CamBamProject") -> Optional[List[Tuple[float, float]]]:
+        """Decode only the observed straight-Pline native point form for inspection.
+
+        An imported template remains the round-trip authority. Unsupported
+        collections stay opaque rather than being rewritten from these points.
+        """
+        if self.tab_method != 'Manual':
+            return None
+        if self.manual_tab_points is not None:
+            return [tuple(point) for point in self.manual_tab_points]
+        template = getattr(self, '_xml_template', None)
+        tabs = template.find('Tabs') if template is not None else None
+        targets = project.get_mop_targets(self)
+        native_ids = getattr(self, '_xml_target_primitive_ids', [])
+        if (tabs is None or tabs.attrib or not 1 <= len(tabs) <= 1000
+                or any(child.tag != 'HoldingTab' for child in tabs)
+                or len(targets) != 1 or len(native_ids) != 1):
+            return None
+        target = project.get_primitive(targets[0])
+        if not isinstance(target, Pline) or not target.closed:
+            return None
+        if (project.get_parent_of_primitive(target) is not None
+                or not np.allclose(target.get_total_transform(), np.eye(3), rtol=0, atol=1e-12)
+                or abs(target.get_total_z_offset()) > 1e-12):
+            return None
+        vertices = target._validated_vertices()
+        if len(vertices) < 3 or any(abs(v.bulge) > 1e-12 or abs(v.z) > 1e-12
+                                    for v in vertices):
+            return None
+        xy = [(v.x, v.y) for v in vertices]
+        segments = []
+        perimeter = 0.0
+        for start, end in zip(xy, xy[1:] + xy[:1]):
+            dx, dy = end[0] - start[0], end[1] - start[1]
+            length = math.hypot(dx, dy)
+            if length <= 1e-9:
+                return None
+            segments.append((start, dx, dy, length, perimeter))
+            perimeter += length
+        result = []
+        try:
+            for tab in tabs.findall('HoldingTab'):
+                normal = tab.find('Normal')
+                if (tab.attrib or len(tab) != 4
+                        or {child.tag for child in tab} != {
+                            'NormalInverted', 'ParentEntityID', 'ParametricPoint', 'Normal'}
+                        or normal is None or normal.attrib or len(normal) != 2
+                        or {child.tag for child in normal} != {'X', 'Y'}
+                        or any(child.attrib or len(child) for child in tab
+                               if child.tag != 'Normal')
+                        or any(child.attrib or len(child) for child in normal)):
+                    return None
+                if (tab.findtext('NormalInverted') != 'false'
+                        or tab.findtext('ParentEntityID') != str(native_ids[0])):
+                    return None
+                fraction = float(tab.findtext('ParametricPoint'))
+                nx = float(tab.findtext('Normal/X'))
+                ny = float(tab.findtext('Normal/Y'))
+                if not all(math.isfinite(v) for v in (fraction, nx, ny)) or not 0 <= fraction < 1:
+                    return None
+                distance = fraction * perimeter
+                matches = [segment for segment in segments
+                           if segment[4] + 1e-8 < distance < segment[4] + segment[3] - 1e-8]
+                if len(matches) != 1:
+                    return None
+                (x0, y0), dx, dy, length, prefix = matches[0]
+                if abs(nx - dy / length) > 1e-6 or abs(ny + dx / length) > 1e-6:
+                    return None
+                along = (distance - prefix) / length
+                result.append((round(x0 + along * dx, 9), round(y0 + along * dy, 9)))
+        except (TypeError, ValueError):
+            return None
+        return result if result else None
 
     def to_xml_element(self, project: "CamBamProject", resolved_primitive_xml_ids: List[int]) -> ET.Element:
         self._validate_lead_encoding()
         dirty = getattr(self, "_xml_dirty_parameters", set())
         baseline = getattr(self, "_xml_parameter_baseline", {})
-        if self.tab_method == 'Manual' and (
-                not hasattr(self, "_xml_template") or 'tab_method' in dirty):
-            raise ValueError(
-                "Manual holding-tab authoring requires explicit native tab points and "
-                "is not supported; imported native Manual tabs are preserve-only"
-            )
+        supplied_points = self.manual_tab_points is not None
+        if self.tab_method == 'Manual' and not hasattr(self, '_xml_template') and not supplied_points:
+            raise ValueError("Manual holding-tab authoring requires explicit XY points")
+        if self.tab_method == 'Manual' and 'tab_method' in dirty and not supplied_points:
+            raise ValueError("Switching to Manual holding tabs requires explicit XY points")
+        if self.tab_method != 'Manual' and supplied_points:
+            raise ValueError("Manual tab points require tab_method='Manual'")
         if ('tab_method' in dirty and baseline.get('tab_method') == 'Manual'):
             raise ValueError(
                 "Switching an imported Manual holding-tab record is not supported"
@@ -710,10 +878,24 @@ class ProfileMop(Mop):
                 native, MOP_PROFILE_FIELD_POLICIES, 'lead_in_type')
             self._reconcile_native_mode_group(
                 native, MOP_PROFILE_FIELD_POLICIES, 'tab_method')
+            if supplied_points:
+                if len(resolved_primitive_xml_ids) != 1:
+                    raise ValueError("Manual tabs require one resolved primitive ID")
+                previous = native.find('Tabs')
+                insertion = (list(native).index(previous) if previous is not None
+                             else list(native).index(native.find('HoldingTabs')) + 1)
+                if previous is not None:
+                    native.remove(previous)
+                native.insert(insertion, self._manual_tabs_element(
+                    project, resolved_primitive_xml_ids[0]))
             return native
         mop_elem = ET.Element("profile", {"Enabled": str(self.enabled).lower()})
         self._add_common_mop_elements(mop_elem, project, resolved_primitive_xml_ids)
         self._add_subtype_mop_elements(mop_elem, MOP_PROFILE_FIELD_POLICIES)
+        if self.tab_method == 'Manual':
+            if len(resolved_primitive_xml_ids) != 1:
+                raise ValueError("Manual tabs require one resolved primitive ID")
+            mop_elem.append(self._manual_tabs_element(project, resolved_primitive_xml_ids[0]))
         self._apply_explicit_parameter_states(mop_elem)
         return mop_elem
 

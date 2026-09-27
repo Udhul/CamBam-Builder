@@ -2186,15 +2186,38 @@ modes and independent lead-out records are import-preserve-only until their full
 parameters and coordinate semantics have native A/B evidence.
 
 Profile `HoldingTabs` is likewise a `Value` container. `TabMethod=None` is the sole
-fresh child when tabs are disabled. `Automatic` additionally writes plain child
+fresh child when tabs are disabled. `Automatic` and bounded `Manual` additionally write plain child
 values governed by that container: positive Width and Height in drawing units;
 integer MinimumTabs/MaximumTabs with minimum no greater than maximum; nonnegative
 perimeter TabDistance; nonnegative SizeThreshold below which tabs are suppressed;
 UseLeadIns; and Square/Triangle/Skip TabStyle. Width is tool-compensated in CamBam's
 display, Height is relative to target depth, and Skip is a non-contact/plasma mode.
-`UseLeadIns=true` requires Automatic Square tabs plus an active lead-in. Manual tab
-point placement and transitions to or from imported Manual records remain
-preserve-only because their native point collection is not modeled.
+`UseLeadIns=true` requires Automatic Square tabs plus an active lead-in. CamBam
+Plus 1.0 native B/C/D files show that Manual positions live in a sibling
+`Tabs/HoldingTab` collection. Each record names the target primitive XML ID,
+has a perimeter-normalized `ParametricPoint`, an outward XY normal, and
+`NormalInverted=false`. In the observed B/C/D sequence, moving one tab changes
+only its fraction, the added later-perimeter tab appears last, and removing it
+restores the four prior records. On the
+observed 60 x 30 mm counterclockwise rectangle, a fraction of `1/6` places a
+tab at `(40,10)` and the left-edge fractions `0.872222222222222` and
+`0.961111111111111` place tabs at `(10,33)` and `(10,17)`.
+
+Fresh direct-core and MCP Manual authoring accepts drawing XY pairs on one
+explicit root, identity-posed, flat straight closed counterclockwise Pline
+with an Outside Profile, zero roughing clearance, Square or Triangle style,
+and no tab lead-ins. The count must fit MinimumTabs/MaximumTabs; each point
+must lie on exactly one edge far enough from its corners for the compensated
+tab width, with nonoverlapping gaps. The writer orders records by perimeter
+fraction, resolves the actual primitive XML ID, derives its outward normal,
+and writes all Manual scalar settings alongside the sibling collection.
+Recognized imported records inspect as XY positions without rewriting their
+native template. Unrecognized imported collections remain opaque and preserved;
+switching away from an imported Manual method remains unsupported. The native
+posts establish Square lifts and Triangle ramps for this contour. Fresh
+framework output still requires its separate CamBam post comparison before
+native output acceptance; transformed, curved, reversed and multi-target
+Manual Profiles remain outside this bound.
 
 An untouched imported lead/tab subtree retains its container/leaf states, cached
 text, unknown children, and independent lead-out. Editing a modeled nested leaf
@@ -2275,8 +2298,10 @@ Inspection is independent of MOP target eligibility: explicit populated or empty
 selections and live group sources retain the same parameter detail, while
 `target_group` distinguishes live intent from explicit targets. Maximal unmodeled
 native subtrees and unknown parameter attributes are named in `unsupported_fields`
-without exposing their contents or blanking sibling modeled values. Manual tab point
-collections, unsupported lead modes and literal CustomScript remain opaque. This
+without exposing their contents or blanking sibling modeled values. Recognized
+Manual tab point collections on the bounded straight-Pline slice inspect as XY;
+unrecognized collections, unsupported lead modes and literal CustomScript remain
+opaque. This
 inspection contract does not authorize parameter mutation or evaluate CAM styles.
 
 This is supported-MOP interchange, not full CamBam format or toolpath coverage.

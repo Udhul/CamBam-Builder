@@ -154,7 +154,7 @@ class PreservationAwareMopInspectionTests(unittest.TestCase):
                 "Default",
             )
             self.assertEqual(profile["parameters"]["tab_method"], "Manual")
-            self.assertFalse(
+            self.assertTrue(
                 profile["parameter_metadata"]["tab_width"]["applicable"]
             )
             self.assertEqual(

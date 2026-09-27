@@ -814,6 +814,7 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
         mop._xml_parameter_states = parameter_states
         mop._xml_parameter_baseline = parameter_baseline
         mop._xml_template = deepcopy(mop_elem)
+        mop._xml_target_primitive_ids = list(primitive_xml_ids)
         mop._xml_primitive_index = 0
         for child in mop_elem:
             if child.tag == "primitive":
