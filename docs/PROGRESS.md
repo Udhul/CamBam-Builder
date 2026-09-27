@@ -197,10 +197,25 @@ The [contract](structure_spec.md#bounded-spherical-bowl-ball-finish-and-rest),
 [runbook](DEVELOPMENT.md#packet-3-spherical-bowl-ball-finish-and-rest) and
 [evidence](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest---2026-09-27)
 own exact bounds and limits. The synthetic detached job needs no CamBam
-post; controller and physical acceptance remain unassessed. **Next priority:
-packet 4, a paired V-carve inlay.** The user already
+post; controller and physical acceptance remain unassessed. The user already
 selected the [five ordered job packets](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27)
 in priority order; do not repeat that choice.
+
+**Completed offline, backlog 6 packet 4:** a shared 4 mm circular contour,
+pointed V profile and separate receiver/plug stock states now yield one
+matched tapered pair at zero and 0.1 mm radial clearance. Complete UCCNC and
+Grbl programs decode and replay for both parts. Analytic insertion and
+decoded wall sections agree on nominal contact or the declared gap; both
+parts have zero modeled residual and protected overcut throughout the
+0–0.9 mm insertion envelope, with a 0.1 mm bottom gap and backing/facing
+allowance. Wrong flip, excessive registration, impossible clearance, changed
+tool geometry and edited output reject. The [contract](structure_spec.md#bounded-circular-paired-v-carve-inlay),
+[runbook](DEVELOPMENT.md#packet-4-paired-v-carve-inlay) and
+[evidence](REVIEW.md#packet-4-paired-v-carve-inlay---2026-09-27)
+own exact bounds, hashes and limits. The synthetic detached pair needs no
+CamBam post or user fit preference. Physical assembly, plunge/process
+behavior and controller runtime remain unassessed. **Next priority: packet 5,
+the fully generated RC01 controller job.**
 
 Do not expand occupancy to non-box fixtures or select a
 general surface backend without a named job that needs them; reopen for an
@@ -1829,8 +1844,8 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    | [1](REST_MACHINING_PLAN.md#1-tabbed-cutout-with-an-interior-operation) | **Accepted offline 2026-09-27** | B/C actual posts, generated V groove, four/five retained bridges and source-bound ordered stock evidence. |
    | [2](REST_MACHINING_PLAN.md#2-native-pocket-with-helical-entry-and-generated-cleanup) | **Accepted offline 2026-09-27** | Actual G2 helical Pocket post and generated T2 cleanup pass decoded stock and source binding. |
    | [3](REST_MACHINING_PLAN.md#3-curved-3d-ball-cutter-finish-and-rest) | **Accepted offline 2026-09-27** | Analytic spherical-bowl ball finish and dependent rest with protected rim and body clearance. |
-   | [4](REST_MACHINING_PLAN.md#4-paired-v-carve-inlay) | **Next session** | Paired tapered V-carve inlay with declared clearance and assembly checks. |
-   | [5](REST_MACHINING_PLAN.md#5-direct-controller-program-for-a-fully-generated-job) | Queued | Fully generated RC01 job through a bounded controller profile, reusing existing UCCNC/Grbl output. |
+   | [4](REST_MACHINING_PLAN.md#4-paired-v-carve-inlay) | **Accepted offline 2026-09-27** | Separate decoded tapered receiver/plug stocks, analytic insertion, zero/0.1 mm clearance and stale-evidence rejection. |
+   | [5](REST_MACHINING_PLAN.md#5-direct-controller-program-for-a-fully-generated-job) | **Next session** | Fully generated RC01 job through a bounded controller profile, reusing existing UCCNC/Grbl output. |
 
    After a packet's implementation, checks and any required external post are
    accepted, update this table, record evidence in `REVIEW.md`, and start the

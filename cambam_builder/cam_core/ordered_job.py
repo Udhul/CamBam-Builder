@@ -118,7 +118,7 @@ class Stage:
     motions: tuple
     rpm: float
     offset_mm: float = 0.0
-    operation: object = None          # replay, volume3d or surface3d operation
+    operation: object = None          # replay, volume3d, surface3d or inlay
     v_plan: object = None             # v_region.VPlan for terminal V finish
     source_revision: str = ""
     transition: object = None
@@ -144,9 +144,10 @@ class Stage:
                     (op.name != self.id or op.tool.name != self.tool_id)):
                 raise ValueError("stage endmill operation identity differs")
             if type(op) is not replay.Operation:
-                from . import surface3d, volume3d
+                from . import inlay, surface3d, volume3d
                 if type(op) not in (volume3d.VolumeOperation,
-                                    surface3d.SurfaceOperation):
+                                    surface3d.SurfaceOperation,
+                                    inlay.InlayOperation):
                     raise ValueError("unsupported stage operation")
                 if op.name != self.id or op.tool_id != self.tool_id:
                     raise ValueError("stage operation identity differs")
@@ -444,6 +445,10 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
     if not job.stock_present:
         report["stock_access_residual"] = {"status": "not_evaluated",
                                            "reason": "no supplied initial stock"}
+        return report
+    from . import inlay
+    if all(type(s.operation) is inlay.InlayOperation for s in job.stages):
+        report["stock_access_residual"] = inlay.replay_stages(job.stages, actual)
         return report
     if job.occupancy_setup is not None:
         from . import occupancy

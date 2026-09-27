@@ -7178,3 +7178,74 @@ re-audited both output bundles. The
 [contract](structure_spec.md#bounded-spherical-bowl-ball-finish-and-rest)
 and [runbook](DEVELOPMENT.md#packet-3-spherical-bowl-ball-finish-and-rest)
 own behavior and repeatable commands. Packet 4 is the next selected job.
+
+## Packet 4 paired V-carve inlay — 2026-09-27
+
+**Accepted bounded offline engineering result.** One shared radius-4 mm
+circular contour, two separate radius-7 mm cylindrical stocks and one pointed
+V profile with half-angle tangent 0.5 define a receiver and a backed plug.
+Both use 1 mm cut depth, 0.9 mm seated engagement and a 0.08 mm maximum
+concentric-ring pitch. The assembly reverses plug Z, registers the two XY
+centers and leaves a 0.1 mm bottom gap; the backed plug has 0.1 mm of
+facing allowance above the seated receiver surface. The two accepted nominal
+radial side clearances are 0 and 0.1 mm, supplied by the caller. At seated
+receiver depth `z`, the independent cross-section oracle gives cavity radius
+`4-0.5z` and plug radius `4-0.45-c+0.5(0.9-z)` mm. Its gap is `c`, and
+the insertion gap at partial depth `s` is `c+0.5(0.9-s)` mm before any XY
+registration offset. Zero clearance gives nominal side contact; positive
+clearance gives a 0.1 mm radial gap. The plug front does not reach the
+receiver floor, and backing-face contact occurs only at full insertion.
+
+The direct UCCNC route emitted two complete programs per clearance case and
+the Grbl route separately decoded the same two one-stage jobs. The zero case
+has 223 female and 191 male decoded moves; the positive case has 223 female
+and 201 male moves. Each includes every entry, full G3 ring, retract and safe
+travel. The pointed tool's decoded radial sweep has zero residual and zero
+protected overcut in each part at depths 0, 0.45 and 0.9 mm; the maximum
+ring gap is below the minimum section cutter diameter at engagement, proving
+continuous radial coverage for every depth in 0–0.9 mm. At depth 0.95 mm,
+female residual is 14.29424657 mm², while male residual is
+38.18605870 / 37.84048351 mm² for zero / positive clearance. Those
+remaining regions are inside the declared bottom gap or facing allowance;
+neither enters the seated insertion envelope. The decoded assembled wall
+gap samples are 0 / 0.1 mm at receiver depths 0, 0.45 and 0.9 mm.
+
+The zero-clearance pair fingerprint is
+`e62dd93ff2f0e26efe624d9c7acce611b3f76c5d8033eeed3897e3ee71406396`;
+its female/male UCCNC program SHA-256 values are
+`6015b68a92d496e8351a481598528043d20ed1df88aa7bbc608c11b6f8eadf1e` /
+`14d6567979fae89c7489c79bff4dc74b9ae16b4f5303e815836d1cc87159a5e0`.
+The 0.1 mm clearance pair fingerprint is
+`98b48684121223ce37fb49d0eaecd03a42277df4edfd4767146eb8ee3df586a1`;
+its female/male hashes are
+`6015b68a92d496e8351a481598528043d20ed1df88aa7bbc608c11b6f8eadf1e` /
+`6474678a9abbcace79f8e64b460cc7e9e69c078d6241a34978e8aaa08e97d9d2`.
+The ignored [zero certificate](../output/packet4-paired-inlay-20260927-01/zero/paired-certificate.json),
+[positive certificate](../output/packet4-paired-inlay-20260927-01/positive/paired-certificate.json)
+and [session generator](../output/packet4-paired-inlay-20260927-01/build_evidence.py)
+retain exact local program bundles while available. The hashes and numerical
+conclusion here remain valid without those ignored files.
+
+Wrong flip, registration beyond clearance, excessive clearance, changed
+tool angle/source and stale pair fingerprint reject. Changed G3 direction or
+either output file's bytes reject the original evidence. The circle and
+parallel-plane flip are deliberately bounded; no arbitrary contour, rounded
+tip, material compression, glue behavior or physical fit is inferred.
+Vertical pointed-tool entry is geometrically included in replay, while
+plunge suitability, feeds, workholding, backing removal, controller runtime
+and actual assembly are unassessed. The jobs are detached and fully generated,
+so no native CamBam post or manual fit preference adds evidence here. Reopen
+for a named noncircular contour, another cutter shape or a physical pair with
+specified fit and setup. The [contract](structure_spec.md#bounded-circular-paired-v-carve-inlay)
+and [runbook](DEVELOPMENT.md#packet-4-paired-v-carve-inlay) own the behavior
+and repeatable regression.
+
+Verification from the repository root: the focused inlay, ordered-job,
+ordered-dialect and V-region modules passed 21 tests; the final inlay module
+passed four tests after its last assertion edit. The full
+`.venv\Scripts\python.exe -m unittest discover -s tests -q` suite passed
+512 tests with one skip. `compileall -q cambam_builder tests/test_paired_inlay.py`,
+`git diff --check`, and the untracked source whitespace check passed.
+The UCCNC session generator wrote and re-audited both complete part bundles
+for each clearance. An ignored-file audit found no new `.cb`/`.nc` files
+outside `output/`; pre-existing tracked historical fixtures are unchanged.

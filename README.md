@@ -55,7 +55,9 @@ replays decoded waterline and dependent rest cuts with a protected thin rib and
 conservative residual-volume bounds. A bounded sloped-plane ball-cutter case
 checks analytic contact and volume against decoded, conservative two-stage
 stock replay. A shallow spherical-bowl ball finish/rest case adds a protected
-rim, a dependent smaller tool and a declared side-clamp/body check. Runtime,
+rim, a dependent smaller tool and a declared side-clamp/body check. A bounded
+circular paired V-carve inlay now checks separate plug/receiver stock, decoded
+output and analytic assembly at zero or positive radial clearance. Runtime,
 physical setup and freeform surfaces remain unassessed.
 See the
 [current status](docs/PROGRESS.md#active-work-and-next-priority).

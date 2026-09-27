@@ -2013,6 +2013,34 @@ evidence. The [contract](structure_spec.md#bounded-spherical-bowl-ball-finish-an
 and [review](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest---2026-09-27)
 state the represented shapes, numerical basis and remaining limits.
 
+### Packet 4 paired V-carve inlay
+
+Run from the repository root with the declared interpreter:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_paired_inlay tests.test_ordered_job tests.test_ordered_dialects tests.test_v_region -q
+```
+
+The self-contained test builds the synthetic contour without relying on
+ignored output. Its 4 mm circular design, 7 mm
+circular stocks, pointed 0.5-tangent V profile, 1 mm cut depth, 0.9 mm
+engagement and 0.08 mm maximum ring pitch exercise zero and 0.1 mm radial
+clearance. Two separate complete UCCNC or Grbl programs are decoded and
+stock-replayed. The current UCCNC session bundle contains a handoff and `stage-1.nc`
+for each part, plus one [paired certificate](../output/packet4-paired-inlay-20260927-01/zero/paired-certificate.json)
+per clearance case. Use the certificate's pair fingerprint and both program
+SHA-256 values when re-auditing later bytes with `inlay.audit_pair`.
+
+The insertion envelope has zero modeled residual and protected overcut at
+depths 0, 0.45 and 0.9 mm. Stock remaining deeper than 0.9 mm is the declared
+bottom gap or backing/facing allowance. Zero clearance has nominal side
+contact; 0.1 mm clearance has a 0.1 mm radial gap at correct registration.
+This synthetic detached output needs no CamBam post or manual GUI check.
+Controller runtime, center-plunge suitability and physical assembly remain
+outside this offline gate. The [contract](structure_spec.md#bounded-circular-paired-v-carve-inlay)
+and [review](REVIEW.md#packet-4-paired-v-carve-inlay---2026-09-27)
+give the geometry and measured evidence.
+
 ### Bounded holder and fixture occupancy
 
 Run the reusable synthetic case from the repository root:

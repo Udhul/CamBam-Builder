@@ -777,6 +777,17 @@ posts before claiming that output route. Stop at one bounded tapered pair;
 production glue gap, material behavior and physical fit are separate.
 **Next fresh session: packet 5.**
 
+**Accepted bounded offline result (2026-09-27):** one circular contour and
+pointed V profile produce independent tapered receiver/plug jobs at zero and
+0.1 mm caller-supplied radial clearance. Complete UCCNC and Grbl output for
+each part independently decodes and replays; analytic assembly and decoded
+sections show the declared side gap, 0.1 mm bottom gap, zero insertion-envelope
+residual/overcut and retained backing. Source/tool, registration, flip and
+program edits reject stale or colliding evidence. Exact bounds and bytes are
+in the [packet 4 evidence](REVIEW.md#packet-4-paired-v-carve-inlay---2026-09-27).
+No CamBam post or physical-fit choice was needed for this detached synthetic
+case. Packet 5 is the next fresh-session work.
+
 #### 5. Direct controller program for a fully generated job
 
 **Job:** take the nominal generated RC01 rough/cleanup sequence through a

@@ -28,7 +28,7 @@ are outside that runtime package list.
 | `cambam_builder/cambam_entities.py` and nine old root module paths | Compatibility/discovery imports of canonical native objects; no native implementation remains at root | Preserve public and documented direct imports; implementation modules import owners directly |
 | `cambam_builder/native/transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
 | `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy, remaining-section bounds and supplied section-motion verification | Horizontal cuts and explicit travel inside rectangular stock/target; no generated or native path integration |
-| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns ordered XYZ/cut-sweep values, `ordered_job.py` owns caller-supplied stage/state and decoded stock auditing, `volume3d.py` owns bounded layered 3D stock, `surface3d.py` owns affine-plane and spherical-bowl ball contact/stock, `occupancy.py` owns bounded tool-body/box clearance, and `curved_region.py` owns bounded circular-arc access/rest approximation | Exact nominal and curved endmill stock, stepped-volume, analytic sloped/bowl ball and holder/fixture evidence slices; no native entity, XML, MCP or machine-output dependency |
+| `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns ordered XYZ/cut-sweep values, `ordered_job.py` owns caller-supplied stage/state and decoded stock auditing, `volume3d.py` owns bounded layered 3D stock, `surface3d.py` owns affine-plane and spherical-bowl ball contact/stock, `inlay.py` owns bounded circular paired-target assembly/stock, `occupancy.py` owns bounded tool-body/box clearance, and `curved_region.py` owns bounded circular-arc access/rest approximation | Exact nominal and curved endmill stock, stepped-volume, analytic sloped/bowl ball, circular inlay and holder/fixture evidence slices; no native entity, XML, MCP or machine-output dependency |
 | `cambam_builder/cam_extensions/strategy.py` | Deterministic selection among separately audited ordered routes, including partial and infeasible outcomes | Policy over evidence records; no XML or native entity dependency |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
@@ -658,6 +658,47 @@ conservative cells for evolving stock; no freeform mesh, overhang, general
 surface offset, real holder installation or controller runtime is claimed.
 See the [packet 3 runbook](DEVELOPMENT.md#packet-3-spherical-bowl-ball-finish-and-rest)
 and [evidence](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest---2026-09-27).
+
+### Bounded circular paired V-carve inlay
+
+`cam_core.inlay` composes two independent one-stage ordered jobs from one
+circular design contour and one pointed `v_region.VProfile`. The receiver
+removes a disk; the plug removes the annulus outside a retained tapered core.
+The two jobs have separate machining frames and stock replays. The assembly
+frame reverses plug Z and accepts a declared XY registration offset. For
+contour radius `R`, cutter half-angle tangent `t`, engagement `H`, cut depth
+`D>H`, and nonnegative radial clearance `c`, the receiver wall is
+`R-z*t` at receiver depth `z`. The plug wall at machining depth `u` is
+`R-H*t-c+u*t`; at assembly `u=H-z`, so the seated radial gap is exactly `c`.
+At insertion depth `s<=H`, the gap is `c+(H-s)*t` before registration. A
+registration offset reduces minimum gap by its magnitude. The receiver floor
+is `D-H` below the plug front; the retained plug backing begins behind the
+seated face. The backing face contacts the receiver top at full insertion.
+
+Both operations cut concentric full G3 circles at tip depth `D`, with vertical
+entries, retracts and safe travel included in the decoded program. The
+receiver's outer centerline is `R-D*t`; the plug's inner centerline is
+`R+(D-H)*t-c`. A circle of center radius `r` cuts the radial interval
+`[r-(D-z)*t, r+(D-z)*t]` at section depth `z`. The decoded-circle stock
+evaluator unions these intervals independently for each part. A ring pitch
+strictly below `2*(D-H)*t` guarantees continuous coverage throughout the
+insertion envelope `0..H`; the two final wall circles establish its exact
+boundaries. Section residual and protected overcut are reported at the
+surface, mid-engagement, seated face, midpoint of the bottom/facing allowance
+and cut depth. Residual in the final `D-H` allowance is expected; it does not
+enter the assembled insertion envelope.
+
+`integrations.ordered_output` renders complete UCCNC or Grbl programs and
+decodes every move, tool, feed, spindle and arc center. `inlay.audit_pair`
+replays both decoded stocks, compares their assembled wall radii and binds
+the pair, source/tool geometry and output hashes. Wrong flip, excessive
+registration, impossible clearance, changed tool geometry and stale program
+bytes fail. The cross-section/insertion formulas are an independent assembly
+oracle. The supported geometry is a circle with a parallel-plane Z flip and
+one pointed cutter; process loads, plunge capability, material response,
+machine setup and physical fit are unassessed. Native CamBam emission is not
+part of this detached route. See the [runbook](DEVELOPMENT.md#packet-4-paired-v-carve-inlay)
+and [evidence](REVIEW.md#packet-4-paired-v-carve-inlay---2026-09-27).
 
 ### Bounded tool-body and fixture occupancy
 
