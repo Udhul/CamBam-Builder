@@ -1,17 +1,18 @@
 # Future rest machining and V-cutter paths
 
-Status: **M0-M4 bounded outcomes accepted; M5 named output fixtures pass their
-offline engineering gate. Full packet closure still needs the ordered native-MOP
-edit case identified in the 2026-09-26 review. The next development phase promotes
-these proofs into reusable job and verification capabilities.**
-Requested 2026-09-08 and expanded 2026-09-22/23. Priority belongs only to [PROGRESS.md](PROGRESS.md#remaining-backlog-in-order).
+Status: **M0-M5 bounded outcomes accepted offline.** The reusable ordered-job
+packet closed M5's native-MOP edit/order gap; the five subsequent job packets
+also passed their bounded offline gates. The next priority is branch delivery
+review, recorded in [PROGRESS.md](PROGRESS.md#active-work-and-next-priority).
+Requested 2026-09-08 and expanded 2026-09-22/23. Priority belongs only to
+[PROGRESS.md](PROGRESS.md#active-work-and-next-priority).
 This document owns the problem, proposed outcomes, technical reasoning and future
 acceptance criteria. Only the explicitly marked bounded slices claim implementation;
 none authorize machine execution.
 The five original outcomes below are retained. Historical design refinements and
 decisions are in [Design refinement](#design-refinement---2026-09-22)
 and the [execution architecture refinement](#execution-architecture-refinement---2026-09-23).
-The current direction and next implementation packet are in
+The implemented reusable-job direction and later packets are in
 [From reference jobs to reusable CAM capabilities](#from-reference-jobs-to-reusable-cam-capabilities).
 The [first generated acceptance job](#first-generated-acceptance-job-rc01)
 now gives user-accepted synthetic inputs and separate standalone/native acceptance gates.
@@ -52,12 +53,13 @@ remain required. Do not claim physical machining without real setup acceptance.
 | M2: curved Region rest and endmill cleanup | On a native annulus and a mixed line/arc concave Region with a hole, derive pure rest from supplied prior motion and produce complete smaller-endmill entry/cut/link/retract paths. Preserve analytic source identity; validate arc topology, conservative access/protection and independently bounded residual/overcut through approximation and emitted motion. Strict native reimport, visible preview, actual explicit post and stock replay must pass; include a curved narrow-access rejection and translated/reflected frame case. | **Accepted for the bounded annulus, mixed and reflected synthetic jobs via exact explicit motion.** All three actual Default posts pass ordered motion and stock replay; their native Engrave preview posts separately match the final T2 centerlines. The user confirmed curved preview visibility. CustomScript proves post transport, not independent CamBam path planning; neither route is physical machining acceptance. |
 | M3: V cleanup and edge tracing | On the polygonal target and at least one accepted curved target, generate pointed, flat-tip and tangent spherical/conical rounded-tip variable-depth paths, depth-capped/wide-area additional passes, and boundary/corner cleanup around concavity and holes. Check tool-profile continuity, full cutter occupancy, access, protected material, residual and infeasible/partial results between vertices and around arcs. Strict native preview and actual explicit post must be audited; Engrave remains inspection-only unless its whole post passes. | **Accepted for the bounded capped inward V recess.** The user saw geometry and V paths in all seven previews. All seven corrected actual preview posts match centerlines with +5 mm XY rapid links; all seven corrected explicit posts pass complete T1/T3 stock, access and residual audits. Pointed, flat and rounded profiles cover letter and annulus; mixed rounded and curved rejection pass. Flat-pocket strategy selection remains M4 work. |
 | M4: composed workflow and edits | One reopened/edited native source runs rest analysis, alternative endmill/V strategy comparison, selected ordered operations and stock-dependent cleanup without hidden session state. Normalize complete actual emitted motion from any supported native CamBam MOP or ordered MOP series as prior-stock authority, with explicit rejection of unsupported motion; calculate remaining area and volume by stage. Include a curved target and rounded-tip strategy in the accepted comparison; prove one contour-parallel offset fill candidate alongside the raster proof input through the same stock verifier. Allow manual or planned chaining of safe native MOPs, custom Region MOPs and exact framework paths. Relevant edits invalidate source, path and post claims; unchanged cosmetic edits retain valid evidence. The same accepted plan is available through native preview/explicit output and a parsed, stock-replayed direct reference program. | **Accepted for the bounded edited annulus.** The reopened 2.1 mm hole, T1-only partial endmill route and rounded raster/contour-offset finishes pass shared stock and direct reference audits. The user saw source primitives and Engrave toolpaths in both previews. Both actual preview posts match centerlines and both actual explicit Default posts pass complete T1/T3 motion and stock audits; the area-first selector chooses raster while offset also meets the fixed budgets. The bounded linear native-MOP normalizer rejects unsupported arc/unsafe motion; generic curved native Pocket planning is not certified. |
-| M5: first controller output | Lower the accepted M4 plan through a declared controller profile with explicit units, coordinate/datum mapping, tools, feeds, spindle, entry/link/retract and end roles; independently decode every emitted program or command stream and replay its actual coordinates with stock carried across program boundaries. Keep tool-change intent, measurement/offset method, execution method and dialect separate. Prove manual and automatic transition contracts, stockless explicit-MOP import, an explicitly requested nonidentity datum map, and two distinct controller dialect fixtures. Report stock-dependent checks as unavailable when no stock model is supplied; physical changer behavior remains machine-specific acceptance. | **Named offline fixtures accepted by engineering; packet closure has a specific coverage gap.** UCCNC and Grbl cutting stages pass decoded stock checks. Offset values and synthetic host effects are pinned assumptions, not general state/kinematics simulation. The disabled/reordered native-MOP case still needs named end-to-end evidence in the next job-contract increment. No abstract user sign-off is required. Runtime/physical setup remain `not_evaluated`. |
+| M5: first controller output | Lower the accepted M4 plan through a declared controller profile with explicit units, coordinate/datum mapping, tools, feeds, spindle, entry/link/retract and end roles; independently decode every emitted program or command stream and replay its actual coordinates with stock carried across program boundaries. Keep tool-change intent, measurement/offset method, execution method and dialect separate. Prove manual and automatic transition contracts, stockless explicit-MOP import, an explicitly requested nonidentity datum map, and two distinct controller dialect fixtures. Report stock-dependent checks as unavailable when no stock model is supplied; physical changer behavior remains machine-specific acceptance. | **Accepted for the bounded offline domain.** The M4 raster and edited annulus/rectangle jobs use decoded UCCNC and Grbl output; manual and modeled automatic transitions, stockless import, and a nonidentity datum have checked fixtures. The reusable ordered-job packet closes the native disabled/reordered T1/T2/T1 case with fresh synthetic Default posts and cutting-stock prefixes. It does not claim a fresh actual CamBam post, controller runtime or physical changer behavior. See the [ordered-job evidence](REVIEW.md#reusable-ordered-jobs-and-verification---2026-09-26). |
 
-This is **five fully accepted milestones plus the M5 named fixture gate accepted
-by engineering**. The open item is technical coverage, not user approval of an
-abstract result. Closing these bounded milestones will not by itself establish
-a general CAM engine. Runtime and physical setup remain separate evidence gates.
+All **six bounded milestones are accepted** for their stated offline scope.
+The five later [job packets](#ordered-next-session-job-packets-selected-2026-09-27)
+are accepted separately. This does not establish a general CAM engine, native
+Pocket algorithm parity, controller runtime or physical setup; reopen those
+only for a named job or machine setup requiring them.
 
 ### M5 controller coverage and automatic evidence - 2026-09-26
 
@@ -806,8 +808,9 @@ current public ordered-job route already satisfies this job, close with the
 end-to-end regression and evidence instead of another post engine. Stop at
 offline level-1 output for this named controller profile. Target-controller
 runtime, real machine limits and physical cuts remain separate gates.
-**Next fresh session:** reassess the [remaining backlog](PROGRESS.md#remaining-backlog-in-order)
-against a new named need; do not auto-extend these five packets.
+**Next fresh session:** complete the bounded
+[branch delivery review](PROGRESS.md#active-work-and-next-priority);
+do not auto-extend these five packets.
 
 **Accepted bounded offline result (2026-09-27):** the exact nominal RC01
 T1/T2 generated trace now emits two complete UCCNC programs through the
@@ -820,8 +823,7 @@ output bytes are hash-bound; edits and unsupported commands reject. The
 [packet 5 evidence](REVIEW.md#packet-5-generated-rc01-uccnc-output---2026-09-27)
 records exact values and limits. No CamBam post or manual validation is needed
 for this synthetic offline gate. UCCNC runtime and physical use remain open.
-The five selected packets are complete; a fresh session should reassess the
-remaining backlog against a named need.
+The five selected packets are complete; the branch delivery review is next.
 
 Existing libraries can inform primitives or comparison oracles without owning
 our workflow. [OpenCAMLib's drop/push-cutter methods](https://opencamlib.readthedocs.io/en/latest/)

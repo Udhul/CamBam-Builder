@@ -230,9 +230,23 @@ with partial finite-tool completion. The [contract](structure_spec.md#bounded-ge
 [evidence](REVIEW.md#packet-5-generated-rc01-uccnc-output---2026-09-27)
 own exact hashes and limits. The synthetic split handoff asserts T2
 installation and tip registration; controller runtime and physical setup
-remain unassessed. **The five selected packets are complete. Next priority:
-reassess the [remaining backlog](#remaining-backlog-in-order) for a named
-user need before choosing another implementation packet.**
+remain unassessed. The five selected packets are complete.
+
+**Next priority: bounded rest/V branch delivery review.** The
+[M0-M5 scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
+is 6/6 accepted for its stated offline domain; the later five job packets are
+also accepted. On `feat/rest-machining-and-vcarving`, review the exact
+`main...HEAD` change set, confirm source/artifact hygiene and required native
+observations, rerun branch-level automated/package gates after the latest
+commit, and repair only demonstrated delivery defects. Stop when the branch
+is merge-ready under [delivery rules](WORKFLOW.md#verification-and-handoff-checklist)
+or a specific failing gate is recorded. The user performs the merge. This is
+a delivery increment, not a sixth job packet or a new machining feature.
+No new CamBam post or user validation is required for the accepted offline
+jobs. UCCNC runtime, physical machining, failed native Pocket role parity,
+general freeform geometry, non-box fixtures and the deferred package migration
+have separate [reopening criteria](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27)
+or named-need gates; they do not hold the bounded epic open.
 
 Do not expand occupancy to non-box fixtures or select a
 general surface backend without a named job that needs them; reopen for an
@@ -1864,11 +1878,12 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    | [4](REST_MACHINING_PLAN.md#4-paired-v-carve-inlay) | **Accepted offline 2026-09-27** | Separate decoded tapered receiver/plug stocks, analytic insertion, zero/0.1 mm clearance and stale-evidence rejection. |
    | [5](REST_MACHINING_PLAN.md#5-direct-controller-program-for-a-fully-generated-job) | **Accepted offline 2026-09-27** | Fully generated RC01 T1/T2 job through six-decimal UCCNC output and decoded RC01 stock replay. |
 
-   After a packet's implementation, checks and any required external post are
-   accepted, update this table, record evidence in `REVIEW.md`, and start the
-   next packet in a new session. A pending external observation keeps its
-   packet active. Packet 5 ends this sequence; select later work against a
-   new named need. Historical entries below retain earlier stage limits; they
+   All five selected packets are accepted. M0-M5's separate bounded
+   [scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
+   is also complete: the reusable ordered-job evidence closed M5's native
+   disabled/reordered source case. Branch delivery review is the active next
+   increment above. A later machining capability needs a new named job and
+   acceptance boundary. Historical entries below retain earlier stage limits; they
    do not permanently restrict the framework to RC01 or a fixed-axis sample
    workflow.
    The [planar backend decision](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
@@ -1979,8 +1994,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    other dimensions and pointed tools. One edited member also emits a parsed
    and target-replayed direct reference file; the CamBam output adapters remain
    bound to the posted member. The nominal RC01 two-tool sequence now also has
-   exact parsed and replayed headless reference output. A controller-specific
-   direct post remains future work;
+   exact parsed and replayed headless reference output. At this historical
+   checkpoint a controller-specific direct post remained future work;
+   [packet 5](#active-work-and-next-priority) later added bounded UCCNC output.
    N remains blocked on its known role controls.
 
    **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)

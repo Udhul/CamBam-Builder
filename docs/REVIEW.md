@@ -7318,3 +7318,39 @@ also re-audited with 2,939 decoded motions after the final code change.
 untracked source whitespace check found no trailing whitespace; the ignored
 `.cb`/`.nc` check under `tests/` and `demos/` found no candidates. The
 worktree is uncommitted and ready for user review/commit, not merge-ready.
+
+## Bounded rest/V epic closure and branch delivery selection — 2026-09-27
+
+The five later ordered job packets are all accepted for their stated offline
+scope, but they are not the original bounded epic's milestone count. The
+[M0-M5 scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
+already accepted M0-M4. Its M5 row was stale: the
+[reusable ordered-job evidence](#reusable-ordered-jobs-and-verification---2026-09-26)
+demonstrates caller-supplied UCCNC/Grbl jobs, manual and modeled automatic
+transitions, stockless import and nonidentity datum, plus a native-normalized
+T1/T2/T1 job with 2/3/5 cumulative cuts. Disabling or reordering a predecessor
+invalidates old source/post evidence; fresh synthetic Default posts and stock
+prefixes of 2/4 or 2/4/6 close the named edit/order case. This is engineering
+acceptance of M5's bounded offline contract, not a fresh actual CamBam post or
+observed controller transition. The scorecard is therefore **6/6 accepted**;
+the additional job packet sequence is **5/5 accepted**.
+
+The natural next increment on `feat/rest-machining-and-vcarving` is a branch
+delivery audit against `main`, not another nearby geometry or output fixture.
+At this triage, the worktree was clean, `main...HEAD` had zero commits behind
+and 87 ahead, `git diff --check main...HEAD` passed, and the branch diff added
+no `.cb`/`.nc` files. The branch still needs review of the complete committed
+diff and required checks rerun after the latest commit before any merge-ready
+claim; prior pre-commit test results cannot supply that gate. No new user
+observation is needed for the accepted offline jobs. The original native RC01
+Pocket N role failure, general native algorithm parity, formal GEOS topology
+enclosure, freeform 3D, non-box fixtures, general package migration, UCCNC
+runtime and physical machining remain scoped limits with separate reopening
+criteria, not missing M0-M5 or packet acceptance. Reopen them for a named
+consumer, controller trace or real-machine setup that needs those capabilities.
+
+This round changed documentation only. The updated local heading links and
+accepted evidence were checked against their owners; `git diff --check` passed.
+No runtime behavior or native output changed, so no new CamBam observation or
+automated behavior test adds evidence to this status correction. The correction
+remains uncommitted; the delivery audit must use the eventual committed `HEAD`.
