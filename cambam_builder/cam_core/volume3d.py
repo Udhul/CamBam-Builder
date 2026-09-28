@@ -27,6 +27,12 @@ def _rect(value):
             value[0] < value[2] and value[1] < value[3])
 
 
+def _interior_overlap(a, b):
+    """Whether two axis-aligned rectangles share positive-area interior."""
+    return (max(a[0], b[0]) < min(a[2], b[2]) and
+            max(a[1], b[1]) < min(a[3], b[3]))
+
+
 @dataclass(frozen=True)
 class LayeredTarget:
     """Stock from Z=0 to -stock_depth; disjoint rectangular removal prisms."""
@@ -48,20 +54,23 @@ class LayeredTarget:
                     not 0 < p[4] <= self.stock_depth
                     for p in self.prisms)):
             raise ValueError("invalid layered target")
-        stock = box(*self.stock_xy)
-        shapes = [box(*p[:4]) for p in self.prisms]
-        feature = box(*self.protected_xy)
-        if (not stock.is_valid or not stock.contains(feature) or
-                any(not stock.contains(shape) or
-                    shape.intersection(feature).area > AREA_TOLERANCE_MM2
-                    for shape in shapes) or
-                any(a.intersection(b).area > AREA_TOLERANCE_MM2
-                    for i, a in enumerate(shapes)
-                    for b in shapes[i + 1:])):
-            raise ValueError("prisms overlap or touch protected stock")
+        stock = self.stock_xy
+        rectangles = [p[:4] for p in self.prisms]
+        def inside(rect):
+            return (stock[0] <= rect[0] and stock[1] <= rect[1] and
+                    rect[2] <= stock[2] and rect[3] <= stock[3])
+        if (not inside(self.protected_xy) or
+                any(not inside(rect) or
+                    _interior_overlap(rect, self.protected_xy)
+                    for rect in rectangles) or
+                any(_interior_overlap(a, b)
+                    for i, a in enumerate(rectangles)
+                    for b in rectangles[i + 1:])):
+            raise ValueError("prisms overlap or enter protected stock")
 
     def section(self, depth):
-        if not 0 < depth <= self.stock_depth:
+        if (isinstance(depth, bool) or not isinstance(depth, Real) or
+                not math.isfinite(depth) or not 0 < depth <= self.stock_depth):
             raise ValueError("section depth outside stock")
         return unary_union([box(*p[:4]) for p in self.prisms if depth <= p[4]])
 
@@ -224,17 +233,17 @@ def compare_representations(target, pitches=(0.25, 0.125)):
             cells = []
             for ix in range(nx):
                 for iy in range(ny):
-                    cell = box(xmin + ix * pitch, ymin + iy * pitch,
-                               min(xmax, xmin + (ix + 1) * pitch),
-                               min(ymax, ymin + (iy + 1) * pitch))
+                    cell = (xmin + ix * pitch, ymin + iy * pitch,
+                            min(xmax, xmin + (ix + 1) * pitch),
+                            min(ymax, ymin + (iy + 1) * pitch))
+                    area = (cell[2] - cell[0]) * (cell[3] - cell[1])
                     lower = upper = 0.0
                     for prism in target.prisms:
-                        region = box(*prism[:4])
-                        overlap = region.intersection(cell).area
-                        if overlap > AREA_TOLERANCE_MM2:
-                            upper += cell.area * prism[4]
-                        if abs(overlap - cell.area) <= AREA_TOLERANCE_MM2:
-                            lower += cell.area * prism[4]
+                        if _interior_overlap(prism[:4], cell):
+                            upper += area * prism[4]
+                        if (prism[0] <= cell[0] and prism[1] <= cell[1] and
+                                cell[2] <= prism[2] and cell[3] <= prism[3]):
+                            lower += area * prism[4]
                     cells.append((lower, upper))
             return (sum(cell[0] for cell in cells),
                     sum(cell[1] for cell in cells))

@@ -32,6 +32,35 @@ def with_setup(job, *, fixture_y=-0.9, holder_radius=0.8):
 
 
 class OccupancyTests(unittest.TestCase):
+    def test_straight_holder_contact_and_numeric_admission(self):
+        body = ToolBody("T1", (
+            ToolBand("cutter", 0, 1, 0.2),
+            ToolBand("shank", 1, 1.5, 0.2),
+            ToolBand("holder", 1.5, 3, 0.5)))
+        stage = SimpleNamespace(tool_id="T1")
+        move = JobMove("cut", (0, 0, 0), (10, 0, 0), 100)
+        stock = Box("stock", (-1, -1, -2, 11, 1, 0))
+        for gap, collision in ((0.0, True), (0.5e-9, True),
+                               (2e-9, False)):
+            with self.subTest(gap=gap):
+                setup = OccupancySetup("program", stock,
+                    (Box("clamp", (4, 0.5 + gap, 1.6,
+                                    6, 1.0 + gap, 2.5)),), (body,))
+                if collision:
+                    with self.assertRaisesRegex(ValueError,
+                                                "holder collision with fixture clamp"):
+                        verify(setup, (stage,), ((move,),))
+                else:
+                    result = verify(setup, (stage,), ((move,),))
+                    self.assertAlmostEqual(result["minimum_fixture_clearance_mm"],
+                                           gap, delta=1e-15)
+
+        setup = OccupancySetup("program", stock, (), (body,))
+        extreme = JobMove("cut", (-1e308, 0, -1e200),
+                          (1e308, 0, 1e200), 100)
+        with self.assertRaisesRegex(ValueError, "arithmetic is unresolved"):
+            verify(setup, (stage,), ((extreme,),))
+
     def test_planar_arc_holder_hits_between_clear_endpoints(self):
         body = ToolBody("T1", (
             ToolBand("cutter", 0, 3, 0.5),

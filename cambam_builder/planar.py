@@ -367,6 +367,7 @@ def normalize(region, budget):
         if any(not isinstance(c, (Polygon, Circle, Rectangle)) for c in region.components):
             _fail("unsupported", "general arcs/curves and native entities require a separate adapter")
         raw = []
+        source_polygons = []
         spans = []
         numeric = list(region.frame.origin)
         if region.frame.section_z is not None:
@@ -382,6 +383,7 @@ def normalize(region, budget):
         for index, component in enumerate(region.components):
             _primitive(component)
             if isinstance(component, Polygon):
+                source_polygons.append((component.shell, component.holes))
                 rings = (component.shell,) + component.holes
                 converted = []
                 for ri, ring in enumerate(rings):
@@ -437,6 +439,9 @@ def normalize(region, budget):
                   ErrorTerm("numeric_computation", None, None, "unknown"),
                   ErrorTerm("output_conversion", None, None, "unknown"))
         _ledger_check(ledger, budget)
+        # The converted coordinates can round a source contact or crossing away.
+        # Admit authored line topology in its source frame as well as locally.
+        adapter.validate(tuple(source_polygons))
         components, contacts = adapter.validate(tuple(raw))
         fingerprint = _hash((region.frame, tuple(sorted(_source_key(c) for c in region.components)), _policy(budget)))
         provenance = Provenance((fingerprint,), _policy(budget), (), "planar-v1", adapter.versions())

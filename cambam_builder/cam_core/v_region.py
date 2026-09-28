@@ -72,7 +72,7 @@ class VProfile:
 
     def depth_for_radius(self, radius):
         radius = _finite(radius, "available radius")
-        if radius < self.radius(0) - 1e-10:
+        if radius < self.radius(0):
             return None
         if radius >= self.radius(self.cutting_length):
             return self.cutting_length
@@ -80,9 +80,11 @@ class VProfile:
             return radius / self.tangent
         if self.kind == "flat":
             return (radius - self.tip_radius) / self.tangent
-        join_radius = self.radius(self.join_height)
+        join_radius = self.tip_radius * math.cos(math.radians(self.angle_degrees) / 2)
         if radius <= join_radius:
-            return self.tip_radius - math.sqrt(max(0.0, self.tip_radius ** 2 - radius ** 2))
+            # Rationalize R - sqrt(R^2-r^2) to retain tiny positive depths.
+            return radius * radius / (self.tip_radius + math.sqrt(
+                max(0.0, self.tip_radius ** 2 - radius ** 2)))
         return self.join_height + (radius - join_radius) / self.tangent
 
     def occupancy_radius(self, penetration, section_depth):
@@ -131,8 +133,17 @@ class VTarget:
         depth = _finite(depth, "section depth")
         if not 0 <= depth <= self.cap_depth:
             raise ValueError("section outside V target")
+        tangent = _finite(tangent, "section tangent")
+        if tangent <= 0:
+            raise ValueError("section tangent must be positive")
         shape = self.outer if outer else self.safe
-        return shape.buffer(-depth * tangent, quad_segs=64) if depth else shape
+        # Round hole/concave-corner joins are inscribed: nominal erosion is
+        # an outer enclosure. Enlarge the inner erosion's disk to compensate
+        # for chord loss, including GEOS rounding of non-quadrant fillet counts.
+        distance = depth * tangent
+        if not outer:
+            distance /= math.cos(math.pi / 128)
+        return shape.buffer(-distance, quad_segs=64) if depth else shape
 
 
 @dataclass(frozen=True)
@@ -427,21 +438,26 @@ def section_report(result, depth, *, final=True):
     if not 0 <= depth <= plan.target.cap_depth:
         raise ValueError("section outside V target")
     inner, outer = [], []
+    # Each primitive is a disk or straight capsule, so its round caps span
+    # exact half/full circles with 32 segments per quadrant.
+    inflation = 1 / math.cos(math.pi / 128)
     for cut in prior_cuts:
-        if -cut.bottom >= depth:
-            line = LineString((cut.a, cut.b)) if cut.a != cut.b else Point(cut.a)
+        section = cut.section_segment(depth)
+        if section is not None:
+            a, b = section
+            line = LineString((a, b)) if a != b else Point(a)
             inner.append(line.buffer(max(0, cut.tool.radius -
                                          cut.path_error_mm - 1e-6),
                                      quad_segs=32))
-            outer.append(line.buffer(cut.tool.radius + cut.path_error_mm +
-                                     1e-6, quad_segs=32))
+            outer.append(line.buffer((cut.tool.radius + cut.path_error_mm +
+                                      1e-6) * inflation, quad_segs=32))
     for path in plan.paths if final else ():
         for a, b in zip(path.points, path.points[1:]):
             low, high = min(a[2], b[2]), max(a[2], b[2])
             line = LineString((a[:2], b[:2]))
             if high >= depth:
                 radius = plan.tool.radius(high - depth) + 1e-6
-                outer.append(line.buffer(radius, quad_segs=32))
+                outer.append(line.buffer(radius * inflation, quad_segs=32))
             if low >= depth:
                 radius = max(0.0, plan.tool.radius(low - depth) - 1e-6)
                 if radius:

@@ -5,6 +5,7 @@ import math
 from pathlib import Path
 import tempfile
 import unittest
+from dataclasses import replace
 
 try:
     from cambam_builder.cam_core import curved_region, replay
@@ -19,6 +20,24 @@ except ModuleNotFoundError as exc:
 
 @unittest.skipUnless(HAS_PLANAR, "optional planar backend is absent")
 class CurvedApproximationTests(unittest.TestCase):
+    def test_error_margin_encloses_round_hole_and_shell_corners(self):
+        from shapely.geometry import Point
+        shell = ((0, 0, 0), (20, 0, 0), (20, 20, 0), (0, 20, 0))
+        hole = ((8, 8, 0), (12, 8, 0), (12, 12, 0), (8, 12, 0))
+        approximation = curved_region.approximate(shell, (hole,))
+        theta = math.pi / 256
+        radius = 0.001 * (1 - 1e-5)
+        # Inside the true error disk around the hole's top-right corner.
+        hole_point = Point(12 + radius*math.cos(theta),
+                           12 + radius*math.sin(theta))
+        self.assertFalse(approximation.safe.covers(hole_point))
+        # The outward enclosure must include the same disk at the shell.
+        shell_point = Point(20 + radius*math.cos(theta),
+                            20 + radius*math.sin(theta))
+        self.assertTrue(approximation.outer.covers(shell_point))
+        self.assertEqual(len(approximation.safe.interiors), 1)
+        self.assertEqual(len(approximation.outer.interiors), 1)
+
     def test_subresolution_bulge_fails_instead_of_losing_arc(self):
         shell = ((0, 0, 1e-10), (10, 0, 0), (10, 10, 0), (0, 10, 0))
         with self.assertRaisesRegex(ValueError, "bulge below supported resolution"):
@@ -60,6 +79,17 @@ class CurvedRestTests(unittest.TestCase):
             self.assertGreater(rough[0] - final[1], 17.7)
             self.assertLess(final[1] - final[0], 0.15)
             self.assertLess(result.protected_overcut_upper_area(depth), 1e-8)
+        self.assertLess(result.rest_volume(final=True)[1], 0.8)
+
+    def test_helical_volume_requires_bounded_depth_integration(self):
+        result = self.result
+        cut = next(c for c in result.planned.stock.cuts if c.a != c.b)
+        helical = replace(cut, bottom_start=cut.bottom / 2)
+        changed_stock = replace(result.planned.stock, cuts=(helical,))
+        changed = replace(result, planned=replace(result.planned, stock=changed_stock))
+        with self.assertRaisesRegex(ValueError, "helical volume"):
+            changed.rest_volume(final=True)
+        # Constant-depth source stock remains a valid nearby case.
         self.assertLess(result.rest_volume(final=True)[1], 0.8)
 
     def test_original_arc_identity_and_source_freshness(self):

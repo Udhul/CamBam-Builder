@@ -125,6 +125,15 @@ def evaluate_case(case, limits):
         return {"id": case["id"], "status": "out_of_planar_scope",
                 "notes": ["Cutter-profile inversion and joins belong to the tool-profile layer."],
                 "checks": []}
+    workflow_cases = {
+        "M1_narrow_access_rejection", "M2_annulus_curved_cleanup",
+        "M2_mixed_arc_concave_hole", "M2_curved_narrow_access_rejection",
+        "M3_polygonal_and_curved_V_paths", "M3_flat_tip_curved_narrow_access",
+    }
+    if case["id"] in workflow_cases:
+        return {"id": case["id"], "status": "out_of_planar_scope",
+                "notes": ["Generated motion, tool occupancy and evolving-stock acceptance belong to the CAM core workflow suites; this backend probe establishes none of those claims."],
+                "checks": []}
     if key == "G01":
         a, b = box(*data["a"]), box(*data["b"])
         for name, result, reference in (

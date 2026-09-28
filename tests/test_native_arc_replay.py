@@ -8,6 +8,27 @@ from cambam_builder.cam_core import polygon_rest, replay
 
 
 class NativeArcReplayTests(unittest.TestCase):
+    def test_arc_chords_enclose_analytic_semicircle_and_preserve_direction(self):
+        radius = 3
+        start, end = (radius, 0, -1), (-radius, 0, -1)
+        for direction, sign in ((3, 1), (2, -1)):
+            with self.subTest(direction=direction):
+                segments, error = replay.arc_segments(start, end, (0, 0),
+                                                      direction)
+                self.assertEqual(segments[0][0], start[:2])
+                self.assertEqual(segments[-1][1], end[:2])
+                step = math.pi / len(segments)
+                expected_sagitta = radius * (1 - math.cos(step / 2))
+                self.assertLessEqual(expected_sagitta, 0.0001)
+                self.assertGreaterEqual(error, expected_sagitta)
+                for index, (a, b) in enumerate(segments):
+                    midpoint = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+                    angle = sign * step * (index + 0.5)
+                    ideal = (radius * math.cos(angle), radius * math.sin(angle))
+                    self.assertLessEqual(math.dist(midpoint, ideal),
+                                         expected_sagitta + 1e-14)
+                    self.assertGreater(sign * midpoint[1], 0)
+
     def test_helix_section_clip_and_unsupported_forms(self):
         target = replay.Target("square", (0, 0, 10, 10), 1,
                                region_shell=((0, 0), (10, 0),

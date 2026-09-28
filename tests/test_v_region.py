@@ -27,6 +27,91 @@ def _circle(radius, clockwise=False, center=(0, 0)):
 
 @unittest.skipUnless(HAS_PLANAR, "optional planar backend is absent")
 class VRegionTests(unittest.TestCase):
+    def test_helical_prior_section_clips_at_reached_depth(self):
+        shell = ((0, 0), (10, 0), (10, 10), (0, 10))
+        target = v_region.VTarget.polygon("helix", shell, (), 1)
+        tool = v_region.VProfile("pointed", 90, 0, 2, 1)
+        plan = v_region.VPlan(target, tool, (), (), 5, 0.001, 1,
+                              "infeasible", "supplied stock analysis")
+        cylinder = replay.ToolProfile("T1", "cylinder", 0.2, 2)
+        op = replay.Operation("prior", cylinder,
+            replay.Target("square", (0, 0, 10, 10), 1, region_shell=shell))
+        at, start, end, high = (5, 5, 5), (5, 5, 0), (6, 5, -1), (6, 5, 5)
+        trace = replay.Trace("helix", "XY", at, (op,), (
+            replay.Event("tool_change", "T1", at),
+            replay.Event("spindle_start", "T1", at),
+            replay.Motion("approach", "T1", "prior", at, start, 60),
+            replay.ArcMotion("cut", "T1", "prior", start, end, 240, 2, (5.5, 5)),
+            replay.Motion("retract", "T1", "prior", end, high, 60),
+            replay.Event("spindle_stop", "T1", high)))
+        rest = v_region.with_prior(plan, trace)
+        lower, upper, _ = v_region.section_report(rest, 0.75, final=False)
+        # Only the last quarter of the semicircle has reached this section.
+        exact = 8.5**2 - (2*0.2*0.5*math.pi/4 + math.pi*0.2**2)
+        self.assertLessEqual(lower, exact)
+        self.assertGreaterEqual(upper, exact)
+        self.assertLess(upper - lower, 0.03)
+
+    def test_capsule_residual_encloses_independent_area(self):
+        target = v_region.VTarget.polygon("capsule", ((0, 0), (10, 0),
+            (10, 10), (0, 10)), (), 2)
+        tool = v_region.VProfile("pointed", 90, 0, 3, 2)
+        path = v_region.VPath("fill", ((4, 5, 1), (6, 5, 1)))
+        plan = v_region.VPlan(target, tool, (path,),
+            v_region._motions((path,), 5), 5, 0.001, 1, "partial", "analytic test")
+        # A length-two unit-radius capsule has area 4 + pi.
+        lower, upper, overcut = v_region.section_report(plan, 0)
+        exact = 100 - 4 - math.pi
+        self.assertLessEqual(lower, exact)
+        self.assertGreaterEqual(upper, exact)
+        self.assertLess(upper - lower, 0.01)
+        self.assertEqual(overcut, 0)
+
+    def test_volume_slabs_enclose_integrated_capsule_and_refine(self):
+        target = v_region.VTarget.polygon("volume", ((0, 0), (10, 0),
+            (10, 10), (0, 10)), (), 1)
+        tool = v_region.VProfile("pointed", 90, 0, 3, 2)
+        path = v_region.VPath("fill", ((4, 5, 1), (6, 5, 1)))
+        plan = v_region.VPlan(target, tool, (path,),
+            v_region._motions((path,), 5), 5, 0.001, 1, "partial", "analytic test")
+        # Integral 0..1 of (10-2z)^2 - 4(1-z) - pi(1-z)^2.
+        exact = 100 - 20 + 4/3 - 2 - math.pi/3
+        coarse = v_region.volume_bounds(plan, slabs=4)
+        fine = v_region.volume_bounds(plan, slabs=16)
+        for lower, upper in (coarse, fine):
+            self.assertLessEqual(lower, exact)
+            self.assertGreaterEqual(upper, exact)
+        self.assertGreaterEqual(fine[0], coarse[0])
+        self.assertLessEqual(fine[1], coarse[1])
+
+    def test_holed_target_section_encloses_true_corner_offsets(self):
+        from shapely.geometry import Point
+        target = v_region.VTarget.polygon("hole", ((0, 0), (20, 0),
+            (20, 20), (0, 20)), (((8, 8), (12, 8), (12, 12), (8, 12)),), 2)
+        inner, outer = (target.section(1, 1, outer=flag) for flag in (False, True))
+        # Square shell erodes to 18^2; hole dilates by four strips and a disk.
+        exact_area = 18**2 - (16 + 16 + math.pi)
+        self.assertLessEqual(inner.area, exact_area)
+        self.assertGreaterEqual(outer.area, exact_area)
+        # Just inside the true unit-radius exclusion at a chord midpoint.
+        theta = math.pi / 256
+        point = Point(12 + (1 - 1e-5)*math.cos(theta),
+                      12 + (1 - 1e-5)*math.sin(theta))
+        self.assertFalse(inner.covers(point))
+        self.assertEqual(len(inner.interiors), 1)
+        self.assertEqual(len(outer.interiors), 1)
+
+    def test_short_rounded_profile_inverse_and_tiny_clearance(self):
+        tool = v_region.VProfile("rounded", 60, 0.5, 1, 0.1)
+        # From r^2 = 2 R h - h^2, independently choose h and derive r.
+        for height in (1e-20, 0.025, 0.1):
+            radius = math.sqrt(height - height**2)
+            self.assertAlmostEqual(tool.depth_for_radius(radius) / height,
+                                   1, delta=1e-12)
+        self.assertIsNone(tool.depth_for_radius(-1e-12))
+        flat = v_region.VProfile("flat", 90, 0.25, 2, 1)
+        self.assertIsNone(flat.depth_for_radius(math.nextafter(0.25, 0)))
+
     def profiles(self):
         return (
             v_region.VProfile("pointed", 90, 0, 4, 3),

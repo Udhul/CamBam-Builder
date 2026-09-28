@@ -72,6 +72,32 @@ def synthetic_job(boundary="split"):
 
 
 class Volume3DTests(unittest.TestCase):
+    def test_tiny_prisms_keep_disjoint_volume_and_column_enclosure(self):
+        # The exact union cannot use an area tolerance to accept overlap:
+        # even a tiny shared rectangle would be counted twice in volume.
+        stock = (0, 0, 1, 1)
+        protected = (0.8, 0.8, 0.9, 0.9)
+        narrow = (0.1, 0.1, 0.10000001, 0.2, 1)
+        target = LayeredTarget(stock, 1, (narrow,), protected)
+        exact = 1e-9
+        self.assertAlmostEqual(target.target_volume_mm3, exact, delta=1e-17)
+        low, high = compare_representations(target, (0.5,))[1][
+            "volume_interval_mm3"]
+        self.assertLessEqual(low, exact)
+        self.assertGreaterEqual(high, exact)
+        self.assertGreater(high, 0)
+
+        first = (0.1, 0.1, 0.5, 0.5, 1)
+        second = (0.49999996, 0.1, 0.7, 0.5, 1)
+        with self.assertRaisesRegex(ValueError, "overlap"):
+            LayeredTarget(stock, 1, (first, second), protected)
+        touching_protected = (0.49999996, 0.2, 0.6, 0.3)
+        with self.assertRaisesRegex(ValueError, "protected"):
+            LayeredTarget(stock, 1, (first,), touching_protected)
+        for invalid_depth in (float("nan"), float("inf"), True):
+            with self.assertRaisesRegex(ValueError, "section depth"):
+                target.section(invalid_depth)
+
     def test_cutter_sweep_brackets_independent_capsule_formula(self):
         a, b, radius = (2, 2, -1), (4, 2, -1), 0.2
         analytic = 2 * radius * 2 + math.pi * radius ** 2

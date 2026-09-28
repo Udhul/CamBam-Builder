@@ -153,6 +153,29 @@ class NominalTests(unittest.TestCase):
         result = normalize(RegionSet(FRAME, (Polygon(square(0, 0, 10)), Polygon(square(5, 5, 10)))), BUDGET)
         self.assertEqual(result.status, "invalid_input")
 
+    def test_source_hole_contact_cannot_round_away_during_unit_conversion(self):
+        # Binary-exact 5/8 point on the slanted authored shell edge. The
+        # inch-to-mm float conversion moves that point just inside the shell.
+        a = (1.16015625, 0.69921875)
+        b = (4.2265625, 3.5234375)
+        tip = (3.07666015625, 2.46435546875)
+        self.assertEqual(tuple(Fraction(3, 8) * Fraction(x) +
+                               Fraction(5, 8) * Fraction(y) for x, y in zip(a, b)),
+                         tuple(map(Fraction, tip)))
+        shell = (a, b, (1.40234375, 6.58984375),
+                 (-1.6640625, 3.765625), a)
+        hole = (tip, (2.79423828125, 2.77099609375),
+                (2.94755859375, 2.91220703125), tip)
+        frame = PlanarFrame("inch", "fixture", (0, 0), 0)
+        budget = ErrorBudget(1, 1)
+        contact = normalize(RegionSet(frame, (Polygon(shell, (hole,)),)), budget)
+        self.assertEqual(contact.status, "invalid_input", contact)
+        self.assertIn("shell/hole contact", contact.diagnostics[0])
+        inward = (tip[0] - 1 / 1024, tip[1] + 1 / 1024)
+        clear_hole = (inward, hole[1], hole[2], inward)
+        clear = normalize(RegionSet(frame, (Polygon(shell, (clear_hole,)),)), budget)
+        self.assertEqual(clear.status, "ok", clear.diagnostics)
+
     def test_contact_and_unrepresentable_output(self):
         contact = self.normalized(Polygon(square(0, 0, 1)), Polygon(square(1, 1, 1)))
         self.assertTrue(any("point" in event for event in contact.topology_events))

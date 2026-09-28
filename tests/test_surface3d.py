@@ -55,6 +55,19 @@ def synthetic_job(boundary="split"):
 
 
 class Surface3DTests(unittest.TestCase):
+    def test_contact_and_volume_queries_reject_invalid_scalars(self):
+        target = SlopedTarget((0, 0, 4, 2), 3, 1, 0.25)
+        for radius in (0, -0.5, float("nan"), float("inf"), True):
+            with self.assertRaisesRegex(ValueError, "invalid contact"):
+                contact_x(target, radius, 1)
+            with self.assertRaisesRegex(ValueError, "invalid straight pass"):
+                straight_pass_volume_mm3(target, radius, 1, -1.5)
+        for value in (float("nan"), float("inf"), True):
+            with self.assertRaisesRegex(ValueError, "invalid contact"):
+                contact_x(target, 0.5, value)
+            with self.assertRaisesRegex(ValueError, "invalid straight pass"):
+                straight_pass_volume_mm3(target, 0.5, 1, value)
+
     def test_analytic_contact_target_and_straight_pass(self):
         job = synthetic_job()
         target = job.stages[0].surface_operation.target

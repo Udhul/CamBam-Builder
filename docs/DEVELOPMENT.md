@@ -2227,6 +2227,22 @@ increment, and no runtime or packaging changes are implied by these commands.
 
 ### Required checks by change
 
+For changes to geometry/stock enclosures, run the mathematical owners and their
+decoded consumers. The session 2 focused foundation command is:
+
+```powershell
+& $ProjectPython -m unittest tests.test_planar tests.test_stock tests.test_replay_contracts tests.test_native_arc_replay tests.test_mixed_replay tests.test_occupancy tests.test_volume3d tests.test_surface3d tests.test_spherical_bowl tests.test_v_region tests.test_curved_rest tests.test_rest_vcarve_acceptance_fixtures -v
+```
+
+Shared replay or enclosure changes also require full discovery. Inspect lower
+and upper bounds against independent analytic references, plus topology and
+contact assertions; a success status or area alone is insufficient. The
+[foundation inventory](structure_spec.md#foundation-assumptions-and-numerical-guarantees)
+and [session 2 evidence](REVIEW.md#branch-review-session-2---2026-09-28)
+record the equations, limits and fault-sensitive regressions. The default
+`evaluate_shapely.py` probe explicitly excludes named CAM workflow cases in its
+shared corpus; those exclusions do not replace the workflow suites.
+
 | Change | Minimum evidence before technical closure |
 | --- | --- |
 | Documentation only | Review changed local links/headings, factual claims against their owner and `git diff --check`; run example code if changed |

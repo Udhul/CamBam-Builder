@@ -92,6 +92,12 @@ class SphericalBowlTarget:
                 c[1] - self.rim_radius_mm <= v[1] or
                 c[1] + self.rim_radius_mm >= v[3]):
             raise ValueError("invalid spherical bowl and protected rim")
+        try:
+            representable = math.isfinite(self.sphere_radius_mm)
+        except (OverflowError, ZeroDivisionError):
+            representable = False
+        if not representable:
+            raise ValueError("spherical bowl radius is not representable")
 
     @property
     def sphere_radius_mm(self):
@@ -105,7 +111,14 @@ class SphericalBowlTarget:
         radial = math.hypot(x - self.center_xy[0], y - self.center_xy[1])
         if radial >= self.rim_radius_mm:
             return 0.0
-        return math.sqrt(self.sphere_radius_mm ** 2 - radial ** 2) - self.rim_plane_offset_mm
+        sphere = self.sphere_radius_mm
+        rim_plane = self.rim_plane_offset_mm
+        # Rationalize the cap height: subtracting two nearly equal radii
+        # erases shallow bowls even when their input depth is representable.
+        return ((self.rim_radius_mm - radial) *
+                ((self.rim_radius_mm + radial) / sphere) /
+                (math.sqrt(1 - (radial / sphere) ** 2) +
+                 rim_plane / sphere))
 
     @property
     def target_volume_mm3(self):
@@ -117,8 +130,10 @@ class SphericalBowlTarget:
             raise ValueError("section outside stock")
         if depth >= self.depth_mm:
             return 0.0
-        return math.pi * max(0.0, self.sphere_radius_mm ** 2 -
-                            (self.rim_plane_offset_mm + depth) ** 2)
+        cap_height = self.depth_mm - depth
+        sphere = self.sphere_radius_mm
+        return math.pi * (cap_height * sphere) * (
+            2 - cap_height / sphere)
 
 
 @dataclass(frozen=True)
@@ -153,6 +168,9 @@ def contact_tip_z(target, radius_mm, x, *, clearance_mm=0):
 
 def contact_x(target, radius_mm, center_x):
     """Exact point of tangent contact on the infinite plane."""
+    if (type(target) is not SlopedTarget or not _number(radius_mm) or
+            radius_mm <= 0 or not _number(center_x)):
+        raise ValueError("invalid contact query")
     return center_x - radius_mm * target.slope / math.sqrt(1 + target.slope ** 2)
 
 
@@ -167,8 +185,11 @@ def bowl_contact_tip_z(target, radius_mm, x, y, *, clearance_mm=0):
     if radial > target.rim_radius_mm - radius_mm:
         raise ValueError("ball center enters protected rim")
     offset_radius = target.sphere_radius_mm - radius_mm
-    return (target.rim_plane_offset_mm - radius_mm -
-            math.sqrt(offset_radius ** 2 - radial ** 2) + clearance_mm)
+    # The exact offset is -depth at the center; preserve that value when
+    # sphere and offset radii are too close for direct subtraction.
+    return (-target.depth_mm + radial * (radial / offset_radius) /
+            (1 + math.sqrt(1 - (radial / offset_radius) ** 2)) +
+            clearance_mm)
 
 
 def straight_pass_volume_mm3(target, radius_mm, center_x, tip_z):
@@ -177,6 +198,10 @@ def straight_pass_volume_mm3(target, radius_mm, center_x, tip_z):
     The ball center is below Z=0 and the cutter disk fits inside stock X.
     This oracle does not derive volume from the grid evaluator.
     """
+    if (type(target) not in (SlopedTarget, SphericalBowlTarget) or
+            not all(_number(v) for v in (radius_mm, center_x, tip_z)) or
+            radius_mm <= 0):
+        raise ValueError("invalid straight pass query")
     x0, y0, x1, y1 = target.stock_xy
     center_z = tip_z + radius_mm
     if not (x0 + radius_mm <= center_x <= x1 - radius_mm and center_z < 0):

@@ -97,8 +97,12 @@ def approximate(shell, holes=(), *, sagitta_mm=0.001, max_segments=32768):
         raise ValueError("curved Region chord topology is invalid")
     # Native Region validation excludes source self intersections and contacts.
     # An offset that splits or loses a hole needs a separate access analysis.
-    safe = nominal.buffer(-sagitta_mm, quad_segs=64)
-    outer = nominal.buffer(sagitta_mm, quad_segs=64)
+    # GEOS uses inscribed round joins. Compensate the error disk itself;
+    # otherwise concave/hole corners are under-eroded and convex corners
+    # under-covered. This angle also covers rounded non-quadrant fillet counts.
+    margin = sagitta_mm / math.cos(math.pi / 128)
+    safe = nominal.buffer(-margin, quad_segs=64)
+    outer = nominal.buffer(margin, quad_segs=64)
     if (safe.geom_type != "Polygon" or safe.is_empty or
             len(safe.interiors) != len(holes) or
             outer.geom_type != "Polygon" or
@@ -136,6 +140,8 @@ class RestResult:
 
     def rest_volume(self, *, final):
         cuts = self.planned.stock.cuts if final else self.planned.prior_stock.cuts
+        if any(cut.bottom_start is not None for cut in cuts):
+            raise ValueError("helical volume needs bounded depth integration")
         target_depth = self.planned.target.depth
         levels = sorted({0.0, target_depth} |
                         {-cut.bottom for cut in cuts if 0 < -cut.bottom < target_depth})

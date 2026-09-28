@@ -126,10 +126,14 @@ def _overlap_parameter(a, b, band, box):
     z0, z1 = a[2], b[2]
     lower = box.bounds[2] - band.top_mm
     upper = box.bounds[5] - band.bottom_mm
+    if not all(math.isfinite(v) for v in (lower, upper, z1 - z0)):
+        raise ValueError("occupancy geometry arithmetic is unresolved")
     if z0 == z1:
         return (0.0, 1.0) if lower <= z0 <= upper else None
     t0, t1 = (lower - z0) / (z1 - z0), (upper - z0) / (z1 - z0)
     lo, hi = max(0.0, min(t0, t1)), min(1.0, max(t0, t1))
+    if not all(math.isfinite(v) for v in (t0, t1, lo, hi)):
+        raise ValueError("occupancy geometry arithmetic is unresolved")
     return (lo, hi) if lo <= hi else None
 
 
@@ -152,6 +156,11 @@ def verify(setup, stages, decoded_moves):
     minimum_stock_clearance = math.inf
     for stage, moves in zip(stages, decoded_moves):
         for move in moves:
+            replay._xyz(move.start)
+            replay._xyz(move.end)
+            if any(not math.isfinite(b - a) for a, b in
+                   zip(move.start, move.end)):
+                raise ValueError("occupancy geometry arithmetic is unresolved")
             if move.arc_g:
                 # The stock replay uses this same bounded arc enclosure. Each
                 # chord is within error of the continuous center path, so its
@@ -173,6 +182,8 @@ def verify(setup, stages, decoded_moves):
                         continue
                     if segments is None:
                         a, b = (_at(move.start, move.end, t) for t in interval)
+                        if not all(math.isfinite(v) for v in a + b):
+                            raise ValueError("occupancy geometry arithmetic is unresolved")
                         distance = _segment_rect_distance(a, b, box.bounds)
                     else:
                         # Supported arcs are level, so axial overlap is the
@@ -180,6 +191,8 @@ def verify(setup, stages, decoded_moves):
                         distance = min(_segment_rect_distance(a, b, box.bounds)
                                        for a, b in segments)
                     clearance = distance - band.radius_mm - arc_error
+                    if not math.isfinite(clearance):
+                        raise ValueError("occupancy geometry arithmetic is unresolved")
                     if clearance <= GEOMETRY_TOLERANCE_MM:
                         label = "stock" if box is setup.stock else f"fixture {box.name}"
                         raise ValueError(f"{band.kind} collision with {label}")

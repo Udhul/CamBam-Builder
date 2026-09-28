@@ -12,10 +12,18 @@ from numbers import Real
 
 def _xyz(value):
     if not isinstance(value, tuple) or len(value) != 3 or any(
-            isinstance(v, bool) or not isinstance(v, Real) or
-            not math.isfinite(float(v)) for v in value):
+            not _finite_real(v) for v in value):
         raise ValueError("finite XYZ tuple required")
     return value
+
+
+def _finite_real(value):
+    if isinstance(value, bool) or not isinstance(value, Real):
+        return False
+    try:
+        return math.isfinite(float(value))
+    except (OverflowError, ValueError):
+        return False
 
 
 def _tapered_cone_contains(spine, x, y, depth):
@@ -77,8 +85,8 @@ class ToolProfile:
 
     def __post_init__(self):
         if (not self.name or self.kind not in ("cylinder", "pointed_cone") or
-                not math.isfinite(float(self.radius)) or
-                not math.isfinite(float(self.cutting_length)) or
+                not _finite_real(self.radius) or
+                not _finite_real(self.cutting_length) or
                 self.radius <= 0 or self.cutting_length <= 0 or
                 (self.kind == "pointed_cone" and
                  self.radius != self.cutting_length)):
@@ -102,10 +110,10 @@ class Target:
                 self.bounds, self.island, self.cone_spine, self.polygon,
                 self.region_shell, self.region_holes)) or
                 not self.name or len(self.bounds) != 4 or
-                any(not math.isfinite(float(v)) for v in self.bounds) or
+                any(not _finite_real(v) for v in self.bounds) or
                 not self.bounds[0] < self.bounds[2] or
                 not self.bounds[1] < self.bounds[3] or
-                not math.isfinite(float(self.depth)) or self.depth <= 0 or
+                not _finite_real(self.depth) or self.depth <= 0 or
                 (self.island and (len(self.island) != 4 or
                                   self.inset_per_depth)) or
                 (self.cone_spine and (len(self.cone_spine) != 5 or
@@ -116,13 +124,18 @@ class Target:
                                         self.cone_spine or self.polygon)) or
                 (self.region_holes and not self.region_shell)):
             raise ValueError("unsupported replay target")
+        if self.island and (any(not _finite_real(v) for v in self.island) or
+                            not (self.bounds[0] <= self.island[0] <
+                                 self.island[2] <= self.bounds[2] and
+                                 self.bounds[1] <= self.island[1] <
+                                 self.island[3] <= self.bounds[3])):
+            raise ValueError("invalid protected island")
         if self.region_shell:
             from shapely.geometry import Polygon as ShapelyPolygon
             rings = (self.region_shell,) + self.region_holes
             if (any(type(ring) is not tuple or len(ring) < 3 or
                     any(type(p) is not tuple or len(p) != 2 or
-                        any(isinstance(c, bool) or not isinstance(c, Real) or
-                            not math.isfinite(float(c)) or
+                        any(not _finite_real(c) or
                             not self.bounds[i % 2] <= c <= self.bounds[i % 2 + 2]
                             for i, c in enumerate(p)) for p in ring)
                     for ring in rings)):
@@ -134,8 +147,7 @@ class Target:
             p = self.polygon
             if (type(p) is not tuple or len(p) < 3 or
                     any(type(v) is not tuple or len(v) != 2 or
-                        any(isinstance(c, bool) or not isinstance(c, Real) or
-                            not math.isfinite(float(c)) for c in v) or
+                        any(not _finite_real(c) for c in v) or
                         not (self.bounds[0] <= v[0] <= self.bounds[2] and
                              self.bounds[1] <= v[1] <= self.bounds[3])
                         for v in p)):
@@ -157,7 +169,7 @@ class Target:
                 raise ValueError("target polygon must be globally convex")
         if self.cone_spine:
             x0, x1, cy, d0, d1 = self.cone_spine
-            if (any(not math.isfinite(float(v)) for v in self.cone_spine) or
+            if (any(not _finite_real(v) for v in self.cone_spine) or
                     not x0 < x1 or not 0 < d0 < d1 <= self.depth or
                     not 0 < (d1 - d0) / (x1 - x0) < 1 or
                     x0 - d0 < self.bounds[0] or x1 + d1 > self.bounds[2] or
@@ -205,7 +217,7 @@ class Motion:
             raise ValueError("unsupported replay motion role")
         _xyz(self.start)
         _xyz(self.end)
-        if self.start == self.end or not math.isfinite(float(self.feed)) or self.feed < 0:
+        if self.start == self.end or not _finite_real(self.feed) or self.feed < 0:
             raise ValueError("invalid replay motion")
 
 
@@ -300,6 +312,15 @@ class Trace:
         if (any(type(op) is not Operation for op in self.operations) or
                 len({op.name for op in self.operations}) != len(self.operations)):
             raise ValueError("duplicate or invalid operations")
+        tools = {}
+        targets = {}
+        for op in self.operations:
+            if (op.tool.name in tools and tools[op.tool.name] != op.tool or
+                    op.target.name in targets and
+                    targets[op.target.name] != op.target):
+                raise ValueError("conflicting replay tool or target identity")
+            tools[op.tool.name] = op.tool
+            targets[op.target.name] = op.target
 
     @property
     def motion_fingerprint(self):
@@ -364,11 +385,11 @@ class Sweep:
                                              x, y, depth)
             segment = self.section_segment(depth)
             return (segment is not None and
-                    self.tool.radius > self.path_error_mm and
+                    self.tool.radius >= self.path_error_mm and
                     _distance2((x, y), *segment) <=
                     (self.tool.radius - self.path_error_mm) ** 2)
         radius = self.radius_at(depth)
-        return (radius is not None and radius > self.path_error_mm and
+        return (radius is not None and radius >= self.path_error_mm and
                 _distance2((x, y), self.a, self.b) <=
                 (radius - self.path_error_mm) ** 2)
 

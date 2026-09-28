@@ -234,7 +234,7 @@ remain unassessed. The five selected packets are complete.
 
 ### Branch review session queue
 
-**Session 1 accepted by engineering; next priority: session 2 of the five-session
+**Sessions 1 and 2 accepted by engineering; next priority: session 3 of the five-session
 branch engineering and delivery review against `main`.** The [review plan](BRANCH_REVIEW_PLAN.md) preserves the
 2026-09-27 request: assess native/extended separation, core versus workflow
 responsibilities, reusable geometry/stock foundations, primary V-carving,
@@ -244,9 +244,14 @@ implemented the [capability/API map](structure_spec.md#capability-and-public-api
 complete allocation of 163 branch paths plus two newly affected test paths, and
 the [initial 21-row behavior-to-test matrix](REVIEW.md#initial-behavior-to-test-matrix).
 Manual-tab parent-ID remapping and replay target tuple admission are repaired;
-full discovery completed with 521 tests, zero failures and one Windows
-symlink-privilege skip. Sessions 2-5 and branch
-acceptance remain pending.
+session 1 discovery completed with 521 tests, zero failures and one Windows
+symlink-privilege skip. Session 2 repaired directional enclosures, helix section
+clipping, cutter/surface conditioning, small-feature topology and replay/occupancy
+admission. Its [assumption inventory](structure_spec.md#foundation-assumptions-and-numerical-guarantees)
+and [findings/coverage](REVIEW.md#branch-review-session-2---2026-09-28) are recorded.
+Full discovery ran 539 tests with one stale numerical snapshot failure and one
+Windows skip; the corrected portability oracle then passed all four module
+tests, with runtime unchanged. Sessions 3-5 and branch acceptance remain pending.
 
 **Test adequacy is required in every session:** map intended behavior to tests,
 audit independent oracles and assertion strength, and identify missing core,
@@ -257,9 +262,9 @@ must close alongside final branch gates; a green suite alone is insufficient.
 
 | Session | Outcome and execution packet | State |
 | --- | --- | --- |
-| 1 | [Capability boundaries and public API contracts](BRANCH_REVIEW_PLAN.md#session-1-capability-boundaries-and-public-api-contracts) | Accepted by engineering 2026-09-27; automated checks complete, uncommitted and ready to commit. [Findings and coverage](REVIEW.md#branch-review-session-1---2026-09-27) |
-| 2 | [Geometry, topology and numerical foundations](BRANCH_REVIEW_PLAN.md#session-2-geometry-topology-and-numerical-foundations) | Next: audit BT-04..10, BT-17..19 and allocated foundations, then refine numerical oracles and boundary tests |
-| 3 | [Machining strategies, rest behavior and reuse](BRANCH_REVIEW_PLAN.md#session-3-machining-strategies-rest-behavior-and-reuse) | Pending session 2 |
+| 1 | [Capability boundaries and public API contracts](BRANCH_REVIEW_PLAN.md#session-1-capability-boundaries-and-public-api-contracts) | Accepted by engineering 2026-09-27; included in reviewed HEAD `2a3ddd9`. [Findings and coverage](REVIEW.md#branch-review-session-1---2026-09-27) |
+| 2 | [Geometry, topology and numerical foundations](BRANCH_REVIEW_PLAN.md#session-2-geometry-topology-and-numerical-foundations) | Accepted by engineering 2026-09-28; automated checks complete, uncommitted and ready to commit. [Findings and coverage](REVIEW.md#branch-review-session-2---2026-09-28) |
+| 3 | [Machining strategies, rest behavior and reuse](BRANCH_REVIEW_PLAN.md#session-3-machining-strategies-rest-behavior-and-reuse) | Next: audit strategy guarantees, primary V, tool selection, overlap/smoothing and actual rest composition against the repaired foundations |
 | 4 | [Execution safety, evidence and misuse resistance](BRANCH_REVIEW_PLAN.md#session-4-execution-safety-evidence-and-misuse-resistance) | Pending session 3 |
 | 5 | [Integrated regression and delivery decision](BRANCH_REVIEW_PLAN.md#session-5-integrated-regression-and-delivery-decision) | Pending sessions 1-4 and final branch gates |
 
@@ -273,9 +278,18 @@ Session 1 requires no new CamBam or physical observation: the repaired identity
 and constructor boundaries are directly testable offline. Existing native/post
 acceptance remains limited to its unchanged source bytes. Primary V planning
 does not require a predecessor, while ordered Region-V stock evidence currently
-does; session 3 assesses that composition limit. Session 2 matters next because
-all strategies and output claims depend on correct geometry, enclosure directions
-and stock mathematics; adding another reference job would not establish them.
+does; session 3 assesses that composition limit. Session 2 needs no new external
+observation: its mathematical defects have independent offline witnesses. Prior
+numerical reports from affected owners must be recomputed; unchanged native
+source/post observations retain their original byte scope. Session 3 matters
+next because sound foundations alone do not establish strategy completeness,
+useful rest overlap or tool-bundle reuse. Assess the conservative helical cleanup
+entry limitation and primary-V ordered-stock composition there before proposing
+another reference job. General collapsed polygon feasibility, certified GEOS
+arithmetic, helical curved volume and freeform offsets remain deferred under
+backlog 6; reopen for a named consumer blocked by those limits. The coherent
+session 2 outcome is a good fresh-session breakpoint; contracts, failure evidence
+and the next scope are durable.
 
 The
 [M0-M5 scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)

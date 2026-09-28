@@ -305,9 +305,16 @@ class HoledTargetStockTests(unittest.TestCase):
     def test_protected_walls_tangency_and_overrun(self):
         self.compose([self.source(6, 24, 5, 2)])  # island top tangent
         self.compose([self.source(4, 10, 4, 2)])  # target exterior tangent
+        # 3-4-5 distance to the island's lower-left corner, scaled by 1/5.
+        corner = self.source(Q(62, 5), Q(62, 5), Q(31, 5), 1)
+        tangent = self.compose([corner])
+        self.assertTrue(tangent.stock_bounds.removal_upper.contains(13, 7))
+        self.assertFalse(tangent.rest_upper.contains(13, 7))
+        self.assertTrue(tangent.rest_upper.contains(13 + Q(1, 10), 7))
         epsilon = Q(1, 10**30)
         for unsafe in (self.source(6, 24, 5, 2 + epsilon),
-                       self.source(4, 10, 4 - epsilon, 2)):
+                       self.source(4, 10, 4 - epsilon, 2),
+                       self.source(Q(62, 5), Q(62, 5), Q(31, 5), 1 + epsilon)):
             with self.subTest(unsafe=unsafe), self.assertRaisesRegex(ValueError, "protected"):
                 self.compose([unsafe])
 

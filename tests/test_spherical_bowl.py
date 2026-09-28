@@ -95,6 +95,29 @@ def synthetic_job(*, depth_mm=0.8, small_radius_mm=0.25, boundary="split"):
 
 
 class SphericalBowlTests(unittest.TestCase):
+    def test_shallow_cap_keeps_depth_contact_and_section(self):
+        # Radius subtraction erases the 1e-15 cap; squaring the larger
+        # 2e200 sphere radius of the second cap overflows despite finite inputs.
+        for depth in (1e-15, 1e-200):
+            with self.subTest(depth=depth):
+                target = SphericalBowlTarget((-3, -3, 3, 3), 1, (0, 0), 2,
+                                             depth)
+                self.assertAlmostEqual(target.depth_at(0, 0), depth,
+                                       delta=depth * 1e-14)
+                self.assertAlmostEqual(target.depth_at(1, 0), 0.75 * depth,
+                                       delta=depth * 1e-14)
+                self.assertAlmostEqual(target.section_area_mm2(0),
+                                       4 * math.pi, places=12)
+                self.assertAlmostEqual(target.section_area_mm2(depth / 2),
+                                       2 * math.pi, places=12)
+                self.assertEqual(bowl_contact_tip_z(target, 0.25, 0, 0), -depth)
+                self.assertGreater(bowl_contact_tip_z(target, 0.25, 1, 0), -depth)
+                self.assertLess(bowl_contact_tip_z(target, 0.25, 1, 0), 0)
+        for rim, depth in ((2, 1e-320), (1e200, 1e199)):
+            with self.assertRaisesRegex(ValueError, "not representable"):
+                SphericalBowlTarget((-2 * rim, -2 * rim, 2 * rim, 2 * rim),
+                                     rim, (0, 0), rim, depth)
+
     def test_independent_bowl_contact_section_and_volume_references(self):
         target = synthetic_job().stages[0].surface_operation.target
         radius, depth = 2, 0.8

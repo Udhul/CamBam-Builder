@@ -1273,6 +1273,15 @@ volume intervals. GEOS topology and offsets are conditional floating results,
 not formal interval proofs. A curved throat with no cutter-center clearance
 fails instead of being bridged by a low cut.
 
+The error-margin buffers compensate their own polygonal round joins: with
+64 segments per quadrant the offset magnitude is
+`sagitta_mm / cos(pi/128)`. The conservative angle includes GEOS rounding of
+non-quadrant fillet subdivision counts. This closes chord loss at shell and
+hole corners; it does not supply a formal floating-point topology certificate.
+`rest_volume` rejects changing-depth cylindrical sweeps: constant-depth midpoint
+slabs cannot integrate a helix. Section queries remain available with depth
+clipping; a bounded helical volume integrator is a separate extension.
+
 `integrations.cambam.native_curved_rest` strict-imports one zero-Z native
 Region with at least one arc and one non-nested 4 mm Part. The exact `.cb` hash
 binds a separately supplied ordered T1 trace; imported source geometry,
@@ -1306,6 +1315,11 @@ explicit: it does not claim to restore a square wall and flat floor left by
 an endmill. The result is reported as partial when a finite stepover/tip
 leaves stock. An empty center region returns an infeasible result and reason.
 
+The rounded-profile inverse also supports a cutting length below the ball/cone
+join. Its spherical branch uses `r*r / (b + sqrt(b*b-r*r))` to avoid cancellation
+at tiny positive clearances. A clearance below the tip radius is infeasible,
+including the immediately adjacent representable value below a flat tip.
+
 For a tip penetration `d` and section `t`, cutter occupancy measured from the
 original boundary is `t*tan + rho(d-t) <= rho(d)` for all three supported
 profiles. Each straight XYZ segment, including changing Z between vertices,
@@ -1330,6 +1344,15 @@ intermediate cutter radii. `volume_bounds` integrates conservative slab
 enclosures; its current eight-slab interval is broad and is not a physical
 surface-finish guarantee. Arc sagitta is at most 0.001 mm; GEOS topology and
 floating arithmetic remain conditional.
+
+The outer disk/capsule sweep radius is divided by `cos(pi/128)` at 32 segments
+per quadrant; merely adding the `1e-6` mm arithmetic margin does not enclose
+circle chords. Target sections use 64 segments per quadrant: the inner target
+erodes by `t*tan / cos(pi/128)`, while the outer target retains nominal erosion.
+The larger inner erosion compensates inscribed round joins at holes and concave
+corners, including non-quadrant fillet rounding. Prior cylindrical helices use
+`Sweep.section_segment(t)` before buffering, so unreached motion cannot count as
+removed material. These directions propagate to the residual and volume bounds.
 
 `cam_core.v_region.with_prior` replays one supplied source-bound cylindrical
 trace before the V stage. Each prior cut must lie within the same capped V
@@ -1873,6 +1896,57 @@ combined motion-role findings. Its `stock_dependent_use` stays blocked: native
 cleanup may not treat posted T1 removal as safe executable predecessor stock.
 Neither native record is a native-Pocket N or physical acceptance certificate.
 The framework program's own certificate is unchanged by native output.
+
+### Foundation assumptions and numerical guarantees
+
+The session 2 audit distinguishes exact predicates, analytic formulas evaluated
+in floating point, conditional GEOS enclosures and finite sampling. Lengths are
+millimetres, areas mm² and volumes mm³ in the detached CAM modules; positive
+depth is into stock from Z=0. `planar` alone admits explicit inch conversion and
+rigid frames. Native normalizers obtain world XYZ and reflected bulges from
+`Region.get_absolute_coordinates_xyz`; a curved non-similarity transform is
+unsupported. A 2D buffer is set dilation/erosion, not an open-curve offset API or
+a general 3D swept-volume implementation.
+
+| Owner / calculation | Assumptions and guarantee | Independent evidence / boundary |
+| --- | --- | --- |
+| `planar.feasible_centers` | Rational rectangle/circle radius comparison preserves area, line, point and empty feasible sets; floating placement is separately qualified. | Exact fit and adjacent representable sizes, mixed units/rigid placement in `test_planar`. |
+| `planar.normalize`, `_planar_shapely` overlays | Authored polygon rings and converted rings must both be valid; no silent topology repair. Output preserves representable holes/components. Nominal GEOS operations do not claim certified numerical error bounds. | Source-touch conversion regression, hole/split/contact cases and backend evaluation tools. |
+| `stock.bound_horizontal_sweep`, composition and access | A horizontal capsule has area `2*r*length + pi*r²`. Radius/position uncertainty shrinks guaranteed and expands possible removal. Rational membership and cell classification compose union bounds; residual reverses removal enclosure direction. Travel uses earlier guaranteed stock only. | Capsule/lens areas, exact tangencies, overlap/order/refinement and denied uncleared connectors in `test_stock`. No arbitrary orientation or general 3D access claim. |
+| `replay.Sweep`, `arc_segments` | Closed cylinder/cone membership; downward helix chords clip at each depth. Arc enclosure includes radius mismatch, twice requested sagitta and reconstruction margin. Every prior cut remains subject to its protected target. One tool/target name has one meaning per trace. | Semicircle tube area, depth-clipped membership, malformed islands and conflicting identity tests. Rising/full-circle forms remain unsupported. |
+| `curved_region.approximate` | Bulge sweep `theta=4*atan(b)`; arc area adds `R²*(theta-sin(theta))/2`. Chord sagitta plus directional margin buffers bracket validated analytic rings. Offset topology changes reject. | Annulus area, reflected mixed arcs, narrow access and round-corner margin tests. Analytic source topology validation is a caller precondition. |
+| `v_region.VProfile`, `section_report`, `volume_bounds` | Half-angle profiles and tangent sphere/cone join; full-line distance bounds every cutter height. Nested target/removal sections yield slab residual bounds without assuming residual itself is monotone. | Capsule section/integrated volume, holed erosion, inverse/join continuity and helix-depth regressions in `test_v_region`. Floating GEOS topology remains conditional. |
+| `vcarve`, `tapered_vcarve` analytic sections | Pointed 90-degree cone; slot equal-depth/equal-span row partitions or straight increasing-X radius envelope with slope strictly between 0 and 1. | Independent row integration and support-function corpus references; other angles/orientations require another owner contract. |
+| `volume3d.LayeredTarget` | Axis-aligned positive-depth rectangular prisms have disjoint interiors and do not overlap protected stock; even tiny positive overlap rejects. Column bounds classify rectangle coverage without area cutoffs. | Exact prism sums, thin features, disk/capsule sweep formula and decoded dependent stages in `test_volume3d`. Boundary contact is allowed; no overhang/mesh claim. |
+| `surface3d` | Affine plane ball contact follows the surface normal. Spherical-cap volume is `pi*h*(3*a²+h²)/6`; rationalized depth/contact and cap-height sections retain shallow bowls. Cell extrema and enlarged/shrunken cutter radii bracket each column. | Signed plane contact, cap references, shallow bowl, refinement and dependent stock/rim tests. No freeform surface or formal interval arithmetic claim. |
+| `inlay` | Circular pointed-V radial intervals; flip maps plug depth `u` to receiver depth `engagement-u`. Minimum assembly gap is clearance minus XY offset, plus `(engagement-insertion)*tan(alpha)`. | Separate decoded part stocks and explicit radii/areas/gaps in `test_paired_inlay`. Reported tolerances are model/output allowances, not physical fit evidence. |
+| `occupancy.verify` | Axial tool-band/box overlap clips segment parameters; minimum XY segment/rectangle distance minus band radius and arc error must exceed the declared contact tolerance. | Mid-segment/arc collisions, touching axial partitions and overflow rejection in `test_occupancy`. Only declared boxes and contiguous cylindrical bands are modeled. |
+
+The detailed review and test-adequacy dispositions are in
+[session 2 evidence](REVIEW.md#branch-review-session-2---2026-09-28).
+For the affine floor `z=-(a+s*x)`, ball contact tip Z is
+`-depth(X)+r*(sqrt(1+s*s)-1)` and the contact X coordinate is
+`X-r*s/sqrt(1+s*s)`. Their linear endpoint inequalities protect complete
+straight moves. For a bowl of rim radius `a`, depth `h` and sphere radius
+`S=(a*a+h*h)/(2*h)`, section area uses `pi*u*S*(2-u/S)` with `u=h-depth`;
+depth/contact expressions are rationalized to avoid subtracting almost equal
+radii. The rounded V tip uses the same cancellation-avoidance principle.
+
+Surface cells use half-diagonal `delta`: cutter radii `max(0,r-delta)` and
+`r+delta` at the cell center enclose removal throughout that cell. The concave
+ball envelope along a segment is maximized with a shrinking ternary bracket;
+the upper error allowance is `sqrt(2*r*L*w)+abs(dz)*w`, where `L` is XY length
+and `w` the remaining parameter width. Residual bounds use
+`max(0,target_low-cut_high)` and `max(0,target_high-cut_low)` times cell area.
+Same-cell final lower minus prior upper removal proves incremental gain.
+Integer-nested refinement supports tighter bounds; arbitrary unrelated pitches
+need not yield monotone intervals. Runtime layered-stock overcut tolerance
+`1e-7` mm² is separate from rectangle admission, which has no area cutoff.
+
+Exact arithmetic in the bounded stock owner does not make the other owners
+exact. GEOS topology, floating reconstruction and fixed process/output tolerances
+must remain visible to callers; successful reference jobs do not establish
+arbitrary topology, scales, freeform surfaces or machine execution.
 
 ### Detached nominal planar core
 

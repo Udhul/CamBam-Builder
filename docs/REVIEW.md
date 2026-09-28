@@ -7506,6 +7506,11 @@ behavior. No registry, backend or package shuffle is justified by this finding.
 
 ### Initial behavior-to-test matrix
 
+This is the session 1 snapshot. The
+[session 2 coverage and adequacy ledger](#session-2-coverage-and-test-adequacy)
+updates BT-04..10/17..19 and the mathematical portions of BT-11/12/13;
+strategy and execution dispositions remain with S3/S4.
+
 IDs are stable review rows. Test names below are exact methods qualified by their
 `tests.test_*` module; class names may be omitted where unambiguous. The source
 column identifies the intended contract, not the implementation as its own oracle.
@@ -7626,7 +7631,10 @@ Inventory reconciliation: **163 committed-diff paths + 2 newly affected paths = 
 - `tests/test_replay_contracts.py`
 - `tests/test_stockless_native.py`
 
-#### Allocation S2: Foundation mathematics and numerical guarantees (pending)
+#### Allocation S2: Foundation mathematics and numerical guarantees
+
+Disposition is recorded in [session 2](#branch-review-session-2---2026-09-28);
+this list remains the original allocation, not a separate live queue.
 
 19 paths:
 
@@ -7841,3 +7849,174 @@ scope and higher value now than another bounded job or package relocation becaus
 all later claims depend on its geometry/stock foundations. Next: complete
 [session 2](PROGRESS.md#branch-review-session-queue), audit its allocated paths
 and BT-04..10/17..19, and refine their boundary/oracle evidence.
+
+## Branch review session 2 - 2026-09-28
+
+Session began 2026-09-27 and resumed after the session allowance was restored.
+Reviewed HEAD `2a3ddd91c2680661e45f8cac743f38123b95469f` against local `main`
+and merge base `18dbb9950f3065e95df0ee645a25361d45e63b30`: 91 branch commits,
+165 committed diff paths, initially clean worktree. Session 1 repairs were
+already committed in this snapshot. The following repairs are uncommitted.
+No staging, commit, publishing or merge was performed.
+
+The scope was the 19 allocated foundations paths, mathematical dependencies
+in curved/V/inlay/native normalization, and BT-04..10/17..19. The stopping
+condition is resolved demonstrated defects, explicit assumption/error-direction
+inventory, independent oracle and sensitivity evidence, and passing shared
+regressions. Strategy generation, output misuse and final installed-package
+delivery retain their S3/S4/S5 owners. The
+[foundation contract inventory](structure_spec.md#foundation-assumptions-and-numerical-guarantees)
+owns current mathematics; the following records the audit and failure evidence.
+
+### Session 2 findings and repairs
+
+| ID / consequence | Trigger, expected versus old behavior | Repair / regression criterion / acceptance scope |
+| --- | --- | --- |
+| BR-2-001, high, numerical enclosure | `v_region.section_report` used inscribed outer buffers. A length-2 unit-radius capsule in a 10×10 target has exact residual `100-4-pi = 92.8584073464` mm², but the old lower bound was `92.8596585624`. `VTarget.section` likewise called nominal round erosion an inner target: a 20×20 shell with 4×4 square hole at inset 1 reported `288.8587227491`, above exact `288.8584073464`. Curved error margins admitted points inside the true hole-corner exclusion disk. | Outer straight capsule radii now compensate chord loss; inner V target erosion and both curved error-margin buffers compensate round joins. New analytic area and explicit corner-membership tests fail before/pass after. Previous universal directional-enclosure claims at these corners are superseded; nominal path success alone never proved them. Constant-step integrated capsule volume is enclosed and tighter at 16 than 4 slabs. |
+| BR-2-002, medium, cutter inverse | A rounded tip of radius .5, angle 60°, cutting length .1 has a valid spherical cutting portion below the .25 join, but `depth_for_radius` queried a height beyond cutting length. Direct radius subtraction also erased tiny positive inverse depths; the flat-tip tolerance admitted a negative depth for a radius just below the tip. | Compute join radius analytically, rationalize the sphere inverse and reject any clearance below tip radius. Independent `r²=2Rh-h²` tests at heights `1e-20`, .025 and .1, plus nextafter flat clearance, pass. This changes cutter geometry admission, not process or physical tool acceptance. |
+| BR-2-003, high, depth-dependent stock | Region V prior replay buffered an entire descending helix chord whenever its deepest end reached the section. At depth .75 on a radius-.5 semicircle descending 0→1 with radius-.2 tool, only the last quarter is active. Old residual upper `71.9657488411` was below analytic `71.9672566612` mm². Curved `rest_volume` also used constant-depth midpoint slabs for changing-depth sweeps. | V sections now call `Sweep.section_segment`; new arc-tube residual test brackets the analytic result. Curved volume rejects helices with the same bounded-integration diagnostic as polygon volume. Constant-depth volume remains supported; no new helical volume capability is claimed. |
+| BR-2-004, high, source topology | `planar.normalize` validated only converted rings. Inch conversion rounded a binary-exact shell/hole contact into an apparently valid clearance. The authored tip is exactly `3/8*a+5/8*b` on a slanted shell edge. | Validate authored Polygon topology before admitting converted topology. `test_source_hole_contact_cannot_round_away_during_unit_conversion` asserts exact rational collinearity, specific rejection, and success for a nearby inward hole. Removing the new check in an isolated run yields one assertion failure, no errors. This prevents conversion from repairing invalid input implicitly; GEOS predicates remain conditional floating operations. |
+| BR-2-005, high, thin-volume enclosure | Layered target admission tolerated positive prism/protected overlaps below `1e-7` mm², although volume sums require disjoint interiors. Column evaluation discarded a valid `1e-9` mm³ prism and returned `[0,0]`. A prism overlap of approximately `1.6e-8` mm² was admitted. | Exact rectangle ordering/interior-overlap comparisons replace area cutoffs for these predicates. The tiny prism is now enclosed by `[0,.25]` mm³ at .5 pitch; overlap rejects. This is deliberately coarse but conservative. Finite positive section admission and protected overlap regressions pass; boundary contact remains allowed. |
+| BR-2-006, medium, surface numerical conditioning | A rim-radius-2 bowl with depth `1e-15` returned zero center depth, zero top section and zero contact tip Z. At `1e-200`, squaring the large derived sphere radius overflowed despite representable answers. Contact/straight-pass helpers also admitted nonpositive or nonfinite scalars; negative radius could produce negative removal volume. | Rationalized cap/contact formulas and cap-height section area retain `(depth,4*pi,-depth)` at the center/top/contact for both depths. Unrepresentable sphere radius rejects explicitly. Scalar helper guards reject invalid radius/coordinates; independent nearby valid plane queries pass. Float representability remains a limit, not arbitrary-precision support. |
+| BR-2-007, high, protected geometry and identity | Replay accepted reversed/nonfinite/out-of-bounds islands and conflicting target/tool values with the same name, allowing geometric identity to change within one trace. Some numeric fields accepted booleans/strings or raised conversion overflow. Closed cone membership omitted the exact zero-radius tip section for constant-depth cuts. | Ordered finite in-bounds islands and one meaning per name are enforced; common finite-real admission rejects malformed fields. Closed membership retains the cone tip/centerline. Regressions compare valid reused names with conflicts, protected island cuts, and independent 3-4-5 tangent and reached-depth membership. Strategy selection and maliciously mutated objects remain S4 scope. |
+| BR-2-008, high, false occupancy clearance | Finite extreme endpoints can overflow segment/axial arithmetic; an unresolved distance must not become a clearance result. | Occupancy rejects unresolved deltas, axial parameters, clipped coordinates and final clearance. New exact contact, `0.5e-9` and `2e-9` mm gap cases straddle the declared `1e-9` threshold; an overflowing ±`1e308` move rejects. Existing mid-segment, both-direction arc and frame cases remain. |
+| BR-2-009, medium, unavailable verification entry point | The default `evaluate_shapely.py` corpus had gained six M1/M2/M3 workflow cases and aborted on their unknown IDs. | Explicitly classify those known cases as `out_of_planar_scope`; unknown cases still error. The default command now completes 160 checks with 11 passing cases, eight exclusions, one expected limitation and zero unexpected failures. Exclusion is not workflow acceptance. |
+| BR-2-010, medium, disputed test oracle | Full discovery exposed `test_m5_portability` comparing a copied residual upper bound `1.526323` to five decimal places. Corrected curved target margins yield `1.5263437653309495`; the old snapshot has no independent mathematical derivation. | Retire the section/volume output snapshots, retain the established 2 mm² / 80 mm³ acceptance budgets, and assert ordered nonnegative intervals, guaranteed improvement (final upper below prior lower), protected overcut below `1e-7` mm² and exact equality of manual/mixed physical-stock intervals. Foundation capsule/holed-target/slab tests independently establish enclosure direction. This changes the oracle to the portability contract, not a tolerance increase or regenerated golden value. |
+
+The polygonal-buffer correction is derived from chord apothem
+`r*cos(delta/2)`. Disk/capsule semicircles have an exact quadrant count; GEOS
+rounds arbitrary corner fillet counts, so the polygon-margin factor uses a
+larger angle. The backend behavior was verified in primary sources:
+[Shapely buffer contract](https://shapely.readthedocs.io/en/2.0.6/reference/shapely.buffer.html)
+and [GEOS 3.13.1 OffsetSegmentGenerator](https://github.com/libgeos/geos/blob/3.13.1/src/operation/buffer/OffsetSegmentGenerator.cpp).
+These sources explain buffer construction; the enclosure direction is our
+geometric derivation, conditional on GEOS topology and floating arithmetic.
+Recompute numerical reports produced by affected owners before reusing them as
+current evidence. Unchanged native source/post observations remain evidence for
+those bytes and their transport; they do not prove the superseded calculations.
+No new native serialization or physical machining behavior is claimed here.
+
+### Session 2 coverage and test adequacy
+
+This ledger supplements the original allocation, naming every S2 path and
+relevant additional dependencies. “Adequate” is for the stated bounded claim;
+it does not certify all possible scales or combinations.
+
+| Exact paths / inspected symbols | Evidence, oracle strength and disposition |
+| --- | --- |
+| `cambam_builder/planar.py`; `cambam_builder/_planar_shapely.py`; `tests/test_planar.py` | Normalization/frame conversion, `_chords`, exact `feasible_centers`, `_operate`, adapter validity/overlay/conversion reviewed. BT-04/05/06 adequate for the declared exact-fit/nominal contract: exact nextafter/rational fits, units/rigid placement, separate hole/component assertions, source-contact repair, ownership and absent-backend subprocess. Numeric/operation error remains explicitly unknown; no certified arbitrary polygon stock inference. |
+| `cambam_builder/stock.py`; `tests/test_stock.py` | `bound_horizontal_sweep`, capsule union grid, `_capsule_within_target`, `compose_target_rest_bounds`, `verify_section_motion` reviewed. BT-07/08 adequate for horizontal fixed-section rectangle/island claims: independent capsule and disk-lens formulas, rational bounds `333/106 < pi < 355/113`, monotone prefixes/refinement, uncertainty and earlier guaranteed coverage. New exact 3-4-5 island-corner tangency succeeds; radius `1+10^-30` rejects. Bypassing corner protection produces one assertion failure. General multi-capsule travel coverage and 3D access remain outside this API. |
+| `cambam_builder/cam_core/replay.py`; `tests/test_replay_contracts.py`; `tests/test_mixed_replay.py`; `tests/test_native_arc_replay.py` | Target/profile admission, protected boundaries, affine-radius sweep, section clipping, arc chords and ordered prefixes reviewed. BT-09/10 adequate mathematical slice after BR-2-007: analytic tube area, CW/CCW radial sagitta, 3-4-5 affine tangent and exact descending-section tests. Mixed tool/prefix tests protect composition; S4 still owns state/freshness and decoded grammar misuse. |
+| `cambam_builder/cam_core/occupancy.py`; `tests/test_occupancy.py` | Segment/rectangle distance, axial parameter overlap, band radii and level-arc uncertainty reviewed. BT-19 adequate continuous geometric slice: endpoint-clear middle collisions, arc direction, contact partitions, numeric rejection and independent nearby smaller-holder success. Box/band scope and declared setup remain explicit; transition effects S4. |
+| `cambam_builder/cam_core/volume3d.py`; `tests/test_volume3d.py`; `cambam_builder/cam_core/surface3d.py`; `tests/test_surface3d.py`; `tests/test_spherical_bowl.py` | Rectangular layers, inner/outer sweep signs, cell depth extrema, ball/plane and ball/bowl contact, volume and dependent stock inspected. BT-17 adequate bounded math after BR-2-005/006: independent prism/capsule/plane/spherical-cap oracles and decoded dependent stages. Tiny features/shallow caps now have counterexamples. Representation/timing measurements are not accuracy proof; no general mesh, overhang or freeform claim. |
+| `cambam_builder/cam_core/curved_region.py`; `tests/test_curved_rest.py` | Directed bulge radius/area, chord error, safe/outer topology, residual intervals and constant-depth slabs reviewed. Independent `77*pi` annulus, mixed reflected area and corner exclusion/margin test; helical volume is now explicitly rejected. Adequate conditional curved approximation; path-generation heuristics remain S3. |
+| `cambam_builder/cam_core/v_region.py`; `tests/test_v_region.py` | `VProfile`, `VTarget.section`, `verify` full-height inequality, prior clipping, section/volume enclosures reviewed. BT-11/12 mathematical slice adequate after BR-2-001..003; analytic capsule residual, holed erosion, integrated volume/refinement and inverse tests replace reliance on success flags alone. Plan completeness, overlap/fitting and alternatives remain S3. |
+| `cambam_builder/cam_core/vcarve.py`; `cambam_builder/cam_core/tapered_vcarve.py`; `tests/test_vcarve_slot.py`; `tests/test_variable_vcarve.py` | Equal-span slot row integration, nested section volume bounds and affine-radius tangent-envelope section formula inspected. Independent numerical row integration corroborates the bounded 90°/increasing-X domain; fixture numeric snapshots alone are not the oracle. Generation/selection remains S3. |
+| `cambam_builder/cam_core/inlay.py`; `tests/test_paired_inlay.py` | Radial interval union/area, receiver/plug section signs and assembly flip/gap derivation inspected. BT-18 adequate mathematical circular slice: explicit radii/areas/gaps, separate decoded stocks, registration and flipped-frame rejection. General candidate/shape reuse remains S3 and complete-byte freshness S4; physical fit is unassessed. |
+| `tests/test_m5_portability.py` | Additional S4-allocated consumer reopened by BR-2-001. Replaced disputed output snapshots under BR-2-010 with physical-stock equality, independent prior/final improvement and existing acceptance budgets. Complete-byte/transition audit remains S4. |
+| `tests/test_rest_vcarve_acceptance_fixtures.py`; `tools/evaluate_planar_adversarial.py`; `tools/evaluate_shapely.py` | All reference/probe assertions inspected. Shoelace, circle/annulus, support-function integral, capsule, profile join and exact-fit references are independent of planners. Narrow-bridge probe independently checks topology only; sampled boundary estimates still share GEOS predicates and are not interval certificates. Adversarial probe: 233 checks, zero unexpected failures; default probe repaired under BR-2-009. |
+| `cambam_builder/native/region.py`; `cambam_builder/native/transformations.py`; `tests/test_curved_bounds.py`; `cambam_builder/integrations/cambam/native_curved_rest.py`; `cambam_builder/integrations/cambam/native_v_region.py`; `cambam_builder/cam_core/polygon_rest.py` | Followed normalization dependency: column-vector transforms, rightmost-first composition, similarity-only bulges with reflected sign, world XYZ/planarity, validated source rings, cylinder sweep inflation and helical-volume rejection. Native bounds tests independently use affine row norms/extrema. This is foundation dependency review, not full S3 strategy or S4 native adapter byte review. |
+
+### Reusable-core gaps and retained limits
+
+No backend/registry refactor was justified. Exact rational stock, nominal GEOS
+sets and conditional CAM sweeps have different guarantees; combining their
+names would not strengthen the weakest guarantee. General closed-set polygon
+feasible centers (including line/point degeneracies), certified floating polygon
+enclosures, general surface/volume offsets and freeform collision remain
+extensions under [backlog 6](PROGRESS.md#remaining-backlog-in-order). Reopen with
+a named consumer whose valid target cannot be represented or whose required
+error/clearance budget cannot be met by the bounded owner. The narrow-bridge
+backend probe needs an independent boundary/area oracle before making a new
+precision claim; its current topology-only result remains valid.
+
+A downward helix's shallow chord endpoint can be an unsuitable entry anchor
+for polygon cleanup. Replay rejects an unsafe descent rather than certifying
+it; S3 should assess this conservative generation failure when auditing actual
+rest composition. Curved helical volume is explicitly unsupported, with section
+queries available; reopen only for a consumer needing that volume metric.
+None of these extensions replaces the more urgent S3 strategy/reuse review.
+
+### Session 2 verification and acceptance
+
+Interpreter `.venv/Scripts/python.exe`: CPython 3.13.5, NumPy 2.5.3,
+Shapely 2.1.2 / GEOS 3.13.1, MCP 2.2.0. Commands ran from repository root.
+Task artifacts are ignored under `output/branch-review-session2-20260927-01/`,
+`output/planar-stock-audit-20260927/` and
+`output/session2-replay-occupancy-20260928-7b3d/`; the durable witnesses above do
+not require them. No new dependency, fixture bytes or tracked helper was added.
+
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p test_planar.py -v`:
+  19 passed; corresponding `-p test_stock.py`: 20 passed.
+- `.venv/Scripts/python.exe -m unittest tests.test_replay_contracts tests.test_mixed_replay tests.test_native_arc_replay tests.test_occupancy -q`:
+  23 passed. After the final ownership-preserving occupancy adjustment,
+  `.venv/Scripts/python.exe -m unittest tests.test_occupancy -q`: seven passed.
+- `.venv/Scripts/python.exe -m unittest tests.test_volume3d tests.test_surface3d tests.test_spherical_bowl -q`:
+  12 passed in 31.951 seconds on the frozen 3D tree.
+- `.venv/Scripts/python.exe -m unittest tests.test_v_region tests.test_curved_rest tests.test_curved_bounds tests.test_variable_vcarve tests.test_vcarve_slot tests.test_paired_inlay tests.test_rest_vcarve_acceptance_fixtures -v`:
+  preliminary 49 passed. The later helix and volume-slab cases passed focused
+  checks and are included in final discovery; this preliminary run alone is
+  not final-tree evidence.
+- `.venv/Scripts/python.exe tools/evaluate_planar_adversarial.py --output output/planar-stock-audit-20260927/adversarial_report.json`:
+  233 checks, zero unexpected failures. Repeated after the probe repair with
+  `--output output/branch-review-session2-20260927-01/adversarial-final.json`:
+  233 checks, zero unexpected failures; both recorded runner hashes match the
+  final tool sources.
+- `.venv/Scripts/python.exe tools/evaluate_shapely.py --output output/planar-stock-audit-20260927/shapely_report.json`:
+  160 checks, 11 passing cases, eight explicit scope exclusions and one expected
+  polygon-backend limitation; zero unexpected failures. Both JSON artifacts
+  were inspected, not judged from exit code alone.
+- Isolated sensitivity: reversed arc direction gives two assertion failures;
+  wrong affine-cone sign, omitted depth clipping, bypassed source topology,
+  bypassed island-corner protection and removed contact tolerance each give one.
+  All have zero errors. The V capsule/holed erosion/short-tip tests failed on the
+  original implementation (two failures, one error), and curved corner and V
+  helix tests each failed before repair. No production source was mutated for
+  fault injection and no acceptance budgets were loosened. BR-2-010 retires
+  copied numerical output snapshots with no independent geometric oracle.
+- `.venv/Scripts/python.exe -m compileall -q cambam_builder legacy_cambam_builder`
+  and the `CBProject('smoke')` import/construct assertion passed on the final
+  runtime tree. Final package and supported-interpreter matrix remain S5.
+
+An initial full-discovery process was stopped when final worker adjustments
+arrived. It has no completion footer and supplies no pass evidence. A fresh
+final-tree run was then interrupted by a session interruption before its
+completion footer. Neither partial log supplies pass evidence. Runtime/test
+SHA-256 fingerprints were checked unchanged before the final restarted
+discovery (`full-complete.log`), whose result is the closure gate below.
+
+**Completed shared verification:**
+`.venv/Scripts/python.exe -m unittest discover -s tests -v` completed **539 tests
+in 630.316 seconds**, with **one failure and one skip**. The only failure was
+the copied portability snapshot in BR-2-010; all other executed tests passed.
+After its test-only oracle repair,
+`.venv/Scripts/python.exe -m unittest tests.test_m5_portability -q` completed
+**four tests in 30.286 seconds, OK**, exit 0. No runtime changes followed the
+full run. This combination closes the regression gate without claiming a second
+all-green full-discovery run. The skip remains
+`test_mcp_documents.DocumentTests.test_symlink_rejection` because Windows
+symlink privilege is unavailable; other reparse/junction checks ran.
+
+Final `git diff --check`, added local documentation links, the 19-path S2 coverage
+reconciliation and runtime fingerprint checks passed. No untracked candidates
+or ignored `.cb`/`.nc` outside `output/` were enumerated; `.pytest_cache/` remains
+unreadable, the same artifact-discovery limit as S1. No artifacts were deleted.
+The last tracked change after full discovery is the explicitly rerun portability
+test plus documentation. Eighteen new regression methods were added; existing
+stock and portability assertions were strengthened. No new test fixture bytes
+were versioned.
+
+**Acceptance and delivery:** implemented, automated checks complete and
+**accepted by engineering** for the bounded mathematical foundations. All ten
+findings have a repair or corrected test-oracle disposition and focused evidence.
+Manual CamBam validation adds no evidence to these detached mathematical repairs;
+no user observation is required for S2. GEOS/floating limits, unsupported geometry
+and physical/controller acceptance remain explicitly bounded. Changes are
+**ready to commit**, not merge-ready; S3-S5 and final branch/package gates remain.
+Suggested commit: `fix: close geometry and numerical foundation review findings`.
+
+Local workstream: the mathematical review is closed. Overall project: two of
+five branch-review sessions are complete, with no new feature/backend expansion.
+A fresh session is recommended because S3 has a distinct strategy/consumer scope
+and all evidence and remaining limits are now durable. Next: complete
+[session 3—machining strategies, rest behavior and reuse](PROGRESS.md#branch-review-session-queue).
