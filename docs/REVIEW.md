@@ -7509,7 +7509,8 @@ behavior. No registry, backend or package shuffle is justified by this finding.
 This is the session 1 snapshot. The
 [session 2 coverage and adequacy ledger](#session-2-coverage-and-test-adequacy)
 updates BT-04..10/17..19 and the mathematical portions of BT-11/12/13;
-strategy and execution dispositions remain with S3/S4.
+the [session 3 coverage and adequacy ledger](#session-3-coverage-and-test-adequacy)
+updates the strategy portions of BT-11..18/21. Execution dispositions remain S4.
 
 IDs are stable review rows. Test names below are exact methods qualified by their
 `tests.test_*` module; class names may be omitted where unambiguous. The source
@@ -7658,7 +7659,10 @@ this list remains the original allocation, not a separate live queue.
 - `tools/evaluate_planar_adversarial.py`
 - `tools/evaluate_shapely.py`
 
-#### Allocation S3: Machining strategies and policy (pending)
+#### Allocation S3: Machining strategies and policy
+
+Disposition is recorded in [session 3](#branch-review-session-3---2026-09-28);
+this list remains the original allocation, not a separate live queue.
 
 18 paths:
 
@@ -8020,3 +8024,187 @@ five branch-review sessions are complete, with no new feature/backend expansion.
 A fresh session is recommended because S3 has a distinct strategy/consumer scope
 and all evidence and remaining limits are now durable. Next: complete
 [session 3—machining strategies, rest behavior and reuse](PROGRESS.md#branch-review-session-queue).
+
+## Branch review session 3 - 2026-09-28
+
+Reviewed branch `feat/rest-machining-and-vcarving` at
+`6188a60f67998ee4bb508fea97f96408605f2da4` against local `main` and merge base
+`18dbb9950f3065e95df0ee645a25361d45e63b30`: 92 branch commits, 165 committed
+diff paths, initially clean worktree. Session 2 is committed in that HEAD.
+The scope is generated strategies, actual rest coverage, primary V and policy
+reuse; complete execution/evidence misuse and final delivery remain S4/S5.
+The lead reviewed policy and consumer contracts, with bounded V, rest and
+surface-composition reviews integrated into this record. Local reproductions
+and logs live in `output/branch-review-s3-20260928-01/`; the conclusions below
+do not require those files.
+
+### Session 3 findings and dispositions
+
+| Finding | Contract, counterexample and impact | Repair / acceptance criterion |
+| --- | --- | --- |
+| BR-3-001, high, inconsistent ordered residual evidence | `cam_extensions.strategy._assess` checked only adjacent residual intervals. An audited chain `[0,1] -> [0,10] -> [2,3]` in area or volume was selected despite the first stage proving that at most 1 remains. A wider intermediate estimate cannot restore removed material. This invalidates selection of such inconsistent supplied chains, not existing two-stage machining observations. | Retain the minimum upper bound from every earlier prefix. `test_all_prefix_bounds_constrain_later_residuals` fails on both area and volume before repair; a nearby overlapping `[.5,2]` final interval remains eligible. Bounds themselves remain caller assertions, not independently manufactured stock certificates. |
+| BR-3-002, medium, smaller-tool coverage | `polygon_rest.generate` used a fixed 1.5 mm row pitch for every tool. A 12×12 mm square, one radius-1.5 full-depth prior column and radius-.5 cleanup left final rest upper `22.8519015737` mm². Independent finite-tool square corner rest is `(4-pi)*.5² = .2146018366` mm². The target stayed protected, but the interior strips defeated the intended smaller-tool cleanup. | Limit pitch to `min(1.5, 1.5*radius)` mm and row start offset to `min(.5,radius)` mm, retaining the nominal radius-1 paths. New `PolygonSmallToolTests.test_interior_pitch_scales_with_cleanup_diameter` checks unchanged target, prior area `144-pi*1.5²`, both depth 1 and floor 3, residual near the analytic corner limit, zero material outside the .05 mm ideal/boundary envelope and protected overcut at most `1e-8` mm². Repaired residual is approximately `[.2381,.2387]` mm². |
+| BR-3-003, medium, false V infeasibility / omitted component | `v_region.plan` seeded depth at .05 mm and started raster rows/offsets at half a pitch. Valid .4 mm and .08 mm squares received no path at default 1 mm pitch; a small lobe joined to a large lobe by a thin bridge was silently omitted after center erosion separated it. No unsafe sweep was accepted, but primary machining was unavailable or incomplete for avoidable sampling reasons. | Halve an empty shallow seed toward the supported depth threshold, then add an interior row in each reachable component missed by normal paths. Both raster and offset variations now produce verified partial paths in each tested component. The result still reports partial; failure wording describes supported-depth/path finding, not a universal geometric impossibility proof. |
+| BR-3-004, medium, repaired finite-tool capability gap | Region-V previously rejected `target.cap_depth > tool.cutting_length` even when useful shallow machining was possible. A 10×10 opening, cap 2 and pointed flute .5 illustrates the gap. Rejection was explicit, so this was not false clearance. | Limit penetration to the shorter of cap/flute while retaining the original full target. `test_short_flute_makes_partial_cut_and_keeps_deep_target_rest` checks partial status, maximum penetration .5 and an independent untouched depth-1 target section of 64 mm². No floor lowering or target redefinition is credited as completion. |
+| BR-3-005, medium, target comparison contract | `VTarget.section` receives the tangent from `VProfile`: source opening and cap alone do not identify a physical V finish. A 10×10 opening at depth 1 has area `(10-2*tan(angle/2))²`; 60° and 90° differ by more than 10 mm². Comparing those residuals as one target would be misleading. No delivered comparison changes angle between candidates. | Public docstrings and architecture now state that same-target alternatives retain the angle; the analytic section test fixes that interpretation. Independent design/tool angles remain an explicitly deferred capability in backlog 6, reopened by an unequal-angle comparison consumer. The selector cannot infer geometry from trusted audit records. |
+
+**BR-3-006, low, surface API annotation:** `surface3d.SurfaceOperation.target`
+named only `SlopedTarget`, although constructor validation and existing bowl
+consumers also support `SphericalBowlTarget`. The Python-3.9-compatible union
+annotation now names both. Runtime validation and motion behavior are unchanged;
+existing plane/bowl suites cover both consumers.
+
+No target edges were smoothed or relaxed, no residual budget was loosened, no
+golden output was regenerated and no native/physical acceptance was inferred.
+The small-cutter test's .03 mm² allowance above the ideal corner residual covers
+the deliberate .0005 mm contour inset: the 48 mm perimeter contributes under
+.024 mm², with the remaining budget covering curved-join/buffer/rounding error.
+Its separate topology/overcut assertions prevent total area from excusing a gouge.
+
+### Session 3 coverage and test adequacy
+
+All 18 S3-allocated paths are named below. Their complete `main...HEAD` changes
+and relevant callers/tests were inspected at the revision above plus the S3
+repairs. This supplements the original allocation rather than creating another
+queue. "Adequate" applies only to the stated bounded behavior, not arbitrary
+geometry or a physical machining guarantee.
+
+| Exact paths / symbols | Behavior, independent evidence, sensitivity and disposition |
+| --- | --- |
+| `cambam_builder/cam_core/rc01.py`; `tests/test_rc01.py` — `Job`, `generate`, `verify`, independent section/engagement oracle | BT-13: explicit nominal pocket/island, rough then cleanup, continuous boundary and depth-prefix checks inspected. Tests assert analytic corner residual and process limits; island-crossing, low-rapid, missing predecessor and bottom-borrowing faults reject. Adequate for the declared RC01 recipe, not a configurable general pocket optimizer. |
+| `cambam_builder/cam_core/convex_rest.py`; `tests/test_convex_rest.py` — `generate`, `RestResult` | BT-13: one supplied cone column extended along increasing original-edge clearance; target sections use independent half-plane/triangle references and removal integration. Source/motion, tool/depth, protected-target and low-link cases reject. Adequate bounded consumer; arbitrary prior columns/topology remain outside this API. |
+| `cambam_builder/cam_core/polygon_rest.py`; `tests/test_polygon_rest.py`; `tests/test_curved_rest.py` — `generate`, residual queries, native adapters followed | BT-13: original shell/hole protection, source-bound multiple priors, smaller-tool access and actual coverage. Existing tests assert independent corner formula, exact source area 1532, section/volume consistency, point membership, segment-boundary distance, multiple-prefix contribution and narrow-access rejection. BR-3-002 adds nondefault radius-.5 material outcome rather than preserving a path list. Adequate for the bounded polygon/curved strategy; fixed row heuristic and single connected center-domain limits are explicit. |
+| `cambam_builder/cam_core/vcarve.py`; `tests/test_vcarve_slot.py`; `cambam_builder/cam_core/tapered_vcarve.py`; `tests/test_variable_vcarve.py` — `generate_slot`, `generate`, `verify`, section/row references | BT-11: predecessor-free full/capped pointed paths, finite-tool corners/floor cusps and changing-depth family. Independent row quadrature checks nominal and edited geometry/tool at multiple heights; changed access and overdeep motion reject. Adequate declared family: full-depth slot varies dimensions, capped slot generation specifically accepts width 4/cap 1; straight variable groove requires increasing depth and slope below 1. Unsupported forms reject explicitly. |
+| `cambam_builder/cam_core/v_region.py`; `tests/test_v_region.py` — `plan`, `verify`, `with_prior`, section/volume reports | BT-11/12: pointed/flat/rounded tools, holes and curved bounds, full-height segment containment, slope, cap, wide fills, finite residual and source-bound prior. Analytic capsule/square/holed section and integrated-volume references protect the reporter independently of recipe output. BR-3-003/004 add small/disconnected components, both patterns and short-flute partial outcomes; BR-3-005 distinguishes physical targets. Existing hole-crossing/motion/prior-overcut faults reject. Adequate bounded planning and residual claims; no arbitrary geometric completeness, rest-specific path pruning or conditional smoother. |
+| `cambam_builder/cam_core/inlay.py`; `tests/test_paired_inlay.py` — `generate`, `assembly`, `replay_stages`, `audit_pair` | BT-18: circular pointed-cone paired stocks and insertion at zero/.1 clearance, changed tool/registration and two dialects. Explicit radii/areas, gap `clearance+(.9-insertion)*.5`, separate decoded stocks and residual/overcut thresholds are independent assembly/material assertions. Adequate bounded consumer; arbitrary contours, physical fit and a general inlay search are not established. `audit_pair` outward dependency remains BR-1-004. |
+| `cambam_builder/cam_extensions/strategy.py`; `tests/test_strategy_selection.py` — `_assess`, `select_strategy` | BT-14: hand-authored independent intervals/chains establish feasibility-first, area/volume/tie ranking, manual safe-partial status and rejected unsafe choice. New tests independently remove each of eight named gates and each freshness/completeness/motion/emitted assertion; exact/nextafter budget boundaries and dominated-candidate permutations pass. BR-3-001 controls every prefix. Adequate supplied-candidate policy; caller metric/target honesty, cost models and automatic search remain outside it. |
+| `cambam_builder/cam_core/mixed.py` — `mixed_trace`, `verify_mixed`; followed `tests/test_mixed_replay.py` | BT-09/13: explicit RC01-plus-slot recipe retains both independent verifiers and one shared replay. Fixed placement/tool labels are reference constraints; ordered job and replay values provide reusable composition. Prefix point membership separates the two stocks; omitted entry/tool change, low link and protected-wall faults reject. Adequate reuse demonstration, not a generic scheduler. |
+
+Additional inspected dependencies: `cambam_builder/cam_core/curved_region.py`
+(`generate`, depth-specific rest/overcut/volume queries),
+`cambam_builder/cam_core/ordered_job.py` (`from_prior_v`, evaluator dispatch),
+`cambam_builder/integrations/cambam/native_series_audit.py`
+(`audit_linear_native_series`, stage certificates),
+`cambam_builder/integrations/m4_curved_workflow.py` (`audit_comparison`),
+`tests/test_native_series_audit.py`, `tests/test_m4_curved_workflow.py` and
+`tests/test_ordered_job.py`. These establish two actual policy consumers,
+caller tool names/translations and native/generated, raster/offset, two-dialect
+composition. Synthetic native wrappers test transport/replay, not native CAM
+algorithm parity. Their complete-byte/freshness audit remains S4; it is not
+claimed here merely because the tests pass.
+
+BT-15/21 composition judgment: primary Region-V planning is independent, but its
+decoded ordered stock evaluator requires exactly one cylinder predecessor.
+The S1 standalone test correctly reports equivalent motion plus `unsupported`
+stock. `with_prior` reuses primary paths without rest-specific pruning. Rest
+connectors may cut inside the original target after a proved descent; this is
+different from fitting/smoothing into a declared cleared-overlap domain.
+`replay._covered` can prove access against one depth-clipped prior sweep, not
+arbitrary unions; helical chord uncertainty can conservatively block an entry.
+Those are qualified capability gaps, not silently credited clearance. Generic
+conditional smoothing, overlap budgets, independent design angles, automatic
+tool bundles and cost objectives remain untested extensions in backlog 6, with
+named-consumer reopening criteria. Another nominal job would not resolve them
+and is lower priority than S4's execution/evidence audit.
+
+BT-17 additional strategy dependencies inspected:
+`cambam_builder/cam_core/surface3d.py` (`SurfaceOperation`, `replay_stages`),
+`cambam_builder/cam_core/volume3d.py` (`VolumeOperation`, `replay_stages`),
+`tests/test_surface3d.py`, `tests/test_volume3d.py` and
+`tests/test_spherical_bowl.py`. Explicit motion roles own access: a
+`cleared_descent` requires predecessor evidence, while `entry` removes virgin
+stock subject to original-target/overcut checks. The `rest` strategy label is
+metadata, not an alternative permission or dependency mechanism. Replacing
+cleared descents with cutting entries can legitimately permit a standalone
+stage; that does not establish predecessor-cleared access. Separate report
+roles and preserved residuals make this distinction observable.
+
+These tests independently reference prism/capsule volumes, affine contact/pass
+volume and spherical-cap section/volume/contact. The declared smaller-tool
+volume/bowl and same-tool slope jobs demonstrate ordered stock improvement and
+protected geometry. Strategy coverage is **partial**: paths are hand-authored,
+and positive gain/interval improvement does not impose an independent final
+coverage budget. No automatic surface/rest generator or minimum finish-coverage
+claim is accepted. Reopen that test gap with a named generated-surface strategy
+or required finish budget; it does not undermine the supplied-motion verifier's
+qualified bounds. Mixed replay's removed-entry test detects discontinuity, not
+an alternate valid schedule; valid changed order is instead exercised through
+the native ordered-job consumer. Broader execution-role misuse remains S4.
+
+### Session 3 verification and acceptance
+
+Environment: repository `.venv/Scripts/python.exe`, CPython 3.13.5, Shapely 2.1.2.
+Focused commands completed from the repository root:
+
+| Command (after `.venv/Scripts/python.exe`) | Result |
+| --- | --- |
+| `-m unittest tests.test_strategy_selection tests.test_native_series_audit tests.test_m4_curved_workflow -v` | 16 tests, 48.695 s, OK after BR-3-001 |
+| `-m unittest tests.test_polygon_rest tests.test_curved_rest tests.test_convex_rest -q` | 17 tests, 347.171 s, OK after BR-3-002 |
+| `-m unittest tests.test_v_region tests.test_vcarve_slot tests.test_variable_vcarve tests.test_paired_inlay tests.test_m4_curved_workflow tests.test_rest_vcarve_acceptance_fixtures -v` | 41 tests, 94.582 s, OK after V repairs |
+| `-m unittest tests.test_native_v_region tests.test_native_variable_v tests.test_direct_variable_v tests.test_cone_script tests.test_variable_cone_script tests.test_variable_cone_engrave -v` | 16 tests, 89.626 s, OK after V repairs |
+| `-m unittest tests.test_mixed_replay tests.test_volume3d tests.test_surface3d tests.test_spherical_bowl -q` | 16 tests, 51.3 s, OK; supplied-motion composition slice |
+| `-m compileall -q cambam_builder legacy_cambam_builder` and `CBProject('smoke')` import/construct assertion | Passed |
+
+Fault sensitivity was checked without changing working source. The two new V
+methods against isolated `6188a60` source yielded six intended missing-path
+assertion failures and the expected short-flute admission error. The polygon
+small-tool method against isolated old source failed its residual upper-bound
+assertion at both tested depths (`22.8519015737` versus allowed `.2446018366`
+mm²). The selector counterexample failed twice before repair. Additional
+isolated source faults removed only the stock gate (one assertion failure,
+zero errors) or forgot the earlier area/volume upper bound (two assertion
+failures, zero errors). Thus compound negative inputs no longer mask a missing
+individual policy guard. The new gate test names the eight contract gates
+independently of the implementation's `REQUIRED_GATES` constant.
+
+Nine identical-source nominal V plan fingerprints match the `6188a60` planner:
+letter and annulus with pointed 90°, flat 90°/.25 mm tip and rounded 60°/.5 mm
+tip; mixed Region with the rounded tool; and the 1.05-scaled annulus hole with
+rounded raster/offset fill. The comparison uses cap 2, pitch 1, the native
+adapter's four-decimal re-verification and the same synthetic source bytes for
+both implementations. It is a planner-compatibility check, not a new actual-post
+observation. The radius-1 polygon reference retains its previous pitch/start.
+Thus the repaired nondefault cases do not require repeating unchanged nominal
+CamBam observations; S2's numerical-report recomputation requirement still applies.
+
+After the full run started, only the `SurfaceOperation.target` annotation was
+corrected in runtime source. Its plane/bowl suites were rerun separately:
+`-m unittest tests.test_surface3d tests.test_spherical_bowl -q` passed eight
+tests in 35.724 s. Planner/policy source and test SHA-256 values were checked
+unchanged against the full-run start. Final compileall also passed.
+
+The 18-path S3 allocation reconciles with the new ledger, and added local
+document links resolve. `git diff --check`, untracked-text inspection and
+ignored `.cb`/`.nc` enumeration outside `output/` found no new candidates or
+accidental artifacts. `.pytest_cache/` remains unreadable, the same enumeration
+limit recorded by S1/S2. No artifacts were deleted or fixture bytes versioned.
+All task helpers/source-fault copies are ignored beneath the session output
+directory. Final full discovery and delivery state are recorded below.
+
+**Completed shared verification:**
+`.venv/Scripts/python.exe -m unittest discover -s tests -v` completed **547 tests
+in 800.458 seconds, zero failures, one skip**, exit 0 (`full.log`). The skip is
+the existing `test_mcp_documents.DocumentTests.test_symlink_rejection` for
+unavailable Windows symlink privilege. No planner/policy/test edits followed
+that run; the annotation-only surface adjustment has the separate eight-test
+pass above. Eight new regression methods were added in the existing strategy,
+polygon-rest and Region-V suites. No production budgets or numerical tolerances
+were relaxed.
+
+**Acceptance and delivery:** implementation and automated checks complete;
+**accepted by engineering** for session 3's bounded strategy/reuse scope.
+BR-3-001..004 are repaired, BR-3-005 has an explicit comparison contract and
+backlog reopening condition, and BR-3-006 has a corrected annotation. Manual
+CamBam validation adds no evidence to these detached repairs; no new user
+observation is required. Physical setup/controller behavior, unsupported
+geometry and the explicitly deferred capabilities remain outside acceptance.
+Changes are **ready to commit**, not merge-ready. Nothing was staged, committed
+or merged. Suggested commit: `fix: close machining strategy and rest review findings`.
+
+Local workstream: strategy review is closed with material counterexamples and
+qualified reuse limits. Overall project: three of five branch-review sessions
+are accepted; execution/evidence review has higher delivery value now than
+another strategy recipe. A fresh session is recommended because contracts,
+failure evidence, acceptance and remaining limits are persisted in their owners;
+there are no pending results or user decisions to carry conversationally.
+Next: complete [session 4—execution safety, evidence and misuse resistance](PROGRESS.md#branch-review-session-queue).

@@ -2190,6 +2190,16 @@ fitting, stock slicing and physical process allowances in reports.
 
 ### Wide areas, rest access and smoothing
 
+**Implemented boundary, reviewed 2026-09-28:** current rest planners generate
+verified contours/straight fills and permit cutting connectors within the
+original target after a proved cleared descent. They do not expose a generic
+conditional smoother, fitted-arc deviation contract or overlap-cost budget.
+Region-V `with_prior` adds prior-stock analysis to an existing primary plan;
+it does not prune or optimize that plan against rest. The following paragraphs
+remain the broader design proposal. Current strategy guarantees and composition
+limits are owned by [the architecture contract](structure_spec.md#strategy-guarantees-and-composition-limits),
+and extension priority/reopening criteria by backlog 6 in PROGRESS.
+
 The default strategy proposal is to derive feasible poses first, then cover target
 rest using boundary/medial-axis candidates plus interior passes where needed.
 Simply clipping the depth of a medial-axis path can leave wide side bands uncut.

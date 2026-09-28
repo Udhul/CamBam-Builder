@@ -94,7 +94,8 @@ def _assess(source, alternative, area_budget, volume_budget):
         return Assessment(alternative.name, "unsafe", ("no audited stages",), None, 0, ())
     predecessor = source
     reasons = []
-    previous = None
+    prior_area_upper = math.inf
+    prior_volume_upper = math.inf
     stage_residuals = []
     for index, stage in enumerate(alternative.stages):
         if type(stage) is not StageAudit:
@@ -117,13 +118,15 @@ def _assess(source, alternative, area_budget, volume_budget):
             reasons.append(f"stage {index}: missing audit gates")
         if type(stage.residual) is not ResidualBounds:
             reasons.append(f"stage {index}: missing residual bounds")
-        elif previous is not None and (
-                stage.residual.area_lower_mm2 > previous.area_upper_mm2 + 1e-9 or
-                stage.residual.volume_lower_mm3 > previous.volume_upper_mm3 + 1e-9):
+        elif (stage.residual.area_lower_mm2 > prior_area_upper + 1e-9 or
+              stage.residual.volume_lower_mm3 > prior_volume_upper + 1e-9):
             reasons.append(f"stage {index}: residual increases beyond prior bounds")
         if type(stage.residual) is ResidualBounds:
             stage_residuals.append((stage.name, stage.residual))
-        previous = stage.residual if type(stage.residual) is ResidualBounds else None
+            # Removal cannot restore stock. A later, wider enclosure must not
+            # erase a tighter upper bound established by any earlier prefix.
+            prior_area_upper = min(prior_area_upper, stage.residual.area_upper_mm2)
+            prior_volume_upper = min(prior_volume_upper, stage.residual.volume_upper_mm3)
         predecessor = stage.chain_fingerprint
     residual = alternative.stages[-1].residual if (
         type(alternative.stages[-1]) is StageAudit and

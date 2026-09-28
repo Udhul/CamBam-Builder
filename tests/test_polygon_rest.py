@@ -20,6 +20,48 @@ except ModuleNotFoundError as exc:
 
 
 @unittest.skipUnless(HAS_PLANAR, "optional planar backend is absent")
+class PolygonSmallToolTests(unittest.TestCase):
+    def test_interior_pitch_scales_with_cleanup_diameter(self):
+        # A single central rough column leaves enough stock to expose gaps
+        # between cleanup rows independently of any native fixture recipe.
+        target = replay.Target("square", (0, 0, 12, 12), 3,
+                               region_shell=((0, 0), (12, 0), (12, 12), (0, 12)))
+        rough = replay.ToolProfile("rough", "cylinder", 1.5, 5)
+        finish = replay.ToolProfile("finish", "cylinder", 0.5, 5)
+        operation = replay.Operation("prior", rough, target)
+        high, low = (6, 6, 5), (6, 6, -3)
+        items = (
+            replay.Event("tool_change", rough.name, high),
+            replay.Event("spindle_start", rough.name, high),
+            replay.Motion("entry", rough.name, operation.name, high, low),
+            replay.Motion("retract", rough.name, operation.name, low, high),
+            replay.Event("spindle_stop", rough.name, high),
+        )
+        prior = replay.Trace("synthetic-square-small-tool", "drawing", high,
+                             (operation,), items)
+        result = polygon_rest.generate(
+            prior, finish, expected_source=prior.source_fingerprint,
+            expected_motion=prior.motion_fingerprint, rough_allowance_mm=0)
+
+        self.assertEqual(result.target, target)
+        self.assertEqual(tuple(name for name, _ in result.stock.prefixes),
+                         ("prior", "cleanup"))
+        ideal_corner_rest = (4 - math.pi) * finish.radius ** 2
+        self.assertAlmostEqual(result.pure_rest_area(1)[0],
+                               12 ** 2 - math.pi * rough.radius ** 2,
+                               delta=0.001)
+        for depth in (1, 3):
+            with self.subTest(depth=depth):
+                lower, upper = result.residual_area(depth)
+                self.assertGreaterEqual(lower, ideal_corner_rest - 0.001)
+                self.assertLess(upper, ideal_corner_rest + 0.03)
+                self.assertLessEqual(
+                    result.residual_outside_ideal_envelope_area(depth), 1e-8)
+                self.assertLessEqual(result.protected_overcut_upper_area(depth),
+                                     1e-8)
+
+
+@unittest.skipUnless(HAS_PLANAR, "optional planar backend is absent")
 class PolygonRestTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

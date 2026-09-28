@@ -1819,6 +1819,65 @@ with rounded-tip comparison and direct reference output remains the full M4
 gate; [the milestone scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
 owns its acceptance.
 
+### Strategy guarantees and composition limits
+
+The session 3 review distinguishes generated motion, its verification and policy
+over verified candidates. These are the current contracts; the broader proposal
+in [the CAM design](REST_MACHINING_PLAN.md#wide-areas-rest-access-and-smoothing)
+does not make missing search or smoothing capabilities available.
+
+| Owner | Guarantee and scope | Limit relevant to reuse |
+| --- | --- | --- |
+| `vcarve.generate_slot`, `tapered_vcarve.generate` | Primary 90-degree pointed-cone machining without a predecessor; explicit target, finite tool and complete above-stock links, with independent residual references | Finite passes leave corner/floor residual. Capped-slot generation is specifically width 4/cap 1 mm; full-depth slots and the straight increasing-depth groove support their declared variable dimensions. Output setup constants belong to the reference adapter. |
+| `convex_rest.generate` | Replays one supplied cone column and extends it along a verified rising-clearance straight line in a convex target | One prior column and fixed cone family; this is not an arbitrary Region rest planner. |
+| `polygon_rest.generate`, `curved_region.generate` | Source-bound supplied cylindrical prefixes, smaller-tool original-boundary contours, interior rows and replayed cleared descent/cutting connectors; curved input uses inward-safe geometry | One connected feasible center Region, full-depth predecessor and supported tool pair required. Candidate rows/access are bounded heuristics; residual reports, not tool reachability, establish coverage. No arbitrary tabs or released-body model. |
+| `v_region.plan`, `verify`, `with_prior` | Primary raster/offset planning on polygon/curved inward-safe geometry, full-profile containment, explicit high links and partial residual reporting; optional one-cylinder predecessor | Planning is not a geometric completeness or global path-search proof. A short flute limits penetration while the original deeper target remains in residual reports. `with_prior` measures predecessor plus the same V paths; it does not regenerate paths to minimize air cuts. |
+| `ordered_job.audit` | Decoded Region-V stock is supported for exactly one endmill predecessor followed by one V stage | A standalone Region-V stage may emit equivalent motion but reports stock `unsupported`. Multiple V stages, arbitrary mixed stock evaluators and primary Region-V decoded stock need explicit future contracts. Detached primary planning/analysis remains available. |
+| `replay._covered` | A cleared descent/link requires an enclosing prior sweep at the queried depth | Cylinder coverage is proved against one prior sweep at a time. Union-only access and a smaller cylinder around an approximated helical chord can conservatively reject. This is not a general clearance-path finder. |
+| `strategy.select_strategy` | Supplied safe routes rank by budget feasibility, final upper residual area, upper volume, then declared tie order. Manual choice preserves safe partial status; failed gates cannot win | No bundle generation, automatic tool choice, cutting/air/time/tool-change cost, engagement objective or global optimum. Caller audits must describe the same physical target and metric; records remain trusted assertions. |
+
+Residual consistency in selection uses the minimum upper area/volume bound from
+**every earlier stage**, with the existing `1e-9` comparison allowance. A wide
+intermediate enclosure cannot erase earlier proof of less remaining stock.
+Overlapping intervals are not proof of an increase and remain eligible. Selection
+does not tighten or manufacture the supplied final report.
+
+Region-V's current finish angle is supplied by `VProfile`, not stored separately
+in `VTarget`. The opening, cap **and tool angle** jointly define the requested
+surface. Same-target alternatives must retain that angle; comparing 60-degree
+and 90-degree plans on one opening compares different design surfaces. Independent
+design/tool angles remain an extension. Tip style, finite radius and flute length
+may vary at the same angle without redefining the ideal pointed finish envelope.
+
+Region-V planning halves its shallow seed when necessary and inserts an interior
+row for each reachable component missed by the normal raster/offset passes.
+This prevents a coarse pitch from silently omitting a short component; it does
+not prove complete coverage below its `1e-6` mm path threshold or across every
+possible topology. Smaller-endmill interior pitch is at most 1.5 times cutter
+radius (and at most the existing 1.5 mm nominal pitch), preventing the former
+fixed-pitch gap for sub-millimetre-radius tools. Original boundaries, replay
+checks and residual measurements remain authoritative after either change.
+
+`mixed.verify_mixed` is an explicitly synthetic RC01/slot reuse probe with fixed
+placement and names. The independent replay API and caller-authored ordered jobs
+are the composition seams. Layered-volume and plane/bowl modules verify supplied
+stages and stock; their test jobs do not implement a general waterline, freeform
+surface or automatic ball-rest path planner. Inlay is a bounded circular paired
+stock consumer with an analytic assembly model, not the definition of primary V.
+For `SurfaceOperation` and `VolumeOperation`, `strategy="rest"` is descriptive.
+The supplied motion's `cleared_descent` role requires predecessor evidence;
+`entry` permits target-contained stock-removing descent. A label alone neither
+requires a predecessor nor establishes cleared access. Positive stock reduction
+in the hand-authored surface jobs is not a general finish-coverage budget.
+
+Conditional rest smoothing, arc fitting and an overlap budget are not implemented
+by the current strategy modules. Offsets and conservative buffers construct
+feasible/covered sets; they do not certify a fitted path. A future smoother must
+preserve the original target, distinguish pure rest from allowed cleared overlap,
+and recheck coverage and full swept containment after fitting, including holes,
+thin bridges and any modeled tabs. Physical surface finish, engagement and
+controller acceleration remain separate from geometric residual evidence.
+
 ### Edited curved rounded-tip composition and offset fill
 
 `cam_core.v_region.plan` supports `raster` and `offset` fill patterns after the

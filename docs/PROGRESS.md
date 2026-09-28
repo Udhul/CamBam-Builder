@@ -234,7 +234,7 @@ remain unassessed. The five selected packets are complete.
 
 ### Branch review session queue
 
-**Sessions 1 and 2 accepted by engineering; next priority: session 3 of the five-session
+**Sessions 1-3 accepted by engineering; next priority: session 4 of the five-session
 branch engineering and delivery review against `main`.** The [review plan](BRANCH_REVIEW_PLAN.md) preserves the
 2026-09-27 request: assess native/extended separation, core versus workflow
 responsibilities, reusable geometry/stock foundations, primary V-carving,
@@ -251,7 +251,14 @@ admission. Its [assumption inventory](structure_spec.md#foundation-assumptions-a
 and [findings/coverage](REVIEW.md#branch-review-session-2---2026-09-28) are recorded.
 Full discovery ran 539 tests with one stale numerical snapshot failure and one
 Windows skip; the corrected portability oracle then passed all four module
-tests, with runtime unchanged. Sessions 3-5 and branch acceptance remain pending.
+tests, with runtime unchanged. Session 3 has repaired all-prefix residual
+consistency, small-tool rest spacing and missed/short-flute Region-V paths;
+full discovery passed 547 tests with zero failures and the existing Windows skip.
+All eight plane/bowl tests also passed after an annotation-only correction. Its
+[findings and coverage](REVIEW.md#branch-review-session-3---2026-09-28) and
+[strategy contracts](structure_spec.md#strategy-guarantees-and-composition-limits)
+are recorded. Session 3 changes are uncommitted and ready to commit;
+sessions 4-5 and branch delivery remain pending.
 
 **Test adequacy is required in every session:** map intended behavior to tests,
 audit independent oracles and assertion strength, and identify missing core,
@@ -263,9 +270,9 @@ must close alongside final branch gates; a green suite alone is insufficient.
 | Session | Outcome and execution packet | State |
 | --- | --- | --- |
 | 1 | [Capability boundaries and public API contracts](BRANCH_REVIEW_PLAN.md#session-1-capability-boundaries-and-public-api-contracts) | Accepted by engineering 2026-09-27; included in reviewed HEAD `2a3ddd9`. [Findings and coverage](REVIEW.md#branch-review-session-1---2026-09-27) |
-| 2 | [Geometry, topology and numerical foundations](BRANCH_REVIEW_PLAN.md#session-2-geometry-topology-and-numerical-foundations) | Accepted by engineering 2026-09-28; automated checks complete, uncommitted and ready to commit. [Findings and coverage](REVIEW.md#branch-review-session-2---2026-09-28) |
-| 3 | [Machining strategies, rest behavior and reuse](BRANCH_REVIEW_PLAN.md#session-3-machining-strategies-rest-behavior-and-reuse) | Next: audit strategy guarantees, primary V, tool selection, overlap/smoothing and actual rest composition against the repaired foundations |
-| 4 | [Execution safety, evidence and misuse resistance](BRANCH_REVIEW_PLAN.md#session-4-execution-safety-evidence-and-misuse-resistance) | Pending session 3 |
+| 2 | [Geometry, topology and numerical foundations](BRANCH_REVIEW_PLAN.md#session-2-geometry-topology-and-numerical-foundations) | Accepted by engineering 2026-09-28; included in reviewed HEAD `6188a60`. [Findings and coverage](REVIEW.md#branch-review-session-2---2026-09-28) |
+| 3 | [Machining strategies, rest behavior and reuse](BRANCH_REVIEW_PLAN.md#session-3-machining-strategies-rest-behavior-and-reuse) | Accepted by engineering 2026-09-28; automated checks complete, uncommitted and ready to commit. [Findings and coverage](REVIEW.md#branch-review-session-3---2026-09-28) |
+| 4 | [Execution safety, evidence and misuse resistance](BRANCH_REVIEW_PLAN.md#session-4-execution-safety-evidence-and-misuse-resistance) | Next: audit emitted/imported motion, evidence freshness, role/transition semantics and foreseeable misuse against reviewed machining contracts |
 | 5 | [Integrated regression and delivery decision](BRANCH_REVIEW_PLAN.md#session-5-integrated-regression-and-delivery-decision) | Pending sessions 1-4 and final branch gates |
 
 Each session records coverage/findings in REVIEW and updates this queue with the
@@ -278,18 +285,19 @@ Session 1 requires no new CamBam or physical observation: the repaired identity
 and constructor boundaries are directly testable offline. Existing native/post
 acceptance remains limited to its unchanged source bytes. Primary V planning
 does not require a predecessor, while ordered Region-V stock evidence currently
-does; session 3 assesses that composition limit. Session 2 needs no new external
+does; session 3 assessed and retained that explicit composition limit. Session 2 needs no new external
 observation: its mathematical defects have independent offline witnesses. Prior
 numerical reports from affected owners must be recomputed; unchanged native
-source/post observations retain their original byte scope. Session 3 matters
-next because sound foundations alone do not establish strategy completeness,
-useful rest overlap or tool-bundle reuse. Assess the conservative helical cleanup
-entry limitation and primary-V ordered-stock composition there before proposing
-another reference job. General collapsed polygon feasibility, certified GEOS
-arithmetic, helical curved volume and freeform offsets remain deferred under
-backlog 6; reopen for a named consumer blocked by those limits. The coherent
-session 2 outcome is a good fresh-session breakpoint; contracts, failure evidence
-and the next scope are durable.
+source/post observations retain their original byte scope. Session 3 also needs
+no user observation: independent geometric/policy witnesses close its repairs,
+and nine nominal V plan fingerprints remain unchanged against the reviewed HEAD.
+Smoothing/overlap budgets, automatic bundle/cost search, independent V design
+angles and primary/multiple-V decoded stock remain qualified backlog 6 gaps,
+alongside conservative helical/union access and broader geometric foundations.
+Reopen them for the named consumers/requirements recorded there. Session 4 matters
+next because correct candidate paths do not prove actual bytes, stale-state
+rejection or execution-role safety. A fresh session is recommended: this coherent
+strategy outcome, failure evidence, acceptance and next scope are durable.
 
 The
 [M0-M5 scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
@@ -1946,6 +1954,28 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    acceptance boundary. Historical entries below retain earlier stage limits; they
    do not permanently restrict the framework to RC01 or a fixed-axis sample
    workflow.
+
+   **Session 3 strategy extensions, deferred behind execution/delivery review:**
+   primary Region-V planning and analysis are available, but its ordered decoded
+   stock evaluator requires one cylindrical predecessor. Reopen primary or
+   multi-stage V stock composition for a named standalone/composed output job;
+   acceptance must decode actual paths and establish virgin-entry, protected
+   sweep and residual evidence without inventing a roughing stage. General
+   cleared-union/helical cleanup access needs a depth-aware coverage proof when
+   a supported job is blocked by the present single-sweep clearance predicate.
+   Conditional rest smoothing/overlap budgets need a concrete finish/access or
+   redundant-cutting requirement and post-fit coverage/topology/edge checks.
+   Automatic bundle search and cutting/air/tool-change costs need declared tools,
+   objectives and a consumer for which supplied-candidate ranking is insufficient.
+   Independent Region-V design/tool angles need a caller comparing unequal-angle
+   tools against one fixed surface; currently the tool angle also defines that
+   surface, so such plans cannot be ranked as equivalent targets.
+   The hand-authored surface jobs prove bounded replay and improvement, not a
+   general final-coverage budget; require independent target/coverage oracles
+   when a named automatic surface strategy or finish requirement is introduced.
+   These gaps do not supersede session 4: actual motion and evidence misuse have
+   greater delivery impact than another nominal recipe. See the
+   [current guarantees](structure_spec.md#strategy-guarantees-and-composition-limits).
    The [planar backend decision](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
    selects Shapely/GEOS for the design. Adversarial acceptance and the
    [internal value/error contract](REST_MACHINING_PLAN.md#internal-planar-value-and-error-contract)

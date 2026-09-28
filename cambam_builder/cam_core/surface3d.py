@@ -10,6 +10,7 @@ import math
 from numbers import Real
 import time
 import tracemalloc
+from typing import Union
 
 
 VERSION = "sloped-ball-v1"
@@ -142,7 +143,7 @@ class SurfaceOperation:
     tool_id: str
     radius_mm: float
     cutting_length_mm: float
-    target: SlopedTarget
+    target: Union[SlopedTarget, SphericalBowlTarget]
     strategy: str
 
     def __post_init__(self):

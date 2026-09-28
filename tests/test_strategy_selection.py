@@ -2,6 +2,7 @@
 
 from dataclasses import replace
 import hashlib
+import math
 import unittest
 
 from cambam_builder.cam_extensions.strategy import (
@@ -89,6 +90,74 @@ class StrategySelectionTests(unittest.TestCase):
         result = self.select((stale,))
         self.assertEqual(result.status, "infeasible")
         self.assertIn("stale source fingerprint", result.assessments[0].reasons[0])
+
+    def test_each_required_gate_independently_excludes_a_better_route(self):
+        good = Alternative("good", (stage("good", SOURCE, 1, 8),))
+        # Derive this list from the public contract, not REQUIRED_GATES: deleting
+        # a gate from the implementation must still be detected by this test.
+        for gate in ("motion", "tool", "entry", "link", "stock", "target",
+                     "residual", "post"):
+            with self.subTest(gate=gate):
+                bad = Alternative("bad", (replace(stage("bad", SOURCE, 0, 0),
+                    passed_gates=REQUIRED_GATES - {gate}),))
+                selected = self.select((bad, good))
+                self.assertEqual((selected.status, selected.chosen), ("selected", "good"))
+                self.assertEqual(selected.assessments[0].reasons,
+                                 ("stage 0: missing audit gates",))
+                rejected = self.select((bad, good), manual="bad")
+                self.assertEqual((rejected.status, rejected.chosen), ("infeasible", None))
+
+    def test_independent_evidence_failures_cannot_win(self):
+        good = Alternative("good", (stage("good", SOURCE, 1, 8),))
+        for field, value, reason in (
+                ("freshness", "stale", "stale evidence"),
+                ("complete", False, "incomplete emitted motion"),
+                ("motion_fingerprint", "", "missing actual emitted-motion fingerprint"),
+                ("emitted_fingerprint", "", "missing actual emitted-motion fingerprint")):
+            with self.subTest(field=field):
+                bad = Alternative("bad", (replace(stage("bad", SOURCE, 0, 0),
+                                                    **{field: value}),))
+                selected = self.select((bad, good))
+                self.assertEqual(selected.chosen, "good")
+                self.assertEqual(selected.assessments[0].reasons,
+                                 ("stage 0: " + reason,))
+
+    def test_all_prefix_bounds_constrain_later_residuals(self):
+        # A wide second enclosure cannot undo the first stage's proof that at
+        # most 1 mm2 / 1 mm3 remains. Adjacent-only checks miss this conflict.
+        first = replace(stage("first", SOURCE, 0, 0),
+                        residual=ResidualBounds(0, 1, 0, 1))
+        middle = replace(stage("middle", first.chain_fingerprint, 0, 0),
+                         residual=ResidualBounds(0, 10, 0, 10))
+        for bounds in (ResidualBounds(2, 3, 0, 1), ResidualBounds(0, 1, 2, 3)):
+            with self.subTest(bounds=bounds):
+                last = replace(stage("last", middle.chain_fingerprint, 0, 0),
+                               residual=bounds)
+                route = Alternative("impossible", (first, middle, last))
+                result = self.select((route,), area=20, volume=20)
+                self.assertEqual((result.status, result.chosen), ("infeasible", None))
+                self.assertEqual(result.assessments[0].reasons,
+                                 ("stage 2: residual increases beyond prior bounds",))
+        last = replace(stage("last", middle.chain_fingerprint, 0, 0),
+                       residual=ResidualBounds(0.5, 2, 0.5, 2))
+        # Overlapping enclosures do not prove an increase: retain this route.
+        self.assertEqual(self.select((Alternative("possible", (first, middle, last)),)).status,
+                         "selected")
+
+    def test_budget_boundary_feasible_priority_and_dominated_candidate(self):
+        at = Alternative("at", (replace(stage("at", SOURCE, 0, 0),
+                                         residual=ResidualBounds(0, 2, 0, 20)),))
+        for bounds in (ResidualBounds(0, math.nextafter(2, math.inf), 0, 20),
+                       ResidualBounds(0, 1, 0, math.nextafter(20, math.inf))):
+            beyond = Alternative("beyond", (replace(stage("beyond", SOURCE, 0, 0),
+                                                     residual=bounds),))
+            chosen = self.select((beyond, at))
+            self.assertEqual((chosen.status, chosen.chosen), ("selected", "at"))
+            manual = self.select((at, beyond), manual="beyond")
+            self.assertEqual((manual.status, manual.chosen), ("partial", "beyond"))
+        better = Alternative("better", (stage("better", SOURCE, 1, 8),))
+        for routes in ((at, better), (better, at)):
+            self.assertEqual(self.select(routes, tie=("at", "better")).chosen, "better")
 
 
 if __name__ == "__main__":

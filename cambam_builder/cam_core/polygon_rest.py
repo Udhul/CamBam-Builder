@@ -225,7 +225,10 @@ def generate(prior_trace, cleanup_tool, *, expected_source, expected_motion,
         .buffer(cleanup_tool.radius, quad_segs=QUAD_SEGS))
     need_interior = after_contours.difference(
         finite_ideal.buffer(0.05).union(region.boundary.buffer(0.05)))
-    y = math.floor(region.bounds[1]) + 0.5
+    # Keep the accepted radius-1 path, but do not leave uncut strips when a
+    # smaller cleanup tool has a diameter below the nominal row pitch.
+    row_step = min(1.5, 1.5 * cleanup_tool.radius)
+    y = math.floor(region.bounds[1]) + min(0.5, cleanup_tool.radius)
     while y < region.bounds[3]:
         section = feasible.intersection(
             _line((region.bounds[0] - 1, y), (region.bounds[2] + 1, y)))
@@ -237,7 +240,7 @@ def generate(prior_trace, cleanup_tool, *, expected_source, expected_motion,
                                (segment.coords[0], segment.coords[-1]))
                 if points[0] != points[1]:
                     paths.append((points, False))
-        y += 1.5
+        y += row_step
     contours = []
     for points, closed in paths:
         choices = []

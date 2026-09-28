@@ -27,6 +27,70 @@ def _circle(radius, clockwise=False, center=(0, 0)):
 
 @unittest.skipUnless(HAS_PLANAR, "optional planar backend is absent")
 class VRegionTests(unittest.TestCase):
+    def test_tool_angle_changes_the_defined_v_target_section(self):
+        target = v_region.VTarget.polygon("opening", ((0, 0), (10, 0),
+            (10, 10), (0, 10)), (), 2)
+        for angle in (60, 90):
+            with self.subTest(angle=angle):
+                tool = v_region.VProfile("pointed", angle, 0, 3, 2)
+                inner = target.section(1, tool.tangent).area
+                outer = target.section(1, tool.tangent, outer=True).area
+                expected = (10 - 2 * math.tan(math.radians(angle / 2))) ** 2
+                self.assertLessEqual(inner, expected)
+                self.assertGreaterEqual(outer, expected)
+                self.assertLess(outer - inner, .01)
+        self.assertGreater(target.section(1, math.tan(math.pi / 6)).area,
+                           target.section(1, 1).area + 10)
+
+    def test_primary_raster_reaches_short_and_disconnected_components(self):
+        from shapely.geometry import box
+
+        tool = v_region.VProfile("pointed", 90, 0, 2, 1)
+        for width in (0.4, 0.08):
+            for pattern in ("raster", "offset"):
+                with self.subTest(width=width, pattern=pattern):
+                    target = v_region.VTarget.polygon("small", ((0, 0),
+                        (width, 0), (width, width), (0, width)), (), 1)
+                    result = v_region.plan(target, tool, fill_pattern=pattern)
+                    self.assertEqual(result.status, "partial")
+                    self.assertTrue(result.paths)
+                    self.assertGreater(max(p[2] for path in result.paths
+                                           for p in path.points), 0)
+                    self.assertEqual(v_region.verify(result), result)
+
+        # The thin bridge vanishes under cutter-center erosion.  The large
+        # component gets ordinary grid rows; the short component still needs
+        # its own row to avoid silently losing that part of the target.
+        shape = box(0, 0, 10, 10).union(box(9.9, .245, 12.1, .255)).union(
+            box(12, .05, 12.4, .45))
+        self.assertEqual(shape.geom_type, "Polygon")
+        target = v_region.VTarget("satellite", shape, shape, 1)
+        for pattern in ("raster", "offset"):
+            with self.subTest(pattern=pattern):
+                result = v_region.plan(target, tool, fill_pattern=pattern)
+                self.assertEqual(result.status, "partial")
+                self.assertTrue(any(path.points[0][0] > 12
+                                    for path in result.paths))
+                self.assertTrue(any(path.points[0][0] < 10
+                                    for path in result.paths))
+
+    def test_short_flute_makes_partial_cut_and_keeps_deep_target_rest(self):
+        target = v_region.VTarget.polygon("deep", ((0, 0), (10, 0),
+            (10, 10), (0, 10)), (), 2)
+        tool = v_region.VProfile("pointed", 90, 0, 1, .5)
+        result = v_region.plan(target, tool)
+        self.assertEqual(result.status, "partial")
+        self.assertTrue(result.paths)
+        self.assertLessEqual(max(p[2] for path in result.paths
+                                 for p in path.points), .5)
+        self.assertEqual(v_region.verify(result), result)
+        # At depth 1 the short flute cannot have removed any material.  The
+        # independent square erosion has side 10 - 2*1 = 8 mm.
+        lower, upper, _ = v_region.section_report(result, 1)
+        self.assertLessEqual(lower, 64)
+        self.assertGreaterEqual(upper, 64)
+        self.assertLess(upper - lower, .01)
+
     def test_helical_prior_section_clips_at_reached_depth(self):
         shell = ((0, 0), (10, 0), (10, 10), (0, 10))
         target = v_region.VTarget.polygon("helix", shell, (), 1)

@@ -2227,6 +2227,21 @@ increment, and no runtime or packaging changes are implied by these commands.
 
 ### Required checks by change
 
+For strategy, rest-coverage or route-selection changes, run the owned planners
+and both supplied-audit consumers:
+
+```powershell
+& $ProjectPython -m unittest tests.test_rc01 tests.test_convex_rest tests.test_polygon_rest tests.test_curved_rest tests.test_vcarve_slot tests.test_variable_vcarve tests.test_v_region tests.test_paired_inlay tests.test_strategy_selection tests.test_native_series_audit tests.test_m4_curved_workflow -v
+```
+
+Planner changes that alter generated paths also require their native/direct and
+ordered-output consumers; full discovery provides that coverage. Check material
+results against independent section/volume references and preserve partial
+completion. Missing gates must reject independently, and a broad intermediate
+residual interval must not erase earlier stock bounds. See the
+[session 3 review](REVIEW.md#branch-review-session-3---2026-09-28) for the small-tool
+spacing, missed V-component and selection counterexamples.
+
 For changes to geometry/stock enclosures, run the mathematical owners and their
 decoded consumers. The session 2 focused foundation command is:
 

@@ -96,6 +96,12 @@ class VProfile:
 
 @dataclass(frozen=True)
 class VTarget:
+    """Source opening and depth cap; a plan's tool angle defines its V walls.
+
+    The same source with a different included angle is a different finish
+    surface.  Compare tool alternatives as one target only when their angles
+    agree; independent design-angle and tool-angle inputs are not modeled.
+    """
     source_id: str
     safe: Polygon
     outer: Polygon
@@ -310,7 +316,10 @@ def complete_motion(plan, initial_tip):
 def plan(target, tool, *, stepover_mm=1.0, xy_step_mm=1.0,
          margin_mm=0.01, safe_z=2.0, max_paths=1000,
          fill_pattern="raster"):
-    """Trace cap boundaries and fill with varying-Z rows or offset contours."""
+    """Trace the tool-angle V target with varying-Z rows or offset contours.
+
+    Return partial paths when flute length or finite spacing leaves target rest.
+    """
     if type(target) is not VTarget or type(tool) is not VProfile:
         raise ValueError("V Region target and tool required")
     stepover_mm = _finite(stepover_mm, "stepover")
@@ -319,18 +328,25 @@ def plan(target, tool, *, stepover_mm=1.0, xy_step_mm=1.0,
     safe_z = _finite(safe_z, "safe Z")
     if (stepover_mm <= 0 or xy_step_mm <= 0 or margin_mm <= 1e-5 or
             safe_z <= 0 or type(max_paths) is not int or max_paths <= 0 or
-            target.cap_depth > tool.cutting_length or
-            tool.radius(target.cap_depth) > tool.maximum_radius or
             fill_pattern not in ("raster", "offset")):
         raise ValueError("V path controls exceed tool/setup limits")
-    cap = target.cap_depth
+    # A short flute can still remove the upper part of a deeper target.  Keep
+    # the target cap intact for residual reporting and limit only penetration.
+    cap = min(target.cap_depth, tool.cutting_length)
     deep = target.safe.buffer(-(tool.radius(cap) + margin_mm), quad_segs=32)
     start_depth = min(0.05, cap)
     reachable = target.safe.buffer(-(tool.radius(start_depth) + margin_mm),
                                    quad_segs=32)
+    # Fixed 0.05 mm seeding can miss a legitimate shallower path in a narrow
+    # opening.  Depths below the planner's 1e-6 mm path threshold are not
+    # executable at its seven-decimal coordinate precision.
+    while reachable.is_empty and start_depth > 1e-6:
+        start_depth /= 2
+        reachable = target.safe.buffer(-(tool.radius(start_depth) + margin_mm),
+                                       quad_segs=32)
     if reachable.is_empty:
         result = VPlan(target, tool, (), (), safe_z, margin_mm, stepover_mm,
-                       "infeasible", "no positive-depth cutter center fits",
+                       "infeasible", "no cutter center fits at supported depth",
                        fill_pattern)
         verify(result)
         return result
@@ -378,9 +394,25 @@ def plan(target, tool, *, stepover_mm=1.0, xy_step_mm=1.0,
             inset += stepover_mm
         else:
             raise ValueError("V offset fill budget exceeded")
+    # A finite raster pitch or first offset can miss an entire short or
+    # disconnected reachable component.  Give each untouched component one
+    # interior row; established paths for other components are unchanged.
+    xmin, _, xmax, _ = reachable.bounds
+    for polygon in _polygons(reachable):
+        if any(polygon.covers(Point(path.points[0][:2])) for path in paths):
+            continue
+        row = polygon.representative_point().y
+        horizontal = LineString(((xmin - 1, row), (xmax + 1, row)))
+        for line in _segments(polygon.intersection(horizontal)):
+            candidate = _depth_path(target, tool, _sample(line, xy_step_mm),
+                                    cap, margin_mm, "fill")
+            if candidate is not None:
+                paths.append(candidate)
+        if len(paths) > max_paths:
+            raise ValueError("V path budget exceeded")
     status = "partial" if paths else "infeasible"
     reason = ("finite stepover and finite tip leave measured residual" if paths else
-              "no admissible positive-depth path")
+              "no admissible positive-depth path found")
     result = VPlan(target, tool, tuple(paths), _motions(paths, safe_z),
                    safe_z, margin_mm, stepover_mm, status, reason, fill_pattern)
     verify(result)
