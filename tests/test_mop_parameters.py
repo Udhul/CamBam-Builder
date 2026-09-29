@@ -242,6 +242,53 @@ class MopParameterTests(unittest.TestCase):
         )
         self.assertTrue(all("state" not in child.attrib for child in tabs))
 
+    def test_native_observed_manual_tab_positions_emit_perimeter_records(self):
+        # CamBam Plus 1.0 B/C fixtures: output/manual-tabs-20260927-01.
+        project = CBProject("manual-tab-policy")
+        layer = project.add_layer("Geometry")
+        outline = project.add_pline(
+            layer, [(10, 10), (70, 10), (70, 40), (10, 40)],
+            closed=True, identifier="outline")
+        part = project.add_part("Part")
+        profile = project.add_profile_mop(
+            part, [outline], identifier="profile", profile_side="Outside",
+            target_depth=-3, stock_surface=0, tool_diameter=3,
+            roughing_clearance=0, lead_in_type="None", tab_method="Manual",
+            tab_style="Square", tab_width=6, tab_height=1,
+            tab_min_tabs=5, tab_max_tabs=5,
+            manual_tab_points=[(10, 17), (40, 40), (70, 25), (40, 10), (10, 33)],
+        )
+        element = profile.to_xml_element(project, [1])
+        self.assertEqual("Manual", element.findtext("HoldingTabs/TabMethod"))
+        self.assertEqual("5", element.findtext("HoldingTabs/MinimumTabs"))
+        self.assertEqual("Square", element.findtext("HoldingTabs/TabStyle"))
+        records = element.findall("Tabs/HoldingTab")
+        self.assertEqual(
+            ["0.166666666666667", "0.416666666666667", "0.666666666666667",
+             "0.872222222222222", "0.961111111111111"],
+            [record.findtext("ParametricPoint") for record in records],
+        )
+        self.assertEqual(
+            [("0", "-1"), ("1", "0"), ("0", "1"), ("-1", "0"), ("-1", "0")],
+            [(record.findtext("Normal/X"), record.findtext("Normal/Y"))
+             for record in records],
+        )
+        self.assertEqual(["1"] * 5,
+                         [record.findtext("ParentEntityID") for record in records])
+        profile.manual_tab_points = [(40, 10), (70, 25), (40, 40), (10, 33)]
+        with self.assertRaisesRegex(ValueError, "minimum/maximum"):
+            profile.to_xml_element(project, [1])
+        profile.tab_min_tabs = profile.tab_max_tabs = 4
+        profile.manual_tab_points = [(40, 10), (70, 25), (40, 40), (10, 33)]
+        self.assertEqual(4, len(profile.to_xml_element(project, [1]).findall("Tabs/HoldingTab")))
+        profile.manual_tab_points = [(10, 10), (70, 25), (40, 40), (10, 33)]
+        with self.assertRaisesRegex(ValueError, "clear of corners"):
+            profile.to_xml_element(project, [1])
+        profile.manual_tab_points = [(40, 10), (70, 25), (40, 40), (10, 33)]
+        outline.local_z_offset = 1
+        with self.assertRaisesRegex(ValueError, "identity pose"):
+            profile.to_xml_element(project, [1])
+
     def test_engrave_fresh_subtype_policy_omits_unset_final_increment(self):
         project = CBProject("engrave-policy")
         layer = project.add_layer("Geometry")

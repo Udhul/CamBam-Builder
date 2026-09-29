@@ -7,6 +7,1109 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+**Accepted 2026-09-26 safe native arc hybrid:** the bounded
+level XY G2/G3 path now preserves direction/center through the native,
+UCCNC/Grbl and ordered replay boundaries. Synthetic native-arc plus generated
+rounded-V jobs pass independent decoded stock checks in both dialects;
+protected sweep and helix counterexamples reject. The user posted the
+source-bound, single-T1 Pocket
+[candidate](../output/native-arc-hybrid-20260926-01/native-arc-predecessor.cb)
+through CamBam Plus 1.0 Default. Its eleven G3 cuts and the generated rounded
+T3 finish pass complete decoded UCCNC stock/access replay. The Z=-1 mm
+native/final residual intervals are 366.03554-366.04387 /
+3.79242-5.28194 mm2 with zero modeled protected overcut. This closes the
+actual-post and offline stock gate for one level native Region Pocket;
+controller runtime, tool installation and physical machining remain
+unassessed. The [runbook](DEVELOPMENT.md#safe-native-g2g3-hybrid-evidence-case)
+and [review](REVIEW.md#safe-native-g2g3-hybrid-evidence---2026-09-26) own
+the files, hashes, limits and results.
+
+**Prior 2026-09-26 sloped ball-surface evidence:** one
+4 x 2 mm affine floor descending from 1 to 2 mm now has exact contact,
+section and target-volume oracles plus a ball-end straight-pass volume oracle.
+Two decoded UCCNC/Grbl stages pass protected-plane, cutting-length,
+prior-cleared entry and conservative residual-volume checks. The first/final
+0.125 mm cell intervals are 9.02725–10.50402 / 3.50399–6.85051 mm³;
+the dependent stage demonstrably removes new stock. Exact affine contact
+with conservative XY cells is sufficient for this fixture, so no general
+mesh/signed-distance backend is selected. [Contract](structure_spec.md#bounded-sloped-surface-and-ball-cutter-evidence),
+[runbook](DEVELOPMENT.md#sloped-surface-and-ball-cutter-evidence), and
+[dated evidence](REVIEW.md#sloped-surface-and-ball-cutter-evidence---2026-09-26)
+state its bounds. That original slope slice did not model holder body or
+external fixtures; the later bounded setup case below adds them. Runtime
+remains outside both offline results.
+
+**Prior 2026-09-26 reusable ordered-job increment:** M0-M4
+retain their bounded acceptance. M5's named UCCNC/Grbl fixtures and the new
+caller-supplied ordered-job UCCNC/Grbl routes pass their offline engineering
+gate; no abstract user sign-off is required. The specific disabled/reordered
+native-MOP case now has synthetic Default-post source/order invalidation and
+fresh T1/T2/T1 cutting-stock replay evidence. It is not a new observed CamBam
+post or controller-runtime claim.
+Stockless Part import/save/reopen
+now preserves absence through copy/transfer and MCP edits, without changing
+explicit MOP Z values. The accepted M4 rounded-raster route now emits separate
+T1/T3 UCCNC files with strict independent decoding and decoded T1-to-T3 stock,
+rounded-cutter, access and residual checks. The synthetic
+[handoff and files](../output/m5-uccnc-20260926-02/handoff.json) pass the first
+level-1 output gate; physical setup and UCCNC runtime parity remain unassessed.
+The [Grbl portability bundle](../output/m5-portability-20260926-01/handoff.json)
+exercises the second dialect, an in-program manual fixture with a -4.5 mm
+declared CAM-to-work Z map, and a mixed manual/synthetic-automatic T1/T3/T1
+fixture with fixed G54 and declared length-offset values. Its separate
+Grbl reader feeds the same decoded T1/T3 stock verifier; the safe final T1
+stage and asserted external changer travel have separate fixture checks. Unknown pause,
+macro, offset, tool and changed effect behavior fail closed. The automatic
+effect is a synthetic host contract, not observed Grbl or physical changer
+behavior. [Dated evidence](REVIEW.md#m5-grbl-portability-and-transition-policies---2026-09-26)
+owns exact hashes and results. General effective-tip/offset composition and an
+independently evaluated changer state model are not established by these tests.
+The [mediation contract](structure_spec.md#mediation-invariants-and-evidence-contract)
+defines source, frame, state and evidence ownership; the
+[review evidence](REVIEW.md#m5-mediation-architecture-review---2026-09-26)
+records the original gaps; the [M5 implementation evidence](REVIEW.md#m5-stockless-and-uccnc-split-output---2026-09-26)
+records the first bounded output result. The user then confirmed the stockless
+Part and explicit MOP Z values in CamBam Plus 1.0 and supplied a fresh
+[Default post](../output/m5-stockless-acceptance-20260926-01/framework-roundtrip.nc).
+Its parsed positive-Z path reaches Z2 without an inferred shift; see the
+[dated native acceptance](REVIEW.md#m5-stockless-actual-cambam-post-acceptance---2026-09-26).
+Runtime/physical acceptance remains outstanding. No user validation or new G-code
+is required for the present engineering review.
+
+**Completed offline increment, backlog 6:** the
+[reusable ordered-job packet](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification)
+now has a caller-supplied semantic job, shared decoded motion/stock auditor,
+strict UCCNC/Grbl output and a native-series adapter. Edited-annulus and
+rectangular targets use raster/offset plans, variable tools/feeds/frames and
+both dialects. A native-normalized T1/T2/T1 sequence cuts new stock in each
+stage; disabled/reordered native MOPs invalidate old evidence and require a
+fresh post/replay. Fixed-origin length correction, real compensation motion,
+manual boundaries and a synthetic automatic travel effect have checked offline
+state and fail-closed cases. Exact limits and results are in the
+[review](REVIEW.md#reusable-ordered-jobs-and-verification---2026-09-26).
+
+**Accepted hybrid increment, backlog 6:**
+[native and generated machining in one job](REST_MACHINING_PLAN.md#subsequent-capability-progression).
+The user posted the prepared T1 Inside Profile through CamBam Plus 1.0 Default.
+Its complete G0/G1 stream and a generated T3 rounded V finish now occupy one
+source-bound job. Two UCCNC stage files independently decode and replay with
+five native cylindrical cuts, Z=-1 mm prior/final residual intervals of
+70.48014–70.48024 / 1.33759–1.98689 mm², zero protected overcut and an
+edited-source rejection. The [runbook](DEVELOPMENT.md#native-posted-predecessor-and-generated-v-cleanup)
+and [review](REVIEW.md#native-posted-predecessor-and-generated-v-cleanup---2026-09-26)
+own exact files, checks and limits. Runtime and physical setup remain unassessed.
+
+**Completed offline evidence slice, backlog 6:** the
+[layered 3D stock and waterline increment](REST_MACHINING_PLAN.md#subsequent-capability-progression)
+uses an 8 x 6 x 3 mm stock, two stepped pockets, an untouched 0.4 mm rib and
+disconnected residual. A T1 contour stage and T2 interior rest stage pass
+independently decoded UCCNC/Grbl ordered output. The T2 cleared descent is
+accepted only through T1 stock; omitting T1 or crossing the rib fails.
+Analytic removal volume is 28.8 mm³. Final residual is bounded at
+0.5624–0.5714 mm³ with zero modeled protected overcut. The exact rectangular
+prism section backend is selected for this fixture after measured comparison
+with conservative XY columns; no general freeform/solid backend is selected.
+See the [contract](structure_spec.md#bounded-layered-3d-stock-and-waterline-evidence),
+[runbook](DEVELOPMENT.md#layered-3d-stock-and-waterline-evidence) and
+[dated evidence](REVIEW.md#layered-3d-stock-and-waterline-evidence---2026-09-26).
+
+**Completed offline holder/fixture increment, backlog 6:** a supplied
+program-frame stock box, rectangular side clamp and cutter/shank/holder body
+now bind to the ordered-job fingerprint. Both independently decoded UCCNC and
+Grbl sloped-ball jobs pass continuous stage-motion body/box occupancy with
+0.1 mm minimum modeled fixture clearance. Moving only the clamp makes the
+holder collide between clear endpoints while the cutter remains clear;
+changing the holder radius restores clearance. The [contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy),
+[runbook](DEVELOPMENT.md#bounded-holder-and-fixture-occupancy) and
+[evidence](REVIEW.md#bounded-holder-and-fixture-occupancy---2026-09-27)
+state its conservative stock assumption and excluded transition/runtime motion.
+
+**Accepted offline source-bound occupancy slice, backlog 6:** the retained
+actual CamBam linear Profile post and generated rounded V finish now have one
+declared program-frame stock/clamp and T1/T3 body setup. Both UCCNC stages
+independently decode; all 229 straight moves pass continuous body/box and
+unchanged stock replay. Moving only the clamp makes the T3 holder collide
+between clear cut endpoints while its cutter clears; the changed setup also
+invalidates the original handoff. The [contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy),
+[runbook](DEVELOPMENT.md#source-bound-nativegenerated-occupancy-case) and
+[evidence](REVIEW.md#source-bound-nativegenerated-occupancy---2026-09-27)
+state the setup, source hashes and limits. No new CamBam observation is needed
+because the native source, candidate and actual post are unchanged. Physical
+installation and controller runtime remain unassessed.
+
+**Accepted offline G3 source-bound occupancy slice, backlog 6:** the retained
+actual level-G3 Pocket and generated rounded V finish now share a declared
+stock, raised clamp and T1/T3 body setup. All 1,223 independently decoded
+UCCNC moves, including eleven native G3 cuts, pass continuous body/box and
+unchanged stock replay. Moving only the clamp invalidates the handoff and
+causes a native G3 holder collision inside the arc, after twenty clear moves
+and with both arc endpoints clear. The [contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy),
+[runbook](DEVELOPMENT.md#source-bound-g3-nativegenerated-occupancy-case)
+and [evidence](REVIEW.md#source-bound-g3-nativegenerated-occupancy---2026-09-27)
+own the bound, exact hashes and setup. The accepted source and actual post
+are unchanged; no new CamBam observation is needed. Physical installation,
+stage-transition travel and controller runtime remain unassessed.
+
+**Accepted 2026-09-27, backlog 7:** bounded Manual Profile holding-tab
+authoring and inspection now have native B/C output acceptance. The user
+posted the unchanged fresh B/C sources through CamBam Plus 1.0 Default; all
+53/57 machine-command lines match the native moved/added references in order,
+including four/five final-depth tab lifts. Core and MCP author/save/reopen
+checks cover the shared writer. The [runbook](DEVELOPMENT.md#manual-profile-holding-tab-native-fixture)
+and [review](REVIEW.md#fresh-writer-cambam-default-post-acceptance---2026-09-27)
+own exact files, hashes and the narrow contour/post bound. No further fixture
+or UI report is needed for this accepted slice.
+
+**Accepted offline, backlog 6 packet 1:** the unchanged actual B/C Manual
+Profile posts and one generated interior V operation now form source-bound
+ordered cutout jobs. Complete native and generated motion replays leave four
+or five 6 mm ideal centerline bridges; the 60 x 30 mm part remains connected
+to outer stock at the bottom section. Source/post/program edits and stale
+stage order reject; a freshly replayed reverse order has a separate
+certificate. The [contract](structure_spec.md#bounded-manual-tab-cutout-with-interior-v-operation),
+[runbook](DEVELOPMENT.md#manual-tab-cutout-and-interior-v-evidence) and
+[dated evidence](REVIEW.md#manual-tab-cutout-and-interior-v-evidence---2026-09-27)
+record the fixture, numerical bounds, hashes and limits. The prior actual
+CamBam posts meet the external gate; no new post or user validation is needed.
+Physical holding and controller runtime remain unassessed.
+
+**Accepted offline, backlog 6 packet 2:** the user observed the circular Pocket
+toolpath and supplied the actual CamBam Plus 1.0 Default post. Ten descending
+G2 entries, the complete 67-move native prefix and a generated 9-move T2 ring
+cleanup pass source-bound independent decoded UCCNC replay. At Z=-1 and -2,
+native residual is 72.198-72.230 mm², then 0.697-0.728 mm², with zero
+modeled protected overcut. The [bounded contract](structure_spec.md#bounded-native-helical-circle-pocket-and-generated-cleanup),
+[runbook](DEVELOPMENT.md#packet-2-helical-pocket-native-post-preparation) and
+[evidence](REVIEW.md#packet-2-helical-pocket-and-generated-cleanup---2026-09-27)
+own its actual source/post hashes, checks and limits. Controller runtime and
+physical machining remain unassessed.
+
+**Completed offline, backlog 6 packet 3:** a synthetic radius-2 mm,
+depth-0.8 mm spherical-bowl target with protected flat rim now has exact
+contact, section and 5.29463 mm³ volume references. Generated radius-0.8 mm
+T1 finish and radius-0.25 mm T2 rest stages independently decode through
+UCCNC and Grbl. At 0.125 mm cells, the final residual is enclosed by
+0.08655–2.30749 mm³ and a same-cell lower bound proves at least
+0.0192558 mm³ new T2 removal, with zero modeled protected overcut. The
+declared side-clamp/body setup passes continuous clearance. Missing prior
+stock, rim intrusion, deeper cut, edited source and output bytes reject.
+The [contract](structure_spec.md#bounded-spherical-bowl-ball-finish-and-rest),
+[runbook](DEVELOPMENT.md#packet-3-spherical-bowl-ball-finish-and-rest) and
+[evidence](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest---2026-09-27)
+own exact bounds and limits. The synthetic detached job needs no CamBam
+post; controller and physical acceptance remain unassessed. The user already
+selected the [five ordered job packets](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27)
+in priority order; do not repeat that choice.
+
+**Completed offline, backlog 6 packet 4:** a shared 4 mm circular contour,
+pointed V profile and separate receiver/plug stock states now yield one
+matched tapered pair at zero and 0.1 mm radial clearance. Complete UCCNC and
+Grbl programs decode and replay for both parts. Analytic insertion and
+decoded wall sections agree on nominal contact or the declared gap; both
+parts have zero modeled residual and protected overcut throughout the
+0–0.9 mm insertion envelope, with a 0.1 mm bottom gap and backing/facing
+allowance. Wrong flip, excessive registration, impossible clearance, changed
+tool geometry and edited output reject. The [contract](structure_spec.md#bounded-circular-paired-v-carve-inlay),
+[runbook](DEVELOPMENT.md#packet-4-paired-v-carve-inlay) and
+[evidence](REVIEW.md#packet-4-paired-v-carve-inlay---2026-09-27)
+own exact bounds, hashes and limits. The synthetic detached pair needs no
+CamBam post or user fit preference. Physical assembly, plunge/process
+behavior and controller runtime remain unassessed.
+
+**Accepted offline, backlog 6 packet 5:** the exact nominal generated RC01
+T1 roughing and T2 cleanup now emit two complete UCCNC programs through the
+existing ordered-job route. Six-decimal coordinates preserve an island
+tangent that the default four-decimal route rounds into protected material.
+Both independently decoded files pass ordered stock replay and RC01's
+continuous-height access, component, process and three-depth residual gates.
+The output and source motion, transition assertion and numerical policy are
+bound by the handoff and RC01 evidence files. Rough/final rest remains
+7.7750106–7.7876785 / 0.9214411–0.9263454 mm² in each open depth slab,
+with partial finite-tool completion. The [contract](structure_spec.md#bounded-generated-rc01-uccnc-output),
+[runbook](DEVELOPMENT.md#packet-5-generated-rc01-uccnc-output) and
+[evidence](REVIEW.md#packet-5-generated-rc01-uccnc-output---2026-09-27)
+own exact hashes and limits. The synthetic split handoff asserts T2
+installation and tip registration; controller runtime and physical setup
+remain unassessed. The five selected packets are complete.
+
+### Branch review session queue
+
+**All five review sessions are accepted by engineering. Session 5 is ready to
+commit under the user-approved Python >=3.12 policy.** The [review plan](BRANCH_REVIEW_PLAN.md) preserves the
+2026-09-27 request: assess native/extended separation, core versus workflow
+responsibilities, reusable geometry/stock foundations, primary V-carving,
+rest/tool-bundle strategies and conditional smoothing, mathematical assumptions,
+API relationships and misuse hazards before final delivery. Session 1 has
+implemented the [capability/API map](structure_spec.md#capability-and-public-api-boundary-map),
+complete allocation of 163 branch paths plus two newly affected test paths, and
+the [initial 21-row behavior-to-test matrix](REVIEW.md#initial-behavior-to-test-matrix).
+Manual-tab parent-ID remapping and replay target tuple admission are repaired;
+session 1 discovery completed with 521 tests, zero failures and one Windows
+symlink-privilege skip. Session 2 repaired directional enclosures, helix section
+clipping, cutter/surface conditioning, small-feature topology and replay/occupancy
+admission. Its [assumption inventory](structure_spec.md#foundation-assumptions-and-numerical-guarantees)
+and [findings/coverage](REVIEW.md#branch-review-session-2---2026-09-28) are recorded.
+Full discovery ran 539 tests with one stale numerical snapshot failure and one
+Windows skip; the corrected portability oracle then passed all four module
+tests, with runtime unchanged. Session 3 has repaired all-prefix residual
+consistency, small-tool rest spacing and missed/short-flute Region-V paths;
+full discovery passed 547 tests with zero failures and the existing Windows skip.
+All eight plane/bowl tests also passed after an annotation-only correction. Its
+[findings and coverage](REVIEW.md#branch-review-session-3---2026-09-28) and
+[strategy contracts](structure_spec.md#strategy-guarantees-and-composition-limits)
+are recorded. Session 3 is included in reviewed HEAD `20402d5`.
+Session 4 is accepted by engineering on 2026-09-29: complete motion/effect
+parsing, source/result freshness, explicit stock authority, transitions,
+optional occupancy and MCP mutation/publication were reviewed and repaired.
+Full discovery passed 571 tests with zero failures and the existing Windows
+symlink-privilege skip. Its [findings, misuse matrix and coverage](REVIEW.md#branch-review-session-4---2026-09-29)
+are durable; all 51 allocated paths are accounted for. Session 4 is committed
+in reviewed HEAD `4f3ab98`. No new user observation is required. Generated bundles
+using the old startup, transition or ordered-verifier contract need regeneration
+and fresh audit; unchanged native source/post observations keep their byte scope.
+Session 5 review, package/test repairs and fixture disposition are committed in
+`755fa49`. The user approved Python >=3.12 on 2026-09-29, retiring the older
+interpreter gate BR-5-006. Replacement package checks and final evidence
+reconciliation pass; the support-policy changes remain uncommitted.
+
+**Test adequacy is required in every session:** map intended behavior to tests,
+audit independent oracles and assertion strength, and identify missing core,
+extended, boundary/outlier and combination coverage. Demonstrate that critical
+tests detect plausible defects rather than simply reproduce current output. The
+[test-adequacy gate](BRANCH_REVIEW_PLAN.md#test-adequacy-across-all-five-sessions)
+must close alongside final branch gates; a green suite alone is insufficient.
+
+| Session | Outcome and execution packet | State |
+| --- | --- | --- |
+| 1 | [Capability boundaries and public API contracts](BRANCH_REVIEW_PLAN.md#session-1-capability-boundaries-and-public-api-contracts) | Accepted by engineering 2026-09-27; included in reviewed HEAD `2a3ddd9`. [Findings and coverage](REVIEW.md#branch-review-session-1---2026-09-27) |
+| 2 | [Geometry, topology and numerical foundations](BRANCH_REVIEW_PLAN.md#session-2-geometry-topology-and-numerical-foundations) | Accepted by engineering 2026-09-28; included in reviewed HEAD `6188a60`. [Findings and coverage](REVIEW.md#branch-review-session-2---2026-09-28) |
+| 3 | [Machining strategies, rest behavior and reuse](BRANCH_REVIEW_PLAN.md#session-3-machining-strategies-rest-behavior-and-reuse) | Accepted by engineering 2026-09-28; included in reviewed HEAD `20402d5`. [Findings and coverage](REVIEW.md#branch-review-session-3---2026-09-28) |
+| 4 | [Execution safety, evidence and misuse resistance](BRANCH_REVIEW_PLAN.md#session-4-execution-safety-evidence-and-misuse-resistance) | Accepted by engineering 2026-09-29; included in reviewed HEAD `4f3ab98`. [Findings and coverage](REVIEW.md#branch-review-session-4---2026-09-29) |
+| 5 | [Integrated regression and delivery decision](BRANCH_REVIEW_PLAN.md#session-5-integrated-regression-and-delivery-decision) | Accepted by engineering 2026-09-29; prior repairs committed in `755fa49`, Python >=3.12 policy and closure ready to commit. [Policy, checks and delivery evidence](REVIEW.md#python-312-minimum-and-session-5-closure---2026-09-29) |
+
+Each session records coverage/findings in REVIEW and updates this queue with the
+exact next task. Retain unfinished sessions as active instead of skipping gates.
+Repair demonstrated defects; assess missing foundations against supported claims
+and intended consumers, and defer justified extensions with reopening criteria
+in the existing backlog. Reference-job success does not establish general
+framework support. [Planning evidence](REVIEW.md#branch-review-programme-planning---2026-09-27).
+Session 1 requires no new CamBam or physical observation: the repaired identity
+and constructor boundaries are directly testable offline. Existing native/post
+acceptance remains limited to its unchanged source bytes. Primary V planning
+does not require a predecessor, while ordered Region-V stock evidence currently
+does; session 3 assessed and retained that explicit composition limit. Session 2 needs no new external
+observation: its mathematical defects have independent offline witnesses. Prior
+numerical reports from affected owners must be recomputed; unchanged native
+source/post observations retain their original byte scope. Session 3 also needs
+no user observation: independent geometric/policy witnesses close its repairs,
+and nine nominal V plan fingerprints remain unchanged against the reviewed HEAD.
+Smoothing/overlap budgets, automatic bundle/cost search, independent V design
+angles and primary/multiple-V decoded stock remain qualified backlog 6 gaps,
+alongside conservative helical/union access and broader geometric foundations.
+Reopen them for the named consumers/requirements recorded there. Session 4 closes
+the bounded execution/evidence review, including low-level bypasses and mutable
+observations. Session 5 repairs package/test isolation, restores four durable
+synthetic tabbed-cutout regressions and reconciles all 171 final affected paths.
+Python 3.12/3.13 wheel installs and a 3.12 sdist install each reconcile to 569
+passing final test IDs and three explicit skips, using the earlier full runs,
+unchanged runtime/test bytes and matching dependencies, plus fresh affected
+checks. The rebuilt wheels each run 89 MCP tests with zero failures/errors and
+the Windows privilege skip; the clean sdist runs 49 fixture/repair tests with
+zero failures/errors and the local B/C observation skip; base-only 3.12 passes
+18 tests without skips. Its
+[findings and evidence](REVIEW.md#branch-review-session-5---2026-09-29) are recorded.
+The user authorized retaining fixtures with a permanent codebase role; the two
+historical corpora meet that condition through their durable regression tests.
+The interrupted Python 3.9 runs remain historical incomplete evidence. The user's
+explicit Python >=3.12 decision retires that support obligation; it does not
+turn those tests into passes. Python 3.13 remains the development default, the
+verification matrix is 3.12/3.13, and Shapely 2.1.2 is shared by supported
+interpreters. Newer Python versions are permitted by metadata but need separate
+verification before a tested-version claim. No new CamBam or physical observation
+is required for this support-policy change.
+
+**Next increment:** commit the Python >=3.12 support policy and session-5 closure,
+then verify the final committed branch against `main`. Current reviewed HEAD is
+`755fa49`, target `main` is `18dbb99`, and all 95 branch commits plus the current
+support-policy changes are accounted for. This work is ready to commit, not
+merge-ready: the user performs the commit and merge, and exact branch gates must
+be rerun after the commit. Suggested commit: `build: require Python 3.12 and close
+branch delivery review`. Delivery of the reviewed foundations takes priority
+over another machining extension. This is a good fresh-session breakpoint:
+contracts, acceptance, evidence and next action are durable; no process, result
+or user observation is pending.
+
+The
+[M0-M5 scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
+is 6/6 accepted for its stated offline domain; the later five job packets are
+also accepted. On `feat/rest-machining-and-vcarving`, review the exact
+`main...HEAD` change set, confirm source/artifact hygiene and required native
+observations, rerun branch-level automated/package gates after the latest
+commit, and repair only demonstrated delivery defects. Stop when the branch
+is merge-ready under [delivery rules](WORKFLOW.md#verification-and-handoff-checklist)
+or a specific failing gate is recorded. The user performs the merge. This is
+a delivery increment, not a sixth job packet or a new machining feature.
+No new CamBam post or user validation is presently required for the accepted
+offline jobs; a demonstrated defect may reopen its affected acceptance scope.
+UCCNC runtime, physical machining, failed native Pocket role parity,
+general freeform geometry, non-box fixtures and the deferred package migration
+have separate [reopening criteria](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27)
+or named-need gates; they do not hold the bounded epic open.
+
+Do not expand occupancy to non-box fixtures or select a
+general surface backend without a named job that needs them; reopen for an
+overhanging or other unsupported target, fixture or residual tolerance these
+bounded methods cannot meet. The [remaining backlog](#remaining-backlog-in-order)
+states the native sequence needed.
+
+The user reaffirmed native CamBam interchange, independent calculation, hybrid
+native/generated jobs and future volume/surface methods as the product direction.
+Engineering owns technical decisions and evidence; user questions are limited
+to concrete product choices or external observations. See
+[framework principles](structure_spec.md#framework-direction-and-extension-principles),
+[acceptance ownership](WORKFLOW.md#acceptance-ownership) and the
+[review correction](REVIEW.md#framework-direction-and-engineering-acceptance---2026-09-26).
+Manual-tab authoring now has accepted native before/after and fresh posted
+evidence. The sloped
+ball-surface slice is an offline engineering result. The actual native arc
+hybrid is accepted for its bounded offline scope; its source, post and output
+handoff remain retained as evidence. The synthetic holder/fixture and first
+source-bound linear and G3 hybrid occupancy increments are closed.
+The dated entries below retain development history.
+
+**2026-09-23 execution architecture refinement (backlog 6).** The user's context
+preserves today's `.cb` -> native toolpath/G-code workflow while exploring an
+independent shared CAM core and eventual direct G-code output. At that point,
+the general motion representation, generators, optimizer and direct postprocessor
+were not implemented. The
+[refinement](REST_MACHINING_PLAN.md#execution-architecture-refinement---2026-09-23)
+records the three output/execution routes, edit invalidation, compatibility limits
+and recommendations. Native MOP intent cannot certify stock removed by our different
+planned motion. CamBam has in-application automation; a supported standalone
+headless integration has not been established.
+
+**User decision, 2026-09-23:** the first combined sequence may generate both roughing
+and cleanup, with standalone and native CamBam shape/MOP workflows both required.
+The [accepted integration contract](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23)
+records native closed-region Pocket/Profile cleanup, explicit XYZ/Engrave V-carving,
+shared core analysis and supported combinations. Native motion evidence remains
+distinct from our predictions; attachment is not proof of achieved removal.
+The user also accepted designing direct headless G-code now and implementing it
+after the first useful rest/V-carve workflow. The third answer establishes
+[caller-owned orchestration](REST_MACHINING_PLAN.md#caller-owned-workflows-and-reusable-capabilities):
+provide import/interpretation, change and freshness diagnostics, planning,
+verification and output capabilities; consuming applications choose manual,
+automatic or iterative workflows. No fixed reimport sequence or live-sync service
+is imposed. All three architecture questions have now been answered.
+
+**2026-09-23 first generated acceptance job defined and selected by the user (backlog 6).**
+[RC01](REST_MACHINING_PLAN.md#first-generated-acceptance-job-rc01) specifies a
+40 x 30 x 3 mm pocket with an 8 x 8 mm island in 10 mm stock, a 6 mm rougher and
+2 mm cleanup tool. It records full tool/holder geometry, entry/retract and process
+bounds, independent corner-rest oracles, all-height verification obligations and
+separate standalone, native-input, explicit-path and native-Pocket acceptance gates.
+Zero allowance and a rectangular target keep the first oracle analytic; the earlier
+letter-like/allowance case remains a broader follow-up. A cone feasibility guard
+keeps the shared contracts open to the next V-carve slice.
+
+**2026-09-23 standalone RC01 slice implemented (backlog 6, gate S).** Deterministic
+T1 roughing and four-window T2 cleanup now emit ordered XYZ motion, explicit
+setup/spindle events and rough/final evidence fingerprints. Continuous-height
+replay checks target, access, tool components, process limits and three depth
+slabs. Independent rational strip area bounds place rough rest at
+7.7750–7.7877 mm² and final rest at 0.9214–0.9264 mm² per slab; the finite-tool
+result is partial target completion. Focused adversarial checks cover stale input,
+missing predecessor, island crossing, low rapid, component reach, uncertainty
+and a missing lower-layer strip. The residual-location check uses GEOS polygons
+with <0.000001 mm circle sagitta; floating topology has no formal interval proof.
+Standalone automated acceptance is conditional on that numerical limitation.
+
+**2026-09-23 RC01 native input and A/B/C preparation (backlog 6, gate I automated
+slice).** A strict-reimported synthetic `.cb` now carries the target Region,
+Part stock and disabled T1/T2 Pocket intent; a separate explicit setup supplies
+tool components and non-native process values. Normalization reaches the same
+`Job()` as S and rejects unsupported/inherited edits. A/B/C candidate files,
+their SHA-256 guarded comparison manifest and a fail-closed Default-post reader
+are prepared under `integrations/cambam/`. A/B candidate Engraves contain level-cut
+centerlines; these are comparison probes, not a proposed rest-machining workflow.
+See the [contract](structure_spec.md#rc01-native-input-and-comparison-candidates),
+[runbook](DEVELOPMENT.md#rc01-native-input-and-abc-comparison-preparation) and
+[dated evidence](REVIEW.md#rc01-native-input-and-comparison-preparation---2026-09-23).
+
+**2026-09-23 RC01 first CamBam output trial (backlog 6, E/N fail).** The user
+opened and posted A/B/C with CamBam Plus 1.0, `Default` postprocessor and Default
+mm profile. All three original posts reach Z=-6 although the target floor is
+Z=-3. The first A path starts at (27,18.5) rather than required (5,5); B and C
+also reorder the T1 prefix. B/C change to T2 away from the setup point without
+an explicit spindle stop. The first adapter repair puts Engrave geometry at Z=0,
+uses one depth interval per MOP and disables CamBam path optimisation. The
+user-posted repaired A confirms Z=-1 first plunge and Z=-3 minimum, but its
+first XY rapid is still (26.5981,9.5), not (5,5). The native post follows the
+framework's UUID-sorted MOP target selection, and CamBam adds rapid approach/
+retract moves. B/C repaired posts remain untested. No E/N motion or rest-coverage
+acceptance is recorded.
+See the [first trial](REVIEW.md#rc01-first-cambam-output-trial---2026-09-23)
+and [repaired-A check](REVIEW.md#rc01-repaired-a-cambam-output-check---2026-09-23).
+
+**2026-09-23 package organization preference recorded.** New behavior belongs
+to explicit [native, reusable CAM core, extended CAM, or integration owners](structure_spec.md#package-organization-decision-and-migration-plan).
+The RC01 bridge was moved out of the package root now. Existing root native and
+detached modules remain current owners; the staged native consolidation follows
+the first RC01 output trial **before new rest/V-carve feature breadth**, and
+generic/extended extraction follows a concrete second consumer or output
+finding. This keeps future sessions from adding more ambiguous root modules
+while limiting the present change to the active slice.
+
+**2026-09-23 native Pocket RC01 trial completed (backlog 6, N fails).**
+The original Region now drives one enabled T1 Pocket; a second candidate adds
+four enabled T2 corner-window Pockets. Both strict-reimport with source MOPs
+disabled. The user-posted Default programs have identical T1 prefixes and a
+minimum tip Z=-3. Posted rough rest is 7.72558–7.72584 mm² per slab; final
+rest is 0.85840–0.85843 mm² per slab. Area, benefit and location budgets pass
+within the polygon/GEOS numerical limits, and actual T2 vertical access has
+exact T1 cut witnesses. N still fails because CamBam adds low rapids, ramps,
+F60 low-level XY and a T2 change away from setup without spindle stop;
+island tangencies are numerically unresolved. No complete native motion or
+physical acceptance is recorded. See the [runbook](DEVELOPMENT.md#rc01-native-pocket-roughing-and-corner-cleanup-probe)
+and [posted trial](REVIEW.md#rc01-native-pocket-posted-motion-trial---2026-09-23).
+
+**2026-09-23 RC01 integrated output-route assessment (backlog 6).** The
+selected native Pocket/Default route received one combined local MOP repair:
+no spiral lead, no path optimisation, cut-feed stepover and zero crossover.
+The strict-reimported T1-only and T1/T2 candidates are retained under
+`output/rc01-roletrial-20260923-1845/`; they are diagnostic artifacts, not an
+acceptance request. The existing posted Pocket pair already establishes bounded
+coverage but fails the required motion roles. The repaired MOP fields can affect
+ramps, order and low-level stepover feed; they cannot encode the exact (5,5)
+first entry, feed approach from +5 to +1, feed retract to +5, or stopped-spindle
+tool change at (-10,-10,+5). CamBam's documented Pocket/Default post interface
+does not expose those roles as independently programmable moves. Therefore no
+repeat post is requested for this carrier. This is a route/interface finding,
+not an emitted-motion pass or a claim that every possible CamBam extension fails.
+See the [review evidence](REVIEW.md#rc01-pocketdefault-role-carrier-assessment---2026-09-23)
+and [milestone stop rule](REST_MACHINING_PLAN.md#next-rc01-output-milestone-after-native-pocket-trial).
+
+**2026-09-23 explicit CamBam output slice accepted (backlog 6, E-script):** the
+agent prepares complete `.cb` files; the user generates native toolpaths/G-code
+in CamBam and returns only the needed `.nc`. A single complete T1/T2
+`Drill/CustomScript` carrier embeds every verified framework role as literal
+motion inside the `.cb`, retains the target and disabled source MOPs, and
+strict-reimports. The first native post from
+`output/rc01-script-20260923-2115/S-combined.cb` exposed a carrier encoding
+defect: CamBam preserved all 2,941 `|` separators on one invalid NC line,
+so no motion/rest check could run on that actual file. The builder now stores
+real XML newlines. The user-posted revised `S-combined.nc` matches the
+strict-reimported `.cb` hash and all 2,945 ordered emitted items. Continuous
+replay passes protected stock, tool-component and stock-dependent access,
+setup/tool/feed/process limits, three rough/final depth slabs and required
+T1-to-T2 columns. Rough rest is 7.7750106–7.7876785 mm² and final rest
+0.9214411–0.9263454 mm² in each slab; this is finite-tool partial target
+completion. The accepted output is the **explicit-script E carrier** for
+synthetic RC01. The original XYZ/Engrave carrier has no parity acceptance,
+native Pocket N still fails, and physical machining is pending. The Default
+post omits incoming machine position and GEOS residual-location topology
+has no formal interval proof. See the
+[output evidence](REVIEW.md#rc01-literal-motion-cambam-output-acceptance---2026-09-23)
+and [contract](structure_spec.md#rc01-literal-motion-cambam-carrier).
+Direct standalone posting remains later under the accepted order; no change
+to that timing is needed for this CamBam `.cb` route. Defer package-layout,
+general area precision and optimizer implementation work until a named
+finding reopens them.
+
+**2026-09-23 native optimiser output corpus completed for the bounded
+inventory (backlog 6 foundation).** The user posted all four synthetic
+Legacy/New `.cb` candidates in CamBam Plus 1.0 and confirmed the MOP mode
+labels. Exact input/post bytes, the original hash manifest and a derived
+motion observation map now live in tracked `tests/fixtures/optimizer_corpus/`.
+All seven authorable shape families and four authorable MOP classes have
+native Default-output observations in both modes. The Region Pocket and
+Text/Arc Engrave sections differ between modes; the three interaction
+sections emit identical motion in this one fixture. Drill G98/G81 cycle
+travel remains unresolved by the modal reader. Native-only Line, Spline,
+Surface, Script, Bitmap, 3D Surface, NCFile and installed Lathe have explicit
+blocked/reopening results; historical Bas Relief is out of current 1.0 UI
+scope. No native stock authority or physical acceptance follows from this
+mapping. See the [runbook](DEVELOPMENT.md#native-optimiser-shapemop-mapping-corpus),
+[inventory and stop rule](REST_MACHINING_PLAN.md#native-cambam-optimizer-and-output-mapping-foundation)
+and [posted evidence](REVIEW.md#native-optimiser-corpus-posted-output---2026-09-23).
+
+**2026-09-23 native posted-stock authority T1 slice implemented (backlog 6).**
+The controlled RC01 Region/Pocket T1 source and user-posted Default output are
+now reusable tracked fixtures. A caller explicitly selects `native_posted` or
+`framework_generated`; the two paths retain separate motion fingerprints and
+never fall back to one another. The native path pins the evidence record,
+source, candidate, setup, manifest and post, strict-reimports the
+source/candidate, replays actual posted T1 cuts and rejects byte changes before
+reuse. Native rough rest is 7.7255777–7.7258435 mm² in each of the three
+depth slabs. This is a bounded stock observation, not an accepted native
+execution: 62 recorded motion-role findings still block stock-dependent
+cleanup, and GEOS topology is not a formal
+interval proof. The [contract](structure_spec.md#rc01-selected-posted-motion-stock-authority),
+[runbook](DEVELOPMENT.md#rc01-selected-native-posted-stock-replay) and
+[evidence](REVIEW.md#rc01-selected-native-posted-stock-authority---2026-09-23)
+record the boundary. No new CamBam post or manual validation is needed for this
+replay of previously user-posted bytes.
+
+**2026-09-23 paired native posted-stock assessment completed (backlog 6).**
+The recorded T1/T2 candidate and Default post now join the reusable RC01
+fixture, with a paired evidence record and caller-selectable replay. Source,
+both candidates, setup, manifest, posts, selected MOPs and parsed-motion
+fingerprints are pinned; prior results fail freshness after any byte change.
+The parsed T1 event/move prefix is identical. All three slabs meet rough/final
+rest budgets; four required and eight actual T2 vertical columns have exact
+prior T1 cut witnesses. Rough/final rest is 7.72558–7.72584 / 0.85840–0.85843
+mm² per slab. This is conditional geometric coverage, **not** native cleanup
+execution authority: 62 rough and 233 combined motion-role findings retain
+low rapids, ramps, unsupported feed roles, displaced unstopped tool change and
+unresolved tangencies. `stock_dependent_use` remains blocked. See the
+[contract](structure_spec.md#rc01-selected-posted-motion-stock-authority),
+[runbook](DEVELOPMENT.md#rc01-selected-native-posted-stock-replay) and
+[assessment](REVIEW.md#rc01-paired-native-posted-stock-assessment---2026-09-23).
+No unchanged repost or manual acceptance is needed.
+
+**2026-09-23 bounded pointed-cone slot implemented (backlog 6).** The detached
+`cam_core.vcarve` slice now generates finite plunge, cut, retract and above-stock
+link motions for a 12 x 4 mm V-shaped rectangular slot. A 90-degree pointed cone
+with 3 mm maximum radius/conical length makes one 2 mm centerline pass; a
+radius-1.5 tool is rejected. At a 1 mm target cap, three passes reduce the
+surface residual while leaving the flat floor partial. Analytic inequalities
+check conical containment at every stock height; section membership and area
+are available at arbitrary depth, with a geometrically bounded volume interval
+subject to floating roundoff. The [contract](structure_spec.md#bounded-pointed-cone-slot-generation-and-verification)
+and [focused checks](DEVELOPMENT.md#bounded-pointed-cone-slot-checks) state exact
+scope and limits. This is generated geometric evidence, not native motion or
+physical machining acceptance.
+The five new tests and 44 related cone/RC01/stock/reference tests pass;
+`compileall` and tracked `git diff --check` pass. A broad run executed 375 tests
+but failed on two MCP imports because the optional `anyio` package is absent;
+its 73 skips and two errors are not a full-suite pass. No manual CamBam check
+adds evidence for this detached geometry. The [review](REVIEW.md#bounded-pointed-cone-slot---2026-09-23)
+records numerical references and limits. Work is uncommitted and ready to commit.
+
+**2026-09-24 shared RC01/cone replay implemented (backlog 6).**
+`cam_core.replay` now owns an immutable ordered XYZ trace, resolved cylinder/cone
+profiles and targets, tool/spindle events, source and motion fingerprints, and
+cumulative cut-sweep prefixes. RC01 and cone adapt their existing motions into
+that contract; their residual calculations consume the shared ordered cuts while
+retaining their separate access/process and analytic oracles. One synthetic
+trace places the cone slot beside RC01 stock and replays T1 roughing, T2 cleanup
+and cone carving in order. It rejects stale source, a removed cone entry,
+low links and missing tool change. The focused RC01/cone/mixed/native-adapter
+suite passed 28 tests; compileall, import smoke and working-diff checks pass.
+This remains detached synthetic evidence, not CamBam cone output or physical
+acceptance. Work is uncommitted and ready to commit. See the
+[contract](structure_spec.md#shared-rc01-and-pointed-cone-motionstock-replay),
+[runbook](DEVELOPMENT.md#shared-rc01cone-motion-and-stock-replay-checks) and
+[review](REVIEW.md#shared-rc01cone-motion-and-stock-replay---2026-09-24).
+
+**2026-09-24 bounded cone output carrier accepted (backlog 6).**
+The bounded full-depth slot now has a strict-reimported `V-cone.cb` with one
+literal Drill/CustomScript motion carrier, a hash-guarded exact expected-motion
+manifest, and a Default-post audit that replays parsed emitted cone cuts against
+the original slot target. The user-posted Default/Default mm `V-cone.nc` matched
+all nine expected items, including feeds, spindle/tool events and return to
+setup. Shared replay found one slot prefix and two cone cut sweeps; independent
+section residuals at depths 0/1/2 are 3.4336293856408275 /
+0.8584073464102069 / 0 mm2, so completion remains partial. The user confirmed
+CamBam displayed the Drill toolpath; the actual post contains all six motion blocks.
+The prepared files, exact audit and SHA-256 values are in the
+[runbook](DEVELOPMENT.md#bounded-cone-customscript-carrier-and-posted-replay).
+This closes only the bounded explicit cone output gate, with the declared
+initial-position and ideal-tool assumptions; physical machining remains
+unaccepted. See the [contract](structure_spec.md#bounded-pointed-cone-cambam-output-carrier)
+and [review](REVIEW.md#bounded-cone-carrier-preparation---2026-09-24).
+
+**2026-09-24 bounded variable-depth V groove accepted through explicit output
+(backlog 6).** One
+straight tapered finish target is the exact swept envelope of a pointed cone
+whose spine rises in depth from 1 to 2.5 mm. A proper subspine from
+(2,2,-1.25) to (10,2,-2.25) generates a genuinely sloped XYZ feed cut and
+leaves independently calculated finite-end rest. Shared replay checks its
+all-height containment and ordered entry/cut/retract; tangent/arc section
+area and independent row integration agree within 0.0005 mm2. A
+strict-reimported `V-variable.cb` and exact expected-motion manifest live under
+`output/variable-v-20260924-01/`. The user exported `V-variable.nc` with CamBam
+Default; the exact audit matched all nine emitted items and replayed the
+sloped feed cut as two cone sweeps. Ideal section rest is
+15.091265791880026 / 7.028684027518187 / 4.21460291488107 /
+1.8062583920918873 / 0 mm2 at depths 0/1/1.5/2/2.5. The 34 focused
+RC01/cone/variable tests, compileall and text checks passed before posting.
+The one Drill/CustomScript MOP targets a Point anchor; the XYZ Pline is the
+finish-target guide, not an active native Engrave/V-carve MOP. This closes the
+bounded **explicit** emitted-motion gate only. The user's UI report establishes
+the MOP/target relationship, not a visible sloped toolpath or native generation.
+See the
+[contract](structure_spec.md#bounded-variable-depth-v-groove-and-cambam-carrier),
+[runbook](DEVELOPMENT.md#bounded-variable-depth-v-groove-carrier-and-posted-replay)
+and [evidence](REVIEW.md#bounded-variable-depth-v-groove-posted-output---2026-09-24).
+
+**2026-09-24 bounded XYZ Engrave output finding (backlog 6).** The
+strict-reimported `V-variable-engrave.cb` keeps the original target spine
+separate from the generated (2,2,-1.25) to (10,2,-2.25) cut Pline, with one
+enabled Engrave targeting only the cut. TargetDepth=0,
+OptimisationMode=None, and all test process fields are explicit. The
+hash-guarded whole-post audit passes a synthetic exact wrapper and rejects a
+wrapper that retains the sloped cut but loses approach/retract roles. The
+user's CamBam Plus 1.0 preview shows one directly sloped Engrave toolpath;
+the actual Default post contains one exact F300 sloped cut and no other XY
+feed cuts. Its whole-motion audit fails: eight items versus nine required,
+with no F120 feed approach, a rapid retract from Z=-2.25, and no setup
+return before spindle stop. Engrave is a visible inspection carrier, not an
+accepted executable carrier. The previously accepted CustomScript file
+remains execution authority. See the [contract](structure_spec.md#bounded-variable-depth-v-groove-and-cambam-carrier),
+[runbook](DEVELOPMENT.md#bounded-variable-depth-xyz-engrave-preview-and-post-probe)
+and [posted finding](REVIEW.md#bounded-xyz-engrave-cambam-post-finding---2026-09-24).
+
+**2026-09-24 bounded native V input normalized (backlog 6).** A strict-reimported
+`.cb` with the original XYZ finish spine, 18 x 8 x 3 mm Part stock and disabled
+VCutter Engrave intent now normalizes with explicit supplemental cone/setup
+values to the same detached `TaperedRequest` and canonical plan fingerprint as
+standalone generation. Relevant geometry, stock, tool, inherited-state and
+setup edits fail closed. Separate derived files retain the original spine:
+the visible preview Engrave targets only a generated sloped Pline; the literal
+CustomScript targets only a Point anchor. Their expected nine-item motion is
+identical to the previously accepted standalone carrier. Automated input and
+separation checks pass. The user then exported the prepared native-derived
+explicit candidate with CamBam Default/Default mm. Its exact nine-item audit
+passed, including posted-coordinate cone replay and the five section-rest
+references; the result remains partial target completion with the declared
+initial-position and ideal-tool assumptions. This closes the bounded native
+input to explicit CamBam output gate, not the preview Engrave or physical
+machining gate. See the [contract](structure_spec.md#bounded-native-v-input-normalization),
+[runbook](DEVELOPMENT.md#bounded-native-v-input-normalization) and
+[evidence](REVIEW.md#bounded-native-derived-v-output---2026-09-24).
+
+**2026-09-24 bounded direct V reference output (backlog 6).** The accepted
+native-derived source and the standalone request now produce the same
+deterministic direct millimetre G0/G1 file. The shared core owns the resolved
+nine-item process trace; the direct adapter emits, reparses and replays every
+item against the original cone target. Its parsed semantics exactly match the
+accepted CamBam post, and all five section-rest references pass. Exact source,
+setup, output and comparison-post hashes guard the evidence. This delivers a
+headless reference-dialect G-code route for one bounded case; no controller
+profile, production setup or physical machining is accepted. See the
+[contract](structure_spec.md#bounded-direct-variable-depth-v-reference-output),
+[runbook](DEVELOPMENT.md#bounded-direct-variable-depth-v-reference-output) and
+[evidence](REVIEW.md#bounded-direct-v-reference-output---2026-09-24).
+
+**2026-09-24 straight variable-depth V planning family (backlog 6).** The
+detached request now accepts finite increasing-X, constant-Y target spines,
+rectangular stock, 90-degree pointed cones and strict interior cut intervals
+within the [bounded family](structure_spec.md#straight-variable-depth-v-planning-family).
+Generation derives the cut depth from the original target and shared replay
+checks all-height cone containment and ordered access. The accepted example
+and an edited 14 mm spine with an 8 mm cone both pass independent midpoint-row
+section-rest references at five depths. Edited native XYZ spine, Part stock,
+VCutter diameter and explicit cone/cut setup normalize to the same verified
+detached plan. A `--plan-only` route exposes that result without creating
+unverified output candidates. The original accepted plan and motion hashes
+remain unchanged; at this planning checkpoint, output adapters still accepted
+only that example.
+This completes planning and native input normalization; edited direct reference
+output is recorded below. See the [runbook](DEVELOPMENT.md#bounded-native-v-input-normalization)
+and [evidence](REVIEW.md#straight-variable-depth-v-planning-family---2026-09-24).
+
+**2026-09-24 edited direct V reference output (backlog 6).** The strict native
+14 mm spine / 8 mm cone member now writes an ASCII headless reference file.
+Its SHA-256 is
+`e5b33039303c53bcccf4b104e907b1bdc9835537482580cc6f427bc7f5710a69`.
+The writer reparses nine exact items, including the derived sloped cut, and
+replays the parsed coordinates against the original finish target. All five
+section-rest values agree with the independent row oracle within 0.0005 mm2;
+the result is partial target completion. The accepted original file hash is
+unchanged. No edited CamBam post, controller profile or physical setup is
+accepted. See the [contract](structure_spec.md#bounded-direct-variable-depth-v-reference-output),
+[runbook](DEVELOPMENT.md#bounded-direct-variable-depth-v-reference-output) and
+[evidence](REVIEW.md#edited-direct-v-reference-output---2026-09-24).
+
+**2026-09-24 bounded direct RC01 reference output (backlog 6).** The nominal
+two-tool core sequence now writes a deterministic ASCII headless reference file.
+Its 2,945 emitted items are reparsed and matched exactly to the generated
+roles, feeds, coordinates and process events, then the parsed values pass the
+original RC01 continuous stock, access, process and three-slab residual checks.
+The rough-only and final residual intervals preserve the accepted finite-tool
+partial completion. The output SHA-256 is
+`390a6b31f961088a0224c957396a09c28b6dca4f5e2604af001b472911d5b8af`.
+This closes one headless combined-tool reference dialect, with no controller,
+physical or edited-job acceptance. See the
+[contract](structure_spec.md#bounded-direct-rc01-roughingcleanup-reference-output),
+[runbook](DEVELOPMENT.md#bounded-direct-rc01-roughingcleanup-reference-output)
+and [evidence](REVIEW.md#bounded-direct-rc01-reference-output---2026-09-24).
+
+**2026-09-24 native-owner consolidation (backlog 6):** the nine native document,
+entity, transform and XML implementations now have canonical owners under
+`cambam_builder.native`; old root paths re-export the same objects. Runtime
+callers import native owners directly, and the wheel includes the new package.
+The focused two-cycle Region/Pocket identity, target-reference and stock-offset
+regression, varied-order imports, same-code-version snapshot and isolated
+clean-wheel import/XML check pass. The final suite passed 406 tests with one
+Windows symlink-privilege skip. This closes the package boundary needed for
+later native adapters; it does not claim new generated motion or native toolpath
+parity. See the [owner contract](structure_spec.md#package-organization-decision-and-migration-plan)
+and [dated evidence](REVIEW.md#native-owner-consolidation---2026-09-24).
+
+**2026-09-24 convex closed-region rest/pointed cleanup slice (backlog 6):**
+the detached core now consumes one caller-supplied, fingerprint-guarded prior
+cone column in a nonrectangular triangular target. Shared replay identifies
+pure rest after that prior cut, proves the cleanup's cleared descent through
+the column and checks its variable-depth cone sweep against the original
+protected triangle at every height. Prior and cleanup remain distinct ordered
+prefixes. Exact pure-rest section areas at 0/1/2 mm are
+43.476106579/21.207669627/5.333333333 mm²; final rest is
+35.160992224/18.089501744/5.333333333 mm² and independently agrees with
+row-integrated cone widths within 0.002 mm². Completion is partial, as intended.
+The [implemented contract](structure_spec.md#bounded-convex-closed-region-rest-and-pointed-cleanup)
+and [acceptance case](REST_MACHINING_PLAN.md#bounded-convex-region-restv-acceptance-case-2026-09-24)
+retain the convex, pointed, nominal limits. This is standalone geometry and
+motion evidence, not native source, preview, posted execution or physical
+acceptance. Focused shared replay checks passed 16 tests, and the final
+repository suite passed 409 tests with one existing Windows symlink-privilege
+skip; syntax, tracked diff and untracked whitespace checks passed.
+
+**2026-09-24 native triangle workflow and posted execution accepted (backlog 6):** the accepted
+Region/Part source and exact supplied prior trace now produce separate generated
+XYZ/Engrave preview and complete prior-plus-cleanup Drill/CustomScript candidate.
+The copied source, supplied prior, preview, explicit candidate and ordered
+motion are pinned; strict reimport and constructed-post regression checks pass.
+The user's CamBam Plus 1.0 Default/Default mm NC for the exact explicit
+candidate passed all ten ordered events/moves and posted-coordinate stock
+replay, retaining `prior` then `cleanup` prefixes and the expected partial
+section rest. The user saw entry, retract, repeated entry, slope and final
+retract in CAMotics. CamBam did not display the CustomScript path. The
+separate preview NC contains the exact sloped cut, and the user confirmed
+that the preview's sloped polyline is visible in CamBam.
+The user also confirmed the source triangle in the millimetre drawing and
+Part stock offset `(-1,-1)`, size `(14,10,3)` and surface Z=0 (global bottom
+Z=-3). This closes the bounded native input, preview and posted-motion gate.
+The retained files and CamBam procedure are in the
+[runbook](DEVELOPMENT.md#native-triangle-source-preview-and-post-gate), and the
+[owner contract](structure_spec.md#one-native-triangle-workflow) describes the
+bounded support. Native execution evidence is accepted for this one candidate;
+controller, physical setup and machining remain unverified.
+
+**Epic completion forecast, scope set 2026-09-24:** the user selected curved
+Regions and rounded V tips for v1. The
+[bounded scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
+sets six whole-outcome milestones. M0, the reusable core/native/explicit output
+bridge, M1 polygonal rest and smaller-endmill cleanup, and M2 curved Region
+rest and endmill cleanup are accepted on this branch. M3 bounded V cleanup
+and edge tracing on polygonal and curved targets is also accepted. Two
+remain: M4 one edited combined workflow with direct reference output and
+M5 one selected controller dialect. This is **4 of 6 milestones accepted,
+2 remaining**, not a time/effort percentage. RC01 and
+the native triangle partially de-risk M1/M3; accepted curved-bound and
+geometry-design work preceded the accepted M3 path gates. The added M2 reflects
+the user's expanded finish line, not a succession of small internal steps.
+Internal fixes and probes do not create new milestones.
+
+**2026-09-24 M1 polygonal endmill implementation and actual-post acceptance
+(backlog 6).** The existing A01 letter-like Region with triangular
+hole and 0.5 mm T1 allowance now has a source-bound supplied T1 trace,
+shared replay of original-boundary cylindrical cuts, pure rest and generated
+T2 smaller-endmill cleanup. T2 descends only at T1-cleared
+columns and retracts above stock between paths. Four 2 mm levels reach
+Z=-8. Independent corner geometry gives a 1.190659933 mm² finite-tool
+minimum residual per slab. The generated rough/final intervals at depths
+1/3/5/7 mm are 137.21820–137.23037 / 1.31326–1.31853 mm²; the final
+upper is below the fixed 1.690659933 mm² budget. Inflated nominal
+protected overcut and residual outside the 0.05 mm ideal/original-boundary
+envelope evaluate to zero. A separate 1.8 mm throat rejects a radius-1 mm
+low-level crossing. These are conditional GEOS numerical results; they do
+not certify physical tool error or controller motion.
+
+The user posted both initial CamBam candidates. The original explicit file
+passed all 3,932 ordered items and stock replay. The user's preview finding
+showed redundant T2 interior scanlines; those were removed because the two
+boundary contours alone meet the same residual budget. The revised preview
+shows only shell/hole contours at final Z=-8, and the new 2,692-item explicit
+candidate under `output/m1-polygon-20260924-04/` passed its fresh Default post:
+SHA-256 `e214571c55c67cb525a0a2d17a8b0508b9aa11da776e97a0c138b866ee172ba5`,
+all 2,692 ordered items and stock prefixes `prior` 784 cuts, `cleanup` 2,268
+cumulative cuts. Integrated rough and final volume bounds are available from
+the same four section slabs. The original native Pocket candidate/post is
+byte-identical in that directory. Its actual post meets rough/final area
+budgets and all 180 low vertical
+rapids have prior-cut witnesses, but **12 T2 feed descents begin outside
+T1-cleared columns**. The native motion gate fails; MOP settings and bounded
+coverage cannot certify those entries. The user's scenario-based direction
+selects the audited exact explicit route and retains Pocket as a failed
+comparison. CAMotics revealed long horizontal passes through the letter;
+posted-motion inspection assigns these to the supplied synthetic T1 raster,
+not the two-contour T2 cleanup. This fixture is no roughing recommendation.
+The [contract](structure_spec.md#m1-polygonal-endmill-rest-and-native-output-candidates),
+[runbook](DEVELOPMENT.md#m1-polygonal-region-rest-and-smaller-endmill-output-gate)
+and [M1 scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
+own the limits. **M1 is accepted for bounded A01; count is 2 of 6.**
+
+**2026-09-25 M2 curved rest and actual post accepted for three bounded jobs
+(backlog 6).** The native annulus, mixed line/arc concave Region with a circular
+hole, and translated/reflected version now strict-import with their analytic
+bulges and original Part stock. Source-hash-bound supplied T1 motion and an
+inward-safe arc approximation drive complete generated T2 motion; separate
+visual Engrave and exact Drill/CustomScript candidates are retained under the
+three `output/m2-*-20260925-*` directories named in the
+[runbook](DEVELOPMENT.md#m2-curved-region-rest-and-smaller-endmill-output-gate).
+The maximum chord sagitta is 0.001 mm. The analytic annulus area is
+241.902634242 mm²; its rough/final section residual intervals are
+17.96728–18.10760 / 0.03366–0.17300 mm². The mixed and reflected source area
+is 631.292105800 mm²; their rough/final intervals are
+35.06282–35.31860 / 0.64979–0.90388 mm². The inner/outer target and cutter
+brackets yield zero nominal protected overcut in these generated plans and
+finite volume intervals. A narrower curved annulus rejects a too-wide T2 cut.
+These GEOS results are conditional, and the synthetic T1 trace is test stock
+authority rather than a roughing recommendation. The user confirmed visible
+curved paths in CamBam and posted all three preview and explicit NC files.
+The actual preview posts match CamBam-generated final Z=-4 T2 centerlines
+within 4-decimal post precision; the actual explicit posts pass every ordered
+event/move, source/candidate hashes, stock replay and fixed budgets: annulus
+2,984 items, mixed 2,688, reflected 2,684. Their exact NC hashes and area
+intervals are in the [runbook](DEVELOPMENT.md#m2-curved-region-rest-and-smaller-endmill-output-gate).
+The mixed manifests' old target-representation fingerprints required a narrow
+source-derived synthetic-motion compatibility check; every motion item, script
+line and residual stayed identical. CustomScript verifies CamBam literal-motion
+transport, while Engrave verifies native centerline interpretation. Neither
+establishes independent native Pocket planning, controller acceptance or
+physical machining. **At this M2 checkpoint, the count was 3 of 6.**
+
+**2026-09-25 M4 native series and strategy building block (backlog 6).**
+`native_series` now binds strict native source/candidate geometry and stock to
+ordered enabled MOP sections in a complete actual Default post. It preserves
+every parsed line/arc and tool/spindle event with exact evidence hashes;
+unsupported words and ambiguous ordering fail. A bounded linear cylindrical
+bridge replays each stage against one source-bound rectangle or straight
+Region, measures remaining area and volume by prefix, checks protected
+overcut and refuses arcs, ramps or unsafe access. The deterministic selector
+compares only complete, current, audited native/custom/framework stage chains;
+manual selection cannot override an unsafe gate. A MOP-free source preserves
+its certificate across document-title edits when original UUID/world geometry
+and Part stock are unchanged; source files with MOPs still require exact-byte
+freshness. The retained actual M1
+Pocket post normalizes as an ordered two-stage input but has no generic replay
+certificate; its independent M1 audit already rejected 12 T2 entries. A
+constructed two-MOP linear file proves end-to-end normalization, stock replay
+and selected strategy without claiming fresh CamBam acceptance. See the
+[contract](structure_spec.md#bounded-native-mop-series-normalization-and-strategy-selection)
+and [checks](DEVELOPMENT.md#native-mop-series-normalization-and-strategy-selection-checks).
+The new package built as wheel/sdist, and the installed wheel imported its
+new modules from outside the checkout. This does not verify all supported
+Python versions or CamBam physical execution.
+At that building-block checkpoint, M4 still lacked a reopened edited curved
+combined job, contour-parallel offset fill and parsed direct reference output;
+the later candidate checkpoint below supplies them. The M3 rounded-tip
+geometry and native output gates were already accepted.
+
+**2026-09-25 M3 implementation checkpoint (backlog 6):** The bounded 2 mm
+capped inward V recess on the accepted A01 letter and M2 annulus now has
+pointed, flat and tangent spherical/conical rounded-tip profile math,
+continuous full-height segment occupancy, shell/hole edge contours,
+variable-Z fill rows, complete high-link motion and conditional section
+residual bounds. The mixed concave line/arc Region and its reflected frame
+also pass core protection checks; a narrow curved throat reports infeasible.
+One supplied source-bound T1 cylinder trace per job now establishes prior
+stock, passes the V finish's full-height protection check and produces a
+separate pure-rest section. The final V paths reduce the Z=-1 residual by
+more than 500/90/200 mm² on letter/annulus/mixed respectively. Native
+preview and ordered T1/T3 literal candidates strict-reimport for all three
+profiles on letter/annulus and rounded on mixed. Seven combined jobs are under
+`output/m3-v-suite-20260925-02/`; synthetic Default-post regressions pass
+complete-stream and tamper checks. The original Region/Part survives both
+candidates. See the [contract](structure_spec.md#m3-bounded-region-v-path-and-native-candidate-contract),
+[runbook](DEVELOPMENT.md#m3-region-v-paths-and-native-output-gate) and
+[M3 criteria](../tests/fixtures/rest_vcarve_acceptance.json). The T1 raster
+is a proof fixture, not a production roughing recommendation. The finish
+target is an inward V recess; selection against earlier M1/M2 flat-pocket
+strategies and a square-wall flat floor remain separate.
+**2026-09-25 actual M3 post checkpoint:** The user exported all fourteen
+CamBam files and saw source geometry and V paths in the seven previews.
+All seven explicit posts passed complete T1/T3 stock, access and residual
+audits. Their CustomScript Drill carrier does not display those literal cuts
+as CamBam toolpaths. Six of seven preview posts failed the centerline gate:
+CamBam inserted one to three shallow feed crossovers between separate paths;
+letter-rounded matched. The inherited Engrave crossover distance was 0.7.
+The preview adapter now requests zero crossover distance, and seven corrected
+source-bound previews are prepared at
+`output/m3-v-preview-retract-20260925-01/`. The original NCs remain failure
+evidence; see [dated audit](REVIEW.md#m3-actual-cambam-post-audit-and-preview-crossover-correction---2026-09-25).
+**2026-09-25 corrected M3 acceptance:** The user exported all fourteen
+corrected Default NC files. All seven preview centerline audits and all seven
+complete explicit T1/T3 stock, access and residual audits passed. Every
+preview XY rapid link is at Z=+5 mm. The corrected candidates share source,
+prior and plan fingerprints with the seven visually accepted previews.
+**M3 is accepted for the bounded capped inward V recess; the epic count is
+4 of 6.** The result is partial with quantified finite-stepover residual;
+controller and physical machining acceptance remain separate. Exact NC hashes,
+limits and reopening criteria are in the
+[dated acceptance](REVIEW.md#m3-corrected-native-output-acceptance---2026-09-25).
+**2026-09-25 M4 edited curved candidate checkpoint (backlog 6):** One reopened
+annulus source with its circular hole edited to radius 2.1 mm now drives
+source-bound T1 prior analysis and alternative rounded-tip raster/contour-offset
+V routes. Both fills pass the same continuous cutter, shared prior-stock,
+section-residual and volume verifier. Each route has strict native preview and
+explicit candidates plus a separately parsed and stock-replayed complete T1/T3
+direct reference file. A complete parsed T1-only direct program also gives the
+partial endmill baseline its own output. The endmill-only prior and both rounded finishes enter
+edit-aware stage comparison; title-only source edits retain evidence, while
+geometry/stock changes invalidate it. All three direct files pass their automated
+gate, and synthetic Default posts test native parsing and selection. The
+retained A/B bundle and exact CamBam steps are in the
+[runbook](DEVELOPMENT.md#m4-edited-curved-rounded-tip-comparison-and-output-gate);
+the [contract](structure_spec.md#edited-curved-rounded-tip-composition-and-offset-fill)
+owns scope and limits. At this candidate checkpoint, M4 awaited visual
+inspection and the four actual Default-mm preview/explicit posts recorded
+below. This did not establish independent curved native Pocket planning or
+controller acceptance.
+**2026-09-26 M4 actual CamBam A/B acceptance (backlog 6):** The user exported
+both preview and both explicit Default-mm NC files and confirmed that both
+previews showed the source primitives and Engrave toolpaths on the generated
+Plines. Both actual preview posts match every planned centerline; both actual
+T1/T3 explicit posts pass complete ordered tool, spindle, feed and motion
+comparison, source/candidate hashes, prior stock replay, full-height V cutter
+occupancy, access and residual checks. Raster/offset explicit streams contain
+450/375 items. Their Z=-1 mm residual upper bounds are 1.526323/1.530029 mm²
+with zero nominal protected overcut; eight-slab volume upper bounds are
+42.675341/41.508764 mm³. Both rounded routes meet the fixed 2 mm² and
+80 mm³ budgets; the area-first selector chooses `rounded_raster`. The
+complete endmill-only direct route remains safe but partial. Exact post hashes
+and limits are in the [dated acceptance](REVIEW.md#m4-edited-curved-actual-output-acceptance---2026-09-26).
+**M4 is accepted for the bounded edited annulus; the epic count is 5 of 6.**
+The synthetic T1 remains a proof fixture, CustomScript proves literal-motion
+transport, and neither generic curved native MOP planning nor controller or
+physical machining is certified.
+
+**2026-09-26 M5 controller direction corrected (backlog 6):** The user will
+use UCCNC for production, while the framework must admit other controllers
+and both manual and automatic tool changes. The previous LinuxCNC-only
+simulation selection is superseded. UCCNC is the first output fixture for the
+accepted M4 rounded raster route, not a core dependency. The core plan and
+stock replay remain controller-neutral; each output adapter declares its
+dialect, setup, command/transport capabilities and transition effects. The
+local UCCNC installation and CNCdrive's Windows demo mode offer a compatibility
+test, but no exact machine-readable
+UCCNC trajectory export has been established. The bundled M6 example adds
+machine-coordinate moves, so its behavior cannot be inferred from the NC
+file alone. The user's actual UCCNC workflow pauses at `M6` for a manual tool
+change. The first test case now uses separate T1/T3 files and a declared
+stock-dependent handoff, avoiding reliance on the installed sample M6 macro.
+The transition policy independently selects operator or automatic changer,
+in-program or split-program handoff, and measurement/offset method. `M6`, an
+`M0` stop block and a changer macro are controller-specific implementations,
+not core tool-change types. CamBam Parts can group same-tool MOPs for separate
+posting. The user's own manual method retracts Z, changes tool, touches the
+new tip to the stock surface and sets work Z=0. It fits the first M4 fixture
+because that fixture's **resolved path** treats the physical surface as Z=0
+and declares no active tool-length compensation. The Part stock object is
+optional for imported files with explicit MOP settings; it must not silently
+shift posted coordinates. CamBam can use stock values when MOP settings are
+`Auto`, so preserve and resolve those states separately. A missing stock
+model makes stock-dependent checks unassessed, not import invalid. The core
+retains the programmed tip path; only an explicit CAM-to-work setup map may
+transform it. Unknown scripts, motion, datum or offset effects fail closed
+for a verified controller-output claim. LinuxCNC
+`rs274` can later provide an independent command-line interpreter check of a
+shared subset, not UCCNC execution authority. See the
+[M5 evidence contract](REST_MACHINING_PLAN.md#m5-controller-coverage-and-automatic-evidence---2026-09-26)
+and [dated finding](REVIEW.md#m5-controller-evidence-route-correction---2026-09-26).
+The first synthetic UCCNC file pair now has a decoded level-1 audit; no runtime
+acceptance exists and the milestone count stays 5 of 6.
+
+**M5 named portability fixtures implemented; engineering scope clarified below:** The
+[M5 implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet)
+now has a second named Grbl v1.1 output fixture, a one-program manual pause,
+mixed manual/automatic transition policies, a fixed-work-origin table-derived
+`G43.1` fixture and full decoded nonidentity-datum job. The same source-bound
+T1/T3 verifier audits both dialects; the mixed fixture additionally checks
+safe return travel and pinned synthetic external changer assumptions. Four named Grbl
+tests reject unknown stops/macros, stale length state, changed effects and
+wrong datum mapping. UCCNC and Grbl runtime parity remain optional
+controller-specific evidence tiers; leave them `not_evaluated` until exact
+traces exist. The [runtime-scope correction](REVIEW.md#m5-controller-runtime-evidence-scope---2026-09-26)
+records the reopening criterion. Production output waits for the user's actual
+machine profile and setup; add other controller adapters only against named
+fixtures.
+See the [M5 runbook](DEVELOPMENT.md#m5-uccnc-output-and-automatic-evidence)
+and [scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24).
+M1 fixes the route criterion: each candidate's actual emitted motion earns
+its own stock/access certificate. M4 then composes native MOP series, custom
+Region MOPs and framework paths into an edit-aware strategy choice with
+area/volume reporting. Bounded native-MOP normalization and strategy selection
+are M4 components; the accepted edited curved/rounded posts now close the
+bounded combined output gate. Unsupported native motion remains unselectable.
+**Priority correction after architectural review:** the
+[ordered-job increment](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification)
+remains in backlog 6 and precedes Manual-tab authoring. It removes demonstrated
+fixture coupling and supplies the foundation for native/generated composition
+and later 3D methods. M5's native disable/reorder case remains an explicit
+engineering obligation; no user sign-off supplies that missing evidence. Real
+machine profiles and exact runtime traces still reopen separate production and
+runtime gates. Backlog 7 remains deferred; 8-10 are complete.
+For this next ordered-job increment, defer geometry outside the existing supported domain, optimization and
+the detached/policy
+[stage 3 package move](structure_spec.md#package-organization-decision-and-migration-plan)
+unless an acceptance case requires them. Reopen the accepted triangle only if its
+source, supplied prior, tool/setup or post changes.
+
+The [clarified output direction](REST_MACHINING_PLAN.md#programmatic-execution-requirement)
+keeps original finish-target geometry separate from derived path Plines. The
+accepted CustomScript route supplies exact motion but cannot display its
+literal result as a CamBam toolpath; the user confirmed the slope in CAMotics.
+The bounded straight XYZ probe established a visible sloped cut, while its
+actual post failed entry, retract and setup roles. Retain script as execution
+authority and the Engrave candidate as a preview. Reopen Engrave execution
+only if a carrier/post control can express the missing roles and a fresh
+whole-post audit passes; do not repeat the same candidate. Add spatial bulges
+only after separate interpolation and posted-motion proof. The broader
+[native plus explicit workflow](REST_MACHINING_PLAN.md#accepted-integration-requirement---2026-09-23)
+now has one bounded native-input and accepted explicit-output route. Defer
+optimizer and topology outside the specified line/arc Region domain until a
+named consumer requires them. Rounded spherical/conical tips and line/arc
+Regions are scheduled in M2/M3, with independent tool/geometry bounds. The
+direct reference route is now verified; controller-specific and
+production output remain separate pending a selected controller and real setup.
+Native Pocket N reopens only with a carrier/post change that encodes its
+missing roles and fresh whole-motion evidence.
+
+The user selected the proposed synthetic case, including its test-only
+plunge/feed limits, on 2026-09-23. These are accepted
+test inputs, not production parameters; that selection alone did not accept
+generated or native motion.
+Definition, standalone generation, automated native-input preparation and one
+bounded explicit CamBam output route are complete. Native Pocket N and physical
+machining remain unaccepted; the test-only case does not certify production.
+See [next increment and stopping criteria](#next-detached-stockrest-increment).
+Definition verification: reviewed the two-document change against the implemented
+fixed-section contract; `.venv/Scripts/python.exe` independently recalculated all
+eight rounded residual/gain references, stock/target arithmetic and checked all
+eight added local links/anchors. `git diff --check` passed. Runtime tests and manual
+CamBam checks were not run: no runtime/example code changed, and application
+validation adds no evidence to the definition. Changes remain uncommitted.
+The subsequent user-selection update changes acceptance/priority text only; input
+values and numerical criteria are unchanged. Review and `git diff --check` cover
+that update; no repeat numerical or manual validation is required.
+
+**2026-09-22 bounded section-motion verification complete (backlog 6).**
+Ordered supplied cuts now update guaranteed removal in an exact rectangular
+stock/target with one protected island. Explicit cutting, cleared-space and
+outside-stock entries are checked at the fixed section. Each non-cutting travel
+piece must fit one cited prior guaranteed removal capsule or remain strictly
+outside initial stock. A large pass, connector and smaller cleanup pass preserve
+the original target and yield independently checked residual membership. Uncleared
+connectors, island crossing and uncertainty overrun are rejected. The
+[implemented contract](structure_spec.md#directional-analytic-stock-section-bounds)
+owns assumptions and boundary membership; [review evidence](REVIEW.md#bounded-section-motion-verification---2026-09-22)
+owns acceptance. General planar results remain uncertified.
+
+At that checkpoint, next was a concrete multi-height cleanup entry/access fixture;
+the 2026-09-23 refinement above broadens its purpose to a generated workflow.
+The section verifier now closes the immediate entry/connection gate at one Z,
+but descent, retracts, tool changes and stock at other heights remain unknown.
+Obtain an actual consumer's tool, stock-height and motion requirements before
+expanding to XYZ or generated cleanup paths; another area refinement has lower
+value without that input. Native/MCP expansion and remote transport have no new
+blocking input. No manual CamBam acceptance adds evidence for this nonserialized
+geometry slice. This is a good fresh-session breakpoint after automated checks:
+the contract, evidence, limits and reopening criterion are persisted. Changes are
+uncommitted; no production-machining claim is made.
+
 **2026-09-21 backlog 4e local stdio acceptance complete.** OpenCode 1.18.31,
 running GLM-5.3-Flash from an isolated task-owned configuration, completed the real
 37-tool local stdio A/B workflow without coaching, failed calls, retries, permission
@@ -850,26 +1953,222 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    bind/origin/authentication/TLS policy, document-handle lifecycle and cancellation
    before implementation; never expose the current write-capable service by merely
    binding to a LAN interface.
-6. **Planned future feature:** rest-area calculation and rest
+6. **Nominal planar foundation implemented, 2026-09-22:** rest-area calculation and rest
    machining helpers for pocket and inside/outside profile MOPs. Five outcomes:
    pure rest regions; safe expansion for a smaller endmill; pointed/flat-tip
    V-cutter preparation; a general bounded XYZ V-carving path calculator; and
    V-cutter edge tracing with corner cleanup. Region topology and shape Z fidelity
-   are independently prioritized upstream dependencies owned by the
+   are completed upstream dependencies owned by the
    [shape parity plan](SHAPE_PARITY_PLAN.md), not part of rest implementation.
    Calculations must run programmatically in this framework without CamBam;
    `.cb` files provide interchange, not access to a headless CAM engine.
    [Problem, reasoning, support gaps and acceptance plan](REST_MACHINING_PLAN.md).
-   Promote for a concrete workflow after higher-priority work; no implementation
-   or machining acceptance is claimed by this planning entry.
-7. **Deferred MCP/core capability: author Manual Profile holding-tab positions.**
-   Current automatic authoring covers width, height, minimum/maximum count, distance,
-   size threshold, the constrained lead-in flag and Square/Triangle/Skip style.
-   Imported native Manual tabs remain inspectable and round-trip preserved, while
-   fresh Manual authoring is rejected. Reopen only with a CamBam Plus 1.0 A/B fixture
-   saved before and after moving/adding/removing tabs, so the exact native point
-   collection, coordinate frame, identity/order behavior and generated toolpaths can
-   be modeled and round-trip tested without inventing vendor XML.
+   The broader design covers general combined-tool region and paired-inlay
+   workflows, with caller-supplied tools/catalog integration. The first detached
+   nominal planar runtime increment is now implemented.
+   **Current continuation, 2026-09-26:** the
+   [ordered-job packet](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification)
+   is implemented for its bounded offline domain and closes the M5 synthetic
+   native order/edit evidence gap. The actual native Profile plus generated V
+   hybrid and the bounded actual native G3 Pocket/rounded-V hybrid are accepted.
+   The stepped-volume, sloped-ball and bounded holder/fixture foundations also
+   pass decoded offline gates, including actual source-bound linear and G3
+   native/generated setups. The user-selected work followed the
+   [ordered job packets](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27).
+   This order is a priority decision, not a claim that each job depends on
+   the prior job's implementation.
+
+   | Packet | Status | Bounded outcome |
+   | --- | --- | --- |
+   | [1](REST_MACHINING_PLAN.md#1-tabbed-cutout-with-an-interior-operation) | **Accepted offline 2026-09-27** | B/C actual posts, generated V groove, four/five retained bridges and source-bound ordered stock evidence. |
+   | [2](REST_MACHINING_PLAN.md#2-native-pocket-with-helical-entry-and-generated-cleanup) | **Accepted offline 2026-09-27** | Actual G2 helical Pocket post and generated T2 cleanup pass decoded stock and source binding. |
+   | [3](REST_MACHINING_PLAN.md#3-curved-3d-ball-cutter-finish-and-rest) | **Accepted offline 2026-09-27** | Analytic spherical-bowl ball finish and dependent rest with protected rim and body clearance. |
+   | [4](REST_MACHINING_PLAN.md#4-paired-v-carve-inlay) | **Accepted offline 2026-09-27** | Separate decoded tapered receiver/plug stocks, analytic insertion, zero/0.1 mm clearance and stale-evidence rejection. |
+   | [5](REST_MACHINING_PLAN.md#5-direct-controller-program-for-a-fully-generated-job) | **Accepted offline 2026-09-27** | Fully generated RC01 T1/T2 job through six-decimal UCCNC output and decoded RC01 stock replay. |
+
+   All five selected packets are accepted. M0-M5's separate bounded
+   [scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
+   is also complete: the reusable ordered-job evidence closed M5's native
+   disabled/reordered source case. Branch delivery review is the active next
+   increment above. A later machining capability needs a new named job and
+   acceptance boundary. Historical entries below retain earlier stage limits; they
+   do not permanently restrict the framework to RC01 or a fixed-axis sample
+   workflow.
+
+   **Session 3 strategy extensions, deferred behind execution/delivery review:**
+   primary Region-V planning and analysis are available, but its ordered decoded
+   stock evaluator requires one cylindrical predecessor. Reopen primary or
+   multi-stage V stock composition for a named standalone/composed output job;
+   acceptance must decode actual paths and establish virgin-entry, protected
+   sweep and residual evidence without inventing a roughing stage. General
+   cleared-union/helical cleanup access needs a depth-aware coverage proof when
+   a supported job is blocked by the present single-sweep clearance predicate.
+   Conditional rest smoothing/overlap budgets need a concrete finish/access or
+   redundant-cutting requirement and post-fit coverage/topology/edge checks.
+   Automatic bundle search and cutting/air/tool-change costs need declared tools,
+   objectives and a consumer for which supplied-candidate ranking is insufficient.
+   Independent Region-V design/tool angles need a caller comparing unequal-angle
+   tools against one fixed surface; currently the tool angle also defines that
+   surface, so such plans cannot be ranked as equivalent targets.
+   The hand-authored surface jobs prove bounded replay and improvement, not a
+   general final-coverage budget; require independent target/coverage oracles
+   when a named automatic surface strategy or finish requirement is introduced.
+   These gaps do not supersede session 5: installed-package and final branch
+   verification have greater delivery impact than another nominal recipe.
+   Inlay body/fixture occupancy and body checks during helix or transition travel
+   remain explicitly rejected; reopen only for a named job needing those checks,
+   with continuous decoded-motion and setup-binding evidence. See the
+   [current guarantees](structure_spec.md#strategy-guarantees-and-composition-limits).
+   The [planar backend decision](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
+   selects Shapely/GEOS for the design. Adversarial acceptance and the
+   [internal value/error contract](REST_MACHINING_PLAN.md#internal-planar-value-and-error-contract)
+   are enforced for the [implemented bounded subset](structure_spec.md#detached-nominal-planar-core).
+   Bounded directional section evidence is implemented below; general conservative
+   stock/rest, generated paths and machining acceptance remain later gates.
+   The [2026-09-23 refinement](REST_MACHINING_PLAN.md#execution-architecture-refinement---2026-09-23)
+   adds the explicit future headless-posting capability and manual-edit contract.
+   Keep ordinary native-MOP export alongside a proposed shared motion core and
+   separate CamBam/direct-post adapters. One bounded reference-dialect direct
+   V output is implemented after the first useful native plus explicit V
+   workflow. A bounded UCCNC output profile now covers the nominal generated
+   RC01 job; other controller/job combinations remain named future work.
+
+   #### Next detached stock/rest increment
+
+   **Completed 2026-09-22:** directional occupancy and remaining-stock/rest bounds
+   for one analytic rectangular stock/target and supplied horizontal disk sweep.
+   The [contract](structure_spec.md#directional-analytic-stock-section-bounds)
+   distinguishes complete swept coverage from nominal feasible centers, declares
+   input uncertainty and rejects unsupported geometry or protected-boundary overrun.
+   Independent analytic acceptance needs no native/CamBam validation.
+
+   **Completed 2026-09-22: compose bounded removal from multiple supplied sweeps.**
+   Exact union membership, overlap-safe rational grid area intervals, provenance
+   validation and monotonic fixed-grid stock prefixes are implemented and verified.
+   Independent collinear-overlap, disk-lens and disjoint references pass. Area
+   bounds are coarse enclosures; reopen precision/performance only when a concrete
+   consumer's accuracy or workload blocks progress.
+
+   **Completed 2026-09-22: separate protected target geometry from cumulative
+   stock.** An exact rectangular outer target and strictly interior rectangular
+   island now constrain supplied large/small-tool sweeps inside exact initial
+   stock. Required rest uses the original target; whole-stock bounds retain
+   cumulative removal and provenance. Independent membership checks, uncertainty
+   examples, exact wall tangency and rational overrun rejection pass. No generated
+   cleanup or connecting/entry motion is implied. Reopen broader target geometry
+   only for a demonstrated blocking input.
+
+   **Completed 2026-09-22: verify bounded cleanup motion against evolving stock.**
+   For the rectangular target/island scenario, ordered horizontal cuts and
+   explicit section entries/connectors now prove cutting occupancy stays in the
+   original target and non-cutting occupancy stays in one cited prior guaranteed
+   free capsule or strictly outside initial stock. Independent residual membership
+   and rejected uncleared/island connectors are checked under the declared
+   uncertainty. This does not establish descent, retracts, tool changes or stock
+   at other heights. Generated paths, native/MCP attachment, inlays and curved
+   topology remain deferred.
+
+   **Definition and user selection completed 2026-09-23: roughing-plus-cleanup job RC01.**
+   The [job owner](REST_MACHINING_PLAN.md#first-generated-acceptance-job-rc01)
+   records accepted synthetic stock/target/island, tool and holder dimensions, depth/process
+   bounds, entry/retract/connection requirements, residual/overcut oracles, rejection
+   variants and standalone/native acceptance gates. The definition stopping condition
+   is met; the user selected the proposed synthetic case and test-only limits. Native Pocket
+   cleanup and explicit framework paths each require evidence from actual emitted
+   motion. Synthetic job acceptance is separate from real-machine constraints.
+
+   **Standalone S and automated native I preparation implemented 2026-09-23;
+   first E/N output trial failed.**
+   `cambam_builder.cam_core.rc01` and `tests/test_rc01.py` now own the accepted nominal
+   generated motion, whole-height stock/access replay, rational per-slab rest
+   intervals and negative variants. New detached CAM features use the
+   [package boundary](structure_spec.md#execution-boundary-and-detached-cam-core)
+   before native adapters are added. See the [implemented contract](structure_spec.md#rc01-generated-motion-and-full-height-replay)
+   and [dated checks](REVIEW.md#rc01-standalone-generated-sequence---2026-09-23).
+   GEOS residual-location topology still lacks formal numeric interval proof;
+   reopen that precision only if a strict S certificate or native comparison
+   requires it. Native input normalization and A/B/C comparison candidates are
+   implemented, with source MOPs disabled. The first posted A/B/C trial exceeded
+   the -3 floor to -6, reordered T1, and changed to T2 without the required
+   setup/spindle sequence. The repaired A post confirms the intended -1/-2/-3
+   depths, but still follows UUID-sorted targets and inserts rapid approach/
+   retract. B/C have not been reposted. A fully native Pocket roughing/cleanup
+   pair was posted: T1 prefixes match, depth and rest coverage pass the bounded
+   numerical checks, and four required plus eight actual T2 columns have exact
+   T1 clearance witnesses. The pair is now hash-pinned as a selected
+   conditional stock/rest observation; 62 rough and 233 combined role findings
+   block stock-dependent execution. N fails due low rapids, ramps, feed and setup/tool
+   events, with island tangency still unresolved. The Pocket/Default role
+   trial could not encode approach/retract/setup roles. The later literal
+   CustomScript `.cb` did: its revised CamBam Default post passed exact
+   emitted-sequence and continuous stock/access/process/rest replay for all
+   2,945 items. This closes one alternate explicit E output slice, not the
+   original XYZ/Engrave parity or native Pocket N. This was the CamBam route's
+   status before the later bounded [direct UCCNC output](#active-work-and-next-priority).
+   Never infer vertical clearance from fixed-Z evidence.
+
+   **Bounded pointed-cone explicit output accepted 2026-09-24.** The 12 x 4 mm
+   full-depth V slot has one accepted Default/Default mm CustomScript post.
+   Exact event/move comparison and actual posted cone-sweep replay preserve
+   protected target and the independent partial-rest references. The user
+   confirmed a displayed Drill toolpath; posted G-code is the motion authority.
+   This is a constant-tip-depth one-pass output slice, not general variable-depth
+   V-carving or physical acceptance. The bounded sloped target, independent
+   residual reference and explicit carrier are now implemented. The actual
+   Default post passed exact motion and residual replay. The distinct
+   generated-XYZ-Pline/Engrave gate now has a visible sloped path and exact
+   isolated cutting segment, but fails whole-motion roles; it is inspection
+   only. One bounded native V input now normalizes to the same standalone
+   request and keeps source, preview and explicit candidates separate. Its
+   own CamBam-produced explicit post passed all nine items and the original
+   residual replay. A separate headless reference G-code file now parses and
+   replays to the same semantic sequence and partial rest. A straight
+   variable-depth family and edited native input normalization now support
+   other dimensions and pointed tools. One edited member also emits a parsed
+   and target-replayed direct reference file; the CamBam output adapters remain
+   bound to the posted member. The nominal RC01 two-tool sequence now also has
+   exact parsed and replayed headless reference output. At this historical
+   checkpoint a controller-specific direct post remained future work;
+   [packet 5](#active-work-and-next-priority) later added bounded UCCNC output.
+   N remains blocked on its known role controls.
+
+   **Package layout dependency:** the [staged organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
+   owns native/extended/core naming and migration criteria. The RC01 integration
+   package is the proved bridge; native document owners were consolidated after
+   the output semantics settled. Promote root detached/policy modules only when
+   the next capability consumer fixes the shared abstraction boundary; a package
+   move alone does not close the general rest/V-carve gap.
+
+   Session-1 finding [BR-1-004](REVIEW.md#findings-and-dispositions) records two
+   current exceptions: `cam_core.inlay.audit_pair` calls the output adapter,
+   and the direct RC01 reference writer reuses the CamBam Default-post reader.
+   Detached calculation remains available. Reopen orchestration relocation for
+   a second paired-output consumer, an independently packaged core, or a dialect
+   requirement that this coupling obstructs; do not migrate solely for naming.
+
+   **Implementation stopping condition:** RC01 passes its independent continuous
+   motion, stock, process and residual checks, reports expected finite-tool residual
+   as partial target completion, and exposes unsupported/stale outcomes. Record
+   standalone, each native output carrier and physical acceptance separately;
+   inspect prepared `.cb` artifacts and replay actual posts before output
+   acceptance. Defer general
+   topology, positive-error completion, low links, universal MOP parity, optimizer
+   infrastructure and general 3D stock until a named consumer or RC01 gate shows why
+   the bounded workflow cannot meet its requirements.
+
+7. **Completed 2026-09-27: author Manual Profile holding-tab positions.**
+   Native Square/Triangle/B/C/D saves and Default posts establish the bounded
+   point collection, coordinate frame and move/add/remove order. Fresh direct-core
+   and MCP authoring now accept explicit drawing XY tab positions for one root,
+   flat, straight, counterclockwise closed Pline and Outside Profile, with
+   Square/Triangle style and count/spacing checks. Recognized imported native
+   positions inspect as XY while their templates remain preserved. The fresh
+   B/C `<Tabs>` records match native saves, and the user's CamBam Plus 1.0
+   Default posts of those unchanged files match all native B/C machine commands
+   and four/five tab lifts exactly. This closes the bounded Square-output gate;
+   the core/MCP XML authoring contract is also tested. Fresh Triangle output and
+   curved, reversed, transformed or multi-target variants remain evidence-bound.
+   [Acceptance](REVIEW.md#fresh-writer-cambam-default-post-acceptance---2026-09-27).
 8. **Future MOP semantic, native-export and framework/MCP parity audit.** Perform this
    as three bounded increments after the current SpiralMill prompt-free acceptance;
    do not treat every CamBam feature found as automatically in scope for

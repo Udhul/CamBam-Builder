@@ -1,0 +1,159 @@
+<?xml version='1.0' encoding='utf-8'?>
+<CADFile units="Millimeters" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="0.9.8.0" Name="Native links legacy">
+  <MachiningOptions>
+    <PostProcessor>Default</PostProcessor>
+    <StyleLibrary>Standard-mm</StyleLibrary>
+    <ToolLibrary>Default-mm</ToolLibrary>
+    <Stock>
+      <Material></Material>
+      <PMin>0,0,0</PMin>
+      <PMax>0,0,0</PMax>
+      <Color>255,165,0</Color>
+    </Stock>
+  </MachiningOptions>
+  <layers>
+    <layer name="Mapping shapes" color="Green" alpha="1.0" pen="1.0" visible="true" locked="false">
+      <objects>
+        <circle c="62,10,0.0" d="8" id="1">
+          <Tag>{"user_id":"link-circle-3","internal_id":"2c8a139c-e1e4-4c39-96f7-b7a4d1292664","groups":[],"description":""}</Tag>
+          <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+        </circle>
+        <arc p="93,11,0.0" r="7" s="45" w="255" id="2">
+          <Tag>{"user_id":"link-arc","internal_id":"37d93ca3-70c7-485f-bb58-aa6f2f94ceb5","groups":[],"description":""}</Tag>
+          <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+        </arc>
+        <circle c="15,10,0.0" d="8" id="3">
+          <Tag>{"user_id":"link-circle-1","internal_id":"5ef2e7db-ffa9-43be-a929-32dfa71a9c6a","groups":[],"description":""}</Tag>
+          <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+        </circle>
+        <circle c="38,10,0.0" d="8" id="4">
+          <Tag>{"user_id":"link-circle-2","internal_id":"921f651c-5bd4-40a0-ad4b-797e0c5772d1","groups":[],"description":""}</Tag>
+          <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+        </circle>
+        <rect Closed="true" p="122,6,0.0" w="19" h="13" id="5">
+          <Tag>{"user_id":"finish-rect","internal_id":"9c9874ba-daf1-4dd0-a073-e7a669c0410b","groups":[],"description":""}</Tag>
+          <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+        </rect>
+      </objects>
+    </layer>
+  </layers>
+  <parts>
+    <part Name="Mapping part" Enabled="true">
+      <Stock>
+        <PMin>0,0,-8</PMin>
+        <PMax>185,45,0</PMax>
+        <Material>MDF</Material>
+        <Color>210,180,140</Color>
+      </Stock>
+      <MachiningOrigin>0.0,0.0</MachiningOrigin>
+      <ToolProfile>EndMill</ToolProfile>
+      <Nesting>
+        <NestMethod>None</NestMethod>
+      </Nesting>
+      <machineops>
+        <profile Enabled="true">
+          <Name>LINKS_MULTI_TARGET_DEPTH_LEAD</Name>
+          <Tag>{"user_id": "links_multi_target_depth_lead", "internal_id": "f42514d1-b57e-4572-8373-c7e123ab3a80"}</Tag>
+          <TargetDepth state="Value">-3</TargetDepth>
+          <DepthIncrement state="Value">1</DepthIncrement>
+          <StockSurface state="Value">0</StockSurface>
+          <RoughingClearance state="Value">0</RoughingClearance>
+          <ClearancePlane state="Value">5</ClearancePlane>
+          <SpindleDirection state="Value">CW</SpindleDirection>
+          <SpindleSpeed state="Value">12000</SpindleSpeed>
+          <VelocityMode state="Value">ExactStop</VelocityMode>
+          <WorkPlane state="Value">XY</WorkPlane>
+          <OptimisationMode state="Value">Standard</OptimisationMode>
+          <ToolDiameter state="Value">2</ToolDiameter>
+          <ToolNumber state="Value">1</ToolNumber>
+          <ToolProfile state="Value">EndMill</ToolProfile>
+          <PlungeFeedrate state="Value">60</PlungeFeedrate>
+          <CutFeedrate state="Value">240</CutFeedrate>
+          <MaxCrossoverDistance state="Value">0.25</MaxCrossoverDistance>
+          <primitive>
+            <prim>1</prim>
+            <prim>3</prim>
+            <prim>4</prim>
+          </primitive>
+          <StepOver state="Value">0.4</StepOver>
+          <InsideOutside state="Value">Outside</InsideOutside>
+          <MillingDirection state="Value">Conventional</MillingDirection>
+          <CollisionDetection state="Value">true</CollisionDetection>
+          <CornerOvercut state="Value">false</CornerOvercut>
+          <LeadInMove state="Value">
+            <LeadInType state="Value">Spiral</LeadInType>
+            <SpiralAngle state="Value">20</SpiralAngle>
+          </LeadInMove>
+          <FinalDepthIncrement state="Value">0.0</FinalDepthIncrement>
+          <CutOrdering state="Value">DepthFirst</CutOrdering>
+          <HoldingTabs state="Value">
+            <TabMethod>None</TabMethod>
+          </HoldingTabs>
+        </profile>
+        <engrave Enabled="true">
+          <Name>LINKS_ARC_SECOND_TOOL</Name>
+          <Tag>{"user_id": "links_arc_second_tool", "internal_id": "1b82f0d5-e3d3-454a-92af-ff87dbeade17"}</Tag>
+          <TargetDepth state="Value">-2</TargetDepth>
+          <DepthIncrement state="Value">1</DepthIncrement>
+          <StockSurface state="Value">0</StockSurface>
+          <RoughingClearance state="Value">0</RoughingClearance>
+          <ClearancePlane state="Value">5</ClearancePlane>
+          <SpindleDirection state="Value">CW</SpindleDirection>
+          <SpindleSpeed state="Value">12000</SpindleSpeed>
+          <VelocityMode state="Value">ExactStop</VelocityMode>
+          <WorkPlane state="Value">XY</WorkPlane>
+          <OptimisationMode state="Value">Standard</OptimisationMode>
+          <ToolDiameter state="Value">1</ToolDiameter>
+          <ToolNumber state="Value">3</ToolNumber>
+          <ToolProfile state="Value">EndMill</ToolProfile>
+          <PlungeFeedrate state="Value">60</PlungeFeedrate>
+          <CutFeedrate state="Value">240</CutFeedrate>
+          <MaxCrossoverDistance state="Value">0.7</MaxCrossoverDistance>
+          <primitive>
+            <prim>2</prim>
+          </primitive>
+          <RoughingFinishing state="Value">Roughing</RoughingFinishing>
+          <FinalDepthIncrement state="Value">0.0</FinalDepthIncrement>
+          <CutOrdering state="Value">DepthFirst</CutOrdering>
+        </engrave>
+        <profile Enabled="true">
+          <Name>LINKS_RETURN_FIRST_TOOL</Name>
+          <Style>cutout</Style>
+          <Tag>{"user_id": "links_return_first_tool", "internal_id": "20b032cf-72f6-4dd1-8676-ca75f11957b1"}</Tag>
+          <TargetDepth state="Value">-2</TargetDepth>
+          <DepthIncrement state="Value">1</DepthIncrement>
+          <StockSurface state="Value">0</StockSurface>
+          <RoughingClearance state="Value">0</RoughingClearance>
+          <ClearancePlane state="Value">5</ClearancePlane>
+          <SpindleDirection state="Value">CW</SpindleDirection>
+          <SpindleSpeed state="Value">12000</SpindleSpeed>
+          <VelocityMode state="Value">ExactStop</VelocityMode>
+          <WorkPlane state="Value">XY</WorkPlane>
+          <OptimisationMode state="Value">Standard</OptimisationMode>
+          <ToolDiameter state="Value">2</ToolDiameter>
+          <ToolNumber state="Value">1</ToolNumber>
+          <ToolProfile state="Value">EndMill</ToolProfile>
+          <PlungeFeedrate state="Value">60</PlungeFeedrate>
+          <CutFeedrate state="Value">240</CutFeedrate>
+          <MaxCrossoverDistance state="Value">0.7</MaxCrossoverDistance>
+          <primitive>
+            <prim>5</prim>
+          </primitive>
+          <StepOver state="Value">0.4</StepOver>
+          <InsideOutside state="Value">Inside</InsideOutside>
+          <MillingDirection state="Value">Conventional</MillingDirection>
+          <CollisionDetection state="Value">true</CollisionDetection>
+          <CornerOvercut state="Value">false</CornerOvercut>
+          <LeadInMove state="Value">
+            <LeadInType state="Value">None</LeadInType>
+          </LeadInMove>
+          <FinalDepthIncrement state="Value">0.0</FinalDepthIncrement>
+          <CutOrdering state="Value">DepthFirst</CutOrdering>
+          <HoldingTabs state="Value">
+            <TabMethod>None</TabMethod>
+          </HoldingTabs>
+        </profile>
+      </machineops>
+    </part>
+  </parts>
+</CADFile>

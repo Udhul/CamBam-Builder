@@ -5,6 +5,14 @@ A Python framework for building CamBam CAD/CAM files. The modern package exposes
 I/O. It is work in progress; round-trip fidelity and CamBam acceptance are not
 established for all supported entities.
 
+The intended framework combines faithful, editable CamBam interchange with an
+independent CAM core for toolpaths, evolving stock and rest analysis. Native and
+framework-generated machining can be composed through explicit motion evidence.
+Path strategies, geometry/stock backends and controller adapters have separate
+contracts so future surface/volume methods can extend the same foundation. See
+the [framework direction](docs/structure_spec.md#framework-direction-and-extension-principles)
+for the design and its current implementation limits.
+
 Start with the [documentation map](docs/README.md), then the relevant topic:
 
 - [Development and verification](docs/DEVELOPMENT.md)
@@ -23,15 +31,51 @@ project.add_rect(layer=layer, identifier='outline', width=100, height=50)
 See `demos/` for larger examples and the runbook for their limitations.
 Licensed under the [MIT license](LICENSE).
 
-For development, install the environment with `uv sync`, then run the
-project through `.venv\Scripts\python.exe`. Python 3.9 through 3.13 are verified;
+Document-independent CAM calculations and planning live under
+`cambam_builder.cam_core`; native CamBam entities/XML and the MCP adapter remain
+separate. The first generated roughing/cleanup slice is `cam_core.rc01`.
+A validated family of straight variable-depth V grooves supports detached
+planning and edited native inputs. The accepted baseline and one edited member
+also have verified headless G-code reference output. The nominal RC01
+roughing/cleanup job also has a parsed and stock-replayed headless reference
+file. Their strict millimetre dialect is not a machine controller profile.
+The first bounded UCCNC profile emits an independently decoded, stock-replayed
+synthetic T1/T3 pair. A Grbl v1.1 portability fixture now checks in-program
+manual and modeled automatic transitions through the same stock verifier;
+the reusable ordered-job API now accepts caller-supplied stages, raster or
+offset V plans, and supported native-normalized linear and XY arc motion for UCCNC or
+Grbl output with decoded stock evidence. One actual CamBam-posted linear
+Profile predecessor and generated rounded-V cleanup now pass together in a
+source-bound two-stage UCCNC job. A fresh CamBam G3 Pocket post and generated
+rounded-V finish now pass bounded decoded two-stage UCCNC stock and continuous
+tool-body/box occupancy gates. A posted G2 helical Circle Pocket and generated
+smaller-tool cleanup also pass source-bound decoded two-stage UCCNC stock and
+protected-boundary checks. A separate synthetic stepped-volume case
+replays decoded waterline and dependent rest cuts with a protected thin rib and
+conservative residual-volume bounds. A bounded sloped-plane ball-cutter case
+checks analytic contact and volume against decoded, conservative two-stage
+stock replay. A shallow spherical-bowl ball finish/rest case adds a protected
+rim, a dependent smaller tool and a declared side-clamp/body check. A bounded
+circular paired V-carve inlay now checks separate plug/receiver stock, decoded
+output and analytic assembly at zero or positive radial clearance. The fully
+generated nominal RC01 T1/T2 rough/cleanup job also emits two complete
+six-decimal UCCNC programs with decoded all-height RC01 stock and process
+evidence; its tool handoff remains a declared offline assumption. Runtime,
+physical setup and freeform surfaces remain unassessed.
+See the
+[current status](docs/PROGRESS.md#active-work-and-next-priority).
+
+Python 3.12 or newer is required. For development, install the environment with
+`uv sync --python 3.13`, then run the project through `.venv\Scripts\python.exe`.
+The verification matrix covers Python 3.12 and 3.13;
 see the [development runbook](docs/DEVELOPMENT.md#environment-and-setup).
 
 The optional local MCP server exposes thirty-seven document, planning and authoring
 tools for AI clients, including verified geometry authoring (Rect, Circle,
 Arc, Pline, Points, Text, Region), Profile/Pocket/Engrave/Drill MOPs with
-target replacement, open-Pline Profile side diagnostics, automatic Profile holding
-tabs, Text-targeted Profile/Pocket/Engrave, signed Profile/Pocket/Engrave roughing
+target replacement, open-Pline Profile side diagnostics, automatic and bounded
+point-authored Manual Profile holding tabs, Text-targeted Profile/Pocket/Engrave,
+signed Profile/Pocket/Engrave roughing
 clearance, CannedCycle and SpiralMill CW/CCW Drill authoring, and VCutter-path
 engraving, similarity transforms with baking, and parent/group/copy
 relationships including cross-document subtree copy and transfer between two
@@ -44,7 +88,7 @@ binary-copy an existing or manually edited `.cb` there and hash-guard `document_
 this avoids model-mediated XML. Export returns inline content and explicitly creates
 no file; same-host clients can instead copy an exact server-generated `document_save`
 handoff artifact and verify its SHA-256. Install
-with `uv sync --extra mcp` on Python 3.10+;
+with `uv sync --python 3.13 --extra mcp`;
 see [MCP setup and client configuration](docs/DEVELOPMENT.md#local-mcp-setup-and-verification).
 Clean Windows installation, an agentic OpenCode stdio workflow and CamBam Plus 1.0
 domain acceptance are verified for the bounded Rect/Outside-Profile A/B slice.

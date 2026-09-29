@@ -1,0 +1,33 @@
+{
+  "format": "rc01-native-v1",
+  "job_fingerprint": "1d7c3e93e8b45cd8df9ff31a12ff120e413043156bbc42fe9494caa19295b2c6",
+  "source_file": "source.cb",
+  "source_sha256": "5e175cab6c77c7a562eb6f15c748713929cfb40e530f8ad9ec89701fbf1d3f78",
+  "postprocessor": "Default",
+  "units": "mm",
+  "profile": "Default mm",
+  "variants": {
+    "rough": {
+      "file": "N-rough.cb",
+      "sha256": "e14afa4b5594814c754fe828898e0e13de5672c9d5bd55a4d470aec457f7ea6c",
+      "enabled_mops": [
+        "NATIVE T1 full target roughing"
+      ],
+      "source_mops_disabled": true,
+      "emitted_motion_status": "pending_CamBam_regeneration_and_post"
+    },
+    "combined": {
+      "file": "N-native-cleanup.cb",
+      "sha256": "23e44d90b3d0be46389f0a86b915dad42a578835e5ab4978f52c620c331bd2b1",
+      "enabled_mops": [
+        "NATIVE T1 full target roughing",
+        "NATIVE T2 window 1",
+        "NATIVE T2 window 2",
+        "NATIVE T2 window 3",
+        "NATIVE T2 window 4"
+      ],
+      "source_mops_disabled": true,
+      "emitted_motion_status": "pending_CamBam_regeneration_and_post"
+    }
+  }
+}

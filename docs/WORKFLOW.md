@@ -6,21 +6,47 @@
 item by recording objective, affected owners and executable acceptance criteria.
 Record blockers there; implementation detail belongs in the domain owner.
 Close a slice by separately recording implementation, automated verification and
-user acceptance. Pending user acceptance must remain visible. Retire completed
+the applicable acceptance authority. Required pending user observations must
+remain visible. Retire completed
 plans after transferring durable facts and failure evidence to their owners.
 
 Use these states explicitly: **backlog**, **active**, **blocked**, **implemented**,
 **automated checks complete**, and **accepted**. A recommendation is still backlog
 until work begins. Blocked work records the missing decision/dependency and a
 concrete unblocking action; do not open a second implicit active priority.
-For documentation-only work, user/production acceptance may be marked not required
-with a reason. For product behavior, identify the specific validation still owed.
+Engineering review and reproducible automated evidence can close an offline
+capability. For user-visible or external behavior, identify the specific
+observation still owed; do not add a general sign-off requirement to every change.
 
 An active item needs only: objective, scope/owners, acceptance criteria, current
 state, blocker (or none), and next action. Links can supply detail. Do not duplicate
 the active item in the remaining backlog. If an external issue tracker is designated,
 it owns task state/acceptance and the repository status links to the active issue;
 the repository continues to own contracts and verification instructions.
+
+## Acceptance ownership
+
+The lead owns technical choices and evidence assessment within the user's stated
+product intent. The user supplies desired outcomes, workflow facts, program/machine
+configuration and observations that require their environment. Their familiarity
+with CAM internals must not determine the rigor or extensibility of the framework.
+
+| Gate | Responsible authority and closure |
+| --- | --- |
+| Architecture, algorithms and offline correctness | Engineering review against explicit contracts and independent checks. Close or report the exact technical gap; asking the user to approve a technical summary supplies no missing evidence. |
+| Product preference or ambiguous behavior | Ask a short concrete question with an example, recommendation and consequence. Resolve implementation choices autonomously when intent already settles them. |
+| CamBam display, actual native post, controller or physical observation | Prepare artifacts and exact pass/fail criteria first. Ask only for evidence unavailable to the agent and record its scope. |
+
+Use `accepted by engineering` for a technically closed offline gate and
+`accepted by user observation` only for what the user actually reported. Record
+machine/runtime acceptance separately. A discovered implementation gap stays open
+with a repair criterion; user assent cannot replace the repair. A capability limit
+does not prevent closure of a narrower named fixture whose contract actually passed.
+
+Do not ask the user to approve the architecture in general, select an internal
+data structure, or interpret a numerical certificate. If a decision genuinely
+requires their input, explain the practical behavior affected in the conversation.
+Otherwise state the engineering decision, evidence and remaining limits and proceed.
 
 ## Progressive retrieval and decisions
 
@@ -117,8 +143,9 @@ Changed areas and owning files:
 Decisions/assumptions and evidence links:
 Implementation: pending / complete
 Automated verification: exact commands, exit/results, reproducible fixtures/artifacts
-User/production acceptance: pending / accepted / not required (reason)
-Acceptance authority/evidence: user or domain reviewer; never infer acceptance
+Engineering acceptance: complete / pending (specific technical gap)
+User/production validation: pending / observed / not required (specific reason)
+Acceptance authority/evidence: engineering checks or actual user/domain observation
 Remaining risks, blockers and reopening criteria:
 Delivery state: working / ready to commit / merge-ready (target base and HEAD)
 Recommended next increment:

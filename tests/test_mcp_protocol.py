@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 from importlib.metadata import PackageNotFoundError, version
 from importlib.util import find_spec
+from importlib.resources import files
 import json
 import os
 from pathlib import Path
@@ -35,7 +36,7 @@ PYTHON = Path(sys.executable)
 class ConsumerAgentTemplateTests(unittest.TestCase):
     def test_first_run_is_an_explicit_separate_question_gate(self):
         template = (
-            ROOT / "cambam_builder" / "mcp_adapter" / "consumer_AGENTS.template.md"
+            files("cambam_builder.mcp_adapter").joinpath("consumer_AGENTS.template.md")
         ).read_text(encoding="utf-8")
         normalized = " ".join(template.split())
 

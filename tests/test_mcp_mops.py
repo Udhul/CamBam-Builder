@@ -1034,6 +1034,165 @@ class MopBreadthTests(unittest.TestCase):
 
         self.run_async(test)
 
+    def test_manual_profile_tab_points_author_and_reject_invalid_positions(self):
+        async def test():
+            handle = await self.create("manual-tabs")
+            outline = await self.call("geometry_add_pline", self.args(
+                document=handle, expected_revision=0, identifier="outline",
+                layer="Geometry", closed=True,
+                points=[{"x": 10, "y": 10}, {"x": 70, "y": 10},
+                        {"x": 70, "y": 40}, {"x": 10, "y": 40}],
+            ))
+            self.assertTrue(outline["ok"], outline)
+            target = outline["data"]["entity_id"]
+            base = dict(document=handle, expected_revision=1, part="Part",
+                        targets=[target], side="Outside", tab_method="Manual",
+                        tab_min_tabs=4, tab_max_tabs=4, tab_width=6,
+                        tab_height=1, **self.mop_arguments(target_depth=-3))
+            missing = await self.call("machining_add_profile", self.args(
+                identifier="missing", **base))
+            self.assertEqual("tab_points", missing["error"]["field"])
+            before = await self.inspect(handle, revision=1)
+            off_edge_args = self.args(
+                identifier="off-edge", tab_points=[[40, 11], [70, 25],
+                                                   [40, 40], [10, 33]], **base)
+            off_edge = await self.call("machining_add_profile", off_edge_args)
+            self.assertFalse(off_edge["ok"], off_edge)
+            self.assertEqual("INVALID_ARGUMENT", off_edge["error"]["code"])
+            self.assertEqual("tab_points", off_edge["error"]["field"])
+            replay = await self.call("machining_add_profile", off_edge_args)
+            self.assertEqual({**off_edge, "replayed": True}, replay)
+            self.assertEqual(before, await self.inspect(handle, revision=1))
+            added = await self.call("machining_add_profile", self.args(
+                identifier="manual", tab_points=[[40, 10], [70, 25],
+                                                 [40, 40], [10, 33]], **base))
+            self.assertTrue(added["ok"], added)
+            saved = await self.call("document_save", self.args(
+                document=handle, expected_revision=2, path="manual.cb"))
+            self.assertTrue(saved["ok"], saved)
+            root = ET.parse(self.root / "manual.cb").getroot()
+            profile = root.find("./parts/part/machineops/profile")
+            self.assertEqual("Manual", profile.findtext("HoldingTabs/TabMethod"))
+            self.assertEqual(
+                ["0.166666666666667", "0.416666666666667",
+                 "0.666666666666667", "0.872222222222222"],
+                [tab.findtext("ParametricPoint")
+                 for tab in profile.findall("Tabs/HoldingTab")],
+            )
+            # A native editor may assign nonsequential IDs; export must remap
+            # both the MOP target and tab parents when the writer uses ID 1.
+            root.find("./layers/layer/objects/*").set("id", "7")
+            profile.find("primitive/prim").text = "7"
+            for parent in profile.findall("Tabs/HoldingTab/ParentEntityID"):
+                parent.text = "7"
+            ET.ElementTree(root).write(self.root / "manual.cb", encoding="utf-8")
+            reopened = await self.call("document_open", self.args(
+                path="manual.cb", units="mm"))
+            self.assertTrue(reopened["ok"], reopened)
+            records = await self.inspect_records(reopened["document"])
+            record = next(record for record in records
+                          if record.get("identifier") == "manual")
+            self.assertEqual("Manual", record["parameters"]["tab_method"])
+            self.assertEqual([[40, 10], [70, 25], [40, 40], [10, 33]],
+                             record["parameters"]["manual_tab_points"])
+            self.assertNotIn("Tabs", record["unsupported_fields"])
+            remapped = await self.call("document_save", self.args(
+                document=reopened["document"], expected_revision=0, path="remapped.cb"))
+            self.assertTrue(remapped["ok"], remapped)
+            remapped_root = ET.parse(self.root / "remapped.cb").getroot()
+            self.assertEqual(["1"] * 4, [node.text for node in remapped_root.findall(
+                "./parts/part/machineops/profile/Tabs/HoldingTab/ParentEntityID")])
+            reopened_again = await self.call("document_open", self.args(
+                path="remapped.cb", units="mm"))
+            self.assertTrue(reopened_again["ok"], reopened_again)
+            records_again = await self.inspect_records(reopened_again["document"])
+            self.assertEqual([[40, 10], [70, 25], [40, 40], [10, 33]],
+                next(item for item in records_again if item.get("identifier") == "manual")
+                ["parameters"]["manual_tab_points"])
+
+            ET.SubElement(profile.find("Tabs/HoldingTab"), "VendorField").text = "keep"
+            ET.ElementTree(root).write(self.root / "manual-extra.cb", encoding="utf-8")
+            opaque = await self.call("document_open", self.args(
+                path="manual-extra.cb", units="mm"))
+            self.assertTrue(opaque["ok"], opaque)
+            opaque_records = await self.inspect_records(opaque["document"])
+            opaque_record = next(item for item in opaque_records
+                                 if item.get("identifier") == "manual")
+            self.assertNotIn("manual_tab_points", opaque_record["parameters"])
+            self.assertIn("Tabs", opaque_record["unsupported_fields"])
+
+        self.run_async(test)
+
+    def test_reassigned_manual_tab_parent_blocks_export_without_publication(self):
+        async def test():
+            handle = await self.create("manual-parent")
+            targets = []
+            for revision, identifier in enumerate(("original", "replacement")):
+                outline = await self.call("geometry_add_pline", self.args(
+                    document=handle, expected_revision=revision,
+                    identifier=identifier, layer="Geometry", closed=True,
+                    points=[{"x": 10, "y": 10}, {"x": 70, "y": 10},
+                            {"x": 70, "y": 40}, {"x": 10, "y": 40}],
+                ))
+                self.assertTrue(outline["ok"], outline)
+                targets.append(outline["data"]["entity_id"])
+            added = await self.call("machining_add_profile", self.args(
+                document=handle, expected_revision=2, identifier="manual",
+                part="Part", targets=[targets[0]], side="Outside",
+                tab_method="Manual", tab_min_tabs=4, tab_max_tabs=4,
+                tab_width=6, tab_height=1,
+                tab_points=[[40, 10], [70, 25], [40, 40], [10, 33]],
+                **self.mop_arguments(target_depth=-3),
+            ))
+            self.assertTrue(added["ok"], added)
+            saved = await self.call("document_save", self.args(
+                document=handle, expected_revision=3, path="original.cb"))
+            self.assertTrue(saved["ok"], saved)
+            opened = await self.call("document_open", self.args(
+                path="original.cb", units="mm"))
+            self.assertTrue(opened["ok"], opened)
+            handle = opened["document"]
+            records = {item["identifier"]: item
+                       for item in await self.inspect_records(handle)
+                       if item.get("identifier")}
+            changed = await self.call("machining_set_mop_targets", self.args(
+                document=handle, expected_revision=0,
+                mop_id=records["manual"]["id"],
+                targets=[records["replacement"]["id"]],
+            ))
+            self.assertTrue(changed["ok"], changed)
+            current = next(item for item in await self.inspect_records(handle, 1)
+                           if item.get("identifier") == "manual")
+            self.assertNotIn("manual_tab_points", current["parameters"])
+            self.assertIn("Tabs", current["unsupported_fields"])
+            before_files = {path.relative_to(self.root): path.read_bytes()
+                            for path in self.root.rglob("*") if path.is_file()}
+            exported = await self.call("document_export", {
+                "workspace_id": self.service.workspace.id,
+                "document": handle, "expected_revision": 1,
+                "suggested_filename": "reassigned.cb",
+            })
+            failed_save = await self.call("document_save", self.args(
+                document=handle, expected_revision=1, path="reassigned.cb"))
+            for result in (exported, failed_save):
+                self.assertFalse(result["ok"], result)
+                self.assertEqual("EXPORT_FAILED", result["error"]["code"])
+                self.assertIsNone(result["data"])
+            self.assertEqual(before_files, {
+                path.relative_to(self.root): path.read_bytes()
+                for path in self.root.rglob("*") if path.is_file()})
+            restored = await self.call("machining_set_mop_targets", self.args(
+                document=handle, expected_revision=1,
+                mop_id=records["manual"]["id"],
+                targets=[records["original"]["id"]],
+            ))
+            self.assertTrue(restored["ok"], restored)
+            valid = await self.call("document_save", self.args(
+                document=handle, expected_revision=2, path="restored.cb"))
+            self.assertTrue(valid["ok"], valid)
+
+        self.run_async(test)
+
     def test_text_vcutter_engrave_and_automatic_profile_tabs_round_trip(self):
         async def test():
             handle = await self.create("engrave-tabs")

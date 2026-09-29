@@ -125,7 +125,7 @@ class MopContextTests(unittest.TestCase):
             part, [outline], identifier="profile", tab_method="Manual"
         )
 
-        with self.assertRaisesRegex(ValueError, "explicit native tab points"):
+        with self.assertRaisesRegex(ValueError, "explicit XY points"):
             build_xml_tree(project)
 
     def test_native_machining_and_part_style_context_survives_two_roundtrips(self):

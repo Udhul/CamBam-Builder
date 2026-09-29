@@ -1,0 +1,172 @@
+<?xml version='1.0' encoding='utf-8'?>
+<CADFile xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="0.9.8.0" Name="RC01 synthetic input">
+  <MachiningOptions>
+    <Stock>
+      <Material></Material>
+      <PMin>0,0,0</PMin>
+      <PMax>0,0,0</PMax>
+      <Color>255,165,0</Color>
+    </Stock>
+  </MachiningOptions>
+  <layers>
+    <layer name="RC01 target" color="Green" alpha="1.0" pen="1.0" visible="true" locked="false">
+      <objects>
+        <entity xsi:type="Region" id="1">
+          <ModificationCount>0</ModificationCount>
+          <Tag>{"user_id":"rc01-target","internal_id":"470e82bb-7036-4eb5-b022-7425933e6a2d","groups":[],"description":""}</Tag>
+          <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+          <OuterCurve Closed="true">
+            <ModificationCount>0</ModificationCount>
+            <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+            <pts>
+              <p b="0.0">0.0,0.0,0.0</p>
+              <p b="0.0">40.0,0.0,0.0</p>
+              <p b="0.0">40.0,30.0,0.0</p>
+              <p b="0.0">0.0,30.0,0.0</p>
+            </pts>
+          </OuterCurve>
+          <HoleCurves>
+            <Polyline Closed="true">
+              <ModificationCount>0</ModificationCount>
+              <mat m="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0"></mat>
+              <pts>
+                <p b="0.0">16.0,11.0,0.0</p>
+                <p b="0.0">24.0,11.0,0.0</p>
+                <p b="0.0">24.0,19.0,0.0</p>
+                <p b="0.0">16.0,19.0,0.0</p>
+              </pts>
+            </Polyline>
+          </HoleCurves>
+        </entity>
+      </objects>
+    </layer>
+  </layers>
+  <parts>
+    <part Name="RC01 part" Enabled="true">
+      <Stock>
+        <PMin>-5,-5,-10</PMin>
+        <PMax>45,35,0</PMax>
+        <Material>MDF</Material>
+        <Color>210,180,140</Color>
+      </Stock>
+      <MachiningOrigin>0.0,0.0</MachiningOrigin>
+      <ToolProfile>EndMill</ToolProfile>
+      <Nesting>
+        <NestMethod>None</NestMethod>
+      </Nesting>
+      <machineops>
+        <pocket Enabled="false">
+          <Name>SOURCE T1 Pocket intent (disabled)</Name>
+          <Tag>{"user_id":"rc01-source-t1","internal_id":"0eec4bc2-8327-41cc-9670-9f1b1ec84f0d"}</Tag>
+          <TargetDepth state="Value">-3</TargetDepth>
+          <DepthIncrement state="Value">1</DepthIncrement>
+          <StockSurface state="Value">0</StockSurface>
+          <RoughingClearance state="Value">0</RoughingClearance>
+          <ClearancePlane state="Value">5</ClearancePlane>
+          <SpindleDirection state="Value">CW</SpindleDirection>
+          <SpindleSpeed state="Value">12000</SpindleSpeed>
+          <VelocityMode state="Value">ExactStop</VelocityMode>
+          <WorkPlane state="Value">XY</WorkPlane>
+          <OptimisationMode state="Value">Standard</OptimisationMode>
+          <ToolDiameter state="Value">6</ToolDiameter>
+          <ToolNumber state="Value">1</ToolNumber>
+          <ToolProfile state="Value">EndMill</ToolProfile>
+          <PlungeFeedrate state="Value">60</PlungeFeedrate>
+          <CutFeedrate state="Value">300</CutFeedrate>
+          <MaxCrossoverDistance state="Value">0.7</MaxCrossoverDistance>
+          <primitive>
+            <prim>1</prim>
+          </primitive>
+          <StepOver state="Value">0.4</StepOver>
+          <StepoverFeedrate state="Value">Plunge Feedrate</StepoverFeedrate>
+          <MillingDirection state="Value">Conventional</MillingDirection>
+          <CollisionDetection state="Value">true</CollisionDetection>
+          <LeadInMove state="Value">
+            <LeadInType state="Value">Spiral</LeadInType>
+            <SpiralAngle state="Value">30.0</SpiralAngle>
+          </LeadInMove>
+          <FinalDepthIncrement state="Value">0.0</FinalDepthIncrement>
+          <CutOrdering state="Value">DepthFirst</CutOrdering>
+          <RegionFillStyle state="Value">InsideOutsideOffsets</RegionFillStyle>
+          <FinishStepover state="Value">0.0</FinishStepover>
+          <FinishStepoverAtTargetDepth state="Value">false</FinishStepoverAtTargetDepth>
+          <RoughingFinishing state="Value">Roughing</RoughingFinishing>
+        </pocket>
+        <pocket Enabled="false">
+          <Name>SOURCE T2 Pocket intent (disabled)</Name>
+          <Tag>{"user_id":"rc01-source-t2","internal_id":"83d9a798-5b61-4057-8fc0-28d42d084f1c"}</Tag>
+          <TargetDepth state="Value">-3</TargetDepth>
+          <DepthIncrement state="Value">1</DepthIncrement>
+          <StockSurface state="Value">0</StockSurface>
+          <RoughingClearance state="Value">0</RoughingClearance>
+          <ClearancePlane state="Value">5</ClearancePlane>
+          <SpindleDirection state="Value">CW</SpindleDirection>
+          <SpindleSpeed state="Value">12000</SpindleSpeed>
+          <VelocityMode state="Value">ExactStop</VelocityMode>
+          <WorkPlane state="Value">XY</WorkPlane>
+          <OptimisationMode state="Value">Standard</OptimisationMode>
+          <ToolDiameter state="Value">2</ToolDiameter>
+          <ToolNumber state="Value">2</ToolNumber>
+          <ToolProfile state="Value">EndMill</ToolProfile>
+          <PlungeFeedrate state="Value">60</PlungeFeedrate>
+          <CutFeedrate state="Value">300</CutFeedrate>
+          <MaxCrossoverDistance state="Value">0.7</MaxCrossoverDistance>
+          <primitive>
+            <prim>1</prim>
+          </primitive>
+          <StepOver state="Value">0.4</StepOver>
+          <StepoverFeedrate state="Value">Plunge Feedrate</StepoverFeedrate>
+          <MillingDirection state="Value">Conventional</MillingDirection>
+          <CollisionDetection state="Value">true</CollisionDetection>
+          <LeadInMove state="Value">
+            <LeadInType state="Value">Spiral</LeadInType>
+            <SpiralAngle state="Value">30.0</SpiralAngle>
+          </LeadInMove>
+          <FinalDepthIncrement state="Value">0.0</FinalDepthIncrement>
+          <CutOrdering state="Value">DepthFirst</CutOrdering>
+          <RegionFillStyle state="Value">InsideOutsideOffsets</RegionFillStyle>
+          <FinishStepover state="Value">0.0</FinishStepover>
+          <FinishStepoverAtTargetDepth state="Value">false</FinishStepoverAtTargetDepth>
+          <RoughingFinishing state="Value">Roughing</RoughingFinishing>
+        </pocket>
+        <pocket Enabled="true">
+          <Name>NATIVE T1 full target roughing</Name>
+          <Tag>{"user_id": "native-t1-rough", "internal_id": "7792b695-d9fd-459c-9a3a-401e7de4b475"}</Tag>
+          <TargetDepth state="Value">-3</TargetDepth>
+          <DepthIncrement state="Value">1</DepthIncrement>
+          <StockSurface state="Value">0</StockSurface>
+          <RoughingClearance state="Value">0</RoughingClearance>
+          <ClearancePlane state="Value">5</ClearancePlane>
+          <SpindleDirection state="Value">CW</SpindleDirection>
+          <SpindleSpeed state="Value">12000</SpindleSpeed>
+          <VelocityMode state="Value">ExactStop</VelocityMode>
+          <WorkPlane state="Value">XY</WorkPlane>
+          <OptimisationMode state="Value">Standard</OptimisationMode>
+          <ToolDiameter state="Value">6</ToolDiameter>
+          <ToolNumber state="Value">1</ToolNumber>
+          <ToolProfile state="Value">EndMill</ToolProfile>
+          <PlungeFeedrate state="Value">60</PlungeFeedrate>
+          <CutFeedrate state="Value">300</CutFeedrate>
+          <MaxCrossoverDistance state="Value">0.7</MaxCrossoverDistance>
+          <primitive>
+            <prim>1</prim>
+          </primitive>
+          <StepOver state="Value">0.4</StepOver>
+          <StepoverFeedrate state="Value">Plunge Feedrate</StepoverFeedrate>
+          <MillingDirection state="Value">Conventional</MillingDirection>
+          <CollisionDetection state="Value">true</CollisionDetection>
+          <LeadInMove state="Value">
+            <LeadInType state="Value">Spiral</LeadInType>
+            <SpiralAngle state="Value">30.0</SpiralAngle>
+          </LeadInMove>
+          <FinalDepthIncrement state="Value">0.0</FinalDepthIncrement>
+          <CutOrdering state="Value">DepthFirst</CutOrdering>
+          <RegionFillStyle state="Value">InsideOutsideOffsets</RegionFillStyle>
+          <FinishStepover state="Value">0.0</FinishStepover>
+          <FinishStepoverAtTargetDepth state="Value">false</FinishStepoverAtTargetDepth>
+          <RoughingFinishing state="Value">Roughing</RoughingFinishing>
+        </pocket>
+      </machineops>
+    </part>
+  </parts>
+</CADFile>

@@ -11,7 +11,7 @@ only if the user explicitly reports one.
 
 ## Environment and setup
 
-The declared and verified toolchain is Python >=3.9 and setuptools/wheel
+The declared toolchain is Python >=3.12 and setuptools/wheel
 (`pyproject.toml`). NumPy is declared directly in project metadata. `uv.lock` is
 intentionally ignored: supported-version checks resolve the currently compatible
 NumPy release independently on each interpreter. No `setup.py`, separate
@@ -24,7 +24,10 @@ uv sync --python 3.13
 ```
 
 This creates `.venv` and installs the project plus a currently compatible NumPy
-version. The command may require dependency downloads. After setup,
+version. Python 3.13 is the development default; the verification matrix covers
+3.12 and 3.13. Older interpreters are unsupported under the user-approved
+[2026-09-29 support policy](REVIEW.md#python-312-minimum-and-session-5-closure---2026-09-29).
+The command may require dependency downloads. After setup,
 explicitly select its interpreter for every command; activation is optional. If
 the IDE uses another project environment, set `$ProjectPython` to that interpreter
 instead. Confirm it before running checks:
@@ -135,6 +138,63 @@ a local import does not prove them.
 
 ## Packaging and supported Python validation
 
+The rest/V branch's refreshed package evidence is recorded in
+[session 5](REVIEW.md#branch-review-session-5---2026-09-29). Package acceptance
+requires installed behavior, not an editable-checkout import. For a new package
+change, use a unique ignored `output/<task>-<unique>/` directory and:
+
+1. Run `uv build --out-dir output/<task>-<unique>/dist`. Inspect both archives:
+   all declared modern/native/core/integration and legacy modules, MCP schema
+   and consumer template, license and metadata must be present. The sdist must
+   also contain the tracked regression fixture data and
+   `demos/mcp_client_acceptance_verify.py`, selected by `MANIFEST.in`; the wheel
+   does not ship the tests. Confirm that ignored session artifacts/cache files
+   were not included.
+2. Create separate environments with `uv venv --python <version> <env-path>`
+   for Python 3.12 and 3.13. Install the built wheel using
+   `uv pip install --python <env-path>/Scripts/python.exe <wheel-path>[planar,mcp]`.
+   Independently install `<sdist-path>[planar,mcp]` into another Python 3.12
+   environment. Both extras have the same Python minimum as the base library.
+   Do not use an editable install or add the source package to `PYTHONPATH`.
+3. From a working directory outside the checkout, verify version/dependency
+   metadata, modern/legacy construction, native Rect XML write/read, all supported
+   module imports and packaged MCP resources. Assert that imported package paths
+   belong to the selected environment's `site-packages`, including subprocesses
+   used by tests. The dormant legacy CLI module is outside the supported import
+   surface. Record interpreter, NumPy, Shapely/GEOS and MCP versions.
+4. Copy the tests, their tracked fixtures and the one demo helper into a task-owned
+   test snapshot containing **no runtime package source**. Put only this snapshot
+   on the test import path and run `-m unittest discover -s <snapshot>/tests -v`
+   with the installed interpreter, retaining the external working directory.
+   The snapshot root must contain an `output/` directory for protocol tests.
+   Route temporary files/logs into the task directory. Do not copy ignored native
+   observations to disguise the fresh-checkout coverage boundary.
+5. Independently install a base-only wheel on Python 3.12 without Shapely or MCP.
+   Run analytic feasible-center and native identity/XML checks; require backend normalization
+   to report `unsupported` and backend-dependent CAM import to fail for missing
+   `shapely`. This does not promise all CAM modules work without the planar extra.
+   Present-backend checks must still exercise the supported CAM consumers.
+
+Inspect skips by name. MCP-dependent service tests may skip only in environments
+without that extra; the metadata/model parity checks still run. A fresh checkout
+may skip the separate byte-bound B/C tabbed observation and retained actual M1
+post observation; synthetic tabbed stock/order/tamper regressions must run.
+Windows symlink privilege may be absent, while junction/reparse checks still run.
+Existing actual-post acceptance remains scoped to its recorded bytes; a skip is
+not renewed observation. Record and repair collection errors rather than treating
+them as optional tests. No controller runtime or physical acceptance follows from
+package verification. Metadata permits newer Python releases, but the declared
+verification matrix here is 3.12-3.13. For support-policy changes, prior complete
+regression evidence may be combined with fresh installed checks only after
+comparing runtime/test bytes and dependency versions; rerun every affected
+behavior and document exactly which evidence was reused. A source installation
+must independently exercise the distributed tests and fixtures. When clean wheel
+and sdist installs have identical runtime/test bytes and numerical dependencies,
+the same complete regression evidence may cover their unchanged behavior;
+fresh installation, asset/fixture and entry-point checks are still required.
+
+Historical baseline (before the rest/V branch):
+
 Verified 2026-09-10 using `uv 0.10.2`. The minimum is Python 3.9: Python 3.8
 was not available on the validation machine, and the separately shipped legacy
 package evaluates PEP 585 built-in generic annotations that require Python 3.9.
@@ -164,6 +224,32 @@ evidence, not a release location. `legacy_cambam_builder.cambam_builder_cli` is
 a dormant historical module with no declared entry point and is outside the
 supported import surface; no CLI or publishing behavior was added.
 
+### Native owner migration checks
+
+The canonical CamBam document modules are in `cambam_builder.native`; the old
+root module paths remain import-compatible. From the repository root, use the
+declared interpreter for the focused contract checks:
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -p test_entity_module_boundaries.py -v
+& $ProjectPython -m unittest discover -s tests -p test_native_owner_migration.py -v
+& $ProjectPython -m unittest discover -s tests -p test_region.py -v
+& $ProjectPython -m unittest discover -s tests -p test_mop_roundtrip.py -v
+& $ProjectPython -m unittest discover -s tests -p test_mop_context.py -v
+& $ProjectPython -m unittest discover -s tests -p test_copy_transfer.py -v
+```
+
+The migration test checks canonical/legacy import identity, two full XML cycles
+with a Region target, Pocket MOP identity/reference and Part-local stock offset,
+and a same-code-version pickle snapshot. Broaden to the full suite for changes to
+native owners or adapters. A wheel check must build into a unique ignored
+`output/` directory, install it with its declared NumPy dependency into an
+isolated environment and import from outside the repository source path. Verify
+both `cambam_builder.native` and old root paths resolve to the installed wheel,
+not to the checkout; the dated
+[review evidence](REVIEW.md#native-owner-consolidation---2026-09-24) records one
+such check.
+
 Reproduce the development environment with `uv sync`. Because the lockfile is
 local and ignored, dependency versions may advance over time. For a fresh
 artifact check, build with `uv build --out-dir <unique-output-directory>`, install
@@ -172,7 +258,2088 @@ tests to a directory outside the repository, and run discovery there with that
 environment's interpreter. This prevents the repository root from satisfying
 imports accidentally.
 
+### Detached nominal planar runtime checks
+
+Install the optional runtime backend with `uv sync --extra planar --python 3.13`
+(add `--extra mcp` when also exercising MCP). The base dependency set remains
+NumPy-only; `cambam_builder.planar` imports lazily and analytic feasible centers
+work without Shapely. Metadata pins the evaluated Windows-compatible releases:
+Shapely 2.1.2 for all supported Python versions.
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -p test_planar.py -v
+& $ProjectPython -m unittest discover -s tests -v
+```
+
+The focused suite verifies the detached API end to end and its explicit failure
+states. Without the extra, backend tests skip explicitly while analytic/optional-
+import tests still run; those skips are not backend acceptance. The runtime suite
+can also run from the repository root with the previously isolated evaluation
+interpreters below, without changing their installed dependencies. Nominal evidence
+and API exclusions are in the [specification](structure_spec.md#detached-nominal-planar-core).
+No manual CamBam validation is needed for this nonserialized geometry slice.
+
+### Directional stock section checks
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -p test_stock.py -v
+```
+
+Twenty backend-independent analytic tests exercise exact sweep/rest areas, directional
+containment under radius/position uncertainty, boundary contact and exact overrun
+rejection, collapsed/empty guarantees, large translations and unsupported inputs.
+Composition checks add independent overlapping capsule/disk-lens and disjoint area
+references, duplicate/order invariance, empty input, uncertain actual unions,
+monotonic stock prefixes, grid refinement and mismatched/altered-source rejection.
+The target-aware checks independently compare required rest and whole-stock state
+against a rectangular target with one island and supplied large/small-tool sweeps.
+They check crossing into uncleared target, protected-area preservation under
+uncertainty, exact wall tangency and rational overrun rejection.
+Section-motion checks add ordered cutting and explicit entry/travel verification
+against prior guaranteed removal or strictly outside-stock space. The independent
+cleanup reference checks pointwise residual membership; rejected cases include
+uncleared connectors, an island crossing, forged future clearance, and a tiny
+uncertainty overrun. This remains a fixed-Z section certificate: vertical access,
+tool changes and other heights are unverified.
+No CamBam manual validation adds evidence: this slice has no serialization, path
+generation or execution claim. Physical uncertainty limits remain caller inputs.
+
+### RC01 standalone generated-sequence checks
+
+Install the already declared optional planar backend (`uv sync --extra planar
+--python 3.13`), then run from the repository root:
+
+```powershell
+& $ProjectPython -m unittest discover -s tests -p test_rc01.py -v
+& $ProjectPython -m unittest discover -s tests -p test_stock.py -v
+& $ProjectPython -m compileall -q cambam_builder
+git diff --check
+```
+
+The RC01 suite checks deterministic ordered T1/T2 motion, exact all-height
+access/component and process rejection, independent three-slab residual bounds,
+and missing-bottom-layer rejection. A passing result is synthetic standalone
+evidence only. GEOS powers the conservative residual-location check; its
+polygon sagitta is below 0.000001 mm, while floating topology is not a formal
+interval proof. Native input, explicit Engrave motion, native Pocket motion and
+physical machining have separate [RC01 gates](REST_MACHINING_PLAN.md#rc01-standalone-and-cambam-output-gates).
+No manual CamBam check adds evidence to this standalone implementation itself.
+
+### Bounded pointed-cone slot checks
+
+From the repository root, using the declared project interpreter:
+
+```powershell
+& $ProjectPython -m unittest tests.test_vcarve_slot -v
+& $ProjectPython -m compileall -q cambam_builder/cam_core tests/test_vcarve_slot.py
+git diff --check
+```
+
+The focused suite checks finite plunge/cut/retract and above-stock links for the
+12 x 4 mm slot, exact 2 mm cone guard, full-height containment rejection,
+independent row-integrated section residuals, analytic V and capped-depth
+references, and volume enclosures. No CamBam file is generated. Manual CamBam
+validation adds no evidence to this detached geometric slice; it remains a
+conditional ideal-stock calculation, not a production toolpath or native output
+acceptance.
+
+### Shared RC01/cone motion and stock replay checks
+
+From the repository root, using the declared project interpreter:
+
+```powershell
+& $ProjectPython -m unittest tests.test_rc01 tests.test_vcarve_slot tests.test_mixed_replay tests.test_rc01_native tests.test_rc01_stock_authority -v
+& $ProjectPython -m compileall -q cambam_builder tests/test_mixed_replay.py
+git diff --check
+```
+
+The mixed test checks a single ordered source/motion fingerprint and stock cut
+prefix across RC01 T1, T2 and the translated cone slot. It checks independent
+residual membership before and after the cone cut, and rejects stale source,
+removed cone entry, low link and missing tool change. The adjacent suites
+retain each original target, access and numerical residual oracle; the native
+RC01 checks guard its existing adapter consumers. This is detached synthetic
+evidence only. At that checkpoint, a manual CamBam check added no evidence;
+the posted cone output audit is the separate next section.
+
+### Convex closed-region rest and pointed cleanup checks
+
+From the repository root with the declared interpreter:
+
+```powershell
+& $ProjectPython -m unittest tests.test_convex_rest tests.test_variable_vcarve tests.test_mixed_replay tests.test_vcarve_slot -v
+& $ProjectPython -m compileall -q cambam_builder/cam_core tests/test_convex_rest.py
+git diff --check
+```
+
+The triangle case checks exact original and pure-rest section areas at 0, 1 and
+2 mm, plus a separate midpoint row integration of the final variable-radius
+cone sweep within 0.002 mm². It checks ordered prior/cleanup prefixes, a
+prior-cleared descent, partial completion, stale source/motion, invalid prior,
+overcut, unsupported polygon/tool and low-link rejection. This is detached
+synthetic geometry only. No manual CamBam validation adds evidence for this
+slice; source normalization, preview and emitted execution remain distinct
+future gates.
+
+### Native triangle source, preview and post gate
+
+The bounded native consumer is `integrations.cambam.native_convex_rest`. From
+the repository root, build a fresh synthetic case with the declared interpreter:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_convex_rest output/native-convex-rest-NEW
+& $ProjectPython -m unittest tests.test_native_convex_rest tests.test_convex_rest -v
+```
+
+For an existing accepted triangle, provide both its `.cb` and matching
+source-SHA-bound supplied prior trace. The generated example's `prior.json`
+shows the exact schema. Existing source without `--prior` is rejected:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_convex_rest output/native-convex-rest-EDITED --source path/to/source.cb --prior path/to/prior.json
+```
+
+The retained synthetic delivery is `output/native-convex-rest-20260924-04/`.
+Its `source.cb`, `prior.json`, `preview/triangle-preview.cb` and
+`explicit/triangle-explicit.cb` are separate files. The source SHA-256 is
+`fd811374e7cfb12783d25bc90f937f14167bee524fc8b18176f50b84dd6fc79d`;
+the prior JSON is `d3af3561df9b18bf91283dc0939223c1628a6a5f272d04918d4b7b7aac95c1dd`;
+the preview is `7da156b420a7db4f1267f66db85dab0efc353696ee664592cdf02f40c85d0a68`;
+and the explicit candidate is
+`e3bf022ab0f3cabfa78906e5466d714dc4644d24d36469c4b6fddae95c841c60`.
+The manifest pins these hashes, the prior and full motion fingerprints, every
+expected motion item and section residuals. The prior tip enters at `(3,2,1)`,
+plunges to `(3,2,-1.2)` and retracts. The generated cleanup descends through
+that cleared column, cuts from `(3,2,-1.2)` to `(4,2,-2)`, then retracts.
+Pure rest at depths 0/1/2 mm is
+`43.476106579/21.207669627/5.333333333` mm²; final partial rest is
+`35.160992224/18.089501744/5.333333333` mm² (1e-9 mm² comparison for the
+manifest calculations).
+
+CamBam validation adds two pieces of evidence. First open the **preview**
+`.cb` in CamBam Plus 1.0, confirm millimetres, the three original Region
+vertices, stock XY `(-1,-1)` to `(13,9)` and Z `-3` to `0`, and that the enabled Engrave
+targets only the generated XYZ cleanup line. Generate its toolpath and report
+whether the displayed segment visibly slopes from Z=-1.2 to Z=-2; this checks
+preview usability only. Then open the **explicit** `.cb` separately with
+**Default** postprocessor and **Default mm** profile, confirm only its
+Drill/CustomScript is enabled, generate toolpaths and post it as
+`explicit/triangle-explicit.nc`. Do not post the preview. Preserve all four
+pinned files unchanged. The declared setup assumes the tip starts at
+`(-10,-10,+5)` and uses test-only T3, 90-degree pointed 3 mm radius/length,
+CW 12000 rpm, entry 60 and cut/retract 300 mm/min; the post does not prove
+physical setup.
+
+Audit the actual CamBam-produced NC from the root:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_convex_rest output/native-convex-rest-20260924-04/expected-motion.json output/native-convex-rest-20260924-04/explicit/triangle-explicit.nc
+```
+
+Pass requires `bounded_triangle_post_pass`, the exact candidate hash above,
+all ten ordered events/moves, `prior` then `cleanup` cut prefixes, and the
+stated pure/final rest values. Any missing/extra move, feed or coordinate,
+changed source/prior/candidate, unsupported post word or replay failure is a
+fail or unverified result. Report preview slope pass/fail, source/stock/units
+pass/fail, the generated NC path and audit result. Keep the files until that
+acceptance is recorded; there is no production or controller claim.
+
+The user generated the retained `explicit/triangle-explicit.nc` in CamBam
+Plus 1.0 and observed its enter/retract/re-enter/sloped-cut/retract sequence in
+CAMotics. The posted file SHA-256 is
+`2cfe5e2c9cda871342f7b229fd4a77658a800b7af01dc36746adedc03a3aea5a`.
+The command above returned `bounded_triangle_post_pass`: all ten items matched,
+the parsed post replayed `prior` then `cleanup`, and the final section rest
+values match the manifest. CamBam did not show the CustomScript motion as a
+toolpath; inspect the separate preview file for a visible generated path.
+`preview/triangle-preview.nc` was also parsed and contains the exact F300
+segment `(3,2,-1.2)` to `(4,2,-2)`. The user confirmed the preview's sloped
+polyline is visible in CamBam. They confirmed the source triangle in the
+millimetre drawing and the Part's offset `(-1,-1)`, size `(14,10,3)` and
+stock surface Z=0, putting the global stock bottom at Z=-3. This completes
+the bounded native display and posted-motion acceptance. Do not repeat the
+accepted explicit post unless the candidate,
+source, prior or output setup changes. Physical machining remains unverified.
+
+### M1 polygonal Region rest and smaller-endmill output gate
+
+Install the optional planar backend (`uv sync --extra planar`) and use the
+declared project interpreter. The retained synthetic fixture and posted
+CamBam candidates are under `output/m1-polygon-20260924-04/`. `source.cb`
+has the eight-edge letter-like Region and triangular hole. `prior.json`
+contains the complete supplied T1 motion and its exact source binding.
+`expected-motion.json` pins the source, supplied motion and all candidates.
+The preview and execution files are separate:
+
+- `preview/m1-preview.cb`: two final-level Z=-8 T2 contour centerlines,
+  one at the shell and one at the hole, as a visual Engrave. The full
+  four-level sequence is in the explicit candidate, not this preview.
+- `explicit/m1-explicit.cb`: one literal T1/T2 Drill/CustomScript execution
+  carrier; its displayed Drill toolpath is not its executable motion.
+- `native/m1-native.cb`: independent original-Region T1/T2 Pocket trial.
+
+For another existing source, supply both its `.cb` and matching source-bound
+`prior.json`; an absent prior fails rather than inferring Pocket removal:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_polygon_rest output/m1-polygon-NEW --source path/to/source.cb --prior path/to/prior.json
+& $ProjectPython -m unittest tests.test_polygon_rest tests.test_rest_vcarve_acceptance_fixtures -v
+```
+
+The retained source SHA-256 is
+`be092ec2827810ca0c47f6bc7a9a901a2d9fa2d609b096599261995bf1e5947f`;
+the supplied prior is
+`875becc966121baa362299afe756e12fb7159257e2f03f03110f25cd0ac3c98c`.
+The revised explicit candidate is
+`3691b0221882247ca3b9be577dd7f1b4d5fa5138a9523bf20b8ef445dbd44973`;
+the native candidate is
+`4b2140b4d317511cc798cfa6acadfeee8cbfa02748974f9506129fbc38811460`.
+The latter is byte-identical to the already posted native trial; no native
+repost is needed. Do not modify the pinned files. The synthetic setup assumes
+millimetres, original Region area 1532 mm², Part stock X=-26..26, Y=-2..62,
+Z=-8..0, initial tip (-30,-10,+5), T1 diameter 5, T2 diameter 2,
+10 mm cutting length, 2 mm axial levels to Z=-8, CW 12000 rpm, feed 60
+for entry and 300 mm/min for cut/retract. The T1 allowance is 0.5 mm.
+These are test tokens, not real material cutting parameters.
+
+Manual validation adds evidence beyond automated checks. In CamBam Plus 1.0,
+open the **preview** and confirm the source shell/hole, stock and a visible
+T2 centerline after generating toolpaths; do not post this file. Open the
+**explicit** file separately, select `Default` postprocessor and `Default mm`
+profile, confirm only the literal Drill MOP is enabled, generate toolpaths and
+post to `explicit/m1-explicit.nc`. Return that exact NC file and report
+source/stock/units and whether both preview contours are visible. The
+CustomScript motion may be absent from CamBam's toolpath display; its actual
+post is the execution evidence.
+
+Audit both posts from the repository root:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_polygon_rest output/m1-polygon-20260924-04/expected-motion.json output/m1-polygon-20260924-04/explicit/m1-explicit.nc --route explicit
+& $ProjectPython -m cambam_builder.integrations.cambam.native_polygon_rest output/m1-polygon-20260924-04/expected-motion.json output/m1-polygon-20260924-04/native/m1-native.nc --route native
+```
+
+The revised explicit gate returned `bounded_m1_explicit_post_pass` for actual
+Default NC SHA-256
+`e214571c55c67cb525a0a2d17a8b0508b9aa11da776e97a0c138b866ee172ba5`.
+It verified all 2,692
+ordered items, `prior` then `cleanup` stock prefixes, and the same section
+rest interval at depths 1/3/5/7 mm: rough
+137.218201–137.230366 mm² and final 1.313264–1.318529 mm². The
+independent finite-tool lower limit is 1.190659933 mm²; the allowed final
+upper limit is 1.690659933 mm². Inflated nominal protected overcut and
+residual outside the ideal/original-boundary 0.05 mm envelope must be zero.
+The separate native gate needs `bounded_m1_native_post_pass` with no motion
+findings and the same final upper budget. Its Pocket strategy may emit
+different coordinates from the explicit trace; it cannot borrow that trace's
+certificate. The actual retained native post has SHA-256
+`c675f00cbaf050c3b7776d8ecab45164a403419db71d473d3ee8d85b22471d05`.
+Its area passes, 180 low vertical rapids have prior-cut witnesses and
+boundary shortfall is at most 0.000397 mm within the declared 0.001 mm
+backend tolerance, but 12 T2 feed descents have no T1-cleared column.
+The native command returns `native_motion_gate_failed`. The selected M1 route
+is the audited explicit post; the native Pocket route is excluded. Do not
+repeat the native post or iterate minor Pocket controls. The posted explicit
+NC contains the fixture's supplied T1 raster, with 208 long horizontal feed
+segments, followed by the two-contour T2 cleanup. CamBam does not render the
+CustomScript motion as its generated toolpath; inspect the NC in CAMotics for
+the full sequence. The preview Engrave shows only the final-depth T2 contours.
+For A01, integrated rough rest is 1097.74561–1097.84293 mm³ and final rest
+is 10.50611–10.54823 mm³, conditional on the section geometry backend.
+The synthetic T1 raster is a stock-proof fixture, not a recommended machining
+strategy. The user's revised preview display and source/stock UI observations
+were not separately reported; strict file reimport and actual NC acceptance
+are recorded independently.
+Neither gate is controller or physical machining acceptance. The Default
+post does not encode the incoming machine position, and GEOS topology is not
+a formal numerical interval proof.
+
+### M2 curved Region rest and smaller-endmill output gate
+
+Use `.venv\Scripts\python.exe` from the repository root with the optional
+planar backend installed. The tracked acceptance inputs and numeric limits are
+`M2_*` in [the rest corpus](../tests/fixtures/rest_vcarve_acceptance.json).
+The three prepared, ignored synthetic jobs are:
+
+| Case | Directory | Analytic opening area | Rough/final area interval at Z=-1 and -3 mm |
+| --- | --- | ---: | ---: |
+| Annulus | `output/m2-annulus-20260925-02/` | 241.902634242 mm² | 17.96728–18.10760 / 0.03366–0.17300 mm² |
+| Mixed line/arc concave Region with circular hole | `output/m2-mixed-20260925-01/` | 631.292105800 mm² | 35.06282–35.31860 / 0.64979–0.90388 mm² |
+| Translated/reflected mixed Region | `output/m2-reflected-20260925-01/` | 631.292105800 mm² | 35.06282–35.31860 / 0.64979–0.90388 mm² |
+
+Each directory contains exact `source.cb`, `prior.json`, separate
+`preview/m2-preview.cb` and `explicit/m2-explicit.cb`, and a hash-guarded
+`expected-motion.json`. The source preserves native bulges; the reflected
+case retains a native Region transform. The preview Engrave shows only final
+depth T2 paths. The literal Drill/CustomScript carries all supplied T1 and
+generated T2 motion, including entries, high links and retracts. Its displayed
+Drill path does not show the CustomScript motion. T1 raster/contour motion is
+a stock-proof fixture, not a production roughing recommendation. The declared
+millimetre setup uses stock Z=0..-4, T1/T2 diameters 3/1.5 mm, both cutting
+lengths 8 mm, CW 12000 rpm, F60 entries, F300 cuts/retracts and a +5 mm tip
+clearance. These are test tokens, not material-safe feeds or controller output.
+The CustomScript post checks literal-motion transport through CamBam; it does
+not show that CamBam independently planned the same path. The separate Engrave
+post checks CamBam's native interpretation of the generated T2 preview
+centerlines. Neither preview operation supplies the T1/entry/link certificate.
+The analytic arc area and independently fixed residual budgets, source-bound
+stock replay, and complete actual explicit post provide that bounded result.
+
+Rebuild a new isolated job with an exact existing `.cb` and matching supplied
+motion, then run focused checks:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_curved_rest output/m2-new-UNIQUE --source path/to/source.cb --prior path/to/prior.json
+& $ProjectPython -m unittest tests.test_curved_rest tests.test_polygon_rest tests.test_region -v
+```
+
+The source alone cannot assert T1 removal; a missing or stale `prior.json`
+fails. Generated area and volume are conditional GEOS bounds around an
+analytic circular-arc source. The 0.001 mm maximum chord sagitta and explicit
+inner/outer Regions are recorded in each manifest. The curved narrow-annulus
+fixture rejects a tool wider than its 0.8 mm radial throat; replay also rejects
+cuts across protected holes. The independent source-area and residual budgets
+are in the corpus, and a posted file must satisfy the same budget.
+
+For each of the three jobs, open its `source.cb` and `preview/m2-preview.cb`
+in CamBam Plus 1.0. Confirm millimetres, the native curved shell/hole and Part
+stock, and visible generated T2 centerlines at Z=-4. For the reflected job,
+confirm its curved Region appears at drawing X=24..56 and Y about -5..17.
+Then open `explicit/m2-explicit.cb` separately, choose **Default** postprocessor
+and **Default mm** profile, confirm only its literal Drill is enabled, generate
+toolpaths and post to `explicit/m2-explicit.nc`. Inspect the complete T1/T2
+motion in an NC viewer: every low cut stays in the opening and every link
+retracts to +5 mm. The original source and expected files must stay unchanged.
+
+Audit each actual file from the repository root:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_curved_rest output/m2-annulus-20260925-02/expected-motion.json output/m2-annulus-20260925-02/explicit/m2-explicit.nc
+& $ProjectPython -m cambam_builder.integrations.cambam.native_curved_rest output/m2-mixed-20260925-01/expected-motion.json output/m2-mixed-20260925-01/explicit/m2-explicit.nc
+& $ProjectPython -m cambam_builder.integrations.cambam.native_curved_rest output/m2-reflected-20260925-01/expected-motion.json output/m2-reflected-20260925-01/explicit/m2-explicit.nc
+& $ProjectPython -m cambam_builder.integrations.cambam.native_curved_rest output/m2-annulus-20260925-02/expected-motion.json output/m2-annulus-20260925-02/preview/m2-preview.nc --preview
+& $ProjectPython -m cambam_builder.integrations.cambam.native_curved_rest output/m2-mixed-20260925-01/expected-motion.json output/m2-mixed-20260925-01/preview/m2-preview.nc --preview
+& $ProjectPython -m cambam_builder.integrations.cambam.native_curved_rest output/m2-reflected-20260925-01/expected-motion.json output/m2-reflected-20260925-01/preview/m2-preview.nc --preview
+```
+
+Pass requires `bounded_m2_curved_post_pass` and
+`m2_native_preview_centerlines_pass` for all three unchanged candidates,
+zero inflated protected overcut, matching every ordered event/move and the
+manifest's stock prefixes and residual intervals. Report each NC path, audit
+result and the source/stock/preview observations. A constructed NC regression
+tests the parser but is not actual CamBam acceptance. Controller and physical
+machining acceptance remain separate.
+
+**2026-09-25 actual CamBam Plus 1.0 acceptance.** The user reported visible
+curved preview paths in CamBam, generated all three preview and explicit NC
+files, and confirmed that CustomScript motion is absent from the Drill
+toolpath display. Strict native reimport checked the original Region bulges,
+Part stock and candidate source identities. All three preview posts passed the
+separate 4-decimal T2 centerline comparison at Z=-4; the annulus has 2 paths
+with 214/502 vertices, and both mixed cases have 2 with 192/442 vertices.
+All three explicit Default posts passed exact ordered event/move comparison,
+source/candidate hashes, stock replay and the fixed residual/overcut budgets:
+
+| Case | Preview post SHA-256 | Explicit post SHA-256 | Ordered items | Final area interval at Z=-1/-3 mm |
+| --- | --- | --- | ---: | ---: |
+| Annulus | `4f19ee35e7ca9763c8aaced736e70ac2caa0b798ab9cdb325e5f06e47ab84080` | `c7fb042a63380f2c94970aed2b645f627511e527b975273eb29e12690e4fecf5` | 2,984 | 0.033661–0.172997 mm² |
+| Mixed | `0851e8774b1feede38f1e3853f09ef619e28536ecff5a71a1800049602549988` | `a8499c356958d8d849556841ca8750172e662faf30fcc4c5f4b4fb1e84cff6e2` | 2,688 | 0.649797–0.903873 mm² |
+| Reflected | `718e45c8b8cee4af17f8ef79735e7a2db11b4367ab17c39793bc8b43632bb375` | `879bc3c0e2416e1e75d2d8cebc39f2e3480de406b6a21ed9f9cdc4a4243a9b4c` | 2,684 | 0.649797–0.903873 mm² |
+
+The two mixed v1 manifests retained fingerprints incorporating an older replay
+target representation. Their source hashes, every supplied T1 item, generated
+T2 item, script line, analytic area and residual bound match exactly. The
+legacy acceptance branch permits that fingerprint drift only when the supplied
+T1 items equal the source-derived synthetic fixture; other supplied traces
+still need a current exact fingerprint. A 0.1 mm preview NC coordinate tamper
+returned `deviation`. No physical or controller acceptance is implied.
+
+### M3 Region V paths and native output gate
+
+The ignored `output/m3-v-suite-20260925-02/` holds seven source-bound jobs.
+Earlier `m3-v-suite-20260925-01` files were standalone V probes and are not
+the M3 acceptance candidates; use the `-02` combined jobs below.
+The seven original explicit NC posts passed their complete-stream gate.
+Six original preview posts exposed shallow CamBam crossover feeds, so the
+corrected preview candidates are under
+`output/m3-v-preview-retract-20260925-01/`. They use the same source, prior,
+tool and path geometry, with Engrave `MaxCrossoverDistance=0`. Preserve the
+original exports as failure evidence. All fourteen corrected actual posts
+passed their separate gates; the user also exported fresh explicit posts.
+Each has `source.cb`, `prior.json`, `preview/m3-preview.cb`,
+`explicit/m3-explicit.cb` and `expected-motion.json`. The first six pair the
+accepted A01 letter and M2 annulus with pointed, 0.25 mm flat-tip and 0.5 mm
+tangent rounded-tip V tools; `mixed-rounded` adds the accepted concave line/arc
+shell and circular hole. All use a 2 mm capped inward V recess, 1 mm raster
+stepover, 0.01 mm center clearance margin, 2 mm tip-Z change per XY
+millimetre maximum cut slope and +5 mm tip clearance. The
+included angles are 90/90/60 degrees respectively. Tool maximum radius is
+4 mm and cutting length 3 mm. A separate source-bound synthetic T1 trace
+uses a 1 mm cylinder and cuts only the interior of the V target before T3.
+T1 and T3 use CW 12000 rpm, F60 entries and F300 cuts/retracts. These are
+test tokens, not material or controller settings. The
+original source Region and Part stock must stay unchanged.
+
+| Job suffix | Section Z=-1 residual interval, mm² | Generated literal moves |
+| --- | ---: | ---: |
+| `letter-pointed` | 3.95018–4.36033 | 2368 |
+| `letter-flat` | 4.90681–6.19275 | 2281 |
+| `letter-rounded` | 4.17639–4.80768 | 2316 |
+| `annulus-pointed` | 1.27043–1.53412 | 453 |
+| `annulus-flat` | 1.26181–1.51851 | 434 |
+| `annulus-rounded` | 1.31719–1.52394 | 437 |
+| `mixed-rounded` | 2.64310–4.19296 | 924 |
+
+These are conditional GEOS bounds from the four-decimal candidate paths;
+every inflated nominal protected-overcut area at Z=-1 is zero. At Z=-1 the
+prior upper residual is 626.47571 mm² for letter pointed/flat, 587.12897 mm²
+for letter rounded, 112.36541 mm² for annulus pointed/flat, 103.12817 mm² for
+annulus rounded and 260.20373 mm² for mixed rounded. Minimum prior-to-V gains
+are 500/90/200 mm² for letter/annulus/mixed. The independent
+upper budgets are 5/7/5 mm² for the letter, 2 mm² for every annulus profile
+and 5 mm² for mixed rounded. The annulus rounded eight-slab volume upper bound
+is 80 mm³. The tracked [M3 corpus](../tests/fixtures/rest_vcarve_acceptance.json)
+owns those criteria and the narrow curved flat-tip infeasibility fixture.
+The [core contract](structure_spec.md#m3-bounded-region-v-path-and-native-candidate-contract)
+explains the finish target and numeric limits. The supplied T1 raster is a
+stock-proof fixture, not a production roughing recommendation. The result
+does not claim a square-wall flat-floor finish.
+
+Run the focused automated checks from the root:
+
+```powershell
+& $ProjectPython -m unittest tests.test_v_region tests.test_native_v_region tests.test_rest_vcarve_acceptance_fixtures -v
+```
+
+To reproduce the accepted native inspection, for each suffix above open
+`output/m3-v-preview-retract-20260925-01/<suffix>/preview/m3-preview.cb`
+in CamBam Plus 1.0.
+The user's original seven previews already established visible source Regions,
+shell/hole edge paths and variable-Z fill paths; the corrected candidates have
+the same source and plan fingerprints, so that check need not be repeated.
+Generate toolpaths and post with **Default** / **Default mm** to
+`preview/m3-preview.nc` beside that corrected `.cb`. The corrected
+`explicit/m3-explicit.cb` was also posted with Default mm. Its
+displayed Drill path need not show the CustomScript cuts; the NC contains the
+complete T1/T3 motion: no XY rapid at Z<=0, no cut outside the Region or below
+Z=-2, and a +5 mm retract between disconnected paths. The proposed feed and
+spindle values need no physical machining trial for this gate.
+
+Audit the fourteen corrected posts from the repository root:
+
+```powershell
+$Names = 'letter-pointed','letter-flat','letter-rounded','annulus-pointed','annulus-flat','annulus-rounded','mixed-rounded'
+foreach ($Name in $Names) {
+  $Job = Join-Path 'output/m3-v-preview-retract-20260925-01' $Name
+  & $ProjectPython -m cambam_builder.integrations.cambam.native_v_region preview "$Job/expected-motion.json" "$Job/preview/m3-preview.nc"
+  & $ProjectPython -m cambam_builder.integrations.cambam.native_v_region audit "$Job/expected-motion.json" "$Job/explicit/m3-explicit.nc"
+}
+```
+
+Each corrected preview returned `m3_v_preview_centerlines_match`; each
+corrected explicit post returned `bounded_m3_v_post_pass`. A parser failure,
+`deviation`, changed hash, missing segment or unsafe link fails that job.
+Record the fourteen combined audit statuses, including any first failing
+line/reason. The original seven visible preview observations remain accepted;
+the corrected jobs retain their source and plan fingerprints. The synthetic
+post test checks the parser only, while these actual CamBam posts establish
+the bounded native gate. Controller and physical machining acceptance are
+separate. Exact accepted NC hashes are in the
+[dated review](REVIEW.md#m3-corrected-native-output-acceptance---2026-09-25).
+
+To regenerate a new isolated job or audit one file:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_v_region build output/m3-new-UNIQUE --case annulus --profile rounded
+& $ProjectPython -m cambam_builder.integrations.cambam.native_v_region audit output/m3-new-UNIQUE/expected-motion.json output/m3-new-UNIQUE/explicit/m3-explicit.nc
+```
+
+For an existing native source, pass both `--source path/to/source.cb` and
+`--prior path/to/prior.json`; a source alone has no removal authority.
+
+### Bounded cone CustomScript carrier and posted replay
+
+Build one new ignored directory from the repository root:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.cone_script output/cone-script-NEW
+& $ProjectPython -m unittest tests.test_cone_script tests.test_vcarve_slot tests.test_mixed_replay -v
+```
+
+The current prepared file is
+`output/cone-script-20260924-01/V-cone.cb` (SHA-256
+`59cd263d5dafac98a5f2dd794ea30906545118e3ebf3631d015e8fed62143150`).
+`source.cb` is the synthetic Rect/Part input; `expected-motion.json` gives the
+exact nine expected items, six literal NC lines, process values, hashes and
+analytic residual references. Both `.cb` files strict-reimport. The ignored
+`refresh_expected.py` updated only that manifest to the final complete-item
+format after the candidate was generated; it did not edit the candidate.
+
+In CamBam Plus 1.0, open `V-cone.cb`, use the **Default** postprocessor and
+**Default mm** profile, generate toolpaths (Ctrl+T), and post G-code (Ctrl+W)
+to `V-cone.nc` in that same directory. Do not edit either `.cb`. The expected
+motion begins with T3/M6 and M3/S12000 at the declared setup tip
+(-10,-10,+5), rapids to (2,2,+5), feeds to (2,2,+1), plunges to (2,2,-2),
+cuts to (10,2,-2), feeds up to (10,2,+1), rapids back to setup, then stops.
+The `expected-motion.json` file is the complete coordinate/feed/event reference.
+
+Audit the **CamBam-produced** file with:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.cone_script output/cone-script-20260924-01/expected-motion.json output/cone-script-20260924-01/V-cone.nc
+```
+
+Pass requires `bounded_emitted_cone_motion_pass`, nine matched posted items,
+one `slot` prefix with two ideal cut sweeps, and residual areas at depths
+0/1/2 of 3.4336293856408275 / 0.8584073464102069 / 0 mm2 (floating
+comparison tolerance 1e-9 mm2). Extra, missing, reordered or changed moves,
+feeds, tool/spindle events, low rapid and protected-wall overcut fail. The
+Default post does not encode initial machine position; physically confirm the
+declared setup separately before any machine use. The result is an ideal-stock
+output observation, not physical machining acceptance.
+
+The user posted the prepared file on 2026-09-24 and confirmed CamBam displayed
+the Drill toolpath after closer inspection. Its Ctrl+W Default post emitted
+all six literal motion blocks. `V-cone.nc` SHA-256 is
+`1c4281c930e26fade89d5fc75064a36908466f6ffa3ed96d2b5d30b390761cd4`.
+The command above returned `bounded_emitted_cone_motion_pass`: nine items,
+one `slot` prefix/two cone sweeps, partial target completion and the exact
+0/1/2 mm residual references. No repeat CamBam export is needed for this gate.
+
+### Bounded variable-depth V groove carrier and posted replay
+
+From the repository root, using the declared project interpreter:
+
+```powershell
+& $ProjectPython -m unittest tests.test_variable_vcarve tests.test_variable_cone_script tests.test_cone_script tests.test_vcarve_slot tests.test_mixed_replay -v
+& $ProjectPython -m cambam_builder.integrations.cambam.variable_cone_script output/variable-v-NEW
+```
+
+The prepared file is `output/variable-v-20260924-01/V-variable.cb`, SHA-256
+`5f58068f39ffcaef6cf40147750a62f4e0be55d5580a42c90a01c9ae26d064b0`.
+Its strict-reimported `source.cb`, SHA-256
+`652a830b75ee19fb10b860cf14f796ed85ad1a0115a2d4157ce3d144262b1d2c`,
+contains the exact XYZ finish-spine guide and stock. The ignored
+`expected-motion.json` pins the source/candidate and all nine expected items.
+The guide runs from (0,2,-1) to (12,2,-2.5); the one generated sloped cut runs
+from (2,2,-1.25) to (10,2,-2.25). Both use the same 90-degree pointed-cone
+depth law. The finite ends remain partial target stock.
+
+To repeat the accepted output gate, open `V-variable.cb` in CamBam Plus 1.0,
+select **Default** postprocessor and **Default mm** profile, generate toolpaths
+(Ctrl+T), then post G-code (Ctrl+W) to `V-variable.nc` in the same directory.
+Leave the prepared `.cb` files unchanged. The Drill MOP intentionally targets
+the one-point script anchor; the sloped XYZ Pline is a finish-target guide and
+does not drive a native V-carve MOP. The posted bytes are the motion authority.
+The script's six
+lines and expected ordered roles are in `expected-motion.json`. In particular,
+the cut must feed from Z=-1.25 to Z=-2.25 while X moves from 2 to 10. The
+test-only feed tokens are 120 approach, 60 plunge and 300 cut/retract mm/min.
+
+Audit the **CamBam-produced** file with:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.variable_cone_script output/variable-v-20260924-01/expected-motion.json output/variable-v-20260924-01/V-variable.nc
+```
+
+Pass requires `bounded_emitted_variable_v_motion_pass`, all nine exact emitted
+items, one `variable-v` prefix with two cone sweeps, and ideal section rest at
+depths 0/1/1.5/2/2.5 mm of 15.091265791880026 / 7.028684027518187 /
+4.21460291488107 / 1.8062583920918873 / 0 mm2, each within 1e-9 mm2 of
+the recorded analytic calculation. Independent row integration agrees within
+0.0005 mm2. Any extra, missing, reordered or changed event, coordinate, G0/G1
+role or feed fails. The post does not encode incoming physical machine position;
+tip (-10,-10,+5) is a declared setup assumption. No physical machining is
+authorized by this ideal geometric test.
+
+The user exported the prepared file on 2026-09-24. The actual `V-variable.nc`
+SHA-256 is `3d37cd3ecd5c69efbdb3ddab381f283dda2352d470a3733e9477606da0e6c570`.
+The command above returned `bounded_emitted_variable_v_motion_pass`, nine
+matched items, one `variable-v` prefix/two sweeps and the exact five residual
+references. No repeat post is needed for this bounded Default/Default mm gate.
+The user reported the one-point Drill target; that is the declared explicit
+carrier relationship, not native sloped-Pline toolpath generation.
+
+### Bounded variable-depth XYZ Engrave preview and post probe
+
+The one candidate is
+`output/variable-v-engrave-20260924-01/V-variable-engrave.cb` (SHA-256
+`0b7d2e3d42a04785b2989f4b19b0d43916ce09452f62f76d5182c3fb141a5585`).
+Its `source.cb` (SHA-256
+`aea8757a00e0e4fcc3aa0bd5b43005332c3c4635d29231b7f81265271c19bf4a`)
+holds the original target spine. The candidate adds the generated cut as a
+different XYZ Pline and enables one Engrave MOP targeting **only** that cut.
+`expected-motion.json` pins the source/candidate hashes, plan/motion
+fingerprints, complete nine-item reference and five rest-area references.
+TargetDepth=0, OptimisationMode=None and DepthIncrement=3 are explicit. The
+synthetic Default wrapper passes the whole-motion audit; a wrapper with the
+correct sloped cut but missing approach/retract fails. This establishes local
+adapter behavior only. The later CamBam preview and native post result are
+recorded below.
+
+In CamBam Plus 1.0, open the candidate above with **Default** postprocessor
+and **Default mm** profile. Select `CANDIDATE variable-depth XYZ Engrave`,
+generate toolpaths (Ctrl+T), and inspect the XZ view. Report whether the
+Engrave toolpath contains exactly one sloped cutting segment from
+(2,2,-1.25) to (10,2,-2.25), with no extra depth pass. Then post G-code
+(Ctrl+W) to `V-variable-engrave.nc` in the same directory. Leave the `.cb`
+and manifest unchanged. This is synthetic evidence gathering; do not run the
+post on a machine. The original target guide is separate from the selected
+cut Pline, and the Drill/CustomScript MOP is absent from this candidate.
+
+Audit the actual CamBam-produced file from the repository root with:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.variable_cone_engrave output/variable-v-engrave-20260924-01/expected-motion.json output/variable-v-engrave-20260924-01/V-variable-engrave.nc
+```
+
+The strict acceptance status is `bounded_emitted_variable_v_engrave_pass`:
+one exact sloped F300 cut, all nine ordered moves/events including F120
+approach, F60 entry, F300 retract, setup return and T3/spindle events, one
+`variable-v` stock prefix with two cone sweeps, and rest areas at depths
+0/1/1.5/2/2.5 of 15.091265791880026 / 7.028684027518187 /
+4.21460291488107 / 1.8062583920918873 / 0 mm2 within 1e-9 mm2. Any
+missing/extra/reordered/changed item, low rapid, overcut or unsupported
+post word fails. Record the actual NC SHA-256 and the user's preview report
+before promoting Engrave to an executable carrier. If it fails, retain the
+accepted script route and report the precise visual/operational split. The
+Default post does not encode incoming machine position; tip
+(-10,-10,+5) remains a declared setup assumption, and physical machining
+is outside this probe.
+
+The user completed the preview and post on 2026-09-24. The XZ toolpath
+appeared to slope directly along the Pline with no extra pass. The actual
+`V-variable-engrave.nc` SHA-256 is
+`69367ec77654c9c2e005fd2db7dbc44c8c4d98bcacbc617a12b682e2cd926981`.
+The audit command above returned `engrave_emitted_motion_deviation` (exit 1):
+one exact sloped F300 cut and no other XY feed cuts, but eight posted items
+versus nine required. The post rapids to +2.75 before plunging at F60,
+rapids out of the cut to +5, and stops at (10,2,+5) instead of returning to
+setup. It omits F120 approach and F300 feed retract. The
+[review finding](REVIEW.md#bounded-xyz-engrave-cambam-post-finding---2026-09-24)
+records the precise split. This closes the bounded probe: use this file for
+visible path inspection only and the accepted `V-variable.cb` CustomScript
+carrier for exact execution. No unchanged repost is needed.
+
+### Bounded native V input normalization
+
+The native source has the original XYZ finish spine, one Part stock and one
+disabled Engrave targeting the original spine. `setup.json` explicitly supplies
+the 90-degree cone dimensions and non-native setup controls. From the repository
+root, create a new ignored directory with:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_variable_v output/native-variable-v-NEW
+& $ProjectPython -m unittest tests.test_native_variable_v tests.test_variable_vcarve tests.test_variable_cone_script tests.test_variable_cone_engrave -v
+```
+
+To verify an edited native spine, stock or pointed tool for detached planning,
+pass the source and its explicit setup without creating output candidates:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.native_variable_v --plan-only path/to/source.cb --setup path/to/setup.json
+```
+
+The planner strict-imports the native `.cb` and returns the canonical target,
+cut, stock, tool, plan fingerprint and section rest. It accepts an increasing-X,
+constant-Y, unbulged two-point XYZ target inside Part stock, a 90-degree cone
+whose explicit setup radius/length match the source VCutter diameter, and a
+strict interior cut interval. The fixed process/setup fields, disabled source
+Engrave and explicit Value states remain required. Unsupported edits fail.
+The result is planning evidence only; no CamBam post or physical setup is
+accepted for the changed case. The detached family and its limits are in the
+[specification](structure_spec.md#straight-variable-depth-v-planning-family).
+
+The no-argument example builder still requires the original request. It keeps
+the source bytes and makes separate `preview/V-variable-engrave.cb` and
+`explicit/V-variable.cb`. The preview's enabled Engrave targets only the
+generated sloped cut Pline; the explicit file's enabled Drill/CustomScript
+targets only a Point anchor. The original finish spine and disabled source
+Engrave remain in both files. Their `expected-motion.json` manifests pin the
+source/candidate hashes and motion reference. A new native-derived candidate
+does not inherit the acceptance of an older post merely because its planned
+script is identical.
+
+The prepared example is under `output/native-variable-v-20260924-02/`.
+`source.cb` SHA-256 is
+`ab97360d39640dc26da0cd65257ef2fec2d44e3afb279cc66f5a4cf700f45411`;
+the preview `.cb` is
+`04e1658da909ed6e1a3d93352243b2243287d12962e73b9889e6ba6bfba6f746`,
+and the explicit `.cb` is
+`edef7f1eb33e3dffcc5dbaf3f2cfda2c2ff65a96866fe532d1613ad3c5d6c376`.
+The canonical plan fingerprint is
+`4e0c0f4249c94da0f51a8fb4b38f9da718bb60fe12134fb391beb235c1fd0f46`;
+the expected motion fingerprint is
+`53867dca493fbc394dbaa3c49feea92f8527d1ed5146cc9dc8dd62aa2adf4244`.
+Automated checks establish edited input normalization, independent section
+rest and original-case file separation. Manual CamBam action adds no evidence
+to the detached planning claim.
+
+For the separate **native-derived emitted-output** gate, open
+`explicit/V-variable.cb` in CamBam Plus 1.0 with **Default** postprocessor and
+**Default mm** profile, generate toolpaths (Ctrl+T), then post (Ctrl+W) as
+`explicit/V-variable.nc`. Leave the `.cb` and manifest unchanged. Do not use
+the preview candidate for execution. Audit the actual CamBam-produced file:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.variable_cone_script output/native-variable-v-20260924-02/explicit/expected-motion.json output/native-variable-v-20260924-02/explicit/V-variable.nc
+```
+
+Pass is `bounded_emitted_variable_v_motion_pass`: nine exact ordered items,
+including the F120 approach, F60 entry, sloped F300 cut from (2,2,-1.25) to
+(10,2,-2.25), F300 retract and setup return; one `variable-v` prefix/two cone
+sweeps; section rest at 0/1/1.5/2/2.5 mm of 15.091265791880026 /
+7.028684027518187 / 4.21460291488107 / 1.8062583920918873 / 0 mm2 within
+1e-9 mm2. Report the audit JSON and posted file SHA-256. Any deviation fails
+this candidate's output gate. The declared initial tip position
+(-10,-10,+5) and ideal-tool assumptions remain outside the post; this is no
+physical machining acceptance.
+
+The user exported this exact native-derived candidate on 2026-09-24.
+`explicit/V-variable.nc` SHA-256 is
+`969e0bcceb3556747aec2d2005ad7f91bd992915479933b38dd09181a25709bf`.
+The audit command above returned `bounded_emitted_variable_v_motion_pass` with
+all nine items, one `variable-v` prefix/two sweeps and the exact five rest
+references. No repeat CamBam export is needed for this bounded gate.
+
+### Bounded direct variable-depth V reference output
+
+The direct writer consumes the same detached plan and verified process trace
+as the accepted native-derived CamBam carrier. It emits an absolute millimetre
+G0/G1 reference program without starting CamBam. To regenerate in a new ignored
+directory from a native input, run:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.direct_variable_v output/direct-variable-v-NEW --source output/native-variable-v-20260924-02/source.cb --setup output/native-variable-v-20260924-02/setup.json --compare output/native-variable-v-20260924-02/explicit/V-variable.nc
+& $ProjectPython -m cambam_builder.integrations.direct_variable_v output/direct-variable-v-NEW/direct-evidence.json --compare output/native-variable-v-20260924-02/explicit/V-variable.nc
+```
+
+Omit `--source`, `--setup` and `--compare` for the equivalent standalone
+request without a native comparison. The prepared program is
+`output/direct-variable-v-20260924-01/direct-V-variable.nc`, SHA-256
+`220faa9b9e7836ee5a80be263a6150371adee456375b314638d292ce678b86c5`.
+Its `direct-evidence.json` pins source, setup, program, accepted CamBam post,
+plan and motion fingerprints. The independent reader parses nine exact items;
+posted-coordinate replay returns one `variable-v` prefix with two cone sweeps
+and partial rest at 0/1/1.5/2/2.5 mm of 15.091265791880026 /
+7.028684027518187 / 4.21460291488107 / 1.8062583920918873 / 0 mm2.
+The direct and CamBam programs have different text but the same parsed event
+and motion sequence. Any changed source/setup/program/comparison post,
+unsupported command, altered role/feed/coordinate or stale manifest fails.
+This verifies the bounded reference dialect only. It assumes initial tip
+(-10,-10,+5) and does not select or certify a controller, real tool, material
+or physical setup; do not treat it as a machine-ready program. Manual CamBam
+validation adds no evidence to this headless output gate.
+
+An edited member of the straight family uses an edited native source and matching
+explicit setup. Build into a new empty ignored directory, then audit that exact
+manifest without `--compare` unless there is a separately accepted post for the
+same edited source and motion:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.direct_variable_v output/direct-variable-v-edited-NEW --source path/to/edited-source.cb --setup path/to/edited-setup.json
+& $ProjectPython -m cambam_builder.integrations.direct_variable_v output/direct-variable-v-edited-NEW/direct-evidence.json
+```
+
+The retained 14 mm spine / 8 mm cone example is under
+`output/direct-variable-v-edited-20260924-01/`. Its ignored `generate.py` recreates
+the edited native source and setup from the synthetic fixture, then builds and
+audits `direct/direct-V-variable.nc`. The direct file SHA-256 is
+`e5b33039303c53bcccf4b104e907b1bdc9835537482580cc6f427bc7f5710a69`.
+The cut runs from (5,2,-1.0285714285714287) to
+(15,2,-2.1714285714285717). Reparsed motion has nine exact items and two
+cone sweeps. Its five target-minus-cut rest areas at depths
+0/0.8/1.3333333333333335/1.8666666666666667/2.4 mm are
+13.86847630534713 / 7.426634715521917 / 4.518313632820263 /
+1.9880579984409152 / 0 mm2. This is partial target completion. The
+comparison-post field is null because the accepted CamBam post belongs to the
+original member; no CamBam export is required for this direct output gate.
+
+### Bounded direct RC01 roughing/cleanup reference output
+
+The direct writer consumes the exact nominal detached `rc01.generate(Job())`
+trace. It writes one ASCII absolute-mm G0/G1 reference file, reparses all
+2,945 emitted items and replays the parsed motion against the original stock,
+island, tool components, process constraints and independent three-slab rest
+bounds. From the repository root, with `$ProjectPython` set above:
+
+```powershell
+& $ProjectPython -m unittest tests.test_direct_rc01 tests.test_rc01 -v
+& $ProjectPython -m cambam_builder.integrations.direct_rc01 output/rc01-direct-NEW
+& $ProjectPython -m cambam_builder.integrations.direct_rc01 output/rc01-direct-NEW/direct-evidence.json
+```
+
+Use a new empty ignored directory for each generated run. The retained
+`output/rc01-direct-20260924-01/direct-RC01.nc` has SHA-256
+`390a6b31f961088a0224c957396a09c28b6dca4f5e2604af001b472911d5b8af`.
+The manifest pins that file, nominal job and motion fingerprints. It reports
+2,939 moves, partial target completion, rough rest per depth
+[7.775010615955999, 7.787678472024001] mm2, and final rest per depth
+[0.9214411294439999, 0.9263453527720001] mm2. The same intervals apply
+to each open depth slab (-1,0), (-2,-1) and (-3,-2); rough/final volume
+intervals are [23.325031847867997, 23.363035416072] and
+[2.7643233883319995, 2.7790360583160005] mm3. The area coordinate
+enclosure is 0.000000001 mm; the GEOS residual-location topology has no
+formal numeric interval proof. A changed file, stale manifest or changed
+parsed role/feed/coordinate fails the audit.
+
+This is a strict reference dialect under the declared initial tip position
+(-10,-10,+5) and initial coolant-off state. No controller or physical setup is
+selected. Manual CamBam
+validation adds no evidence to this headless output gate.
+
+### Packet 5 generated RC01 UCCNC output
+
+The nominal generated RC01 rough/cleanup job now uses the existing bounded
+split-file UCCNC profile. Run from the repository root, replacing `NEW` with
+a unique ignored `output/` directory name:
+
+```powershell
+& .\.venv\Scripts\python.exe -m cambam_builder.integrations.rc01_controller build output/packet5-rc01-uccnc-NEW
+& .\.venv\Scripts\python.exe -m cambam_builder.integrations.rc01_controller audit output/packet5-rc01-uccnc-NEW/rc01-evidence.json
+& .\.venv\Scripts\python.exe -m unittest tests.test_rc01_controller tests.test_ordered_job tests.test_ordered_dialects tests.test_rc01 tests.test_direct_rc01 -q
+```
+
+`stage-1.nc` and `stage-2.nc` are complete T1/T2 programs. The handoff's
+`numerical.coordinate_decimals` is six because four-place rounding crosses
+the protected island in this exact generated job. The UCCNC stage boundary
+assumes an operator installs T2 and registers its tip at (-10,-10,+5) mm;
+`offline-synthetic-operator-state` is a declared test assertion, not observed
+controller state. Both files assume the initial registered T1 tip at that
+point, G54, zero tool-length offset/G49, fixed mm coordinates and the
+synthetic RC01 tools, feeds and stock. The adapter accepts a caller-supplied
+`--transition-token` for a distinct declared setup; provide the same token
+when re-auditing. It neither drives UCCNC nor validates a physical setup.
+
+`handoff.json` binds both NC SHA-256 values and the controller/numerical
+policy. `rc01-evidence.json` additionally binds the RC01 source/motion,
+handoff hash and decoded all-height rough/final certificate. The audit
+independently decodes every command and rejects changed output, unsupported
+commands, changed source, precision or transition state. The retained
+[session evidence](../output/packet5-rc01-uccnc-20260927-01/rc01-evidence.json)
+provides one synthetic offline output bundle; its durable bounds and hashes
+are in the [review](REVIEW.md#packet-5-generated-rc01-uccnc-output---2026-09-27).
+No CamBam post or GUI check adds evidence to this fully generated job.
+
+### RC01 native input and A/B/C comparison preparation
+
+From the repository root, use a new unique ignored directory (the example name
+must be changed for a later run):
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.rc01_adapter output/rc01-native-20260923-example
+& $ProjectPython -m unittest discover -s tests -p test_rc01_native.py -v
+```
+
+The builder saves `source.cb`, `setup.json`, `A-rough.cb`, `B-explicit.cb`,
+`C-native-cleanup.cb` and `comparison.json`. It strict-imports and normalizes
+the source and every candidate before returning. The setup file is the explicit
+non-native component/setup input, not CamBam style inheritance. Each candidate
+retains the original Region, 50 x 40 x 10 mm Part stock at drawing origin
+(-5,-5), and two disabled source Pocket MOPs with one target reference each.
+`comparison.json` records source/candidate hashes, exact framework motion,
+rough/final section and volume intervals, and pending emitted-motion status.
+
+| File | Enabled candidate operations | Expected targets |
+| --- | --- | --- |
+| A | Three T1 Engrave MOPs, Z=-1,-2,-3 | 79 generated level-cut Plines per depth |
+| B | A plus three T2 Engrave MOPs, Z=-1,-2,-3 | 248 T2 level-cut Plines per depth |
+| C | A plus four T2 Pocket MOPs | Closed 7 x 7 mm Regions at the four specified corner windows |
+
+The standalone A rough reference is 7.7750–7.7877 mm² per open depth slab;
+the B final reference is 0.9214–0.9264 mm² per slab. Each of the three slabs is
+1 mm high, so the corresponding volume intervals are three times those area
+intervals. For C, the actual native cleanup must leave at most 1.358408 mm²
+per slab and 4.075223 mm³ overall, with no protected overcut and at least
+6.367258 mm² per-slab cleanup benefit. These are checks on posted motion, not
+inferences from a displayed path or MOP property.
+
+The candidate Engraves carry cut centerlines only. Their XML does not encode
+framework approach, entry, retract, rapid or tool/spindle events; CamBam may add
+or reorder those motions. This makes the A/B/C files comparison probes, not
+accepted E/N output. The C Pocket settings are tool 2, diameter 2, stock
+surface 0, target depth -3, increment 1, stepover 0.4, roughing clearance 0,
+clearance plane +5, cut feed 300, plunge 60 and CW spindle 12000. The source
+Pocket MOPs remain disabled in all three files.
+
+The first user-posted trial is recorded in
+[the review](REVIEW.md#rc01-first-cambam-output-trial---2026-09-23). Its B/C
+posts remain under `output/rc01-output-20260923-130450/`; the original A post
+was overwritten by a repeat export, so use its recorded first-trial hash and
+findings. Those original posts cut to Z=-6 and are not accepted RC01 motion.
+The repaired probes are under `output/rc01-repair-20260923-132551/`.
+Their Engrave Plines lie at Z=0; each level MOP uses stock surface 0/-1/-2 and
+target depth -1/-2/-3 respectively, with `OptimisationMode=None`. Preserve the
+old artifacts for comparison. A repeat export is useful only for a focused
+depth/order finding until an output carrier can express required approach,
+retract and tool events; do not treat another A/B/C post as an E/N acceptance
+request by itself. The repaired A was posted: the first plunge reaches Z=-1
+and the minimum Z is -3, confirming the depth fix, but the first rapid goes to
+(26.5981,9.5,+5) instead of (5,5,+5). The MOP's UUID-sorted target selection
+explains that order. It also posts rapid approaches/retracts where RC01 requires
+feed moves. See [the focused result](REVIEW.md#rc01-repaired-a-cambam-output-check---2026-09-23).
+No additional Engrave export is requested until a carrier can encode the
+required motion roles. B/C repaired variants have not been posted.
+
+When CamBam Plus 1.0 validation is available, open each file, inspect the source
+Region/Part and enabled MOPs above, regenerate toolpaths and post each separately
+to `A-rough.nc`, `B-explicit.nc`, `C-native-cleanup.nc` in the same output
+directory. Record the actual postprocessor and CAM style. The current reader is
+scoped to CamBam's `Default` post with millimetres, absolute XY/XYZ coordinates,
+G0/G1 straight moves, explicit G17/G21/G90, F/S/T, G40/G61/G64 and
+M3/M5/M6/M30. It rejects arcs, cycles, cutter compensation and unknown modal
+commands. It accepts the observed Z-only startup retract before G17/T1 but
+flags the unencoded initial machine position. It also flags a tool change
+without an explicit spindle stop. `G64` blending leaves trajectory deviation unverified even when listed
+endpoints match. These are comparison-reader limits, not permissions to machine.
+
+Run each returned post through the reader, for example:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.rc01_post output/rc01-native-20260923-example/comparison.json A output/rc01-native-20260923-example/A-rough.nc
+```
+
+Repeat with `B` and `C`. The result gives `sequence_matches`, `prefix_matches`,
+`deviation` with first line/field, or `unverified` with the reason. A/B must
+match every expected event and move within 0.001 mm with no extra motion before
+E can proceed to independent stock replay; C checks only the T1 prefix, so N
+requires a separate full T2 native-motion replay. Exact regenerated/post-added
+entries, feeds, order, tool changes, shank/holder access, rest and overcut remain
+the acceptance authority. Report I/E/N individually with the first deviation,
+the actual postprocessor/style and the three `.nc` files. A CamBam open/display
+pass alone establishes only native readability. No physical cutting is part of
+this test.
+
+### RC01 native Pocket roughing and corner-cleanup probe
+
+Build a fresh ignored pair from the repository root:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.rc01_adapter output/rc01-native-mop-NEW --native
+```
+
+The command requires a new or empty directory. It writes `source.cb`,
+`setup.json`, `N-rough.cb`, `N-native-cleanup.cb` and a SHA-256 guarded
+`comparison.json`; it strict-reimports both candidates. `N-rough.cb` enables
+one T1 native Pocket on the original Region. `N-native-cleanup.cb` adds four T2
+native Pockets on the 7 x 7 mm corner windows in window order. Both retain the
+two disabled source Pocket MOPs. The full-target T1 and window T2 operations
+pin tool number/diameter, stock surface 0, target depth -3, increment 1,
+stepover 0.4, clearance plane +5, zero roughing clearance, CW 12000 rpm,
+plunge 60 and cut 300. These settings are intent, not removal evidence.
+
+In CamBam Plus 1.0, open each candidate, regenerate toolpaths with Ctrl+T and
+post with Ctrl+W using the **Default** postprocessor and **Default mm** profile.
+Save `N-rough.nc` and `N-native-cleanup.nc` beside the candidates, without
+editing the `.cb` files. Then run:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.rc01_native_post output/rc01-native-mop-NEW/comparison.json output/rc01-native-mop-NEW/N-rough.nc output/rc01-native-mop-NEW/N-native-cleanup.nc
+```
+
+The audit rejects changed candidates, a post header naming another file and
+unsupported Default-post commands. Native mode accepts G0/G1 straight moves
+and XY G2/G3 arcs with relative I/J centers, radius mismatch at most 0.001 mm,
+and linear or helical Z. Explicit Engrave comparison remains straight-only.
+The audit compares the posted T1 move prefix including arc centers, checks
+motion/event and protected-target conditions, and computes radial-enclosed
+rest intervals at all three slab bottoms. Arc flattening has 0.0001 mm maximum
+chord sagitta; its radius mismatch and flattening error widen the bounds. It
+reports rough/final area, cleanup benefit, residual outside the 0.05 mm
+location envelope, exact single-prior-cut witnesses for T2 vertical access,
+issue counts by kind and the first 24 findings per post. GEOS floating topology
+is not formally enclosed. The Default post's startup position is absent from
+G-code. The audit does not prove every stock-dependent link or axial/lateral
+engagement; an issue-free result remains access-unverified and needs further
+motion proof before RC01 N acceptance. Physical use has a separate gate.
+
+The user-posted pair is under `output/rc01-native-mop-20260923-02/`.
+Its candidate SHA-256 values are `e14afa4b5594814c754fe828898e0e13de5672c9d5bd55a4d470aec457f7ea6c`
+and `23e44d90b3d0be46389f0a86b915dad42a578835e5ab4978f52c620c331bd2b1`.
+`N-rough.nc` and `N-native-cleanup.nc` have SHA-256 values
+`cde87d91d6f4c746cdabe7a80b04808d65551bc4d15db47e724550c6b0d444a2`
+and `6c36c80766c84d8442cb28c6c1808da9f219dcb66d551333db951bf712109e20`.
+The ignored `audit.json` contains the reproducible detailed result. The posted
+T1 prefixes match; both outputs reach only Z=-3. Rough rest is
+7.72558–7.72584 mm² per slab and final rest is 0.85840–0.85843 mm² per slab;
+the area, benefit and location budgets pass within the stated numeric limits.
+All four required RC01 corner columns and eight native T2 vertical locations
+have exact full-depth T1 cut witnesses. **RC01 N still fails:** rapid approaches
+and retracts below +5, ramped entries, low-level XY at F60, and a T2 change
+away from setup without an explicit spindle stop violate the accepted motion
+contract. Island tangencies remain numerically unresolved. See the
+[trial evidence](REVIEW.md#rc01-native-pocket-posted-motion-trial---2026-09-23).
+
+### RC01 Pocket role-carrier assessment
+
+The local role trial can be reproduced in a new ignored directory:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.rc01_adapter output/rc01-roletrial-NEW --native --role-trial
+& $ProjectPython -m unittest discover -s tests -p test_rc01_native.py -v
+```
+
+It prepares T1-only `R-rough.cb` and complete T1/T2
+`R-native-cleanup.cb`, plus `source.cb`, `setup.json` and a hash manifest.
+Enabled Pockets pin no spiral lead, no optimisation, cut-feed stepover and
+zero crossover; the original Region and disabled source MOPs are retained.
+Each file is strict-reimported before the builder returns. The prepared pair
+is under `output/rc01-roletrial-20260923-1845/`; the manifest hashes are
+recorded in the [review](REVIEW.md#rc01-pocketdefault-role-carrier-assessment---2026-09-23).
+
+This is a diagnostic carrier assessment. It does not encode RC01's feed
+approach/retract and exact setup/tool-change roles, so no CamBam post is
+requested for it. The user performs any CamBam G-code generation from prepared
+`.cb` files; return of the actual emitted `.nc` is required before a future
+route can be audited. The subsequent role-bearing `.cb` carrier is documented
+below; the route decision is in the
+[plan](REST_MACHINING_PLAN.md#next-rc01-output-milestone-after-native-pocket-trial).
+
+### RC01 literal-motion CamBam carrier
+
+The agent prepares the complete T1 roughing plus T2 cleanup `.cb`:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.rc01_script output/rc01-script-NEW
+& $ProjectPython -m unittest discover -s tests -p test_rc01_native.py -v
+```
+
+The current prepared candidate is
+`output/rc01-script-lines-20260923-01/S-combined.cb` (SHA-256
+`91cb871c22429c9a94bcea0f7cbbee0532fa462eb52e3d8558d69094fa6cf933`).
+It retains the RC01 Region, Part stock and two disabled source Pockets. Its one
+enabled `RC01 T1 rough plus T2 cleanup literal motion` Drill/CustomScript MOP
+uses one anchor point at setup (-10,-10), tool 1, CW 12000 rpm, clearance +5
+and exact-stop output. The 2,942 literal XML text lines encode both tool sections,
+feeds, approaches, retracts and the T2 stop/change/restart. CamBam's wrapper
+supplies the first T1 change/start and terminal stop. The ignored manifest
+records the candidate hash and framework fingerprints. The source, script
+and candidate strict-reimport; a synthetic wrapper replay passes, but only
+the actual CamBam post establishes E output behavior.
+
+The first posted file under `output/rc01-script-20260923-2115/` is retained
+as failure evidence: CamBam preserved the previous `|` separators as literal
+text on one NC line, so the reader rejected line 14. Do not repost that `.cb`.
+The repaired candidate uses actual text newlines and has passed strict reimport
+and the local synthetic post/audit checks. The user posted the revised `.nc`;
+its 2,945 emitted items passed the exact-sequence and continuous RC01 replay.
+See the [acceptance evidence](REVIEW.md#rc01-literal-motion-cambam-output-acceptance---2026-09-23).
+
+The completed user CamBam action was to open the prepared `S-combined.cb` in
+CamBam Plus 1.0 with the **Default** postprocessor and **Default mm** profile,
+generate toolpaths (Ctrl+T), then produce G-code (Ctrl+W) and save
+`S-combined.nc` beside the `.cb`. No repeat export is needed for this result.
+The agent audited the post with:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.cambam.rc01_script output/rc01-script-lines-20260923-01/comparison.json output/rc01-script-lines-20260923-01/S-combined.nc
+```
+
+The audit hash-guards the candidate, checks every posted event and move
+against the framework program, rejects extra motion, and replays the actual
+coordinates through continuous stock/access, process and three-slab residual
+verification. CamBam may alter or omit literal script lines; a synthetic pass
+alone cannot predict its actual emitted result. The Default post does not encode
+the incoming machine position, so RC01 retains the declared test setup
+(-10,-10,+5); physical acceptance is separate.
+
+### RC01 selected native posted-stock replay
+
+The reusable synthetic fixture under `tests/fixtures/rc01_native_stock/`
+contains the original RC01 source, T1-only and T1/T2 native Pocket candidates,
+both user-posted Default outputs, setup, comparison manifest and pinned rough
+and paired evidence records. Run:
+
+```powershell
+& $ProjectPython -m unittest tests.test_rc01_stock_authority -v
+& $ProjectPython -c "from cambam_builder.integrations.cambam.rc01_stock_authority import analyze_rc01_stock; print(analyze_rc01_stock('native_posted', evidence_path='tests/fixtures/rc01_native_stock/evidence.json')['rough_rest_by_depth'])"
+& $ProjectPython -c "from cambam_builder.integrations.cambam.rc01_stock_authority import analyze_rc01_stock; r=analyze_rc01_stock('native_posted', evidence_path='tests/fixtures/rc01_native_stock/paired_evidence.json'); print(r['rough_prefix_identical'], r['coverage_budget_met'], r['motion_role_issue_counts'], r['stock_dependent_use'])"
+```
+
+Call `check_native_freshness(evidence_path, result)` before reusing a prior
+native observation. `framework_generated` takes a supplied complete RC01
+`Program` and verifies it separately; no selection fallback occurs. The
+paired result retains both rough and final rest, exact T1 witnesses for the
+actual and required T2 vertical columns, and full motion-role issue counts.
+Its recorded coverage passes, but the 62 rough and 233 combined findings block
+stock-dependent execution and native cleanup acceptance. Both native records
+support analysis only, with no production-use claim. A new CamBam post or
+edited `.cb` needs newly reviewed, explicitly pinned source/post provenance;
+an unchanged repost adds no evidence.
+
+### Native optimiser shape/MOP mapping corpus
+
+The portable corpus lives in
+`tests/fixtures/optimizer_corpus/`: four exact `.cb` inputs, four user-posted
+Default `.nc` outputs, the original input `manifest.json`, and derived
+`observations.json`. It no longer depends on ignored `output/`. The user
+confirmed the Legacy (0.9.7) and New (0.9.8) MOP selections in CamBam Plus
+1.0. The posted headers establish Default and G21/G90 for these files;
+the manifest pins source XML and the expected installed system-file hashes.
+The [dated review](REVIEW.md#native-optimiser-corpus-posted-output---2026-09-23)
+owns the accepted observations and limits.
+`manifest.json` is the unchanged generation snapshot, so its
+`pending_native_post` labels are historical; the current output state is in
+`observations.json` and the review.
+
+Recheck exact source/post hashes, MOP sections, parsed modal motion, and the
+checked-in observation map from the repository root:
+
+```powershell
+& $ProjectPython -m unittest tests.test_optimizer_corpus -v
+$taskDir = Join-Path 'output' ('optimizer-corpus-audit-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+New-Item -ItemType Directory -Path $taskDir | Out-Null
+& $ProjectPython -m cambam_builder.integrations.cambam.optimizer_corpus tests/fixtures/optimizer_corpus --observe --record "$taskDir/observations.json"
+```
+
+The test compares a freshly computed map with the tracked observation JSON;
+the optional audit copy belongs only in its unique ignored task directory.
+The original `output/optimizer-corpus-20260923-04/` remains local trial
+history. Regenerating via `build()` makes new UUIDs and candidate hashes, so
+new exports require their own posts and provenance; do not overwrite this
+accepted fixture set. `G98`/`G81` CannedCycle words remain raw/unresolved in
+the modal parser. Incoming machine position, controller execution and stock
+removal are not certified by this mapping.
+
+### Native MOP-series normalization and strategy selection checks
+
+The bounded M4 building block consumes a strict native `.cb` source,
+candidate and **actual** CamBam Default post. It binds the original source
+primitive identity, analytic geometry and Part stock, ordered enabled MOP
+sections, explicit cylindrical tool fields and declared millimetre/Default
+setup when native XML omits those values. The parser retains posted arcs but
+does not grant them stock authority. Linear XY motion can be lowered to
+`cam_core.replay`; each prefix then receives bounded area, volume and
+protected-overcut measurements for one source-bound rectangle or straight
+Region. The strategy policy compares only complete, current, fully audited
+stage chains and reports selected, partial or infeasible outcomes. A MOP-free
+source permits document-title presentation edits when its original primitive
+UUID/world geometry and Part stock are unchanged; sources with existing MOPs
+still use exact-byte freshness. Candidate/post bytes always stay exact.
+
+Run the focused gate from the repository root:
+
+```powershell
+& $ProjectPython -m unittest tests.test_native_series tests.test_native_series_audit tests.test_strategy_selection -v
+```
+
+The native-series test also normalizes the retained actual M1 two-Pocket post
+under its separately recorded Default-mm setup. This proves ordered post
+reading, not that the M1 native route is safe: its arcs and 12 previously
+observed T2 entries still block a generic linear replay certificate. The
+synthetic two-MOP linear post test proves full parser-to-stock-to-selector
+behavior; it is constructed test data, not new CamBam acceptance. No new
+manual CamBam validation adds evidence for the pure selector or this bounded
+normalizer because the actual M1 post is already retained. Reopen the linear
+certificate boundary when an actual, source-bound candidate with supported
+linear motion and safe entries is available. A curved/rounded-tip combined
+edited job and parsed direct reference output remain the full M4 acceptance
+gate.
+
+The 2026-09-25 packaging gate built both wheel and sdist under
+`output/m4-series-20260925-03/`, installed the local wheel without dependencies
+under `output/m4-wheel-smoke-20260925-02/installed`, then imported
+`cam_extensions.strategy`, `integrations.cambam.native_series_audit` and
+`cam_core.curved_region` after changing the interpreter's working directory
+outside the checkout. All three module paths resolved inside the installed
+wheel target. This checks package inclusion and import, not a clean dependency
+resolution or all supported Python versions.
+
+### M4 edited curved rounded-tip comparison and output gate
+
+`output/m4-edited-curved-20260925-02/` is the retained validation bundle.
+`create_source.py` reopens the accepted M3 annulus source, enlarges its analytic
+circular hole from radius 2 to 2.1 mm while preserving the Region UUID,
+and writes `edited-source.cb`. The outer radius is 9 mm; Part stock remains
+X/Y `[-12,12]` mm, thickness 4 mm and top Z=0. The nested `comparison/`
+contains exact copies of the edited source and an explicitly synthetic,
+source-bound T1 proof trace. This T1 raster is a stock fixture, not a
+recommended roughing recipe. Each `raster/` and `offset/` child has native
+preview/explicit `.cb` candidates, `expected-motion.json`, and its own
+parsed, stock-replayed `direct-reference.nc`. The complete T1-only
+`comparison/endmill-direct.nc` is the partial alternative. The offset fill follows nested
+contours around both annulus boundaries; the raster fill uses horizontal rows.
+The direct output is a strict millimetre reference dialect, not controller NC.
+
+From the repository root, run the focused implementation gate and recheck all three
+retained direct files:
+
+```powershell
+& $ProjectPython -m unittest tests.test_m4_curved_workflow tests.test_v_region tests.test_native_v_region tests.test_strategy_selection -v
+$Comparison = 'output/m4-edited-curved-20260925-02/comparison'
+& $ProjectPython -c "from cambam_builder.integrations.m4_curved_workflow import audit_direct, audit_endmill_direct; p='output/m4-edited-curved-20260925-02/comparison/comparison.json'; print(audit_endmill_direct(p)['status']); print(audit_direct(p,'raster')['status']); print(audit_direct(p,'offset')['status'])"
+```
+
+For actual CamBam Plus 1.0 acceptance, open each of the four native files:
+`comparison/raster/preview/m3-preview.cb`,
+`comparison/offset/preview/m3-preview.cb`,
+`comparison/raster/explicit/m3-explicit.cb`, and
+`comparison/offset/explicit/m3-explicit.cb`. The two previews should visibly
+show the 9/2.1 mm annulus and, respectively, horizontal rows and concentric
+offset rings. The explicit Drill/CustomScript toolpath display may omit literal
+cuts, as in M3; its complete NC is the execution evidence. Generate toolpaths
+and export each with **Default** post / **Default mm** profile to `m3-preview.nc`
+or `m3-explicit.nc` beside its `.cb`. Use separate files; do not overwrite the
+M3 accepted posts. Report whether both visible previews match those patterns,
+and provide the four exported NC files. Audit them with:
+
+```powershell
+& $ProjectPython -m cambam_builder.integrations.m4_curved_workflow audit `
+  "$Comparison/comparison.json" `
+  --source 'output/m4-edited-curved-20260925-02/edited-source.cb' `
+  --raster-preview "$Comparison/raster/preview/m3-preview.nc" `
+  --offset-preview "$Comparison/offset/preview/m3-preview.nc" `
+  --raster-post "$Comparison/raster/explicit/m3-explicit.nc" `
+  --offset-post "$Comparison/offset/explicit/m3-explicit.nc"
+```
+
+Pass requires both `m3_v_preview_centerlines_match`, both
+`bounded_m3_v_post_pass`, both `bounded_m4_direct_pass`, the
+`bounded_m4_endmill_direct_pass` baseline, and a `selected`
+strategy. The raster/offset previews contain 25/8 paths and 307/283 cut
+segments on this edited source. The direct programs contain 450/375 ordered
+items. Their Z=-1 mm final residual upper bounds are 1.52633/1.53003 mm²,
+with eight-slab volume upper bounds 42.676/41.509 mm³; nominal protected
+overcut must remain zero. The endmill-only prior remains partial at Z=-1
+with 103.32511 mm² upper residual. Any extra/missing move, shallow crossover,
+changed source/candidate bytes or stock result fails. The test suite's
+constructed Default posts validate the reader and selector only. The user
+subsequently supplied all four actual exports and the preview observation;
+their result follows. Physical/controller acceptance belongs to M5.
+
+**2026-09-26 actual CamBam Plus 1.0 acceptance.** The user saw the source
+primitives and Engrave toolpaths directly on the generated Plines in both
+preview documents. All four actual Default-mm NC files pass their separate
+source-bound audits. The direct T1-only, raster and offset programs still
+return `bounded_m4_endmill_direct_pass` and two
+`bounded_m4_direct_pass` results. Use the audit command above to reproduce:
+
+Both rounded routes pass zero nominal protected overcut, the 2 mm² area and
+80 mm³ volume upper budgets, and the same edit-aware selector. Its area-first
+policy chooses `rounded_raster`; `rounded_offset` remains a fully audited
+feasible alternative. The endmill-only direct route is safe but partial.
+The result accepts this bounded edited annulus workflow; it does not certify
+native Pocket planning, a controller dialect or physical machining. The
+[dated acceptance](REVIEW.md#m4-edited-curved-actual-output-acceptance---2026-09-26)
+retains the four exact NC hashes and area/volume evidence.
+
+### M5 UCCNC output and automatic evidence
+
+The first bounded split-file adapter is executable. From the repository root,
+use a **new** ignored directory for each build; the recorded synthetic bundle
+is `output/m5-uccnc-20260926-02/`. That historical bundle predates the required
+G94 startup; rebuild before requesting current evidence:
+
+```powershell
+$ProjectPython = '.\.venv\Scripts\python.exe'
+& $ProjectPython -m cambam_builder.integrations.uccnc_m5 output/m5-uccnc-NEW --m4-manifest output/m4-edited-curved-20260925-02/comparison/comparison.json
+& $ProjectPython -m cambam_builder.integrations.uccnc_m5 output/m5-uccnc-NEW/handoff.json
+& $ProjectPython -m unittest tests.test_stockless_native tests.test_native_series tests.test_uccnc_m5 -v
+```
+
+The build writes `T1.nc`, `T3.nc` and a versioned `handoff.json`. The audit
+command rechecks source/prior/plan and setup lineage, exact file hashes, both
+decoded programs and chained stock. Its first profile requires G54, G21, G90,
+G17, G94, G61, G40 and G49; each file identifies its installed tool in a comment,
+sets S12000/F60/F300 in its move stream, and ends with M5/M30. Neither file
+installs or measures a tool. The recorded audit has 61 T1 plus 383 T3 moves,
+30 T1 cuts, Z=-1 final remaining-area upper 1.526323 mm2 and final volume
+upper 42.675342 mm3. Treat the emitted parameters and files as synthetic test
+data, not as a production machine setup. The manifest reports runtime and
+physical setup `not_evaluated`. The independent reader rejects unknown G/M/T
+words and the auditor rejects missing/reordered/stale files or handoff values.
+The [dated evidence](REVIEW.md#m5-stockless-and-uccnc-split-output---2026-09-26)
+records exact hashes and limits.
+
+For the separate **native stockless acceptance**, the prepared
+[source](../output/m5-stockless-acceptance-20260926-01/stockless-source.cb)
+and [framework round trip](../output/m5-stockless-acceptance-20260926-01/framework-roundtrip.cb)
+both have zero Part/MachiningOptions Stock nodes and Profile `StockSurface=4.5`,
+`TargetDepth=2.0`, `ClearancePlane=8.0` with `Value` states; XML parsing
+confirmed these exact values. The user accepted the stockless source in CamBam
+Plus 1.0 and supplied its fresh
+[Default post](../output/m5-stockless-acceptance-20260926-01/framework-roundtrip.nc).
+The native-series reader parsed its complete bounded command set without a
+datum shift: one Profile/T1 stage, 45 moves, ordered feed descent endpoints
+Z4.5 through Z2.0 and a final Z8 retract. Repeat the parser audit from the
+repository root with the declared interpreter:
+
+```powershell
+& $ProjectPython -c "from pathlib import Path; from cambam_builder.integrations.cambam.native_series import normalize_native_series; d=Path('output/m5-stockless-acceptance-20260926-01'); s=normalize_native_series(d/'framework-roundtrip.cb',d/'framework-roundtrip.cb',d/'framework-roundtrip.nc',initial_position=(0,0,8),setup={'units':'mm','postprocessor':'Default'}); print(s.parsed_evidence())"
+```
+
+The `(0,0,8)` mm initial tip is an **assumption**, because the post does not
+encode the machine's initial position. Parsing reports stock/access/residual
+`not_evaluated` without a separate trustworthy initial-stock model and replay
+certificate. The post's `T1 M6` has no certified controller or physical
+effect here. This native acceptance is separate from the automated UCCNC pair;
+the [dated record](REVIEW.md#m5-stockless-actual-cambam-post-acceptance---2026-09-26)
+owns hashes, exact values and reopening criteria.
+
+The first slice followed the [implementation packet](REST_MACHINING_PLAN.md#m5-implementation-packet)
+and [mediation invariants](structure_spec.md#mediation-invariants-and-evidence-contract).
+The original stockless Part persistence defect is recorded with
+synthetic files and a replay command in the
+[architecture review](REVIEW.md#m5-mediation-architecture-review---2026-09-26).
+The new stockless tests inspect saved XML for **absence of Stock**, in addition
+to MOP values. Run `test_mop_parameters.py`, `test_mop_roundtrip.py`,
+`test_native_series.py`, affected copy/clone/transfer tests and the full suite
+for shared Part/persistence changes.
+
+The user selected UCCNC for production. The [M5 evidence contract](REST_MACHINING_PLAN.md#m5-controller-coverage-and-automatic-evidence---2026-09-26)
+keeps the plan and verifier controller-neutral, with one declared dialect/setup
+per output adapter. The accepted source and first selected route remain under
+`output/m4-edited-curved-20260925-02/comparison/`; its raster
+`direct-reference.nc` has 450 ordered events/moves from a declared
+(-17,-17,+5) mm initial tip. It is an oracle for comparison, not a UCCNC file.
+
+For the first Windows-side UCCNC gate, create a unique ignored
+`output/m5-uccnc-.../` bundle with **T1 and T3 files** and an ordered handoff
+manifest. Start from the accepted M4 rounded-raster source/plan. In this
+synthetic setup, declare G54, metric absolute XY-plane exact-stop motion, no
+active tool-length compensation, one unchanged XY datum and work Z=0 at the
+physical stock top for each installed tool. The selected M4 path is already
+programmed with its intended surface at Z=0, so the CAM-to-work Z map is
+identity; its stock model also happens to have a top at Z=0. This models the
+user's manual surface-touch-off method as a **per-tool work-coordinate setup**, without
+assuming that the touch-off writes a tool-length table entry. Pin the safe
+initial tip `(-17,-17,+5)` mm, stock/fixture identity, tool geometry,
+required T1-to-T3 order, source, prior, profile and output hashes. The test
+setup is synthetic and must not be copied to a machine. Each file must set
+its own modal state, run one tool's motion, stop the spindle and end without
+calling `M6`. Its installed tool and registered tip datum are explicit handoff
+preconditions; the file cannot verify that the operator actually touched off.
+Decode both final NC files with a separate strict reader, compare all ordered
+events/coordinates including setup and end roles, and replay the decoded T1
+motion into T3's initial stock, then replay decoded T3 motion too. Do not reuse
+the M4 audit's planned V paths to certify rounded or transformed output.
+Apply the M4 stock,
+access, rounded-cutter, residual and volume checks to the chained job.
+Reject controller commands, transforms or handoff states whose effects are
+unknown. This automated gate is the precise whole-program check; no manual
+visual comparison of hundreds of moves is requested.
+
+Before generalizing the output adapter, import a CamBam file with **no stock
+object** and explicit operation `Stock Surface`/`Target Depth` values. Preserve
+its XML states and compare a fresh post without inventing a Z shift; missing
+stock must not make import fail. Report stock-dependent material/access results
+as not evaluated until a stock
+model is supplied. Check separately that a stock-object edit does not rewrite
+explicit MOP Z values; if either MOP field is `Auto`, resolve its inherited or
+stock-dependent value by CamBam semantics or an actual post before comparing
+motion. CamBam documents this [Auto dependency](https://www.cambam.info/doc/1.0/cam/machining-options.html).
+
+Use a distinct **explicit datum-map** fixture to test translation: declare a
+resolved program surface at Z `+4.5 mm` and a controller setup that touches
+the same physical surface to work Z=0. Only this declared mismatch calls for
+a `-4.5 mm` post shift; decode and invert the shift to compare with the
+original path. A stock object's top value alone must never trigger it. Reject
+a stale per-tool datum, a path that violates a declared mapping, or a
+double-applied touch-off/tool-length correction when claiming verified output.
+A separate declared tool-table/preset fixture should retain a fixed work
+origin and apply its controller length offset. These are setup alternatives,
+not changes to the imported CAM program.
+
+`C:\UCCNC\UCCNC.exe` is installed locally. CNCdrive documents an unlicensed
+Windows demo mode, but the installed `Profiles\Macro_Default\M6.txt` is an
+example automatic changer that commands `G53` movements and hardware actions.
+Do not run the M4 two-tool file with that macro as a harmless test. A separate
+demo load may check UCCNC compatibility only after a safe isolated profile is
+prepared; a screenshot or a 25 Hz position sample is not exact path evidence.
+The installed plugin sample has no confirmed export of every interpreted move.
+No UCCNC motion-output file is expected from the user. Keep exact UCCNC
+runtime parity `not_evaluated` unless a documented or tested per-move trace
+route appears; do not make that research a prerequisite for the portable M5
+emitted-program gate. The framework audits its own final NC bytes before they
+reach any controller. A demo load can add a bounded compatibility observation,
+but sampled screen positions cannot replace complete decoded-motion evidence.
+The user's manual `M6` profile is a possible one-file implementation after
+its exact pause, offset and resume behavior is pinned. A controller-specific
+`M0` stop block between MOPs is another implementation; its script and
+post-stop tool/offset state must be decoded and verified before use. Neither
+command is the framework's tool-change API. A transition policy chooses the
+operator or automatic changer, one or several programs, and the measurement
+and offset method; the dialect adapter owns command syntax and configuration.
+An automatic changer fixture needs declared tool, tip, offset and extra-motion
+effects, with physical changer acceptance kept separate. CamBam Parts can
+group MOPs by tool and post separate files, but their actual posts still need
+the same ordered file and chained-stock audit. Do not silently treat a stop,
+macro or file boundary as verified tool installation. The first gate should
+reject requests for unverified policies and include an explicit failure test
+for a missing or altered second file or mismatched handoff setup.
+After the split-file gate, use the same source-bound plan for a bounded
+one-file manual-stop policy, a declared automatic-changer effect fixture, and
+a second named controller dialect, Grbl v1.1, selected because
+its documented commands include `M0` but omit `M6`; a LinuxCNC fixture can
+exercise its configured manual/automatic `M6` and separate `G43` rule. Decode
+each emitted stream and its handoff events, then run the same whole-job stock
+audit. Reject altered stop blocks, unmodeled changer motion and any transition
+without a declared post-change tool, offset and resume state. This is the M5
+proof of policy and dialect selection; no synthetic fixture certifies a
+physical changer or the user's UCCNC macro.
+
+LinuxCNC's optional command-line `rs274` interpreter can provide an additional
+machine-readable check for a shared command subset if a Linux runner is later
+provisioned. No Docker executable or accessible WSL distribution was found in
+this Windows environment, and LinuxCNC cannot stand in for UCCNC-specific
+macro or offset behavior. Actual UCCNC production limits, offsets, tools,
+workholding and M6 behavior remain separate inputs from the user's machine.
+
+### M5 Grbl portability and transition fixtures
+
+The [recorded synthetic bundle](../output/m5-portability-20260926-01/handoff.json)
+contains historical `manual.nc`, `mixed.nc`, `mixed-changer.json` and a pinned
+handoff. Session 4 corrected offset-compensation motion and effect semantics;
+rebuild into a **new** ignored directory before using current evidence. Run from
+the repository root with the declared interpreter:
+
+```powershell
+$ProjectPython = '.\.venv\Scripts\python.exe'
+& $ProjectPython -m cambam_builder.integrations.m5_portability output/m5-portability-NEW --m4-manifest output/m4-edited-curved-20260925-02/comparison/comparison.json
+& $ProjectPython -m cambam_builder.integrations.m5_portability output/m5-portability-NEW/handoff.json
+& $ProjectPython -m unittest tests.test_m5_portability tests.test_uccnc_m5 -v
+```
+
+The adapter reads the same detached M4 rounded-raster plan and synthetic T1
+prior as the UCCNC pair. The separate strict Grbl reader consumes every byte of
+each whole program, including G21/G90/G17/G94/G61/G40/G49/G54 startup,
+per-stage spindle, feed, G0/G1, G43.1 or G49 length state, M5, M0 and M30.
+The [official Grbl v1.1 supported-code list](https://github.com/gnea/grbl/blob/master/README.md)
+includes `M0` and dynamic `G43.1`, but no `M6`; the
+[realtime command guide](https://github.com/gnea/grbl/blob/master/doc/markdown/commands.md)
+documents cycle start/resume after M0. In this fixture, stage comments are
+identities for the offline auditor, not controller tool-install commands.
+Each M0 requires the declared external completion and safe-tip state before
+resume. Unknown blocks, altered pause/offset state or undeclared motion block
+the offline claim. `$32=0` spindle mode, a fixed G54 work origin and an RPM
+range containing 12000 are setup assertions, not measured machine settings.
+
+`manual.nc` tests one in-program **operator** T1-to-T3 handoff. Its synthetic
+resolved CAM surface is +4.5 mm while the work surface is zero; the explicitly
+declared -4.5 mm CAM-to-work Z map is inverted over all 444 decoded T1/T3
+moves before the same source-bound stock audit. An unchanged or double-shifted
+emitted path fails. `mixed.nc` tests manual T1-to-T3 and modeled automatic
+T3-to-T1 transitions in one program, with fixed G54 and externally supplied
+tool-table lengths 2/3/2 mm expressed via Grbl `G43.1`. Grbl has no native
+tool-table or automatic changer claim here: the table and changer belong to
+the synthetic host setup. The strictly read `mixed-changer.json` declares
+three safe, spindle-off tip-travel segments, T3/T1 installation and length
+registration; the host retains the old active controller offset until the next
+NC G43.1 applies the installed tool's length. Three separately emitted/decoded
+compensation rapids restore Z=5 from displayed Z=3, 4 and 6 respectively; each
+must stay strictly above the stock plane. The last T1 stage contains two further
+decoded safe rapid moves. Completion and return state are assumptions. This reader compares
+against the same pinned effect model used by the fixture writer; it does not
+independently derive arbitrary changer motion or compose machine/tool offsets.
+Length values are checked against the table and each stage's registered tip is
+assumed. The checker rejects
+changed or missing effect bytes, even if the handoff is edited, and does not
+infer installation from `M0` alone.
+
+Both fixtures replay decoded T1 stock into decoded rounded T3 motion. Each has
+61 T1 moves, 383 T3 moves and 30 T1 cuts. Tests require final remaining-area
+upper below 2 mm2, final volume upper below 80 mm3 and both below prior lower
+bounds; reports retain the recomputed intervals. The mixed fixture also has
+two safe T1 return moves and three offset-compensation moves. Runtime parity and physical setup
+are `not_evaluated`. The report's phrase "complete decoded Grbl program and
+transitions" is conditional on these fixed transition assumptions; it is not
+general machine-state simulation. No manual sign-off or new G-code is required
+to close the named offline fixture gate. The
+[engineering review](REVIEW.md#framework-direction-and-engineering-acceptance---2026-09-26)
+records the remaining native order/edit case and reusable state-model work.
+Use the user's actual controller, sender, offset and changer configuration
+only after a separate production profile and machine acceptance exist.
+
+### Reusable ordered-job output and verification
+
+The caller builds `cam_core.ordered_job.Job` directly or adapts an existing
+`v_region.VPlan` and `replay.Trace` with `from_prior_v(plan, prior, safe_tip,
+boundary="split"|"pause")`. A strictly normalized linear CamBam Default
+`NativeSeries` can use `integrations.cambam.native_ordered_job.from_native_series`
+with explicit targets, tool cutting lengths and entry modes. Recheck the
+`NativeSeries` source/candidate/post freshness after a native edit and create a
+new job. Pass `NativeBinding(series, source_path, candidate_path, post_path)`
+to `emit`, `write_bundle` and `audit_bundle` for native jobs so current source
+bytes are checked each time; the old output bundle remains pinned to its old
+source. Jobs without a
+supplied initial-stock model use `stock_present=False` and receive motion
+comparison with stock evidence `not_evaluated`.
+
+`integrations.ordered_output.emit(job, "uccnc"|"grbl")` returns complete NC
+byte strings and independently decoded evidence. `write_bundle(new_directory,
+job, dialect)` writes `handoff.json` and one NC file per UCCNC stage or one
+whole Grbl file; `audit_bundle(handoff_path, current_job)` rechecks final bytes,
+job/prefix fingerprints and the declared numerical policy. A synthetic host
+transition additionally needs caller-supplied UTF-8 JSON effect bytes keyed by
+stage ID; its format is `ordered-effect-v1` with stage/tool/model and ordered
+`travel_program_tip_xyz_mm`. Manual completion, installed tools, fixed G54,
+offset values and physical fixture setup remain explicit assumptions.
+
+From the repository root, the focused final-tree gate is:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_ordered_job tests.test_ordered_dialects tests.test_native_series tests.test_native_series_audit tests.test_uccnc_m5 tests.test_m5_portability tests.test_m4_curved_workflow -q
+```
+
+These tests build an edited annulus and a different rectangular target, route
+both raster and offset V candidates through both output dialects, verify a
+native-normalized T1/T2/T1 cutting sequence, and reject changed source/order,
+program bytes, length state and external effects. The native order edit uses a
+synthetic CamBam Default post; it proves source/order/stock invalidation, not a
+new observed CamBam post. No GUI check is required because this increment does
+not change native document emission. The
+[implemented contract](structure_spec.md#reusable-ordered-job-output-and-verification)
+names the supported geometry and transition limits.
+
+### Native posted predecessor and generated V cleanup
+
+The prepared local fixture is
+`output/hybrid-native-v-20260926-01/source.cb` with one 12 by 12 mm source
+rectangle and matching `native-predecessor.cb` with one enabled T1 Inside
+Profile MOP. It declares a 2 mm cylindrical endmill, 2 mm inward roughing
+clearance, Z=-2 mm floor, +5 mm clearance, CW 12000 rpm and F60/F240 mm/min.
+The assumed initial program-frame tip is (-2,-2,+5) mm, since the Default
+post does not encode its pre-start XY position.
+The generated terminal T3 plan is a 60-degree rounded-tip V tool with a
+0.5 mm spherical tip radius and 2 mm capped depth. These values are synthetic
+verification inputs, not machining recommendations. Source and candidate are
+strictly reimported and retain the same primitive identity, geometry and Part
+stock. The V plan has 13 paths and a `partial` finite-stepover result.
+
+The user posted the candidate in CamBam Plus 1.0; the retained
+[actual native post](../output/hybrid-native-v-20260926-01/native-predecessor.nc)
+passed the final offline gate. To reproduce the external step, open
+[native-predecessor.cb](../output/hybrid-native-v-20260926-01/native-predecessor.cb)
+in CamBam Plus 1.0. Select **Default** postprocessor and millimetres, generate
+the `NATIVE T1 inset Profile` toolpath, and post that enabled MOP to
+`output/hybrid-native-v-20260926-01/native-predecessor.nc`. Keep the exact
+candidate/source files. The post must be actual CamBam output from that file;
+an edited or synthesized NC file does not satisfy this gate. A safe source
+bound result requires only G0/G1 planar motion, one T1 section, no low XY rapid
+or ramp, entry/access replay, and a +5 mm safe return. A rejected post is useful
+evidence: report the first error and retain its NC file for candidate repair.
+
+From the repository root, re-audit the retained post and output bundle with:
+
+```powershell
+& .\.venv\Scripts\python.exe output/hybrid-native-v-20260926-01/finish.py
+```
+
+The script normalizes and hash-binds the original source, native candidate and
+actual Default post; derives a V plan from the same 12 mm square; verifies that
+the posted T1 cylinder fits the capped V target; and writes two independently
+decoded UCCNC stage files under `ordered-uccnc/`. It succeeds only with
+`ordered_output_pass` and `stock_access_residual.status = pass`, a Z=-1 mm
+final residual upper bound below the prior lower bound, and less than
+0.001 mm² protected overcut upper area. It prints the actual section/volume
+bounds and [handoff](../output/hybrid-native-v-20260926-01/ordered-uccnc/handoff.json).
+The first run writes the bundle; later runs re-audit its exact bytes. A changed
+post needs a fresh output directory and job evidence. The offline transition
+still assumes an installed T3. Controller runtime and physical machining
+remain unassessed.
+
+The accepted actual post has one T1 section with 8 linear moves, including a
+vertical G0 retract verified against already cleared stock. The two decoded
+UCCNC stages have 8/221 moves and five cylindrical cuts. Their Z=-1 mm
+prior/final residual intervals are 70.48014297–70.48023554 /
+1.33758636–1.98688732 mm², with zero protected overcut. The separate actual
+source-edit probe was run once with:
+
+```powershell
+& .\.venv\Scripts\python.exe output/hybrid-native-v-20260926-01/check_edit.py
+```
+
+It confirmed that widening a copied source to 13 mm rejects the unchanged
+bundle. The original source, candidate, post and handoff stay untouched.
+
+The focused synthetic regression and adjacent ordered/native gate are:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_native_v_hybrid tests.test_ordered_job tests.test_ordered_dialects tests.test_native_series tests.test_native_series_audit -q
+```
+
+The synthetic regression checks two decoded stages, stock replay, changed
+source/post rejection, forged RPM and mismatched V source rejection. The
+[review evidence](REVIEW.md#native-posted-predecessor-and-generated-v-cleanup---2026-09-26)
+records the actual-post hashes and acceptance scope.
+
+### Manual-tab cutout and interior V evidence
+
+Packet 1 reuses the accepted
+[B and C Manual sources and actual Default posts](../output/manual-tabs-20260927-01/)
+unchanged. The source's 80 x 50 x 3 mm Part stock contains a 60 x 30 mm
+Outside Profile. The generated T3 path cuts one 0.5 mm deep straight interior
+groove before the T1 Profile.
+
+The four exact B/C `.cb`/`.nc` inputs for the packet-specific regression live
+in ignored `output/tabbed-cutout-20260927-04/fixtures/`. Their hashes are
+asserted against the accepted originals in
+`output/manual-tabs-20260927-01/`. On a checkout without these one-off
+inputs, `tests.test_tabbed_cutout` skips its four actual-post checks; copy the
+accepted files into that ignored fixture directory to rerun them. No `.cb`
+or `.nc` fixture is tracked for this packet.
+
+The one-off script creates or re-audits the
+[B](../output/tabbed-cutout-20260927-04/B/handoff.json) and
+[C](../output/tabbed-cutout-20260927-04/C/handoff.json) offline bundles:
+
+```powershell
+& .\.venv\Scripts\python.exe output/tabbed-cutout-20260927-04/verify.py
+& .\.venv\Scripts\python.exe -m unittest tests.test_tabbed_cutout -v
+```
+
+Expect `B pass` with four bridges and `C pass` with five, each having 6 mm
+minimum ideal centerline stock width and `retained_part_connected=True`.
+Both reports list all decoded generated entry/link/retract moves, 46/50
+posted native moves, section stock remaining after each stage at depths
+0.25/2.5 mm, and pinned source/post/program hashes. Re-audit reads the final
+generated NC and original native files anew. A source/post/program edit or
+stage reorder invalidates the old handoff. A freshly generated reversed
+order is a separate, independently checked offline result; it does not
+rewrite the accepted forward-order bundle. No new CamBam post adds evidence
+because these exact B/C sources and posts already passed the native gate.
+The T3 split file assumes operator installation and initial positioning;
+controller runtime and physical holding are unassessed.
+
+### Packet 2 helical Pocket native post preparation
+
+This post gate passed; the steps below describe the local source/post workflow.
+The ignored [candidate](../output/packet2-helical-pocket-20260927-01/packet2-helical-pocket.cb)
+is the exact one-Pocket source described in the
+[packet 2 plan](REST_MACHINING_PLAN.md#2-native-pocket-with-helical-entry-and-generated-cleanup).
+Its SHA-256 is `f53d0221a0a841af9ccb0d2bc1af1607f8b5161535466a7cce7e0a59393f0e03`.
+The one-off [generator/inspector](../output/packet2-helical-pocket-20260927-01/generate.py)
+creates the candidate only when it is absent, then checks the saved XML and
+strict reimport without replacing existing bytes. From the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe output/packet2-helical-pocket-20260927-01/generate.py
+(Get-FileHash output/packet2-helical-pocket-20260927-01/packet2-helical-pocket.cb -Algorithm SHA256).Hash
+```
+
+In CamBam Plus 1.0, open the exact `.cb`, confirm the circle and one enabled
+`PACKET2_NATIVE_T1_HELICAL_POCKET` with a Spiral lead, millimetres and the
+Default post. Regenerate toolpaths with Ctrl+T. Inspect the entry path in the
+CamBam toolpath view for curved XY travel while Z descends. Post with Ctrl+W,
+saving the **complete, unedited** Default output beside the source as
+[`packet2-helical-pocket.nc`](../output/packet2-helical-pocket-20260927-01/packet2-helical-pocket.nc).
+Send back that `.nc` and report whether the helical entry was visible or any
+toolpath/post error occurred. A screenshot is optional; the complete NC is
+needed to inspect its interpolation and stock/access motion. Do not run it on
+a machine. If CamBam shows no helix, still retain the post and report the
+observation so the replacement-fixture request can be based on actual output.
+
+The intake criteria are the complete matching Default post, one T1 Pocket,
+Z=-1/-2 depth evidence, safe return and M30, and a genuine Z-descending
+curved XY entry as specified in the packet 2 plan. The exact source hash is
+checked again before accepting the post. Do not infer helix or stock removal
+from the XML lead setting. Native decoding, dependent T2 cleanup and stock
+replay were gated on observing the post form.
+
+The user supplied the complete actual Default post and observed the spiral
+toolpath. The unchanged source/post remain only in the ignored local
+`output/packet2-helical-pocket-20260927-01/` directory, with SHA-256
+`f53d0221a0a841af9ccb0d2bc1af1607f8b5161535466a7cce7e0a59393f0e03`
+and `af2208d1019af5684d082dd62ce5f148b1a63667f71c151a720cfbcb88fb0978`.
+The local one-off [finish script](../output/packet2-helical-pocket-20260927-01/finish.py)
+verifies those exact bytes, builds one generated T2 ring cleanup, writes or
+re-audits the [UCCNC bundle](../output/packet2-helical-pocket-20260927-01/ordered-uccnc-01/handoff.json),
+and reports two section intervals and protected overcut. It never posts or
+edits the CamBam source. From the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_native_arc_replay tests.test_native_series -q
+& .\.venv\Scripts\python.exe output/packet2-helical-pocket-20260927-01/finish.py
+```
+
+The tracked tests generate synthetic helix inputs for the reusable parser and
+section-replay behavior. The local script requires the exact session source/post;
+it independently decodes both generated stage files and retains the ignored
+bundle. Later invocations audit its existing bytes and fail if they changed.
+A fresh checkout can run the generic tests, while exact post acceptance requires
+the original source/post bytes or a new user post. The section checks require
+native residual within 0.1 mm² of the analytic 72.2566 mm² allowance ring,
+interval widths under 0.05 mm², final residual upper below 1 mm², section
+gain over 70 mm² and protected overcut below 0.01 mm² at Z=-1 and -2. The
+inscribed 256-gon target loses only 0.04542 mm² versus the analytic Circle.
+Volume integration, tool-body occupancy through the helix and machine runtime
+are not certified by this route.
+
+### Safe native G2/G3 hybrid evidence case
+
+The ignored [source](../output/native-arc-hybrid-20260926-01/source.cb) is the
+unchanged straight-edge M1 letter Region with a triangular hole (SHA-256
+`be092ec2827810ca0c47f6bc7a9a901a2d9fa2d609b096599261995bf1e5947f`).
+The [candidate](../output/native-arc-hybrid-20260926-01/native-arc-predecessor.cb)
+(SHA-256 `10f07eab32c7af0f30288f834969df945be17c599c4e7e37317e9eb6fddd2e01`)
+retains one enabled T1 Pocket, a 5 mm cylindrical endmill, 2 mm inward
+roughing clearance, one Z=-2 mm level, +5 mm clearance, CW 12000 rpm and
+F60/F300 mm/min. Its T2 Pocket was removed. The fixed initial program tip
+assumption is (-30,-10,+5) mm, matching the candidate's safe footer. These
+are synthetic verification settings, not a machining recommendation.
+
+To supply the external observation, open the exact candidate in CamBam Plus
+1.0, confirm millimetres and **Default** postprocessor, generate its single
+enabled `NATIVE T1 arc Pocket` toolpath, and post it to
+`output/native-arc-hybrid-20260926-01/native-arc-predecessor.nc`. Keep both
+`.cb` files unchanged. The `.nc` must be the actual complete CamBam post; a
+hand-edited or extracted prior file does not pass this gate. Report whether
+CamBam posted successfully and any error. No physical cut is requested.
+
+After the actual post is present, run from the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe output/native-arc-hybrid-20260926-01/finish.py
+```
+
+The script requires at least one actual G2/G3 cut, exact source/candidate/post
+binding, a single safe-return native stage, level arcs with bounded radius
+error, no unproved low rapid/ramp, and a source-bound generated rounded T3 V
+finish. It writes two UCCNC files, independently decodes them and replays
+decoded native and generated stock. Pass is `ordered_output_pass`,
+`stock_access_residual.status = pass`, final Z=-1 mm residual upper area below
+the native prior lower area, and protected overcut upper below 0.01 mm².
+The handoff records exact post and output hashes. A failure should be retained
+with its first exception and complete `.nc`; repair requires a new candidate
+and post, not an edited NC. The original M1 two-Pocket post is specifically
+excluded because its T2 stock-dependent entries failed access.
+
+Synthetic coverage before the actual post is:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_native_arc_replay tests.test_native_v_hybrid tests.test_native_series tests.test_native_series_audit tests.test_ordered_job tests.test_ordered_dialects -q
+```
+
+It checks G2/G3 center-preserving UCCNC/Grbl decoding, source-bound hybrid
+stock, changed arc output, continuous protected-boundary rejection, helix
+rejection and an independent semicircular swept-area oracle. The actual
+CamBam post now exists at the named path with SHA-256
+`663e4348c221ca089a9b2aa775a88b9f93bb3ec53ccc545466bdd6ca11335d03`.
+The finished [handoff](../output/native-arc-hybrid-20260926-01/ordered-uccnc/handoff.json)
+contains 55/1,168 decoded T1/T3 moves, including eleven native G3 cuts.
+The Z=-1 mm prior/final residual intervals are 366.03554-366.04387 /
+3.79242-5.28194 mm² with zero modeled protected overcut. The first run
+returned `ordered_output_pass`. Later runs re-audit the existing exact bytes;
+a changed post needs a new output directory and fresh evidence.
+
+### Layered 3D stock and waterline evidence
+
+Install the declared optional planar backend with `uv sync --extra planar`,
+then run the reusable synthetic regression from the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_volume3d -v
+```
+
+It builds two stepped rectangular removal prisms in 8 x 6 x 3 mm stock,
+checks the analytic 28.8 mm³ target volume and two section areas, compares
+exact-prism and conservative XY-column representation, and audits T1 waterline
+followed by T2 rest through independently decoded UCCNC and Grbl output.
+The test checks the capsule sweep against an independent analytic area,
+disconnected residual, final volume bounds, protected rib, missing predecessor,
+changed source/output bytes and stockless evidence. Timing and Python peak
+memory are diagnostic; no fixed performance threshold is asserted. A direct
+snapshot for inspection can be printed with:
+
+```powershell
+& .\.venv\Scripts\python.exe -c "from tests.test_volume3d import synthetic_job; from cambam_builder.cam_core.volume3d import compare_representations; from cambam_builder.integrations.ordered_output import emit; import pprint; j=synthetic_job(); pprint.pp(compare_representations(j.stages[0].volume_operation.target)); pprint.pp(emit(j,'uccnc')[1]['stock_access_residual'])"
+```
+
+The result is detached and synthetic: no native document or controller setup
+is changed, so manual CamBam validation adds no evidence. The
+[contract](structure_spec.md#bounded-layered-3d-stock-and-waterline-evidence)
+defines the supported shape/motion boundary; the
+[review](REVIEW.md#layered-3d-stock-and-waterline-evidence---2026-09-26)
+owns the measured result and limits.
+
+### Sloped surface and ball cutter evidence
+
+Run the detached regression from the repository root with the declared Python:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_surface3d -v
+```
+
+The fixture makes a 4 x 2 x 3 mm stock with a floor descending from 1 to
+2 mm. A radius-0.5 mm ball follows one edge-to-edge Y pass, then a dependent
+XYZ pass enters through its prior cleared column and crosses the slope. The
+regression checks the analytic 12 mm³ target and section oracle, tangent
+contact, an independent straight-pass volume formula, conservative cell
+bounds, decoded UCCNC/Grbl replay, protected-plane and cutting-length
+rejections, missing predecessor, stale source and changed output bytes.
+Inspect the live representation and replay measurements with:
+
+```powershell
+& .\.venv\Scripts\python.exe -c "from tests.test_surface3d import synthetic_job; from cambam_builder.cam_core.surface3d import compare_representations; from cambam_builder.integrations.ordered_output import emit; import pprint; j=synthetic_job(); pprint.pp(compare_representations(j.stages[0].surface_operation.target)); pprint.pp(emit(j,'uccnc')[1]['stock_access_residual'])"
+```
+
+Timing and Python peak allocations are diagnostic, with no fixed threshold.
+The calculation is synthetic and detached; a CamBam GUI check adds no
+evidence. The [contract](structure_spec.md#bounded-sloped-surface-and-ball-cutter-evidence)
+and [review](REVIEW.md#sloped-surface-and-ball-cutter-evidence---2026-09-26)
+define the bounded claim and measured result.
+
+### Packet 3 spherical-bowl ball finish and rest
+
+Run the detached synthetic regression from the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_spherical_bowl tests.test_surface3d tests.test_occupancy tests.test_ordered_job tests.test_ordered_dialects -q
+```
+
+`tests.test_spherical_bowl.synthetic_job` creates a 5 x 5 x 2 mm rectangular
+stock, a radius-2 mm spherical-cap recess of depth 0.8 mm, and a protected
+flat rim. T1 radius-0.8 mm ball follows three sampled finish strokes. T2
+radius-0.25 mm ball descends through T1's center entry, then makes a
+three-turn sampled rest path. Both stages include full entry, retract and
+travel motion. A declared side clamp and coaxial cutter/shank/holder bands
+are checked on every decoded move. The regression emits and independently
+decodes UCCNC split files and a Grbl pause program, then checks exact contact,
+section and volume references, conservative stock/gain bounds, rim and body
+protection, prior access, curvature/source edits and output-byte invalidation.
+
+Inspect the bounded measurements with:
+
+```powershell
+& .\.venv\Scripts\python.exe -c "from tests.test_spherical_bowl import synthetic_job; from cambam_builder.cam_core.surface3d import compare_representations; from cambam_builder.integrations.ordered_output import emit; import pprint; j=synthetic_job(); pprint.pp(compare_representations(j.stages[0].surface_operation.target)); r=emit(j,'uccnc')[1]; pprint.pp(r['stock_access_residual']); pprint.pp(r['tool_fixture_occupancy'])"
+```
+
+At 0.125 mm cells, the final residual is enclosed by 0.08655-2.30749 mm³
+and newly removed material has a separate 0.01925 mm³ conservative lower
+bound. The broader interval reflects cell uncertainty; it is not a finish
+tolerance. The setup is synthetic and detached, so a CamBam GUI post adds no
+evidence. The [contract](structure_spec.md#bounded-spherical-bowl-ball-finish-and-rest)
+and [review](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest---2026-09-27)
+state the represented shapes, numerical basis and remaining limits.
+
+### Packet 4 paired V-carve inlay
+
+Run from the repository root with the declared interpreter:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_paired_inlay tests.test_ordered_job tests.test_ordered_dialects tests.test_v_region -q
+```
+
+The self-contained test builds the synthetic contour without relying on
+ignored output. Its 4 mm circular design, 7 mm
+circular stocks, pointed 0.5-tangent V profile, 1 mm cut depth, 0.9 mm
+engagement and 0.08 mm maximum ring pitch exercise zero and 0.1 mm radial
+clearance. Two separate complete UCCNC or Grbl programs are decoded and
+stock-replayed. The current UCCNC session bundle contains a handoff and `stage-1.nc`
+for each part, plus one [paired certificate](../output/packet4-paired-inlay-20260927-01/zero/paired-certificate.json)
+per clearance case. Use the certificate's pair fingerprint and both program
+SHA-256 values when re-auditing later bytes with `inlay.audit_pair`.
+
+The insertion envelope has zero modeled residual and protected overcut at
+depths 0, 0.45 and 0.9 mm. Stock remaining deeper than 0.9 mm is the declared
+bottom gap or backing/facing allowance. Zero clearance has nominal side
+contact; 0.1 mm clearance has a 0.1 mm radial gap at correct registration.
+This synthetic detached output needs no CamBam post or manual GUI check.
+Controller runtime, center-plunge suitability and physical assembly remain
+outside this offline gate. The [contract](structure_spec.md#bounded-circular-paired-v-carve-inlay)
+and [review](REVIEW.md#packet-4-paired-v-carve-inlay---2026-09-27)
+give the geometry and measured evidence.
+
+### Bounded holder and fixture occupancy
+
+Run the reusable synthetic case from the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_occupancy -v
+```
+
+`tests.test_occupancy.with_setup` attaches a program-frame 4 x 2 x 3 mm stock
+box, one rectangular side clamp, and tip-relative radius-0.5 mm cutter,
+radius-0.5 mm shank and radius-0.8 mm holder to the existing two-stage sloped
+ball job. Both UCCNC split and Grbl pause output decode and pass the same
+stock and continuous body/box check. Moving the clamp's near Y face from
+-0.9 to -0.55 mm makes the holder hit it along the X=1 to X=3 cut while the
+radius-0.5 mm cutter and both move endpoints remain clear. The changed setup
+also changes the job fingerprint. Narrowing the holder to radius 0.4 mm
+restores clearance. Print the bounded result with:
+
+```powershell
+& .\.venv\Scripts\python.exe -c "from tests.test_occupancy import with_setup; from tests.test_surface3d import synthetic_job; from cambam_builder.integrations.ordered_output import emit; import pprint; pprint.pp(emit(with_setup(synthetic_job()),'uccnc')[1]['tool_fixture_occupancy'])"
+```
+
+The setup is synthetic and detached; no CamBam GUI check adds evidence.
+The [contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy)
+states the represented shapes and excluded transition motion. The
+[review](REVIEW.md#bounded-holder-and-fixture-occupancy---2026-09-27)
+owns measured results and limits.
+
+### Source-bound native/generated occupancy case
+
+The retained [actual Default Profile post](../output/hybrid-native-v-20260926-01/native-predecessor.nc),
+[native candidate](../output/hybrid-native-v-20260926-01/native-predecessor.cb)
+and [source](../output/hybrid-native-v-20260926-01/source.cb) are unchanged.
+Run the ignored [verification script](../output/hybrid-body-20260927-01/verify.py)
+from the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe output/hybrid-body-20260927-01/verify.py
+& .\.venv\Scripts\python.exe -m unittest tests.test_native_v_hybrid tests.test_occupancy -v
+```
+
+The script reconstructs the native-bound T1 Profile and generated T3 rounded V
+job, then declares one `native-default-mm` program-frame stock box
+X/Y=[0,12], Z=[-2,0] mm. The side clamp is X=[5.5,5.6],
+Y=[-3.0,-2.6], Z=[3.6,4.0] mm. T1 has tip-relative cutter/shank radii
+1 mm and T3 has radius 2.020725942 mm; both cutters span +0 to +3 mm,
+shanks +3 to +3.5 mm and radius-2.28 mm holders +3.5 to +6 mm. These are
+declared synthetic bodies and fixture, not measured installation evidence.
+The script re-audits the [new handoff](../output/hybrid-body-20260927-01/ordered-uccnc/handoff.json)
+against current source/candidate/post bytes on repeat runs. Pass requires
+229 decoded moves, stock and occupancy passes, and changed-setup rejection.
+Moving only the clamp to Y=[-1.922,-1.522] mm makes the T3 holder hit it
+inside a cut whose endpoints and cutter clear; a radius-2.1 mm holder passes
+the same changed clamp. The original two stage program bytes remain the
+accepted hybrid output. Physical setup and controller runtime require their
+own observations. [Evidence](REVIEW.md#source-bound-nativegenerated-occupancy---2026-09-27)
+records hashes and measured clearance.
+
+### Source-bound G3 native/generated occupancy case
+
+The retained [CamBam Default G3 Pocket post](../output/native-arc-hybrid-20260926-01/native-arc-predecessor.nc),
+[candidate](../output/native-arc-hybrid-20260926-01/native-arc-predecessor.cb)
+and [source](../output/native-arc-hybrid-20260926-01/source.cb) are unchanged.
+Run the ignored [verification script](../output/native-arc-body-20260927-01/verify.py)
+from the repository root:
+
+```powershell
+& .\.venv\Scripts\python.exe output/native-arc-body-20260927-01/verify.py
+& .\.venv\Scripts\python.exe -m unittest tests.test_occupancy tests.test_native_v_hybrid tests.test_native_arc_replay -q
+```
+
+The script binds one `native-default-mm` program-frame initial stock box
+X=[-24,24], Y=[0,60], Z=[-2,0] mm to both stages. T1 uses a radius-2.5 mm
+cutter and shank; T3 uses its rounded V profile's largest radius over 3 mm.
+Both cutter bands span tip+0 to +3 mm, shanks +3 to +3.5 mm and radius-2.28 mm
+holders +3.5 to +6 mm. A declared raised clamp is X=[-0.1,0.1],
+Y=[-5.0,-4.6], Z=[3.6,4.0] mm. These synthetic dimensions are test inputs,
+not measured physical installation. The script re-audits the [handoff](../output/native-arc-body-20260927-01/ordered-uccnc/handoff.json)
+against exact source, candidate, post and stage bytes on repeat runs. Pass
+requires 1,223 decoded moves, eleven native G3 cuts, body and stock passes,
+and unchanged residual bounds. Moving only the clamp to Y=[50.5,50.9] mm
+invalidates the old handoff and makes the T1 holder intersect G3 move 20
+inside the arc; every prior native move and both arc endpoints clear, while
+the cutter/shank remain below the clamp. The [contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy)
+and [review](REVIEW.md#source-bound-g3-nativegenerated-occupancy---2026-09-27)
+own the numerical bound and results. No new CamBam posting step adds evidence
+because the native source and complete actual post are unchanged. Physical
+setup, transition travel and controller runtime remain separate observations.
+
+### Isolated planar backend evaluation
+
+The original Shapely experiment remains development-only. Its runners do not
+change runtime dependencies; the later runtime slice above separately owns the
+optional `planar` extra. Use [the corpus/decision owner](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
+for acceptance meaning and [the dated evidence](REVIEW.md#shapelygeos-planar-evaluation---2026-09-22)
+for the tested Windows x64 versions and limits. From the repository root:
+
+```powershell
+$taskDir = Join-Path 'output' ('shapely-evaluation-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+New-Item -ItemType Directory -Path $taskDir | Out-Null
+foreach ($version in @('3.12', '3.13')) {
+    $tag = 'py' + $version.Replace('.', '')
+    $candidate = 'shapely==2.1.2'
+    uv --cache-dir "$taskDir/cache" venv --python $version "$taskDir/$tag"
+    if ($LASTEXITCODE -ne 0) { throw "Environment failed: $version" }
+    uv --cache-dir "$taskDir/cache" pip install --python "$taskDir/$tag/Scripts/python.exe" --only-binary :all: $candidate 'numpy>=1.23.5'
+    if ($LASTEXITCODE -ne 0) { throw "Install failed: $version" }
+    & "$taskDir/$tag/Scripts/python.exe" tools/evaluate_shapely.py --output "$taskDir/$tag-geometry.json"
+    if ($LASTEXITCODE -ne 0) { throw "Evaluation failed: $version" }
+}
+```
+
+Expected per interpreter: 11 planar cases pass, T01 is `expected_limitation`, and
+C01/C02 are `out_of_planar_scope`; `unexpected_failures` is zero. Exit zero means
+the bounded experiment behaved as recorded, not that every desired operation is
+supported. Reports retain individual scalar errors, topology, boundary bounds,
+evidence classes and corpus/runner hashes. Keep the reports in that task directory.
+The dense bidirectional distance check intentionally costs more than the geometry
+operations; do not interpret total runner time as backend throughput.
+
+For packaging/coexistence verification, also build with the declared `uv build`
+command, install the resulting project wheel into each candidate environment with
+`uv pip install --python <candidate-python> --no-deps <wheel>`, and run an isolated
+`-I` import/construct probe checking that modern/legacy imports resolve inside
+`sys.prefix`. Inspect Shapely's `WHEEL`, bundled native-library versions and license
+files. This is a bounded dependency compatibility check, not the full packaging
+regression matrix above. Do not add Shapely to project metadata merely to run it.
+
+For the subsequent adversarial and internal-contract gates, reuse those isolated
+interpreters and create a new task directory for reports:
+
+```powershell
+$acceptanceDir = Join-Path 'output' ('planar-adversarial-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+New-Item -ItemType Directory -Path $acceptanceDir | Out-Null
+foreach ($tag in @('py39', 'py310', 'py311', 'py312', 'py313')) {
+    & "$taskDir/$tag/Scripts/python.exe" tools/evaluate_planar_adversarial.py --output "$acceptanceDir/$tag.json"
+    if ($LASTEXITCODE -ne 0) { throw "Adversarial acceptance failed: $tag" }
+}
+```
+
+Here `$taskDir` is the environment directory created above; when reusing an
+existing evaluation, set it to that directory first. Expect zero
+`unexpected_failures`. The report includes all checked values/limits, actual
+Python/Shapely/GEOS versions and both runner hashes. Its helpers prototype strict
+polygon admission and analytic rectangle/circle center classification, not a
+runtime API. The [internal contract](REST_MACHINING_PLAN.md#internal-planar-value-and-error-contract)
+owns result/error semantics; the [adversarial review](REVIEW.md#adversarial-planar-acceptance-and-internal-contract---2026-09-22)
+owns measured evidence and unsupported cases. Run the backend-independent corpus
+reference tests too. No CamBam manual check adds evidence to this detached design
+increment, and no runtime or packaging changes are implied by these commands.
+
 ### Required checks by change
+
+For execution/evidence changes, check byte grammar, decoded motion, stale source
+and result mutation, transitions, and occupancy through both public integration
+and lower-level calls:
+
+```powershell
+& $ProjectPython -m unittest tests.test_execution_evidence tests.test_ordered_job tests.test_ordered_dialects tests.test_native_v_hybrid tests.test_native_series tests.test_native_series_audit tests.test_native_arc_replay tests.test_rc01_native tests.test_rc01_stock_authority tests.test_uccnc_m5 tests.test_m5_portability tests.test_rc01_controller tests.test_direct_rc01 tests.test_direct_variable_v tests.test_occupancy -v
+& $ProjectPython -m unittest discover -s tests -p 'test_mcp_*.py' -v
+```
+
+Shared parser, replay or verifier changes also require full discovery. Native
+Default posts may use CRLF/LF; strict controller outputs and canonical direct
+reference files retain their exact byte grammar. The ordered verifier version
+`ordered-job-v2-evidence-boundaries` requires fresh bundles and recomputed
+reports. Existing source/post observation does not need repeating when its bytes
+and claimed behavior are unchanged. See the
+[session 4 evidence](REVIEW.md#branch-review-session-4---2026-09-29).
+
+For strategy, rest-coverage or route-selection changes, run the owned planners
+and both supplied-audit consumers:
+
+```powershell
+& $ProjectPython -m unittest tests.test_rc01 tests.test_convex_rest tests.test_polygon_rest tests.test_curved_rest tests.test_vcarve_slot tests.test_variable_vcarve tests.test_v_region tests.test_paired_inlay tests.test_strategy_selection tests.test_native_series_audit tests.test_m4_curved_workflow -v
+```
+
+Planner changes that alter generated paths also require their native/direct and
+ordered-output consumers; full discovery provides that coverage. Check material
+results against independent section/volume references and preserve partial
+completion. Missing gates must reject independently, and a broad intermediate
+residual interval must not erase earlier stock bounds. See the
+[session 3 review](REVIEW.md#branch-review-session-3---2026-09-28) for the small-tool
+spacing, missed V-component and selection counterexamples.
+
+For changes to geometry/stock enclosures, run the mathematical owners and their
+decoded consumers. The session 2 focused foundation command is:
+
+```powershell
+& $ProjectPython -m unittest tests.test_planar tests.test_stock tests.test_replay_contracts tests.test_native_arc_replay tests.test_mixed_replay tests.test_occupancy tests.test_volume3d tests.test_surface3d tests.test_spherical_bowl tests.test_v_region tests.test_curved_rest tests.test_rest_vcarve_acceptance_fixtures -v
+```
+
+Shared replay or enclosure changes also require full discovery. Inspect lower
+and upper bounds against independent analytic references, plus topology and
+contact assertions; a success status or area alone is insufficient. The
+[foundation inventory](structure_spec.md#foundation-assumptions-and-numerical-guarantees)
+and [session 2 evidence](REVIEW.md#branch-review-session-2---2026-09-28)
+record the equations, limits and fault-sensitive regressions. The default
+`evaluate_shapely.py` probe explicitly excludes named CAM workflow cases in its
+shared corpus; those exclusions do not replace the workflow suites.
 
 | Change | Minimum evidence before technical closure |
 | --- | --- |
@@ -265,11 +2432,26 @@ only under `output/mop-core-validation-1roowlbtpza/`, refuses a source/output
 collision, and checks C versus D semantically. Production toolpaths remain
 outside the automated evidence.
 
-Keep reusable synthetic fixtures and expected results with authored tests.
-Use a unique task directory under ignored `output/` for disposable diagnostics,
-generated XML and verbose logs; do not overwrite previous runs. Durable evidence
-must include reproduction inputs/steps and commands in the review or tests so a
-fresh checkout can reproduce it without ignored files. Local logs are supplementary.
+Keep reusable synthetic cases and expected results in authored tests; generate
+their `.cb`/`.nc` inputs at test time. Put all session inputs and results, including
+user posts, generated XML, exact copies, one-off scripts, bundles and verbose logs,
+in a unique task directory under ignored `output/`; do not overwrite previous
+runs or place them in tracked folders. Versioned `.cb`/`.nc` bytes require explicit
+user authorization under [AGENTS.md](../AGENTS.md). Record parameters, hashes,
+observations, numeric findings, acceptance limits and reopening criteria in the
+tracked review/contract owner. A fresh checkout must understand the conclusion
+without ignored files; replay of an actual user post requires its original bytes
+or a new post. The root `.gitignore` blocks ordinary adds of new `.cb`/`.nc`
+files, while previously tracked byte fixtures remain tracked until separately
+reviewed. Before handoff, inspect `git status --short` and check for any ignored
+`.cb`/`.nc` files accidentally left under `tests/` or `demos/`:
+
+```powershell
+git ls-files --others --ignored --exclude-standard -- tests/ demos/ |
+    Select-String '\.(cb|nc)$'
+```
+
+Local logs are supplementary.
 Remove only temporary artifacts created by that task when authorized; never infer
 that an ignored directory is safe to clear. Inspect each exit status separately:
 PowerShell can continue after a native command fails.
@@ -620,9 +2802,9 @@ coordinate/property interchange, not generated production toolpaths.
 
 ## Local MCP setup and verification
 
-The optional server requires Python 3.10+ and exactly `mcp==2.2.0`. Base-library
-Python 3.9 installations remain supported; launching the adapter there produces
-a clear version error. Install from the repository root:
+The base library and optional server require Python 3.12+. The server additionally
+requires exactly `mcp==2.2.0`; launching it on an older interpreter or without
+the extra produces a clear error. Install from the repository root:
 
 ```powershell
 uv sync --python 3.13 --extra mcp
@@ -930,8 +3112,8 @@ New-Item -ItemType Directory -Path D:/CAD/AgentWork
 D:/CAD/CamBamMcp/Scripts/python.exe -c "from cambam_builder import CBProject; print(CBProject('smoke').project_name)"
 ```
 
-Supported and checked on Windows are base-library Python 3.9 and MCP-enabled
-Python 3.10, 3.11, 3.12 and 3.13. Python 3.9 deliberately rejects the adapter.
+The Windows verification matrix covers Python 3.12 and 3.13 for the base library
+and MCP adapter. Python versions below 3.12 are unsupported for both.
 The MCP extra pins `mcp==2.2.0`; all other versions are unsupported until the
 protocol suite is rerun.
 
@@ -1057,9 +3239,9 @@ CannedCycle-only PeckDistance/RetractHeight/Dwell and unused CustomScript entire
 Confirm CamBam opens without asking to revert those irrelevant fields. A nonzero
 LeadOutLength requires DrillLeadOut true, and a positive centerward length must not
 exceed the effective hole radius.
-Manual tab authoring is not part of this check: imported native Manual tabs are
-preserve-only and fresh direct-core/MCP authoring must reject them rather than emit an
-incomplete points collection. Reverse the open Pline in a separate copy and confirm its
+Manual tab authoring is not part of this earlier Drill/open-Pline check; use the
+[current Manual fixture](#manual-profile-holding-tab-native-fixture) for its
+bounded authoring contract. Reverse the open Pline in a separate copy and confirm its
 Inside/Outside physical side swaps; this is why the adapter reports
 `VertexOrderRelative`. Do not generate production G-code. Report each property and
 toolpath check separately; automated XML round trips do not replace this native CAM
@@ -1110,3 +3292,59 @@ environments and logs are under `output/mcp-foundation-20260910/`; durable evide
 Manual CamBam validation adds no evidence for 4b's transport or 4c's framework/MCP
 parity. 4c prepares authored CAD artifacts; 4e retains named local-client and
 CamBam units/geometry/property and toolpath acceptance.
+
+### Manual Profile holding-tab native fixture
+
+Use the ignored [seed](../output/manual-tabs-20260927-01/seed-automatic.cb)
+for the [Manual tab backlog item](PROGRESS.md#remaining-backlog-in-order). Its
+generator is `output/manual-tabs-20260927-01/make_seed.py`; the current seed SHA-256
+is `0F5125664D0291277A4A6D27B74FB2A0185900A10E4B33FAEC1F8E1D948C30D4`.
+The file contains one closed Pline spanning `(10,10)` to `(70,40)`, one Outside
+Profile with four Automatic Square tabs of width 6 mm and height 1 mm, 3 mm
+stock thickness, target depth `-3` mm, and no lead-in. Its XML is framework
+output, not native Manual point evidence. CamBam Plus 1.0 must supply the
+native records; use the fixed version baseline above. The
+[official holding-tab guide](https://www.cambam.info/doc/1.0/cam/holding-tabs.html)
+describes dragging, adding and removing tabs with the Profile selected.
+
+**Observed 2026-09-27:** the user opened the seed in CamBam Plus 1.0, saw four
+Automatic tabs and posted [its Default output](../output/manual-tabs-20260927-01/seed-automatic.nc).
+CamBam-saved [Manual Square](../output/manual-tabs-20260927-01/tabs-manually-placed-square.cb)
+and [Manual Triangle](../output/manual-tabs-20260927-01/tabs-manually-placed-triangle.cb)
+each contain four valid centered points and a matching Default post. Their
+native point encoding and posted tab lifts are recorded in the
+[review](REVIEW.md#manual-profile-tab-native-fixture---2026-09-27).
+
+The user completed the native move/add/remove sequence in
+[B](../output/manual-tabs-20260927-01/B-moved.cb),
+[C](../output/manual-tabs-20260927-01/C-added.cb), and
+[D](../output/manual-tabs-20260927-01/D-removed.cb), with matching Default posts.
+C's `.nc` contains five tab lifts, but its main `.cb` is a later four-tab save.
+The five-tab CamBam backup was copied without changing the source to
+[C-added-recovered.cb](../output/manual-tabs-20260927-01/C-added-recovered.cb).
+It has `MinimumTabs=MaximumTabs=5`, as the user observed was needed; B and D
+use `4/4`. The [review](REVIEW.md#manual-profile-tab-native-fixture---2026-09-27)
+records hashes and point/order evidence.
+
+**Fresh writer acceptance completed 2026-09-27.** The user opened
+[B-fresh-manual.cb](../output/manual-tabs-20260927-01/B-fresh-manual.cb) and
+[C-fresh-manual.cb](../output/manual-tabs-20260927-01/C-fresh-manual.cb) in CamBam
+Plus 1.0 and generated [B](../output/manual-tabs-20260927-01/B-fresh-manual.nc)
+and [C](../output/manual-tabs-20260927-01/C-fresh-manual.nc) Default posts.
+Their complete machine-command streams match native B/C exactly after CamBam
+comments are removed; the [review](REVIEW.md#fresh-writer-cambam-default-post-acceptance---2026-09-27)
+records hashes and scope. No further file creation is needed for this gate.
+For repeatable inspection, B must stay
+`Tab Method=Manual`, `MinimumTabs=MaximumTabs=4`, and show four tabs at
+`(40,10)`, `(70,25)`, `(40,40)`, `(10,33)` mm. C must stay Manual, use `5/5`,
+and add `(10,17)` mm on the left edge, giving two left-edge tabs. Point
+placement tolerance is 0.01 mm. Both use Square width 6 mm, height 1 mm,
+target depth `-3` mm, and tab top `-2` mm. On the bottom-depth pass, B lifts
+over four tab gaps and C over five, including the two separate left-edge gaps.
+These are validation posts, not physical machining acceptance.
+
+For post comparison, the native B bottom pass has `Z=-2` gap traversals
+`X35.5→44.5` at `Y8.5`, `Y20.5→29.5` at `X71.5`, `X44.5→35.5` at `Y41.5`,
+and `Y37.5→28.5` at `X8.5`. Native C adds `Y21.5→12.5` at `X8.5`.
+The accepted fresh Default posts match those endpoints exactly and return to
+`Z=-3` after each gap. Comments, file names and timestamps differ.

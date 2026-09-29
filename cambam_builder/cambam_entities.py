@@ -1,6 +1,6 @@
 """Compatibility facade for the canonical entity implementation modules."""
 
-from .entity_core import (
+from .native.core import (
     ARC_ANGLE_TOLERANCE_RADIANS,
     ARC_SWEEP_TOLERANCE_DEGREES,
     CURVE_POINT_TOLERANCE,
@@ -11,9 +11,9 @@ from .entity_core import (
     Vertex,
     VertexInput,
 )
-from .cad_entities import Arc, Circle, Layer, Pline, Points, Rect, Text
-from .region import Region
-from .cam_entities import (
+from .native.cad import Arc, Circle, Layer, Pline, Points, Rect, Text
+from .native.region import Region
+from .native.cam import (
     MOP_COMMON_FIELD_POLICIES,
     MOP_DRILL_FIELD_POLICIES,
     MOP_ENGRAVE_FIELD_POLICIES,

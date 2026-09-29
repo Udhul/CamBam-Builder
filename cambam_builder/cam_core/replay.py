@@ -1,0 +1,594 @@
+"""Bounded, ordered XYZ stock replay for cylindrical and pointed-cone sweeps.
+
+The target and tool values are detached from generators and output formats.
+Specialized job verifiers still own process limits, fixtures and residual oracles.
+"""
+
+from dataclasses import dataclass
+import hashlib
+import math
+from numbers import Real
+
+
+def _xyz(value):
+    if not isinstance(value, tuple) or len(value) != 3 or any(
+            not _finite_real(v) for v in value):
+        raise ValueError("finite XYZ tuple required")
+    return value
+
+
+def _finite_real(value):
+    if isinstance(value, bool) or not isinstance(value, Real):
+        return False
+    try:
+        return math.isfinite(float(value))
+    except (OverflowError, ValueError):
+        return False
+
+
+def _tapered_cone_contains(spine, x, y, depth):
+    """Membership in a linear-radius cone sweep along an increasing X spine."""
+    x0, x1, cy, d0, d1 = spine
+    slope = (d1 - d0) / (x1 - x0)
+    if depth < 0 or depth > d1:
+        return False
+    radius0 = d0 - depth
+    low = max(0.0, -radius0 / slope) if slope else 0.0
+    length = x1 - x0
+    if low > length:
+        return False
+    # The squared cone occupancy is a concave quadratic in spine distance.
+    u = (x - x0 + slope * radius0) / (1 - slope * slope)
+    u = min(length, max(low, u))
+    radius = radius0 + slope * u
+    return (x - x0 - u) ** 2 + (y - cy) ** 2 <= radius ** 2
+
+
+def _affine_cone_contains(a, b, d0, d1, x, y, depth):
+    """Membership in the disk union of a linearly changing cone tip depth."""
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    length = math.hypot(dx, dy)
+    if length == 0 or depth < 0 or depth > max(d0, d1):
+        return False
+    slope = (d1 - d0) / length
+    if abs(slope) >= 1:
+        return False
+    along = ((x - a[0]) * dx + (y - a[1]) * dy) / length
+    across = ((x - a[0]) * dy - (y - a[1]) * dx) / length
+    radius0 = d0 - depth
+    low = max(0.0, -radius0 / slope) if slope > 0 else 0.0
+    high = min(length, -radius0 / slope) if slope < 0 else length
+    if low > high:
+        return False
+    u = min(high, max(low, (along + slope * radius0) /
+                      (1 - slope * slope)))
+    radius = radius0 + slope * u
+    return (along - u) ** 2 + across ** 2 <= radius ** 2
+
+
+def _polygon_clearance(polygon, point):
+    values = tuple(((b[0] - a[0]) * (point[1] - a[1]) -
+                    (b[1] - a[1]) * (point[0] - a[0])) /
+                   math.hypot(b[0] - a[0], b[1] - a[1])
+                   for a, b in zip(polygon, polygon[1:] + polygon[:1]))
+    if any(not math.isfinite(value) for value in values):
+        raise ValueError("polygon clearance arithmetic is unresolved")
+    return min(values)
+
+
+@dataclass(frozen=True)
+class ToolProfile:
+    name: str
+    kind: str
+    radius: float
+    cutting_length: float
+
+    def __post_init__(self):
+        if (not self.name or self.kind not in ("cylinder", "pointed_cone") or
+                not _finite_real(self.radius) or
+                not _finite_real(self.cutting_length) or
+                self.radius <= 0 or self.cutting_length <= 0 or
+                (self.kind == "pointed_cone" and
+                 self.radius != self.cutting_length)):
+            raise ValueError("unsupported replay tool profile")
+
+
+@dataclass(frozen=True)
+class Target:
+    name: str
+    bounds: tuple                 # xmin, ymin, xmax, ymax
+    depth: float                 # positive depth below stock top Z=0
+    inset_per_depth: bool = False
+    island: tuple = ()
+    cone_spine: tuple = ()       # x0, x1, center y, tip depth at x0/x1
+    polygon: tuple = ()          # strictly convex CCW closed-region shell
+    region_shell: tuple = ()     # planar straight-edge shell, with optional holes
+    region_holes: tuple = ()
+
+    def __post_init__(self):
+        if (any(type(value) is not tuple for value in (
+                self.bounds, self.island, self.cone_spine, self.polygon,
+                self.region_shell, self.region_holes)) or
+                not self.name or len(self.bounds) != 4 or
+                any(not _finite_real(v) for v in self.bounds) or
+                not self.bounds[0] < self.bounds[2] or
+                not self.bounds[1] < self.bounds[3] or
+                not _finite_real(self.depth) or self.depth <= 0 or
+                (self.island and (len(self.island) != 4 or
+                                  self.inset_per_depth)) or
+                (self.cone_spine and (len(self.cone_spine) != 5 or
+                    self.inset_per_depth or self.island or self.polygon)) or
+                (self.polygon and (self.inset_per_depth or self.island or
+                                   self.region_shell)) or
+                (self.region_shell and (self.inset_per_depth or self.island or
+                                        self.cone_spine or self.polygon)) or
+                (self.region_holes and not self.region_shell)):
+            raise ValueError("unsupported replay target")
+        if self.island and (any(not _finite_real(v) for v in self.island) or
+                            not (self.bounds[0] <= self.island[0] <
+                                 self.island[2] <= self.bounds[2] and
+                                 self.bounds[1] <= self.island[1] <
+                                 self.island[3] <= self.bounds[3])):
+            raise ValueError("invalid protected island")
+        if self.region_shell:
+            from shapely.geometry import Polygon as ShapelyPolygon
+            rings = (self.region_shell,) + self.region_holes
+            if (any(type(ring) is not tuple or len(ring) < 3 or
+                    any(type(p) is not tuple or len(p) != 2 or
+                        any(not _finite_real(c) or
+                            not self.bounds[i % 2] <= c <= self.bounds[i % 2 + 2]
+                            for i, c in enumerate(p)) for p in ring)
+                    for ring in rings)):
+                raise ValueError("invalid polygonal Region rings")
+            region = ShapelyPolygon(self.region_shell, self.region_holes)
+            if not region.is_valid or region.is_empty or region.area <= 0:
+                raise ValueError("invalid polygonal Region topology")
+        if self.polygon:
+            p = self.polygon
+            if (type(p) is not tuple or len(p) < 3 or
+                    any(type(v) is not tuple or len(v) != 2 or
+                        any(not _finite_real(c) for c in v) or
+                        not (self.bounds[0] <= v[0] <= self.bounds[2] and
+                             self.bounds[1] <= v[1] <= self.bounds[3])
+                        for v in p)):
+                raise ValueError("invalid convex target polygon")
+            edges = tuple((b[0] - a[0], b[1] - a[1])
+                          for a, b in zip(p, p[1:] + p[:1]))
+            if (any(not math.isfinite(math.hypot(*edge)) for edge in edges) or
+                    any(not math.isfinite((b[0] - a[0]) * (v[1] - a[1]) -
+                                          (b[1] - a[1]) * (v[0] - a[0]))
+                        for a, b in zip(p, p[1:] + p[:1]) for v in p)):
+                raise ValueError("target polygon arithmetic is unresolved")
+            if any(edges[i][0] * edges[(i + 1) % len(p)][1] -
+                   edges[i][1] * edges[(i + 1) % len(p)][0] <= 0
+                   for i in range(len(p))):
+                raise ValueError("target polygon must be strictly convex CCW")
+            if any((b[0] - a[0]) * (v[1] - a[1]) -
+                   (b[1] - a[1]) * (v[0] - a[0]) < 0
+                   for a, b in zip(p, p[1:] + p[:1]) for v in p):
+                raise ValueError("target polygon must be globally convex")
+        if self.cone_spine:
+            x0, x1, cy, d0, d1 = self.cone_spine
+            if (any(not _finite_real(v) for v in self.cone_spine) or
+                    not x0 < x1 or not 0 < d0 < d1 <= self.depth or
+                    not 0 < (d1 - d0) / (x1 - x0) < 1 or
+                    x0 - d0 < self.bounds[0] or x1 + d1 > self.bounds[2] or
+                    cy - d1 < self.bounds[1] or cy + d1 > self.bounds[3]):
+                raise ValueError("unsupported tapered cone target")
+
+    def contains(self, x, y, depth):
+        if not 0 <= depth <= self.depth:
+            return False
+        if self.cone_spine:
+            return _tapered_cone_contains(self.cone_spine, x, y, depth)
+        if self.polygon:
+            return _polygon_clearance(self.polygon, (x, y)) >= depth
+        if self.region_shell:
+            from shapely.geometry import Point, Polygon as ShapelyPolygon
+            return ShapelyPolygon(self.region_shell, self.region_holes).covers(Point(x, y))
+        a, b, c, d = self.bounds
+        t = depth if self.inset_per_depth else 0
+        inside = a + t <= x <= c - t and b + t <= y <= d - t
+        if self.island:
+            u, v, w, h = self.island
+            inside = inside and not (u <= x <= w and v <= y <= h)
+        return inside
+
+
+@dataclass(frozen=True)
+class Operation:
+    name: str
+    tool: ToolProfile
+    target: Target
+
+
+@dataclass(frozen=True)
+class Motion:
+    role: str
+    tool: str
+    operation: str
+    start: tuple
+    end: tuple
+    feed: float = 0
+
+    def __post_init__(self):
+        if self.role not in ("rapid", "approach", "entry", "cleared_descent",
+                             "cut", "retract"):
+            raise ValueError("unsupported replay motion role")
+        _xyz(self.start)
+        _xyz(self.end)
+        if self.start == self.end or not _finite_real(self.feed) or self.feed < 0:
+            raise ValueError("invalid replay motion")
+
+
+@dataclass(frozen=True)
+class ArcMotion:
+    """One XY arc, optionally descending in Z, with exact posted endpoints."""
+
+    role: str
+    tool: str
+    operation: str
+    start: tuple
+    end: tuple
+    feed: float
+    g: int
+    center: tuple
+
+    def __post_init__(self):
+        _xyz(self.start)
+        _xyz(self.end)
+        if (self.role != "cut" or self.g not in (2, 3) or
+                type(self.center) is not tuple or len(self.center) != 2 or
+                any(type(v) not in (int, float) or not math.isfinite(v)
+                    for v in self.center) or self.start[:2] == self.end[:2] or
+                self.start[2] > 0 or self.end[2] >= 0 or
+                self.end[2] > self.start[2] or
+                type(self.feed) not in (int, float) or not math.isfinite(self.feed)
+                or self.feed <= 0):
+            raise ValueError("unsupported planar cutting arc")
+
+
+def arc_segments(start, end, center, g, *, sagitta_mm=0.0001,
+                 allow_helix=False):
+    """Enclose a continuous posted XY arc by chords and a radial error bound."""
+    if (g not in (2, 3) or start[:2] == end[:2] or
+            (start[2] != end[2] and not allow_helix)):
+        raise ValueError("unsupported planar arc geometry")
+    cx, cy = center
+    r0 = math.hypot(start[0] - cx, start[1] - cy)
+    r1 = math.hypot(end[0] - cx, end[1] - cy)
+    if (not math.isfinite(r0 + r1) or r0 <= 0 or
+            abs(r0 - r1) > 0.001 or not 0 < sagitta_mm <= 0.0001):
+        raise ValueError("arc radius or numeric bound unresolved")
+    a0 = math.atan2(start[1] - cy, start[0] - cx)
+    a1 = math.atan2(end[1] - cy, end[0] - cx)
+    sweep = ((a1 - a0) % (2 * math.pi) if g == 3 else
+             -((a0 - a1) % (2 * math.pi)))
+    max_step = 2 * math.acos(max(-1.0, 1 - sagitta_mm / max(r0, r1)))
+    if max_step <= 0:
+        raise ValueError("arc exceeds numeric resolution")
+    count = max(1, math.ceil(abs(sweep) / max_step))
+    if count > 16384:
+        raise ValueError("arc exceeds subdivision limit")
+    points = [start[:2]]
+    for index in range(1, count):
+        t = index / count
+        angle = a0 + sweep * t
+        radius = r0 + (r1 - r0) * t
+        points.append((cx + radius * math.cos(angle),
+                       cy + radius * math.sin(angle)))
+    points.append(end[:2])
+    # Includes endpoint-radius mismatch and floating endpoint reconstruction.
+    return tuple(zip(points, points[1:])), abs(r0 - r1) + 2 * sagitta_mm + 1e-8
+
+
+@dataclass(frozen=True)
+class Event:
+    kind: str
+    tool: str
+    position: tuple
+
+    def __post_init__(self):
+        if self.kind not in ("tool_change", "spindle_start", "spindle_stop"):
+            raise ValueError("unsupported replay event")
+        _xyz(self.position)
+
+
+@dataclass(frozen=True)
+class Trace:
+    source_fingerprint: str
+    frame: str
+    initial_position: tuple
+    operations: tuple
+    items: tuple
+    units: str = "mm"
+
+    def __post_init__(self):
+        if (not self.source_fingerprint or not self.frame or self.units != "mm" or
+                not isinstance(self.operations, tuple) or not self.operations or
+                not isinstance(self.items, tuple) or not self.items):
+            raise ValueError("invalid replay trace")
+        _xyz(self.initial_position)
+        if (any(type(op) is not Operation for op in self.operations) or
+                len({op.name for op in self.operations}) != len(self.operations)):
+            raise ValueError("duplicate or invalid operations")
+        tools = {}
+        targets = {}
+        for op in self.operations:
+            if (op.tool.name in tools and tools[op.tool.name] != op.tool or
+                    op.target.name in targets and
+                    targets[op.target.name] != op.target):
+                raise ValueError("conflicting replay tool or target identity")
+            tools[op.tool.name] = op.tool
+            targets[op.target.name] = op.target
+
+    @property
+    def motion_fingerprint(self):
+        return hashlib.sha256(repr((self.source_fingerprint, self.frame,
+                                    self.initial_position, self.operations,
+                                    self.items, self.units)).encode("utf-8")).hexdigest()
+
+
+def _distance2(point, a, b):
+    if a[0] == b[0]:
+        return ((point[0] - a[0]) ** 2 +
+                max(min(a[1], b[1]) - point[1], 0,
+                    point[1] - max(a[1], b[1])) ** 2)
+    if a[1] == b[1]:
+        return ((point[1] - a[1]) ** 2 +
+                max(min(a[0], b[0]) - point[0], 0,
+                    point[0] - max(a[0], b[0])) ** 2)
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    length2 = dx * dx + dy * dy
+    u = 0 if length2 == 0 else min(1, max(0, ((point[0] - a[0]) * dx +
+                                               (point[1] - a[1]) * dy) / length2))
+    return (point[0] - a[0] - u * dx) ** 2 + (point[1] - a[1] - u * dy) ** 2
+
+
+@dataclass(frozen=True)
+class Sweep:
+    operation: str
+    tool: ToolProfile
+    a: tuple
+    b: tuple
+    bottom: float
+    bottom_start: float = None
+    path_error_mm: float = 0.0
+
+    def section_segment(self, depth):
+        """Return the part of a descending cylindrical sweep reaching depth."""
+        if self.bottom > -depth:
+            return None
+        if self.bottom_start is None or self.bottom_start <= -depth:
+            return self.a, self.b
+        if self.tool.kind != "cylinder":
+            return self.a, self.b
+        if not self.bottom_start > self.bottom:
+            raise ValueError("unsupported variable-depth section")
+        t = (self.bottom_start + depth) / (self.bottom_start - self.bottom)
+        start = tuple(a + t * (b - a) for a, b in zip(self.a, self.b))
+        return start, self.b
+
+    def radius_at(self, depth):
+        if self.bottom_start is not None:
+            raise ValueError("variable-depth sweep has no single section radius")
+        if not 0 <= depth <= -self.bottom:
+            return None
+        return (self.tool.radius if self.tool.kind == "cylinder" else
+                -self.bottom - depth)
+
+    def contains(self, x, y, depth):
+        if self.bottom_start is not None:
+            if self.tool.kind == "pointed_cone":
+                return _affine_cone_contains(self.a, self.b,
+                                             -self.bottom_start, -self.bottom,
+                                             x, y, depth)
+            segment = self.section_segment(depth)
+            return (segment is not None and
+                    self.tool.radius >= self.path_error_mm and
+                    _distance2((x, y), *segment) <=
+                    (self.tool.radius - self.path_error_mm) ** 2)
+        radius = self.radius_at(depth)
+        return (radius is not None and radius >= self.path_error_mm and
+                _distance2((x, y), self.a, self.b) <=
+                (radius - self.path_error_mm) ** 2)
+
+
+def _safe_cut(sweep, target):
+    a, b = sweep.a, sweep.b
+    if target.region_shell:
+        from shapely.geometry import LineString, Point, Polygon as ShapelyPolygon
+        if (sweep.tool.kind != "cylinder" or
+                (sweep.bottom_start is not None and
+                 not sweep.bottom < sweep.bottom_start <= 0) or
+                sweep.bottom < -target.depth or
+                -sweep.bottom > sweep.tool.cutting_length):
+            raise ValueError("unsupported polygonal Region cut/tool depth")
+        region = ShapelyPolygon(target.region_shell, target.region_holes)
+        line = Point(a) if a == b else LineString((a, b))
+        if (not region.covers(line) or
+                line.distance(region.boundary) <
+                sweep.tool.radius + sweep.path_error_mm - 1e-9):
+            raise ValueError(f"cut crosses original polygonal Region boundary: {a} to {b}")
+        return
+    if target.polygon:
+        if sweep.tool.kind != "pointed_cone":
+            raise ValueError("convex V target requires a pointed cone")
+        start_depth = (-sweep.bottom_start if sweep.bottom_start is not None
+                       else -sweep.bottom)
+        end_depth = -sweep.bottom
+        length = math.dist(a, b)
+        if (not 0 < start_depth <= sweep.tool.cutting_length or
+                not start_depth <= end_depth <= min(target.depth,
+                                                    sweep.tool.cutting_length) or
+                (sweep.bottom_start is not None and
+                 (length == 0 or abs(end_depth - start_depth) >= length)) or
+                _polygon_clearance(target.polygon, a) < start_depth or
+                _polygon_clearance(target.polygon, b) < end_depth):
+            raise ValueError("cut crosses protected convex target or tool limit")
+        return
+    if target.cone_spine:
+        x0, x1, cy, d0, d1 = target.cone_spine
+        if (sweep.tool.kind != "pointed_cone" or a[1] != cy or b[1] != cy or
+                a[0] > b[0] or a[0] < x0 or b[0] > x1 or
+                sweep.bottom_start is not None and a == b):
+            raise ValueError("cut crosses tapered cone target")
+        start_depth = -sweep.bottom_start if sweep.bottom_start is not None else -sweep.bottom
+        end_depth = -sweep.bottom
+        slope = (d1 - d0) / (x1 - x0)
+        if (not 0 < start_depth <= end_depth <= sweep.tool.cutting_length or
+                start_depth > d0 + slope * (a[0] - x0) or
+                end_depth > d0 + slope * (b[0] - x0) or
+                sweep.bottom_start is not None and
+                not 0 < (end_depth - start_depth) / (b[0] - a[0]) < 1):
+            raise ValueError("cut crosses tapered cone target or tool limit")
+        return
+    if a[0] != b[0] and a[1] != b[1] and not sweep.path_error_mm:
+        raise ValueError("replay supports axis-aligned stock cuts")
+    if sweep.bottom < -target.depth or -sweep.bottom > sweep.tool.cutting_length:
+        raise ValueError("cut exceeds target depth or cutting length")
+    x0, y0, x1, y1 = target.bounds
+    r = (sweep.tool.radius + sweep.path_error_mm if
+         sweep.tool.kind == "cylinder" else -sweep.bottom)
+    if any(not (x0 + r <= x <= x1 - r and y0 + r <= y <= y1 - r)
+           for x, y in (a, b)):
+        raise ValueError("cut crosses protected target")
+    if target.inset_per_depth and sweep.tool.kind != "pointed_cone":
+        raise ValueError("unsupported inset target/tool combination")
+    if target.island:
+        u, v, w, h = target.island
+        dx = max(u - max(a[0], b[0]), min(a[0], b[0]) - w, 0)
+        dy = max(v - max(a[1], b[1]), min(a[1], b[1]) - h, 0)
+        if dx * dx + dy * dy < r * r:
+            raise ValueError("cut crosses protected island")
+
+
+def _covered(cuts, move, tool):
+    low = min(move.start[2], move.end[2])
+    if low >= 0:
+        return True
+    a, b = move.start[:2], move.end[:2]
+    if tool.kind == "cylinder":
+        for prior in reversed(cuts):
+            if prior.tool.kind != "cylinder" or prior.bottom > low:
+                continue
+            section = prior.section_segment(-low)
+            if section is None:
+                continue
+            prior_a, prior_b = section
+            if (a == b and a in (prior_a, prior_b) and
+                    prior.tool.radius >= tool.radius):
+                return True
+            margin = prior.tool.radius - prior.path_error_mm - tool.radius
+            if margin >= 0 and all(_distance2(p, prior_a, prior_b) <= margin ** 2
+                                   for p in (a, b)):
+                return True
+    else:
+        # A variable-depth cut proves the full-depth column only at its deep
+        # endpoint. A constant-depth cut proves columns all along its path.
+        # Broader cone access needs a separate proof.
+        if (a == b and cuts and cuts[-1].tool == tool and
+                cuts[-1].bottom <= low and
+                (a == cuts[-1].b if cuts[-1].bottom_start is not None else
+                 _distance2(a, cuts[-1].a, cuts[-1].b) == 0)):
+            return True
+    return False
+
+
+@dataclass(frozen=True)
+class ReplayResult:
+    source_fingerprint: str
+    motion_fingerprint: str
+    cuts: tuple
+    prefixes: tuple               # (operation, cumulative cut count)
+    targets: tuple
+
+    def removed_contains(self, x, y, depth, *, through=None):
+        limit = len(self.cuts) if through is None else through
+        if not isinstance(limit, int) or not 0 <= limit <= len(self.cuts):
+            raise ValueError("invalid replay prefix")
+        return any(c.contains(x, y, depth) for c in self.cuts[:limit])
+
+    def residual_contains(self, target, x, y, depth, *, through=None):
+        match = next((t for t in self.targets if t.name == target), None)
+        if match is None:
+            raise ValueError("unknown replay target")
+        return (match.contains(x, y, depth) and
+                not self.removed_contains(x, y, depth, through=through))
+
+
+def replay(trace, *, expected_source):
+    """Replay a complete ordered stream; never infer a missing cut or tool event."""
+    if type(trace) is not Trace or trace.source_fingerprint != expected_source:
+        raise ValueError("stale replay source")
+    operations = {op.name: op for op in trace.operations}
+    at, active, running, cuts, prefixes = trace.initial_position, None, False, [], []
+    last_operation = None
+    for index, item in enumerate(trace.items):
+        if type(item) is Event:
+            if item.position != at:
+                raise ValueError(f"event {index}: position mismatch")
+            if item.kind == "tool_change":
+                if running or item.tool == active or not any(
+                        op.tool.name == item.tool for op in trace.operations):
+                    raise ValueError(f"event {index}: invalid tool change")
+                active = item.tool
+            elif item.kind == "spindle_start":
+                if running or active != item.tool:
+                    raise ValueError(f"event {index}: invalid spindle start")
+                running = True
+            elif not running or active != item.tool:
+                raise ValueError(f"event {index}: invalid spindle stop")
+            else:
+                running = False
+            continue
+        if type(item) not in (Motion, ArcMotion) or item.start != at or not running or item.tool != active:
+            raise ValueError(f"move {index}: discontinuity or inactive tool")
+        op = operations.get(item.operation)
+        if op is None or op.tool.name != active:
+            raise ValueError(f"move {index}: unknown operation/tool")
+        if last_operation != op.name:
+            if last_operation is not None:
+                prefixes.append((last_operation, len(cuts)))
+            last_operation = op.name
+        if type(item) is ArcMotion:
+            if op.tool.kind != "cylinder":
+                raise ValueError(f"move {index}: arc needs cylindrical cutter")
+            segments, error = arc_segments(item.start, item.end, item.center,
+                                           item.g, allow_helix=True)
+            for number, (a, b) in enumerate(segments):
+                z0 = item.start[2] + (item.end[2] - item.start[2]) * number / len(segments)
+                z1 = item.start[2] + (item.end[2] - item.start[2]) * (number + 1) / len(segments)
+                sweep = Sweep(op.name, op.tool, a, b, z1,
+                              z0 if z0 != z1 else None, path_error_mm=error)
+                _safe_cut(sweep, op.target)
+                cuts.append(sweep)
+        elif item.role in ("rapid", "approach"):
+            if min(item.start[2], item.end[2]) < 0:
+                raise ValueError(f"move {index}: low rapid/approach")
+        elif item.role in ("entry", "cut"):
+            if item.role == "entry" and item.start[:2] != item.end[:2]:
+                raise ValueError(f"move {index}: entry changes XY")
+            variable = (item.role == "cut" and item.start[2] != item.end[2] and
+                        (op.target.cone_spine or op.target.polygon) and
+                        op.tool.kind == "pointed_cone")
+            if variable and op.target.polygon and item.end[2] >= item.start[2]:
+                raise ValueError(f"move {index}: convex cone cut must grow in depth")
+            if item.role == "cut" and item.start[2] != item.end[2] and not variable:
+                raise ValueError(f"move {index}: non-level cut")
+            bottom = min(item.start[2], item.end[2])
+            if bottom >= 0:
+                raise ValueError(f"move {index}: cut misses stock")
+            sweep = Sweep(op.name, op.tool, item.start[:2], item.end[:2], bottom,
+                          item.start[2] if variable else None)
+            _safe_cut(sweep, op.target)
+            cuts.append(sweep)
+        elif not _covered(cuts, item, op.tool):
+            raise ValueError(f"move {index}: uncleared travel/access")
+        at = item.end
+    if running or last_operation is None:
+        raise ValueError("incomplete replay sequence")
+    prefixes.append((last_operation, len(cuts)))
+    return ReplayResult(trace.source_fingerprint, trace.motion_fingerprint,
+                        tuple(cuts), tuple(prefixes),
+                        tuple(dict.fromkeys(op.target for op in trace.operations)))

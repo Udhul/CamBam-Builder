@@ -1,0 +1,65 @@
+{
+  "units": "mm",
+  "frame": "rc01-drawing",
+  "tip_datum": "flat_endmill_bottom",
+  "fixture_xy": [
+    -5,
+    -5,
+    45,
+    35
+  ],
+  "fixture_top": -10,
+  "fixture_bottom": -15,
+  "position_error": 0,
+  "radius_error": 0,
+  "start_toolchange_end": [
+    -10,
+    -10,
+    5
+  ],
+  "approach_plane": 1,
+  "cleared_vertical_feed": 120,
+  "retract_feed": 300,
+  "center_cutting": true,
+  "full_width_slotting": true,
+  "max_new_axial_depth": 1,
+  "rough_stepover_max": 2.4,
+  "cleanup_stepover_max": 0.8,
+  "travel_x": [
+    -15,
+    55
+  ],
+  "travel_y": [
+    -15,
+    45
+  ],
+  "travel_z": [
+    -3,
+    10
+  ],
+  "coolant": "off",
+  "tools": [
+    {
+      "name": "T1",
+      "radius": 3,
+      "cutting_length": 6,
+      "shank_radius": 3,
+      "shank_top": 20,
+      "holder_radius": 10,
+      "holder_start": 20,
+      "holder_top": 40,
+      "rpm": 12000
+    },
+    {
+      "name": "T2",
+      "radius": 1,
+      "cutting_length": 6,
+      "shank_radius": 3,
+      "shank_top": 20,
+      "holder_radius": 10,
+      "holder_start": 20,
+      "holder_top": 40,
+      "rpm": 12000
+    }
+  ]
+}

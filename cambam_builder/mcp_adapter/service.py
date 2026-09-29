@@ -13,16 +13,16 @@ from jsonschema import ValidationError
 
 from cambam_builder import CBProject
 from cambam_builder.machining_planning import plan_depth_passes
-from cambam_builder.entity_core import Primitive, Vertex
-from cambam_builder.cad_entities import Arc, Circle, Pline, Points, Rect, Text
-from cambam_builder.cam_entities import (
+from cambam_builder.native.core import Primitive, Vertex
+from cambam_builder.native.cad import Arc, Circle, Pline, Points, Rect, Text
+from cambam_builder.native.cam import (
     DrillMop, EngraveMop, Mop, PocketMop, ProfileMop, MOP_COMMON_FIELD_POLICIES,
     MOP_DRILL_FIELD_POLICIES, MOP_ENGRAVE_FIELD_POLICIES,
     MOP_POCKET_FIELD_POLICIES, MOP_PROFILE_FIELD_POLICIES,
     MOP_XML_FIELD_PATHS,
 )
-from cambam_builder.cambam_reader import CamBamImportLimitError, read_cambam_bytes
-from cambam_builder.region import Region
+from cambam_builder.native.reader import CamBamImportLimitError, read_cambam_bytes
+from cambam_builder.native.region import Region
 from .paths import DomainError, MAX_XML_BYTES, Workspace
 from .schema import CONTRACT, OUTPUTS, StrictValidator, TOOLS, validated_arguments
 
@@ -973,6 +973,11 @@ class DocumentService:
 
             origin = existing.machining_origin if existing is not None else (0.0, 0.0)
             stock_offset = existing.stock_offset if existing is not None else (0.0, 0.0)
+            stock_keys = {
+                "stock_width", "stock_height", "stock_thickness",
+                "stock_material", "stock_color", "stock_offset_x",
+                "stock_offset_y", "stock_surface",
+            }
             part = staged.add_part(
                 args["part"], enabled=patched("enabled", "enabled", True),
                 stock_thickness=patched("stock_thickness", "stock_thickness", 0.0),
@@ -1001,6 +1006,9 @@ class DocumentService:
                 stock_offset=(args.get("stock_offset_x", stock_offset[0]),
                               args.get("stock_offset_y", stock_offset[1])),
                 stock_surface=patched("stock_surface", "stock_surface", 0.0),
+                stock_present=(True if stock_keys.intersection(args)
+                               else existing.stock_present if existing is not None
+                               else True),
             )
             if part is None:
                 raise DomainError("INTERNAL_ERROR", "Framework rejected part configuration")
@@ -1337,6 +1345,11 @@ class DocumentService:
                     "this MCP operation fixes lead_in_type to None",
                     "tab_use_leadins",
                 )
+            manual_points = args.get("tab_points")
+            if args["tab_method"] == "Manual" and manual_points is None:
+                raise DomainError("INVALID_ARGUMENT", "Manual tabs require tab_points", "tab_points")
+            if args["tab_method"] != "Manual" and manual_points is not None:
+                raise DomainError("INVALID_ARGUMENT", "tab_points require Manual tabs", "tab_points")
             has_open_pline = any(isinstance(target, Pline) and not target.closed
                                  for target in targets)
             mop = staged.add_profile_mop(
@@ -1358,9 +1371,16 @@ class DocumentService:
                 tab_distance=args["tab_distance"],
                 tab_size_threshold=args["tab_size_threshold"],
                 tab_use_leadins=args["tab_use_leadins"], tab_style=args["tab_style"],
+                manual_tab_points=([tuple(point) for point in manual_points]
+                                   if manual_points is not None else None),
             )
             if mop is None:
                 raise DomainError("INTERNAL_ERROR", "Framework rejected Profile creation")
+            if manual_points is not None:
+                try:
+                    mop._manual_tab_records(staged)
+                except (TypeError, ValueError) as exc:
+                    raise DomainError("INVALID_ARGUMENT", str(exc)[:512], "tab_points") from None
             self._check_limits(staged)
             data = {"mop_id": str(mop.internal_id), "part": args["part"],
                     "side": args["side"],
@@ -1732,7 +1752,10 @@ class DocumentService:
         template = getattr(mop, "_xml_template", None)
         if template is None:
             try:
-                template = mop.to_xml_element(project, [])
+                # Composite Manual tabs need a resolved primitive ID even for
+                # synthetic inspection; the actual writer supplies the real ID.
+                synthetic_ids = [1] if (kind == "profile" and mop.tab_method == "Manual") else []
+                template = mop.to_xml_element(project, synthetic_ids)
             except (KeyError, TypeError, ValueError):
                 return {}, {}, ["operation"]
 
@@ -1775,6 +1798,19 @@ class DocumentService:
 
         if self._mop_xml_state(template, MOP_XML_FIELD_PATHS["custom_script"]) != "Omitted":
             unsupported.add("CustomScript")
+
+        if kind == "profile":
+            manual_points = mop.inspected_manual_tab_points(project)
+            metadata["manual_tab_points"] = {
+                "native_state": (
+                    "Value" if manual_points is not None else
+                    "Unspecified" if template.find("Tabs") is not None else "Omitted"
+                ),
+                "applicable": mop.tab_method == "Manual",
+            }
+            if manual_points is not None:
+                parameters["manual_tab_points"] = [list(point) for point in manual_points]
+                unsupported.discard("Tabs")
 
         return parameters, metadata, sorted(unsupported)
 

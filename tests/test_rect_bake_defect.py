@@ -245,7 +245,7 @@ class RectBakeDefectTests(unittest.TestCase):
             with self.subTest(matrix=matrix):
                 with self.assertRaises(ValueError):
                     rect.bake_geometry(matrix)
-                with self.assertLogs("cambam_builder.cambam_project", level="ERROR"):
+                with self.assertLogs("cambam_builder.native.project", level="ERROR"):
                     self.assertFalse(project.bake_primitive_transform(rect, transform_to_bake=matrix))
                 self.assertIsInstance(rect, Rect)
                 self.assertIs(project.get_primitive("rect"), rect)

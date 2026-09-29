@@ -587,6 +587,45 @@ class AuthoringTests(unittest.TestCase):
 
         self.run_async(test)
 
+    def test_configure_imported_stockless_part_materializes_only_on_stock_edit(self):
+        async def test():
+            project = CBProject("stockless-patch")
+            project.add_part("Part")
+            root = build_xml_tree(project).getroot()
+            part = root.find("./parts/part")
+            part.remove(part.find("Stock"))
+            imported = await self.call("document_import", self.args(
+                units="mm", source_name="stockless-patch.cb",
+                content=ET.tostring(root, encoding="unicode")))
+            self.assertTrue(imported["ok"], imported)
+            handle = imported["document"]
+
+            changed_origin = await self.call("machining_configure_part", self.args(
+                document=handle, expected_revision=0, part="Part",
+                machining_origin_x=2))
+            self.assertTrue(changed_origin["ok"], changed_origin)
+            exported = await self.call("document_export", {
+                "workspace_id": self.service.workspace.id, "document": handle,
+                "expected_revision": 1, "suggested_filename": "stockless.cb",
+            })
+            self.assertTrue(exported["ok"], exported)
+            self.assertIsNone(ET.fromstring(exported["data"]["content"]).find(
+                "./parts/part/Stock"))
+
+            changed_stock = await self.call("machining_configure_part", self.args(
+                document=handle, expected_revision=1, part="Part",
+                stock_thickness=8))
+            self.assertTrue(changed_stock["ok"], changed_stock)
+            exported = await self.call("document_export", {
+                "workspace_id": self.service.workspace.id, "document": handle,
+                "expected_revision": 2, "suggested_filename": "stock-added.cb",
+            })
+            self.assertTrue(exported["ok"], exported)
+            self.assertIsNotNone(ET.fromstring(exported["data"]["content"]).find(
+                "./parts/part/Stock"))
+
+        self.run_async(test)
+
     def test_settings_tools_report_cross_entity_identifier_conflicts(self):
         async def test():
             handle = await self.create("settings-conflicts")

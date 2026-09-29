@@ -103,7 +103,7 @@ class Workspace:
 
     def serialize(self, project):
         """Serialize one bounded XML snapshot without publishing a workspace file."""
-        from cambam_builder.cambam_writer import serialize_cambam_bytes
+        from cambam_builder.native.writer import serialize_cambam_bytes
 
         data = serialize_cambam_bytes(project)
         if not data or len(data) > MAX_XML_BYTES:

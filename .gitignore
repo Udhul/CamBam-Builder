@@ -1,7 +1,11 @@
 /CamBam-Builder.code-workspace
 __pycache__
 output
+*.cb
+*.nc
 *.egg-info
+/build/
+/.pytest_cache/
 /.venv/
 /.uv-cache/
 /uv.lock

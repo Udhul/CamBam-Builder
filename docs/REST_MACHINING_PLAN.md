@@ -1,20 +1,858 @@
 # Future rest machining and V-cutter paths
 
-Status: **backlog, low priority; optional future capability, not foundation work**.
-Requested 2026-09-08. Priority belongs only to [PROGRESS.md](PROGRESS.md#remaining-backlog-in-order).
+Status: **M0-M5 bounded outcomes accepted offline.** The reusable ordered-job
+packet closed M5's native-MOP edit/order gap; the five subsequent job packets
+also passed their bounded offline gates. The next priority is branch delivery
+review, recorded in [PROGRESS.md](PROGRESS.md#active-work-and-next-priority).
+Requested 2026-09-08 and expanded 2026-09-22/23. Priority belongs only to
+[PROGRESS.md](PROGRESS.md#active-work-and-next-priority).
 This document owns the problem, proposed outcomes, technical reasoning and future
-acceptance criteria. It does not claim implementation or authorize machine execution.
-The request names three tiers but enumerates five outcomes; all five are retained.
+acceptance criteria. Only the explicitly marked bounded slices claim implementation;
+none authorize machine execution.
+Session 4's [execution review](REVIEW.md#branch-review-session-4---2026-09-29)
+repairs source/result freshness, complete motion/effect parsing, stock authority
+and decoded access. The [implemented ordered evidence contract](structure_spec.md#reusable-ordered-job-output-and-verification)
+owns the resulting admission rules and verifier-version invalidation. Historical
+native observations retain their unchanged source/post scope; generated bundles
+must be rebuilt when their startup, transition motion or verifier changes.
+The five original outcomes below are retained. Historical design refinements and
+decisions are in [Design refinement](#design-refinement---2026-09-22)
+and the [execution architecture refinement](#execution-architecture-refinement---2026-09-23).
+The implemented reusable-job direction and later packets are in
+[From reference jobs to reusable CAM capabilities](#from-reference-jobs-to-reusable-cam-capabilities).
+The [first generated acceptance job](#first-generated-acceptance-job-rc01)
+now gives user-accepted synthetic inputs and separate standalone/native acceptance gates.
+
+## Bounded epic completion contract and milestone scorecard (2026-09-24)
+
+This finish line responds to the risk of indefinitely extending one synthetic
+example. The user chose to include curved Regions and rounded tips in v1 on
+2026-09-24. The five desired outcomes below and the earlier accepted
+native/headless decisions remain authoritative. The bounded shape and tool
+interpretation below makes that inclusion testable; a broader interpretation
+requires an explicit scope decision.
+Count delivery milestones, not commits, probes or individual edge cases. One
+milestone closes only after its whole user-visible capability and independent
+evidence are recorded. Bugs and internal steps do not add milestones. If a
+blocker changes the supported product or output route, record the failed gate
+and obtain a scope decision instead of recursively subdividing it.
+
+**v1 supported domain:** finite planar closed Regions made of straight and
+directed circular-arc segments, including concavity and holes, in explicit
+millimetre frames; supplied source-bound prior motion; round endmills and V
+tools with pointed, flat, or spherical-lowest-point tips tangent to a cone;
+fixed-axis stock, declared tool/process limits and partial-result reporting.
+Native arc/Circle or bulged-Pline source meaning must survive import and
+reopening; chord approximations need the owned boundary/area error ledger and
+separate conservative stock/access checks. Posted curved cuts may be bounded
+straight XYZ segments; spatial bulges need independent interpolation and
+posted-motion proof. Reject unsupported splines, ambiguous/touching rings,
+generic rounded edges around a flat tip, tilted cutters and missing
+prior-motion authority with explicit diagnostics. Native `.cb` source and
+preview, exact explicit motion, and a separately checked direct output route
+remain required. Do not claim physical machining without real setup acceptance.
+
+| Milestone | Whole-outcome definition of done | Status on this branch |
+| --- | --- | --- |
+| M0: reusable proof and output bridge | Shared motion/stock replay, strict native source, separate visible preview and exact executable candidate, with at least one independently audited actual CamBam post and a parsed direct reference program. | **Accepted.** RC01 and the pointed/variable-depth cone examples, including the native triangle, establish this bridge. Their geometry and process scopes remain bounded. |
+| M1: polygonal rest and smaller-endmill cleanup | On the existing letter-like Region with a hole and 0.5 mm allowance, derive pure rest from source-bound supplied prior motion, retain the original protected boundary, create safe smaller-tool access through verified cleared space, emit complete entry/cut/link/retract motion, and independently bound residual area/volume and overcut. Strict native reimport and a fresh actual explicit post must pass. Attach a separate native Pocket/Profile cleanup candidate and audit its actual post before crediting that route; select the route whose full emitted motion passes stock and access gates. Include a distinct narrow-access/corner rejection fixture. | **Accepted for the bounded A01 case via exact explicit motion.** The revised two-contour candidate passes its actual 2,692-item CamBam post and stock replay. The independent native Pocket post passes area but fails 12 T2 access entries and is excluded from execution. The supplied synthetic T1 raster is a proof fixture, not a recommended roughing strategy. |
+| M2: curved Region rest and endmill cleanup | On a native annulus and a mixed line/arc concave Region with a hole, derive pure rest from supplied prior motion and produce complete smaller-endmill entry/cut/link/retract paths. Preserve analytic source identity; validate arc topology, conservative access/protection and independently bounded residual/overcut through approximation and emitted motion. Strict native reimport, visible preview, actual explicit post and stock replay must pass; include a curved narrow-access rejection and translated/reflected frame case. | **Accepted for the bounded annulus, mixed and reflected synthetic jobs via exact explicit motion.** All three actual Default posts pass ordered motion and stock replay; their native Engrave preview posts separately match the final T2 centerlines. The user confirmed curved preview visibility. CustomScript proves post transport, not independent CamBam path planning; neither route is physical machining acceptance. |
+| M3: V cleanup and edge tracing | On the polygonal target and at least one accepted curved target, generate pointed, flat-tip and tangent spherical/conical rounded-tip variable-depth paths, depth-capped/wide-area additional passes, and boundary/corner cleanup around concavity and holes. Check tool-profile continuity, full cutter occupancy, access, protected material, residual and infeasible/partial results between vertices and around arcs. Strict native preview and actual explicit post must be audited; Engrave remains inspection-only unless its whole post passes. | **Accepted for the bounded capped inward V recess.** The user saw geometry and V paths in all seven previews. All seven corrected actual preview posts match centerlines with +5 mm XY rapid links; all seven corrected explicit posts pass complete T1/T3 stock, access and residual audits. Pointed, flat and rounded profiles cover letter and annulus; mixed rounded and curved rejection pass. Flat-pocket strategy selection remains M4 work. |
+| M4: composed workflow and edits | One reopened/edited native source runs rest analysis, alternative endmill/V strategy comparison, selected ordered operations and stock-dependent cleanup without hidden session state. Normalize complete actual emitted motion from any supported native CamBam MOP or ordered MOP series as prior-stock authority, with explicit rejection of unsupported motion; calculate remaining area and volume by stage. Include a curved target and rounded-tip strategy in the accepted comparison; prove one contour-parallel offset fill candidate alongside the raster proof input through the same stock verifier. Allow manual or planned chaining of safe native MOPs, custom Region MOPs and exact framework paths. Relevant edits invalidate source, path and post claims; unchanged cosmetic edits retain valid evidence. The same accepted plan is available through native preview/explicit output and a parsed, stock-replayed direct reference program. | **Accepted for the bounded edited annulus.** The reopened 2.1 mm hole, T1-only partial endmill route and rounded raster/contour-offset finishes pass shared stock and direct reference audits. The user saw source primitives and Engrave toolpaths in both previews. Both actual preview posts match centerlines and both actual explicit Default posts pass complete T1/T3 motion and stock audits; the area-first selector chooses raster while offset also meets the fixed budgets. The bounded linear native-MOP normalizer rejects unsupported arc/unsafe motion; generic curved native Pocket planning is not certified. |
+| M5: first controller output | Lower the accepted M4 plan through a declared controller profile with explicit units, coordinate/datum mapping, tools, feeds, spindle, entry/link/retract and end roles; independently decode every emitted program or command stream and replay its actual coordinates with stock carried across program boundaries. Keep tool-change intent, measurement/offset method, execution method and dialect separate. Prove manual and automatic transition contracts, stockless explicit-MOP import, an explicitly requested nonidentity datum map, and two distinct controller dialect fixtures. Report stock-dependent checks as unavailable when no stock model is supplied; physical changer behavior remains machine-specific acceptance. | **Accepted for the bounded offline domain.** The M4 raster and edited annulus/rectangle jobs use decoded UCCNC and Grbl output; manual and modeled automatic transitions, stockless import, and a nonidentity datum have checked fixtures. The reusable ordered-job packet closes the native disabled/reordered T1/T2/T1 case with fresh synthetic Default posts and cutting-stock prefixes. It does not claim a fresh actual CamBam post, controller runtime or physical changer behavior. See the [ordered-job evidence](REVIEW.md#reusable-ordered-jobs-and-verification---2026-09-26). |
+
+All **six bounded milestones are accepted** for their stated offline scope.
+The five later [job packets](#ordered-next-session-job-packets-selected-2026-09-27)
+are accepted separately. This does not establish a general CAM engine, native
+Pocket algorithm parity, controller runtime or physical setup; reopen those
+only for a named job or machine setup requiring them.
+
+### M5 controller coverage and automatic evidence - 2026-09-26
+
+The user will use **UCCNC** for production; that is a development fixture and
+production preference, not the framework's target boundary. The core represents
+ordered cutting, tools, setup and stock handoffs without a controller command
+or assumed human/machine changer. A controller adapter declares its supported
+command set, version and setup; a transition policy declares how each tool
+change is carried out. Another adapter must be able to lower the same plan
+without changing the planner or stock verifier. Unsupported or unresolved
+behavior blocks the dependent execution/evidence claim, not native import.
+The user's UCCNC `M6` pauses for a manual change, but
+its exact macro, machine version and physical limits remain production inputs.
+The previous LinuxCNC-only simulation selection is superseded.
+
+The core's Z contract uses the **intended tool-tip path in a named CAM
+coordinate frame**. For imported CamBam operations, resolve that path from
+their explicit/inherited MOP settings and actual post evidence. For paths
+generated by the framework, the validated plan owns those coordinates. A
+CamBam Part/Machining stock object is optional input for stock simulation,
+clearance and `Auto` properties; it is
+not itself a request to translate output coordinates. Explicit MOP `Stock
+Surface`, `Target Depth` and clearance settings, including their inherited
+style states, determine the toolpath. CamBam documents that a stock object
+supplies an operation's `Stock Surface` or `Target Depth` when those values
+are `Auto`, while `Target Depth` is an absolute Z coordinate. A stock-aware
+postprocessor macro may separately write stock data, so the actual post still
+needs decoding. Preserve MOP states on import and resolve them by CamBam
+semantics or an actual post; missing stock does not make a drawing invalid.
+See [CamBam 1.0 Machining Options](https://www.cambam.info/doc/1.0/cam/machining-options.html)
+and [Pocket operation](https://www.cambam.info/doc/1.0/cam/pocket.html).
+
+The setup separately declares how the **programmed tool-tip coordinates** map
+to controller work coordinates and, when a material model is available, how
+the physical stock/fixture sits in that same frame. The default for an
+existing CamBam program is identity: preserve its authored Z coordinates.
+That coordinate default does not assert that a machine's work offset, tool
+length or physical setup is ready.
+The user's usual method touches each installed tool to the physical stock
+surface and sets work Z=0; it fits programs whose intended surface is Z=0.
+Other setups may use a different work datum, tool-table lengths, a fixed
+setter or probing. The output profile declares active work and tool-length
+offset states and the method that registers the new tip. A work-coordinate
+touch-off need not update a tool-length table; combining both without a
+declared composition can double-apply a correction. See LinuxCNC's separate
+[work-coordinate setting](https://www.linuxcnc.org/docs/scratch/html/gcode/g-code.html)
+and [tool compensation](https://www.linuxcnc.org/docs/html/gcode/tool-compensation.html)
+interfaces. The measurement reference must still exist at the handoff.
+
+Translate coordinates **only when an explicit setup says the programmed and
+controller datums differ**. For example, if a resolved MOP path treats the
+physical surface as programmed Z `+4.5 mm`, but the operator touches that
+surface to controller work Z `0`, a declared `-4.5 mm` translation preserves
+the intended path. Merely changing or omitting a stock object's top elevation
+does not trigger that translation. Decode emitted coordinates and invert any
+declared map before comparison with the original path; reject a mismatch
+when claiming verified output. Keep the same physical cut positions across
+tools even if work or tool-length offsets change between programs.
+
+Import and verification have separate outcomes. A manually authored `.cb`
+with no stock object and explicit MOP values must remain importable and keep
+its explicit Z settings and source identity. With no trustworthy stock or
+fixture model, report material-removal, residual and stock-dependent
+collision/access checks as **not evaluated**;
+do not turn that missing evidence into an import failure or a claim of full
+stock certification. If an `Auto` parameter lacks the information needed to
+resolve its path, retain the source and report that path unresolved until a
+CamBam post or sufficient setup is supplied. Generated rest machining still
+needs an explicit initial-stock model and source-bound prior motion; callers
+may supply that model separately from any CamBam stock object. Unknown
+controller commands or offset effects still prevent a verified
+controller-output claim.
+
+Keep tool transitions as controller-neutral plan events with the old/new tool,
+safe pre/post tip states, spindle/coolant state, stock lineage, clearance
+requirement, required tool-length/offset state and completion/abort conditions.
+Offline evidence is conditional on these setup assertions; it does not confirm
+physical installation. Execution may resume only after the required conditions
+are satisfied. Select the
+**actor** (operator or automatic changer), **program boundary** (pause in one
+program or separate programs), and **measurement/offset method** independently
+for each transition.
+The controller adapter then maps that policy to its commands, controller
+configuration or external operator workflow. An `M0` pause alone does not
+install a tool; an `M6` alone does not establish a length offset. An automatic
+changer may add motion outside the NC file, which needs a pinned effect model,
+completion signal and machine-specific acceptance. Unknown motion, offset
+changes or resume state cannot be silently treated as zero-effect transitions.
+
+The first Windows proof uses **separate T1 and T3 UCCNC files** with a checked
+manual handoff. Its resolved program surface and work-surface Z are both `0`,
+so the chosen Z map is identity. The operator installs and measures each tool
+before its file starts; neither file calls an unverified `M6` macro. This also
+permits CamBam Part-per-tool export where native MOPs are used. The T3 file consumes the
+decoded T1 stock result, not a fresh-stock assumption. Both files need explicit
+modal startup, tool/setup identity, safe initial-tip precondition,
+spindle/feeds and end state. The handoff manifest names their order, the same
+source, XY work datum, stock and fixture, the required per-tool Z registration
+method, effective offset state, CAM-to-work map, and allowed start point. A file
+alone cannot establish that the operator met these preconditions.
+
+The planned execution modes are `manual_change` and `automatic_change`; a
+manual change may use a controller's declared tool-change command, a declared
+program stop block or a split-file handoff. An automatic change may use a
+controller tool-change command, macro, or external tool changer only when its
+pre/post tool, tip, offset and added-travel effects are modeled and checked.
+The dialect profile owns the actual command syntax and whether a host/sender
+must pause or load the next file. Policies may differ between transitions in
+one job. Same-tool MOPs can be grouped into CamBam Parts and posted separately;
+the actual posts still require complete file and chained-stock audits.
+Physical tool installation, measurement and resume remain operator/machine
+facts that software must not infer from the NC file.
+
+This separation is required by real controller differences: CNCdrive's
+[UCCNC manual](https://www.cncdrive.com/UCCNC/UCCNC_usersmanual.pdf)
+defines `M0` as a resumable stop and `M6` as a configurable macro call;
+[LinuxCNC's M-code manual](https://linuxcnc.org/docs/html/gcode/m-code.html)
+documents both manual and automatic `M6` behavior and requires a separate
+`G43` for tool-length offset; the official
+[Grbl v1.1 command list](https://github.com/gnea/grbl/blob/master/README.md)
+includes `M0` but no `M6`. The bounded UCCNC and Grbl fixture adapters now
+implement only their declared subsets and assumptions.
+
+The accepted M4 `rounded_raster` fixture remains the first output oracle:
+source SHA-256 `bb34bc2113a081adc530962ecf5c3ce2b63ba77aeb61f941d525150284d3fb8e`,
+24 x 24 x 4 mm stock at top Z=0, declared initial/tool-change/end tip
+`(-17,-17,+5)` mm, T1 cylindrical endmill and T3 rounded V cutter, S12000,
+F60 entry and F300 cut/retract. Its 450-item reference stream spans tip X
+`[-17,8.7667]`, Y `[-17,8.729]`, Z `[-2,5]` mm. These are synthetic process
+values and a supplied synthetic T1 stock fixture, not production parameters.
+The first controller profile must declare how the work frame and initial tip
+state are established; a posted file cannot infer them.
+
+Automatic evidence has distinct levels:
+
+1. **Emitted program and geometry:** rederive the source-bound plan, emit every
+   program or command stream, decode its complete bytes with an independent
+   reader for that dialect. Compare every ordered tool, spindle, feed, rapid,
+   cut, entry, link and retract event and endpoint; then replay the *decoded*
+   motion through the existing
+   stock, access, cutter-occupancy, section and volume gates. Include post-added
+   motion and coordinate rounding. For split output, verify each file and the
+   ordered T1-to-T3 stock handoff as one job. Pin source, prior, transition
+   policy, profile, macro/stop/offset assumptions and output hashes. This runs
+   on Windows and supplies numeric whole-program evidence without visual
+   inspection.
+2. **Controller interpreter:** where an actual controller or independent
+   interpreter exposes machine-readable canonical moves, compare that trace
+   against the decoded stream and replay it as another authority. LinuxCNC's
+   [stand-alone `rs274` interpreter](https://linuxcnc.org/docs/stable/html/code/rs274.html)
+   is a plausible command-line cross-check for an explicitly shared command
+   subset; a Linux runtime has not been provisioned here, and passing LinuxCNC
+   cannot certify UCCNC-specific M6, offsets or macros.
+3. **Target-controller runtime and physical setup:** For the first UCCNC
+   fixture, CNCdrive documents a [Windows demo mode](https://cncdrive.com/UCCNC.html)
+   and plugin interface.
+   The locally installed public plugin sample exposes loaded G-code lines and
+   sampled position fields, but no verified exact trajectory export was found.
+   Its sample callback runs at 25 Hz, so sampled positions cannot certify
+   every segment. A per-move UCCNC runtime trace is not an expected user
+   artifact or an M5 completion gate. If a documented or tested exact trace
+   interface later becomes available, compare it as separate optional runtime
+   evidence; until then mark runtime parity `not_evaluated`. Demo loading or a
+   toolpath screenshot can catch gross interpretation mistakes, but neither
+   replaces level 1 nor establishes physical safety.
+
+The installed `Macro_Default/M6.txt` example contains additional `G53` tool
+change moves and hardware actions; it does not represent the user's manual
+change profile. No installed default profile is a production recommendation.
+The first M5 increment stops when the two selected UCCNC files, their setup
+declarations and chained stock replay pass level 1, and unknown commands or
+handoff states are rejected. A stockless imported file with explicit MOP
+values must preserve those settings and compare actual output without an
+invented Z shift; stock-dependent checks remain unassessed.
+A separate fixture with an explicitly nonidentity program-to-work datum must
+verify the requested transform and reject a mismatched emitted path. M5's
+portability gate then uses the same plan and
+auditor for a second named dialect fixture, plus a declared in-program manual
+transition and a bounded automatic-changer contract. The automatic fixture
+checks tool/offset/return effects without claiming physical ATC acceptance.
+An unsupported `M6`, stop script, macro or offset must fail closed. This proves
+policy and dialect choice without pretending to certify every controller.
+Record runtime-parity evidence separately. Further adapters need their named
+dialect and fixture; physical acceptance needs the user's real machine
+limits, offsets, tools, workholding and process inputs.
+
+#### M5 implementation packet
+
+**Architecture review, 2026-09-26.** Keep the native/core/strategy/adapter
+separation and caller-owned workflows. Apply the normative
+[mediation invariants](structure_spec.md#mediation-invariants-and-evidence-contract)
+at every boundary. This packet fixes implementation order and acceptance;
+it adds no milestone and does not mark M5 implemented.
+
+1. **Preserve native input before using it as evidence.** Fix the reproduced
+   stockless Part round-trip defect in `native/reader.py`, `cam.py` and
+   `writer.py`: absent stock must survive save/reopen, distinct from explicit
+   stock and newly authored default stock. Inspect copy/clone/transfer behavior
+   when representing presence; do not infer absence from dimensions. Include
+   stock presence in `integrations/cambam/native_series.py` freshness where
+   stock semantics are used. Explicit MOP settings and raw parameter states
+   remain unchanged. Test separate caller-supplied stock without mutating the
+   native source. Existing tests proving MOP values survive are insufficient.
+2. **Prove one complete controller output slice.** Use the accepted M4
+   `rounded_raster` plan, explicit per-tool setup and ordered T1/T3 UCCNC files.
+   Add detached setup/transition/evidence values only as exercised here;
+   dialect syntax, parsing and macro effects belong to `integrations/`.
+   Extract only the shared assembly needed to remove direct-output reliance
+   on CamBam private helpers; do not move the entire M1-M4 implementation.
+   Decode final bytes independently, normalize declared frames/offsets, and
+   replay **both decoded T1 and decoded T3** for access, occupancy, residual
+   and volume. The current M4 audit exact-compares its renderer but uses
+   planned V motion for final bounds; that shortcut is not an M5 auditor.
+   Deliver two files, a versioned setup/handoff manifest, per-capability
+   evidence and an executable audit command in the runbook.
+3. **Prove the extension points before M5 closure.** Use **Grbl v1.1** as the
+   second named dialect fixture, with explicit supported subset/settings,
+   same plan and shared verifier. Add an in-program manual transition and a
+   synthetic automatic-change effect contract (including added travel and
+   length registration); these need not be real machine macros. Exercise
+   mixed transition policies, a fixed work-origin/tool-table setup, and the
+   explicit nonidentity datum fixture. LinuxCNC `rs274` is an optional later
+   independent interpreter check; no Docker/WSL prerequisite is introduced.
+   Runtime parity and physical acceptance retain separate evidence status.
+
+Acceptance cases must be named tests with independent expected values:
+
+| Case | Required outcome |
+| --- | --- |
+| No Part or Machining stock; explicit MOP Z values | Import/save/reopen preserves absence, identity and parameter states; no invented stock/shift; stock checks `not_evaluated` without a separate model. |
+| Explicit MOP Z=4.5; identity mapping; optional stock edited | Authored/program Z stays 4.5. Stock-dependent evidence becomes stale; no automatic datum translation. |
+| `Auto`/inherited value without resolving context | Preserve source; report unresolved dependent path. Never substitute a convenient default or assert a universal Auto formula across MOP types. |
+| Declared program surface +4.5 to work surface 0 | Decoded -4.5 translation inverts to the intended path; unchanged/double-shifted output fails. Unsupported native origin/nesting remains importable but unanalyzed. |
+| Changed T3 coordinate; permitted post rounding | Compare against predeclared tolerance and replay actual rounded coordinates for every cutter. No planned-path stock substitution. |
+| Missing, altered, reordered or stale file/handoff | Reject job evidence; T3 consumes the decoded T1 stock with matching setup/source lineage. |
+| Bare T selection, pause, unknown macro or offset | No invented installed tool/completion; unsupported effects block certification. Declared transition postconditions appear as assumptions, never observed facts. |
+| T1/T3/T1 or disabled/reordered MOP | Preserve execution order/enabled selection; regrouping needs replanning and fresh predecessor-stock evidence. |
+| Native candidate, preview and direct output | Native source remains editable; each execution route earns evidence from its own complete output. No duplicate execution of source and replacement MOPs. |
+| Second dialect and manual/automatic policies | Same detached plan/verifier, separate decoding and setup effects; no controller names or G/M-code branching in core. |
+
+**Original worker boundary and stop (retained as history).** The first implementation unit covers steps 1-2,
+including its applicable rejection cases; step 3 is the subsequent portability
+unit within M5. First reproduce the stock defect, then add regressions and the
+working UCCNC slice. Use the runbook's existing native/M4 tests plus new M5
+tests; add exact new commands when implemented. Stop when this unit's artifacts,
+decoded stock evidence and negative cases pass, with runtime/physical checks
+explicitly unassessed. Do not solve arbitrary controller macros, native path
+generation, multiaxis kinematics or a general workflow engine. Return any need
+to change these semantics to architecture review; implementation details within
+the settled contract remain the worker's responsibility. M5 stays open until
+its portability gate also passes. This sequence matters now because preserving
+source semantics and independently auditing output are prerequisites for useful
+controller flexibility, whereas adding dialects first would replicate defects.
+Those named fixtures now exist; the current scope and remaining evidence belong
+to the [reusable ordered-job packet](#next-implementation-packet-reusable-ordered-jobs-and-verification).
+
+**Portability implementation, 2026-09-26.** Step 3 now emits one-program
+Grbl v1.1 manual and mixed-policy fixtures from the accepted M4 source-bound
+plan. An independent strict reader decodes every Grbl stage and M0 boundary;
+both T1/T3 pairs feed the same decoded stock/access/residual verifier as the
+UCCNC fixture. The manual fixture resolves CAM surface +4.5 mm to work
+surface 0 through a declared -4.5 mm Z map and checks the full decoded job.
+The mixed fixture uses fixed G54, external table-derived `G43.1` values of
+2/3/2 mm, manual T1-to-T3 and synthetic external automatic T3-to-T1 change,
+including three safe host travel segments and a decoded two-move T1 return.
+The host effect is an asserted fixture, not observed machine behavior. Unknown
+Grbl commands, changed M0, tool order, length state, datum coordinates and
+missing or altered host effects fail closed. The [runbook](DEVELOPMENT.md#m5-grbl-portability-and-transition-fixtures)
+and [dated evidence](REVIEW.md#m5-grbl-portability-and-transition-policies---2026-09-26)
+own commands and results. Production machine and exact runtime evidence remain
+separate reopening conditions.
+
+The user-approved curved/rounded scope adds one whole-outcome milestone to the
+earlier polygonal plan; it does not create an open-ended sequence of arc or tip
+subtasks. M1 establishes polygonal endmill cleanup, M2 extends rest/endmill
+cleanup to curves, M3 establishes V cleanup across those targets, M4 composes
+them, and M5 follows an accepted M4 plan. The branch's existing RC01 and
+triangle work remains reusable evidence toward M1/M3; it does not silently
+close their broader definitions. The first M1 fixture is already described in
+[First useful increment and acceptance](#first-useful-increment-and-acceptance).
+M1/M2 close original outcomes 1-2 in the supported domain; M3 closes outcomes
+3-5. M4/M5 close the accepted composition and direct-output requirements.
+Before coding each open milestone, fix its independent expected residuals,
+geometric and process tolerances, rejection cases and native/manual gate in the
+existing acceptance corpus. Passing its core tests without its stated
+source/output checks is progress within that milestone, not a new completed
+increment. Record partial target completion explicitly where finite tools or
+depth caps make full removal impossible.
+The native Pocket/footer trial failed its whole-post access criterion. The
+user's 2026-09-24 route direction selects among native MOPs, custom Regions,
+framework paths and their combinations by posted stock and access evidence.
+Thus the passing exact explicit carrier is the M1 execution route; Pocket is
+retained as a failed comparison. Reposting the same Pocket controls cannot
+certify it. A later native route may be selected only after its own complete
+post passes the same gate.
+
+**M3 fixed acceptance before native posting (2026-09-25).** The bounded
+intact-stock finish is a 2 mm capped inward V recess on A01, the accepted
+annulus and mixed concave/arc Region. It uses 1 mm raster stepover, a
+0.01 mm cutter-center margin and a 2 mm tip-Z change per XY millimetre
+maximum cut slope. The tracked M3 corpus fixes pointed 90-degree,
+0.25 mm flat-tip 90-degree and 0.5 mm tangent spherical/conical 60-degree
+profiles; residual upper budgets at Z=-1; nominal overcut below 1e-7 mm²;
+positive partial residual; and a flat-tip curved narrow-throat rejection.
+Full-height clearance is checked along every emitted straight XYZ segment,
+including variable tip Z. A separate supplied, source-bound T1 cylindrical
+trace must also fit the capped V finish at every height; pure-rest and final
+section bounds must show at least 500/90/200 mm² gain on letter/annulus/mixed.
+The [M3 runbook](DEVELOPMENT.md#m3-region-v-paths-and-native-output-gate)
+names the seven prepared native candidate pairs and the required visible
+preview, preview-post centerline and explicit whole-post gates. A synthetic
+Default wrapper tests only the reader. The current bounded target uses its
+own synthetic T1 proof fixture. M4 owns comparison and selection against
+the earlier M1/M2 flat-pocket strategies. A request to finish an existing
+square-wall flat-floor pocket
+requires its own stated finish geometry and partial-result budget.
+
+**M1 fixed acceptance before native posting (2026-09-24).** The tracked A01
+letter fixture has an eight-edge shell, one triangular hole and 1532 mm²
+original opening. Stock is 8 mm deep; T1/T2 diameters are 5/2 mm, T1 radial
+stock-to-leave is 0.5 mm, and four levels end at Z=-8. The original Region
+protects both shell and hole; actual supplied T1 sweeps define pure rest.
+The six convex shell corners give an independent minimum T2 finite-tool rest
+of 1.190659933 mm² per slab. At depths 1/3/5/7 mm require rough rest below
+139 mm² and above the approximately 127.265 mm² intentional allowance band,
+final rest no more than 1.690659933 mm², gain above 100 mm², section interval
+width below 0.01 mm², nominal protected overcut zero and no residual more
+than 0.05 mm from the ideal/original boundary. The separate 1.8 mm throat
+fixture rejects a radius-1 mm low-level crossing and any zero sharp-corner
+residual claim. The [tracked corpus](../tests/fixtures/rest_vcarve_acceptance.json)
+owns the exact synthetic inputs/limits. The [runbook](DEVELOPMENT.md#m1-polygonal-region-rest-and-smaller-endmill-output-gate)
+owns the generated A/B output files and post audit. One native Pocket/Default
+hypothesis adds a footer that returns to the setup point and stops the spindle,
+alongside no lead, no optimisation, cut-feed stepover and zero crossover.
+Whole-post role/stock evidence, not settings, decides that route. A failed
+actual native gate is evaluated independently. The first native trial failed
+on 12 stock-dependent T2 descents, even though its rough/final area budgets
+passed. It shows why nominal Pocket coverage cannot substitute for safe entry.
+The contour-only literal candidate passed its own actual post. The user's
+CAMotics view found long horizontal passes across the letter: inspection of
+the posted program attributes these to the **supplied synthetic T1 raster**
+(208 horizontal feed segments longer than 5 mm), while T2 has only its two
+shell/hole contour paths (20 long horizontal segments are contour edges).
+This validates motion identity but does not endorse the T1 strategy for a
+production job.
+
+**Ordered route decision for the combined workflow.** Obtain source-bound,
+ordered *actual emitted* motion for each native MOP or MOP series; missing or
+edited motion has no stock authority. Replay each prefix to calculate the
+remaining section area and volume, protected overcut and known-clear access.
+For each cleanup stage, compare native Pocket/Profile/V-carve, custom Regions
+with native MOPs, and framework-generated motion where applicable. Select a
+native route only when its own complete post passes tool, entry, link, stock,
+target and residual gates. Otherwise try a bounded custom Region/MOP route;
+if its post fails, use an exact audited framework path where supported.
+Report an infeasible or partial result when no route passes. Manual chaining
+may select among audited alternatives, with the same source/motion fingerprints
+and checks. M1 proves the single-region T1/T2 explicit case and replay of an
+ordered two-operation supplied trace; normalization of arbitrary native
+MOP-series posts, route comparison and edit-aware selection remain M4 work.
+The final workflow needs multiple area/volume fill methods. The current
+synthetic T1 raster and variable-Z V rows are individual candidate generators,
+not the workflow contract. In M4, put at least one contour-parallel offset
+fill through the same target, evolving-stock, access, swept-cutter and
+actual-output gates as raster and native MOP alternatives. Shape or medial
+tracing is another candidate family, selected when thin features or V-width
+geometry show a coverage or motion advantage. A selected chain may mix native
+MOPs, custom Region MOPs and exact framework paths by stage; only a verified
+emitted prefix authorizes the next stage's stock.
+Reassess the count only when the user explicitly changes this release finish
+line; defer spline/freeform geometry, generic rounded-flat tips and extra
+controller dialects until a user requirement or accepted fixture requires them.
+
+**M2 fixed acceptance and actual-post result (2026-09-25).** The tracked corpus
+fixes three curved jobs before CamBam posting: a radius-9/radius-2 annulus,
+a concave mixed line/arc shell with a circular hole, and a translated/reflected
+version of the mixed source. All use a 4 mm opening, two 2 mm levels, T1/T2
+radii 1.5/0.75 mm and 0.25 mm rough allowance. Independently, annulus analytic
+source area is `77π = 241.902634242` mm²; the mixed source has analytic
+arc-adjusted area `631.292105800` mm². A maximum 0.001 mm chord sagitta,
+outward/inward target bounds and inner/outer cutter sweeps bracket residuals.
+For the annulus, rough/final upper bounds are 18.2/0.2 mm², gain exceeds
+17.7 mm² and final volume is below 0.8 mm³. For each mixed frame, rough/final
+upper bounds are 35.5/1.0 mm² and gain exceeds 34.0 mm². Protected overcut
+upper area is zero. The separate annular 0.8 mm throat rejects a 1 mm tool.
+Native Region topology validation, source-hash-bound supplied prior, safe
+access, generated complete T2 motion, strict reimport and separate preview/
+literal candidates are implemented; [the runbook](DEVELOPMENT.md#m2-curved-region-rest-and-smaller-endmill-output-gate)
+holds the three prepared file sets and exact actual-post evidence. The user
+confirmed curved preview visibility. All three actual preview posts match the
+generated Z=-4 T2 centerlines; all three actual explicit posts pass exact
+ordered motion and stock replay against the original analytic source. The
+literal carrier proves CamBam transport, while the preview confirms its native
+Engrave interpretation; it does not make CamBam's Engrave operation the
+execution route. **M2 passes its bounded gate.** Physical setup remains
+unverified.
+
+## From reference jobs to reusable CAM capabilities
+
+**Engineering direction after the user's clarification, 2026-09-26.** Support
+faithful CamBam authoring and interchange, independent machining calculation,
+and combinations of native and generated methods. The
+[framework principles](structure_spec.md#framework-direction-and-extension-principles)
+own the long-term boundaries. The user's current workflow supplies context; it
+does not limit the design to manual changes, particular tools, one planner or a
+fixed export sequence. Engineering chooses algorithms and contracts and checks
+them. No further user design approval or G-code generation is needed this round.
+
+The reference jobs provide useful evidence for geometry preservation, V-cutter
+occupancy, stock dependence and decoded output on named inputs. They do not yet
+provide a general caller-supplied job API. `m5_portability` loads only the M4
+raster fixture, matches offsets to constants, and checks changer bytes against
+the same model used to write that effect. The next step must prove reuse and
+state semantics across different inputs. Another hardcoded controller example
+or a package-only migration would not achieve it.
+
+### Next implementation packet: reusable ordered jobs and verification
+
+**Implemented for the bounded offline domain, 2026-09-26.** The
+[implemented contract](structure_spec.md#reusable-ordered-job-output-and-verification),
+[runbook](DEVELOPMENT.md#reusable-ordered-job-output-and-verification) and
+[review evidence](REVIEW.md#reusable-ordered-jobs-and-verification---2026-09-26)
+record the result. The packet below remains the acceptance definition; future
+capability work follows the progression after it. Native disabled/order
+evidence uses a synthetic Default post and is not a new CamBam observation.
+
+**Outcome:** a caller supplies a supported ordered machining job, chooses an
+existing strategy or supplies motion, and receives independently checked output
+and stock evidence through the same API. Changing dimensions, tool IDs, feeds,
+frame or stage order must not require editing a fixture renderer. This packet
+also closes the outstanding M5 disabled/reordered native-MOP case; keep that
+case open until its new evidence exists.
+
+**Owners and scope:** `cam_core` owns semantic job/motion/state and verification
+contracts; `cam_extensions` owns strategy selection and convenience composition;
+`integrations/cambam` normalizes native sources and retains editability;
+controller integrations own syntax, offset normalization and modeled external
+effects. Extract the common auditor from `uccnc_m5` behind this boundary while
+preserving proved geometry evaluators. Use the existing fixed-axis endmill and
+V capabilities. This is an executable reuse increment, not a general workflow
+engine or a replacement geometry kernel.
+
+Implement a small ordered job/stage contract with resolved tools, explicit frames
+and units, semantic motions/events, source revisions and stock-prefix dependencies.
+Represent rapid/feed motion, spindle state, tool/offset changes, pause/completion
+conditions and external travel semantically; raw G/M words stay in dialect readers.
+A stage is not defined by its tool number or a source comment. Keep transition
+assumptions separate from decoded program facts and runtime observations. Carry
+state across boundaries instead of resetting each stage to one supplied tip.
+Bind algorithm/profile/effect-model versions and numerical policy into evidence.
+
+**Acceptance cases with independent expected values:**
+
+1. Run direct-Python and supported native-normalized input through the shared
+   contract. Use the edited annulus and one different supported target from the
+   existing corpus; change tool IDs, feeds and safe endpoints. Preserve native
+   originals and source mappings. Stockless import still permits supported motion
+   comparison and leaves stock-dependent checks unassessed.
+2. Pass both raster and contour-offset candidates through the same caller-selected
+   generation/verification and UCCNC/Grbl output interfaces. Shared validation
+   must not call a selected generator to infer missing output. Each emitted route
+   earns its own certificate from its decoded motion.
+3. Exercise a three-stage repeated-tool sequence with actual cutting in each
+   stage using a supported stock evaluator, in addition to the endmill/V pair.
+   Disable or reorder a native predecessor: old dependent evidence must fail,
+   and explicit replanning/replay must establish the resulting enabled order.
+   A final two-rapid return to T1 does not prove this cutting-stock case.
+4. Check identity, an explicit nonidentity datum and fixed-origin length setup
+   using separately calculated physical tip positions before and after a change.
+   Different valid offsets can produce the same cut; erroneous offset/map
+   composition must fail even when NC XYZ values look unchanged. An offset state
+   change and actual compensating motion are distinct events; apply documented
+   dialect semantics rather than adding offsets blindly.
+5. Exercise split and in-program manual policies and one synthetic automatic
+   effect through ordered state validation. Independently decoded extra travel
+   enters the same geometry/access checks where applicable, with explicit fixture
+   and stock data. Reject missing state, low travel, stale stock, invalid resume
+   tip and unmodeled effects. Completion remains an external assertion until
+   actual runtime evidence exists.
+6. Preserve existing native and M0-M5 regression evidence, source freshness and
+   fail-closed behavior. Test the shared contract and both consumers; verify
+   package imports outside the source tree if owners move. Native GUI validation
+   is needed only if emitted native behavior changes; prepare exact artifacts
+   and concrete observations before requesting it.
+
+**Stop:** both output routes consume caller-supplied jobs in this supported
+domain, the cases above pass, and no shared validator depends on M4 fixture paths,
+T1/T3 names, a selected raster algorithm or an emitter's expected bytes. Remaining
+geometry/backend limits are explicit capabilities. Do not expand this packet
+into arbitrary macros, new 3D algorithms or machine control.
+
+### Subsequent capability progression
+
+These are dependency directions. The user-selected ordered packets below turn
+five of them into bounded jobs; [PROGRESS](PROGRESS.md#active-work-and-next-priority)
+alone owns their live status and active priority.
+
+- **Native and generated machining in one job:** extend native motion authority,
+  source edits and cleanup attachment against a named combination. Preserve native
+  MOPs and select one executable authority per stage. An exact framework carrier
+  does not establish native Pocket/Profile algorithm parity. Add needed arcs/cycles
+  through explicit interpolation/state contracts, not silent flattening.
+
+  **Accepted bounded slice, 2026-09-26:** one actual CamBam Default linear
+  Profile post and a generated rounded V finish now share a source-bound
+  ordered UCCNC job. The decoded stage motion, five native cuts, V-safe
+  predecessor stock, residual gain and protected area pass. Re-audit rejects
+  an edited source. The [runbook](DEVELOPMENT.md#native-posted-predecessor-and-generated-v-cleanup)
+  names the files and command; [review evidence](REVIEW.md#native-posted-predecessor-and-generated-v-cleanup---2026-09-26)
+  records hashes, bounds and the external observation. A fresh single-depth
+  native Region Pocket post with eleven G3 cuts now passes the decoded UCCNC
+  native/generated hybrid stock gate. The bounded level-arc path also passes
+  synthetic Grbl checks. The [arc review](REVIEW.md#safe-native-g2g3-hybrid-evidence---2026-09-26)
+  records exact hashes and bounds. Helices, cycles and broader native
+  algorithms remain capability work.
+- **Surface/volume foundation and contour following:** create a synthetic 3D
+  target/stock corpus with analytic references, protected/thin features and
+  non-nested residuals. Evaluate representation error, conservative free space,
+  runtime and memory before selecting surface/solid and stock backends. Demonstrate
+  a surface-following or waterline candidate and subsequent rest operation through
+  the same job/evidence boundary. Surface contact alone cannot verify remaining
+  stock, holder clearance or access.
+
+  **Implemented bounded evidence slice, 2026-09-26:** the two-level rectangular
+  pocket target, protected 0.4 mm rib, contour stage and smaller-tool rest stage
+  pass independently decoded ordered output and conservative layered stock
+  replay. The rest stage's cleared descent fails without the predecessor.
+  Exact prism sections outperform the measured conservative XY columns on this
+  target; the comparison does not select a general 3D backend. The
+  [contract](structure_spec.md#bounded-layered-3d-stock-and-waterline-evidence)
+  and [evidence](REVIEW.md#layered-3d-stock-and-waterline-evidence---2026-09-26)
+  record numerical limits and remaining freeform/holder work.
+
+  **Accepted bounded slope slice, 2026-09-26:** an affine floor and radius-0.5
+  mm ball have independent contact, section, target-volume and straight-pass
+  swept-volume oracles. Two decoded ordered stages check protected-plane
+  clearance, cutting length, prior-cleared descent and conservative residual
+  intervals; the dependent pass demonstrably removes more stock. Exact plane
+  contact with conservative XY cells suffices for this fixture, so general
+  curved/solid and non-box holder backends remain unselected. The
+  [contract](structure_spec.md#bounded-sloped-surface-and-ball-cutter-evidence)
+  and [evidence](REVIEW.md#sloped-surface-and-ball-cutter-evidence---2026-09-26)
+  record its scope and reopening criterion.
+
+  **Completed bounded occupancy slice, 2026-09-27:** an explicit stock box,
+  side clamp and three-band tool body now check continuous decoded straight
+  stage motion on the same sloped-ball job. A holder collision between clear
+  endpoints rejects although the cutter clears. Setup changes invalidate job
+  evidence. The [contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy)
+  and [review](REVIEW.md#bounded-holder-and-fixture-occupancy---2026-09-27)
+  state the conservative initial-stock and fixture-shape limits.
+
+  **Accepted source-bound occupancy slice, 2026-09-27:** the existing actual
+  CamBam linear Profile post and generated rounded V finish now share one
+  declared program-frame stock, side clamp and T1/T3 body setup. All 229
+  independently decoded UCCNC stage moves pass continuous body/box and prior
+  stock replay; moving only the clamp rejects a holder collision on a V cut
+  between clear endpoints, and invalidates the prior handoff. The
+  [runbook](DEVELOPMENT.md#source-bound-nativegenerated-occupancy-case) and
+  [review](REVIEW.md#source-bound-nativegenerated-occupancy---2026-09-27)
+  retain the exact setup, hashes and limits. The later
+  [G3 occupancy result](REVIEW.md#source-bound-g3-nativegenerated-occupancy---2026-09-27)
+  closes the named level-arc gap on the actual Pocket hybrid. Controller
+  runtime and non-box fixtures remain deferred.
+- **Additional methods and optimization:** medial/contact tracing, adaptive
+  clearing, tool combinations and improved entry/link methods consume the same
+  target/stock capabilities and independently checked motion. Rank feasible
+  candidates under declared objectives; label timing/load estimates by their
+  actual machine/process assumptions.
+
+### Ordered next-session job packets (selected 2026-09-27)
+
+The user selected **1 through 5 in this order** after the Manual Profile tab
+writer passed its CamBam Default-post gate. This is a priority sequence, not a
+claim that each job technically depends on the previous one. Start a fresh
+session for packet 1. At the start of each later session, read the active row
+in [PROGRESS](PROGRESS.md#remaining-backlog-in-order), this packet's criteria,
+and the prior packet's accepted evidence; do not redo accepted checks without
+a relevant change. The user has already chosen the order. Engineering chooses
+the implementation within each named job and prepares any required CamBam
+validation files before requesting an external post.
+
+Finish one packet at a time. Close it only when the bounded implementation,
+required automated checks and any named external observation pass. Put the
+implemented contract in `structure_spec.md`, exact checks and hashes in
+`REVIEW.md`, repeatable commands in `DEVELOPMENT.md`, and mark that packet
+complete and the next one active in `PROGRESS.md`. Then stop for a fresh
+session. If a required post or product fact is still missing, leave the
+current packet active, retain its prepared artifacts, and resume it before
+advancing. These packets do not authorize machine execution.
+
+#### 1. Tabbed cutout with an interior operation
+
+**Job:** use the accepted 60 x 30 mm native Manual Square Profile B/C files
+and their actual Default posts as the final cutout stage after one generated
+shallow straight interior V-groove placed well inside the contour. Reuse the
+accepted bounded V-path/tool model rather than selecting a new strategy.
+The Profile has four or five 9 mm compensated gaps and leaves 1 mm of stock
+thickness under each tab. This is a retained-part stock and stage-ordering
+result, not another tab XML authoring increment.
+
+**Bounded result and acceptance:** decode the complete actual B/C posts as
+source-bound motion, add one deterministic interior generated path, and replay
+both stages against a declared stock/target. Independently check the expected
+four/five surviving bridges and that the cutout is not treated as empty or
+released stock; check a removed/misplaced tab and changed source/post fail or
+invalidate dependent evidence. Swapping stage order must invalidate the old
+certificate; fresh replay decides whether that new order is safe. Include the
+generated operation's entry, link and retract in decoded replay. Use the existing B/C
+posts without asking the user to repost unchanged files. Stop when both jobs
+and rejection cases pass; leave arbitrary part shapes, tab styles, clamps and
+physical workholding outside this slice. **Next fresh session: packet 2.**
+
+#### 2. Native Pocket with helical entry and generated cleanup
+
+**Job:** one CamBam Plus 1.0 Pocket with a posted helical entry, followed by
+one generated smaller-tool cleanup on the same source-bound stock. Prepare a
+minimal `.cb` and exact inspection/post criteria before asking the user for
+the actual Default `.nc`; use a supplied real Pocket instead if it meets the
+same bounded criteria.
+
+**Prepared fixture (2026-09-27):** the exact local
+[`packet2-helical-pocket.cb`](../output/packet2-helical-pocket-20260927-01/packet2-helical-pocket.cb)
+has SHA-256 `f53d0221a0a841af9ccb0d2bc1af1607f8b5161535466a7cce7e0a59393f0e03`.
+It is a single enabled `PACKET2_NATIVE_T1_HELICAL_POCKET` on a diameter-24 mm
+circle centered at (20,20), with 40 x 40 x 4 mm stock, top Z=0 and pocket
+bottom Z=-2. T1 is a 6 mm endmill; the Pocket pins 1 mm radial roughing
+allowance, 1 mm depth increments, 0.4 stepover, 20-degree Spiral lead,
+G17/XY work plane, +5 mm clearance, F60/F240 mm/min and CW S12000.
+The Default millimetre post, Standard-mm style and Default-mm tool library are
+explicit. The safe footer retracts to Z=+5, returns to (-5,-5), then stops
+the spindle. The declared initial tip for offline replay is (-5,-5,+5).
+These values define synthetic evidence, not a machining recommendation.
+The intended generated T2 is a 2 mm endmill that removes some of the native
+residual within the same circular target; it is not a second native MOP.
+
+**Exact external post gate:** open that unchanged source in CamBam Plus 1.0,
+confirm millimetres/Default and the single enabled Pocket, regenerate its
+toolpath, and inspect whether the entry descends while moving around the
+circle. Post the complete program with the Default processor to
+[`packet2-helical-pocket.nc`](../output/packet2-helical-pocket-20260927-01/packet2-helical-pocket.nc)
+beside the source, without editing either file. The post must identify this
+candidate and Default, contain a G21/G90 preamble, the named Pocket and T1,
+reach Z=-1 and -2, and end with the declared safe footer and M30. Arc motion
+requires G17 with relative I/J centres and endpoint-radius mismatch at most
+0.001 mm; unsupported cycles, planes or unresolved modal state fail intake.
+A helical entry needs verified curved XY motion with changing Z: a G2/G3 arc with Z
+change, or a multi-segment G1 approximation of that curve corroborated by
+CamBam's toolpath view. A spiral XML setting, level arc, vertical plunge or
+single diagonal ramp alone does not meet the gate. Retain the complete post
+even if it misses these criteria; report whether CamBam generated a visible
+helical entry and any post error. [The runbook](DEVELOPMENT.md#packet-2-helical-pocket-native-post-preparation)
+gives the short operator steps and local source check.
+
+**Bounded result and acceptance:** inspect the actual post's interpolation
+first. If it contains a Z-changing G2/G3 helix, add that explicit plane,
+center/sweep and Z-motion form to the native reader and decoded stock/access
+replay; retain a linearized helix only if that is the evidenced post form.
+Verify the full native prefix and generated cleanup, residual gain, protected
+stock and source-edit invalidation. Reject unsupported cycles, planes or
+unresolved setup rather than flattening or inventing motion. If no genuine
+helical entry can be obtained, keep packet 2 open with the observed post and
+a precise replacement-fixture request. Stop after one accepted native entry
+form and dependent cleanup; general native Pocket parity remains outside.
+**Next fresh session: packet 3.**
+
+**Accepted bounded result (2026-09-27):** the user observed the Circle Pocket
+toolpath and supplied its complete Default post. It contains ten descending G2
+entry moves. The actual source/post and generated T2 stage now pass the
+source-bound decoded UCCNC stock and section gates; exact checks and limits are
+in the [packet 2 evidence](REVIEW.md#packet-2-helical-pocket-and-generated-cleanup---2026-09-27).
+Packet 3 followed this closure and its accepted result appears below. This
+does not establish generic Pocket parity or a controller/physical acceptance.
+
+#### 3. Curved 3D ball-cutter finish and rest
+
+**Job:** advance the accepted affine-slope ball-cutter and stepped-volume
+evidence to one analytic, non-overhanging curved target. Use a shallow
+spherical-bowl reference if no user part is supplied, with two ordered ball
+passes: a larger-tool finish and smaller-tool rest pass, with an explicit
+protected rim.
+
+**Bounded result and acceptance:** define independent surface contact,
+section and volume references before selecting the representation and
+tolerances. Generate and decode both stages, prove that the second removes
+remaining stock, bound conservative residual and protected overcut, and check
+entry/access and tool-body clearance for the declared simple setup. Vary at
+least one curvature or tool dimension and reject stale prior-stock evidence.
+Stop at this analytic target; freeform meshes, overhangs and a universal 3D
+backend require separate evidence. **Next fresh session: packet 4.**
+
+**Accepted bounded result (2026-09-27):** the radius-2 mm spherical bowl with
+protected flat rim, generated radius-0.8/0.25 mm ball stages, and declared
+side clamp passes independently decoded UCCNC/Grbl stock, access and
+tool-body checks. Exact spherical-cap contact/section/volume references and
+conservative cell residual/gain bounds are in the
+[packet 3 evidence](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest---2026-09-27).
+No native CamBam post or manual validation adds evidence to this detached
+case. Packet 4 is the next fresh-session work; this does not establish a
+general surface backend or physical/controller acceptance.
+
+#### 4. Paired V-carve inlay
+
+**Job:** generate one matched tapered male/female inlay pair from a shared
+design contour, a declared assembly frame, one supported V-cutter profile and
+caller-supplied nominal clearance. Use a synthetic reference with zero and
+one positive clearance for engineering acceptance; ask for the user's fit
+preference only if applying the result to a specific physical inlay.
+
+**Bounded result and acceptance:** derive both targets and operations without
+losing their separate stock states. Use an independent cross-section/assembly
+oracle for intended contact, declared gap and collision; decode a supported
+output route for both operations and replay their stock/residual results.
+Reject inconsistent registration, impossible clearance, changed tool geometry
+and stale paired evidence. If native CamBam emission changes, prepare actual
+posts before claiming that output route. Stop at one bounded tapered pair;
+production glue gap, material behavior and physical fit are separate.
+**Next fresh session: packet 5.**
+
+**Accepted bounded offline result (2026-09-27):** one circular contour and
+pointed V profile produce independent tapered receiver/plug jobs at zero and
+0.1 mm caller-supplied radial clearance. Complete UCCNC and Grbl output for
+each part independently decodes and replays; analytic assembly and decoded
+sections show the declared side gap, 0.1 mm bottom gap, zero insertion-envelope
+residual/overcut and retained backing. Source/tool, registration, flip and
+program edits reject stale or colliding evidence. Exact bounds and bytes are
+in the [packet 4 evidence](REVIEW.md#packet-4-paired-v-carve-inlay---2026-09-27).
+No CamBam post or physical-fit choice was needed for this detached synthetic
+case. Packet 5 is the next fresh-session work.
+
+#### 5. Direct controller program for a fully generated job
+
+**Job:** take the nominal generated RC01 rough/cleanup sequence through a
+declared UCCNC output profile so the selected job has no CamBam posting step.
+First audit the existing caller-supplied UCCNC/Grbl ordered-job emitters and
+the RC01 reference-dialect output; implement only the missing adapter or
+source binding. Use the existing bounded synthetic UCCNC setup unless the
+user supplies a different controller and its exact setup before this packet.
+
+**Bounded result and acceptance:** emit complete program bytes for both
+generated stages, independently decode every command and transition, and
+replay the decoded motion against the same access, process, stock and residual
+oracles. Bind tool, datum, transition policy, source and output hashes; reject
+altered files, unsupported commands and unresolved handoff state. If the
+current public ordered-job route already satisfies this job, close with the
+end-to-end regression and evidence instead of another post engine. Stop at
+offline level-1 output for this named controller profile. Target-controller
+runtime, real machine limits and physical cuts remain separate gates.
+**Next fresh session:** complete the bounded
+[branch delivery review](PROGRESS.md#active-work-and-next-priority);
+do not auto-extend these five packets.
+
+**Accepted bounded offline result (2026-09-27):** the exact nominal RC01
+T1/T2 generated trace now emits two complete UCCNC programs through the
+existing ordered-job profile. Six-decimal output preserves the protected
+island endpoint that four-decimal output rounded into the island. Both files
+independently decode and pass ordered stock replay plus RC01's stricter
+continuous-height access, tool-component, process and three-slab residual
+checks. Source motion, transition assertion, numerical policy, handoff and
+output bytes are hash-bound; edits and unsupported commands reject. The
+[packet 5 evidence](REVIEW.md#packet-5-generated-rc01-uccnc-output---2026-09-27)
+records exact values and limits. No CamBam post or manual validation is needed
+for this synthetic offline gate. UCCNC runtime and physical use remain open.
+The five selected packets are complete; the branch delivery review is next.
+
+Existing libraries can inform primitives or comparison oracles without owning
+our workflow. [OpenCAMLib's drop/push-cutter methods](https://opencamlib.readthedocs.io/en/latest/)
+are examples of cutter/surface contact and waterline construction to evaluate
+when the 3D packet starts. This is not a dependency selection or a stock-verifier
+endorsement. The existing [algorithm ownership policy](#algorithm-ownership-and-dependency-policy)
+requires platform, numerical, licensing and maintenance evaluation.
 
 ## Programmatic execution requirement
 
-The framework must calculate geometry and paths programmatically and load/save
-CamBam files without running CamBam. No headless CamBam service or callable CAM
-engine is available to this workflow. Do not design around GUI automation,
+The framework must calculate supported geometry and paths programmatically and
+load/save CamBam files without running CamBam. No supported standalone headless
+CamBam engine has been established for this workflow. CamBam does expose
+in-application scripting/plugins, including a G-code generation example; that is
+different from an independently callable, supported headless service. Do not design around GUI automation,
 CamBam plugins/scripts, or manual toolpath extraction as execution dependencies.
 Implement the needed geometry, cutter and supported MOP path algorithms in the
 framework, using an appropriate programmatic geometry library where justified.
-CamBam is the file consumer and an optional manual validation environment.
+For existing native-MOP authoring, CamBam remains the toolpath generator and
+postprocessor: opening the `.cb` and generating/exporting G-code is required.
+For future framework-generated motion, CamBam is an optional inspection/editing
+environment and one possible output route. A direct postprocessor is a separate
+capability; calculating paths alone does not yet make the workflow headless to G-code.
 
 The useful proxy here is a **file representation**: calculate XYZ tool-center
 paths ourselves, save them as shapes and attach an Engrave MOP. It is not a way
@@ -22,6 +860,868 @@ to invoke CamBam's calculations. Manually exported CamBam paths may serve as
 optional comparison fixtures, but normal operation and automated tests must not
 require them. CamBam's scripting examples document possible file/motion behavior;
 they are not a runtime interface for this framework.
+
+**Output direction clarified 2026-09-24 after the variable-depth post:** the
+user wants the computed V-carve path inspectable as a CamBam toolpath. The
+intended CamBam carrier is generated XYZ Plines selected by an Engrave MOP,
+with original finish-design geometry retained separately. Engrave follows the
+selected shape's Z according to the [CamBam 1.0 manual](https://cambamcnc.org/doc/1.0/cam/engrave.html);
+CamBam's [sloped-lines example](https://www.cambam.info/ref/script.sloped-lines)
+uses source Plines with Target Depth 0 and Optimisation Mode None. This is
+evidence for a bounded candidate, not acceptance of our emitted motion. The
+Drill/CustomScript carrier proved one exact output path but does not show its
+literal motion as a CamBam toolpath; the user confirmed the posted slope in
+CAMotics. Keep it as a verified execution route/fallback while developing the
+visible Engrave route. Do not enable both for the same cut in one posted job.
+The first bounded straight XYZ preview showed the slope directly on the
+Engrave Pline and its Default post contained the exact isolated cut. The
+[whole-motion finding](REVIEW.md#bounded-xyz-engrave-cambam-post-finding---2026-09-24)
+records missing feed approach, feed retract and setup return. Keep the
+accepted CustomScript post as execution authority; the Engrave candidate is
+for inspection. CamBam previously added Engrave target depth to vertex Z and
+changed RC01 order/roles; keep zero depth offset and whole-post auditing for
+any reopened Engrave carrier. Bulge encodes
+an XY circular arc with vertex Z, not an arbitrary 3D curve. Add spatial bulge
+output only after interpolation, native preview and postprocessor behavior pass
+a bounded geometric/motion comparison; bounded XYZ line segments can represent
+curves until then.
+
+## Execution architecture refinement - 2026-09-23
+
+This section records the user's new context and the lead's recommended design.
+Recommendations and unanswered choices are not recorded as user agreement.
+It refines the detached-core proposal below, not a replacement implementation.
+
+### User context and current capability
+
+- Preserve programmatic CAD/Part/MOP authoring and `.cb` interchange. The product
+  goal is native object coverage; current support is bounded, not full CamBam parity.
+- Today's workflow opens that file in CamBam, generates paths with Ctrl+T and
+  exports G-code with Ctrl+W (the user's workflow also regenerates paths there).
+  CamBam's selected postprocessor and configuration determine the machine output;
+  `.nc` is an example extension, not the interface contract.
+- Users may inspect and edit layout, geometry, enabled Parts/MOPs and output grouping
+  before machining. Preserve this workflow alongside future headless execution.
+- Explore an independent toolpath/stock core, reusable beyond rest and V-carving,
+  with eventual direct G-code output and alternative generators/optimizers.
+  At that date exact replication of CamBam path shapes/order was not required.
+  The 2026-09-26 clarification establishes versioned native-behavior compatibility
+  and future shape-following volume methods as intended extensions, developed
+  against named evidence rather than a promise of universal native equivalence.
+
+The detached geometry/cutter/stock design, generated-motion evidence, native versus
+explicit-path adapters and extensible strategies were already proposed. The new
+emphasis is two complete output routes, a clear execution authority, edit/reimport
+semantics, and an explicit delivery decision for direct postprocessing. Existing
+`planar.py` provides nominal geometry; `stock.py` verifies supplied horizontal
+section motions; `machining_planning.py` balances depths/process parameters. None
+currently generates a general XYZ path, optimizes routes or posts G-code. Existing
+MOP `optimisation_mode` is a serialized CamBam setting, not our own optimizer.
+
+Primary sources checked 2026-09-23: CamBam's [automation documentation](https://www.cambam.info/doc/plus/Automation.htm)
+documents scripting and .NET plugins, and its [MOP Automate example](https://www.cambam.info/ref/script.mop-automate)
+describes opening a source file, inserting operations and producing G-code.
+Its [script instructions](https://www.cambam.info/ref/script) run inside CamBam.
+Therefore "CamBam has no API/automation" is too strong. These sources do not
+establish a supported standalone headless engine or its deployment/licensing
+contract; no such integration was tested here. Reopen an optional native bridge
+only with a supported interface and concrete consumer need. It must not become
+a dependency of the independent core.
+
+### Execution authority and compatibility
+
+The decisive invariant is that removal evidence describes the motions intended
+for execution. Our generated pocket path cannot certify clearance left by a
+different native pocket path, even when both use the same outline and cutter.
+Ideal reachable area is an upper bound on possible removal, not guaranteed
+cleared space. Conservatively assuming unknown material remains can support
+analysis, but may prevent useful links or invalidate cutting-engagement limits.
+
+| Route | Motion authority and stock evidence | Output and limit |
+| --- | --- | --- |
+| Native MOP workflow | CamBam generates motions; framework estimates remain estimates unless a supported trajectory source or independently proven lower removal bound exists. | Existing editable `.cb`; CamBam generates and posts. No exact native-rest guarantee from MOP parameters alone. |
+| Framework motion through CamBam | Core generates roughing and dependent cleanup; stock comes from those ordered motions. | Proposed XYZ/Engrave adapter must establish actual emitted cutting, entry/link/retract and order semantics. Native regeneration must not silently substitute a different plan. |
+| Framework motion through direct post | The same core plan is lowered to a declared controller dialect and independently checked. | Future headless G-code plus optional `.cb` inspection artifact; bounded dialect support, not universal postprocessor compatibility. |
+
+CamBam [documents a GCode machining operation](https://cambamcnc.org/doc/1.0/toolpaths-and-gcode.html)
+as well as Engrave. A supported NC-reference/import route may be worth comparing
+with XYZ/Engrave for motion inspection; it is not currently implemented or selected.
+Neither route should be called lossless before testing its complete motion
+semantics. An inspection-only file must say so; a path polyline does not encode
+all feed, spindle, tool-change, rapid and program-state semantics.
+
+For native interoperability distinguish three claims: document fidelity, equivalent
+machining intent/result within declared tolerances, and identical trajectories.
+The first remains a library concern; the second is the useful future acceptance
+goal. The third needs a named versioned compatibility target; it must be possible
+to develop such a provider without requiring every independent strategy to copy it.
+
+### Accepted integration requirement - 2026-09-23
+
+The user accepts framework ownership of both roughing and cleanup for the first
+reliable combined sequence, conditional on supporting both standalone operation
+and native CamBam shape/MOP integration. Native integration is a required product
+workflow, not merely a way to preview independent paths. The user also accepts
+designing direct headless G-code output now and implementing it after the first
+useful rest/V-carve workflow. The third answer establishes caller-owned workflow
+orchestration: the framework supplies reusable capabilities for iterative import/edit
+and embedded headless applications, without imposing a fixed use-case sequence.
+These decisions do not assert that native path equivalence is already established.
+
+Both workflows use the same detached capabilities to calculate rest, tool access, V-carve motions
+and candidate combinations. CamBam geometry/MOP inputs are normalized through an
+adapter; direct Python inputs need no CamBam document. Keep these result forms
+independently callable and composable:
+
+| Requested result | Core result and CamBam attachment contract |
+| --- | --- |
+| Rest analysis | Pure rest with source-motion evidence, original protected target, uncertainty and residuals; optionally attach closed preview shapes. |
+| Native endmill cleanup | Derive tool-specific closed machining regions with permitted overlap into cleared/free space; attach a smaller-tool Pocket, or a Profile only where its finite cutting band covers the intended cleanup. Preserve original geometry/MOPs and explicitly configure the new operation. |
+| Explicit endmill cleanup | Generate cutting and access motions from the same target/stock request; return motion values independently or use a supported path-output adapter. |
+| V-carve cleanup | Generate variable-depth tool-center paths using the original finish target, tool profile, residual stock and allowed overlap; attach XYZ Pline shapes and correctly configured Engrave MOPs through a validated adapter. |
+| Combined strategy | Compare permitted tool/operation sequences against the same target and constraints; return the selected sequence, evidence, residual and tradeoffs. Native and explicit outputs can be combined only where their stock dependencies are supported. |
+
+Do not pass an expanded rest polygon to a general V-carver as a new finish design.
+Its artificial boundary against cleared space would alter the intended wall/depth
+solution. Keep pure rest, allowed machining domain, protected target and tool-center
+paths separate. For endmill attachment, distinguish a cutter-center region from
+the boundary consumed by a native Pocket/Profile; passing centers as boundaries
+would apply tool compensation again. Overlap is tool- and access-dependent, not
+a uniform arbitrary outward offset or a substitute for stepover.
+
+Support curved output as an extension of the motion contract. Preserving endpoint
+Z and bulge in XML does not prove the intervening spatial motion. First use bounded
+XYZ line segments; add bulged paths only after core interpolation, native Engrave
+behavior and relevant post output agree within declared deviation/sweep limits.
+Do not advertise a CamBam bulge as an arbitrary spatial-curve representation.
+
+Attach evidence to each source operation rather than to an entire document mode.
+When CamBam generates a preceding native path, analysis based on our estimated
+counterpart remains estimated. Native region/MOP cleanup authoring is still useful,
+but cannot silently promote that estimate to guaranteed clearance for later links
+or stock-dependent cuts. Unsupported mixed sequences must report the specific
+missing evidence; no silent switch of execution authority is allowed.
+
+Acceptance must eventually cover both input routes and each advertised attachment:
+equivalent normalized requests produce equivalent core results; native cleanup
+regions retain holes/protected walls and admit the chosen cutter; actual native
+Pocket/Profile output achieves the claimed cleanup within tolerance; XYZ/Engrave
+output preserves the required motion; and combinations retain ordered stock
+dependencies. This is a product requirement and future verification plan, not
+current native or production acceptance.
+
+### Proposed shared core and adapters
+
+Keep one distribution. Reusable detached calculations, stock/volume analysis,
+motion values and verification belong in `cambam_builder.cam_core`; optional
+rest/V-carve strategies and policy planning belong in `cam_extensions`. The
+first exact reference job currently lives in `cam_core.rc01`; the
+[package organization plan](structure_spec.md#package-organization-decision-and-migration-plan)
+records its later split and the native/extended migration order. Root-level
+stock, planar and calculation modules remain active owners until moved with
+their callers. Native CamBam integration now lives in `integrations/cambam/`;
+future controller adapters remain separate and depend inward on immutable core
+values. No separate distribution/service or generic plugin registry is needed.
+Names below describe responsibilities, not new public APIs.
+
+| Boundary | Responsibility |
+| --- | --- |
+| Input normalization | Convert direct Python requests or a CamBam snapshot into resolved geometry, operation intent, tools, setup, units and constraints. Resolve inherited styles/defaults, enabled order, nesting/transforms and stock offsets; reject missing required values or unsupported semantics. |
+| Target and stock | Keep desired final geometry/protected material distinct from evolving stock. Evaluate cutter occupancy/removal, residual and uncertainty against ordered motions; analysis is callable without a generator. |
+| Strategies | Pocket/profile/rest/V-carve algorithms propose cutting passes using shared geometry and stock queries. A V-carve target is independent of which clearing tools precede it. Strategies do not serialize `.cb` or controller commands. |
+| Motion representation | An explicit ordered plan of cutting, entry, linking, retract and setup/tool events with resolved tools, feed/spindle requirements, physical tip datum, frame/units and provenance. Begin with fixed-axis XYZ lines; add arcs with explicit plane/center/sweep/interpolation contracts when needed. |
+| Scheduling and optimization | Respect stock and operation dependencies, tool/process constraints and caller-fixed order. Generate a deterministic baseline first; later improve travel, entry, segmentation or cutting strategy under explicit objectives. Controller acceleration/look-ahead remains a separate machine concern. |
+| Verification | Evaluate final continuous motions, including cutting versus non-cutting tool/holder occupancy and between-height behavior. Replay stock after motion changes. Report unsupported/unassessed process or machine constraints separately from geometric success. |
+| Output adapters | Map a verified plan into a bounded CamBam path representation or controller-specific program. Keep ordinary native-MOP document export independently available. Validate any changed interpolation or inserted motions after lowering. |
+
+Toolpath semantics must not depend on CamBam entity IDs, XML, a Shapely object, or
+a controller's textual G-code. Thin adapters retain mappings back to document
+objects. Use direct pure Python APIs first; MCP remains a caller of the same core.
+Preserve the existing SectionMotion contract as a bounded verifier, not the public
+model for all future motion. Extend or adapt it only where the first XYZ consumer
+proves reuse, avoiding a speculative rewrite of working geometry foundations.
+
+For the first rest/V-carve scope, fixed-axis cutters and bounded depth sections
+with interval coverage are a reasonable representation. Sampling a few Z planes
+does not prove clearance between them. Introduce mesh/dexel/voxel stock only if
+a concrete 3D target cannot be represented efficiently and conservatively by the
+section contract. Future surface-following methods can share motions, tool values
+and provenance while requiring a different target/stock evaluator.
+
+Optimization is not a prerequisite for stock understanding. A sweep can be
+evaluated for supplied or generated trajectories independently of how they were
+chosen. Reordering cuts may preserve final removal yet change intermediate access
+and engagement; simplification/arc fitting can change removal itself. Each proposed
+optimization must retain constraints and revalidate affected stock prefixes and
+output motion. Prefer repeatable useful plans before pursuing better rankings.
+
+Direct postprocessing adds controller-specific units, coordinates, feed modes,
+arc support, tool/length offsets, spindle/coolant, program start/end and file/tool
+transitions. Unsupported commands/macros/cycles must fail explicitly. A CamBam
+postprocessor name or custom header/footer is not sufficient to reproduce its
+semantics; do not execute or silently transplant them. Begin with one declared
+controller profile and parse/backplot its supported output for comparison against
+the final motion plan, including rounding and any post-added moves. G-code emission
+does not imply machine execution or production acceptance.
+
+### Caller-owned workflows and reusable capabilities
+
+**User clarification, 2026-09-23:** use-case workflows are situational and belong
+to consuming applications. The framework may participate in repeated conversational
+iterations, import manually edited documents, or act as a programmatic design-to-
+output adapter inside another application. Neither explicit manual reimport nor
+automatic synchronization is a mandatory framework workflow. The earlier binary
+question is superseded by this separation of capability and orchestration.
+
+Expose independently useful operations for document import/inspection, resolved
+job construction, analysis, path generation, verification, result attachment and
+export. A caller can compose them, provide supported existing motion/stock inputs,
+or request only regions or diagnostics. Convenience composition may implement a
+common sequence without making that sequence the only entry point. Calls must not
+require a GUI, interactive approval, MCP session, network service or an implicit
+global "current job". These are target API requirements, not claims about new APIs
+already implemented. Existing document and MCP contracts remain their own owners.
+
+The consuming application chooses when to ingest changed data, which work to
+recompute, whether to ask a user, which strategy/tool sequence to request and where
+to write outputs. The core owns geometric/motion validity: a caller's workflow
+policy cannot turn stale removal evidence into valid clearance. Return structured
+results distinguishing current, stale, uncertain, unsupported, invalid and partial
+states where applicable, with the affected dependencies and reasons; do not resolve
+missing facts by an interactive prompt or silently change strategy. Keep freshness,
+evidence level and machining completeness distinct rather than one success flag.
+
+Native and standalone paths share these functions. File watching, application
+events or a future native bridge can call them to automate synchronization; they
+are integration responsibilities, not new core infrastructure required now.
+
+### Manual edits, provenance and regeneration
+
+Treat generated plans and stock as derived artifacts tied to immutable input
+snapshots. Retain fingerprints of geometry, resolved operations, tools, stock/setup,
+ordered predecessors, algorithm/tolerances and output profile. Accept a fresh
+document or supported in-memory request independently; when a prior snapshot is
+available, identify relevant semantic changes and affected derived results. Imported
+data must be usable without a prior framework session or hidden sidecar state.
+Persistence/transport of provenance is a separate adapter concern.
+
+"Understand user edits" means correctly interpreting the resulting supported
+geometry, relationships, transforms, enabled/order state and effective MOP/tool
+values, and diagnosing changed assumptions when comparison evidence exists. It
+does not mean inferring why the user edited them. Native numeric ID renumbering or
+XML formatting alone must not masquerade as a changed cut; ambiguous entity matches
+must cause conservative invalidation rather than invented identity. Missing external
+styles/tool settings and unsupported imported features must remain explicit gaps.
+Import preservation does not imply those features are supported for planning.
+
+Geometry/layout/tool/depth/enable/order changes invalidate affected plans and stock.
+The caller chooses whether and when to regenerate, inspect or export the edited
+document; verification must reject stale claims for the affected results. Preserve
+authored originals separately from derived path geometry. Edited generated paths
+can be supplied as explicit motion only through a supported interpretation and
+renewed verification; do not reconstruct pocket or V-carve design intent from them
+automatically. If derivation links are lost, treat paths as independent input with
+unknown provenance rather than overwrite them as if they were still owned output.
+
+Disabling a roughing MOP invalidates cleanup that assumes its removal. Splitting
+output files is valid only with explicit stock/setup and execution dependencies;
+a later file is not independently runnable merely because it contains one Part.
+Changing a postprocessor can invalidate output evidence without changing the
+abstract cutting plan. A complete setup translation can reuse evidence only under
+a proven frame transformation; moving geometry relative to fixtures cannot.
+Do not silently run both native source MOPs and their generated replacements.
+
+The core can only assess state supplied to it; it cannot observe unsaved GUI edits.
+The caller may supply updated state manually or automatically. Neither approach
+changes the dependency/freshness rules, and ingestion need not regenerate paths.
+Round-trip retention of provenance in native files needs its own compatibility
+evidence; do not assume arbitrary metadata survives CamBam save.
+
+Future acceptance must cover fresh edited-file import without session history,
+equivalent direct/document inputs, relevant versus cosmetic changes, disabled or
+reordered predecessors, ambiguous/lost identity, stale-result rejection and explicit
+recomputation. Demonstrate both an iterative document consumer and a noninteractive
+embedded caller using the same core. Do not require live synchronization to prove
+these contracts. These checks are separate from native motion and machine acceptance.
+
+### Delivery recommendation and open decisions
+
+Keep rest/V-carving as the active capability driving the shared core. Do not expand
+the immediate task to all native MOPs, a generic optimizer, general 3D stock, or a
+CamBam postprocessor interpreter. The earlier fixed-section work supplies useful
+regression evidence, but another isolated capsule refinement does not by itself
+deliver the user's workflow.
+
+Recommended progression (priority and actual next work live in PROGRESS):
+
+1. **Definition and synthetic-case selection complete, 2026-09-23:**
+   [RC01](#first-generated-acceptance-job-rc01) applies the accepted boundaries to
+   one roughing-plus-cleanup consumer, with stock height, tools/reach, target,
+   entry/retract, process and tolerance requirements, plus a cone feasibility guard.
+   The user selected the proposed synthetic case; no physical setup is required now.
+2. Deliver the first generated sequence with shared motion values, all-height
+   occupancy/access, stock replay and independently checked residual/overcut.
+   First prove an endmill sequence; then pointed-cone variable-depth and capped-depth
+   V-carving using the same contracts. Broader topology should serve this outcome.
+3. Prove the CamBam explicit-path adapter against actual emitted motions before
+   relying on it for execution. Design the direct-post boundary now; the user
+   accepted delivery after the first useful rest/V-carve workflow. If native output
+   cannot preserve required semantics, report that blocker and propose revisiting
+   the order rather than weaken the motion contract.
+4. Add one direct controller post with semantic output checks, then expand strategies,
+   optimization and 3D target representations only against concrete jobs and measured
+   limitations. Matching native motion byte-for-byte is not a completion criterion.
+
+Workflow decision status, asked 2026-09-23:
+
+- **Answered:** the first reliable combined workflow may own roughing and cleanup,
+  while both standalone and native shape/MOP workflows are required. See the
+  [accepted integration requirement](#accepted-integration-requirement---2026-09-23).
+  Native-generated predecessors still need a separate motion-evidence contract.
+- **Answered:** design for headless G-code now; implement after the first useful
+  rest/V-carve workflow. Keep the motion model independent of output format.
+  Select the first controller dialect, tool-change/setup behavior and acceptance
+  environment before that later postprocessor increment.
+- **Answered by reframing:** workflows belong to callers. Supply complete import,
+  interpretation, change/freshness diagnostics and explicit regeneration capabilities
+  for supported inputs; applications decide whether ingestion/recomputation is manual,
+  automatic or iterative. See [caller-owned workflows](#caller-owned-workflows-and-reusable-capabilities).
+- **Answered, 2026-09-23:** the user selected the proposed synthetic
+  [RC01](#first-generated-acceptance-job-rc01) case, including its test-only
+  plunge/feed limits. Its geometry, tools, process bounds and residual/error
+  thresholds are the first acceptance baseline. Physical material, workholding,
+  machine limits and production parameters remain unestablished; accepting the
+  test inputs does not accept generated motion, native output or production use.
+
+This refinement closes when context, boundaries, recommendations and unanswered
+choices are recorded and reviewed. Documentation-only checks suffice; no pytest,
+native-file validation or machining trial is needed for this round. Implementation,
+output compatibility and production acceptance remain separate future gates.
+
+## Bounded convex-region rest/V acceptance case (2026-09-24)
+
+Before implementing this consumer, fix the following independent synthetic oracle.
+The closed, counterclockwise opening is the triangle `(0,0), (12,0), (6,8)`
+in millimetres; stock is above Z=-3 and its top is Z=0. The protected original
+target is the ideal 90-degree pointed V recess `H(x,y)=min(3,q(x,y))`, where
+`q` is the minimum Euclidean distance to the three triangle edges. Its inward
+offsets are similar triangles with inradius 3, so target area at depths
+`z=0,1,2` is exactly `48, 64/3, 16/3` mm² respectively. A 3 mm radius,
+3 mm conical-length pointed tool is supplied. Prior ordered motion makes one
+vertical cone plunge at `(3,2)` to Z=-1.2 and retracts to Z=+1. The consumer
+receives that motion, rather than reconstructing prior stock from intent.
+
+Pure rest is original target minus the replayed prior cone. Its section areas
+at depths `0,1,2` are exactly `48-1.44*pi`, `64/3-0.04*pi`, and `16/3` mm².
+Its witnesses include `(3,2,z=0)` removed and `(4,2,z=1)` still required.
+The cleanup starts in that prior cleared column, cuts horizontally to `(4,2)`,
+and follows tip depth `d(x)=0.8*x-1.2`, from 1.2 to 2 mm. Its depth is the
+original left-edge clearance `(4*x-3*y)/5` along y=2, not a depth inferred
+from the prior rest boundary. At both endpoints every cone section is inside
+all three original polygon halfspaces; linear interpolation and convexity
+prove containment along the entire moving cut. The prior disk is included in
+the cleanup sweep. All links stay above Z=0, and the retract uses the newly
+cut endpoint column. This is a partial finish, with rest outside the path.
+
+Acceptance: reject a stale supplied trace, altered prior/cleanup motion,
+overdeep endpoint, endpoint outside a convex opening, unsupported tool, and
+uncleared low link. Replay must retain distinct prior and cleanup prefixes and
+report monotone removal at the stated witnesses. Independently integrate
+horizontal widths of the variable-radius disk union at each of the three
+depths; compare final residual with `target area - integrated sweep area`
+within 0.002 mm². Exact pure-rest area checks use 1e-9 mm² tolerance.
+No physical clearance, holder, process limit or native output acceptance is
+claimed. The existing native source, preview and execution roles stay separate;
+this detached geometry slice needs no new output carrier.
+
+### Native triangle source, preview and execution gate (2026-09-24)
+
+The next bounded consumer uses the exact triangle and supplied prior cone
+column above. Its strict native source is one original Region and one Part;
+the prior motion remains an explicit, source-hash-bound input. It generates a
+separate visible cleanup XYZ/Engrave preview and a complete prior-plus-cleanup
+Drill/CustomScript candidate. The preview is inspectable but has no execution
+claim. Both derived files preserve the original Region and Part, with one
+enabled operation each; source `.cb`, prior JSON, preview `.cb` and explicit
+`.cb` are pinned independently.
+
+Automated acceptance requires strict reimport of both candidates, matching
+target links and process settings, unchanged original geometry/stock, exact
+source/prior/candidate freshness, core replay of the supplied column and
+cleanup, and rejection of changed source, prior motion, candidate and posted
+coordinates. Emitted-motion acceptance additionally requires a newly produced
+CamBam Plus 1.0 Default/Default mm post from this exact explicit candidate,
+exact ordered event/move/feed/coordinate comparison, and stock replay of those
+parsed posted values with separate prior and cleanup prefixes. A constructed
+NC regression tests the audit mechanics but is not native acceptance. Stop at
+that post audit; any preview discrepancy is recorded separately and does not
+promote Engrave to execution. The [runbook](DEVELOPMENT.md#native-triangle-source-preview-and-post-gate)
+owns the concrete files and steps.
+
+The retained explicit candidate's actual CamBam Plus 1.0 Default post passed
+the ten-item and posted-stock audit on 2026-09-24. The user confirmed the
+ordered motion in CAMotics and reported that CamBam does not display the
+CustomScript path. The separate preview NC contains the exact sloped segment,
+and the user confirmed the preview's sloped polyline is visible in CamBam.
+The user also confirmed the source triangle and millimetre Part stock offset,
+size and surface, completing this bounded native acceptance. See the
+[dated evidence](REVIEW.md#native-triangle-source-preview-and-explicit-candidate---2026-09-24).
+
+## First generated acceptance job RC01
+
+**Defined and selected by the user 2026-09-23; accepted synthetic test inputs,
+standalone generation implemented, native output acceptance pending.** The original
+definition did not generate executable paths or request a CamBam/machine trial;
+the standalone implementation is now described in the
+[implemented contract](structure_spec.md#rc01-generated-motion-and-full-height-replay).
+Framework ownership
+of roughing and cleanup, both input routes, native integration and later direct
+posting are already accepted in the [integration requirement](#accepted-integration-requirement---2026-09-23).
+
+RC01 turns the existing rectangular target/island foundations into a useful
+two-tool pocket sequence with descent, stock-dependent access and output checks.
+It deliberately uses a rectangular opening and zero roughing allowance to retain
+an independent analytic residual oracle. It replaces the earlier letter-like,
+0.5 mm allowance example **as the first generated job only**; that broader case
+remains in the acceptance corpus. Native shape/MOP integration is a required gate,
+not satisfied by an inspection-only path drawing. Direct G-code posting follows
+the first useful rest/V-carve delivery, as previously agreed.
+
+### RC01 inputs and process bounds
+
+All dimensions are millimetres in one right-handed drawing frame. Z is the
+physical cutter-tip height, positive upward; stock top is Z=0. No nesting,
+transforms, external styles, tool-library lookup or inferred defaults are needed.
+
+| Input | Accepted synthetic value / interpretation |
+| --- | --- |
+| Initial stock | Box X=[-5,45], Y=[-5,35], Z=[-10,0]; 50 x 40 x 10. |
+| Finish target | Remove X=[0,40], Y=[0,30], Z=[-3,0], except the protected island X=[16,24], Y=[11,19]. Vertical walls, flat floor Z=-3, no through-cut, tabs or released bodies. |
+| Protected material | Entire stock outside that removal volume, including the island through the full stock height and the 7 mm floor thickness. Allow boundary contact; forbid penetration. |
+| Fixtures | Synthetic support box X=[-5,45], Y=[-5,35], Z=[-15,-10]. No other obstacles in the modeled tool/holder workspace. This is an explicit test assumption, not an inferred real setup. |
+| T1 rougher | Flat, center-cutting endmill, diameter 6; cutting cylinder at tip-relative heights [0,6], radius 3; non-cutting shank (6,20), radius 3; holder [20,40], radius 10. |
+| T2 cleanup | Flat, center-cutting endmill, diameter 2; cutting cylinder [0,6], radius 1; non-cutting shank (6,20), radius 3; holder [20,40], radius 10. |
+| Tool reach | 20 tip-to-holder, 6 cutting length, for both tools; fixed +Z tool axis. All tool components participate in collision checks. |
+| Roughing | T1 at tip Z=-1,-2,-3 in that order; zero radial/floor allowance. Maximum newly engaged axial depth 1; maximum lateral step between adjacent clearing passes 2.4. Full-width initial slotting and center-cutting plunge are permitted synthetic operations. |
+| Cleanup | T2 after all T1 cuts, also at Z=-1,-2,-3; maximum newly engaged axial depth 1, lateral stepover 0.8. Full-width cutting is permitted; no constant-load/adaptive claim. |
+| Process tokens | Both tools: spindle clockwise 12000 rpm; cutting feed 300 mm/min, cutting plunge 60 mm/min, cleared vertical feed 120 mm/min, retract feed 300 mm/min, coolant off. These values exercise propagation and limits only; material cutting suitability is unassessed. |
+| Travel/setup | Start, tool change and end at tip (-10,-10,+5). Clearance plane +5; approach plane +1. Above-stock XY positioning is rapid, vertical motions are feed moves. Allowed tip travel X=[-15,55], Y=[-15,45], Z=[-3,10]. Tool changes are explicit stopped-spindle events at the setup position. |
+| Geometry/error | Main oracle uses exact synthetic stock/tool dimensions and zero physical position/radius error. Maximum geometric approximation 0.001; comparisons use a separately reported numerical enclosure at most 0.000001 mm. Neither is permission to overcut. Positive-error rejection is a separate required case below. |
+
+The 11 mm minimum island-to-outer-wall gap admits T1 and T2; its topology is
+deliberately uncomplicated. At the lowest tip height, each shank starts at Z=+3
+and each holder at Z=+17. These arithmetic facts simplify this job, but the
+verifier must derive clearance from supplied component dimensions rather than
+assume holders always clear the stock.
+
+### RC01 generated motion and all-height obligations
+
+Use a deterministic baseline of fixed-axis XYZ straight segments and explicit
+tool/setup events. Strategy details and exact pass coordinates belong to the
+generator; no optimal route or replication of native Pocket paths is required.
+Repeat the same T1 XY coverage at each depth so new axial engagement stays bounded.
+Provide T1-cleared vertical access columns centered at (5,5), (35,5), (35,25)
+and (5,25), from Z=0 through -3. Each must contain at least the radius-1 T2
+occupancy, proved from actual T1 cuts; a feasible-center calculation is insufficient.
+
+T1's first entry is at (5,5): position at +5, feed to +1, then use a cutting
+plunge through stock top to -1. Subsequent levels may descend in the previously
+cleared column and cut only the next 1 mm. T2 approaches each corner through its
+proven column, feeding to the requested level before cutting remaining material.
+Confine cleanup to the four corner windows specified in gate N below, retaining
+the original pocket/island as the protected-target authority. Verify the full-target
+residual afterward, including any T1 approximation remainder outside those windows;
+do not discard it from the budget or silently repocket the entire target with T2.
+Between disconnected cutting runs, retract vertically to +5 before XY travel;
+this first job does not require low-level rapid links or ramps/helices. A tool
+change requires retract, travel to the setup position, spindle stop, tool event
+and restart before the next approach. Each output must preserve that dependency.
+
+The shared motion contract must resolve units/frame, tip datum, component geometry,
+ordered endpoints, move role (cutting entry, cut, cleared travel, retract, rapid),
+feed/spindle state, operation/tool identity and input/evidence fingerprints.
+Events cannot be hidden in arbitrary output strings. Each move starts at the
+previous endpoint; tool changes do not imply teleportation. The verifier evaluates
+the complete continuous sweep over all occupied heights, not endpoints or a few
+sampled Z planes:
+
+- Cutting occupancy intersected with initial stock may remove only the original
+  target; the whole tool must avoid fixtures. Check axial/process limits
+  checked against the stock prefix immediately before that move. Intended air cuts
+  may overlap already cleared space; they do not redefine the finish boundary.
+- Non-cutting tool components must avoid remaining stock and fixtures throughout.
+  Cleared travel/rapid moves remove nothing and need guaranteed free occupancy.
+  Retracts must remain in the just-cleared column or other proven free volume.
+- Recompute stock from actual ordered cutting sweeps, including plunges. Retain
+  rough-only and combined snapshots; a later cut cannot erase an earlier overcut
+  or invalid access result. Exact prismatic intervals suffice for this job if
+  continuous coverage is proven; mesh stock is not a prerequisite.
+- Polygonal approximation around the island must be conservative for the entire
+  cutter, including between vertices. Chords of a nominal offset arc are not
+  automatically safe. Geometry approximation and physical uncertainty stay distinct.
+
+### RC01 independent result oracle and rejection cases
+
+The removal section has area `40*30 - 8*8 = 1136 mm^2`, volume `3408 mm^3`.
+For ideal complete coverage by a radius-r cylinder, only the four outer concave
+corners are inaccessible: total section rest is `(4-pi)*r^2`. The convex protected
+island creates no additional ideal inaccessible material at these wide clearances.
+This reference is an attainable-area bound, not evidence that generated paths
+have covered it.
+
+| Result | Analytic ideal | Required generated result |
+| --- | --- | --- |
+| T1 rest | 7.7256661177 mm^2 per section; 23.1769983531 mm^3 over 3 mm depth | Rest bounded between ideal and ideal +0.5 mm^2 at every Z in (-3,0), and volume between ideal and ideal +1.5 mm^3. |
+| T1 then T2 rest | 0.8584073464 mm^2 per section; 2.5752220392 mm^3 | Same +0.5 mm^2 / +1.5 mm^3 upper budgets. Report partial target completion: finite endmills retain the sharp-corner material. |
+| Cleanup benefit | Ideal rest reduction 6.8672587713 mm^2; 20.6017763138 mm^3 | Guaranteed reduction at least 6.3672587713 mm^2 per section and 19.1017763138 mm^3 overall. |
+| Protected material / access | Zero overcut, zero fixture or non-cutting component collision, zero unproved travel | Prove containment/disjointness continuously; unresolved numerical boundary cases are indeterminate, not passes. |
+
+Also bound residual location: outside the analytic ideal corner rest, no remaining
+point may be more than 0.05 mm from either that rest or the original protected
+boundary. Together with the area/volume limits this rejects missed interior strips
+and excessive wall stock; section area alone cannot hide a floor error. Include
+the floor boundary in occupancy/containment checks and prove coverage throughout
+the depth intervals. Independent rectangle/circle references and swept-volume
+checks must not simply call the generator's own feasibility result as their oracle.
+Do not reuse the existing coarse section-area grid as a pass certificate if its
+enclosure cannot resolve these budgets; improve only the accuracy RC01 needs.
+
+Required negative variants of this same job:
+
+- Remove/reorder T1, or feed T2 down an uncut corner instead of its cleared column:
+  reject the claimed cleared access and identify the missing predecessor/volume.
+- Insert an XY rapid at Z=-1 across the island; insert a cut below -3 or into an
+  outer wall: reject continuous occupancy, even if segment endpoints look valid.
+- Shorten cutting length to 2 while keeping the wider T2 shank, or lower its holder
+  start to tip+2: reject any resulting stock collision; do not extrapolate the
+  fixed-section certificate to certify reach.
+- Declare radius uncertainty +/-0.005 and isotropic position error 0.005 on an
+  exact-wall-tangent nominal plan: its nominal clearance certificate is invalid.
+  Reject or return unverified until regenerated and checked with inflated occupancy
+  and reduced guaranteed removal. This round does not promise positive-error
+  completion within the nominal residual budgets.
+- Change geometry, tool, depth or enabled/order state after generation: reject stale
+  evidence. Cosmetic XML/ID changes alone must not change normalized geometry or
+  removal; fresh import without prior session state must still work.
+
+### RC01 standalone and CamBam output gates
+
+These are distinct recorded outcomes. Passing an earlier gate does not imply later
+acceptance, and caller applications can invoke each capability independently.
+
+| Gate | Required evidence and boundary |
+| --- | --- |
+| S: standalone generated sequence | Implemented for the exact nominal RC01 request with deterministic motion, ordered rough/final prefixes, rational per-slab area intervals and conservative residual-location diagnostics. Automated negative cases pass. The GEOS location test has <0.000001 mm polygon sagitta but no formal floating-topology interval proof, so strict numerical certification remains conditional. See the [implementation contract](structure_spec.md#rc01-generated-motion-and-full-height-replay) and [evidence](REVIEW.md#rc01-standalone-generated-sequence---2026-09-23). |
+| I: native input and document attachment | A synthetic `.cb` with outer/island Region, Part stock and explicit T1/T2 Pocket intent, plus explicitly supplied tool-component/setup values absent from native fields, normalizes to the same request/results as S. Preserve authored geometry/source MOPs and identity references; attach derived results separately. Reopen/export and import an edited file without hidden session state; supported edits recompute explicitly and invalidate old evidence. Unresolved inherited or unsupported values return diagnostics. |
+| E: explicit framework motion through CamBam | Attach both generated operations using a candidate XYZ-Pline/Engrave adapter or an explicitly bounded, role-bearing CamBam carrier. In the established CamBam Plus 1.0 environment, inspect actual regenerated and posted motion: coordinates, interpolation, ordering, feeds, spindle/tool events and every inserted entry/link/retract. Reverify the actual motion against RC01, including its rough-only stock prefix. A path drawing or successful XML round trip alone fails this gate. Record the accepted carrier; one carrier's result does not imply parity of another. |
+| N: native smaller-tool region/Pocket cleanup | Preserve the original target and attach T2 Pocket MOPs to four closed 7 x 7 corner windows: [0,7]x[0,7], [33,40]x[0,7], [33,40]x[23,30], [0,7]x[23,30]. These are machining boundaries, not cutter-center regions. Each contains its entire T1 corner rest plus overlap into cleared material; none touches the island. Verify actual CamBam-generated cleanup against the same target, process and residual criteria, after the E-verified T1 prefix. Do not infer native removal from nominal Pocket settings. |
+| P: production / controller-specific direct posting | Separate pending gates. S is headless planning; the bounded V and RC01 reference-dialect files are not controller profiles. A later controller adapter must reverify its emitted motion. Physical machining requires an identified machine/material/setup, real tools/workholding and separately agreed tolerances/process limits. No execution is requested by RC01. |
+
+**2026-09-23 I preparation:** the [native adapter contract](structure_spec.md#rc01-native-input-and-comparison-candidates)
+now constructs and strict-reimports the source `.cb`, normalizes its Region,
+stock and disabled source MOPs with explicit supplemental setup, and rejects
+unsupported/inherited edits. The A/B/C `.cb` files and independent standalone
+comparison manifest are reproducible. This was automated input/attachment
+evidence; CamBam output had not yet been checked at that point. The candidate
+Engraves carry only level-cut
+centerlines, so the E probe must inspect CamBam-added entries, links and events
+before any output pass. The [runbook](DEVELOPMENT.md#rc01-native-input-and-abc-comparison-preparation)
+owns the exact generation and comparison commands.
+
+**2026-09-23 first output trial:** the user posted A/B/C with CamBam Plus 1.0;
+the [review](REVIEW.md#rc01-first-cambam-output-trial---2026-09-23) records
+floor overcut, path reordering and invalid T2 tool-change sequencing. E and N
+failed. The repaired A post confirms the additive-depth fix, but still fails
+ordered/role motion; B/C repaired variants have not been posted. The existing
+N gate still requires a verified T1 prefix; a future
+fully native Pocket roughing variant may supply one only after its actual
+motion independently passes the same stock, access and residual checks.
+
+**2026-09-23 native Pocket trial:** a full-target T1 Pocket and four T2
+corner-window Pockets were posted separately as rough-only and combined
+Default programs. Their T1 move prefixes match, both stop at Z=-3, posted
+rough/final area and residual-location budgets pass numerically, and the
+required four plus eight actual T2 vertical columns have exact T1 cut
+witnesses. N nevertheless fails the accepted execution gate: low rapid moves,
+ramped entry, F60 low-level XY, displaced T2 change without a spindle stop,
+and unresolved protected-island tangencies remain. See the
+[dated trial](REVIEW.md#rc01-native-pocket-posted-motion-trial---2026-09-23).
+Coverage alone does not satisfy the full motion contract. The next output
+increment should establish a carrier/post strategy that preserves the required
+setup, approach, retract and tool-event roles before repeating RC01 posting;
+general area precision and optimizer work remain deferred.
+
+For N, configure tool 2/diameter 2, stock surface 0, target depth -3, depth increment
+1, stepover 0.4 of diameter, roughing clearance 0, clearance plane +5 and the supplied
+feeds/spindle explicitly; resolve remaining path-affecting fields during adapter
+implementation. The artificial window edges lie in already cleared space; they
+must never become new protected design walls. Inspect native entry/depth order:
+if CamBam inserts a motion or entry that violates the job, N fails even if its final
+rest looks correct. This job proves Pocket attachment; Profile substitution and
+general minimal rest-boundary construction remain separate follow-ups.
+
+No fixture combines enabled native source roughing with its generated replacement.
+Preserve source MOPs disabled in execution variants and report the enabled sequence.
+For E, require at most 0.001 mm continuous centerline deviation from each intended
+cut, preserve cut direction and stock-dependent order, and separately check all
+adapter/post-added moves. This deviation budget never overrides zero protected
+overcut or access requirements. Unknown emitted commands/modal state leave the
+output unverified; parsing only XYZ endpoints is insufficient.
+E and N may legitimately produce different paths, but both must meet the same
+removal/access requirements with evidence from the motions actually executed.
+If Engrave cannot carry the required roles/events, record an adapter blocker and
+revisit output representation; do not silently reinterpret every line as a cut.
+CamBam-posted comparison output is evidence for E/N, not implementation of our
+future standalone postprocessor.
+
+Before requesting manual E/N acceptance, the implementation increment must create
+and inspect artifacts in a unique ignored `output/rc01-<unique>/` directory:
+`A-rough.cb` (verified roughing prefix), `B-explicit.cb` (roughing plus explicit
+cleanup), `C-native-cleanup.cb` (same roughing plus native Pocket cleanup), and the
+independent motion/residual comparison. Keep source geometry and disabled source
+MOPs inspectable in each. Record the chosen CamBam postprocessor/settings and the
+comparison reader's supported command subset before E/N; the controller dialect
+for later direct posting is a separate choice. Provide clickable files, exact enabled-MOP/property and
+motion expectations, bounded steps to regenerate/save comparison output, and a
+report format with I/E/N pass/fail plus deviations. Inspect returned emitted motion
+locally before recording acceptance. Manual file inspection adds native application
+evidence later; it adds no evidence to this documentation-only definition today.
+
+### Next RC01 output milestone after native Pocket trial
+
+Treat the shared E/N role and event blocker as one integrated output increment,
+not a queue of individual rapid, ramp, feed and tool-change edits. Select the
+most credible bounded carrier/post route using the actual failed posts, implement
+it for the complete T1 roughing plus T2 cleanup job, and inspect its emitted
+program. A candidate must be able to express the required setup position,
+ordered entry, approach, retract, feed, spindle stop/start and tool change
+before another CamBam export is requested. Native Pocket settings alone already
+passed the numerical coverage check and cannot certify those emitted roles.
+
+**Increment acceptance:** strict-reimport any new `.cb` candidate, preserve the
+original target and disabled source MOPs, inspect the full posted program and
+independently replay continuous motion, protected stock, T1-to-T2 access,
+process limits and per-depth rest. Pass one complete output route under its own
+E or N gate; retain the other gate as an explicit overall requirement and keep
+physical acceptance separate. A coverage-only pass or another Default-post
+sequence with the same role/event failures does not complete this increment.
+
+**Stop or change route:** if emitted evidence after local repairs or a documented
+CamBam interface limit shows the selected carrier cannot preserve those roles,
+record the exact blocker and present the direct-posting timing as a concrete
+user decision. Its currently accepted delivery order remains after the first
+useful rest/V-carve workflow until the user changes it. Do not create a series
+of smaller RC01 follow-ups around already diagnosed symptoms. After a successful
+output slice, compare the remaining E/N gate with the first variable-depth
+V-carve and broader rest consumer before choosing another increment. General
+topology, numeric precision, optimizer and package-layout work reopen only
+when this output gate or a named consumer supplies a failing case.
+
+**2026-09-23 route result:** one native Pocket/Default MOP repair pair was
+strict-reimported with no spiral lead, no path optimisation, cut-feed stepover
+and zero crossover. Those fields address three observed path-generation
+symptoms, but this carrier still cannot independently encode RC01's first
+entry, feed approach, feed retract and setup-position stopped tool change.
+The Default post's rapid formatter covers all rapids; changing it globally
+would also change permitted above-stock XY rapid travel. MOP header/footer
+act at operation boundaries, not every entry and retract. The existing
+posted pair proves coverage but fails these roles, and the repaired pair was
+not posted because it cannot meet the candidate precondition above. At this
+route-trial point, E and N remained separate failed/pending output gates.
+A raw-motion carrier through
+CamBam's documented NCFile operation would require producing the complete
+G-code first, so it moves bounded direct posting forward. That timing would
+need a user decision if no other CamBam carrier passed; the later literal-script
+pass leaves direct posting after the first useful rest/V-carve workflow. The
+current user workflow remains agent-prepared `.cb` files followed
+by user-generated G-code in CamBam; moving direct posting forward changes that
+boundary and is not inferred from this role trial. Neither choice certifies a
+controller or machine setup.
+
+**User clarification and selected follow-through, 2026-09-23:** retain the
+agent-prepared `.cb` / user-posted CamBam `.nc` workflow. The agent prepared
+one complete literal-motion `Drill/CustomScript` MOP in a `.cb`, using the
+already verified T1/T2 framework program. This is an alternate E carrier,
+not a repair of native Pocket N or proof of XYZ/Engrave parity. It can encode
+the required roles within one CamBam operation; its wrapper and literal
+motion were checked in the actual Default post. The prepared file,
+manifest and replay command are in the
+[runbook](DEVELOPMENT.md#rc01-literal-motion-cambam-carrier). The first post
+preserved literal `|` separators
+on one invalid NC line; the agent repaired the `.cb` to contain actual XML
+newlines. The user-posted revision passed exact comparison of all 2,945
+emitted items and continuous whole-height stock/access/process/residual
+replay, including the T1-only prefix and T2 cleanup. This meets the
+**one-complete-route output milestone** under the alternate literal-script
+E carrier for the accepted synthetic RC01 request. It does not accept the
+earlier XYZ/Engrave implementation, the native Pocket N route, or physical
+machining. Direct standalone posting retains its later timing. The next
+increment is the user-prioritized native optimizer/output mapping foundation
+below; reopen N when its native motion source and role controls have enough
+evidence to satisfy the independent gate.
+
+### RC01 cone guard, acceptance scope and stopping condition
+
+Pair the cylindrical job with an analytic pointed 90-degree included-angle cone
+guard, not a claim that a cone can finish its vertical sharp corners. In the
+interior of a 4 mm straight slot defining a V-shaped target, the candidate tip
+depth is 2 mm and its radius at the surface is 2 mm. A supplied cone with maximum
+cutting radius 3 and conical axial length 3 admits that local section; a radius-1.5
+cap does not. With an intentional 1 mm target depth cap, surface radius is 1 mm:
+one centerline pass cannot clear the 4 mm opening. Finite ends, whole-body sweep
+and capped-depth partial completion are now covered by the
+[bounded pointed-cone slot contract](structure_spec.md#bounded-pointed-cone-slot-generation-and-verification).
+Original V-target geometry, residual and tool limits remain separate; broader
+variable-depth regions remain future scope.
+
+**User acceptance, 2026-09-23:** the user answered "Use the proposed synthetic case"
+when offered RC01's 40 x 30 x 3 mm pocket, 8 x 8 mm island, 6 mm rougher, 2 mm cleanup
+tool and proposed test-only plunge/feed limits versus tailoring a physical setup.
+Use the documented RC01 inputs and acceptance criteria as the implementation
+baseline, including expected finite-tool corner residual and synthetic plunge/
+full-slotting bounds. No first-job refinement is pending. This accepts the test
+case, not implementation correctness, CamBam output or physical machining.
+Real-machine acceptance remains separate and will require material, machine
+travel/controller, actual cutter/reach/holder, fixtures, allowed entries and process
+limits before numerical production acceptance can be defined.
+
+Definition and user refinement are complete with inputs, oracles, access obligations,
+limits and output gates recorded. The exact nominal T1/T2 sequence and continuous
+all-height replay are implemented. A bounded pointed-cone slot and one shared
+RC01/cone ordered replay are also implemented; the mixed sequence keeps targets
+disjoint to preserve both original residual oracles. The bounded cone
+emitted-motion gate passed on 2026-09-24 through one Drill/CustomScript carrier
+and a user-posted Default/Default mm program. All nine emitted items and the
+original cone residual oracle passed; the result is partial target completion.
+The user confirmed CamBam displayed the Drill toolpath, while its posted G-code
+contained the accepted literal motion. One bounded variable-depth tapered
+V-groove has now been generated with an analytic residual reference and a
+strict-reimported explicit carrier. Its actual CamBam Default post passed exact
+emitted-motion and residual replay on 2026-09-24. The Drill/CustomScript MOP
+targets a one-point anchor; the sloped Pline is a design guide. This does not
+establish native Pline-driven or general variable-depth V-carving. The I/E/N
+adapter gates follow their separately
+recorded results. Do not call full target removal or native output accepted
+while the corresponding gate remains partial, blocked or untested.
+
+The bounded V native-input adapter now imports an original XYZ finish spine,
+disabled source Engrave and Part stock with explicit non-native cone/setup
+values into the same detached request as standalone generation. It attaches
+the visible generated Pline and literal-motion carrier in separate copies of
+the original document. The input/attachment gate is automated and complete
+for this one case. The new native-derived literal candidate's CamBam Default
+post passed its own exact nine-item emitted-motion and residual audit. The
+shared core now supplies the same resolved process trace to a direct
+reference-dialect writer, which reparses and replays its output and matches
+the accepted CamBam post semantically. This is not yet a controller-specific
+or production post. The detached straight-groove request now accepts a
+[validated planning family](structure_spec.md#straight-variable-depth-v-planning-family),
+including supported native geometry, stock and pointed-tool edits. Its output
+adapters still accept only the posted example; priority and reopening criteria
+remain in [PROGRESS](PROGRESS.md#active-work-and-next-priority).
+Reopen general topology, positive-error completion, low links, optimizers or finer
+area infrastructure only when an RC01 gate or a named next consumer requires it.
+
+## Native CamBam optimizer and output mapping foundation
+
+**Completed foundation, 2026-09-23:** after the RC01 explicit-script
+CamBam output carrier passed, the user
+requested a one-time reusable evidence base covering CamBam's native shape
+and machining-operation classes under both its 0.9.7 Legacy and 0.9.8 New
+optimisation modes. The agent prepared complete `.cb` files; the user generated
+the corresponding native G-code in CamBam.
+Keep the number of posts small by grouping independent cases, but separate
+cases where one MOP or tool event could alter another's output.
+
+First inventory all classes available in the CamBam Plus 1.0 baseline and
+label each as authorable here, import/preserve-only, native-only, or unsupported.
+Include Rect, Circle, Arc, open/closed Pline, Points, Text and Region, and
+every discovered MOP class rather than assuming the current library's four
+authorable kinds are the whole CamBam set. Use controlled geometry, stock,
+tool and units so the expected path can be judged; include a small set of
+interaction fixtures for islands, multi-target ordering, multiple depths,
+lead/rapid/crossover moves, tool changes, arcs and styles. Pin the optimiser,
+postprocessor/profile, CamBam build and every relevant MOP property in each
+candidate. Preserve source `.cb` hashes and exact returned `.nc` hashes.
+
+For each supported case, record the native target-to-path relationship, path
+order/direction, depth sequence, interpolation/rounding, entry/link/retract,
+feed/spindle/tool events and any post-added moves. Use deterministic parsers
+and stock replay where supported; record indeterminate geometry or controller
+semantics rather than estimating removal from intent. The durable outcome is
+a versioned mapping and reusable fixture/reader tests in their code and
+documentation owners, with a coverage table and explicit unresolved modes.
+It must let later callers select either native CamBam-derived posted motion
+or framework-generated motion as the stock/rest authority, with separate
+fingerprints and invalidation. Neither authority is silently substituted
+for the other.
+
+**Stopping condition:** every inventoried shape/MOP class has at least one
+accepted native-output observation in each applicable optimiser mode, or an
+explicit unsupported/blocked result with reopening criteria; the bounded
+interaction cases have reproducible input/output hashes and documented
+parser limits. This is finite class and behavior coverage, not every numeric
+parameter combination or a universal CamBam emulator. Expand combinations
+only when a specific consumer exposes a missing dependency. The first output
+slice should prove the corpus method end to end before generating the full
+set of fixtures. No physical machining is part of this mapping.
+
+### Inventoried baseline and prepared slice (2026-09-23)
+
+The installed CamBam Plus 1.0 assembly and system samples were inspected
+read-only. [CamBam's entity list](https://www.cambam.info/doc/1.0/cad/entities.html)
+and [machining operation list](https://www.cambam.info/doc/1.0/cam/basics.html)
+provide the documented class boundary. The installed optimiser enum is
+`Standard=0`, `Experimental=1`, `None=-1`; the
+[1.0 Profile documentation](https://www.cambam.info/doc/1.0/cam/profile.html)
+calls the first two Legacy (0.9.7) and New (0.9.8). These are mode names
+within the installed 1.0 application, not evidence of running older builds.
+The writer emits `Standard` and `Experimental`; the user confirmed the
+corresponding displayed Legacy/New selections in the posted candidates.
+
+| Native shape class / XML | Corpus state and reopening criterion |
+| --- | --- |
+| PolyRectangle `rect`, Circle `circle`, Arc `arc`, Polyline `pline` (open and closed), PointList `points`, MText `text`, Region `entity xsi:type="Region"` | Authorable here; atlas pair has a hash-bound native Default post in both modes. Path mapping is observed; stock removal is not certified. |
+| Line `line`, Spline `spline` | Native only; the strict framework reader rejects these. Reopen with a small native-saved source and verified authoring/import round trip. |
+| Surface `surface` | Native only; pair with a bounded 3D Surface MOP after a controlled mesh and native-saved XML are available. |
+| ScriptEntity `script` | Native only; reopen with a self-contained deterministic script and a reviewed execution boundary. |
+| CADBitmap `bitmap` | Native only; the image is externally linked. Reopen with a synthetic bitmap, relative asset path and both hashes. |
+
+| Native MOP class / XML | Corpus state and reopening criterion |
+| --- | --- |
+| Profile `profile`, Pocket `pocket`, Engrave `engrave`, Drill `drill` | Authorable here; atlas and interaction pairs have hash-bound native Default posts in both modes. Drill G98/G81 CannedCycle remains raw posted words until a cycle-aware reader is justified. |
+| 3D Surface `surface3d` | Native only; blocked with Surface pending the controlled mesh/XML source and 3D post semantics. |
+| NCFile `ncfile` | Native only; blocked pending a colocated synthetic NC source and its exact inclusion/provenance policy. Optimiser mode may be inapplicable to passthrough output; establish that from a native post. |
+| Lathe plugin `mop xsi:type="MOPLathe"` | Installed, native only; blocked pending a native-saved minimal turned profile, machine axis/post settings and safe interpretation. |
+| Bas Relief `MOPBasRelief` | Historical assembly type, not a current 1.0 UI class; [3D Profile replaced it](https://cambam.info/doc/1.0/cam/3d.html). Reopen only for an actual legacy file or present UI entry. |
+
+The current reader does not preserve unsupported native classes, so none of
+the native-only rows is mislabeled import/preserve-only. All four candidates
+were posted and preserved in the tracked
+`tests/fixtures/optimizer_corpus/` directory with their original input
+manifest and derived observations. The atlas pair covers the seven authorable
+shape families and four MOP classes in a common synthetic document; the
+interaction pair covers target order, depth, lead/crossover, return tool
+change and explicit `cutout` style selection. Grouping limits attribution
+of effects between adjacent MOPs, so accepted claims remain per observed
+section and program. Every candidate pins millimeter units, Default postprocessor,
+installed `Standard-mm` style and `Default-mm` tool libraries, stock and
+explicit modeled MOP fields. The manifest records the three system-file
+fingerprints; changed local files require new profile provenance. The native
+reader records exact posted words and modal motion but leaves controller
+cycles, incoming machine position and stock removal unresolved. The bounded
+corpus stopping condition is met for the authorable classes and listed
+blocked/historical classes. This is a versioned output observation corpus,
+not a general native path optimizer or a native stock certificate. Reopen a
+blocked class when its stated source/semantics evidence exists, or expand a
+supported combination when a consumer exposes a concrete missing case.
+
+The first separately bounded posted-stock slice now uses the previously
+user-posted RC01 T1 Region/Pocket program. Its
+[contract](structure_spec.md#rc01-selected-posted-motion-stock-authority)
+pins source and post independently, replays native removal and rejects stale
+files. This does not expand the optimiser corpus into general stock authority;
+the recorded RC01 motion-role failures still block dependent execution.
 
 ## Problem and machining intent
 
@@ -281,11 +1981,10 @@ stable; coordinate with the higher-priority MOP source-compatibility work.
 ### Upstream dependencies
 
 Region topology and Z-coordinate parity across shape types are owned by the
-separate [shape parity plan](SHAPE_PARITY_PLAN.md), with higher priority in the
-backlog. This plan consumes its public geometry and XML contracts; it does not
-implement Region storage, adders, Z migration or schema handling. Pure planar
-rest prototypes can use existing supported contours, but Region inputs and XYZ
-path export must wait for the applicable parity acceptance.
+separate [shape parity plan](SHAPE_PARITY_PLAN.md); backlog 2 records their
+completion. Consume those public geometry and XML contracts rather than reopening
+Region storage, adders or Z migration. XYZ file fidelity is available, while
+varying-Z Engrave motion still needs separate target-version acceptance.
 
 The existing curved-bounds correctness item also supplies arc-aware bounds (or
 rest analysis must use independently bounded arc normalization). Never derive
@@ -366,17 +2065,937 @@ documentation itself needs no manual machining validation.
 
 ## Promotion and stopping conditions
 
-This remains below the existing correctness, compatibility, packaging and MCP
-backlog items. Promote only for a concrete rest-machining workflow with approved
-input semantics and a bounded first outcome. Region/Z parity has its own higher
-backlog priority and plan; it is an upstream dependency, not optional rest scope. A separately
-reported data-loss bug can be prioritized independently on its own evidence.
+The 2026-09-22 request promotes design refinement for the concrete multi-tool
+letter/region workflow. Implementation follows agreement on target semantics and
+the bounded first outcome below. Region/Z parity is a completed upstream
+dependency, not new rest scope. A separately reported data-loss bug can still be
+prioritized independently on its own evidence.
 
-Planning is complete when all five outcomes, repository gaps, source distinctions,
-support requirements and executable acceptance directions are recorded and linked.
+The original proposal recorded all five outcomes. Refined design closure additionally
+requires resolution of the product decisions below and numerical acceptance for
+the selected first slice; those decisions are not yet accepted.
 Future execution acceptance must demonstrate load, analyze, calculate and save
 on a machine without CamBam installed. Manual CamBam compatibility checks remain
 separate from this standalone execution requirement.
-The next implementation priority remains MOP group-source compatibility. Do not
-implement a full stock simulator, routing engine or CamBam integration during this
-documentation task.
+Do not implement a stock simulator, routing engine or CamBam integration during
+this design task.
+
+## Design refinement - 2026-09-22
+
+### Intended product and accepted scope
+
+Build a deterministic, standalone engine that combines caller-supplied tools to
+remove an explicitly defined target volume while preserving protected material.
+Expose region-only analysis, path-only planning, verified removal and optional
+CamBam project attachment as independently useful operations. All calculations
+run without CamBam installed. This is a proposed contract, not an implemented API.
+
+User decisions accepted 2026-09-22:
+
+1. Support the finish modes through a segmented, reusable model; include paired
+   pocket/plug inlays with assembly gaps and constraints in the design scope.
+2. Tools/catalogs belong to the caller or future CamBam client library. The engine
+   consumes supplied tool specifications and restrictions, and can recommend
+   combinations from that set. No hardcoded catalog belongs in the engine.
+3. Continue this work on `feat/rest-machining-and-vcarving`; the user committed
+   the first documentation round. This authorizes design work, not agent commits
+   or merge. No branch delivery/readiness claim is made by this design record.
+4. The engine is for general artistic and technical regions. The A is an example
+   fixture, not a domain restriction; inlay is one application, not the organizing
+   model for the core. Consider owning the geometry algorithms in this repository
+   as well as using established low-level libraries. The user subsequently confirmed
+   that proven packages are welcome: prefer established geometry primitives when
+   they pass our contract, keeping machining semantics and verification owned here.
+
+The [accepted RC01 case](#first-generated-acceptance-job-rc01) supplies the first
+synthetic target, tools and residual/error criteria; production limits remain open.
+The [2026-09-23 answer](#accepted-integration-requirement---2026-09-23) permits a first
+framework-generated sequence while requiring native shape/MOP integration too.
+No numerical production defaults or implicit
+permission to change wall shape, floor depth or allowance are established here.
+
+### Target geometry precedes tool strategy
+
+| Finish mode | Target and meaning of completion |
+| --- | --- |
+| V-shaped recess | Opening plus nominal design angle/tip convention define a depth envelope; narrow corners rise to the surface. Completion means matching that envelope within stated tolerances. |
+| Flat-depth V-carve | The same design envelope truncated at an explicit floor. Wide interiors can be cleared by endmills; the sloped boundary remains protected from roughing. |
+| Vertical-wall pocket | Region extruded to a floor. A smaller endmill may reduce rest; a V-cutter cannot generally finish sharp vertical corners while preserving the whole wall. |
+| Through-cut/profile separation | Explicit kerf/removal band, stock thickness, breakthrough and retained bodies/tabs. A separated central slug is released material, not material swept away by a cutter. |
+| Edge finish/chamfer | Explicit contact surface and width/depth, not an implicit conversion of a pocket into a V-shaped recess. |
+
+Keep the design envelope fixed when comparing tools. Do not define success as
+whatever the selected tool happened to remove. An ideal unlimited cone may define
+the requested V-shaped surface; the real cutter's finite diameter, rounded/flat
+tip and flute length can make that surface infeasible. A depth cap is an intentional
+design choice only when the caller selects a capped finish. A machine/tool limit
+instead produces a limitation report and alternatives.
+
+For the user's 5 mm endmill with 0.5 mm radial stock-to-leave, a locally straight
+inside edge requires the center 3.0 mm from the design boundary; 0.5 mm remains
+after the 2.5 mm radius sweep. In corners, calculate the sweep rather than assuming
+a uniform strip. A Profile leaves the center material unless its passes actually
+cover it. A Pocket must demonstrate interior coverage. If the final finish has
+sloped V walls, derive roughing bounds at each depth from that target: a pocket
+following the full top opening down to the floor may already destroy the slope.
+
+### Mathematical contract
+
+Use fixed vertical tool orientation (3-axis), explicit length units and positive
+downward depth `d`; convert only at the adapter boundary to `Z = surface_z - d`.
+Each depth slice owns desired removal `I(z)`, actual remaining stock `S_k(z)`,
+protected stock/fixtures and independently established free space. With cutting
+sweep `W_k`, update `S_(k+1) = S_k \\ W_k`; pure rest is `S_k intersect I`.
+Report unintended removal separately and never let a subsequent operation hide it.
+
+Represent an axisymmetric cutter by cutting radius `rho_cut(h)` and occupied
+radius `rho_body(h)` at height `h` above its physical lowest point. The body includes
+non-cutting neck/shank/holder where modeled. Missing body data limits collision
+claims; a maximum cutting diameter is not permission to extend the cone forever.
+
+- Ideal pointed/truncated cone: `rho_cut(h) = a + h*tan(alpha)`, where `alpha` is
+  half the included angle, `a` is flat-tip radius, and `h` is within its declared
+  cutting segment. The conical segment ends at `(Rmax-a)/tan(alpha)` or earlier
+  at the specified cutting-length limit. Do not clamp the radius and pretend the
+  resulting cylinder is cutting unless the tool specification actually says so.
+- Optional spherical tip tangent to the cone: with ball radius `b`, use
+  `sqrt(2*b*h-h*h)` for `0 <= h <= b*(1-sin(alpha))`; above the join, use
+  `b*cos(alpha) + (h-b*(1-sin(alpha)))*tan(alpha)` up to the declared cone end.
+  Validate tangency, continuity, diameter and segment domains. A generic rounded
+  tool must supply its profile; a vague tip-radius value does not establish shape.
+  This is a spherical lowest-point tip, not a rounded edge around a nonzero flat.
+  Its cone-end height is `h_join + (Rmax-rho_join)/tan(alpha)`, not the flat-tip
+  cone-end formula. Require `0 < alpha < pi/2` and a maximum radius compatible
+  with the declared join; otherwise use a different explicit profile.
+- At slice depth `z` and tip depth `d`, evaluate the tool section at `h=d-z`
+  only where that section exists. Union the moving disks along the complete path,
+  including changing radii, not just endpoint disks. Check non-cutting occupancy
+  against current stock and fixtures separately from cutting removal.
+
+For a flat endmill in allowed footprint domain `A`, valid centers are
+`A eroded by disk(r)`. Restrict useful cutting candidates to centers whose sweep
+intersects rest, as in outcome 2. For a V-cutter at depth `d`, intersect the
+corresponding center constraints across all affected heights. Thus an empty floor
+slice does not license the wider upper cone to cross a protected upper wall.
+
+For a simple uncut planar opening, Euclidean clearance `q(x,y)` gives the candidate
+cone depth `(q-a)/tan(alpha)` where `q >= a`. The medial axis supplies maximal-disc
+candidates and branches; it is not the complete stock-aware solution. In a rest
+operation, compute clearance against protected geometry, not every edge of the
+rest polygon. A raster distance field may seed candidates, but thin-feature loss
+and its error must be bounded before it can support a clearance claim.
+
+Prefer depth-indexed planar sets with adaptive slice refinement for this fixed-axis
+scope. The public stock contract must not require a particular grid resolution.
+Slice checks need conservative between-slice bounds; an arbitrary stack of sampled
+planes is not proof of volumetric clearance. Also bound error along XYZ segments.
+For a cone, an XY clearance uncertainty `epsilon` implies depth uncertainty
+`epsilon/tan(alpha)`; narrow-angle tools amplify error. Rounded tips require local
+profile-aware bounds near zero radius. Separate geometric approximation, path
+fitting, stock slicing and physical process allowances in reports.
+
+### Wide areas, rest access and smoothing
+
+**Implemented boundary, reviewed 2026-09-28:** current rest planners generate
+verified contours/straight fills and permit cutting connectors within the
+original target after a proved cleared descent. They do not expose a generic
+conditional smoother, fitted-arc deviation contract or overlap-cost budget.
+Region-V `with_prior` adds prior-stock analysis to an existing primary plan;
+it does not prune or optimize that plan against rest. The following paragraphs
+remain the broader design proposal. Current strategy guarantees and composition
+limits are owned by [the architecture contract](structure_spec.md#strategy-guarantees-and-composition-limits),
+and extension priority/reopening criteria by backlog 6 in PROGRESS.
+
+The default strategy proposal is to derive feasible poses first, then cover target
+rest using boundary/medial-axis candidates plus interior passes where needed.
+Simply clipping the depth of a medial-axis path can leave wide side bands uncut.
+Use a caller-selected flat-depth finish and clearance tools, or additional verified
+passes with the V-cutter where feasible. If the requested uncapped target extends
+beyond tool capability, return residual/infeasibility and suggest a larger/different
+tool or an explicit target change. Never silently lower the floor or widen edges.
+
+For a pointed cone clearing a nominal flat floor with parallel tracks at equal tip
+depth, finite spacing leaves ridges: the ideal cross-section cusp is
+`s/(2*tan(alpha))` for spacing `s`. Thus a pointed tip does not guarantee a perfectly
+flat floor with finitely many passes. A flat-tip cutter has a finite floor footprint;
+a rounded tip needs its own scallop calculation. Select passes using cusp/remaining
+thickness and coverage criteria, not a fixed fraction of maximum cone diameter.
+
+Keep original design, pure rest, allowed overlap domain, feasible centers and export
+boundaries separate. Smoothing is an optional path/access operation, not permission
+to fillet the desired corner. At interfaces with verified cleared space, extend
+access and fit arcs only within the allowed domain. Protect holes and tabs at their
+actual heights. Fit within a declared deviation and recheck the swept tool after
+fitting, including added/removed coverage and topology changes. Reject a fit that
+violates containment; straight segments are an acceptable result.
+
+Minimize redundant cutting only after coverage and containment hold. Stepover
+controls spacing between passes; overlap into cleared space is a separate access
+and cost policy, and radial engagement depends on the current stock. Allow necessary
+overlap by default in the proposal, report its amount, and honor an explicit hard
+limit by reporting the coverage it prevents. Do not equate overlap with stepover.
+
+### Detached core and native integration
+
+Proposed boundaries (names are illustrative and not a committed public API):
+
+| Layer | Contract |
+| --- | --- |
+| Geometry and cutter values | Immutable region sets, explicit frame/units, tolerance budget and piecewise tool profiles; no project IDs or XML requirement. |
+| Target and stock | Fixed finish specification, stock snapshots, protected volumes, prior removal and evidence mode. |
+| Analysis | Reachability, pure rest, safe access regions and infeasibility diagnostics; callable without planning paths. |
+| Strategy and routing | Supported pocket/profile/V-carve strategies yield ordered motions, tool assignment, pass/entry/link roles and predicted residuals. |
+| Verification | Independent or conservatively bounded sweep evaluator checks final interpolated motions and stock updates. |
+| Composition | Compare supplied tools/operation sequences; preserve constraints, update stock in order and return tradeoffs and provenance. |
+| CamBam adapter | Snapshot resolved world geometry/MOP values; map pure results to registered Region/Pline entities and explicitly selected MOPs. |
+
+Use simple stable value types before inventing a plugin hierarchy. The existing
+`Region` owns CAD topology/XML, not general Booleans or CAM stock simulation.
+`cam_entities.py` owns MOP parameters and `cambam_project.py` registration. Compose
+existing `machining_planning.py` process constraints where applicable; its endmill
+diameter-based stepover/MRR model does not automatically model varying V engagement.
+Keep these domain differences explicit instead of overloading its formulas.
+
+Results must expose requested/achieved target, rest by depth, uncertainty, unreachable
+features and causes, overcut, violated/missing constraints, operation order and source
+fingerprints. Distinguish complete-within-tolerance, partial, infeasible, unsupported
+and invalid input. An optimization timeout returns the best verified partial plan,
+never a false completeness result. Ranking should first enforce hard constraints,
+then residual quality, then caller-weighted time/tool changes/redundant travel.
+Do not promise a globally optimal tool sequence or time without a machine model.
+
+Keep two adapter modes explicit: native Profile/Pocket instructions delegate path
+generation to CamBam; explicit path export delegates only path following. Native MOP
+metadata alone cannot certify prior cleared space. Prefer framework-generated paths
+for the first deterministic combined workflow. Until native equivalence is established,
+native-source rest is an estimate with uncertainty, not guaranteed air for linking.
+Engrave's `VCutter` enum describes the tool; it is not a V-carve calculation request.
+Verify tool-tip Z, zero offsets, order/direction, depth passes, retracts and emitted
+G-code before claiming the XYZ/Engrave adapter follows the computed trajectories.
+Do not interpolate across disconnected paths by joining them into one polyline.
+
+### Research basis and backend decision
+
+Primary sources checked 2026-09-22; the architecture and formulas above are our
+proposed synthesis/derivations, not claims that these products implement it identically.
+
+- [Vectric V12 documentation](https://docs.vectric.com/docs/V12.0/VCarveDesktop/ENU/Help/page/single-page/)
+  describes flat-depth carving, ordered clearance tools and subsequent tools handling
+  areas earlier tools could not fit. This supports combined clearance/finish strategies.
+- [Autodesk 3D Adaptive reference](https://help.autodesk.com/view/fusion360/ENU/?contextId=MFG-REF-3D-ADAPTIVE-CMD)
+  distinguishes tool containment and stock sources for rest machining, and explicitly
+  combines machining and geometry approximation tolerances. These motivate separate
+  target, stock provenance, footprint constraints and error budgets.
+- [CGAL straight-skeleton manual](https://doc.cgal.org/Manual/3.4/doc_html/cgal_manual/Straight_skeleton_2/Chapter_main.html)
+  explains why straight skeletons differ from Euclidean medial axes at reflex vertices.
+  Do not use skeleton event time unverified as circular cutter clearance.
+- [OpenVoronoi author's medial-axis pocketing work](https://www.anderswallin.net/2012/02/medial-axis-pocketing/)
+  supplies an established candidate approach worth evaluating, not proof that its
+  implementation meets this project's packaging or machining requirements.
+- [Clipper2 overview](https://www.angusj.com/clipper2/Docs/Overview.htm) and
+  [arc tolerance](https://www.angusj.com/clipper2/Docs/Units/Clipper.Offset/Classes/ClipperOffset/Properties/ArcTolerance.htm)
+  document integer-scaled clipping and polygonal arc approximation. Evaluate coordinate
+  scaling and approximation explicitly if selecting this backend.
+- [Shapely manual](https://shapely.readthedocs.io/en/stable/manual.html) provides planar
+  set operations and buffering. It is a candidate planar backend, not a 3D sweep engine.
+- [OpenCAMLib documentation](https://opencamlib.readthedocs.io/en/latest/)
+  describes drop/push cutter operations and cylindrical, ball, cone and composite
+  models. It is a candidate for later surface work, not automatically a rest planner.
+
+At this proposal stage no dependency was selected; the later
+[Shapely/GEOS decision](#shapelygeos-evaluation-decision---2026-09-22) supersedes that
+open choice. Backend evaluation criteria are analytic offset
+accuracy, holes/near-tangencies, deterministic topology, the then-supported Python 3.9-3.13
+and Windows installation, license/distribution obligations and measured performance.
+Start with planar Booleans/offsets; add a medial-axis backend only if the first
+V-carve slice demonstrates a need. A package's existence does not justify a new
+dependency or replacing the already accepted CAD representation.
+
+### First useful increment and acceptance
+
+The concrete [RC01 job](#first-generated-acceptance-job-rc01) now bounds the first
+generated slice and includes native integration gates. The earlier broader example
+below remains a follow-up acceptance case, not an additional first-job requirement.
+After product decisions, implement one standalone end-to-end slice: explicit flat
+endmill paths on a synthetic letter-like region with a hole, a 0.5 mm allowance,
+stock/rest analysis, safe smaller-endmill access and generated cleanup paths with
+independent verification. This establishes the same target/stock/clearance contract
+that V-carving needs and directly addresses the user's artificial-rest-corner defect.
+Pair it with an analytic cone feasibility fixture so the contracts do not accidentally
+assume a cylindrical tool. It does not require reproducing every native MOP strategy.
+Next deliver pointed-cone V-shaped and flat-depth carving with wide-area coverage;
+then rounded/flat tips and combined-tool execution, followed by native adapter motion
+acceptance. Optimize routing only after correctness. These are capability boundaries,
+not a claim that all general engineering cases can be implemented in one increment.
+
+Retain the earlier square-pocket references and add these executable acceptance
+cases before implementation. Synthetic metric geometry may use 0.001 mm geometric
+error for backend evaluation; this is a proposed fixture tolerance, not a machining
+default. Area/volume and between-sample error thresholds must be derived separately.
+
+| Case | Required evidence |
+| --- | --- |
+| Letter-like opening with hole, 5 mm endmill, 0.5 mm allowance | Straight-edge rest 0.5 mm; hole preserved; profile center remains unless actually swept; pocket interior coverage checked. |
+| Smaller tool on resulting rest | No new wall at the rest/cleared-space interface; full target protected boundary preserved; residual compared with smaller-tool reachability. |
+| Pointed 90-degree cone, 4 mm straight slot | Candidate tip penetration 2 mm; finite-length paths and end/corner behavior independently checked. |
+| Same cone, 1 mm design depth cap | Effective top diameter 2 mm; additional paths/clearance required for a wider target; no centerline-only completeness claim. |
+| 90-degree cone, 0.5 mm flat-tip radius, local clearance 2 mm | Candidate depth 1.5 mm; features narrower than the tip are reported unreachable. |
+| Tangent spherical/conical tip | Radius and derivative continuous at analytic join; inverse profile and sweep agree with independent section values. |
+| Vertical-wall sharp corner to fixed floor | V-cutter failure or residual reported; no surface-silhouette-only completeness. |
+| Multiple depths, island, narrow neck, capped diameter, flute/shank | All-height containment and actual stock-aware links; partial results explain infeasibility. |
+| Arc fitting and route simplification | Reverified between-point clearance, deviation and coverage; acute corners not silently deleted. |
+| Units, translated/mirrored input and reordered operations | Equivalent physical result under unit/frame changes; stock evolution follows operation order. |
+
+Broad scope explicitly excluded initially: tilted/multi-axis cutters, undercuts,
+arbitrary mesh stock, automatic slug removal/workholding dynamics, inferred tool
+catalogs and replication of undocumented native strategies. Report unsupported
+cases rather than approximating them silently. Reopen each when a concrete job
+needs it and the existing target/stock representation is shown insufficient.
+
+Design refinement stops at a reviewed proposal and recorded open decisions. No machine
+validation is needed for documentation. Before later manual acceptance, generate
+and inspect A/B files and exact expected motions as required by the development
+runbook. The A is suitable as one example; inlay implementation order is not a
+core-design blocker. Complete the general geometry acceptance matrix and kernel
+ownership evaluation before declaring the design ready for implementation.
+
+## Shared core and paired inlay design
+
+This section refines the preceding proposal after the user's scope decisions.
+It is still design, not a declaration of implemented or production-accepted APIs.
+
+### Small shared model
+
+Use immutable values and pure functions; reserve extensibility for geometry
+backends, target evaluation and path strategies where actual alternatives exist.
+Do not build a generic workflow/plugin framework or a public class per machining
+method. Proposed value groups:
+
+| Value | Minimum responsibility |
+| --- | --- |
+| `RegionSet` | Multiple components, explicit outer/hole nesting, frame and units; bounded normalization from lines/arcs; stable geometry fingerprint. |
+| `JobGeometry` | Required removal, permitted removal, initial stock, fixtures and setup; depth sections with conservative interval bounds. |
+| `ToolSpec` | Cutting/non-cutting meridian profiles, physical tip datum, reach and capability facts; caller ID plus immutable geometry revision. |
+| `PlanRequest` | Job, supplied tools, known prior motions/stock evidence, hard limits and optional optimization preferences. |
+| `MotionPlan` / `AnalysisResult` | Ordered typed motion blocks and tool references, or areas alone; residual and clearance bounds, diagnostics and provenance. |
+
+An inlay recipe produces two `JobGeometry` values and an assembly relation. It uses
+the same analysis/planning functions as ordinary jobs. A future catalog adapts its
+records into `ToolSpec`; neither catalog access nor CamBam entity creation occurs
+inside the engine. Keep process/material recommendations separate from measured
+cutter geometry. A catalog rename must not alter a cached result, while a cutter
+geometry change must invalidate it even if the catalog ID is unchanged.
+
+Keep constraints typed and scoped rather than an unrestricted options dictionary:
+tool facts (profile, reach, center-cutting/ramp capability); job limits (floor,
+breakthrough, allowance, fixtures, permitted relief); pass limits (axial increment,
+radial engagement, ramp slope, feeds); finish/error limits (cusp, residual thickness,
+boundary deviation); and preferences (tool-change cost, path length, overlap).
+Distinguish unknown from zero, and hard limits from recommendations. A missing
+process limit can still allow region analysis, but prevents claiming an executable
+plan has passed that limit. Add new fields only with defined units and an owning
+evaluator; "all relevant parameters" is not permission to accept inert options.
+For a V-cutter, contact radius and engaged axial range vary along the path; a
+single maximum diameter is insufficient for local cutting-speed or chip-load
+claims. Keep geometric feasibility available without inventing a cutting-force
+model, and report unassessed process constraints separately from geometric success.
+
+The shared mathematical operations are section, offset/set operations, feasible
+pose evaluation and motion sweep. Specific strategies propose paths using them.
+Verification evaluates the actual proposed/exported motion, not the strategy's
+claim of what it intended to cover. Independent analytic references and conservative
+bounds are required; a second wrapper around the same offset call is not independence.
+
+### Canonical target construction and uncertainty
+
+Keep three different spatial permissions:
+
+- `I`: material required to be removed for the final finish.
+- `L`: material allowed to be removed, including explicitly authorized relief;
+  ordinarily `I` is contained in `L`. Extra removal within `L` but outside `I` is
+  reported as relief, not credited as required coverage.
+- `E_k`: space known empty before motion `k`, including verified prior removal.
+  Free space is not an instruction to remove material elsewhere.
+
+Cutting occupancy may enter `L union E_k`, excluding fixtures/protected volumes.
+Non-cutting occupancy must avoid remaining stock as well as fixtures. A rapid may
+not cut even when its path lies in `L`. Check entry/ramp/exit motion against evolving
+stock; do not use the final operation's removed volume to justify its own entry.
+These are geometric conditions; engagement and machine/process limits also apply.
+
+A useful exact design definition for an ideal pointed V recess is particularly
+small. Let `Omega` be the top opening, `q(x)` its internal Euclidean distance to
+all boundaries including islands, `alpha` the design half-angle and `D` an optional
+design depth cap. Then, in positive downward coordinates:
+
+`H(x) = min(D, q(x)/tan(alpha))`
+
+`I(z) = Omega eroded by disk(z*tan(alpha)),  0 <= z <= D`
+
+Here `H` is desired depth, not a tool-center trajectory. The second equation
+follows directly from `H(x) >= z`. With no cap, use the first expression without
+`min`. A vertical-wall pocket instead has `I(z)=Omega` through its floor depth.
+The capped V-carve's flat floor exists only on `Omega eroded by disk(D*tan(alpha))`;
+narrow features may never reach that floor. A cap does not give the whole opening
+a flat bottom.
+Design-flat/rounded-tip recesses need an explicit alternative target definition;
+an actual flat/rounded cutter does not silently change this ideal pointed target.
+Allow custom bounded section evaluators later rather than forcing every job into
+one angle formula. These definitions use nominal ideal geometry; finite tools,
+access and tolerances determine whether it can be manufactured.
+
+This makes roughing simple to specify: at depth `z`, a cylindrical endmill of
+radius `r` needs centers inside `I(z) eroded by disk(r)` when preserving the exact
+target. For this nested ideal target that floor slice also bounds the upper
+cutting cylinder. This shortcut does not apply to arbitrary non-nested stock,
+holder occupancy or other target evaluators; those need all-height checks.
+
+Prefer analytic primitives and adaptive depth slabs, not a universal voxel grid.
+Initial target slices may be nested, but residual slices need not be. Preserve
+per-slab bounds and mandatory events at floors, stock surfaces, tool-profile joins,
+tab heights and offset topology changes. Refine other intervals until the error
+budget is met or return unresolved uncertainty.
+
+Use inner/outer removal bounds `C_lo subset C_true subset C_hi`. For exact initial
+stock `S0`, remaining stock is bounded by `S0 \\ C_hi` and `S0 \\ C_lo`; intersect
+both with `I` to bound rest. Only guaranteed removal can justify known-free travel.
+Do not replace nominal geometry by a single rounded approximation and label it
+exact. Tool/setup uncertainty is a separately declared physical envelope.
+
+One compact sweep primitive can support many strategies: at a fixed depth plane,
+a straight XY segment with a linearly varying nonnegative cutter-section radius
+sweeps the convex hull of its two endpoint disks. Constant radius is the capsule
+special case. Split an XYZ segment at tool section entry/exit and profile joins
+before applying this result; conical segments then admit affine-radius treatment.
+Rounded sections need analytic treatment or conservative adaptive radius bounds.
+This avoids relying on densely sampled endpoint disks that can leave false gaps.
+
+### Topology is part of the contract
+
+Keep authored CAD contours intact; normalize a bounded approximation for the
+backend and retain its error/source mapping. Closed polylines alone are not enough:
+explicitly represent holes, separate components, boundary contacts and collapsed
+features. Do not silently repair self-intersections or join nearly touching islands.
+Return a proposed repair and its geometric/topological change when repair is needed.
+
+Offsets can split, merge or eliminate components legitimately. Record these events
+and their depth. A small area is not automatically insignificant: a long thin strip
+can violate a wall requirement, and a tiny lost bridge can disconnect an inlay.
+Use boundary deviation, remaining thickness, component connectivity and volume/area
+together. Report features below representable resolution rather than dropping them.
+
+Feasible centers can be curves or isolated points: a slot exactly one tool diameter
+wide has a centerline, not a positive-area center region. A circle exactly matching
+the cutter has a single feasible center. Preserve these strata or explicitly report
+them unsupported; an empty polygon erosion alone must not mean "unreachable".
+Practical clearance/entry constraints can still rule out an exact-fit nominal case.
+
+Geometry fitting must preserve containment and required sharp features within its
+error budget. Medial-axis branches can be sensitive to small contour perturbations;
+prune only after demonstrating negligible effect on required coverage. Offset
+loops need component-aware routing; merging them is not permission to cross an island.
+
+### Inlays as paired targets
+
+Use an assembly coordinate frame plus separate pocket and plug machining frames.
+Define the retained plug solid and receiving cavity first, then derive the removal
+volumes from their respective stock. The plug is a bounded exterior-clearing job,
+not the unbounded complement of an outline. Preserve backing stock and required
+connections until an explicitly ordered release/face-off operation.
+
+| Parameter | Meaning in the engine |
+| --- | --- |
+| Seating/engagement depth | Intended insertion relative to the finished receiver surface. |
+| Bottom glue gap | Axial separation at designated bottom-facing surfaces; report where narrow features have no common flat floor. |
+| Surface clearance | Separation between designated opposing stock faces at the seated pose; provides room for assembly and later backing removal. |
+| Side-fit allowance | Signed lateral or surface-normal allowance with its measurement convention explicit; separate from bottom glue gap. |
+| Backing thickness / facing allowance | Material retained for handling and the later removal needed to expose the finished inlay. |
+| Assembly transform | Physical flip/rotation, registration and insertion; derive any mirrored 2D machining projection from it. |
+
+Nominal side contact with a bottom gap is a useful geometric baseline. A rigid-body
+model can detect intended interference but cannot predict compression fit in wood,
+glue flow, shrinkage or required assembly force. Such process allowances are supplied,
+not invented. Side clearance may expose a visible seam and must not be conflated with
+hidden bottom glue space. Negative allowance is a deliberate interference request.
+
+For a local straight tapered wall `x(z)=b-z*tan(alpha)`, changing seating by axial
+amount `delta_z` changes lateral fit magnitude by `abs(delta_z)*tan(alpha)`;
+normal separation magnitude is `abs(delta_z)*sin(alpha)`. Thus seating, visible
+seam and side-fit allowance are coupled. This local relation is not a universal
+offset recipe at corners, rounded tips or capped floors; check assembled solids.
+Do not copy another CAM product's Start Depth formulas into the engine's semantics.
+A reference depth does not prove the stock above it was already removed.
+
+Verify pocket and plug after applying their assembly transform: no unintended solid
+intersection, requested gap/contact at designated surfaces, sufficient insertion,
+no premature backing/shoulder contact and the expected visible outline after
+face-off. Check the insertion motion as well as the final pose. Two tools with
+different shapes are permitted only if their achievable surfaces satisfy these
+tests; "same nominal angle" alone is insufficient. First support flips preserving
+parallel depth planes; tilted assemblies/undercuts require a separate representation.
+
+### Machining methods and extension points
+
+| Scenario or method | Shared capability and design implication |
+| --- | --- |
+| Contour-parallel pocketing | Successive offsets and component routing; straightforward first strategy, but check residual strips and corner engagement. |
+| Raster/zigzag clearing | Clip parallel passes to feasible centers; explicit turns/retracts, islands and boundary finish. Useful alternative for wide flat areas. |
+| Medial-axis V finishing | Clearance controls depth; branch traversal and variable-Z motion; limited diameter/depth requires additional coverage. |
+| Adaptive/trochoidal/spiral roughing | Reuse stock and occupancy but add engagement/curvature control; constant stepover does not imply constant tool load. Defer until measured need. |
+| Rest with a smaller endmill | Reuse target and updated stock; cut only useful portions but allow access through known-clear regions. |
+| Flat/rounded-tip cleanup | Same swept-profile model; different reachability and floor-cusp limits. |
+| Profile separation and tabs | Finite cut band, retained/released bodies and ordering; do not treat a loose slug as known empty. |
+| Chamfer after pocketing | Separate desired contact surface; interior free space helps access but upper-wall occupancy still constrains the cone. |
+| Tapered or straight-wall inlays | Two targets plus fit/assembly checks; shared planners and stock verification. |
+| Rest from an imported/native job | Require resolved parameters and evidence mode; estimates cannot authorize assumed-air rapids. |
+
+The first strategy should be deterministic and easy to verify, not the most elaborate
+high-speed path. Choose among supplied tool sequences with hard constraints first.
+Support caller-fixed order and bounded automatic search. A greedy largest-first
+plan is a useful candidate, not a universal optimum: it can add a tool change for
+little gain or constrain entry. Report quality/time/tool-change tradeoffs; label
+time as an estimate when acceleration, feeds or tool-change times are unknown.
+Reuse stock snapshots across candidates; stop on bounded search budget, tolerance
+satisfaction or no verified progress. Never prune a tool solely because it has a
+larger nominal diameter: tip shape, reach and engagement capabilities also matter.
+
+### Engineering sources and library direction
+
+The following primary references inform this refinement; the model above is our
+design synthesis, with formulas derived under the stated assumptions.
+
+- [LaValle, configuration-space planning](https://lavalle.pl/planning/node161.html)
+  gives the obstacle/shape translation framework behind cutter-center constraints.
+  Machining additionally changes stock; static collision-free poses are only one layer.
+- [Held and Spielberger, spiral pocket machining](https://www.cad-journal.net/files/vol_11/CAD_11%283%29_2014_346-357.pdf)
+  studies Voronoi-based pocket decomposition, stepover, curvature and engagement.
+  This supports keeping stock correctness independent of later route optimization.
+- [Vectric V12.5 inlay documentation](https://docs.vectric.com/docs/V12.5/Aspire/ENU/Help/form/VCarve%20Inlay%20Toolpath/)
+  distinguishes glue gap and surface clearance and generates paired operations.
+  Its same-V-bit rule is product behavior, not our proof of arbitrary-tool compatibility.
+- [Boost.Polygon Voronoi](https://www.boost.org/doc/libs/1_63_0/libs/polygon/doc/voronoi_main.htm)
+  handles point/segment sites with integral inputs and nonintersection preconditions.
+  It is a candidate for true segment-clearance graphs, not a full machining engine.
+- [Shapely precision model](https://shapely.readthedocs.io/en/2.1.0/reference/shapely.set_precision.html)
+  explicitly documents collapse/removal of narrow features under precision reduction.
+  Backend validity therefore does not prove preservation of manufacturing intent.
+- [Shapely 2.1 release requirements](https://shapely.readthedocs.io/en/2.1.0/release/2.x.html)
+  require Python 3.10+, whereas this project supported 3.9-3.13 at evaluation time.
+  The user-approved [2026-09-29 policy](REVIEW.md#python-312-minimum-and-session-5-closure---2026-09-29)
+  now requires Python >=3.12; minimum-version changes remain explicit decisions.
+- [CGAL Minkowski sums](https://doc.cgal.org/latest/Minkowski_sum_2/group__PkgMinkowskiSum2Ref.html)
+  offers exact or guaranteed-approximation offsets and lists GPL licensing for this
+  package. Distribution and binding implications must be evaluated before adoption.
+
+No backend is preferred solely because it offers a short Python API. With the
+user's clarification, evaluate established planar packages first under the ownership
+criteria below; a full competing local kernel is not a prerequisite. Shapely/GEOS
+and Clipper2 remain candidates, not dependencies or
+selected architecture. Choose one production implementation per primitive rather
+than maintaining equivalent competing kernels. Separately evaluate segment Voronoi
+when required by V-finishing; avoid raster skeletonization as an unbounded
+substitute. A general mesh/solid kernel is not required for the current fixed-axis scope.
+
+### Algorithm ownership and dependency policy
+
+The user considered an in-repository implementation and then explicitly accepted
+proven packages. Prefer established low-level geometry where acceptance demonstrates
+fitness; implement bounded gaps locally when justified. There is no requirement
+to build a second general polygon kernel to make that decision. Own the domain
+semantics and algorithms regardless of how low-level operations are provided:
+
+| Responsibility | Proposed ownership |
+| --- | --- |
+| Cutter profiles, target evaluators, rest/stock semantics and error budgets | Implement and maintain here. |
+| Feasible-pose constraints, tool combinations, strategies, entry/link policies | Own semantics and independent verification here. Implement strategies or adapt auditable providers with declared capabilities; an external engine must not become the sole correctness authority or a mandatory dependency for all methods. |
+| Analytic line/arc distances, profile inversion, simple sweeps and adaptive subdivision | Prefer small in-repository implementations with analytic checks. |
+| General polygon overlay/offset topology and segment Voronoi construction | Evaluate established packages first using adversarial acceptance and maintenance evidence; own bounded gaps if needed. |
+| Numeric arrays and acceleration | NumPy or justified low-level support; not a substitute for robust geometric predicates. |
+| CamBam registration/XML and client catalogs | Existing adapters/owners; no backend objects or catalog dependencies in the public machining model. |
+
+Implementing general Booleans means owning intersection classification, splitting
+edges, consistent vertex identity, coincident-edge handling, ring/hole reconstruction
+and valid set topology. Offsetting additionally needs self-intersection resolution
+and component split/merge/collapse handling. Robust orientation/incircle predicates
+alone do not guarantee robust constructed intersections or assembled topology.
+NumPy floating-point operations and a single global epsilon do not solve these
+problems. Exact predicates also do not make irrational arc/offset coordinates exact.
+
+For an in-repository candidate, declare the coordinate model and supported inputs
+first: bounded polygonal approximation versus analytic arcs; scaled integers/exact
+rationals where appropriate versus filtered floating-point predicates with exact
+fallbacks. Track snapping and construction error separately. Reuse existing Region
+validation only where its contract fits; its CAD topology checks do not establish
+a Boolean or medial-axis kernel. Do not grow new general CAM algorithms inside the
+Region XML/entity owner.
+
+Evaluate implementation ownership by correctness evidence, auditable failure modes,
+supported platforms, dependency/binding burden, license/distribution requirements,
+performance on representative contours, and long-term maintenance. Count the robust
+kernel and regression burden, not only wrapper lines. A local implementation removes
+upstream-change risk but transfers algorithmic defects and maintenance to us; neither
+local ownership nor library popularity establishes correctness.
+
+The first decision experiment covers union/difference, disk offsets, holes,
+coincident/near-tangent boundaries and narrow-feature preservation using the
+[acceptance corpus](#acceptance-corpus-v1). Evaluate Shapely/GEOS first; examine
+Clipper2 or a bounded local primitive if a demonstrated gap justifies it. Record
+why a failure belongs to the package, our adapter, or an unsupported representation
+before replacing a backend. Isolate established primitives behind a small internal function
+boundary with owned value types. No backend plugin framework is needed. External
+libraries may also serve as development-only comparison oracles without becoming
+runtime dependencies; agreement is corroboration, not proof.
+
+Evidence: [GEOS](https://libgeos.org/) identifies PostGIS, QGIS, GDAL and Shapely
+as consumers, so it should not be classified as an unproven niche CAM library.
+[Shewchuk's robust-predicate research](https://www.cs.cmu.edu/~quake/robust.html)
+explains why floating-point sign errors matter and supplies adaptive-precision
+orientation/incircle algorithms. These are reasons to evaluate maturity and numeric
+contracts explicitly, not blanket endorsements or commitments to vendor code.
+
+### Acceptance additions and next decision
+
+One proposed combined-tool fixture (the user accepts the A as an example):
+millimetres, stock top at Z=0, stock thickness 8; outer A-shaped contour
+`(-24,0), (-8,60), (8,60), (24,0), (12,0), (6,18), (-6,18), (-12,0)`;
+triangular hole `(-4,28), (4,28), (0,44)`. Use the ideal 90-degree included-angle
+target capped at 3 mm depth. Supply a 5 mm flat endmill and a pointed 90-degree
+V-cutter with 12 mm maximum cutting diameter and at least 6 mm conical cutting
+height. Roughing retains a 0.5 mm planar allowance against each target section;
+finishing removes that allowance within the final target. These are synthetic
+geometry inputs, not manufacturer/process recommendations or approved feeds.
+Keep the earlier square and straight-slot cases as independent analytic references;
+this A fixture exercises composition, holes and varying local width.
+
+Add analytic checks for ideal V target sections, affine-radius segment sweeps,
+uncertainty ordering, exact-width slot/point-center cases, a narrow bridge near the
+precision limit, and assembled tapered-wall fit. Inlay verification must test a
+correct pair, wrong flip, premature bottom/backing contact, excessive visible side
+gap and a narrow feature without a flat bottom. Prove geometry before optimizing.
+
+The A cannot stand in for general-shape acceptance. Organize the fixture matrix by
+geometric difficulty and machining outcome rather than application names:
+
+| Family | What it must establish |
+| --- | --- |
+| Rectangles, circles, annuli, exact-width slots | Analytic coverage, offsets, isolated/curve center sets and dimensional limits. |
+| Concave technical pockets, fillets, multiple islands | Arc handling, topology, disconnected rest and safe overlap. |
+| Organic/artistic contours, fine strokes, acute wedges | Curvature, varying width, detail retention and bounded approximation. |
+| Disconnected regions and nested ring hierarchies | Explicit fill semantics, component ownership and independent routing. |
+| Near-tangencies, coincident edges, tiny bridges, large coordinate ranges | Robust predicates/constructions, explicit uncertainty and no silent topology damage. |
+| Wide/depth-capped areas, multiple floors, tabs | Tool limits, full-height occupancy and stock evolution. |
+| Paired mating parts, including inlays | Composition of ordinary jobs and assembly constraints; no core specialization for lettering or inlays. |
+
+Use analytic cases, adversarial constructions and deterministic generated shapes.
+Add unit/translation/rotation invariance, valid similarity scaling with scaled tool
+and tolerance inputs, contour-order independence and stock-removal monotonicity.
+Nonuniform scaling of a design does not scale a physical round cutter into an ellipse.
+Use set identities and independent bounds, not merely pictures or agreement between
+two calls to the same algorithm.
+
+The standalone endmill-rest slice remains the internal foundation, with pointed-cone
+target and sweep checks alongside it. Inlay order can be chosen later without
+blocking that foundation. Design closure needs numerical tolerances and expected
+results for the general-shape matrix plus the kernel ownership decision; choosing
+a showcase application is not a prerequisite or a substitute.
+
+### Acceptance corpus v1
+
+The reusable [JSON corpus](../tests/fixtures/rest_vcarve_acceptance.json) owns exact
+synthetic inputs and numerical reference values. This section owns their meaning,
+acceptance rules and limits. The [reference checks](../tests/test_rest_vcarve_acceptance_fixtures.py)
+validate analytic expectations and the existing CAD input representation without
+installing a candidate geometry package. Passing them does **not** accept a backend,
+stock engine, path planner, Engrave adapter or manufactured result.
+
+All inputs use millimetres. `reference_numeric_tolerance=1e-9` checks scalar oracle
+consistency only; it is not a machining accuracy claim. For the future backend
+runner, require maximum boundary distance <= 0.001 mm, area error <= 0.01 mm2 and
+volume error <= 0.01 mm3 when applicable. These are independently enforced synthetic
+limits: satisfying boundary distance alone does not imply the area/volume limits.
+Refine curves/integration as necessary; never loosen the expected reference to
+match the candidate. Units/scaling tests must scale each limit dimensionally.
+
+For regions with an independent reference construction, check symmetric-difference
+area as well as signed area error; equal area alone does not prove equal geometry.
+Check boundary distance in both directions and exact expected component/hole counts.
+For line/point feasible sets, compare dimension and locations, not area. Geometric
+approximation limits do not authorize cutting outside protected stock: the future
+planner must bound occupancy conservatively and report unresolved uncertainty.
+
+| Case | Required outcome and evidence class |
+| --- | --- |
+| G01 rectangle overlay | Union, intersection and difference have analytic areas; shared boundaries do not create spurious holes/components. |
+| R01 square reachability | Four ideal inaccessible corner pieces for each radius; smaller-tool gain is the difference in ideal rest. Not generated-path coverage. |
+| R02 profile versus pocket | Explicit closed square-center trajectory sweeps 236.5663706144 mm2; ideal pocket coverage is 357.5663706144 mm2. The profile retains an 11 mm square center. |
+| G02 annulus inset | Outer radius shrinks and hole radius grows; one component and one hole survive. |
+| V01 square V target | At depth 2, floor area is 36 mm2; volume to the cap is 130.6666666667 mm3. This is a desired volume, not proof a path cuts it. |
+| V02 circular V target | Sections remain concentric circles; analytic volume and floor extent match numerical integration. |
+| C01 pointed/flat cones | Depth inversion and finite cone extent use the physical tip datum; clearance below flat-tip radius is unreachable. |
+| C02 spherical/conical tip | Radius and slope meet continuously; maximum diameter uses the joined-profile height, not the pointed-cone formula. |
+| S01 constant-radius sweep | A 6 mm segment with radius 2 sweeps a capsule, including the space between endpoint disks. |
+| S02 affine-radius sweep | The disk convex hull has area 20.2309724380 mm2; a separate support-function integral checks the reference. Endpoint union is insufficient. |
+| T01 exact-fit centers | Rectangle yields a segment; circle yields one point. Zero center area is not nominal infeasibility. Entry/physical clearance remains separate. |
+| T02 near contact | Overlap and shared-edge contact form one interior component; the 0.004 mm gap preserves two. Do not close it through precision reduction. |
+| T03 narrow bridge | Connected input area 32.04 mm2; an inset larger than the bridge half-width leaves two components without holes. |
+| A01 general composition | Valid concave outer contour and triangular hole, opening area 1532 mm2. Combined-tool path acceptance deliberately remains pending. |
+
+S01/S02 describe continuous XY sweeps at one depth. They do not establish complete
+XYZ motion: the runner must later split at profile joins and slice entry/exit and
+prove between-depth bounds. R02's pocket value assumes exhaustive ideal reachable
+coverage, whereas its profile value comes from the explicit supplied trajectory.
+Keep these evidence classes visible in any machine-readable evaluation report.
+
+The first backend evaluation should consume the planar cases and target sections,
+report actual errors/topology by case ID, and identify lower-dimensional operations
+needing local support. Do not require a polygon-only package to encode a centerline
+as a positive-area polygon. Acceptance is of the package plus its bounded adapter
+contract, with unsupported capabilities explicit, not of the package in isolation.
+
+Reference validation command, from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -p test_rest_vcarve_acceptance_fixtures.py -v
+```
+
+The [adversarial supplement](REVIEW.md#adversarial-planar-acceptance-and-internal-contract---2026-09-22)
+adds bounded invalid-input, arc-heavy/organic and transformation evidence without
+changing corpus v1. Continuous multi-depth stock and protected-volume checks,
+capped wide-area path coverage, motion ordering and entry, then application-level
+paired-inlay assembly remain later gates. These fourteen reference cases and the
+supplement are not a claim of general engine acceptance.
+
+### Shapely/GEOS evaluation decision - 2026-09-22
+
+Select Shapely/GEOS as the planar primitive candidate for the detached-core design.
+The bounded corpus supports continuing with its overlay and disk-offset operations;
+it does not justify a replacement polygon kernel or a second package comparison.
+This is a design selection, not runtime dependency adoption or general machining
+acceptance. The [evaluation evidence](REVIEW.md#shapelygeos-planar-evaluation---2026-09-22)
+records measured errors, the Windows matrix and the exact-fit limitation.
+The reusable [development runner](../tools/evaluate_shapely.py) stays outside the
+runtime package and normal backend-independent reference tests.
+
+The proposed internal boundary must own these requirements:
+
+- Pass finite, valid, explicitly filled XY regions to GEOS. Preserve component/hole
+  meaning in owned values; do not expose Shapely objects in the public model or
+  silently repair invalid topology. Z/depth, stock evidence and cutter semantics
+  remain the detached core's responsibility.
+- Set curve approximation from a dimensional error budget and check both area and
+  boundary error. The experiment's `quad_segs=256` is sufficient for this corpus,
+  not a universal resolution. Analytic arcs require bounded conversion. Offset
+  approximation does not establish conservative protected-stock containment.
+- Preserve nominal feasible sets with dimensions 0, 1 and 2. Polygon erosion alone
+  cannot implement exact-fit centers. Bounded analytic rectangle/circle handling
+  is the first local support to prove; general collapsed sets remain unsupported
+  until a declared algorithm and uncertainty policy cover them.
+- Do not apply an implicit precision grid. Snapping can merge the corpus's 0.004 mm
+  gap. A future grid policy must account for construction error and topology loss
+  separately and reject unresolved features rather than infer infeasibility.
+- Restrict the first implementation to the common tested 2.0/2.1 API. The tested
+  version policy is `shapely==2.0.7; python_version < '3.10'` and
+  `shapely==2.1.2; python_version >= '3.10'` on CPython Windows x64 3.9-3.13.
+  That historical split is superseded by the user-approved Python >=3.12 minimum
+  and Shapely 2.1.2 for all supported interpreters; see the
+  [current runtime policy](DEVELOPMENT.md#detached-nominal-planar-runtime-checks).
+  Re-run this runner and platform checks before
+  widening versions; 32-bit Windows, ARM64 and source builds are not verified.
+  Add an optional machining dependency only when a runtime slice needs it;
+  `pyproject.toml` remains the sole dependency declaration owner.
+
+The [internal planar contract](#internal-planar-value-and-error-contract) below
+closes the next design boundary. Its adversarial evidence supplements corpus v1;
+continuous multi-depth stock, motion ordering and paired inlays remain later work.
+Reopen backend selection if supported-input topology or the declared error budget
+cannot be met, the supported wheel matrix fails, or representative work shows a
+material performance bottleneck.
+
+### Internal planar value and error contract
+
+This is the design boundary for detached implementation. The first nominal
+runtime subset is now implemented; its API and explicit exclusions live in
+[the implemented specification](structure_spec.md#detached-nominal-planar-core).
+Development probes demonstrate bounded cases; they must
+not be imported by runtime code. Geometry/error ownership belongs to the detached
+core, with one private Shapely adapter. Existing CAD `Region` validation and XML
+rounding remain separate contracts: passing CAD validation is not a machining
+accuracy certificate. The implementation adds an optional `planar` dependency
+extra, while this design contract introduces no path planner.
+
+**Owned inputs and values.** Use immutable tuples/scalars and explicit tagged
+variants, rather than backend objects or a general options dictionary:
+
+| Value | Required fields and meaning |
+| --- | --- |
+| `PlanarFrame` | Source units (`mm` or `inch`), explicit XY frame identity and origin, and section Z when applicable. Convert to local millimetres once; retain the inverse mapping and conversion provenance. Never infer a frame from coordinates. |
+| `RegionSet` | Tuple of filled components, each with one closed shell and its explicitly assigned holes. Segments are lines or directed circular arcs with finite endpoints, center/radius/sweep and source references. Empty sets are explicit. Analytic circle and rectangle identity is retained when supplied; it is not inferred from an approximate polygon. |
+| `PlanarApproximation` | Valid polygonal coordinates, source-segment/parameter mapping, measured or bounded error contributions, frame mapping and original analytic input fingerprint. Authored contours remain intact. |
+| `FeasibleSet` | Separate area components, segment chains and isolated points, with dimension set drawn from `{0,1,2}`; the empty set has no dimensions. An analytic disk/rectangle area can remain analytic until polygon conversion is requested. Dimensions are never classified by an area threshold. |
+| `ErrorBudget` | Positive finite boundary distance and area limits, optional volume limit only when an owning evaluator exists, and work limits for refinement. Numeric units are explicit. Physical clearance, runout, tool uncertainty and desired finish allowance are separate inputs. |
+| `PlanarResult` | Status, operation/evidence class, optional owned value, requested budget, error ledger, topology events, diagnostics and provenance. Partial/unresolved geometry is diagnostic only and cannot be consumed as accepted stock or access. |
+
+The native adapter must resolve effective transforms and section elevation before
+detachment. A varying-Z contour is not silently projected into a planar opening;
+return `unsupported` unless an explicit section/projection operation supplies that
+meaning. Similarity-transformed circles/rectangles retain analytic provenance;
+arbitrary transformed contours do not gain it from bounding boxes or curve fitting.
+Binary operations require the same explicit XY frame and applicable section Z
+after unit conversion, or an explicitly supplied mapping into a common frame.
+Coincident numeric coordinates do not establish alignment. Differing sections are
+not combined by a planar operation.
+
+Source references identify component/ring/segment and parameter interval; they
+do not require project IDs, layers, XML or mutable entity references. Provenance
+records normalized input and policy fingerprints, operation parameters, adapter
+revision and actual Shapely/GEOS versions. Fingerprints canonicalize ring start,
+winding and component/hole order without quantizing coordinates; they include
+frame/units, analytic segment meaning and error policy. Source mapping is kept
+separately so reordered sources can share a geometric cache key without returning
+stale source labels. Hash identity means identical canonical inputs/policy, not
+approximate geometric equivalence or proof of accuracy.
+
+**Admission and topology.** Validate finite numbers, positive primitive sizes,
+arc consistency and explicit closure before handing coordinates to GEOS. Reject
+zero-length edges, fewer than three distinct vertices in polygonal rings or
+approximations, zero-area rings,
+self-crossings/overlaps, outside or nested/overlapping holes and any hole touching
+its shell or another hole. Ring winding and cyclic start are representation
+choices; shell/hole role comes from ownership, never winding alone. Independent
+components must have disjoint interiors; boundary contacts are allowed and must
+remain explicit. Combining overlapping filled inputs is an explicit union
+operation, not a silent normalization repair. Union may coalesce shared edges;
+point contact must not be credited as a traversable positive-width passage.
+
+Validate both the analytic source and its approximation. A valid chord polygon
+does not prove that the original arcs are valid. If source topology or preservation
+through approximation cannot be established within the work/error limits, return
+`unresolved` (or `unsupported` for an unimplemented predicate). Do not call
+`make_valid`, `buffer(0)`, apply a precision grid, remove small areas or merge close
+vertices implicitly. Diagnostics identify the offending sources and reason;
+repair proposals require a separate explicit operation and a topology/error diff.
+An offset can legitimately split or remove an area component; record before/after
+component and hole counts, while keeping feasible-set dimension claims separate.
+The polygon vertex-count rule does not apply to authored analytic arc rings:
+a circle or two-semicircle boundary is allowed when its analytic topology is valid.
+
+Region operations use regularized filled-area semantics: the closure of the
+interior of the set result. Thus polygon difference can retain its cut boundary,
+and boundary-only intersection is an empty **area** result, not proof that the
+literal intersection has no points. Exact closed-set erosion for `FeasibleSet`
+is a different operation. Do not use regularized area difference to prove that
+protected boundaries are untouched. Validate output representability as well as
+backend validity: a valid Boolean output with a shell/hole contact, touching holes
+or a pinched ring outside the strict owned representation returns `unsupported`
+with the contact diagnostic. Never report it as empty or as a backend defect.
+Independent components touching at points remain representable, with contact
+locations recorded; first-slice output closure is therefore explicitly bounded,
+not a promise to encode every GEOS polygon as an accepted `RegionSet`.
+
+**Dimensional error ledger.** For an arc of radius `R` and per-chord angle `a`,
+the chord deviation is `R*(1-cos(a/2))`, and its enclosed area deficit is
+`R*R*(a-sin(a))/2`. Sum absolute segment deficits for an area budget; do not allow
+shell/hole cancellation to hide error. Subdivide adaptively using both limits,
+with stable small-angle evaluation and a bounded segment count. A smooth curve
+needs its own derivative/interpolation bound; merely doubling sample density is
+an observation, not a continuous error bound. Preserve corners and arc endpoints.
+
+Track input approximation, operation approximation, numeric/coordinate effects
+and output conversion separately. A certified operation must establish how these
+contributions propagate and sum within the requested budget; an input chord bound
+alone does not bound an offset near a topology event. Record observed metrics as
+observations and proven bounds as bounds. In particular, the GEOS acceptance
+measurements are not a universal floating-point or conservative containment proof.
+An unavailable contribution is `unknown`, never zero. A result may pass nominal
+synthetic gates while remaining ineligible for safety/stock certification.
+The boundary metric is the continuous bidirectional maximum distance between
+boundaries; the area metric is symmetric-difference area against the intended
+region. Scalar area difference is an additional diagnostic, not a substitute.
+Empty/nonempty mismatches and changed connectivity cannot pass by having small
+area error. `nominal_geometry` may carry unknown operation/numeric bounds only
+with `budget_certified=false` and the unknown terms exposed; any known limit
+violation returns `unresolved`. A request requiring certified bounds cannot be
+satisfied by nominal success. Even a certified geometric approximation needs a
+separate directional containment proof before it is used as guaranteed removal.
+
+Normalize near a deterministic local origin before backend operations and account
+for source-coordinate quantization and reconstruction. Recentering cannot restore
+detail already lost at a large world origin. Reject nonfinite conversion, overflow,
+underflow that loses a feature, or numeric resolution that exhausts the budget;
+otherwise retain the resolution allowance in the ledger. The coordinate probe
+tests a 1e9 mm translation and rejects 1e15 mm for a 0.001 mm boundary budget;
+these are evidence points, not a universal coordinate-range promise. Similarity
+scale `s` scales distances by `abs(s)`, areas by `s*s`, and volumes by `abs(s)**3`.
+Apply the same scaling to budgets, tools and section depths. Inch conversion uses
+25.4 mm/inch. Reflections reverse arc direction and winding without changing fill.
+Anisotropic transforms turn circles into ellipses: reject them for this bounded
+analytic adapter rather than silently preserving circular metadata.
+
+**Exact-fit support.** The first local analytic support is a closed disk eroded by
+a disk and a filled rectangle eroded by a disk, at one depth, without holes. Use
+the supplied analytic parameters in its local frame, not a GEOS erosion or fitted
+polygon. Classify using authoritative parameters before rounded placement/unit
+conversion; exact rational conversion (`127/5` mm/inch) preserves equalities when
+combining units. For rectangle width `w`, height `h`, radius `r >= 0`, compare `w-2*r` and
+`h-2*r` exactly for the supplied binary64 parameters (exact rational comparison
+is sufficient). Negative extent is nominal empty; two positive extents give area;
+one zero gives a closed segment; two zeros give a point. For circle radius `R`,
+compare `R-r`: positive is a disk, zero is its center point, negative is empty.
+Conversion to output coordinates still consumes the numerical error budget.
+
+Never promote a nearly fitting case to exact fit using the boundary tolerance.
+Uncertain dimensions/tool sizes that straddle equality give `unresolved`, with
+the nominal result optionally attached for diagnosis. Exact equality is an ideal
+geometric result for declared inputs, not proof of practical clearance or entry.
+Rigid/reflected placement retains the analytic result and dimensions. General
+collapsed feasible sets, and collapsed branches alongside positive-area erosion,
+remain `unsupported` until a declared recovery algorithm is verified. A polygon
+buffer alone cannot prove absence of these strata, even when it returns some area.
+General polygon erosion may therefore be returned only as **nominal area erosion**,
+not as a complete `FeasibleSet` or a proof of infeasibility. No tolerance-sized
+polygon is substituted for a point or line.
+
+**Result and failure semantics.** Successful results declare `nominal_geometry`
+or a specifically established bounded evidence class; neither means executable
+motion or machining acceptance. Empty is a successful mathematical value only
+where the operation's declared semantics establish it. Other statuses are
+`invalid_input` (with source diagnostics), `unsupported` (missing capability),
+`unresolved` (budget, conditioning, topology ambiguity or work limit), and
+`backend_failure` (caught backend exception or invalid/nonfinite result).
+These statuses are distinct from a later planner's `infeasible`. Validate backend
+outputs, reject unexpected dimensions, and return no accepted value on failure.
+Operations are pure and atomic: errors cannot mutate inputs, a project, cached
+stock or an earlier accepted result. No automatic retry with looser tolerances.
+
+The first runtime slice should prove normalization, explicit union/difference,
+nominal area erosion and the bounded analytic `FeasibleSet` end to end on detached
+values. Keep conservative swept-stock and rest certification gated on their own
+bounds, followed by motion/entry verification. This is more useful now than more
+standalone kernel comparisons: the selected backend has evidence, while consumers
+still need an owned boundary that prevents nominal geometry becoming a false
+machining guarantee.
+
+### First directional stock consumer - 2026-09-22
+
+The [implemented analytic section contract](structure_spec.md#directional-analytic-stock-section-bounds)
+now establishes the directional occupancy gate for one supplied horizontal disk
+sweep in exact rectangular stock/target. The input uncertainty model, triangle-
+inequality propagation, protected boundary check, reversed remaining-stock bounds
+and rejection rules live there. This is conditional section evidence, not the
+full rectangular feasible-center opening or an executed pocket operation.
+Independent scalar area references and translated actual-sweep membership checks
+are in `tests/test_stock.py`. General Boolean success remains nominal and cannot
+feed this consumer. Finite supplied sweep composition now preserves exact union
+membership and reversed stock subtraction, with conservative overlap-safe rational
+grid area intervals and per-pass provenance. The implementation contract remains
+in the specification. A separate exact rectangular target with one protected
+rectangular island now gives required rest against the original target while the
+same composition retains whole-stock state. Exact island/exterior containment and
+independent residual membership are checked; supplied sweeps may cross the
+artificial rest/cleared-space interface. The subsequent bounded section-motion
+verifier checks caller-supplied horizontal cutting and explicit entry/connection
+motion against original target protection and prior guaranteed free space, with
+independent residual membership. It does not establish vertical access, stock at
+other Z heights, generated paths or general target topology. Its contract remains
+in the specification and verification evidence in the review.
+Next priority stays in [PROGRESS](PROGRESS.md#next-detached-stockrest-increment).

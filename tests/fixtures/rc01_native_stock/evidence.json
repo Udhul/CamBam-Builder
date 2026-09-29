@@ -1,0 +1,10 @@
+{
+  "format": "rc01-native-rough-stock-v1",
+  "manifest_file": "comparison.json",
+  "manifest_sha256": "a3c7b17d64a92f1b4bebb6adf9f49b4b49a46817e4f9a8e950f1b0591d30bcb4",
+  "setup_file": "setup.json",
+  "setup_sha256": "f5a8e138ee00c8c45826036048f0754721ca10b85c829921dd4568ccd8f1e2e7",
+  "post_file": "N-rough.nc",
+  "post_sha256": "cde87d91d6f4c746cdabe7a80b04808d65551bc4d15db47e724550c6b0d444a2",
+  "motion_sha256": "a0fdecec1c961b146179371b20b0055b771a566a0412a97853a94aec9e5f5177"
+}
