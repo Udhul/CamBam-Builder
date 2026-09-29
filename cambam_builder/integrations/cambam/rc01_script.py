@@ -152,9 +152,7 @@ def audit_script_post(manifest_path, posted_path):
         raise ValueError("CamBam post header does not match candidate/Default")
     # CustomScript Drill contributes G98/G80 around its literal text. They
     # have no movement without a canned cycle; reject combined/other forms.
-    normalized = "\n".join("" if line.strip() in ("G98", "G80") else line
-                           for line in post.splitlines())
-    actual, warnings = read_default_post(normalized)
+    actual, warnings = read_default_post(post, allow_drill_wrappers=True)
     warnings = [w for w in warnings if "initial machine position is not encoded" not in w]
     if warnings:
         return {"status": "unverified", "reason": warnings[0]}

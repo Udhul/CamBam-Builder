@@ -164,9 +164,7 @@ def _compare_post(trace, candidate, posted_path, *, tool=TOOL, rpm=RPM):
             not any(line.startswith(f"( {candidate.stem} ")
                     for line in post.splitlines()[:6])):
         raise ValueError("CamBam post header does not match candidate/Default")
-    normalized = "\n".join("" if line.strip() in ("G98", "G80") else line
-                           for line in post.splitlines())
-    actual, warnings = read_default_post(normalized)
+    actual, warnings = read_default_post(post, allow_drill_wrappers=True)
     warnings = [w for w in warnings
                 if "initial machine position is not encoded" not in w]
     if warnings:

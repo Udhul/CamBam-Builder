@@ -133,9 +133,7 @@ def build_engrave_candidate(directory, *, native_source_bytes=None, native_setup
 
 def _observations(posted_path, plan, trace):
     posted = Path(posted_path).read_text(encoding="utf-8-sig")
-    normalized = "\n".join("" if line.strip() in ("G98", "G80") else line
-                           for line in posted.splitlines())
-    items, warnings = read_default_post(normalized)
+    items, warnings = read_default_post(posted, allow_drill_wrappers=True)
     cut_start = (plan.cut_spine[0], plan.cut_spine[2], -plan.cut_spine[3])
     cut_end = (plan.cut_spine[1], plan.cut_spine[2], -plan.cut_spine[4])
     sloped = [item for item in items if item["type"] == "move" and

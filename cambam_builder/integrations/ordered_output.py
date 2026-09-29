@@ -72,7 +72,8 @@ def audit_files(job, dialect, files, *, effects=None,
             not math.isfinite(fixture_top_z_mm)):
         raise ValueError("finite fixture top required")
     if job.source_kind == "native":
-        if source_binding is None:
+        from .cambam.native_ordered_job import NativeBinding
+        if type(source_binding) is not NativeBinding:
             raise ValueError("native source freshness binding required")
         source_binding.check(job)
     elif source_binding is not None:
@@ -95,6 +96,10 @@ def audit_files(job, dialect, files, *, effects=None,
                 fixture_top_z_mm=fixture_top_z_mm)
     report = ordered_job.audit(job, decoded, dialect=dialect,
                                expected_fingerprint=job.fingerprint)
+    if job.source_kind == "native":
+        report["document_fidelity"] = {
+            "status": "pass",
+            "scope": "fresh normalized native source/candidate/post and ordered binding"}
     effects = {} if effects is None else effects
     if type(effects) is not dict:
         raise ValueError("external effects must be keyed by stage ID")
@@ -114,6 +119,10 @@ def audit_files(job, dialect, files, *, effects=None,
                                        fixture_top_z_mm=fixture_top_z_mm)
         effect_hashes[stage.id] = _sha(effects[stage.id])
     report["transition_evidence"]["external_effect_hashes"] = effect_hashes
+    report["external_effects"] = {
+        "status": "pass_with_assumptions" if expected else "not_applicable",
+        "scope": "declared synthetic travel, effect bytes and flat fixture clearance",
+        "runtime_observed": False}
     report["motion_equivalence"]["program_sha256"] = hashes
     report["profile"] = _profile(dialect)
     return report

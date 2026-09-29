@@ -16,6 +16,35 @@ from tests import test_native_series as fixture
 
 
 class NativeSeriesAuditTests(unittest.TestCase):
+    def test_source_stock_must_contain_replayed_target(self):
+        for pmin, pmax in (("0,0,-2", "5,10,0"),
+                           ("0,0,-2", "10,10,1"),
+                           ("0,0,-0.5", "10,10,0")):
+            with self.subTest(pmin=pmin, pmax=pmax), tempfile.TemporaryDirectory() as folder:
+                candidate, post, _, args = self.make_case(Path(folder), fixture.POST)
+                tree = ET.parse(candidate)
+                tree.find("./parts/part/Stock/PMin").text = pmin
+                tree.find("./parts/part/Stock/PMax").text = pmax
+                tree.write(candidate, encoding="utf-8", xml_declaration=True)
+                series = normalize_native_series(candidate, candidate, post,
+                                                 initial_position=(5, 5, 5))
+                with self.assertRaisesRegex(ValueError, "stock does not contain"):
+                    audit_linear_native_series(series, candidate, candidate, post, **args)
+
+    def test_stockless_post_parses_but_cannot_gain_native_stock_authority(self):
+        with tempfile.TemporaryDirectory() as folder:
+            candidate, post, _, args = self.make_case(Path(folder), fixture.POST)
+            tree = ET.parse(candidate)
+            part = tree.find("./parts/part")
+            part.remove(part.find("Stock"))
+            tree.write(candidate, encoding="utf-8", xml_declaration=True)
+            series = normalize_native_series(candidate, candidate, post,
+                                             initial_position=(5, 5, 5))
+            self.assertEqual(series.parsed_evidence()["stock_access_residual"]["status"],
+                             "not_evaluated")
+            with self.assertRaisesRegex(ValueError, "explicit source Part stock"):
+                audit_linear_native_series(series, candidate, candidate, post, **args)
+
     def make_case(self, directory, posted):
         candidate, post = fixture.NativeSeriesTests().make_case(directory)
         post.write_text(posted, encoding="utf-8")

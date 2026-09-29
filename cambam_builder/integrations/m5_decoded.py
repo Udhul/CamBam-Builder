@@ -20,3 +20,4 @@ class DecodedProgram:
     end_position: tuple
     spindle_stopped: bool
     program_ended: bool
+    transition_moves: tuple = ()

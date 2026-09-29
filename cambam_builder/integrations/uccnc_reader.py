@@ -15,7 +15,7 @@ _MOVE = re.compile(
     rf"^(G0|G1)(?: F({_NUMBER}))? X({_NUMBER}) Y({_NUMBER}) Z({_NUMBER})$")
 _SPINDLE = re.compile(rf"^M3 S({_NUMBER})$")
 _HEADER = re.compile(r"^\( M5 UCCNC split-file v1 TOOL (T[1-9][0-9]*) G54 \)$")
-_STARTUP = ("G21", "G90", "G17", "G61", "G40", "G49", "G54")
+_STARTUP = ("G21", "G90", "G17", "G94", "G61", "G40", "G49", "G54")
 
 
 def _value(word):
@@ -35,13 +35,14 @@ def decode_program(data, *, initial_tip):
         raise ValueError("UCCNC program must be ASCII") from exc
     if not text.endswith("\n") or "\r" in text:
         raise ValueError("UCCNC program line encoding changed")
-    lines = text.splitlines()
+    lines = text[:-1].split("\n")
     header = _HEADER.fullmatch(lines[0]) if lines else None
-    if len(lines) < 12 or header is None:
+    motion_start = 2 + len(_STARTUP)
+    if len(lines) < motion_start + 3 or header is None:
         raise ValueError("unsupported UCCNC header")
-    if tuple(lines[1:8]) != _STARTUP:
+    if tuple(lines[1:motion_start - 1]) != _STARTUP:
         raise ValueError("unsupported UCCNC startup or offset state")
-    match = _SPINDLE.fullmatch(lines[8])
+    match = _SPINDLE.fullmatch(lines[motion_start - 1])
     if match is None:
         raise ValueError("unsupported UCCNC spindle start")
     rpm = _value(match.group(1))
@@ -54,7 +55,7 @@ def decode_program(data, *, initial_tip):
             math.isfinite(v) for v in initial_tip):
         raise ValueError("declared initial tip required")
     at, feed, moves = tuple(initial_tip), None, []
-    for index, line in enumerate(lines[9:-2], 10):
+    for index, line in enumerate(lines[motion_start:-2], motion_start + 1):
         match = _MOVE.fullmatch(line)
         if match is None:
             raise ValueError(f"unsupported UCCNC command at line {index}")

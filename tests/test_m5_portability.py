@@ -1,6 +1,7 @@
 """Grbl v1.1 second dialect and mixed manual/automatic transition gate."""
 
 import json
+from dataclasses import replace
 import shutil
 import tempfile
 import unittest
@@ -81,6 +82,59 @@ class M5PortabilityTests(unittest.TestCase):
         self.assertNotIn(b"M6", manual + mixed)
         self.assertEqual(decode_job(mixed, initial_tip=self.start).length_offsets_mm,
                          (2, 3, 2))
+        decoded = decode_job(mixed, initial_tip=self.start)
+        self.assertEqual([s.transition_moves[0].start[2] for s in decoded.stages],
+                         [self.start[2] - 2, self.start[2] - 1, self.start[2] + 1])
+        self.assertTrue(all(s.transition_moves[0].end == self.start
+                            for s in decoded.stages))
+        self.assertEqual(self.result["mixed"]["transition_evidence"][
+            "offset_compensation_segments"], 3)
+
+    def test_compensation_is_mandatory_decoded_motion_with_stock_clearance(self):
+        program = (self.bundle / "mixed.nc").read_bytes()
+        lines = program.split(b"\n")
+        index = lines.index(b"G43.1 Z2") + 1
+        for altered in (lines[:index] + lines[index + 1:],
+                        lines[:index] + [lines[index].replace(b"G0", b"G1 F60")]
+                        + lines[index + 1:],
+                        lines[:index] + [lines[index].replace(b"Z5", b"Z4")]
+                        + lines[index + 1:]):
+            with self.assertRaisesRegex(ValueError, "compensation"):
+                decode_job(b"\n".join(altered), initial_tip=self.start)
+        decoded = decode_job(program, initial_tip=self.start)
+        self.assertEqual(m5._audit_offset_travel(decoded, self.start), 3)
+        # A syntactically valid compensated return still fails the stock gate
+        # if the changed work coordinate reaches the stock top.
+        lowered = decode_job(program.replace(b"G43.1 Z2", b"G43.1 Z5", 1),
+                             initial_tip=self.start)
+        with self.assertRaisesRegex(ValueError, "into stock"):
+            m5._audit_offset_travel(lowered, self.start)
+        first = decoded.stages[0]
+        with self.assertRaisesRegex(ValueError, "differs"):
+            m5._audit_offset_travel(replace(decoded, stages=(
+                replace(first, transition_moves=()), *decoded.stages[1:])),
+                self.start)
+
+    def test_reader_retains_actual_boundary_position_and_requires_lf(self):
+        program = (self.bundle / "manual.nc").read_bytes()
+        decoded = decode_job(program, initial_tip=self.start)
+        self.assertEqual(decoded.stages[1].moves[0].start,
+                         decoded.stages[0].end_position)
+        boundary = program.index(b"M5\nM0")
+        prefix = program[:boundary]
+        move_start = prefix.rfind(b"G0 ")
+        changed = (prefix[:move_start] + prefix[move_start:].replace(b"Z5", b"Z4")
+                   + program[boundary:])
+        shifted = decode_job(changed, initial_tip=self.start)
+        self.assertEqual(shifted.stages[1].moves[0].start[2], 4)
+        with self.assertRaisesRegex(ValueError, "safe return"):
+            m5._audit_program(changed, self.plan, self.prior, self.start,
+                              mixed=False)
+        for separator in (b"\x0b", b"\x0c", b"\x1c", b"\x1d", b"\x1e"):
+            for altered in (program.replace(b"G21\n", b"G21" + separator),
+                            program.replace(b"M5\n", b"M5" + separator)):
+                with self.assertRaises(ValueError):
+                    decode_job(altered, initial_tip=self.start)
 
     def test_unknown_stop_macro_offset_and_tool_are_rejected(self):
         manual = (self.bundle / "manual.nc").read_bytes()

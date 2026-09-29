@@ -95,6 +95,16 @@ class UCCNCM5Tests(unittest.TestCase):
         program = m5.render_program(moves)
         decoded = decode_program(program, initial_tip=(-1, -1, 5))
         self.assertEqual(len(decoded.moves), 4)
+        self.assertIn("G94", decoded.startup)
+        for replacement in (b"", b"G93\n"):
+            with self.assertRaisesRegex(ValueError, "startup"):
+                decode_program(program.replace(b"G94\n", replacement),
+                               initial_tip=(-1, -1, 5))
+        for separator in (b"\x0b", b"\x0c", b"\x1c", b"\x1d", b"\x1e"):
+            for altered in (program.replace(b"G21\n", b"G21" + separator),
+                            program.replace(b"M5\n", b"M5" + separator)):
+                with self.assertRaises(ValueError):
+                    decode_program(altered, initial_tip=(-1, -1, 5))
         for command in (b"T3", b"M6", b"M0", b"G43 H3", b"G53 G0 Z5"):
             with self.subTest(command=command):
                 modified = program.replace(b"M5\n", command + b"\nM5\n")

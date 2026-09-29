@@ -8208,3 +8208,225 @@ another strategy recipe. A fresh session is recommended because contracts,
 failure evidence, acceptance and remaining limits are persisted in their owners;
 there are no pending results or user decisions to carry conversationally.
 Next: complete [session 4—execution safety, evidence and misuse resistance](PROGRESS.md#branch-review-session-queue).
+
+## Branch review session 4 - 2026-09-29
+
+Started 2026-09-28, resumed after usage interruptions. Reviewed branch
+`feat/rest-machining-and-vcarving` at `20402d5846b4524757d4ddc9660fbeb5a8790df1`;
+local `main` and merge base were `18dbb9950f3065e95df0ee645a25361d45e63b30`.
+The initial worktree was clean: 93 branch commits, 165 changed paths, 49,891
+insertions and 7,284 deletions against `main`. Session 3 was already committed,
+despite its stale status note. This record covers that baseline plus the session
+4 working-tree repairs; it is not a committed-branch delivery verdict.
+
+Accepted by engineering: actual motion, supplied observations and optional
+checks must earn their own evidence. The review traced low-level bypass callers,
+native normalization and posts, literal carriers, two controller dialects,
+ordered stock and body checks, and the changed MCP mutation/publication boundary.
+No new native post or physical observation is needed to assess these software
+contracts. Final discovery and handoff results are recorded below.
+
+### Findings and repair criteria
+
+All findings below are repaired in this working tree. High findings were
+delivery blockers within the stated offline model; medium findings were
+contract/freshness defects. Each row gives the triggering counterexample,
+pre-repair behavior, repair and regression criterion. Earlier observations are
+invalidated only to the extent specified, never promoted to machine acceptance.
+
+| ID / severity | Owner and counterexample | Repair, regression and affected claim |
+| --- | --- | --- |
+| BR-4-001 / high | `ordered_job.audit` returned native `document_fidelity: pass` from decoded values alone, even after source bytes changed. `ordered_output.audit_files` accepted any object with a no-op `check`. | Low-level fidelity stays `not_evaluated`; only the output integration with concrete `NativeBinding` can promote it. `test_execution_evidence.test_decoded_values_do_not_establish_native_document_fidelity` proves fresh binding passes, stale source rejects, and raw/fake binding cannot inherit document evidence. Invalidates raw-audit native fidelity claims. |
+| BR-4-002 / high | `Transition` admitted operator travel through `(0,0,-1)` or an arbitrary effect model, while `audit_files` only checked synthetic-host effects. The all-inlay early return skipped supplied occupancy, including a box enclosing the whole program. | Reject operator modeled effects and inlay occupancy explicitly; raw audit marks external effects `not_evaluated`. Valid ordinary operator handoffs and inlay stock still pass. Tests `test_operator_transition_cannot_silently_discard_declared_motion`, `test_low_level_audit_does_not_certify_external_effect_bytes`, `test_inlay_cannot_silently_skip_supplied_occupancy`. No broad external-effect or inlay-body capability is added. |
+| BR-4-003 / medium | Ordered occupancy admitted a cutter band ending above the operation's declared cutting length, thereby moving the non-cutting stock check upward. | Require equal cutting lengths while retaining conservative radial enclosure. `test_body_cannot_extend_cutting_length_to_hide_shank` rejects 3 mm body versus 2.5 mm operation and retains a consistent valid case. Native hybrid test now declares 3 mm cutting length consistently with its existing 3 mm body; output motion is unchanged. Prior inconsistent setup declarations need fresh evidence. |
+| BR-4-004 / high | `inlay._decoded_rings` checked ring radii but let an `entry` or `retract` label hide a diagonal between `(0,0,-1)` and `(30,0,2)`. At X=4, Z=-0.6 is outside the female protected wall; complete decoded output still received stock `pass`. | Require vertical entry from safe height and vertical retract from declared cut depth. `test_inlay_access_roles_cannot_hide_diagonal_stock_motion` failed in both directions before repair and passes after it; the generated pair remains valid. Invalidates diagonal role-bypass acceptance, not the unchanged generated rings. |
+| BR-4-005 / medium | Relabeling `program_frame` preserved prefix fingerprints; native binding did not constrain the frame or initial tip separately. | Bind frame/work frame/units/tolerance into prefixes, and require native frame/initial-position identity. `test_prefix_identity_includes_program_frame` and `test_native_frame_cannot_be_relabelled` have nearby valid controls. Verifier becomes `ordered-job-v2-evidence-boundaries`; old ordered bundles require regeneration/re-audit. |
+| BR-4-006 / high | `read_default_post` could discard `M30` on a pre-tool `G0 Z5 M30` block, invent ordering for mixed motion/M effects, or treat `T2` without M6 as an installed tool. Nonfinite words/derived arc centers also lacked complete admission. | Reject ambiguous mixed/repeated/conflicting blocks, unsupported tool/speed state and nonfinite geometry. Preserve unchanged standalone S words seen in native fixtures. `test_default_reader_rejects_unmodeled_block_effects` and `test_reader_rejects_overflow_in_derived_arc_geometry` exercise independent text witnesses. Existing supported posts still parse; no expanded controller grammar is claimed. |
+| BR-4-007 / high | `NativeSeries.check_freshness` and `rc01_stock_authority.check_native_freshness` pinned input hashes but accepted replaced motion/stage/tool values or edited residuals/verdicts with those hashes. | Re-normalize/recompute and compare the entire observation. `test_freshness_reobserves_replaced_motion_and_stage_values` and `test_freshness_rejects_changed_observation_with_unchanged_input_hashes` reject those edits while preserving valid and allowed cosmetic-source cases. Hashes establish identity, not authenticated provenance. |
+| BR-4-008 / high | Missing native Stock retained imported placeholder dimensions; native-series stock audit and variable-V normalization could grant stock-dependent evidence. Supplied stock smaller than the replay target also lacked containment admission. | Require explicit stock in stock-dependent normalizers; shared `_bind_source_target` requires finite positive dimensions, zero stock surface and XY/depth containment. Stockless parsing/motion comparison stays qualified. Tests `test_stockless_post_parses_but_cannot_gain_native_stock_authority`, `test_source_stock_must_contain_replayed_target`, and absent-stock normalizer tests. Invalidates invented-stock evidence, not stockless interchange acceptance. |
+| BR-4-009 / high | Legacy M5 Grbl reader reset every stage to the original tip and recorded G43.1 offsets without coordinate changes or real compensation. The synthetic changer also declared the new offset before NC applied it. | Preserve stage position/offset; emit/decode rapids Z3→5, Z4→5 and Z6→5, require stock clearance, and apply new length state exactly once in NC. `test_compensation_is_mandatory_decoded_motion_with_stock_clearance` and `test_reader_retains_actual_boundary_position_and_requires_lf` reject deleted/wrong/unsafe travel or displaced handoffs. Old M5 Grbl bundles must be rebuilt. |
+| BR-4-010 / medium | `splitlines()` silently admitted VT/FF/FS/GS/RS as controller block separators; direct RC01/V exact-render audits normalized rehashed CRLF/CR through `read_text`. | Controller readers split literal LF; Default reader rejects hidden controls while retaining LF/CRLF. Canonical direct audits decode original bytes; direct V fixes its manifest program basename. `test_only_lf_separates_complete_controller_blocks`, native control test and rehashed-newline tests protect the exact grammar rather than mere writer/reader agreement. |
+| BR-4-011 / high | UCCNC writers/readers omitted G94 despite claiming millimetres per minute; inherited G93 could reinterpret feed. | Emit and require G94 in both UCCNC paths; absent G94 or substituted G93 rejects in ordered/M5 reader tests. This changes generated bytes and invalidates prior generated bundles. The primary [UCCNC manual](https://www.cncdrive.com/UCCNC/UCCNC_usersmanual.pdf), G93/G94 sections, distinguishes inverse time from units/minute. |
+| BR-4-012 / high | Six literal-carrier consumers deleted standalone G80/G98 before parsing, erasing G80 motion cancellation and commands after M30. | Pass complete post text with explicit bounded wrapper admission. G80 clears modal motion; following bare coordinates and wrappers after M30 reject. `test_drill_wrappers_cancel_modal_motion_and_remain_inside_program` and strengthened `test_cone_script` prove the effect survives through a carrier. Accepted explicit-interpolation wrappers remain supported. |
+
+Grbl compensation reasoning was checked against the primary
+[Grbl parser source](https://github.com/gnea/grbl/blob/master/grbl/gcode.c):
+G43.1/G49 update length-offset state without motion, and absolute targets include
+that offset. This supports the bounded coordinate model, not a claim that a
+particular sender, changer or machine completed the transition.
+
+### Source-to-output evidence trace
+
+The native trace is `source.cb` intent and stock → strict candidate normalization
+and actual Default post → immutable `NativeSeries` observation → source-target
+binding and replayed ordered prefix → `Job` → emitted program bytes → independent
+UCCNC/Grbl decoding → move/tool/feed/arc comparison → replay of **decoded** stock,
+optional continuous body/fixture check, and versioned file/effect evidence.
+`NativeBinding` re-observes current source/candidate/post at the integration gate;
+a preview or a stored result cannot stand in for that post. Native source/post
+pairing is caller-declared evidence, not cryptographic proof of manufacturing
+history. Repeated T1/T2/T1 stages retain their full prefix order.
+
+The direct trace starts with caller-resolved geometry, tools, stock and motion;
+it has no native-document fidelity claim. Unknown/stockless or unsupported mixes
+retain separate motion and stock statuses. In particular, a mixed inlay/cylinder
+sequence now returns stock `unsupported` rather than leaking an attribute error.
+Synthetic effects must be complete matching JSON plus safe travel; operator
+completion remains an assertion. Runtime and physical setup remain unassessed.
+The raw core audit explicitly lacks document/effect-byte authority.
+
+Writer/reader agreement establishes representation, not stock correctness.
+Independent tube/capsule/plane/bowl/circular-inlay references from sessions 2–3,
+adversarial protected-boundary motion, and the four-decimal RC01 island failure
+provide separate geometric oracles. The six-decimal RC01 route still checks all
+2,939 decoded moves and reconstructs its process/stock certificate. M4 previews
+remain centerline comparisons; route selection requires its distinct native
+post, direct output and preview gates. No synthetic post is reclassified as an
+observed CamBam result.
+
+### Session 4 misuse and test-adequacy matrix
+
+This closes the execution partitions of BT-03/04/05/09/10/12/14/15/16/18/19/20
+from the initial matrix. All rows are adequately controlled for their stated
+bounded domain after repairs; unsupported extensions and physical uncertainty
+remain explicit limits. Test module names below refer to exact paths in the
+coverage ledger. New tests check rejection causes or specific report fields,
+not just nonempty output or a broad success flag.
+
+| Behavior / domain and forbidden outcome | Calls, tests and expected result | Oracle and sensitivity / residual limit |
+| --- | --- | --- |
+| Native freshness and low-level bypass; never grant fidelity from copied hashes or decoded values | `NativeBinding.check`, `audit_files`, raw `audit`; BR-4-001/005/007 regressions; `test_native_v_hybrid` changes source/post/center/tool/setup | Fresh control passes; mutated observation/file/frame rejects or raw fidelity remains `not_evaluated`. No authentication of provenance or protection from Python monkeypatching. |
+| Stock absent, too small, wrong surface; never invent initial material | BR-4-008 tests; `test_ordered_job.test_stockless_native_series_keeps_motion_without_stock_claim`; `test_stockless_native`; `test_planar.AnalyticTests.test_optional_import_and_analytic_without_shapely` | XML Stock removal and independently chosen box extents separate parse/motion pass from stock refusal. A subprocess blocks Shapely: analytic centers remain available and backend-dependent normalization reports `unsupported`. CAM consumers requiring Shapely fail import rather than supplying stock evidence; installed/absent package matrix belongs to session 5. |
+| Enabled, skipped, reordered and repeated stages | `test_native_series`, `test_native_series_audit`, `test_ordered_job.test_repeated_tool_native_source_through_both_outputs_and_freshness`, `test_mixed_replay` | Explicit source MOP order, item counts, exact prefixes `(2,3,5)`, stale hashes and missing events detect omitted/reordered predecessors. No general native CAM algorithm parity. |
+| Complete block semantics and numeric admission | BR-4-006/010/012 parser tests plus carrier tests | Handwritten M30/T/M/G80 controls, overflow and hidden separators fail where valid neighboring text passes. Unknown commands remain rejected or observationally unreviewed, never zero-motion evidence. |
+| Modal feed, units, distance, relative arc centers | `test_ordered_dialects`, `test_uccnc_m5`, `test_native_arc_replay`, `test_native_v_hybrid` | Explicit G94 requirement, rejected modes/commands, center tamper and independent upper/lower semicircle signs. Supported XY level/descending arcs only; no generic full-circle/rising/rotary/canned-cycle acceptance. |
+| Grbl offset composition, pauses and split restarts | BR-4-009 tests; `test_ordered_job.test_offset_physical_tip_and_decoded_extra_travel` | Independent expected Z deltas, checked compensating motion and unchanged stock under consistent offsets. Registered tips/tool lengths and operator completion remain declared; no runtime trace. |
+| External effects cannot disappear | BR-4-002 tests and `test_ordered_job.test_synthetic_external_effect_must_match_and_clear_fixture` | Missing/changed JSON, unsafe interior travel point, wrong resume or unsupported operator effect rejects. Flat-plane tip proof only; body occupancy with transition travel explicitly rejects. |
+| Rounding, protected material and all-height checks | `test_rc01_controller.test_four_decimal_writer_is_insufficient_for_nominal_island`; direct RC01/V forged-hash tests; `test_v_region` between-vertex gouge | A syntactically valid four-decimal program fails actual stock protection; six decimals pass the independent RC01 verifier. Geometry remains conditional on declared tolerances and ideal cutters. |
+| Body/fixture continuous motion, not endpoints alone | `test_occupancy` straight/arc middle collision and near-contact partitions; native hybrid; BR-4-003 | Independent endpoint distances show clear endpoints while the continuous holder sweep collides; smaller/moved fixtures pass. Box/band model only; no helices or modeled transition bodies. |
+| Inlay access, optional gates and mixed evaluators | BR-4-002/004; `test_execution_evidence.test_mixed_inlay_stock_evaluator_is_explicitly_unsupported`; `test_paired_inlay` | Analytic X=4/Z=-0.6 diagonal witness failed pre-fix twice. Generated separate part stocks still pass analytic assembly; supplied inlay occupancy rejects. Physical fit unassessed. |
+| Preview, candidates and actual output are different evidence | `test_native_v_region.test_preview_centerline_gate`, carrier suites, `test_m4_curved_workflow.test_edited_source_two_fills_direct_and_native_selection` | Missing actual gates retain partial/unverified route; changed source/candidate/post invalidates. Synthetic traces test software only; actual observations keep their original byte scope. |
+| MCP schema, atomic mutation, export/publication | `test_mcp_mops.test_manual_profile_tab_points_author_and_reject_invalid_positions`, `test_reassigned_manual_tab_parent_blocks_export_without_publication`, remaining MCP suites | Off-edge Manual request returns `INVALID_ARGUMENT/tab_points`, replays failure, preserves revision/inspection; reassigned imported tab parent hides stale points and returns `EXPORT_FAILED` without files; restore target permits save. Mutating each native guard caused an assertion failure. |
+| Paths, artifacts, hash guard and delivery language | `test_mcp_documents`, protocol/schema/authoring tests; direct V fixed filename; ordered bundle fixed stage/effect names | Lexical containment, hardlinks, junction/reparse and publication races covered. Export says inline/no file; save gives server artifact, not client delivery. Windows symlink privilege skip remains; this is a branch-change audit, not a full hostile-client security certification. |
+
+### Exact coverage ledger
+
+Disposition is inspected implementation plus independently checked behavior via
+the named suites, unless explicitly qualified. The complete 51-path S4 allocation
+from session 1 is reconciled here. Paths in the first three columns are relative
+to the stated directory; every member is named (no wildcard coverage claim).
+
+| Directory and exact files | Symbols / evidence and disposition |
+| --- | --- |
+| `cambam_builder/cam_core/`: `ordered_job.py` | `Job/Stage/Transition`, fingerprints, `from_prior_v`, observed-stage comparison, evaluator dispatch and audit claims; repaired and tested via ordered/execution/occupancy/inlay suites. |
+| `cambam_builder/integrations/`: `ordered_output.py`, `ordered_dialects.py`, `m5_decoded.py` | Complete file/effect audit, manifests, fixed file members, decode/render, transition state and new decoded transition field; reviewed/repaired. |
+| `cambam_builder/integrations/`: `uccnc_m5.py`, `uccnc_reader.py`, `grbl_m5_reader.py`, `m5_portability.py` | Startup/whole-program grammar, safe handoff, Grbl offset travel, synthetic changer, decoded pair/stock and manifest recomputation; reviewed/repaired. |
+| `cambam_builder/integrations/`: `direct_rc01.py`, `direct_variable_v.py`, `rc01_controller.py`, `m4_curved_workflow.py` | Exact reference output, source/result binding, RC01 decoded reconstruction, M4 separate native/preview/direct route gates. Direct byte fixes; other contracts retained. M4/native Default semantic comparison permits LF/CRLF with exact input hashes, not canonical LF-only provenance. |
+| `cambam_builder/integrations/cambam/`: `native_ordered_job.py`, `native_series.py`, `native_series_audit.py` | `NativeBinding`, native/hybrid/circle adapters, normalization/lowering/freshness, source geometry and explicit stock authority; reviewed/repaired. |
+| `cambam_builder/integrations/cambam/`: `rc01_post.py`, `rc01_native_post.py`, `rc01_stock_authority.py`, `rc01_adapter.py` | Full stream, modal effects, original target normalization, paired-prefix observations, residual versus execution authority and recomputation; reviewed/repaired. |
+| `cambam_builder/integrations/cambam/`: `cone_script.py`, `rc01_script.py`, `variable_cone_script.py`, `variable_cone_engrave.py` | Source/candidate hashes, strict reimport, literal motion, actual posted replay and narrow preview. Wrapper effects repaired at shared parser and consumers; inherited variable script also covered. |
+| `cambam_builder/integrations/cambam/`: `native_variable_v.py`, `native_convex_rest.py`, `native_polygon_rest.py`, `native_curved_rest.py`, `native_v_region.py` | Normalized input and source/prior binding, candidate reconstruction, complete post versus preview, source edits and stock replay. Explicit stock/wrapper repairs; retained bounded target/tool contracts. |
+| `cambam_builder/integrations/cambam/`: `optimizer_corpus.py`, `tabbed_cutout.py` | Corpus remains `posted_unreviewed`, stock authority `none`; unsupported cycles remain observations. Tabbed cutout rechecks original source/post, generated bytes, ordered sections and bridges; no generic holding-strength claim. |
+| `tests/`: `test_ordered_job.py`, `test_ordered_dialects.py`, `test_uccnc_m5.py`, `test_m5_portability.py`, `test_direct_rc01.py`, `test_direct_variable_v.py`, `test_rc01_controller.py`, `test_m4_curved_workflow.py` | Ordered/dialect/direct consumer assertions, byte mutation, stale source/output, stock and precision checks; reviewed and run. |
+| `tests/`: `test_native_series.py`, `test_native_series_audit.py`, `test_native_v_hybrid.py`, `test_rc01_native.py`, `test_rc01_stock_authority.py` | Source/order/tool/stock and replaced-result misuse, native hybrid and shared parser; reviewed, strengthened and run. |
+| `tests/`: `test_cone_script.py`, `test_variable_cone_script.py`, `test_variable_cone_engrave.py`, `test_native_convex_rest.py`, `test_native_v_region.py`, `test_native_variable_v.py`, `test_optimizer_corpus.py`, `test_tabbed_cutout.py` | Native/carrier round trips, source freshness, preview/post distinction, inherited wrappers, observed-only corpus and tabbed stock; reviewed and run. |
+
+Additional/reopened coverage: `cambam_builder/cam_core/inlay.py` (decoded access
+repair), `cambam_builder/cam_core/occupancy.py` and `replay.py` (continuous body,
+arc and access consumers inspected), and new `tests/test_execution_evidence.py`.
+`tests/test_occupancy.py`, `tests/test_native_arc_replay.py`,
+`tests/test_mixed_replay.py`, `tests/test_replay_contracts.py`,
+`tests/test_paired_inlay.py`, `tests/test_surface3d.py`,
+`tests/test_spherical_bowl.py`, `tests/test_volume3d.py`,
+`tests/test_stockless_native.py`, `tests/test_curved_rest.py` and
+`tests/test_polygon_rest.py` supply affected cross-owner checks.
+`tests/test_planar.py`'s backend-absence subprocess was additionally inspected;
+its supported analytic result is explicitly separate from nominal backend and
+machining evidence.
+
+The complete changed MCP diff was inspected in
+`cambam_builder/mcp_adapter/paths.py`, `schema.py`, `server.py`, `service.py`,
+`contract_v1.schema.json`, and `tests/test_mcp_authoring.py`,
+`tests/test_mcp_mop_inspection.py`, `tests/test_mcp_mop_parity.py`,
+`tests/test_mcp_mops.py`. `DocumentService._stage_edit`, `_mop_parameters`,
+`_export`, `_save` and `Workspace.serialize` retain their documented schema,
+stock-presence, failure/atomicity and artifact contracts. No MCP runtime change
+was necessary; endpoint regressions strengthened coverage. Existing native
+Manual-tab guards were checked through controlled fault injection.
+
+### Verification and evidence boundaries
+
+Declared interpreter: CPython 3.13.5, NumPy 2.5.3, Shapely 2.1.2, GEOS 3.13.1.
+No dependencies or historical byte fixtures changed. Session files remain under
+ignored `output/branch-review-s4-*`; the witnesses and conclusions above do not
+depend on those local directories surviving a checkout.
+
+- Initial lead regressions: six tests produced seven assertion failures on the
+  old behavior (including both operator-effect variants); after repair all six
+  passed. Added inlay diagonal test produced two pre-fix assertion failures;
+  after repair, execution plus paired-inlay suites passed 11 tests. Final
+  execution/native-hybrid selection passed 12 tests after two further evidence
+  partition tests and consistent hybrid length declaration.
+- Controller command:
+  `.venv/Scripts/python.exe -m unittest tests.test_ordered_dialects tests.test_uccnc_m5 tests.test_m5_portability tests.test_direct_rc01 tests.test_direct_variable_v tests.test_rc01_controller -q`:
+  22 passed in 200.632 s. Final M5 changes: `-m unittest tests.test_m5_portability -q`,
+  6 passed in 40.650 s.
+- Native selection (`test_native_series`, `test_native_series_audit`,
+  `test_rc01_stock_authority`, `test_rc01_native`, `test_native_variable_v`,
+  `test_cone_script`, `test_variable_cone_script`, `test_variable_cone_engrave`,
+  `test_native_convex_rest`, `test_native_v_region`, `test_curved_rest`,
+  `test_polygon_rest`, `test_optimizer_corpus`, `test_tabbed_cutout`): 77 ran,
+  one diagnostic mismatch. Reordered source/stock admission to preserve the
+  source-specific diagnostic; final audit/arc/stockless selection passed 16,
+  parser/native-series selection passed 15, derived arc-overflow regression
+  passed 1. The original failure remains in the local log; no tolerance relaxed.
+- Earlier broad lead selection: 54 ran with one inconsistent hybrid length
+  error. Fixed the fixture's declared length to match its body; the final
+  12-test selection above passed. The earlier run is not claimed green.
+- `.venv/Scripts/python.exe -m unittest discover -s tests -p 'test_mcp_*.py' -v`:
+  89 ran, zero failures, one Windows symlink-privilege skip. Junction/reparse
+  containment passed. Isolated bypasses of `_manual_tab_records` and
+  `_remap_imported_tab_parents` each caused the expected assertion failure,
+  without test errors; original source was not patched for those probes.
+- `.venv/Scripts/python.exe -m unittest discover -s tests -v`: **571 tests in
+  1056.859 seconds, zero failures, one skip**, final summary `OK (skipped=1)`.
+  The skip is `test_mcp_documents.DocumentTests.test_symlink_rejection` because
+  this Windows session lacks symlink privilege. The full run includes all final
+  runtime/test edits and 24 new test methods; only documentation edits followed.
+  Log: `output/branch-review-s4-final-20260929-01/discovery.log`.
+- `.venv/Scripts/python.exe -m compileall -q cambam_builder legacy_cambam_builder`,
+  import/construct smoke and working-tree `git diff --check` passed. Inspected
+  all session diffs and the new untracked `tests/test_execution_evidence.py`.
+  Deterministic ledger reconciliation found all 51 S4 allocated paths present.
+  Git-visible ignored `.cb`/`.nc` files outside `output/`: none. The pre-existing
+  unreadable `.pytest_cache/` remains an artifact-discovery limitation; no files
+  were deleted. No historical byte fixtures or dependency declarations changed.
+
+Physical setup, controller runtime, external actor completion, general non-box
+fixtures, body occupancy during helices/transitions, primary/multiple Region-V
+stock composition, automatic search/smoothing and general freeform CAM remain
+outside these claims. These are scoped extension limits with reopening criteria
+in backlog 6, not permission to accept unsafe input inside the current model.
+Manual validation adds no evidence to the repaired software gates. Existing
+actual source/post observations stay byte-scoped; old generated UCCNC/Grbl or
+ordered reports require regenerated bytes and fresh audit.
+
+Session 5 remains the distinct next outcome: reconcile the complete branch diff,
+optional-backend and installed-package/Python gates, then assess committed-branch
+delivery against `main`. No staging, commit or merge was performed.
+
+**Acceptance and delivery:** implementation and automated verification complete;
+session 4 is **accepted by engineering** for its bounded offline scope. No known
+unresolved false acceptance remains in the reviewed claims. Evidence fidelity,
+motion equivalence, stock, optional occupancy, runtime and physical setup remain
+separate. The work is **ready to commit**, not merge-ready: final committed diff,
+package/Python/backend gates and delivery decision still belong to session 5.
+Suggested commit: `fix: harden execution evidence and complete session 4 review`.
+
+Local workstream: execution/evidence defects repaired with independent witnesses
+and nearby valid controls. Overall project: four of five review sessions are
+accepted; installed-package and final branch verification now outrank another
+machining extension. A fresh-session breakpoint is appropriate because contracts,
+test results, limitations and priorities are saved in their owners, with no
+pending results or user decisions. Next: complete
+[session 5—integrated regression and delivery decision](PROGRESS.md#branch-review-session-queue).

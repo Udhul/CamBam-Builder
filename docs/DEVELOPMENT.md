@@ -1467,7 +1467,8 @@ retains the four exact NC hashes and area/volume evidence.
 
 The first bounded split-file adapter is executable. From the repository root,
 use a **new** ignored directory for each build; the recorded synthetic bundle
-is `output/m5-uccnc-20260926-02/`:
+is `output/m5-uccnc-20260926-02/`. That historical bundle predates the required
+G94 startup; rebuild before requesting current evidence:
 
 ```powershell
 $ProjectPython = '.\.venv\Scripts\python.exe'
@@ -1479,7 +1480,7 @@ $ProjectPython = '.\.venv\Scripts\python.exe'
 The build writes `T1.nc`, `T3.nc` and a versioned `handoff.json`. The audit
 command rechecks source/prior/plan and setup lineage, exact file hashes, both
 decoded programs and chained stock. Its first profile requires G54, G21, G90,
-G17, G61, G40 and G49; each file identifies its installed tool in a comment,
+G17, G94, G61, G40 and G49; each file identifies its installed tool in a comment,
 sets S12000/F60/F300 in its move stream, and ends with M5/M30. Neither file
 installs or measures a tool. The recorded audit has 61 T1 plus 383 T3 moves,
 30 T1 cuts, Z=-1 final remaining-area upper 1.526323 mm2 and final volume
@@ -1627,9 +1628,10 @@ workholding and M6 behavior remain separate inputs from the user's machine.
 ### M5 Grbl portability and transition fixtures
 
 The [recorded synthetic bundle](../output/m5-portability-20260926-01/handoff.json)
-contains `manual.nc`, `mixed.nc`, `mixed-changer.json` and a pinned handoff.
-Build into a **new** ignored directory, or audit the recorded one, from the
-repository root with the declared interpreter:
+contains historical `manual.nc`, `mixed.nc`, `mixed-changer.json` and a pinned
+handoff. Session 4 corrected offset-compensation motion and effect semantics;
+rebuild into a **new** ignored directory before using current evidence. Run from
+the repository root with the declared interpreter:
 
 ```powershell
 $ProjectPython = '.\.venv\Scripts\python.exe'
@@ -1662,8 +1664,11 @@ tool-table lengths 2/3/2 mm expressed via Grbl `G43.1`. Grbl has no native
 tool-table or automatic changer claim here: the table and changer belong to
 the synthetic host setup. The strictly read `mixed-changer.json` declares
 three safe, spindle-off tip-travel segments, T3/T1 installation and length
-registration; the last T1 stage contains two separately decoded safe rapid
-moves. Its completion and return state are assumptions. This reader compares
+registration; the host retains the old active controller offset until the next
+NC G43.1 applies the installed tool's length. Three separately emitted/decoded
+compensation rapids restore Z=5 from displayed Z=3, 4 and 6 respectively; each
+must stay strictly above the stock plane. The last T1 stage contains two further
+decoded safe rapid moves. Completion and return state are assumptions. This reader compares
 against the same pinned effect model used by the fixture writer; it does not
 independently derive arbitrary changer motion or compose machine/tool offsets.
 Length values are checked against the table and each stage's registered tip is
@@ -1672,9 +1677,10 @@ changed or missing effect bytes, even if the handoff is edited, and does not
 infer installation from `M0` alone.
 
 Both fixtures replay decoded T1 stock into decoded rounded T3 motion. Each has
-61 T1 moves, 383 T3 moves, 30 T1 cuts, Z=-1 mm final remaining-area upper
-1.526323 mm2 and eight-slab final volume upper 42.675342 mm3; the mixed
-fixture also has two safe T1 return moves. Runtime parity and physical setup
+61 T1 moves, 383 T3 moves and 30 T1 cuts. Tests require final remaining-area
+upper below 2 mm2, final volume upper below 80 mm3 and both below prior lower
+bounds; reports retain the recomputed intervals. The mixed fixture also has
+two safe T1 return moves and three offset-compensation moves. Runtime parity and physical setup
 are `not_evaluated`. The report's phrase "complete decoded Grbl program and
 transitions" is conditional on these fixed transition assumptions; it is not
 general machine-state simulation. No manual sign-off or new G-code is required
@@ -2226,6 +2232,23 @@ reference tests too. No CamBam manual check adds evidence to this detached desig
 increment, and no runtime or packaging changes are implied by these commands.
 
 ### Required checks by change
+
+For execution/evidence changes, check byte grammar, decoded motion, stale source
+and result mutation, transitions, and occupancy through both public integration
+and lower-level calls:
+
+```powershell
+& $ProjectPython -m unittest tests.test_execution_evidence tests.test_ordered_job tests.test_ordered_dialects tests.test_native_v_hybrid tests.test_native_series tests.test_native_series_audit tests.test_native_arc_replay tests.test_rc01_native tests.test_rc01_stock_authority tests.test_uccnc_m5 tests.test_m5_portability tests.test_rc01_controller tests.test_direct_rc01 tests.test_direct_variable_v tests.test_occupancy -v
+& $ProjectPython -m unittest discover -s tests -p 'test_mcp_*.py' -v
+```
+
+Shared parser, replay or verifier changes also require full discovery. Native
+Default posts may use CRLF/LF; strict controller outputs and canonical direct
+reference files retain their exact byte grammar. The ordered verifier version
+`ordered-job-v2-evidence-boundaries` requires fresh bundles and recomputed
+reports. Existing source/post observation does not need repeating when its bytes
+and claimed behavior are unchanged. See the
+[session 4 evidence](REVIEW.md#branch-review-session-4---2026-09-29).
 
 For strategy, rest-coverage or route-selection changes, run the owned planners
 and both supplied-audit consumers:

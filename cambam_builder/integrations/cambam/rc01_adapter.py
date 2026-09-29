@@ -108,6 +108,8 @@ def normalize(project, setup, *, allow_attachments=False):
     if len(project.list_parts()) != 1:
         raise ValueError("RC01 requires exactly one Part")
     part = project.list_parts()[0]
+    if not part.stock_present:
+        raise ValueError("RC01 requires explicit Part stock")
     if not part.enabled or part.nesting_method != "None" or tuple(
             part.machining_origin) != (0, 0) or part.stock_surface != 0:
         raise ValueError("unsupported RC01 Part placement or state")

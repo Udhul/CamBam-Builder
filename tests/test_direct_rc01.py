@@ -61,6 +61,14 @@ class DirectRC01Tests(unittest.TestCase):
             path.write_text(json.dumps(manifest), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "verified rendering"):
                 audit_program(path)
+            # Rehashing CRLF must not hide byte changes behind universal
+            # newline decoding and inherit the canonical LF evidence.
+            crlf = original.replace("\n", "\r\n").encode("ascii")
+            (folder / "direct-RC01.nc").write_bytes(crlf)
+            manifest["program_sha256"] = hashlib.sha256(crlf).hexdigest()
+            path.write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "verified rendering"):
+                audit_program(path)
 
 
 if __name__ == "__main__":

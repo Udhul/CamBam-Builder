@@ -201,12 +201,18 @@ def _decoded_rings(operation, motions):
                 rings.append(radius)
                 arcs = []
         elif move.role == "entry" and move.end[2] < 0:
+            if move.start[:2] != move.end[:2] or move.start[2] <= 0:
+                raise ValueError("inlay entry requires vertical access from safe height")
             if abs(move.end[2] + operation.request.cut_depth_mm) > TOL:
                 raise ValueError("inlay entry depth differs")
             entries.append(math.hypot(*move.end[:2]))
         elif move.role in ("rapid", "retract"):
             if move.role == "rapid" and min(move.start[2], move.end[2]) <= 0:
                 raise ValueError("inlay rapid enters stock")
+            if move.role == "retract" and (
+                    move.start[:2] != move.end[:2] or move.end[2] <= 0 or
+                    abs(move.start[2] + operation.request.cut_depth_mm) > TOL):
+                raise ValueError("inlay retract requires vertical return from cut depth")
         else:
             raise ValueError("unsupported inlay motion")
     if (arcs or len(entries) != len(operation.rings_mm) or

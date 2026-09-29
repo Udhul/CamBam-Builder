@@ -21,6 +21,20 @@ from tests.test_variable_vcarve import _independent_row_area
 
 
 class NativeVariableVTests(unittest.TestCase):
+    def test_stockless_input_cannot_use_placeholder_dimensions_for_planning(self):
+        from xml.etree import ElementTree as ET
+
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "source.cb"
+            synthetic_source().save(str(path))
+            self.assertEqual(normalize_bytes(path.read_bytes(), synthetic_setup()),
+                             tapered_vcarve.standalone_request())
+            tree = ET.parse(path)
+            part = tree.find("./parts/part")
+            part.remove(part.find("Stock"))
+            with self.assertRaisesRegex(ValueError, "explicit Part stock"):
+                normalize_bytes(ET.tostring(tree.getroot()), synthetic_setup())
+
     def test_native_input_and_separate_derived_carriers(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)

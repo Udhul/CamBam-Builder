@@ -514,10 +514,8 @@ def _read_post(candidate, posted_path, *, allow_arcs=False):
     if ("( Post processor: Default )" not in lines[:12] or
             not any(line.startswith(f"( {candidate.stem} ") for line in lines[:12])):
         raise ValueError("CamBam post header does not match M1 candidate/Default")
-    normalized = "\n".join("" if line.strip() in ("G98", "G80") else line
-                           for line in lines)
-    actual, warnings = read_default_post(normalized, allow_arcs=allow_arcs,
-                                         initial_position=START)
+    actual, warnings = read_default_post(post, allow_arcs=allow_arcs,
+                                         initial_position=START, allow_drill_wrappers=True)
     warnings = [warning for warning in warnings
                 if "initial machine position is not encoded" not in warning]
     return actual, warnings

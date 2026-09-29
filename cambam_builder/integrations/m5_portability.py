@@ -38,12 +38,19 @@ def _tail(start):
             v_region.VMotion("rapid", away, start))
 
 
-def _stage_lines(moves, tool, *, offset, translation=(0, 0, 0)):
+def _stage_lines(moves, tool, *, offset, previous_offset=0,
+                 translation=(0, 0, 0)):
     if not moves or tool not in TABLE or moves[-1].end != moves[0].start:
         raise ValueError("invalid Grbl stage or safe handoff")
     lines = [f"( STAGE {tool} )",
-             "G49" if offset == 0 else f"G43.1 Z{shared._number(offset)}",
-             f"M3 S{shared.RPM}"]
+             "G49" if offset == 0 else f"G43.1 Z{shared._number(offset)}"]
+    if float(shared._number(offset)) != float(shared._number(previous_offset)):
+        # G43.1 changes the work coordinate at a stationary machine. Restore
+        # the declared safe tip with real travel before starting the spindle.
+        safe = shared._shift(moves[0].start, translation)
+        lines.append("G0 " + " ".join(
+            axis + shared._number(value) for axis, value in zip("XYZ", safe)))
+    lines.append(f"M3 S{shared.RPM}")
     at = moves[0].start
     for move in moves:
         if move.start != at or move.role not in ("rapid", "entry", "cut", "retract"):
@@ -66,9 +73,11 @@ def render_job(prior, plan, start, *, mixed=False):
     if mixed:
         lines += _stage_lines(t1, "T1", offset=TABLE["T1"])
         lines += ["M0"]
-        lines += _stage_lines(t3, "T3", offset=TABLE["T3"])
+        lines += _stage_lines(t3, "T3", offset=TABLE["T3"],
+                              previous_offset=TABLE["T1"])
         lines += ["M0"]
-        lines += _stage_lines(_tail(start), "T1", offset=TABLE["T1"])
+        lines += _stage_lines(_tail(start), "T1", offset=TABLE["T1"],
+                              previous_offset=TABLE["T3"])
     else:
         # A distinct resolved CAM datum has its surface at +4.5 mm; the
         # declared work datum puts that same physical surface at zero.
@@ -87,7 +96,9 @@ def _changer_model(start):
         "spindle_stopped": True,
         "completion_assumed_not_observed": True,
         "length_offset_before_mm": TABLE["T3"],
-        "length_offset_after_mm": TABLE["T1"],
+        "length_offset_after_mm": TABLE["T3"],
+        "installed_tool_length_mm": TABLE["T1"],
+        "offset_application": "following NC G43.1 applies the new tool length",
         "travel_work_tip_xyz_mm": [list(start),
                                     [start[0] - 3, start[1], start[2]],
                                     [start[0] - 3, start[1] - 2, start[2]],
@@ -142,6 +153,7 @@ def _audit_program(data, plan, prior, start, *, mixed, effect=None):
     if any(not shared._near(stage.end_position, start)
            for stage in decoded.stages):
         raise ValueError("Grbl pause or end lacks safe return")
+    compensation = _audit_offset_travel(decoded, start)
     if mixed:
         if effect is None:
             raise ValueError("automatic changer effect missing")
@@ -152,9 +164,11 @@ def _audit_program(data, plan, prior, start, *, mixed, effect=None):
         report["motion_equivalence"]["return_t1_moves"] = tail_moves
         report["transition_evidence"] = {
             "status": "pass_with_asserted_external_effects",
-            "manual": "operator pause at first M0; install T3, fixed G54, table Z=3",
-            "automatic": "second M0; synthetic host T3-to-T1 effect decoded",
+            "manual": "first M0; install T3 with fixed G54; following NC applies table Z=3",
+            "automatic": "second M0; synthetic T3-to-T1 effect retains active offset; following NC applies Z=2",
             "changer_travel_segments": len(changer["travel_work_tip_xyz_mm"]) - 1,
+            "offset_compensation_segments": compensation,
+            "offset_compensation_clearance": "each decoded linear segment stays above stock Z0",
             "length_offsets_mm": list(expected_offsets),
             "completion": "assumed_not_observed"}
     else:
@@ -184,6 +198,31 @@ def _audit_program(data, plan, prior, start, *, mixed, effect=None):
         "status": "not_evaluated", "reason": "tool and host effects are setup assertions"}
     report["motion_equivalence"]["scope"] = "complete decoded Grbl program and transitions"
     return report
+
+
+def _audit_offset_travel(decoded, start):
+    """Check every compensation segment before normal machining replay.
+
+    This fixture's stock top is Z0. A linear tip segment with both ends above
+    that plane cannot intersect stock; tool-body/fixture occupancy is separate.
+    """
+    old_offset, count = 0.0, 0
+    for stage, offset in zip(decoded.stages, decoded.length_offsets_mm):
+        delta = offset - old_offset
+        travel = stage.transition_moves
+        if delta:
+            expected_start = (start[0], start[1], start[2] - delta)
+            if (len(travel) != 1 or travel[0].g != 0 or travel[0].feed != 0 or
+                    not shared._near(travel[0].start, expected_start) or
+                    not shared._near(travel[0].end, start)):
+                raise ValueError("Grbl offset compensation travel differs")
+            if min(travel[0].start[2], travel[0].end[2]) <= 0:
+                raise ValueError("Grbl offset compensation travels into stock")
+            count += 1
+        elif travel:
+            raise ValueError("unexpected Grbl offset compensation")
+        old_offset = offset
+    return count
 
 
 def _manifest(m4_path, plan, prior, start, programs):

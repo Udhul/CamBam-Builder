@@ -187,7 +187,8 @@ def audit_program(manifest_path, *, comparison_post=None):
     """Recheck exact program/source bytes, parsed roles and posted-coordinate rest."""
     manifest_path = Path(manifest_path)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if manifest.get("format") != "direct-variable-v-v1":
+    if (manifest.get("format") != "direct-variable-v-v1" or
+            manifest.get("program") != "direct-V-variable.nc"):
         raise ValueError("not a bounded direct V manifest")
     directory = manifest_path.parent
     program = directory / manifest["program"]
@@ -212,7 +213,7 @@ def audit_program(manifest_path, *, comparison_post=None):
         raise ValueError("comparison CamBam post changed")
     if comparison_post is None and manifest["comparison_post_sha256"] is not None:
         raise ValueError("accepted comparison post is required for this manifest")
-    result = _audit_text(program.read_text(encoding="ascii"), plan,
+    result = _audit_text(program.read_bytes().decode("ascii"), plan,
                          comparison_post=comparison_post)
     if result != manifest["result"]:
         raise ValueError("direct V evidence differs from manifest")

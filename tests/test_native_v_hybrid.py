@@ -65,7 +65,7 @@ class NativeVHybridTests(unittest.TestCase):
                 v_region.VProfile("rounded", 60, 0.5, 4, 3),
                 stepover_mm=2, xy_step_mm=1, safe_z=5)
             job = from_native_v(series, plan, target=target,
-                                cutting_length_mm=2, tool_id="T3")
+                                cutting_length_mm=3, tool_id="T3")
             binding = NativeBinding(series, source, candidate, post,
                                     native_setup)
             v_radius = plan.tool.radius(plan.tool.cutting_length)

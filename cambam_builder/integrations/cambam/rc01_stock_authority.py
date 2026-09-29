@@ -77,6 +77,8 @@ def check_native_freshness(evidence_path, result):
     actual = {key: _sha256(path) for key, path in paths.items()}
     if actual != result.get("input_sha256"):
         raise ValueError("native stock result belongs to different evidence bytes")
+    if result != analyze_rc01_stock("native_posted", evidence_path=evidence_path):
+        raise ValueError("native stock observation changed from bound bytes")
     return True
 
 

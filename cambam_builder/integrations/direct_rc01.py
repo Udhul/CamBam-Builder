@@ -142,7 +142,7 @@ def build_program(directory):
     directory.mkdir(parents=True, exist_ok=True)
     program_path = directory / PROGRAM_NAME
     program_path.write_bytes(text.encode("ascii"))
-    result = _audit_text(program_path.read_text(encoding="ascii"), job, expected)
+    result = _audit_text(program_path.read_bytes().decode("ascii"), job, expected)
     manifest = {
         "format": "direct-rc01-v1",
         "program": PROGRAM_NAME,
@@ -172,7 +172,7 @@ def audit_program(manifest_path):
     if (manifest["job_fingerprint"] != job.fingerprint or
             manifest["motion_fingerprint"] != expected.motion_fingerprint):
         raise ValueError("RC01 reference manifest is stale")
-    result = _audit_text(program_path.read_text(encoding="ascii"), job, expected)
+    result = _audit_text(program_path.read_bytes().decode("ascii"), job, expected)
     if result != manifest["result"]:
         raise ValueError("RC01 reference evidence differs from manifest")
     return {"program_sha256": manifest["program_sha256"], **result}

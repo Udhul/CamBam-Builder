@@ -64,6 +64,12 @@ class OrderedDialectTests(unittest.TestCase):
         self.assertEqual(decoded.stages[1].moves[0].start, (12, -3, 6))
         self.assertEqual(decoded.stages[1].transition_moves, ())
         self.assertEqual(decoded.final_position, (12, -3, 6))
+        self.assertIn("G94", decoded.startup)
+        for program in files:
+            for startup in (b"", b"G93\n"):
+                with self.assertRaisesRegex(ValueError, "structure"):
+                    decode((program.replace(b"G94\n", startup),), "uccnc",
+                           initial_work_tip=(12, -3, 6))
 
     def test_grbl_carries_offset_state_and_decodes_real_compensation(self):
         job = Job((0, 0, 5), (12, -3, 1), (
@@ -114,6 +120,20 @@ class OrderedDialectTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "tool ID"):
             render(Job((0, 0, 5), (0, 0, 0),
                        (_stage("tool42", 0, 2, 12000),)), "grbl")
+
+    def test_only_lf_separates_complete_controller_blocks(self):
+        job = Job((0, 0, 5), (0, 0, 0), (_stage("T42", 0, 2, 12000),))
+        for dialect in ("uccnc", "grbl"):
+            program = render(job, dialect)[0]
+            self.assertTrue(decode((program,), dialect,
+                                   initial_work_tip=job.initial_tip).stages)
+            for separator in (b"\x0b", b"\x0c", b"\x1c", b"\x1d", b"\x1e"):
+                for altered in (program.replace(b"G21\n", b"G21" + separator),
+                                program.replace(b"M5\n", b"M5" + separator)):
+                    with self.subTest(dialect=dialect, separator=separator):
+                        with self.assertRaises(ValueError):
+                            decode((altered,), dialect,
+                                   initial_work_tip=job.initial_tip)
 
 
 if __name__ == "__main__":

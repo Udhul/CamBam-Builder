@@ -12,7 +12,7 @@ import math
 from . import replay, v_region
 
 
-VERSION = "ordered-job-v1"
+VERSION = "ordered-job-v2-evidence-boundaries"
 MATCH_TOLERANCE_MM = 0.000051
 
 
@@ -109,6 +109,8 @@ class Transition:
         if self.actor == "synthetic_host" and (
                 len(self.travel) < 2 or self.effect_model == "none"):
             raise ValueError("automatic transition needs modeled external travel")
+        if self.actor == "operator" and (self.travel or self.effect_model != "none"):
+            raise ValueError("operator transition effects are unsupported; use a modeled host effect")
 
 
 @dataclass(frozen=True)
@@ -229,7 +231,8 @@ class Job:
         return tuple(_hash((VERSION, self.source_fingerprint,
                             self.stages[:n], self.initial_tip,
                             self.translation_xyz_mm, self.stock_present,
-                            self.source_kind) + (() if self.occupancy_setup is None
+                            self.source_kind, self.program_frame, self.work_frame,
+                            self.units, MATCH_TOLERANCE_MM) + (() if self.occupancy_setup is None
                                                  else (self.occupancy_setup,)))
                      for n in range(1, len(self.stages) + 1))
 
@@ -358,7 +361,11 @@ def _decoded_v_plan(plan, motions):
 
 
 def audit(job, decoded, *, dialect, expected_fingerprint=None):
-    """Compare independent decoded stages, then replay their actual coordinates."""
+    """Compare supplied decoded stages and replay their coordinates.
+
+    This value-level gate has no source files or program bytes. The output
+    integration alone can establish document freshness and external effects.
+    """
     if type(job) is not Job or (expected_fingerprint is not None and
                                 expected_fingerprint != job.fingerprint):
         raise ValueError("stale ordered job evidence")
@@ -417,8 +424,8 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
         "prefix_fingerprints": job.prefixes,
         "input_resolution": {"status": "pass", "scope": "resolved ordered job",
                              "source_fingerprint": job.source_fingerprint},
-        "document_fidelity": ({"status": "pass", "scope":
-                               "supplied normalized native source/candidate/post"}
+        "document_fidelity": ({"status": "not_evaluated", "reason":
+                               "native source freshness requires the output integration"}
                               if job.source_kind == "native" else
                               {"status": "not_evaluated",
                                "reason": "direct Python job has no native document"}),
@@ -437,6 +444,8 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
                                      s.motions[0].start[2] + s.offset_mm -
                                      s.tool_length_mm) for s in job.stages),
                                 "completion_assumed_not_observed": tuple(assumptions)},
+        "external_effects": {"status": "not_evaluated",
+                             "reason": "effect bytes require the output integration"},
         "runtime_parity": {"status": "not_evaluated",
                            "reason": "no controller runtime trace"},
         "physical_setup": {"status": "not_evaluated",
@@ -448,6 +457,8 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
         return report
     from . import inlay
     if all(type(s.operation) is inlay.InlayOperation for s in job.stages):
+        if job.occupancy_setup is not None:
+            raise ValueError("inlay tool-body occupancy is unsupported")
         report["stock_access_residual"] = inlay.replay_stages(job.stages, actual)
         return report
     if job.occupancy_setup is not None:
@@ -480,7 +491,7 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
                 raise ValueError("occupancy stock differs from stage target")
             body = bodies.get(stage.tool_id)
             if body is None or (body.bands[0].radius_mm < cutter_radius or
-                                body.bands[0].top_mm < cutting_length):
+                                body.bands[0].top_mm != cutting_length):
                 raise ValueError("occupancy cutter differs from stage tool")
         report["tool_fixture_occupancy"] = occupancy.verify(
             setup, job.stages, actual)
@@ -504,7 +515,8 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
         return report
     endmill_count = next((i for i, s in enumerate(job.stages)
                           if s.v_plan is not None), len(job.stages))
-    if any(s.operation is None for s in job.stages[:endmill_count]) or any(
+    if any(type(s.operation) is not replay.Operation
+           for s in job.stages[:endmill_count]) or any(
             s.v_plan is not None for s in job.stages[endmill_count + 1:]):
         report["stock_access_residual"] = {"status": "unsupported",
                                            "reason": "unsupported stock evaluator sequence"}

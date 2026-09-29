@@ -14,6 +14,61 @@ from cambam_builder.integrations.cambam.rc01_script import audit_script_post, bu
 
 
 class NativeRC01Tests(unittest.TestCase):
+    def test_absent_stock_flag_cannot_reuse_retained_dimensions(self):
+        project = synthetic_source()
+        project.list_parts()[0].stock_present = False
+        with self.assertRaisesRegex(ValueError, "explicit Part stock"):
+            normalize(project, synthetic_setup())
+
+    def test_default_reader_rejects_unmodeled_block_effects(self):
+        prefix = "G21 G90 G61 G40\nG17\nT1 M6\nM3 S12000\n"
+        suffix = "G1 F60 Z-1\nG1 F240 X7\nG0 Z5\nM5\nM30\n"
+        valid = prefix + suffix
+        items, warnings = read_default_post(valid)
+        self.assertFalse(warnings)
+        self.assertEqual(len([item for item in items if item["type"] == "move"]), 3)
+        self.assertEqual(read_default_post(valid.replace("M3 S12000", "M3 S12000\nS12000"))[1], [])
+        variants = (
+            valid.replace("T1 M6", "G0 Z5 M30\nT1 M6"),
+            valid.replace("G1 F240 X7", "G1 F240 X7 M5"),
+            valid.replace("G1 F240 X7", "T2\nG1 F240 X7"),
+            valid.replace("G1 F240 X7", "S20000\nG1 F240 X7"),
+            valid.replace("M5\nM30", "M5 M30"),
+            valid.replace("G61", "G61 G64"),
+            valid.replace("G21", "G21 G21"),
+            valid.replace("T1 M6", "T0 M6"),
+            valid.replace("X7", "X" + "9" * 400),
+        )
+        for post in variants:
+            with self.subTest(post=post), self.assertRaises(ValueError):
+                read_default_post(post)
+
+    def test_drill_wrappers_cancel_modal_motion_and_remain_inside_program(self):
+        valid = "G21 G90 G17\nT1 M6\nM3 S12000\nG98\nG1 F60 Z-1\nG80\nG0 Z5\nM5\nM30\n"
+        self.assertEqual(len(read_default_post(valid, allow_drill_wrappers=True)[0]), 5)
+        for changed in (valid.replace("G0 Z5", "Z5"), valid + "G80\n",
+                        valid.replace("G98", "G98 G1 X2")):
+            with self.subTest(changed=changed), self.assertRaises(ValueError):
+                read_default_post(changed, allow_drill_wrappers=True)
+
+    def test_reader_rejects_hidden_control_separators_before_line_splitting(self):
+        valid = "G21 G90 G17\nT1 M6\nM3 S12000\nG1 F60 Z-1\nG0 Z5\nM5\nM30\n"
+        self.assertEqual(read_default_post(valid),
+                         read_default_post(valid.replace("\n", "\r\n")))
+        for separator in ("\x00", "\x0b", "\x0c", "\x1c", "\x1d", "\x1e",
+                          "\x7f", "\x85", "\u2028", "\u2029"):
+            with self.subTest(separator=repr(separator)), self.assertRaisesRegex(
+                    ValueError, "control character"):
+                read_default_post(valid.replace("G0 Z5\nM5", "G0 Z5" + separator + "M5"))
+
+    def test_reader_rejects_overflow_in_derived_arc_geometry(self):
+        huge = "1" + "0" * 308
+        post = ("G21 G90 G17\nT1 M6\nM3 S12000\n"
+                f"G2 F60 X0 Y0 I{huge} J{huge}\nM5\nM30\n")
+        with self.assertRaisesRegex(ValueError, "inconsistent arc radii"):
+            read_default_post(post, allow_arcs=True,
+                              initial_position=(1e308, 1e308, 5))
+
     def test_full_literal_motion_carrier_and_post_replay(self):
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory) / "script"

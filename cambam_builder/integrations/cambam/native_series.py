@@ -9,7 +9,7 @@ Parsing alone never grants stock or access authority: callers must replay
 the lowered trace against their independently normalized target and tool lengths.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import hashlib
 import json
 import math
@@ -186,6 +186,14 @@ class NativeSeries:
                 raise ValueError("native series source geometry or stock changed")
         if self.setup_bound_externally and setup != {"units": "mm", "postprocessor": "Default"}:
             raise ValueError("native series bound setup missing or changed")
+        # Frozen dataclasses are values, not proof objects: callers can replace
+        # their fields while retaining the original byte hashes. Re-observe the
+        # pinned inputs before accepting the stored motion, tools or stage order.
+        current = normalize_native_series(source_path, candidate_path, post_path,
+                                          initial_position=self.initial_position,
+                                          setup=setup)
+        if replace(current, source_sha256=self.source_sha256) != self:
+            raise ValueError("native series observation changed from bound bytes")
         return True
 
     def to_trace(self, targets, cutting_lengths_mm, entry_modes):

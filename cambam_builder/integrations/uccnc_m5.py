@@ -57,7 +57,7 @@ def render_program(moves, *, tool="T1", translation_xyz_mm=(0, 0, 0)):
     if tool not in ("T1", "T3"):
         raise ValueError("unsupported split-file tool label")
     lines = [f"( M5 UCCNC split-file v1 TOOL {tool} G54 )", "G21", "G90", "G17",
-             "G61", "G40", "G49", "G54", f"M3 S{RPM}"]
+             "G94", "G61", "G40", "G49", "G54", f"M3 S{RPM}"]
     at = moves[0].start
     for move in moves:
         if move.start != at or move.role not in (
@@ -175,7 +175,7 @@ def _expected_manifest(m4_path, plan, prior, start, programs):
     return {
         "format": FORMAT,
         "profile": {"name": PROFILE, "controller": "UCCNC",
-                    "subset": "G21 G90 G17 G61 G40 G49 G54 G0 G1 M3 M5 M30",
+                    "subset": "G21 G90 G17 G94 G61 G40 G49 G54 G0 G1 M3 M5 M30",
                     "version": 1},
         "source": {"m4_manifest": str(Path(m4_path).resolve()),
                    "m4_manifest_sha256": _sha(Path(m4_path).read_bytes()),

@@ -44,13 +44,14 @@ def decode_job(data, *, initial_tip):
         raise ValueError("Grbl program must be ASCII") from exc
     if not contents.endswith("\n") or "\r" in contents:
         raise ValueError("Grbl program line encoding changed")
-    lines = contents.splitlines()
+    lines = contents[:-1].split("\n")
     if (tuple(lines[:9]) != ("( M5 GRBL v1.1 PORTABILITY 1 )", *_STARTUP)
             or len(initial_tip) != 3 or any(
                 type(v) not in (int, float) or not math.isfinite(v)
                 for v in initial_tip)):
         raise ValueError("unsupported Grbl startup or initial tip")
     index, stages, offsets, stops = 9, [], [], []
+    at, old_offset = tuple(initial_tip), 0.0
     while index < len(lines):
         match = _STAGE.fullmatch(lines[index])
         if match is None or index + 2 >= len(lines):
@@ -66,12 +67,29 @@ def decode_job(data, *, initial_tip):
             raise ValueError("unsupported Grbl tool length state")
         offsets.append(offset)
         index += 1
+        before_offset = at
+        at = (at[0], at[1], at[2] + old_offset - offset)
+        transitions = []
+        if old_offset != offset:
+            match = _MOVE.fullmatch(lines[index])
+            if match is None or match.group(1) != "G0" or match.group(2) is not None:
+                raise ValueError("missing Grbl offset compensation motion")
+            end = tuple(_value(match.group(j)) for j in (3, 4, 5))
+            if end == at or any(abs(a - b) > 0.000051
+                                for a, b in zip(end, before_offset)):
+                raise ValueError("Grbl offset compensation missed safe tip")
+            transitions.append(DecodedMove(0, 0, at, end))
+            at = end
+            index += 1
+        old_offset = offset
+        if index >= len(lines):
+            raise ValueError("incomplete Grbl stage")
         match = _SPINDLE.fullmatch(lines[index])
         if match is None or _value(match.group(1)) <= 0:
             raise ValueError("unsupported Grbl spindle start")
         rpm = _value(match.group(1))
         index += 1
-        at, feed, moves = tuple(initial_tip), None, []
+        feed, moves = None, []
         while index < len(lines) and lines[index] != "M5":
             match = _MOVE.fullmatch(lines[index])
             if match is None:
@@ -96,7 +114,7 @@ def decode_job(data, *, initial_tip):
         index += 1  # M5
         ended = index == len(lines) - 1 and lines[index] == "M30"
         stages.append(DecodedProgram(tool, _STARTUP, rpm, tuple(moves), at,
-                                     True, ended))
+                                     True, ended, tuple(transitions)))
         if ended:
             break
         if index >= len(lines) - 1 or lines[index] != "M0":

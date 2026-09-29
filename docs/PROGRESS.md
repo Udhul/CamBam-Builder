@@ -234,7 +234,7 @@ remain unassessed. The five selected packets are complete.
 
 ### Branch review session queue
 
-**Sessions 1-3 accepted by engineering; next priority: session 4 of the five-session
+**Sessions 1-4 accepted by engineering; next priority: session 5 of the five-session
 branch engineering and delivery review against `main`.** The [review plan](BRANCH_REVIEW_PLAN.md) preserves the
 2026-09-27 request: assess native/extended separation, core versus workflow
 responsibilities, reusable geometry/stock foundations, primary V-carving,
@@ -257,8 +257,17 @@ full discovery passed 547 tests with zero failures and the existing Windows skip
 All eight plane/bowl tests also passed after an annotation-only correction. Its
 [findings and coverage](REVIEW.md#branch-review-session-3---2026-09-28) and
 [strategy contracts](structure_spec.md#strategy-guarantees-and-composition-limits)
-are recorded. Session 3 changes are uncommitted and ready to commit;
-sessions 4-5 and branch delivery remain pending.
+are recorded. Session 3 is included in reviewed HEAD `20402d5`.
+Session 4 is accepted by engineering on 2026-09-29: complete motion/effect
+parsing, source/result freshness, explicit stock authority, transitions,
+optional occupancy and MCP mutation/publication were reviewed and repaired.
+Full discovery passed 571 tests with zero failures and the existing Windows
+symlink-privilege skip. Its [findings, misuse matrix and coverage](REVIEW.md#branch-review-session-4---2026-09-29)
+are durable; all 51 allocated paths are accounted for. Changes are uncommitted
+and ready to commit. No new user observation is required. Generated bundles
+using the old startup, transition or ordered-verifier contract need regeneration
+and fresh audit; unchanged native source/post observations keep their byte scope.
+Session 5 and branch delivery remain pending.
 
 **Test adequacy is required in every session:** map intended behavior to tests,
 audit independent oracles and assertion strength, and identify missing core,
@@ -271,9 +280,9 @@ must close alongside final branch gates; a green suite alone is insufficient.
 | --- | --- | --- |
 | 1 | [Capability boundaries and public API contracts](BRANCH_REVIEW_PLAN.md#session-1-capability-boundaries-and-public-api-contracts) | Accepted by engineering 2026-09-27; included in reviewed HEAD `2a3ddd9`. [Findings and coverage](REVIEW.md#branch-review-session-1---2026-09-27) |
 | 2 | [Geometry, topology and numerical foundations](BRANCH_REVIEW_PLAN.md#session-2-geometry-topology-and-numerical-foundations) | Accepted by engineering 2026-09-28; included in reviewed HEAD `6188a60`. [Findings and coverage](REVIEW.md#branch-review-session-2---2026-09-28) |
-| 3 | [Machining strategies, rest behavior and reuse](BRANCH_REVIEW_PLAN.md#session-3-machining-strategies-rest-behavior-and-reuse) | Accepted by engineering 2026-09-28; automated checks complete, uncommitted and ready to commit. [Findings and coverage](REVIEW.md#branch-review-session-3---2026-09-28) |
-| 4 | [Execution safety, evidence and misuse resistance](BRANCH_REVIEW_PLAN.md#session-4-execution-safety-evidence-and-misuse-resistance) | Next: audit emitted/imported motion, evidence freshness, role/transition semantics and foreseeable misuse against reviewed machining contracts |
-| 5 | [Integrated regression and delivery decision](BRANCH_REVIEW_PLAN.md#session-5-integrated-regression-and-delivery-decision) | Pending sessions 1-4 and final branch gates |
+| 3 | [Machining strategies, rest behavior and reuse](BRANCH_REVIEW_PLAN.md#session-3-machining-strategies-rest-behavior-and-reuse) | Accepted by engineering 2026-09-28; included in reviewed HEAD `20402d5`. [Findings and coverage](REVIEW.md#branch-review-session-3---2026-09-28) |
+| 4 | [Execution safety, evidence and misuse resistance](BRANCH_REVIEW_PLAN.md#session-4-execution-safety-evidence-and-misuse-resistance) | Accepted by engineering 2026-09-29; automated checks complete, uncommitted and ready to commit. [Findings and coverage](REVIEW.md#branch-review-session-4---2026-09-29) |
+| 5 | [Integrated regression and delivery decision](BRANCH_REVIEW_PLAN.md#session-5-integrated-regression-and-delivery-decision) | Next: reconcile complete diff/test coverage, verify installed packages and supported Python/backend configurations, then assess final committed branch against `main` |
 
 Each session records coverage/findings in REVIEW and updates this queue with the
 exact next task. Retain unfinished sessions as active instead of skipping gates.
@@ -294,10 +303,12 @@ and nine nominal V plan fingerprints remain unchanged against the reviewed HEAD.
 Smoothing/overlap budgets, automatic bundle/cost search, independent V design
 angles and primary/multiple-V decoded stock remain qualified backlog 6 gaps,
 alongside conservative helical/union access and broader geometric foundations.
-Reopen them for the named consumers/requirements recorded there. Session 4 matters
-next because correct candidate paths do not prove actual bytes, stale-state
-rejection or execution-role safety. A fresh session is recommended: this coherent
-strategy outcome, failure evidence, acceptance and next scope are durable.
+Reopen them for the named consumers/requirements recorded there. Session 4 closes
+the bounded execution/evidence review, including low-level bypasses and mutable
+observations. Session 5 matters next because checkout tests do not establish
+installed-package compatibility or final committed-branch delivery. A fresh
+session is recommended: the repairs, failure witnesses, acceptance and next
+scope are durable, with no pending tests or product decisions.
 
 The
 [M0-M5 scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
@@ -1973,8 +1984,11 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    The hand-authored surface jobs prove bounded replay and improvement, not a
    general final-coverage budget; require independent target/coverage oracles
    when a named automatic surface strategy or finish requirement is introduced.
-   These gaps do not supersede session 4: actual motion and evidence misuse have
-   greater delivery impact than another nominal recipe. See the
+   These gaps do not supersede session 5: installed-package and final branch
+   verification have greater delivery impact than another nominal recipe.
+   Inlay body/fixture occupancy and body checks during helix or transition travel
+   remain explicitly rejected; reopen only for a named job needing those checks,
+   with continuous decoded-motion and setup-binding evidence. See the
    [current guarantees](structure_spec.md#strategy-guarantees-and-composition-limits).
    The [planar backend decision](REST_MACHINING_PLAN.md#shapelygeos-evaluation-decision---2026-09-22)
    selects Shapely/GEOS for the design. Adversarial acceptance and the

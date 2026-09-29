@@ -430,10 +430,8 @@ def audit_post(manifest_path, posted_path):
     if ("( Post processor: Default )" not in lines[:12] or
             not any(line.startswith(f"( {candidate.stem} ") for line in lines[:12])):
         raise ValueError("M2 post header does not match explicit candidate")
-    normalized = "\n".join("" if line.strip() in ("G98", "G80") else line
-                           for line in lines)
     actual, warnings = read_default_post(
-        normalized, initial_position=trace.initial_position)
+        post, initial_position=trace.initial_position, allow_drill_wrappers=True)
     warnings = [w for w in warnings if
                 "initial machine position is not encoded" not in w]
     if warnings:

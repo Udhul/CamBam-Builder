@@ -41,6 +41,24 @@ M30
 
 
 class NativeSeriesTests(unittest.TestCase):
+    def test_freshness_reobserves_replaced_motion_and_stage_values(self):
+        with tempfile.TemporaryDirectory() as folder:
+            candidate, post = self.make_case(Path(folder))
+            series = normalize_native_series(candidate, candidate, post,
+                                             initial_position=(5, 5, 5))
+            changed = (
+                replace(series, items=series.items[:-1]),
+                replace(series, stages=tuple(reversed(series.stages))),
+                replace(series, stages=(replace(series.stages[0], diameter_mm=0.1),)
+                        + series.stages[1:]),
+                replace(series, motion_sha256="0" * 64),
+            )
+            self.assertTrue(series.check_freshness(candidate, candidate, post))
+            for forged in changed:
+                with self.subTest(forged=forged), self.assertRaisesRegex(
+                        ValueError, "observation changed"):
+                    forged.check_freshness(candidate, candidate, post)
+
     def make_case(self, directory):
         project = CBProject("series")
         layer = project.add_layer("Geometry")

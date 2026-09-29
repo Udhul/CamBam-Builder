@@ -43,6 +43,14 @@ class ConeScriptTests(unittest.TestCase):
                                    0.8584073464102069)
             self.assertEqual(result["section_rest_mm2"]["depth_2"], 0)
 
+            # The carrier wrapper's cancellation and the program boundary
+            # cannot disappear before whole-stream parsing.
+            for changed in (reference + "G80\n", reference.replace(
+                    "G1 F300 X10 Y2 Z-2", "G80\nX10 Y2 Z-2")):
+                posted.write_text(changed, encoding="utf-8")
+                with self.assertRaises(ValueError):
+                    audit_cone_post(directory / "expected-motion.json", posted)
+
             for changed in (
                 reference.replace("G1 F60 X2 Y2 Z-2", "G0 X2 Y2 Z-2"),
                 reference.replace("G1 F300 X10 Y2 Z-2", "G1 F300 X10 Y2 Z-2.1"),

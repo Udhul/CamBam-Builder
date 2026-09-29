@@ -487,6 +487,8 @@ per-stage spindle/feed and length state, and predecessor fingerprints. Stages
 may end at a different safe tip; the next stage begins there. A transition
 declares manual split or in-program pause, or a synthetic host effect and its
 expected travel. Completion tokens are assumptions, not observed events.
+Operator transitions accept no modeled travel or effect; a modeled effect must
+use the synthetic-host path and supply independently checked effect bytes.
 Native `NativeSeries` can be mapped through `native_ordered_job.from_native_series`
 after strict source/candidate/post normalization and replay; its original
 document and posted trace remain separate. Native output and re-audit require
@@ -519,6 +521,11 @@ the common auditor checks the effective physical tip from declared tool length
 and offset. UCCNC split uses G49 and an asserted registered tip at each file
 boundary. A pause or stage comment does not install a tool. Unknown commands,
 missing compensation, changed offsets and unsupported boundary policies fail.
+Both UCCNC writers explicitly select G94 (units per minute); strict controller
+readers require their complete startup and literal LF block delimiters. The
+older M5 Grbl portability fixture also carries position/offset state and decodes
+its compensating rapids; its synthetic changer retains the active offset until
+the following NC command applies the new tool length.
 
 `ordered_output.emit/audit_files/write_bundle/audit_bundle` bind versioned
 profile, numerical policy, job/source and prefix fingerprints, final program
@@ -534,6 +541,24 @@ model and clear the supplied flat fixture-top plane. Runtime and physical setup
 remain `not_evaluated`. Re-audit after a native edit requires a freshly
 normalized source/job; an old bundle's fingerprint cannot certify it.
 
+The low-level `ordered_job.audit` takes decoded values, not source or program
+files. Native document fidelity and external-effect evidence therefore remain
+`not_evaluated` there. Only `ordered_output` promotes those fields after a concrete
+`NativeBinding` and complete effect-byte check. Native binding re-observes the
+source/candidate/post, requires the native frame and initial tip, and checks the
+actual native prefix. Replacing an observation's fields while retaining its
+input hashes does not preserve acceptance. Native stock audits require explicit
+Part stock containing the replay target at stock top Z=0; stockless parsing and
+motion comparison remain available without stock authority.
+
+Verifier `ordered-job-v2-evidence-boundaries` includes the program/work frame,
+units and matching tolerance in prefix identity as well as whole-job identity.
+Pre-review ordered bundles must be regenerated and audited under this verifier;
+their stored reports cannot be carried forward. Prior actual CamBam observations
+retain only their unchanged source/post scope. The exact-rendering direct RC01
+and variable-V auditors preserve original line endings when comparing bytes;
+a rehashed newline conversion cannot inherit canonical-byte acceptance.
+
 For a cylindrical arc, `replay.arc_segments` encloses the continuous
 centerline by chords with at most 0.0001 mm sagitta, plus the posted endpoint
 radius mismatch and a numeric margin. Outer cutter radius uses that path error
@@ -544,7 +569,7 @@ Source arc endpoints are exact replay endpoints. Curved rapid travel, rising
 arcs, straight ramps, full-circle same-XY words and unresolved arc radius fail
 closed. GEOS buffer/Boolean results remain conditional numerical
 evidence, not a physical controller trajectory guarantee. Linear `JobMove`
-representation preserves existing v1 job fingerprints.
+representation remains stable; verifier-version changes invalidate old job evidence.
 
 The earlier geometry domain remains planar fixed-axis cylindrical replay
 and one terminal rounded-V finish; the separate stepped-volume contract below
@@ -780,6 +805,10 @@ one pointed cutter; process loads, plunge capability, material response,
 machine setup and physical fit are unassessed. Native CamBam emission is not
 part of this detached route. See the [runbook](DEVELOPMENT.md#packet-4-paired-v-carve-inlay)
 and [evidence](REVIEW.md#packet-4-paired-v-carve-inlay---2026-09-27).
+Decoded inlay entries and retracts must be vertical between the declared cut
+depth and a positive safe height. Their role labels cannot hide diagonal stock
+motion. Supplying body/fixture occupancy for inlay is explicitly unsupported;
+the independent-part stock evaluator cannot silently skip that requested gate.
 
 ### Bounded tool-body and fixture occupancy
 
@@ -788,18 +817,20 @@ after independent UCCNC/Grbl decoding and motion comparison. The setup names
 the program frame, the same Z=0 initial stock box as each supported stage,
 closed fixture boxes and one coaxial tool body per stage tool. Each body has
 contiguous tip-relative cutter, shank and holder cylinders. The cutter cylinder
-conservatively encloses the operation radius and cutting length; it may cut
+conservatively encloses the operation radius and ends at exactly its declared
+cutting length; it may cut
 stock, but every band must clear every fixture, while shank and holder must
 clear initial stock. This conservative stock check does not credit cavities
 removed by earlier stages. Setup, tool and fixture changes invalidate the job
-and prefix fingerprints. Jobs without a setup retain their earlier fingerprints
-and have no tool-body/fixture clearance result.
+and prefix fingerprints. Jobs without a setup have no tool-body/fixture clearance
+result; verifier-version freshness still applies.
 
 The setup stock must match each stage's bounded 3D stock, planar replay target
 bounds/depth, or terminal V target bounds/cap depth. A planar cylinder's cutter
-band encloses its resolved tool radius and cutting length. A V band's radius
-encloses the profile radius at its cutting length and reaches at least that
-length, thereby enclosing all its smaller cross-sections. Native source/post
+band encloses its resolved tool radius and matches its cutting length. A V band's
+radius encloses the profile radius at its cutting length and ends at that same
+length. Extending the exempt cutter band would hide non-cutting body from stock
+checks, so inconsistent lengths reject. Native source/post
 binding remains a separate required gate for a native job. The accepted linear
 Profile plus generated rounded V case uses one declared program-frame stock
 and side clamp across both stages; its unchanged actual Default post and two
@@ -1407,8 +1438,8 @@ to the setup position at tip Z=+5. Real XML newlines separate G-code blocks.
 tool/spindle events, candidate/source SHA-256 values and plan/motion fingerprints.
 The candidate and source hashes must still match when its post is audited.
 
-The audit accepts only the bounded straight-line Default-post dialect, harmless
-standalone Drill G98/G80 wrapper markers, one optional redundant final M5, and
+The audit accepts only the bounded straight-line Default-post dialect,
+standalone Drill G98/G80 wrappers, one optional redundant final M5, and
 the declared initial tip position. It compares every emitted move/event with
 the resolved trace before replaying the **posted coordinates** through
 `cam_core.replay` and the original cone slot oracle. An actual CamBam `.nc` is
@@ -1711,13 +1742,18 @@ CamBam's `Default` post supplies the initial T1 change/spindle start and the
 terminal T2 spindle stop. The script supplies all intervening move roles and
 T1 stop/T2 change/start. `audit_script_post()` hash-guards the strict-reimported
 candidate and source, accepts only the bounded Default post with its name
-header, discards standalone G98/G80 Drill wrapper markers that cause no move,
+header, interprets standalone G98/G80 Drill wrappers without inventing motion,
 and requires every emitted move/event to match the generated sequence exactly
 in decimal coordinates, feed, tool and order. Extra motion fails. The audit
 reconstructs a `Program` from actual emitted endpoints and calls the
 continuous RC01 `verify()` for protected stock, tool-component access, process
 and rough/final rest. Its accepted synthetic setup assumes the initial tip is
 at (-10,-10,+5); the Default post does not encode incoming machine position.
+G80 cancels modal motion; subsequent coordinates require explicit interpolation.
+Wrappers after M30 reject, as do mixed motion/M blocks, tool selection without
+M6, changed spindle speed without M3 and hidden control separators. Native
+LF/CRLF formatting remains supported. G98 is a return-mode selection only;
+no canned-cycle execution is admitted by the wrapper option.
 
 The user-posted newline-repaired file passed all 2,945 items, with per-slab
 rough rest 7.775010615955999–7.787678472024001 mm² and final rest
@@ -1784,7 +1820,9 @@ and other presentation-only edits that leave that snapshot unchanged retain
 the candidate/post certificate; geometry or stock edits invalidate it. A
 source containing any MOP still requires exact source bytes because its MOP
 intent lacks a semantic edit classifier. Candidate and actual post bytes are
-always exact-hash guarded. The bounded planar audit also requires each native
+always exact-hash guarded. Freshness re-normalizes those files and compares the
+complete stored observation, so changed stage/tool/motion values cannot retain
+acceptance merely by copying input hashes. The bounded planar audit also requires each native
 MOP to target the same original Rect or straight Region geometry and floor;
 a caller-supplied larger target cannot manufacture safe stock clearance.
 
@@ -1941,6 +1979,8 @@ motion-role issue counts. The rough-only format and result remain supported.
 `check_native_freshness(evidence_path, result)` rejects an earlier observation
 after any evidence record, source, candidate, setup, manifest or post byte
 change, including either post and the combined candidate in paired mode.
+It also recomputes the observation and rejects edited residuals, role findings
+or verdicts that retain the correct input hashes.
 Reanalysis requires explicit new pair provenance; a matching post title
 alone cannot prove that an edited document was posted.
 

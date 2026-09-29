@@ -96,6 +96,9 @@ def _bind_source_target(source_path, candidate_path, series, target):
                                source_name="series audit source")
     candidate = read_cambam_bytes(Path(candidate_path).read_bytes(),
                                   source_name="series audit candidate")
+    source_part = source.list_parts()[0]
+    if not source_part.stock_present:
+        raise ValueError("native stock audit requires explicit source Part stock")
     primitive = source.get_primitive(target.name)
     if type(primitive) is Rect:
         points = primitive.get_absolute_coordinates_xyz()
@@ -120,9 +123,18 @@ def _bind_source_target(source_path, candidate_path, series, target):
         raise ValueError("native source target must be Rect, Circle or straight Region")
     supplied_region = polygon_rest._geometry(target)
     if (not source_region.is_valid or source_region.is_empty or
-            not source_region.equals(supplied_region) or
-            target.depth > source.list_parts()[0].stock_thickness):
+            not source_region.equals(supplied_region)):
         raise ValueError("replay target differs from original native source")
+    sx, sy, sz = source_part.stock_drawing_origin
+    width, height, thickness = (source_part.stock_width, source_part.stock_height,
+                                source_part.stock_thickness)
+    if (any(not math.isfinite(value) for value in
+            (sx, sy, sz, width, height, thickness)) or
+            min(width, height, thickness) <= 0 or sz != 0 or
+            not (sx <= target.bounds[0] < target.bounds[2] <= sx + width and
+                 sy <= target.bounds[1] < target.bounds[3] <= sy + height and
+                 target.depth <= thickness)):
+        raise ValueError("native source Part stock does not contain replay target")
     part = candidate.list_parts()[0]
     mops = {mop.name: mop for mop in candidate.get_mops_in_part(part) if mop.enabled}
     if any(mops[stage.name].target_depth != -target.depth

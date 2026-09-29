@@ -17,7 +17,7 @@ _ALLOWED_G = {0, 1, 17, 21, 40, 61, 64, 90}
 _ALLOWED_M = {3, 5, 6, 30}
 
 
-def read_default_post(data, *, allow_arcs=False,
+def read_default_post(data, *, allow_arcs=False, allow_drill_wrappers=False,
                       initial_position=(-10.0, -10.0, 5.0)):
     """Decode bounded absolute-mm Default-post motion and modal events.
 
@@ -26,6 +26,9 @@ def read_default_post(data, *, allow_arcs=False,
     """
     if not isinstance(data, str) or len(data) > 20_000_000:
         raise ValueError("posted text must be bounded Unicode")
+    if any((ord(char) < 32 and char not in "\t\r\n") or
+           127 <= ord(char) <= 159 or char in "\u2028\u2029" for char in data):
+        raise ValueError("unsupported control character in posted text")
     if (not isinstance(initial_position, tuple) or len(initial_position) != 3 or
             any(isinstance(v, bool) or not isinstance(v, (int, float)) or
                 not math.isfinite(v) for v in initial_position)):
@@ -42,10 +45,18 @@ def read_default_post(data, *, allow_arcs=False,
             continue
         if stopped:
             raise ValueError(f"line {number}: commands after M30")
+        if allow_drill_wrappers and line in ("G98", "G80"):
+            # These standalone CustomScript wrappers select a canned-cycle
+            # return mode or cancel motion; no canned cycle is admitted here.
+            if line == "G80":
+                motion = None
+            continue
         words = _WORD.findall(line)
         if "".join(a + b for a, b in words).replace(" ", "") != line.replace(" ", ""):
             raise ValueError(f"line {number}: unsupported command text")
         codes = [(a.upper(), float(b)) for a, b in words]
+        if any(not math.isfinite(value) for _, value in codes):
+            raise ValueError(f"line {number}: nonfinite word")
         for axis in ("XYZFSTIJ" if allow_arcs else "XYZFST"):
             if sum(a == axis for a, _ in codes) > 1:
                 raise ValueError(f"line {number}: repeated {axis} word")
@@ -62,6 +73,19 @@ def read_default_post(data, *, allow_arcs=False,
                 any(m not in _ALLOWED_M for m in ms) or
                 sum(g in (0, 1, 2, 3) for g in gs) > 1):
             raise ValueError(f"line {number}: unsupported G/M command")
+        # This bounded reader does not model a controller's execution order
+        # within a block containing motion and external effects. In particular,
+        # a pre-tool no-op retract must never swallow an M30 or tool change.
+        if (len(ms) > 1 or len(set(gs)) != len(gs) or
+                (61 in gs and 64 in gs)):
+            raise ValueError(f"line {number}: conflicting or repeated G/M commands")
+        if ms and any(axis in "XYZIJ" for axis, _ in codes):
+            raise ValueError(f"line {number}: unsupported mixed motion and M command")
+        if any(axis == "T" for axis, _ in codes) and ms != [6]:
+            raise ValueError(f"line {number}: tool selection requires explicit M6")
+        if any(axis == "S" for axis, _ in codes) and ms != [3]:
+            if codes != [("S", rpm)]:
+                raise ValueError(f"line {number}: changed spindle speed requires explicit M3")
         for g in gs:
             if g == 21:
                 units = True
@@ -97,7 +121,9 @@ def read_default_post(data, *, allow_arcs=False,
                 center = (at[0] + offsets["I"], at[1] + offsets["J"])
                 start_radius = math.hypot(at[0] - center[0], at[1] - center[1])
                 end_radius = math.hypot(end[0] - center[0], end[1] - center[1])
-                if start_radius <= 0 or abs(start_radius - end_radius) > 0.001:
+                if (any(not math.isfinite(value) for value in
+                        (*center, start_radius, end_radius)) or
+                        start_radius <= 0 or abs(start_radius - end_radius) > 0.001):
                     raise ValueError(f"line {number}: inconsistent arc radii")
             if end != at:
                 if motion in (1, 2, 3) and "F" not in values and feed is None:
@@ -118,8 +144,8 @@ def read_default_post(data, *, allow_arcs=False,
         if "S" in values:
             rpm = values["S"]
         if "T" in values:
-            if not values["T"].is_integer():
-                raise ValueError(f"line {number}: noninteger tool")
+            if not values["T"].is_integer() or values["T"] <= 0:
+                raise ValueError(f"line {number}: nonpositive or noninteger tool")
             tool = int(values["T"])
         for m in ms:
             if m == 6:

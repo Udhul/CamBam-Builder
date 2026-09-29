@@ -86,7 +86,7 @@ class DirectVariableVTests(unittest.TestCase):
             manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "verified rendering"):
                 audit_program(manifest_path, comparison_post=comparison)
-            program.write_text(original, encoding="ascii")
+            program.write_bytes(original.encode("ascii"))
             manifest["program_sha256"] = sha256(program.read_bytes()).hexdigest()
             manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
             source_copy = folder / "source.cb"
@@ -98,6 +98,31 @@ class DirectVariableVTests(unittest.TestCase):
                                   encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "comparison CamBam post changed"):
                 audit_program(manifest_path, comparison_post=comparison)
+
+    def test_rehashed_newlines_and_changed_program_name_fail(self):
+        from hashlib import sha256
+
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = Path(temporary) / "direct"
+            build_program(folder)
+            path = folder / "direct-evidence.json"
+            manifest = json.loads(path.read_text(encoding="utf-8"))
+            program = folder / "direct-V-variable.nc"
+            original = program.read_bytes()
+            for replacement in (b"\r\n", b"\r"):
+                altered = original.replace(b"\n", replacement)
+                program.write_bytes(altered)
+                manifest["program_sha256"] = sha256(altered).hexdigest()
+                path.write_text(json.dumps(manifest), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "verified rendering"):
+                    audit_program(path)
+            program.write_bytes(original)
+            manifest["program_sha256"] = sha256(original).hexdigest()
+            manifest["program"] = "other.nc"
+            (folder / "other.nc").write_bytes(original)
+            path.write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "manifest"):
+                audit_program(path)
 
 
 if __name__ == "__main__":

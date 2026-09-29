@@ -17,6 +17,18 @@ FIXTURE = Path(__file__).parent / "fixtures" / "rc01_native_stock"
 
 
 class RC01StockAuthorityTests(unittest.TestCase):
+    def test_freshness_rejects_changed_observation_with_unchanged_input_hashes(self):
+        evidence = FIXTURE / "evidence.json"
+        original = analyze_rc01_stock("native_posted", evidence_path=evidence)
+        self.assertTrue(check_native_freshness(evidence, original))
+        for field, value in (("stock_dependent_use", "bounded_geometric_observation"),
+                             ("motion_role_findings", []),
+                             ("rough_rest_by_depth", [])):
+            changed = dict(original, **{field: value})
+            with self.subTest(field=field), self.assertRaisesRegex(
+                    ValueError, "observation changed"):
+                check_native_freshness(evidence, changed)
+
     def test_recorded_native_pair_has_coverage_but_blocks_execution(self):
         evidence = FIXTURE / "paired_evidence.json"
         paired = analyze_rc01_stock("native_posted", evidence_path=evidence)

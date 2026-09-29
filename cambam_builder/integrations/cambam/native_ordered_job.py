@@ -25,6 +25,9 @@ class NativeBinding:
             raise ValueError("native ordered source binding differs")
         self.series.check_freshness(self.source_path, self.candidate_path,
                                     self.post_path, setup=self.setup)
+        if (job.program_frame != "native-default-mm" or
+                job.initial_tip != self.series.initial_position):
+            raise ValueError("native ordered frame or initial position differs")
         native_count = len(self.series.stages)
         hybrid = (len(job.stages) == native_count + 1 and native_count == 1 and
                   job.stages[-1].v_plan is not None and job.stock_present)
@@ -45,7 +48,7 @@ class NativeBinding:
                            item.operation == native.name)
             if (stage.id != native.name or stage.tool_id != native.tool or
                     stage.source_revision != self.series.evidence_fingerprint or
-                    stage.operation is None or
+                    type(stage.operation) is not replay.Operation or
                     stage.operation.tool.kind != "cylinder" or
                     stage.operation.tool.radius * 2 != native.diameter_mm or
                     stage.rpm != spindle[index] or

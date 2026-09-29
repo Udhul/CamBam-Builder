@@ -9,6 +9,12 @@ Requested 2026-09-08 and expanded 2026-09-22/23. Priority belongs only to
 This document owns the problem, proposed outcomes, technical reasoning and future
 acceptance criteria. Only the explicitly marked bounded slices claim implementation;
 none authorize machine execution.
+Session 4's [execution review](REVIEW.md#branch-review-session-4---2026-09-29)
+repairs source/result freshness, complete motion/effect parsing, stock authority
+and decoded access. The [implemented ordered evidence contract](structure_spec.md#reusable-ordered-job-output-and-verification)
+owns the resulting admission rules and verifier-version invalidation. Historical
+native observations retain their unchanged source/post scope; generated bundles
+must be rebuilt when their startup, transition motion or verifier changes.
 The five original outcomes below are retained. Historical design refinements and
 decisions are in [Design refinement](#design-refinement---2026-09-22)
 and the [execution architecture refinement](#execution-architecture-refinement---2026-09-23).

@@ -86,6 +86,8 @@ def normalize(project, setup, *, allow_attachments=False):
             (not allow_attachments and (len(shapes) != 1 or len(mops) != 1))):
         raise ValueError("native V requires one Part, target Pline and source Engrave")
     part = parts[0]
+    if not part.stock_present:
+        raise ValueError("native V planning requires explicit Part stock")
     guides = [shape for shape in shapes
               if shape.user_identifier == "tapered-target-spine"]
     source_mops = [item for item in mops

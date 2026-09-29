@@ -21,7 +21,7 @@ _OFFSET = re.compile(rf"^G43\.1 Z({_NUMBER})$")
 _TOOL = r"T[1-9][0-9]*"
 _UCCNC_HEADER = re.compile(rf"^\( ORDERED UCCNC v1 TOOL ({_TOOL}) \)$")
 _GRBL_STAGE = re.compile(rf"^\( STAGE ({_TOOL}) \)$")
-_UCCNC_STARTUP = ("G21", "G90", "G17", "G61", "G40", "G49", "G54")
+_UCCNC_STARTUP = ("G21", "G90", "G17", "G94", "G61", "G40", "G49", "G54")
 _GRBL_STARTUP = ("G21", "G90", "G17", "G94", "G61", "G40", "G49", "G54")
 _GRBL_HEADER = "( ORDERED GRBL v1.1 JOB 1 )"
 
@@ -219,7 +219,7 @@ def _lines(data):
         raise ValueError("NC program must be ASCII") from exc
     if not content.endswith("\n") or "\r" in content:
         raise ValueError("NC program line encoding changed")
-    return content.splitlines()
+    return content[:-1].split("\n")
 
 
 def _read_motion(line, at, feed):
@@ -270,13 +270,14 @@ def _decode_uccnc(files, initial):
     for data in files:
         lines = _lines(data)
         header = _UCCNC_HEADER.fullmatch(lines[0]) if lines else None
-        if (header is None or len(lines) < 12 or
-                tuple(lines[1:8]) != _UCCNC_STARTUP or
+        motion_start = 2 + len(_UCCNC_STARTUP)
+        if (header is None or len(lines) < motion_start + 3 or
+                tuple(lines[1:motion_start - 1]) != _UCCNC_STARTUP or
                 lines[-2:] != ["M5", "M30"]):
             raise ValueError("unsupported UCCNC program structure")
-        rpm = _read_spindle(lines[8])
+        rpm = _read_spindle(lines[motion_start - 1])
         at, feed, moves = next_initial, None, []
-        for line in lines[9:-2]:
+        for line in lines[motion_start:-2]:
             move, feed = _read_motion(line, at, feed)
             moves.append(move)
             at = move.end
