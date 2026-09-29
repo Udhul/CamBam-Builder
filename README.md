@@ -65,8 +65,9 @@ physical setup and freeform surfaces remain unassessed.
 See the
 [current status](docs/PROGRESS.md#active-work-and-next-priority).
 
-For development, install the environment with `uv sync`, then run the
-project through `.venv\Scripts\python.exe`. Python 3.9 through 3.13 are verified;
+Python 3.12 or newer is required. For development, install the environment with
+`uv sync --python 3.13`, then run the project through `.venv\Scripts\python.exe`.
+The verification matrix covers Python 3.12 and 3.13;
 see the [development runbook](docs/DEVELOPMENT.md#environment-and-setup).
 
 The optional local MCP server exposes thirty-seven document, planning and authoring
@@ -87,7 +88,7 @@ binary-copy an existing or manually edited `.cb` there and hash-guard `document_
 this avoids model-mediated XML. Export returns inline content and explicitly creates
 no file; same-host clients can instead copy an exact server-generated `document_save`
 handoff artifact and verify its SHA-256. Install
-with `uv sync --extra mcp` on Python 3.10+;
+with `uv sync --python 3.13 --extra mcp`;
 see [MCP setup and client configuration](docs/DEVELOPMENT.md#local-mcp-setup-and-verification).
 Clean Windows installation, an agentic OpenCode stdio workflow and CamBam Plus 1.0
 domain acceptance are verified for the bounded Rect/Outside-Profile A/B slice.

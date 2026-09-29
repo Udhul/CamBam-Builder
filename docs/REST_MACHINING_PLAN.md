@@ -2305,7 +2305,7 @@ proposed synthesis/derivations, not claims that these products implement it iden
 At this proposal stage no dependency was selected; the later
 [Shapely/GEOS decision](#shapelygeos-evaluation-decision---2026-09-22) supersedes that
 open choice. Backend evaluation criteria are analytic offset
-accuracy, holes/near-tangencies, deterministic topology, supported Python 3.9-3.13
+accuracy, holes/near-tangencies, deterministic topology, the then-supported Python 3.9-3.13
 and Windows installation, license/distribution obligations and measured performance.
 Start with planar Booleans/offsets; add a medial-axis backend only if the first
 V-carve slice demonstrates a need. A package's existence does not justify a new
@@ -2580,8 +2580,9 @@ design synthesis, with formulas derived under the stated assumptions.
   explicitly documents collapse/removal of narrow features under precision reduction.
   Backend validity therefore does not prove preservation of manufacturing intent.
 - [Shapely 2.1 release requirements](https://shapely.readthedocs.io/en/2.1.0/release/2.x.html)
-  require Python 3.10+, whereas this project supports 3.9-3.13. A compatible version
-  strategy must be tested; do not silently increase the project's minimum Python.
+  require Python 3.10+, whereas this project supported 3.9-3.13 at evaluation time.
+  The user-approved [2026-09-29 policy](REVIEW.md#python-312-minimum-and-session-5-closure---2026-09-29)
+  now requires Python >=3.12; minimum-version changes remain explicit decisions.
 - [CGAL Minkowski sums](https://doc.cgal.org/latest/Minkowski_sum_2/group__PkgMinkowskiSum2Ref.html)
   offers exact or guaranteed-approximation offsets and lists GPL licensing for this
   package. Distribution and binding implications must be evaluated before adoption.
@@ -2795,7 +2796,10 @@ The proposed internal boundary must own these requirements:
 - Restrict the first implementation to the common tested 2.0/2.1 API. The tested
   version policy is `shapely==2.0.7; python_version < '3.10'` and
   `shapely==2.1.2; python_version >= '3.10'` on CPython Windows x64 3.9-3.13.
-  Keep the existing Python minimum. Re-run this runner and platform checks before
+  That historical split is superseded by the user-approved Python >=3.12 minimum
+  and Shapely 2.1.2 for all supported interpreters; see the
+  [current runtime policy](DEVELOPMENT.md#detached-nominal-planar-runtime-checks).
+  Re-run this runner and platform checks before
   widening versions; 32-bit Windows, ARM64 and source builds are not verified.
   Add an optional machining dependency only when a runtime slice needs it;
   `pyproject.toml` remains the sole dependency declaration owner.

@@ -77,10 +77,10 @@ separate application service for older protocols.
 
 `cambam_builder.mcp_adapter` is explicitly included in setuptools'
 package list. Geometry/XML behavior stays in the framework. The optional extra is
-`mcp = ["mcp==2.2.0; python_version >= '3.10'"]`; base library users retain Python
->=3.9 and their existing dependency surface. The launcher must clearly reject
-Python 3.9 and missing extras before importing the SDK. Never silently run with
-missing dependencies on 3.9. Revisit the pin only with protocol/adapter checks.
+`mcp = ["mcp==2.2.0"]`; the base library and adapter both require Python >=3.12.
+Base library users retain their NumPy-only dependency surface. The launcher must
+clearly reject older interpreters and missing extras before importing the SDK.
+Revisit the pin only with protocol/adapter checks.
 
 Declare `cambam-mcp = "cambam_builder.mcp_adapter.__main__:main"`, with equivalent
 `python -m cambam_builder.mcp_adapter`. Use argparse and SDK dependencies; no new

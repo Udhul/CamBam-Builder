@@ -13,8 +13,8 @@ EXPECTED_MCP_VERSION = "2.2.0"
 
 def _require_mcp() -> None:
     """Reject unsupported interpreters/dependency installs before SDK import."""
-    if sys.version_info < (3, 10):
-        raise SystemExit("cambam-mcp requires Python 3.10 or newer; install the [mcp] extra")
+    if sys.version_info < (3, 12):
+        raise SystemExit("cambam-mcp requires Python 3.12 or newer; install the [mcp] extra")
     try:
         installed = version("mcp")
     except PackageNotFoundError:

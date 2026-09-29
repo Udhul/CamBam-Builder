@@ -11,7 +11,7 @@ only if the user explicitly reports one.
 
 ## Environment and setup
 
-The declared and verified toolchain is Python >=3.9 and setuptools/wheel
+The declared toolchain is Python >=3.12 and setuptools/wheel
 (`pyproject.toml`). NumPy is declared directly in project metadata. `uv.lock` is
 intentionally ignored: supported-version checks resolve the currently compatible
 NumPy release independently on each interpreter. No `setup.py`, separate
@@ -24,7 +24,10 @@ uv sync --python 3.13
 ```
 
 This creates `.venv` and installs the project plus a currently compatible NumPy
-version. The command may require dependency downloads. After setup,
+version. Python 3.13 is the development default; the verification matrix covers
+3.12 and 3.13. Older interpreters are unsupported under the user-approved
+[2026-09-29 support policy](REVIEW.md#python-312-minimum-and-session-5-closure---2026-09-29).
+The command may require dependency downloads. After setup,
 explicitly select its interpreter for every command; activation is optional. If
 the IDE uses another project environment, set `$ProjectPython` to that interpreter
 instead. Confirm it before running checks:
@@ -148,11 +151,11 @@ change, use a unique ignored `output/<task>-<unique>/` directory and:
    does not ship the tests. Confirm that ignored session artifacts/cache files
    were not included.
 2. Create separate environments with `uv venv --python <version> <env-path>`
-   for Python 3.9 through 3.13. Install the built wheel using
+   for Python 3.12 and 3.13. Install the built wheel using
    `uv pip install --python <env-path>/Scripts/python.exe <wheel-path>[planar,mcp]`.
-   MCP is intentionally omitted by its Python >=3.10 marker on 3.9. Independently
-   install `<sdist-path>[planar]` into another Python 3.9 environment. Do not use
-   an editable install or add the source package to `PYTHONPATH`.
+   Independently install `<sdist-path>[planar,mcp]` into another Python 3.12
+   environment. Both extras have the same Python minimum as the base library.
+   Do not use an editable install or add the source package to `PYTHONPATH`.
 3. From a working directory outside the checkout, verify version/dependency
    metadata, modern/legacy construction, native Rect XML write/read, all supported
    module imports and packaged MCP resources. Assert that imported package paths
@@ -166,8 +169,8 @@ change, use a unique ignored `output/<task>-<unique>/` directory and:
    The snapshot root must contain an `output/` directory for protocol tests.
    Route temporary files/logs into the task directory. Do not copy ignored native
    observations to disguise the fresh-checkout coverage boundary.
-5. Independently install a base-only wheel without Shapely or MCP. Run analytic
-   feasible-center and native identity/XML checks; require backend normalization
+5. Independently install a base-only wheel on Python 3.12 without Shapely or MCP.
+   Run analytic feasible-center and native identity/XML checks; require backend normalization
    to report `unsupported` and backend-dependent CAM import to fail for missing
    `shapely`. This does not promise all CAM modules work without the planar extra.
    Present-backend checks must still exercise the supported CAM consumers.
@@ -181,7 +184,14 @@ Existing actual-post acceptance remains scoped to its recorded bytes; a skip is
 not renewed observation. Record and repair collection errors rather than treating
 them as optional tests. No controller runtime or physical acceptance follows from
 package verification. Metadata permits newer Python releases, but the declared
-verification matrix here is 3.9-3.13.
+verification matrix here is 3.12-3.13. For support-policy changes, prior complete
+regression evidence may be combined with fresh installed checks only after
+comparing runtime/test bytes and dependency versions; rerun every affected
+behavior and document exactly which evidence was reused. A source installation
+must independently exercise the distributed tests and fixtures. When clean wheel
+and sdist installs have identical runtime/test bytes and numerical dependencies,
+the same complete regression evidence may cover their unchanged behavior;
+fresh installation, asset/fixture and entry-point checks are still required.
 
 Historical baseline (before the rest/V branch):
 
@@ -254,7 +264,7 @@ Install the optional runtime backend with `uv sync --extra planar --python 3.13`
 (add `--extra mcp` when also exercising MCP). The base dependency set remains
 NumPy-only; `cambam_builder.planar` imports lazily and analytic feasible centers
 work without Shapely. Metadata pins the evaluated Windows-compatible releases:
-Shapely 2.0.7 for Python 3.9 and 2.1.2 for Python 3.10+.
+Shapely 2.1.2 for all supported Python versions.
 
 ```powershell
 & $ProjectPython -m unittest discover -s tests -p test_planar.py -v
@@ -2230,9 +2240,9 @@ for the tested Windows x64 versions and limits. From the repository root:
 ```powershell
 $taskDir = Join-Path 'output' ('shapely-evaluation-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
 New-Item -ItemType Directory -Path $taskDir | Out-Null
-foreach ($version in @('3.9', '3.10', '3.11', '3.12', '3.13')) {
+foreach ($version in @('3.12', '3.13')) {
     $tag = 'py' + $version.Replace('.', '')
-    $candidate = if ($version -eq '3.9') { 'shapely==2.0.7' } else { 'shapely==2.1.2' }
+    $candidate = 'shapely==2.1.2'
     uv --cache-dir "$taskDir/cache" venv --python $version "$taskDir/$tag"
     if ($LASTEXITCODE -ne 0) { throw "Environment failed: $version" }
     uv --cache-dir "$taskDir/cache" pip install --python "$taskDir/$tag/Scripts/python.exe" --only-binary :all: $candidate 'numpy>=1.23.5'
@@ -2792,9 +2802,9 @@ coordinate/property interchange, not generated production toolpaths.
 
 ## Local MCP setup and verification
 
-The optional server requires Python 3.10+ and exactly `mcp==2.2.0`. Base-library
-Python 3.9 installations remain supported; launching the adapter there produces
-a clear version error. Install from the repository root:
+The base library and optional server require Python 3.12+. The server additionally
+requires exactly `mcp==2.2.0`; launching it on an older interpreter or without
+the extra produces a clear error. Install from the repository root:
 
 ```powershell
 uv sync --python 3.13 --extra mcp
@@ -3102,8 +3112,8 @@ New-Item -ItemType Directory -Path D:/CAD/AgentWork
 D:/CAD/CamBamMcp/Scripts/python.exe -c "from cambam_builder import CBProject; print(CBProject('smoke').project_name)"
 ```
 
-Supported and checked on Windows are base-library Python 3.9 and MCP-enabled
-Python 3.10, 3.11, 3.12 and 3.13. Python 3.9 deliberately rejects the adapter.
+The Windows verification matrix covers Python 3.12 and 3.13 for the base library
+and MCP adapter. Python versions below 3.12 are unsupported for both.
 The MCP extra pins `mcp==2.2.0`; all other versions are unsupported until the
 protocol suite is rerun.
 

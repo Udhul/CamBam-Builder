@@ -8437,6 +8437,10 @@ pending results or user decisions. Next: complete
 
 ## Branch review session 5 - 2026-09-29
 
+The original Python 3.9 delivery hold below is superseded by the user's explicit
+[Python >=3.12 support decision and replacement verification](#python-312-minimum-and-session-5-closure---2026-09-29).
+Its incomplete test evidence remains historical; it is not converted into a pass.
+
 Scope: integrated regression, installed distribution/backend compatibility,
 complete coverage reconciliation and the delivery decision. Initial worktree was
 clean on `feat/rest-machining-and-vcarving`, HEAD
@@ -8733,3 +8737,153 @@ the evidence, unresolved gate and remedy are durable, with no pending user choic
 or live process. Suggested eventual commit after closure:
 `test: close integrated regression and package delivery review`.
 Continue from the [branch review queue](PROGRESS.md#branch-review-session-queue).
+
+## Python 3.12 minimum and session 5 closure - 2026-09-29
+
+The user explicitly approved raising the project minimum to Python 3.12 and
+retaining Python 3.13 as the development default. This supersedes BR-5-006's
+Python 3.9 delivery obligation and the earlier recommendation to investigate
+that configuration. The interrupted 3.9 results above remain incomplete;
+no correctness defect or performance cause was established. Reopen old-version
+support only for an explicit consumer requirement, with its dependency and
+verification cost assessed. This is an authorized compatibility-policy change,
+not a skipped test within the supported matrix.
+
+The policy avoids maintaining the separate Shapely 2.0.7 backend and MCP exclusion
+for 3.9. Python 3.9 is end-of-life, 3.10 reaches end-of-life in October 2026,
+and 3.12 has scheduled security support through October 2028 according to the
+[Python support schedule](https://devguide.python.org/versions/).
+Python 3.11 is also outside the chosen support floor; its previously passing
+results remain historical. Metadata permits newer interpreters, but the declared
+verification matrix is 3.12/3.13; no new 3.14+ verification claim is made.
+
+The previous session's twelve-file repair was committed by the user as
+`755fa4969dbdc9a408bdbf49b7ae63977dbb1283`; the worktree was clean on resumption.
+This increment changes `pyproject.toml` to `requires-python = ">=3.12"`,
+`mcp = ["mcp==2.2.0"]` and `planar = ["shapely==2.1.2"]`. The MCP launcher
+rejects source execution on older interpreters before SDK import. README,
+DEVELOPMENT, MCP_CONTRACT, the planar architecture/decision text and PROGRESS
+now describe the same policy. Historical verification entries are preserved.
+The native XML writer's Python-3.9 API availability note is not a package
+support promise and needs no unrelated runtime edit.
+
+### Replacement package verification
+
+Task inputs, environments, scripts and logs are local to
+`output/python312-session5-20260929-01/`. The source/package contracts and durable
+results below remain understandable without those disposable files.
+
+`uv --cache-dir <task>/uv-cache build --out-dir <task>/dist` built the wheel and
+sdist. The first sandboxed attempt could not access PyPI; the approved build
+completed. Initial sandboxed access to the approved artifact was denied during
+the old-interpreter dry run; the approved offline retry verified the intended
+metadata rejection. Neither environmental failure is counted as product evidence.
+
+Archive inspection confirms all 84 runtime Python files, both MCP resources,
+and all 101 tracked test/fixture files plus the existing demo helper in the
+sdist, with bytes matching the checkout and no ignored output/cache content.
+Compared with the earlier tested artifacts, all 102 test/fixture/helper files
+and 83 runtime files are unchanged; only the launcher's interpreter guard differs.
+Final artifact SHA-256 values:
+
+- Wheel: `f8bd7261e53561c69cdc8f642f799e2ba614536dbbc4aa46733d55e32bd5f27e`.
+- Sdist: `ffa35f47fe084649c0b8eecd6960d97a26ce21b6d28882f70e225106b08594b6`.
+
+Clean `uv venv --python <version> <env>` environments install the wheel with
+`[planar,mcp]` on 3.12/3.13, the sdist with both extras on 3.12, and a base-only
+wheel on 3.12. Installed verification runs Python with `-I` from an empty working
+directory outside the checkout; only tests/fixtures/helper extracted from the
+sdist are added to its import path. Every loaded runtime module is asserted to
+come from that environment's site-packages. Checks cover both package roots,
+modern/legacy construction, Rect XML round trip, all available modern module
+imports/bytes, installed dependency metadata and packaged resources.
+
+Fresh wheel MCP discovery passes 89 tests on each interpreter: 92.549 seconds
+on Python 3.12 and 88.995 seconds on 3.13, each with one Windows symlink-privilege
+skip; junction/reparse tests run. The base-only wheel passes all 18 analytic,
+native identity/XML and import-order tests, with zero skips. It also verifies
+analytic circle centers, explicit backend `unsupported` normalization and a
+backend-dependent CAM import failing specifically for absent `shapely`.
+
+Every new environment checks installed `Requires-Python: >=3.12` and absence
+of interpreter-conditioned dependency branches. The launcher rejects a simulated
+3.11 interpreter before SDK lookup, accepts installed MCP 2.2.0 on supported
+interpreters, and clearly rejects the absent MCP extra in the base environment.
+An actual offline `uv pip install --dry-run --no-deps --python <Python-3.11-env>
+<wheel>` rejects Python 3.11.9 because the artifact requires Python >=3.12,
+without altering that environment.
+
+The clean sdist's 49 fixture/repair checks pass in 64.372 seconds, with one skip
+for the separately retained local B/C observation. These exercise the synthetic
+tabbed stock/order/tamper cases, both permanent native corpora, planar analytic
+and nominal cases, the two repaired polygon fixture readers, MCP resources,
+pure parity, cross-document operations and the distributed acceptance helper.
+The installed console entry point also shows help with MCP installed and rejects
+the missing extra in the base-only install.
+
+| Clean install | Python | NumPy | Shapely / GEOS | MCP | Fresh test result |
+| --- | --- | --- | --- | --- | --- |
+| Wheel | 3.12.10 | 2.5.3 | 2.1.2 / 3.13.1 | 2.2.0 | 89 MCP tests, zero failures/errors, one privilege skip |
+| Wheel | 3.13.5 | 2.5.3 | 2.1.2 / 3.13.1 | 2.2.0 | 89 MCP tests, zero failures/errors, one privilege skip |
+| Sdist | 3.12.10 | 2.5.3 | 2.1.2 / 3.13.1 | 2.2.0 | 49 fixture/repair tests, zero failures/errors, one local-observation skip |
+| Base-only wheel | 3.12.10 | 2.5.3 | Absent | Absent | 18 tests, zero failures/errors/skips |
+
+**Evidence reuse and test adequacy:** exact runtime/test comparison and matching
+interpreter, NumPy, Shapely/GEOS and MCP versions make the earlier complete
+3.12/3.13 regression applicable to unchanged behavior in the new installations.
+Only the launcher guard changed, and all 89 MCP tests were freshly run on both
+wheel interpreters; launcher/metadata checks also ran on the source install.
+The source-distributed fixtures and repaired tests were exercised independently.
+Deterministic test-ID reconciliation against the earlier full and repaired-test
+runs, fresh MCP runs and source fixture run yields **572 final IDs: 569 passes,
+three justified skips, no missing or failing IDs** for each wheel configuration
+and the 3.12 sdist. The skips remain the actual local M1 and B/C observations and
+Windows symlink privilege; they do not replace synthetic or junction/reparse
+coverage. S1-S4's independent analytic and mutation witnesses remain applicable.
+
+A redundant full sdist rerun was initially started and passed the curved-rest
+cases before progressing into MCP. After the byte/dependency reconciliation and
+all affected/package checks passed, that task-owned process was deliberately
+stopped. Its partial log and nonzero termination status are preserved and are
+**not** described as a passing full run or used to fill a missing result.
+Engineering acceptance rests on the explicitly reconciled evidence above, not
+on waiving unresolved tests. This avoids repeating expensive, unchanged geometry
+work solely because the same bytes arrived through a source archive. The
+[runbook](DEVELOPMENT.md#packaging-and-supported-python-validation) records the
+conditions for this reuse. Unlike the retired 3.9 configuration, the supported
+3.12/3.13 numerical backends already have complete regression evidence.
+
+### Final engineering acceptance and delivery state
+
+All five sessions are accepted by engineering for their documented offline
+scope. The existing native/extended separation, API usability, mathematical
+limits and deferred capability judgments in the session-5 review remain valid.
+The only new runtime behavior is the explicit interpreter rejection; machining
+outputs, native fixture bytes and prior acceptance scopes are unchanged. No new
+CamBam, controller or physical observation is required for this support-policy
+change. Python <3.12 users must upgrade; 3.14+ metadata eligibility is not a
+verified-version claim. Runtime and physical machining remain unassessed.
+
+Final target `main` remains `18dbb9950f3065e95df0ee645a25361d45e63b30` and is an
+ancestor of reviewed HEAD `755fa4969dbdc9a408bdbf49b7ae63977dbb1283`, which contains
+95 branch commits. The previous committed session repair was checked against
+its twelve-path record. Final coverage reconciles 171 exact branch-plus-working
+paths; the additional launcher path is explicitly reviewed in this increment.
+Current changes are limited to README, `pyproject.toml`, the MCP launcher,
+DEVELOPMENT, MCP_CONTRACT, REST_MACHINING_PLAN, structure_spec, PROGRESS and REVIEW.
+Compileall, `git diff --check`, `git diff --check main...HEAD`, ancestry and
+coverage/link checks pass. There are no untracked candidates, staged changes or
+ignored CAM files outside `output/`; historical fixture files are unchanged.
+
+**Delivery decision: ready to commit, not merge-ready.** The user-approved policy
+and closure documentation are uncommitted. No staging, commit, merge or cleanup
+was performed. After the user's commit, recheck the exact committed `main...HEAD`
+diff, ancestry, worktree and applicability of these checks before declaring
+merge-ready. The user performs integration with a visible merge point.
+
+The next priority is that final committed-branch delivery gate, ahead of deferred
+machining extensions: it delivers the reviewed foundations without introducing
+another capability. This is a coherent fresh-session breakpoint with no live
+verification process, pending decision or unsaved result. Suggested commit:
+`build: require Python 3.12 and close branch delivery review`.
+Next: [commit the policy change and verify the final branch](PROGRESS.md#branch-review-session-queue).

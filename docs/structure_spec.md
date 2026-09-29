@@ -2054,8 +2054,8 @@ arbitrary topology, scales, freeform surfaces or machine execution.
 `PlanarApproximation`, `FeasibleSet` and `PlanarResult` records. It imports no CAD
 entities, development probes or backend geometry classes. `_planar_shapely.py`
 privately owns lazy Shapely/GEOS admission and regularized area operations.
-The `planar` optional extra selects Shapely 2.0.7 on Python 3.9 and 2.1.2 on
-Python 3.10+; ordinary imports and analytic centers need no backend.
+The `planar` optional extra selects Shapely 2.1.2 on the supported Python >=3.12
+interpreters; ordinary imports and analytic centers need no backend.
 
 Inputs declare `mm` or `inch`, a nonempty XY frame identity, a numerical origin in
 that frame and optional section Z. Coordinates normalize as `(source-origin)*scale`

@@ -234,8 +234,8 @@ remain unassessed. The five selected packets are complete.
 
 ### Branch review session queue
 
-**Sessions 1-4 accepted by engineering; session 5 delivery decision: hold for
-incomplete Python 3.9 regression (BR-5-006).** The [review plan](BRANCH_REVIEW_PLAN.md) preserves the
+**All five review sessions are accepted by engineering. Session 5 is ready to
+commit under the user-approved Python >=3.12 policy.** The [review plan](BRANCH_REVIEW_PLAN.md) preserves the
 2026-09-27 request: assess native/extended separation, core versus workflow
 responsibilities, reusable geometry/stock foundations, primary V-carving,
 rest/tool-bundle strategies and conditional smoothing, mathematical assumptions,
@@ -267,8 +267,10 @@ are durable; all 51 allocated paths are accounted for. Session 4 is committed
 in reviewed HEAD `4f3ab98`. No new user observation is required. Generated bundles
 using the old startup, transition or ordered-verifier contract need regeneration
 and fresh audit; unchanged native source/post observations keep their byte scope.
-Session 5 review, package/test repairs and fixture disposition are recorded;
-complete Python 3.9 wheel/sdist regression remains the delivery blocker.
+Session 5 review, package/test repairs and fixture disposition are committed in
+`755fa49`. The user approved Python >=3.12 on 2026-09-29, retiring the older
+interpreter gate BR-5-006. Replacement package checks and final evidence
+reconciliation pass; the support-policy changes remain uncommitted.
 
 **Test adequacy is required in every session:** map intended behavior to tests,
 audit independent oracles and assertion strength, and identify missing core,
@@ -283,7 +285,7 @@ must close alongside final branch gates; a green suite alone is insufficient.
 | 2 | [Geometry, topology and numerical foundations](BRANCH_REVIEW_PLAN.md#session-2-geometry-topology-and-numerical-foundations) | Accepted by engineering 2026-09-28; included in reviewed HEAD `6188a60`. [Findings and coverage](REVIEW.md#branch-review-session-2---2026-09-28) |
 | 3 | [Machining strategies, rest behavior and reuse](BRANCH_REVIEW_PLAN.md#session-3-machining-strategies-rest-behavior-and-reuse) | Accepted by engineering 2026-09-28; included in reviewed HEAD `20402d5`. [Findings and coverage](REVIEW.md#branch-review-session-3---2026-09-28) |
 | 4 | [Execution safety, evidence and misuse resistance](BRANCH_REVIEW_PLAN.md#session-4-execution-safety-evidence-and-misuse-resistance) | Accepted by engineering 2026-09-29; included in reviewed HEAD `4f3ab98`. [Findings and coverage](REVIEW.md#branch-review-session-4---2026-09-29) |
-| 5 | [Integrated regression and delivery decision](BRANCH_REVIEW_PLAN.md#session-5-integrated-regression-and-delivery-decision) | Delivery held: review/repairs recorded; Python 3.10-3.13 reconciled, Python 3.9 wheel/sdist full regression incomplete (BR-5-006). [Evidence and remedy](REVIEW.md#session-5-verification-and-delivery) |
+| 5 | [Integrated regression and delivery decision](BRANCH_REVIEW_PLAN.md#session-5-integrated-regression-and-delivery-decision) | Accepted by engineering 2026-09-29; prior repairs committed in `755fa49`, Python >=3.12 policy and closure ready to commit. [Policy, checks and delivery evidence](REVIEW.md#python-312-minimum-and-session-5-closure---2026-09-29) |
 
 Each session records coverage/findings in REVIEW and updates this queue with the
 exact next task. Retain unfinished sessions as active instead of skipping gates.
@@ -307,29 +309,35 @@ alongside conservative helical/union access and broader geometric foundations.
 Reopen them for the named consumers/requirements recorded there. Session 4 closes
 the bounded execution/evidence review, including low-level bypasses and mutable
 observations. Session 5 repairs package/test isolation, restores four durable
-synthetic tabbed-cutout regressions and reconciles all 170 affected paths.
-Python 3.10-3.13 each have 569 passing final test IDs and three explicit skips;
-21 affected/dependent tests pass with the documented skips in every installed
-configuration, including two Python 3.9 sdist installs. Its
+synthetic tabbed-cutout regressions and reconciles all 171 final affected paths.
+Python 3.12/3.13 wheel installs and a 3.12 sdist install each reconcile to 569
+passing final test IDs and three explicit skips, using the earlier full runs,
+unchanged runtime/test bytes and matching dependencies, plus fresh affected
+checks. The rebuilt wheels each run 89 MCP tests with zero failures/errors and
+the Windows privilege skip; the clean sdist runs 49 fixture/repair tests with
+zero failures/errors and the local B/C observation skip; base-only 3.12 passes
+18 tests without skips. Its
 [findings and evidence](REVIEW.md#branch-review-session-5---2026-09-29) are recorded.
 The user authorized retaining fixtures with a permanent codebase role; the two
 historical corpora meet that condition through their durable regression tests.
-Full Python 3.9 wheel/sdist runs were interrupted without final results. Bounded
-recovery preserves additional completed results but does not waive missing tests.
-This is a delivery hold, not integrated engineering acceptance or a merge-ready
-claim. No new CamBam or physical observation is required for these repairs.
+The interrupted Python 3.9 runs remain historical incomplete evidence. The user's
+explicit Python >=3.12 decision retires that support obligation; it does not
+turn those tests into passes. Python 3.13 remains the development default, the
+verification matrix is 3.12/3.13, and Shapely 2.1.2 is shared by supported
+interpreters. Newer Python versions are permitted by metadata but need separate
+verification before a tested-version claim. No new CamBam or physical observation
+is required for this support-policy change.
 
-**Next increment:** finish the missing installed Python 3.9 coverage using the
-declared Shapely 2.0.7 / GEOS 3.11.4 configuration. Diagnose curved-workflow cost
-if it prevents completion; preserve independent numerical and mutation oracles.
-Acceptance requires every final test ID to pass or have an already justified
-optional skip in both wheel and sdist coverage, followed by exact final-tree
-reconciliation. Then prepare the user commit and rerun committed-branch gates
-against `main`; the user performs the merge. Do not extend machining capability
-before resolving this supported-version delivery gap. A fresh session is useful
-for this focused verification/performance task: the remaining gate, evidence
-and reproduction procedure are durable; no user decision or background result
-is pending at handoff.
+**Next increment:** commit the Python >=3.12 support policy and session-5 closure,
+then verify the final committed branch against `main`. Current reviewed HEAD is
+`755fa49`, target `main` is `18dbb99`, and all 95 branch commits plus the current
+support-policy changes are accounted for. This work is ready to commit, not
+merge-ready: the user performs the commit and merge, and exact branch gates must
+be rerun after the commit. Suggested commit: `build: require Python 3.12 and close
+branch delivery review`. Delivery of the reviewed foundations takes priority
+over another machining extension. This is a good fresh-session breakpoint:
+contracts, acceptance, evidence and next action are durable; no process, result
+or user observation is pending.
 
 The
 [M0-M5 scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
