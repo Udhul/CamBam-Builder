@@ -79,7 +79,7 @@ class PolygonRestTests(unittest.TestCase):
 
     def test_independent_area_limits_and_original_boundary(self):
         result = self.result
-        fixture = json.loads(Path("tests/fixtures/rest_vcarve_acceptance.json").read_text(
+        fixture = json.loads((Path(__file__).parent / "fixtures/rest_vcarve_acceptance.json").read_text(
             encoding="utf-8"))
         case = next(row for row in fixture["cases"]
                     if row["id"] == "A01_general_region_composition")
@@ -163,7 +163,7 @@ class PolygonRestTests(unittest.TestCase):
                                   replay.ToolProfile("T2", "cylinder", 1, 10),
                                   expected_source="edited",
                                   expected_motion=result.prior_trace.motion_fingerprint)
-        fixture = json.loads(Path("tests/fixtures/rest_vcarve_acceptance.json").read_text(
+        fixture = json.loads((Path(__file__).parent / "fixtures/rest_vcarve_acceptance.json").read_text(
             encoding="utf-8"))
         case = next(row for row in fixture["cases"]
                     if row["id"] == "M1_narrow_access_rejection")

@@ -234,8 +234,8 @@ remain unassessed. The five selected packets are complete.
 
 ### Branch review session queue
 
-**Sessions 1-4 accepted by engineering; next priority: session 5 of the five-session
-branch engineering and delivery review against `main`.** The [review plan](BRANCH_REVIEW_PLAN.md) preserves the
+**Sessions 1-4 accepted by engineering; session 5 delivery decision: hold for
+incomplete Python 3.9 regression (BR-5-006).** The [review plan](BRANCH_REVIEW_PLAN.md) preserves the
 2026-09-27 request: assess native/extended separation, core versus workflow
 responsibilities, reusable geometry/stock foundations, primary V-carving,
 rest/tool-bundle strategies and conditional smoothing, mathematical assumptions,
@@ -263,11 +263,12 @@ parsing, source/result freshness, explicit stock authority, transitions,
 optional occupancy and MCP mutation/publication were reviewed and repaired.
 Full discovery passed 571 tests with zero failures and the existing Windows
 symlink-privilege skip. Its [findings, misuse matrix and coverage](REVIEW.md#branch-review-session-4---2026-09-29)
-are durable; all 51 allocated paths are accounted for. Changes are uncommitted
-and ready to commit. No new user observation is required. Generated bundles
+are durable; all 51 allocated paths are accounted for. Session 4 is committed
+in reviewed HEAD `4f3ab98`. No new user observation is required. Generated bundles
 using the old startup, transition or ordered-verifier contract need regeneration
 and fresh audit; unchanged native source/post observations keep their byte scope.
-Session 5 and branch delivery remain pending.
+Session 5 review, package/test repairs and fixture disposition are recorded;
+complete Python 3.9 wheel/sdist regression remains the delivery blocker.
 
 **Test adequacy is required in every session:** map intended behavior to tests,
 audit independent oracles and assertion strength, and identify missing core,
@@ -281,8 +282,8 @@ must close alongside final branch gates; a green suite alone is insufficient.
 | 1 | [Capability boundaries and public API contracts](BRANCH_REVIEW_PLAN.md#session-1-capability-boundaries-and-public-api-contracts) | Accepted by engineering 2026-09-27; included in reviewed HEAD `2a3ddd9`. [Findings and coverage](REVIEW.md#branch-review-session-1---2026-09-27) |
 | 2 | [Geometry, topology and numerical foundations](BRANCH_REVIEW_PLAN.md#session-2-geometry-topology-and-numerical-foundations) | Accepted by engineering 2026-09-28; included in reviewed HEAD `6188a60`. [Findings and coverage](REVIEW.md#branch-review-session-2---2026-09-28) |
 | 3 | [Machining strategies, rest behavior and reuse](BRANCH_REVIEW_PLAN.md#session-3-machining-strategies-rest-behavior-and-reuse) | Accepted by engineering 2026-09-28; included in reviewed HEAD `20402d5`. [Findings and coverage](REVIEW.md#branch-review-session-3---2026-09-28) |
-| 4 | [Execution safety, evidence and misuse resistance](BRANCH_REVIEW_PLAN.md#session-4-execution-safety-evidence-and-misuse-resistance) | Accepted by engineering 2026-09-29; automated checks complete, uncommitted and ready to commit. [Findings and coverage](REVIEW.md#branch-review-session-4---2026-09-29) |
-| 5 | [Integrated regression and delivery decision](BRANCH_REVIEW_PLAN.md#session-5-integrated-regression-and-delivery-decision) | Next: reconcile complete diff/test coverage, verify installed packages and supported Python/backend configurations, then assess final committed branch against `main` |
+| 4 | [Execution safety, evidence and misuse resistance](BRANCH_REVIEW_PLAN.md#session-4-execution-safety-evidence-and-misuse-resistance) | Accepted by engineering 2026-09-29; included in reviewed HEAD `4f3ab98`. [Findings and coverage](REVIEW.md#branch-review-session-4---2026-09-29) |
+| 5 | [Integrated regression and delivery decision](BRANCH_REVIEW_PLAN.md#session-5-integrated-regression-and-delivery-decision) | Delivery held: review/repairs recorded; Python 3.10-3.13 reconciled, Python 3.9 wheel/sdist full regression incomplete (BR-5-006). [Evidence and remedy](REVIEW.md#session-5-verification-and-delivery) |
 
 Each session records coverage/findings in REVIEW and updates this queue with the
 exact next task. Retain unfinished sessions as active instead of skipping gates.
@@ -305,10 +306,30 @@ angles and primary/multiple-V decoded stock remain qualified backlog 6 gaps,
 alongside conservative helical/union access and broader geometric foundations.
 Reopen them for the named consumers/requirements recorded there. Session 4 closes
 the bounded execution/evidence review, including low-level bypasses and mutable
-observations. Session 5 matters next because checkout tests do not establish
-installed-package compatibility or final committed-branch delivery. A fresh
-session is recommended: the repairs, failure witnesses, acceptance and next
-scope are durable, with no pending tests or product decisions.
+observations. Session 5 repairs package/test isolation, restores four durable
+synthetic tabbed-cutout regressions and reconciles all 170 affected paths.
+Python 3.10-3.13 each have 569 passing final test IDs and three explicit skips;
+21 affected/dependent tests pass with the documented skips in every installed
+configuration, including two Python 3.9 sdist installs. Its
+[findings and evidence](REVIEW.md#branch-review-session-5---2026-09-29) are recorded.
+The user authorized retaining fixtures with a permanent codebase role; the two
+historical corpora meet that condition through their durable regression tests.
+Full Python 3.9 wheel/sdist runs were interrupted without final results. Bounded
+recovery preserves additional completed results but does not waive missing tests.
+This is a delivery hold, not integrated engineering acceptance or a merge-ready
+claim. No new CamBam or physical observation is required for these repairs.
+
+**Next increment:** finish the missing installed Python 3.9 coverage using the
+declared Shapely 2.0.7 / GEOS 3.11.4 configuration. Diagnose curved-workflow cost
+if it prevents completion; preserve independent numerical and mutation oracles.
+Acceptance requires every final test ID to pass or have an already justified
+optional skip in both wheel and sdist coverage, followed by exact final-tree
+reconciliation. Then prepare the user commit and rerun committed-branch gates
+against `main`; the user performs the merge. Do not extend machining capability
+before resolving this supported-version delivery gap. A fresh session is useful
+for this focused verification/performance task: the remaining gate, evidence
+and reproduction procedure are durable; no user decision or background result
+is pending at handoff.
 
 The
 [M0-M5 scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)

@@ -135,6 +135,56 @@ a local import does not prove them.
 
 ## Packaging and supported Python validation
 
+The rest/V branch's refreshed package evidence is recorded in
+[session 5](REVIEW.md#branch-review-session-5---2026-09-29). Package acceptance
+requires installed behavior, not an editable-checkout import. For a new package
+change, use a unique ignored `output/<task>-<unique>/` directory and:
+
+1. Run `uv build --out-dir output/<task>-<unique>/dist`. Inspect both archives:
+   all declared modern/native/core/integration and legacy modules, MCP schema
+   and consumer template, license and metadata must be present. The sdist must
+   also contain the tracked regression fixture data and
+   `demos/mcp_client_acceptance_verify.py`, selected by `MANIFEST.in`; the wheel
+   does not ship the tests. Confirm that ignored session artifacts/cache files
+   were not included.
+2. Create separate environments with `uv venv --python <version> <env-path>`
+   for Python 3.9 through 3.13. Install the built wheel using
+   `uv pip install --python <env-path>/Scripts/python.exe <wheel-path>[planar,mcp]`.
+   MCP is intentionally omitted by its Python >=3.10 marker on 3.9. Independently
+   install `<sdist-path>[planar]` into another Python 3.9 environment. Do not use
+   an editable install or add the source package to `PYTHONPATH`.
+3. From a working directory outside the checkout, verify version/dependency
+   metadata, modern/legacy construction, native Rect XML write/read, all supported
+   module imports and packaged MCP resources. Assert that imported package paths
+   belong to the selected environment's `site-packages`, including subprocesses
+   used by tests. The dormant legacy CLI module is outside the supported import
+   surface. Record interpreter, NumPy, Shapely/GEOS and MCP versions.
+4. Copy the tests, their tracked fixtures and the one demo helper into a task-owned
+   test snapshot containing **no runtime package source**. Put only this snapshot
+   on the test import path and run `-m unittest discover -s <snapshot>/tests -v`
+   with the installed interpreter, retaining the external working directory.
+   The snapshot root must contain an `output/` directory for protocol tests.
+   Route temporary files/logs into the task directory. Do not copy ignored native
+   observations to disguise the fresh-checkout coverage boundary.
+5. Independently install a base-only wheel without Shapely or MCP. Run analytic
+   feasible-center and native identity/XML checks; require backend normalization
+   to report `unsupported` and backend-dependent CAM import to fail for missing
+   `shapely`. This does not promise all CAM modules work without the planar extra.
+   Present-backend checks must still exercise the supported CAM consumers.
+
+Inspect skips by name. MCP-dependent service tests may skip only in environments
+without that extra; the metadata/model parity checks still run. A fresh checkout
+may skip the separate byte-bound B/C tabbed observation and retained actual M1
+post observation; synthetic tabbed stock/order/tamper regressions must run.
+Windows symlink privilege may be absent, while junction/reparse checks still run.
+Existing actual-post acceptance remains scoped to its recorded bytes; a skip is
+not renewed observation. Record and repair collection errors rather than treating
+them as optional tests. No controller runtime or physical acceptance follows from
+package verification. Metadata permits newer Python releases, but the declared
+verification matrix here is 3.9-3.13.
+
+Historical baseline (before the rest/V branch):
+
 Verified 2026-09-10 using `uv 0.10.2`. The minimum is Python 3.9: Python 3.8
 was not available on the validation machine, and the separately shipped legacy
 package evaluates PEP 585 built-in generic annotations that require Python 3.9.

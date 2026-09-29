@@ -7685,7 +7685,9 @@ this list remains the original allocation, not a separate live queue.
 - `tests/test_variable_vcarve.py`
 - `tests/test_vcarve_slot.py`
 
-#### Allocation S4: Execution, evidence and misuse (pending)
+#### Allocation S4: Execution, evidence and misuse
+
+Disposition: [session 4](#branch-review-session-4---2026-09-29).
 
 51 paths:
 
@@ -7741,7 +7743,9 @@ this list remains the original allocation, not a separate live queue.
 - `tests/test_variable_cone_engrave.py`
 - `tests/test_variable_cone_script.py`
 
-#### Allocation S5: Final delivery, docs, packaging and historical fixtures (pending)
+#### Allocation S5: Final delivery, docs, packaging and historical fixtures
+
+Disposition: [session 5](#branch-review-session-5---2026-09-29).
 
 33 paths:
 
@@ -8430,3 +8434,302 @@ machining extension. A fresh-session breakpoint is appropriate because contracts
 test results, limitations and priorities are saved in their owners, with no
 pending results or user decisions. Next: complete
 [session 5—integrated regression and delivery decision](PROGRESS.md#branch-review-session-queue).
+
+## Branch review session 5 - 2026-09-29
+
+Scope: integrated regression, installed distribution/backend compatibility,
+complete coverage reconciliation and the delivery decision. Initial worktree was
+clean on `feat/rest-machining-and-vcarving`, HEAD
+`4f3ab98252276de741350b5cb2b333c373a83c8a`. Local `main` and merge base were both
+`18dbb9950f3065e95df0ee645a25361d45e63b30`: 94 branch commits, 166 changed paths,
+50,793 insertions and 7,284 deletions. Session 4's changes were already committed;
+its historical ready-to-commit statement is not the current delivery state.
+No remote-base claim, staging, commit, publication or merge is included.
+
+### Session 5 findings and repairs
+
+| Finding / consequence | Trigger, expected versus observed behavior | Repair and acceptance criterion |
+| --- | --- | --- |
+| BR-5-001 / verification defect | Clean Python 3.9 installs correctly omit MCP, but `test_mcp_cross_document` imported `anyio` before its optional-dependency guard; `test_mcp_mop_parity` imported `DocumentService` unconditionally. Test collection failed instead of exercising supported base behavior. | Guard the optional imports. Skip only the two service-dependent parity methods; retain its three metadata/model checks without MCP. Run both absent and present configurations; do not install undeclared dependencies to hide the defect. |
+| BR-5-002 / package-test isolation defect | Three MCP tests read assets relative to the checkout, two polygon-rest tests read fixtures relative to the working directory, and the sdist included tests without their fixture data or the existing `demos.mcp_client_acceptance_verify` helper. Installed modules alone did not make the distributed regression sources usable. | Read schema/template assets through `importlib.resources.files` and test fixtures relative to `__file__`; add bounded `MANIFEST.in` inclusions for existing fixture data and the one helper. Inspect archive contents/bytes and exercise tests against installed code with no source package on the import path. The helper's absence from the first copied-test harness was also corrected. |
+| BR-5-003 / material fresh-checkout coverage gap | Every tabbed-cutout test depended on ignored B/C files. A clean checkout silently lost retained-stock, ordering and tamper regressions along with the actual-post observation. | Generate independent synthetic four/five-tab source/post pairs at test time. The reusable four tests now run without local artifacts; one separate actual-post observation retains pinned B/C hashes. A bypass of `_bridges` caused both removed/misplaced-tab assertions to fail, with zero test errors. The repaired tests reject for the specific bridge-count diagnostic. |
+| BR-5-004 / documentation overstatement | The architecture owner table said `cam_core` had no machine-output dependency, conflicting with the already disclosed `inlay.audit_pair -> integrations.ordered_output.audit_files` orchestration call. | Qualify the table with that exact exception. No runtime relocation or speculative abstraction. |
+| BR-5-005 / delivery authorization gate | The 13 historical tracked CAM files have recorded provenance and reusable tests, but neither durable evidence nor their introducing commit messages records explicit permission to version them. User posting/acceptance is not that permission. | Preserve the exact files; request continued-versioning authorization under AGENTS. Retention decision is recorded below; no byte files were added, removed or rewritten. |
+| BR-5-006 / incomplete required verification | Both full Python 3.9 wheel/sdist runs ended during the session interruption, without unittest summaries. Partial successes and focused reruns cannot establish complete supported-version coverage. | Keep the delivery gate open. Preserve completed results and the missing test IDs; finish isolated Python 3.9 / Shapely 2.0.7 / GEOS 3.11.4 coverage before final branch acceptance. Investigate measured curved-workflow cost if it continues to prevent completion; do not drop tests or change support metadata to obtain a green result. |
+
+The synthetic tabbed case uses a hand-derived 1.5 mm tool-center offset around
+the 60 x 30 mm rectangle, with 9 mm centerline gaps and a 3 mm tool giving
+6 mm retained bridges. Four- and five-tab variants assert actual connected stock,
+ordered residual prefixes, decoded generated roles and independent gap positions.
+Its source authoring uses the public API, while the text motion is separately
+constructed; it is not presented as a CamBam post. Actual B/C observation remains
+separate. Initial synthetic construction omitted the required source/post header
+and failed four cases; correcting that test input preserved the production guard.
+
+### Historical fixture disposition
+
+The optimizer corpus has eight CAM files:
+`tests/fixtures/optimizer_corpus/atlas-legacy.cb`,
+`tests/fixtures/optimizer_corpus/atlas-legacy.nc`,
+`tests/fixtures/optimizer_corpus/atlas-new.cb`,
+`tests/fixtures/optimizer_corpus/atlas-new.nc`,
+`tests/fixtures/optimizer_corpus/links-legacy.cb`,
+`tests/fixtures/optimizer_corpus/links-legacy.nc`,
+`tests/fixtures/optimizer_corpus/links-new.cb`, and
+`tests/fixtures/optimizer_corpus/links-new.nc`. Its `manifest.json` and
+`observations.json` preserve the source bindings and actual legacy/new-mode
+ordering/cycle observations. See [native corpus observations](#native-optimiser-corpus-posted-output---2026-09-23).
+`test_optimizer_corpus.test_native_posts_reproduce_checked_in_observations`
+recomputes the observations, tool events, target order and unsupported cycles;
+it remains observation-only with no stock authority.
+
+The RC01 corpus has five CAM files:
+`tests/fixtures/rc01_native_stock/source.cb`,
+`tests/fixtures/rc01_native_stock/N-rough.cb`,
+`tests/fixtures/rc01_native_stock/N-rough.nc`,
+`tests/fixtures/rc01_native_stock/N-native-cleanup.cb`, and
+`tests/fixtures/rc01_native_stock/N-native-cleanup.nc`. Its `comparison.json`,
+`setup.json`, `evidence.json` and `paired_evidence.json` bind the generated
+source, actual posts, interpretation and stock evidence. See
+[selected stock authority](#rc01-selected-native-posted-stock-authority---2026-09-23)
+and [paired assessment](#rc01-paired-native-posted-stock-assessment---2026-09-23).
+`test_rc01_stock_authority` checks native/generated stock distinctions, explicit
+execution refusal, source/result freshness and T1-prefix tampering.
+
+All historical source/candidate/post hashes inspected match the durable review;
+15 adjacent JSON file/hash checks matched. The 13 CAM files total 114,868 bytes;
+the complete optimizer and RC01 corpora occupy 133,188 and 51,148 bytes,
+respectively (184,336 combined). Their native observations cannot be reproduced
+by regenerating synthetic inputs alone. Engineering recommends retaining both
+bounded corpora; changed CamBam/post bytes must reopen the associated hashes,
+observations and interpretation together. Introducing commits `18ee5dd`,
+`1d02330`, and `085f2eb` contain no additional versioning authorization.
+
+Retention authorization: **accepted 2026-09-29 within the user's condition**:
+"only keep fixtures ifthey are intended to be a durable part of the codebase and
+have a permanent role there." Both corpora satisfy that condition: the permanent
+regression roles, source bindings, assertions and maintenance obligations above
+justify retaining exactly these 13 existing CAM files and their companion JSON.
+This does not authorize adding disposable session fixtures. No cleanup, staging,
+commit or external publication is authorized by the retention decision.
+
+### Final coverage and behavior adequacy
+
+Deterministic reconciliation found 165 exact paths in the original S1 allocation,
+with no obsolete paths; the sole additional committed path,
+`tests/test_execution_evidence.py`, is explicitly covered by S4. There are no
+deleted paths. S1-S4's owner-level reviews and repair witnesses remain applicable
+because this session changes no runtime implementation. S5 dispositions its
+remaining 33 allocated paths as follows; paths are relative to the stated prefix.
+
+| Exact paths | Inspected evidence and disposition |
+| --- | --- |
+| Root: `.gitignore`, `AGENTS.md`, `README.md` | Artifact protection, explicit fixture/delivery authorization, native/extended claims and optional install boundary; reviewed. Historical byte fixtures remain explicitly accounted for. |
+| `docs/`: `BRANCH_REVIEW_PLAN.md`, `WORKFLOW.md`, `README.md` | Five-session gates, acceptance ownership, topic ownership and delivery rules; reviewed against actual procedure. Topic map now identifies source-archive contents. |
+| `docs/`: `DEVELOPMENT.md`, `MCP_CONTRACT.md`, `structure_spec.md` | Declared commands, Python/backend boundaries, supported Manual-tab author/inspection/reference behavior and native/extended ownership. Package procedure refreshed; BR-5-004 corrected. |
+| `docs/`: `PROGRESS.md`, `REST_MACHINING_PLAN.md`, `REVIEW.md` | Priority, bounded milestone/job acceptance, numeric/native evidence, invalidation and deferred capability claims compared with S1-S4 contracts/tests. Final decision belongs here and live next action in PROGRESS. |
+| Root: `pyproject.toml` | All native/core/extension/integration packages declared; NumPy direct, Shapely version-conditioned, MCP only on Python >=3.10. Archive/installed checks exercise actual declarations. |
+| `tests/fixtures/optimizer_corpus/`: `atlas-legacy.cb`, `atlas-legacy.nc`, `atlas-new.cb`, `atlas-new.nc`, `links-legacy.cb`, `links-legacy.nc`, `links-new.cb`, `links-new.nc`, `manifest.json`, `observations.json` | Hash-bound native observations and test assertions inspected; retention gate above. |
+| `tests/fixtures/rc01_native_stock/`: `N-native-cleanup.cb`, `N-native-cleanup.nc`, `N-rough.cb`, `N-rough.nc`, `source.cb`, `comparison.json`, `evidence.json`, `paired_evidence.json`, `setup.json` | Native stock/source/execution distinctions and tamper oracles inspected; retention gate above. |
+| `tests/fixtures/rest_vcarve_acceptance.json` | Analytic reference corpus used by planar/V tests; numeric correctness assertions are independent of native byte observation. No changed golden values. |
+
+New/reopened session paths: `MANIFEST.in`; `tests/test_mcp_documents.py`,
+`tests/test_mcp_protocol.py`, `tests/test_mcp_mop_parity.py`,
+`tests/test_mcp_cross_document.py`, `tests/test_polygon_rest.py`, and
+`tests/test_tabbed_cutout.py`.
+Unchanged caller `tests/test_mcp_acceptance_verifier.py` and helper
+`demos/mcp_client_acceptance_verify.py` were inspected for source-package inclusion.
+The first four review sessions' exact-path ledgers cover all other implementation
+and test paths. Test counts alone do not supply their dispositions.
+
+The 21-row behavior matrix is reconciled with S2's analytic/invariant checks,
+S3's strategy partitions and S4's byte/freshness/role/stock/occupancy misuse
+witnesses. BT-01/02's native identity and Manual-tab boundaries are controlled
+through installed imports and XML references; BT-03 and BT-15/16/20 preserve the
+separation of source, motion, stock and external execution evidence. BT-04..13
+and BT-17..19 retain the explicit S2/S3 numerical and strategy limits; S4 closes
+their execution misuse portions. BT-14 controls supplied-candidate ranking,
+not automatic search. BT-21 remains an unimplemented extension, not an accepted
+behavior. BR-5-003 adds a fault-sensitive fresh-checkout check of retained-stock
+and ordered-output behavior previously available only with local native files.
+
+**Engineering judgment:** native entity/XML owners and compatibility aliases
+form a usable interchange boundary; document-independent plans and explicit
+native/output adapters allow the demonstrated generated/hybrid jobs. The inlay
+orchestration exception is disclosed. Reusable planar/stock/motion values are
+adequately controlled within the stated models, but GEOS nominal geometry is
+not a universal certified error enclosure. Independent analytic section, volume,
+contact and mutation witnesses support the named mathematical guarantees;
+generator/decoder/replay agreement alone is insufficient. Public APIs correctly
+distinguish unsupported, partial and infeasible outcomes in reviewed domains.
+
+Residual blind spots do not silently expand acceptance: primary/multiple Region-V
+ordered stock, general cleared-union/helical access, automatic tool-bundle search,
+smoothing/overlap budgets, unequal design/tool V angles, general surface finish
+coverage, non-box fixtures and helix/transition body occupancy remain bounded
+or rejected as documented. Controller execution, physical setup and material fit
+remain unassessed. Reopen these only for the named consumers and evidence in
+[backlog 6](PROGRESS.md#remaining-backlog-in-order). Delivery of the reviewed
+foundation outranks another nominal job or nearby geometric edge case.
+
+### Session 5 verification and delivery
+
+Local task material is under `output/branch-review-session5-20260929-01/`;
+durable conclusions do not depend on that directory surviving. The local helpers
+are disposable verification tooling, not another supported product API.
+
+Completed package/focused gates:
+
+- `uv build --out-dir output/branch-review-session5-20260929-01/dist-final`:
+  wheel and sdist built. All 84 runtime Python files (81 modern, 3 legacy) are
+  present in both archives, together with MCP resources and declared metadata.
+  All 92 final wheel member contents are byte-identical to the initial wheel used
+  for full regression. The final sdist contains all 101 tracked test/fixture files
+  plus the one demo helper, each byte-equal to the repaired source. No ignored
+  output/cache material is included. Final SHA-256: wheel
+  `e6f8ab4e7df21c32d4d2e9d9a4656336fd47dfcc4322af49175559a50ce7f4f9`;
+  sdist `da34935dc00ad80708135d408512f5946c75aebb91b1fd4db93d3b732a4f6625`.
+- Clean `uv venv --python <version> <env>` and
+  `uv pip install --python <env>/Scripts/python.exe <wheel>[planar,mcp]`
+  installs succeeded for all five interpreters. Two independent Python 3.9
+  sdist installations (initial and final archive) also succeeded with `[planar]`.
+  Installed smoke checks assert environment-owned imports with checkout source
+  excluded, all available modern-module bytes/imports, both package roots,
+  project construction, metadata and a native Rect XML round trip.
+- `.venv/Scripts/python.exe output/branch-review-session5-20260929-01/final_package_checks.py`
+  ran the final 21 changed/dependent tests in every wheel environment and the
+  original sdist environment: zero failures/errors. Python 3.10-3.13 each skip
+  only the one byte-bound native B/C observation. Python 3.9 skips that observation
+  plus nine named MCP-dependent tests; the pure parity/model checks run.
+  `launch_matrix.py sdist-final-install --focused` independently repeats the
+  same 21-test result against the final sdist installation.
+- Base-only wheel, Python 3.9, NumPy 2.0.2 and no Shapely/MCP: all 18 selected
+  analytic/native/XML/import-order tests pass without skips. Analytic circle
+  centers succeed, normalization reports `unsupported`, and a backend-dependent
+  ordered CAM import fails specifically for missing `shapely`.
+- Final checkout changes: `-m unittest tests.test_tabbed_cutout
+  tests.test_mcp_protocol.ConsumerAgentTemplateTests tests.test_mcp_mop_parity
+  tests.test_mcp_documents.DocumentTests.test_schema_asset_and_strict_values -q`
+  passes 12 tests, including actual B/C observation. The subsequent optional-import
+  repair is covered by `-m unittest tests.test_mcp_cross_document
+  tests.test_mcp_mop_parity tests.test_mcp_acceptance_verifier -q`: 12 pass.
+  The two changed `tests.test_polygon_rest.PolygonRestTests` methods
+  (`test_independent_area_limits_and_original_boundary` and
+  `test_source_motion_and_narrow_access_rejections`) also pass on the final
+  checkout, in 30.467 seconds.
+  The controlled `_bridges` bypass produces exactly two expected assertion
+  failures and zero errors, proving removed/misplaced-gap test sensitivity.
+- `collect_final.py` discovers 572 final test IDs without import errors on each
+  installed configuration. Complete diff/ledger reconciliation accounts for
+  170 branch-plus-session paths, with no uncovered or obsolete entries; six
+  session links/headings resolve. `MANIFEST.in` was explicitly inspected as an
+  untracked candidate. Compile/import smoke and both working/branch whitespace
+  checks pass. Final branch status is recorded below.
+
+| Install | Python | NumPy | Shapely / GEOS | MCP |
+| --- | --- | --- | --- | --- |
+| Wheel | 3.9.13 | 2.0.2 | 2.0.7 / 3.11.4 | Absent by metadata marker |
+| Wheel | 3.10.11 | 2.2.6 | 2.1.2 / 3.13.1 | 2.2.0 |
+| Wheel | 3.11.9 | 2.4.6 | 2.1.2 / 3.13.1 | 2.2.0 |
+| Wheel | 3.12.10 | 2.5.3 | 2.1.2 / 3.13.1 | 2.2.0 |
+| Wheel / checkout | 3.13.5 | 2.5.3 | 2.1.2 / 3.13.1 | 2.2.0 |
+| Sdist | 3.9.13 | 2.0.2 | 2.0.7 / 3.11.4 | Absent |
+
+Full checkout discovery (`.venv/Scripts/python.exe -m unittest discover -s tests
+-v`) ran 571 tests: one MCP subprocess startup timeout and one Windows symlink
+skip. A subsequent MCP discovery hit the same ten-second startup deadline in a
+different test. Both affected cases then passed in isolation, and the final full
+MCP discovery (`-m unittest discover -s tests -p test_mcp*.py -v`) passed all 89
+tests with only the existing Windows skip, in 133.163 seconds. Neither the
+deadline nor runtime code was changed. This resolves the observed assertion
+failures for this tree, but does not establish a startup-latency guarantee.
+
+Installed full runs on Python 3.10, 3.11, 3.12 and 3.13 each ran 571 tests;
+their three initial errors were the missing copied demo helper and the two
+working-directory-relative polygon fixture reads. Final 21-test reruns repair
+those errors and cover every changed test. Deterministic reconciliation against
+all 572 final discovered test IDs gives **569 passes, three explicit skips,
+zero missing IDs and zero failures on each interpreter**. The skips are the
+retained local M1 post observation, local B/C observation and Windows symlink
+privilege; synthetic replacements and junction/reparse checks run. No full-run
+command is retroactively described as green: this is combined evidence from
+unchanged-runtime full runs and final affected-test reruns. The original long
+elapsed times span interruptions and are not performance benchmarks.
+
+The local harness initially required an `__init__.py` for its namespace-style
+test snapshot and attempted to JSON-serialize skipped TestCase objects after
+test completion; those reporting/setup errors were corrected. Logs retain the
+failed attempts. A usage-limit failure in automatic approval review interrupted
+a later collection command; after the user requested continuation, approval and
+collection succeeded. It was not an unsafe-action rejection.
+
+**Incomplete Python 3.9 gate (BR-5-006):** both original wheel/sdist processes
+were gone on resumption, and their logs stop inside
+`CurvedRestTests.test_mixed_and_reflected_frame`, with no unittest summary.
+The annulus, constructed-post/tamper, narrow-access and helical-volume tests
+had completed successfully. Their interrupted wall times do not prove a hang
+or establish a performance threshold. A bounded recovery on each installation
+selected the 517 final IDs without completed passing/skipped evidence and put
+the expensive curved-rest class last. Each recovery exited 124 at its explicit
+300-second diagnostic deadline, after 39 further tests completed. The deadline
+is a session diagnostic limit, not a product requirement or unittest failure.
+Stacks show active Shapely distance calculations in `v_region.verify` through
+M4/M5 output auditing. Earlier 60/90-second diagnostic probes showed active
+`polygon_rest.generate` predicates/distances; a disposable prepared-geometry
+experiment also did not finish within its bound and establishes no optimization
+or equivalent-output claim. Runtime and dependency declarations remain unchanged.
+
+| Final-ID coverage on Python 3.9 | Passed | Explicit skips | Assertion/errors observed | Still unverified |
+| --- | ---: | ---: | ---: | ---: |
+| Wheel, combining interrupted full run, final focused run and recovery | 84 | 10 | 0 | 478 |
+| Sdist, combining interrupted original install, final focused run and recovery against final install | 84 | 10 | 0 | 478 |
+
+The ten completed skips are the B/C native observation and nine MCP-dependent
+focused cases. Pending IDs are not skips. Package smoke, absent-backend behavior
+and the final 21-test reruns pass on 3.9; they do not replace full regression.
+Local `recovery-coverage.json` contains the exact missing IDs, while original,
+focused and recovery logs remain separate. `reconcile_results.py 3.10 3.11 3.12
+3.13` validates the complete newer-interpreter evidence;
+`reconcile_recovery.py` reports the incomplete older-interpreter evidence without
+converting it into a pass.
+
+**Remedy and reopening criterion:** follow the clean-install/test-only-snapshot
+procedure in [DEVELOPMENT](DEVELOPMENT.md#packaging-and-supported-python-validation)
+on Python 3.9.13, NumPy 2.0.2, Shapely 2.0.7 / GEOS 3.11.4, with no MCP. Complete
+all final test IDs against both wheel and sdist; existing partial results may be
+reused only where runtime/test bytes and dependencies match. The first unresolved
+curved-rest case is `test_curved_rest.CurvedRestTests.test_mixed_and_reflected_frame`;
+its later source-freshness case is also outstanding. Recovery reaches the M5
+portability changer/handoff tests before its deadline; subsequent discovery
+remains unverified on 3.9. Profile these concrete consumers if computation prevents
+completion. Any optimization needs unchanged mathematical/mutation evidence and
+renewed affected package checks; neither removing coverage nor silently raising
+the supported Python minimum closes this gate.
+
+Final repository gates: target `main` remains
+`18dbb9950f3065e95df0ee645a25361d45e63b30`, reviewed HEAD remains
+`4f3ab98252276de741350b5cb2b333c373a83c8a`, with 94 branch commits and `main`
+an ancestor. The exact committed diff plus session repairs are covered by the
+170-path ledger. `git diff --check main...HEAD`, `git diff --check` and compileall
+pass. `MANIFEST.in` is the only untracked candidate and was inspected separately;
+11 tracked files are modified. No ignored `.cb`/`.nc` files occur outside
+`output/`; the protected pytest cache contains only ordinary cache metadata.
+All historical fixture bytes are unchanged. No staging, commit, merge or cleanup
+was performed, and no background verification process remains pending.
+
+**Delivery decision: hold.** The review, bounded repairs and fixture authorization
+are recorded, but integrated engineering acceptance is withheld for BR-5-006.
+The branch is neither ready to commit as a completed session-5 delivery nor
+merge-ready. The required supported-version gate and uncommitted changes remain;
+after verification and the user's commit, rerun exact committed-branch gates.
+No new user/CamBam/controller observation would close the missing automated gate.
+Existing offline job acceptance and its source-byte boundaries remain unchanged;
+controller runtime and physical machining remain unassessed.
+
+The highest-impact next increment is completing the Python 3.9 installed regression
+and resolving any measured cost preventing it, ahead of the deferred machining
+extensions. A fresh session is a useful breakpoint for that distinct investigation:
+the evidence, unresolved gate and remedy are durable, with no pending user choice
+or live process. Suggested eventual commit after closure:
+`test: close integrated regression and package delivery review`.
+Continue from the [branch review queue](PROGRESS.md#branch-review-session-queue).

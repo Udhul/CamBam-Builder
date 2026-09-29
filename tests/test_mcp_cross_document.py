@@ -7,7 +7,6 @@ revision semantics, failure addressing, staged-target limits, ledger replay,
 cancellation and both same- and opposing-direction serialization.
 """
 
-import anyio
 from importlib.util import find_spec
 import json
 from pathlib import Path
@@ -21,6 +20,7 @@ from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 
 if find_spec("mcp") is not None:
+    import anyio
     from cambam_builder.mcp_adapter.service import DocumentService
     from cambam_builder.mcp_adapter.schema import OUTPUTS, TOOLS
 else:  # pragma: no cover - exercised only in a base-library environment

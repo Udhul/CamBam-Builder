@@ -17,7 +17,7 @@ Read this map after the root README; follow only the relevant owner.
 | Reusable consuming-project agent policy | [consumer_AGENTS.template.md](../cambam_builder/mcp_adapter/consumer_AGENTS.template.md) | Copy-and-customize bootstrap plus daily natural-language CamBam collaboration workflow; not repository development policy |
 | Region and all-shape Z-coordinate parity | [SHAPE_PARITY_PLAN.md](SHAPE_PARITY_PLAN.md) | Independent upstream feature support; priority stays in PROGRESS |
 | Rest machining, V-cutter and shared CAM execution design | [REST_MACHINING_PLAN.md](REST_MACHINING_PLAN.md) | Active core/output proposal, native versus headless workflows, edit invalidation, open decisions, research and acceptance; priority stays in PROGRESS |
-| Package metadata and dependency declarations | `pyproject.toml` | Sole source for published metadata and direct dependencies |
+| Package metadata, dependencies and source-archive contents | `pyproject.toml`, `MANIFEST.in` | `pyproject.toml` owns published metadata/direct dependencies; `MANIFEST.in` includes the existing regression fixture data in the sdist |
 | Executable API behavior | `cambam_builder/` and future regression tests | Actual implementation; document divergences from target explicitly |
 | License | [LICENSE](../LICENSE) | MIT terms; does not authorize external processing of user data |
 

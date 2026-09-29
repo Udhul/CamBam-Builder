@@ -2,6 +2,7 @@
 import copy
 import hashlib
 from importlib.util import find_spec
+from importlib.resources import files
 import json
 import os
 import re
@@ -630,7 +631,7 @@ class DocumentTests(unittest.TestCase):
         self.run_async(test)
 
     def test_schema_asset_and_strict_values(self):
-        schema_asset = Path(__file__).parents[1] / "cambam_builder/mcp_adapter/contract_v1.schema.json"
+        schema_asset = files("cambam_builder.mcp_adapter").joinpath("contract_v1.schema.json")
         self.assertTrue(schema_asset.is_file())
         self.assertEqual(CONTRACT, json.loads(schema_asset.read_text(encoding="utf-8")))
 

@@ -3,7 +3,8 @@
 import json
 import unittest
 from dataclasses import fields
-from pathlib import Path
+from importlib.resources import files
+from importlib.util import find_spec
 
 from cambam_builder.cambam_entities import (
     Arc,
@@ -22,7 +23,10 @@ from cambam_builder.cambam_entities import (
     Rect,
     Text,
 )
-from cambam_builder.mcp_adapter.service import DocumentService
+if find_spec("mcp") is not None:
+    from cambam_builder.mcp_adapter.service import DocumentService
+else:
+    DocumentService = None
 from cambam_builder.region import Region
 
 
@@ -121,10 +125,7 @@ PARITY = {
 class McpMopParityTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        schema_path = (
-            Path(__file__).parents[1]
-            / "cambam_builder" / "mcp_adapter" / "contract_v1.schema.json"
-        )
+        schema_path = files("cambam_builder.mcp_adapter").joinpath("contract_v1.schema.json")
         cls.definitions = json.loads(schema_path.read_text(encoding="utf-8"))["$defs"]
 
     def test_every_modeled_field_has_one_author_and_inspection_disposition(self):
@@ -184,6 +185,7 @@ class McpMopParityTests(unittest.TestCase):
                     properties.add(target)
                 self.assertEqual(contract["author"], properties)
 
+    @unittest.skipIf(DocumentService is None, "Install .[mcp] for adapter checks")
     def test_mcp_has_target_mutation_but_no_parameter_mutation(self):
         mop_edits = {
             name for name in DocumentService.EDIT_TOOLS
@@ -198,6 +200,7 @@ class McpMopParityTests(unittest.TestCase):
             mop_edits,
         )
 
+    @unittest.skipIf(DocumentService is None, "Install .[mcp] for adapter checks")
     def test_target_kind_matrix_matches_service_rules(self):
         samples = {
             "rect": Rect(),
