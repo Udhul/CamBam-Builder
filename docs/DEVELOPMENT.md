@@ -1830,6 +1830,50 @@ not change native document emission. The
 [implemented contract](structure_spec.md#reusable-ordered-job-output-and-verification)
 names the supported geometry and transition limits.
 
+### Standalone Region-V ordered stock verification
+
+Run the synthetic first consumer, independent capsule witness and misuse tests:
+
+```powershell
+& $ProjectPython -m unittest tests.test_standalone_v tests.test_v_region tests.test_ordered_job tests.test_ordered_dialects tests.test_execution_evidence tests.test_native_v_hybrid -v
+```
+
+The first consumer is the radius-9 mm annulus with a radius-2 mm protected hole
+and 2 mm cap. Pointed/flat/rounded tools and raster/offset fills pass independently
+decoded UCCNC and Grbl checks. Tests generate all inputs; no retained session
+artifact or CamBam post is required. The hand-authored capsule checks section and
+volume bounds against analytic values. Short flutes retain partial residual;
+infeasible empty plans refuse emission. Matching motion with a protected-boundary
+violation, stale source/revision/setup, altered feed/depth/XY and forged bundle
+reports must fail. See the [implemented contract](structure_spec.md#standalone-region-v-virgin-stock-contract).
+
+Minimal public construction, with caller feeds and virgin stock explicitly set:
+
+```python
+from cambam_builder.cam_core import ordered_job, v_region
+from cambam_builder.integrations.ordered_output import emit
+
+target = v_region.VTarget.polygon(
+    "square-source", ((0, 0), (6, 0), (6, 6), (0, 6)), (), 1)
+plan = v_region.plan(target, v_region.VProfile("pointed", 90, 0, 3, 2))
+start = (-2, -2, plan.safe_z)
+stage = ordered_job.Stage(
+    "primary-v", "T41",
+    tuple(ordered_job.JobMove(m.role, m.start, m.end,
+                             0 if m.role == "rapid" else 100)
+          for m in v_region.complete_motion(plan, start)),
+    11000, v_plan=plan, source_revision=plan.fingerprint)
+job = ordered_job.Job(target.source_id, (stage,), start, stock_present=True)
+programs, report = emit(job, "uccnc")
+assert report["stock_access_residual"]["initial_stock"] == "virgin"
+assert report["stock_access_residual"]["plan_status"] == "partial"
+```
+
+This is offline geometric acceptance. Full discovery and the installed 3.12/3.13
+package matrix remain required for changes to the shared verifier. Runtime and
+physical setup are separately unevaluated; no manual validation adds evidence
+to the synthetic mathematical claims.
+
 ### Native posted predecessor and generated V cleanup
 
 The prepared local fixture is
@@ -2341,10 +2385,15 @@ and lower-level calls:
 & $ProjectPython -m unittest discover -s tests -p 'test_mcp_*.py' -v
 ```
 
-Shared parser, replay or verifier changes also require full discovery. Native
+Shared parser, replay or verifier changes also require full discovery. Historical
+hash-bound fixtures use scoped `.gitattributes`: optimizer source/posts, RC01
+posts and their pinned JSON metadata are CRLF; generated RC01 XML sources are LF.
+Preserve those manifest-bound
+bytes regardless of `core.autocrlf`; do not rehash changed fixtures to bypass
+freshness. Native
 Default posts may use CRLF/LF; strict controller outputs and canonical direct
 reference files retain their exact byte grammar. The ordered verifier version
-`ordered-job-v2-evidence-boundaries` requires fresh bundles and recomputed
+`ordered-job-v3-standalone-region-v` requires fresh bundles and recomputed
 reports. Existing source/post observation does not need repeating when its bytes
 and claimed behavior are unchanged. See the
 [session 4 evidence](REVIEW.md#branch-review-session-4---2026-09-29).

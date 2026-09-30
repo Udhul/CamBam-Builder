@@ -15,22 +15,31 @@ their recorded offline scope. The user merged reviewed commit `199f1f4` into
 3.13 remains the development default. The dated entries below preserve earlier
 checkpoints; this queue owns the current execution order.
 
-1. **Next feature task, planned; implementation not started:** standalone Region-V
-   ordered stock verification. Planning already accepts virgin stock, but the
-   ordered verifier requires one cylindrical predecessor. Close that integration
-   gap through a reusable one-V-stage workflow, using the existing annular example
-   as the first complete job and independent boundary/misuse cases for breadth.
-   This is one substantial capability task, potentially spanning sessions;
-   it is not a reopening of the completed epic. The
+1. **Completed; accepted by engineering 2026-09-30; ready to commit:** standalone
+   Region-V ordered stock verification. One V stage now emits and independently
+   decodes virgin-stock/access/residual evidence using existing Stage/Job
+   constructors, with pointed/flat/rounded profiles and raster/offset fills.
+   Fourteen synthetic regressions include independent annulus/capsule witnesses,
+   stale/forged evidence, short flutes, complete rapid travel and protected sweeps.
+   Python 3.12/3.13 installed full discovery passed 586 tests each; a checkout MCP
+   startup timeout did not reproduce in its isolated 11-test module. Fresh source
+   installation and base-only checks also passed. The
    [implementation packet](REST_MACHINING_PLAN.md#standalone-region-v-ordered-stock-verification)
-   defines owners, supported scope, acceptance and the stopping condition.
-2. **Following hardening task, planned:** repeatable regression/package execution
+   is closed; [evidence, exact checks and limits](REVIEW.md#standalone-region-v-ordered-stock-verification---2026-09-30)
+   remain in their owner. No manual observation is required for this offline scope;
+   stock/setup are caller declarations, and runtime/physical acceptance is separate.
+   Multiple V stages and other unsupported evaluator mixes remain deferred.
+2. **Next task, planned:** repeatable regression/package execution
    and evidence reporting. Session 5 exposed costly manual orchestration and
    interrupted runs. Provide repeatable commands, timings, explicit incomplete
    results and safe evidence reuse under the
    [planned hardening contract](DEVELOPMENT.md#planned-regression-execution-and-reporting-hardening).
-   Measure geometry cost before choosing an optimization; no new CI service or
-   numerical change is selected by this plan.
+   This increment again required interrupted-run reconciliation and an isolated
+   startup-timeout rerun, so this maintenance outcome matters before another CAM
+   capability. Measure geometry cost before choosing an optimization; no new CI
+   service or numerical change is selected by this plan. This is a good fresh-session
+   breakpoint: the V contract, evidence and remaining limits are persisted, and
+   the next scope needs no unsaved decisions or pending results.
 3. **Conditional capability follow-ups:** multiple V stages and broader predecessor
    combinations need a named combined-tool job; rest smoothing/air-cut reduction
    need measurable finish or efficiency goals; automatic tool selection needs
@@ -339,18 +348,20 @@ Repair demonstrated defects; assess missing foundations against supported claims
 and intended consumers, and defer justified extensions with reopening criteria
 in the existing backlog. Reference-job success does not establish general
 framework support. [Planning evidence](REVIEW.md#branch-review-programme-planning---2026-09-27).
-Session 1 requires no new CamBam or physical observation: the repaired identity
+Session 1 required no new CamBam or physical observation: the repaired identity
 and constructor boundaries are directly testable offline. Existing native/post
 acceptance remains limited to its unchanged source bytes. Primary V planning
-does not require a predecessor, while ordered Region-V stock evidence currently
-does; session 3 assessed and retained that explicit composition limit. Session 2 needs no new external
+did not require a predecessor, while ordered Region-V stock evidence then
+did; session 3 assessed and retained that composition limit. The subsequent
+standalone packet removes it; its current acceptance is in the post-merge queue.
+Session 2 needs no new external
 observation: its mathematical defects have independent offline witnesses. Prior
 numerical reports from affected owners must be recomputed; unchanged native
 source/post observations retain their original byte scope. Session 3 also needs
 no user observation: independent geometric/policy witnesses close its repairs,
 and nine nominal V plan fingerprints remain unchanged against the reviewed HEAD.
 Smoothing/overlap budgets, automatic bundle/cost search, independent V design
-angles and primary/multiple-V decoded stock remain qualified backlog 6 gaps,
+angles and multiple-V decoded stock remain qualified backlog 6 gaps,
 alongside conservative helical/union access and broader geometric foundations.
 Reopen them for the named consumers/requirements recorded there. Session 4 closes
 the bounded execution/evidence review, including low-level bypasses and mutable
@@ -2039,9 +2050,8 @@ reopening criteria; historical milestones do not create new active work.
    workflow.
 
    **Remaining strategy extensions after the completed delivery review:**
-   primary Region-V planning and analysis are available, but its ordered decoded
-   stock evaluator requires one cylindrical predecessor. Standalone Region-V
-   verification is now selected in the [post-merge queue](#post-merge-task-queue).
+   standalone Region-V ordered verification is implemented; its completion and
+   acceptance state is owned by the [post-merge queue](#post-merge-task-queue).
    Reopen multi-stage V stock composition for a named composed output job;
    acceptance must decode actual paths and establish virgin-entry, protected
    sweep and residual evidence without inventing a roughing stage. General

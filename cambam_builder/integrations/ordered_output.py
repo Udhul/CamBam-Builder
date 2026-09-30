@@ -85,7 +85,11 @@ def audit_files(job, dialect, files, *, effects=None,
                                           job.translation_xyz_mm))
     decoded = ordered_dialects.decode(files, dialect, initial_work_tip=initial)
     for stage, read in zip(job.stages, decoded.stages):
-        for move in read.transition_moves:
+        travel = list(read.transition_moves)
+        if job.stock_present and stage.v_plan is not None:
+            travel.extend(move for intended, move in zip(stage.motions, read.moves)
+                          if intended.role == "rapid")
+        for move in travel:
             physical = tuple(
                 (point[0] - job.translation_xyz_mm[0],
                  point[1] - job.translation_xyz_mm[1],

@@ -1,5 +1,197 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Standalone Region-V ordered stock verification - 2026-09-30
+
+**Accepted by engineering for the bounded offline contract; ready to commit.**
+No manual observation is needed to close this mathematical/output increment.
+Controller runtime and physical setup retain their separate unevaluated gates.
+
+The public `Stage`/`Job` route now audits one Region-V stage against declared
+virgin stock without a synthetic predecessor. The mathematical owners remain
+`v_region.verify/section_report/volume_bounds`; `ordered_job.audit` rebuilds paths
+from decoded coordinates before invoking them. Source ID and plan revision are
+mandatory and independently checked. Stockless jobs retain `not_evaluated`;
+multiple V stages and other unsupported mixes retain a refusal. The existing
+endmill-then-V route retains its decoded prefix. The implemented contract is in
+[structure_spec](structure_spec.md#standalone-region-v-virgin-stock-contract),
+and reproduction commands/public construction are in
+[DEVELOPMENT](DEVELOPMENT.md#standalone-region-v-ordered-stock-verification).
+Verifier `ordered-job-v3-standalone-region-v` invalidates earlier bundles.
+
+The first consumer reuses the M3 annulus: source ID `M2-annulus`, outer radius
+9 mm, clockwise protected hole radius 2 mm, cap 2 mm, 0.001 mm arc sagitta.
+Safe/outer areas are 241.804517/241.942781 mm2. Target fingerprint is
+`e56e42de21d1c06929ab26d4aa9309d150424942a9674db5f180f5d24eeff54c`.
+Pointed 90-degree/zero tip,
+flat 90-degree/0.25 mm tip and rounded 60-degree/0.5 mm tip profiles all have
+maximum radius 4 mm and cutting length 3 mm. Raster uses the original defaults:
+1 mm stepover/XY sample, 0.01 mm margin, safe Z=2 mm. The additional offset probe
+uses 2.5 mm stepover/2 mm XY sample with the same margin/safe height. Job start is
+(-2,-2,2), tool T41, 11000 RPM, 100 mm/min for entry/cut/retract, zero correction,
+program frame `program`, G54 and zero translation. Both independently decoded
+four-decimal UCCNC and Grbl outputs give identical stock bounds. All plans remain
+`partial`; pass does not claim complete removal.
+
+| Fill/profile | Paths/moves | Residual section at 1 mm, lower-upper mm2 | Residual volume, lower-upper mm3 |
+| --- | --- | --- | --- |
+| Raster/pointed | 24/392 | 1.230321-1.534144 | 7.138527-81.797671 |
+| Raster/flat | 24/373 | 1.216527-1.518590 | 0-58.182877 |
+| Raster/rounded | 24/380 | 1.287938-1.523959 | 1.738815-75.484964 |
+| Offset/pointed | 4/84 | 40.137819-40.332256 | 50.244576-135.304823 |
+| Offset/flat | 4/85 | 5.715897-5.932879 | 17.278068-89.433018 |
+| Offset/rounded | 4/83 | 86.711492-86.905812 | 144.446513-214.000183 |
+
+Initial section bounds are 172.673198-172.832329 mm2 for the 90-degree tools and
+201.891433-202.041725 mm2 for the 60-degree tool. Independent section values
+`pi*((9-t*tan(angle/2))**2-(2+t*tan(angle/2))**2)` lie inside those bounds at
+t=1 mm. Initial volume bounds are 327.750872-363.266008 mm3 and
+393.507135-414.362394 mm3 respectively. All six decoded outer-sweep overcut
+areas at the reported section are zero. Eight slabs deliberately give broad
+volume intervals; a zero lower bound is uncertainty, not a zero-residual claim.
+
+The independent ordinary target is a 10x10 mm square, cap 1 mm, with a 90-degree
+pointed cutter moving from (4,5,-1) to (6,5,-1), safe Z=3 mm and margin 0.001 mm.
+The initial analytic volume `100-20+4/3 = 81.333333` mm3 is enclosed by
+79.083319-83.599568 mm3. Subtracting the swept capsule volume `2+pi/3` gives
+78.286136 mm3 residual, enclosed by 75.580654-80.990890 mm3. At the exact cap
+the pointed cutter removes zero section area: both initial and final intervals
+enclose 64 mm2. An initial test incorrectly demanded strict improvement there;
+that assertion was corrected, preserving the physical witness. Short-flute
+tests similarly enclose the untouched 8x8 mm section below a 0.5 mm flute.
+Holed annular and narrow-connected/satellite geometries exercise both fills;
+shallow cap 0.5 mm reports `section_depth_mm=0.5`; no fitting tool returns an
+infeasible empty plan and refuses executable construction.
+
+Misuse tests reject stale source/revision even with stock disabled, changed
+setup/source bundles, altered feed/depth/XY and forged residual evidence. A
+0.00001 mm endpoint edit within matching tolerance changes both the decoded V
+fingerprint and residual. A stronger analytic witness has a valid 1 mm-deep
+pointed path beginning at x=1.00001 mm with margin 0.000011 mm. An otherwise
+matching 0.00002 mm decoded shift to x=0.99999 crosses the x=0 boundary by
+0.00001 mm. Motion equivalence passes; both value-level and complete-byte stock
+audits reject the decoded protected sweep. A task-local fault probe substitutes
+the planned V plan for the decoded reconstruction: that regression fails with
+`ValueError not raised`. This detects the plausible planned-stock bypass,
+independently of generator/decoder agreement.
+
+Lead review also found that manually authored plans could use negative or NaN
+clearance margins to make the old protected-boundary predicate vacuous. Validation
+previously lived only in the planner. The owning `v_region.verify` now requires
+the proper target/profile types, finite positive safe Z/stepover, and the same
+margin minimum (>0.00001 mm) as planning, before any stock computation. Both
+direct verify and otherwise consistent source/stage/byte audits reject negative,
+zero and NaN margins, infinite safe height and negative stepover. The repaired
+standalone and mathematical owner suite passed 24 tests in 28.291 seconds. Since
+this repair changes the shared verifier, earlier broad evidence is superseded
+by fresh final-tree discovery and installed runs rather than silently reused.
+
+The same review found that a forged V `JobMove` with G2/G3 retained its arc during
+motion comparison but lost the center when reconstructed as a linear `VMotion`.
+The V stock gate now explicitly rejects arcs. A valid 1 mm-deep chord from
+(1.1,1.1) to (4.9,1.1) fits a 6x6 mm Region; replacing it with a G3 semicircle
+centered at (3,1.1), radius 1.9 mm, reaches Y=-0.8 outside the target. Both
+UCCNC/Grbl motion comparisons accept the faithfully decoded arc, and both stock
+audits refuse it as unsupported linear-V motion. Existing cylindrical arc
+replay remains supported. Controls-only broad reruns were deliberately interrupted
+when this defect was found; their logs are retained as incomplete and cannot
+establish final-tree acceptance.
+
+Independent read-only review identified a further complete-motion gap: the final
+return was excluded from internal V reconstruction, and an endpoint within
+matching tolerance could round onto or below stock. All decoded V rapids now
+receive continuous straight-travel validation at the value-level stock gate;
+external approach/return links must remain rapid. The byte audit also applies
+the declared flat fixture top in physical/program coordinates to V rapids.
+The regression uses a 10x10 mm outer square, protected 4..6 mm square hole,
+flat 90-degree/0.25 mm tip and initial tip (4,5,0.00004). A valid six-decimal
+UCCNC return is changed to Z=-0.00001, differing by only 0.00005 mm; motion
+matching succeeds but both audits reject stock contact. The Grbl dialect reads
+the same negative-endpoint attack, while its four-decimal writer (and the default
+UCCNC writer) already round the nominal return to Z=0 and correctly refuse it.
+An initial attempt used six-decimal Grbl output, which that profile explicitly
+does not support; the test now respects the two writer policies. Fixture-plane
+and infeasible-status-with-paths regressions also pass. The reviewer found no
+remaining critical stock false pass within this linear single-V/one-cylinder-V
+scope. Review was read-only, not a claim of tests run by the reviewer.
+
+Final validation used Python 3.12.10/3.13.5, NumPy 2.5.3, Shapely 2.1.2,
+GEOS 3.13.1 and MCP 2.2.0. Runtime and test bytes were frozen before the final
+build/discovery; only documentation and the fixture checkout policy changed
+afterward, leaving all exercised fixture bytes unchanged.
+
+| Final check | Exact result |
+| --- | --- |
+| `.venv/Scripts/python.exe -m unittest tests.test_standalone_v -v` | 14 passed, 12.712 s; `standalone-closure.log` |
+| `.venv/Scripts/python.exe -m unittest discover -s tests -v` | 586 run, one MCP startup timeout and one symlink skip, 1378.612 s; the original failed result is retained |
+| `.venv/Scripts/python.exe -m unittest tests.test_mcp_protocol -v` | All 11 passed in isolation, 30.775 s, including the timed-out test; no runtime/test change between runs |
+| Clean installed wheel, Python 3.12 full discovery | 586 run, zero failures/errors, three named skips, 1440.806 s |
+| Clean installed wheel, Python 3.13 full discovery | 586 run, zero failures/errors, three named skips, 1397.177 s |
+| Independently installed sdist, Python 3.12 | All 49 selected affected/fixture/protocol-resource checks passed, 175.793 s |
+| Base-only wheel, Python 3.12 | All 18 analytic/native identity/XML checks passed, 12.054 s; no Shapely/MCP, backend normalization unsupported and CAM import refused for missing Shapely |
+| Archive/provenance checks | Both archives inspected; 103 test/fixture/helper files byte-compared; all modern/legacy source and packaged MCP assets checked; isolated installed imports and native Rect XML smoke passed |
+| Git checkout byte policy | 38 comparisons pass under `core.autocrlf=true/false`, without staging or changing Git blobs |
+| Syntax/import/hygiene | `compileall -q cambam_builder legacy_cambam_builder`, CBProject smoke, new owner anchors, untracked text whitespace and `git diff --check` pass; no ignored CAM files found under tests/demos |
+
+The checkout startup timeout occurred before protocol initialization in
+`MCPProtocolTests.test_missing_metadata_and_legacy_initialize_are_rejected`.
+Both installed full runs passed that test, and the source protocol module passed
+after parallel discovery ended. Load-related startup flakiness is an inference,
+not a measured cause. Engineering accepts the combined final-tree coverage;
+the failed full run is not relabeled green. Reopen the protocol defect if it
+reproduces in isolation or the server exits/errors before startup. The next
+regression/reporting task owns deliberate reruns, timings and incomplete results.
+Installed skips are Windows symlink privilege (junction/reparse checks still run),
+retained M1 user post unavailable, and accepted B/C one-off tabbed inputs absent.
+The latter two are observation boundaries; synthetic regressions ran. The source
+checkout exercised its retained observations and skipped only symlink privilege.
+
+The wheel/sdist runtime/test bytes and numerical dependencies match. Complete
+wheel regression evidence therefore also covers the source install's unchanged
+behavior, with fresh independent installation/import/asset/affected checks.
+Final archive SHA-256 values are
+`6282ebd00588a7ca6c30623a4e509656b1aa83b1e74bf3cea764294bb7c99234`
+(wheel) and `7205553f0fb105a7a8977d071bcf923b99785c5a9ec32b2c9ec7c234a102a646`
+(sdist). Raster pointed annulus UCCNC/Grbl program hashes are
+`d560afc897a1881ef1c9673d721018ca1b4a1e510fd71ce34449a7d12c423f45`
+and `622525ef4f048944ed52a0b47aa8e562d8b74344add1897a7e1353161495c582`.
+Synthetic bytes and the documented public construction were inspected/rechecked
+under the final verifier; stock values remain those in the table above.
+Earlier pre-repair broad passes and interrupted controls-only runs are
+superseded; their logs remain available as history, not final-tree coverage.
+
+The first shared execution run exposed five stale-source errors in existing
+RC01 byte fixtures. `core.autocrlf=true` changed their generated XML sources to
+CRLF: source SHA-256 was `7d4cd25f1dc8530c6723c2d93df164ed9a7ff73dddb8272fbbae89ed800cb6e0`
+instead of recorded `5e175cab6c77c7a562eb6f15c748713929cfb40e530f8ad9ec89701fbf1d3f78`.
+The required historical policy is LF for RC01 generated XML, CRLF for its actual
+posts, optimizer-corpus sources/posts and the two corpora's pinned JSON metadata.
+For example, the RC01 comparison manifest must retain hash
+`a3c7b17d64a92f1b4bebb6adf9f49b4b49a46817e4f9a8e950f1b0591d30bcb4`,
+not its Git-normalized LF hash `fcfca66d0273ee7658f5f8a49fd1a6f485d5f5b68e17b29b49495db5a59f96ce`.
+Scoped `.gitattributes` now makes those
+checkout bytes reproducible on either autocrlf setting, retaining the existing
+manifest hashes and Git-normalized contents. The first attempted all-LF
+restoration exposed the native posts' CRLF requirement and was corrected before
+the nine stock-authority/optimizer regressions passed (19.351 seconds). No new
+versioned CAM fixture was added. The failed execution log, fault probe, synthetic
+programs, numeric JSON and package logs remain in ignored
+`output/standalone-region-v-20260930-01/`; they are supplementary to these
+durable parameters and assertions.
+
+The exact source/plan/feed/setup and complete-byte matching checks are discrete
+contracts; continuous cutter containment uses analytic profile radii and nominal
+GEOS distances; section/volume intervals depend on documented chord/numeric
+allowances and GEOS Booleans. Output rounding can conservatively refuse a path,
+including an exact initial tip whose first vertical column becomes diagonal
+after rounding; matching tolerance does not relax motion/access checks. Initial
+stock and installed tool length are caller assertions. Physical cutting,
+controller runtime, force/load, chip evacuation and undeclared fixtures remain
+unassessed. Manual validation adds no evidence to the offline mathematical claims.
+Reopen broader geometry or multi-V composition for a named job outside this
+contract; numerical refinements need a measured residual/accuracy requirement.
+The next overall priority remains repeatable regression/package execution and
+reporting, rather than another nominal CAM fixture.
+
 ## Manual-tab cutout and interior V evidence - 2026-09-27
 
 Backlog 6 packet 1 uses the previously accepted, unchanged CamBam Plus 1.0
