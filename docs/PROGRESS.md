@@ -75,7 +75,7 @@ and external-acceptance follow-ups remain separate work.
    [MV01 packet](REST_MACHINING_PLAN.md#multi-stage-region-v-stock-verification-mv01).
    It remains a useful proof; it is now a follow-up rather than the whole
    combined-tool roadmap. No personal machining part is required for either task.
-5. **User-requested capability follow-ups, in recommended development order:**
+5. **Capability follow-ups with illustrative consumers, in recommended development order:**
 
    | Increment | Useful outcome / dependency |
    | --- | --- |
@@ -95,6 +95,12 @@ and external-acceptance follow-ups remain separate work.
    gates. Smoothing, union-cleared access, tool search and broader surfaces are
    explicit requirements within their owning follow-ups rather than forgotten
    conditional notes. Broader fixture/pose/process models retain scoped proofs.
+   These jobs are requirement probes, not workflow-specific core designs or an
+   exhaustive feature catalogue. Apply the
+   [fundamentals-first framework direction](structure_spec.md#framework-direction-and-extension-principles):
+   each packet establishes shared capabilities and challenges reuse with a
+   materially different supported consumer input/composition. New workflows
+   compose those capabilities; genuinely missing semantics extend their owner.
 6. **Conditional external acceptance:** prioritize controller runtime and supervised
    physical validation if the user's next goal is cutting a real part. Select the
    machine/controller, tooling, stock and setup first, then prepare the acceptance
@@ -116,10 +122,15 @@ records implemented-versus-planned evidence, research and the revised priority.
 The previous merged epic remains accepted within its existing scope. The user
 requested planning before further verification; this round changes documentation
 only and does not start DT01, MV01 or another runtime feature.
+The subsequent [fundamentals-first clarification](REVIEW.md#fundamentals-first-roadmap-clarification---2026-09-30)
+preserves this priority and treats every named workflow as a consumer of shared
+capabilities, with reuse challenged beyond its initial example.
 
 **Next agent task:** implement
 [DT01 fixed design target and cutter-independent V verification](REST_MACHINING_PLAN.md#fixed-design-target-and-cutter-independent-v-verification-dt01),
-preserving same-angle callers and independent geometric/output evidence. Stop
+preserving same-angle callers and independent geometric/output evidence. Its
+ornament is a proof consumer of reusable target/tool contracts; also challenge
+those contracts with a different supported opening/topology. Stop
 at its documented acceptance before proceeding to MV01. A fresh implementation
 session is appropriate: expectations, consumers and limits are durable, with no
 pending result or personal-part decision required to begin offline work.

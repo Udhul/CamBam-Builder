@@ -35,6 +35,17 @@ PROGRESS alone owns execution order. The current specification still owns what
 actually works. Synthetic consumers may establish engineering acceptance; a
 personal machining job is not a prerequisite for framework development.
 
+**Fundamentals-first interpretation, clarified 2026-09-30.** The examples below
+are representative consumers and requirement probes, not an exhaustive workflow
+catalogue or proposed workflow-specific architecture. Each follow-up must deliver
+reusable capabilities under the specification's
+[framework direction](structure_spec.md#framework-direction-and-extension-principles).
+The motif/job proves their composition; it does not supply hard-coded shape,
+tool-count, sequencing or integration assumptions. The framework should accommodate
+unlisted workflows through supported capability composition, extending a shared
+contract when genuinely new domain semantics require it. No finite example set
+establishes support for every possible geometry or machine.
+
 ### Expectation-to-capability map
 
 Here, receiver means the cavity; plug/insert means the retained mating component.
@@ -129,6 +140,15 @@ cost. No new geometry dependency or universal voxel/mesh model is selected here.
 The identifiers below name substantial capability outcomes, not a claim that
 implementation has begun or a second priority queue. Each owns its acceptance
 detail here; execution order and live state remain in PROGRESS.
+
+For every packet, identify the shared facts/queries being added and the strategy,
+adapter or caller policy consuming them. Prove one end-to-end slice, then challenge
+its contract with a materially different supported geometry, tool or composition
+before declaring it reusable. Do not build a separate verifier per recipe or
+introduce a universal backend to anticipate every future job. For example, IN01's
+pair is a consumer of body/frame/fit and assembly-stock capabilities; RP01's frieze
+is a consumer of feature/contact/residual queries. Their product-specific choices
+remain outside those shared mechanisms.
 
 - **DT01: fixed design and cutter-independent verification.** The packet below
   proves one capped V target with independently chosen cutter profiles/angles.
@@ -264,6 +284,10 @@ Do not introduce a universal solid backend or a public generic workflow engine.
 - Independently specified design sections/volume remain identical when only the
   candidate cutter changes. Source/geometry/design-angle/depth changes invalidate
   target evidence; cutter changes invalidate the operation without rewriting design.
+- Target construction and verification take caller-owned geometry and parameters,
+  without a motif/recipe discriminator. Exercise a second materially different
+  supported opening/topology through the same fixed-design contract and evaluator;
+  keep its orchestration in tests rather than another core verification route.
 - Verify actual full-profile continuous motion against that fixed target at all
   relevant heights, including flatter/sharper candidate angles and explicit
   rejected overcut. A requested cap does not become a tool-limited shallower design.
@@ -1498,6 +1522,11 @@ iterations, import manually edited documents, or act as a programmatic design-to
 output adapter inside another application. Neither explicit manual reimport nor
 automatic synchronization is a mandatory framework workflow. The earlier binary
 question is superseded by this separation of capability and orchestration.
+
+The 2026-09-30 [illustrative consumers](#product-expectations-and-capability-follow-ups-2026-09-30)
+retain this contract: use domain knowledge to develop composable fundamentals,
+including support for unlisted combinations within declared capabilities. A
+named workflow packet is an acceptance consumer, not a mandatory core sequence.
 
 Expose independently useful operations for document import/inspection, resolved
 job construction, analysis, path generation, verification, result attachment and

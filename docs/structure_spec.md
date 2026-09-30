@@ -124,12 +124,45 @@ behavior compatibility are intended extensions. The user's current machine and
 manual workflow supply test cases, not the framework's capability ceiling.
 
 **Expanded product direction, 2026-09-30; target contracts, not implementation.**
-The user expects pointed/flat/combined V carving, varied cutter angles and depth
-caps, paired decorative inlays with fit/glue/seating allowances and post-assembly
+The user's illustrative consumers include pointed/flat/combined V carving,
+varied cutter angles and depth caps, paired decorative inlays with
+fit/glue/seating allowances and post-assembly
 finishing, mixed endmill/V rest jobs, fully native rest MOP/primitive synthesis,
 and shape-aware tool/path planning for ornaments, friezes and 3D reliefs.
 The [expectation map and follow-up contracts](REST_MACHINING_PLAN.md#product-expectations-and-capability-follow-ups-2026-09-30)
 own detailed product behavior and staged acceptance. PROGRESS owns priority.
+
+**Fundamentals-first clarification, 2026-09-30.** These consumers expose domain
+requirements; they do not enumerate the framework's possible workflows or define
+its module boundaries. Develop reusable machining capabilities that callers can
+compose for anticipated and previously unlisted jobs. Domain expertise should
+inform the fundamentals and reveal missing semantics, rather than accumulate a
+special core implementation for each ornament, inlay or machining recipe.
+
+The enduring facts are design/protected geometry and allowed removal; bodies,
+stock and coordinate/setup relations; cutter and non-cutting body geometry;
+motion, operation effects and dependency order; geometric/contact/residual
+queries with error bounds; process constraints; and provenance/validity evidence.
+Strategies and scheduling policies consume those facts to propose work. Output
+adapters and caller orchestration preserve their meaning at integration boundaries.
+Pair fit, assembly and post-assembly finishing motivate reusable body relations,
+insertion/contact and stock-transform queries. Inlay-specific allowance choices
+belong in a domain consumer, not a conditional branch in generic stock replay.
+
+An increment is accepted for the reusable capability it establishes, demonstrated
+by a meaningful end-to-end consumer. Also exercise a materially different supported
+geometry, tool choice or caller composition that challenges its assumptions;
+varying only a filename is insufficient. Keep sample dimensions, motif topology,
+tool counts and workflow order outside shared contracts. A new consumer that uses
+already-supported fundamentals should compose them without changing core
+verification. When it requires a genuinely missing fact or evaluator, extend
+that owning contract and declare its capability/error limits. Never infer complete
+domain coverage from a finite set of examples.
+
+This direction does not select a universal representation or require a generic
+workflow engine in advance. Establish narrow interfaces from domain semantics
+and demonstrated reuse, while allowing future representations and strategies to
+extend them without imposing today's example sequence on every caller.
 
 The design surface/volume must have its own identity independent of cutter
 profile and independent of derived MOP machining boundaries. Required removal,

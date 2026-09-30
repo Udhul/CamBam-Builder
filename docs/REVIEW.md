@@ -1,5 +1,44 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Fundamentals-first roadmap clarification - 2026-09-30
+
+The user clarified that the ornamental/inlay workflows are examples of the CAM
+domain, not an exhaustive product catalogue or workflow-specific design mandate.
+Initial worktree is clean on `main` at `5ad9a1c`, the committed expectation plan.
+The existing specification already separates path strategies, stock/query
+backends, evidence, adapters and caller orchestration, and requires demonstrated
+reuse. The new packets needed to state how that direction constrains their
+workflow-shaped proof consumers.
+
+The [framework direction](structure_spec.md#framework-direction-and-extension-principles)
+now explicitly owns fundamentals-first design: reusable design/body/frame/tool/
+motion/query/constraint/evidence semantics, with strategies and domain consumers
+composing them. Future consumers using supported fundamentals should not need
+changes to core verification; genuinely missing semantics extend their owning
+contract. Physical access and declared evaluator limits still apply. No universal
+representation or speculative workflow engine is selected.
+
+The [expectation packets](REST_MACHINING_PLAN.md#product-expectations-and-capability-follow-ups-2026-09-30)
+now require identifying the shared capabilities and challenging them with a
+materially different supported geometry, tool or caller composition. DT01 adds
+a second opening/topology through the same evaluator, rather than a special
+ornament verifier. PROGRESS retains DT01 first and makes this acceptance explicit.
+This clarification preserves the requested example outcomes and current bounded
+guarantees. It changes documentation only; no runtime tests or user observation
+are required. Reopen the design boundary if a new consumer needs fixture-specific
+core branching despite using already-supported semantics.
+
+Documentation validation: `.venv/Scripts/python.exe
+output/framework-direction-20260930-204400-754abefd/check_framework_direction.py`
+exits 0. Working `git diff --check`, six added local links/anchors and the
+four-document scope pass; the full diff is reviewed. Untracked inventory is empty,
+and no ignored `.cb`/`.nc` candidate is found outside `output/`. Existing denied
+cache/temp directories limit exhaustive artifact enumeration. Checks and diff
+remain in that unique ignored task directory. No files are staged or committed;
+documentation is ready to commit. This is a fresh-session breakpoint because the
+clarified direction and DT01 acceptance are durable, with no pending product
+decision. Suggested commit: `docs: make CAM fundamentals-first acceptance explicit`.
+
 ## Ornamental CAM and inlay expectation refinement - 2026-09-30
 
 **Planning/refinement complete; runtime implementation has not begun.** The user
