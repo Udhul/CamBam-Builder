@@ -1,5 +1,155 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Runner evidence repair and delivery verification - 2026-09-30
+
+**Implemented, verified and accepted by engineering; ready to commit.** Both
+defects from the final epic review below are closed for the bounded runner scope.
+Initial worktree was clean on `feat/cam-verification-hardening`,
+`HEAD=13baf007c50368142150fcdd482d185e052a58ea`, with target
+`main=d05ebc2baae9371b3fc5556c27319269e58fc551`. No staging, commit or merge is
+authorized for this increment.
+
+The bounded completion contract now requires a terminal outcome and lifecycle
+completion for every selected occurrence, or its named unittest module/class
+fixture skip. It preserves ordinary skips, expected failures and failed subtests.
+`stop()` and silent suite omissions remain non-green. Independent read-only
+review found that lifecycle close without an outcome, including a repeated test
+ID inheriting a previous outcome, also needed protection; both witnesses now
+have regressions. Per-invocation outcome reset prevents duplicate-ID overcredit.
+Reuse requires hash-intact passing worker evidence with suite completion.
+
+The runner's bounded observation map records presence and SHA-256 bytes for the
+four B/C inputs used by `test_tabbed_cutout` and the three M1 inputs used by
+`test_native_series`. Resume reruns a module when any of its inputs is added,
+removed or changed, including a previously skipped observation. Per-module and
+final comparisons reject changes during execution. Installed snapshots retain
+their separate absent-input boundary; unrelated output history is not hashed.
+Schema 2 rejects old reports rather than admitting the earlier partial-pass
+contract. No runtime dependency, CAM evaluator or general input tracer changed.
+The [runbook](DEVELOPMENT.md#regression-execution-and-reporting) owns commands,
+schema compatibility and maintenance of the explicit observation list.
+
+Before/after synthetic evidence is retained under
+`output/runner-evidence-repair-20260930-153836-ef97ac62/`. The task-local
+`reproduce.py` reads the original runner from HEAD and runs both versions on
+isolated synthetic inputs: original stop/resume and changed-input resume pass
+incorrectly; repaired stop/resume are incomplete and not reused; changed bytes
+rerun and fail; adding an absent input reruns its formerly skipped test and
+passes. Source identity remains equal across the ignored byte change in both
+versions. No retained user input is modified. Synthetic orchestration witnesses
+use a fixed environment probe; actual checkout/package gates probe real
+interpreter, dependency and artifact identities independently.
+
+Focused command `.venv/Scripts/python.exe -m unittest discover -s tests -p
+test_verification_runner.py -v` passes **18 tests**, exit 0, **10.374 s**. Eight
+new regressions cover stopped suites, omitted selected tests, outcome omission,
+repeated IDs, legitimate fixture skips, top-level/resume non-green completion,
+observation add/change/remove/unrelated-history behavior, and mutation during
+execution. An earlier 16-test run passed in 360.473 s because each synthetic
+orchestration attempt hashed the complete real environment twice; limiting
+those probes to a fixed witness environment removes that irrelevant test cost
+while retaining actual subprocess test execution and real broad provenance
+gates. This is a test-harness change, not production identity caching.
+
+Manual CamBam/controller validation adds no evidence for this development tool;
+its acceptance authority is engineering. Existing native observations retain
+their byte scope, and controller/runtime/physical acceptance stays separate.
+Reopen on a reproducible false pass or a new/changed retained-input consumer;
+update the bounded map alongside that consumer. Conditional CAM extensions
+remain outside the selected epic.
+
+Completed clean-package command:
+
+```powershell
+.venv/Scripts/python.exe tools/verify.py --package --pattern test_verification_runner.py --pattern test_verification_package.py --pattern test_tabbed_cutout.py --pattern test_native_series.py --pattern test_standalone_v.py --pattern test_native_owner_migration.py --pattern test_mcp_protocol.py --pattern test_rest_vcarve_acceptance_fixtures.py
+```
+
+Exit 0/pass, **77 tests in eight modules per target**, **231 tests / 24 module
+records** total, **459.167 s wall**. Fresh Python 3.12.10 and 3.13.5 wheels and
+the independent Python 3.12.10 sdist pass. Each target has exactly two named
+skips: retained M1 native-post normalization and B/C retained-bridge observation
+are absent from its source-free snapshot. Their seven input identities are
+explicitly null; no ignored observations were copied into installed coverage.
+Archive contents/bytes, installed provenance and the three full plus one
+base-only smoke gates pass. NumPy 2.5.3, Shapely 2.1.2, GEOS 3.13.1 and MCP
+2.2.0 match the earlier package environment; base-only Shapely/MCP remain absent.
+Report: `output/verification-20260930-154819-4e9a37cb/report.json`.
+Full installed runtime discovery is not repeated for this tooling-only repair,
+following the existing runbook/evidence policy; complete checkout discovery
+supplies the broad behavior gate below.
+
+Real package reconciliation command `.venv/Scripts/python.exe tools/verify.py
+--package --resume output/verification-20260930-154819-4e9a37cb` passes, exit 0,
+**39.096 s wall**, reusing all **24 modules / 231 tests** after fresh installed
+smoke, interpreter/dependency/snapshot/artifact checks, result-file hash checks
+and completion admission. The six named absent-observation skips remain explicit;
+none is interpreted as a new native observation. Report:
+`output/verification-20260930-155715-404c0d2e/report.json`.
+Final-source checkout, focused package and reconciliation identities match:
+`906ee3676fe3ee802f4f836514480cacd002a6a547458e55d654476dda084a9f`
+(SHA-256 of UTF-8 `json.dumps(identity, sort_keys=True)`). Wheel SHA-256 is
+`3da8a02fb85f0375e95a307a6f2a5d1a9a878880d7256543032487bdef3fd6f1`;
+sdist SHA-256 is
+`7b1e702033bfe3389bbb2eebeb6ba4436fc75642f8d60065d355a9a8812f0731`.
+Those archive hashes were reread by the approved reconciliation; a direct
+sandboxed archive read was denied and supplies no additional acceptance evidence.
+
+Failure evidence is preserved: the sandboxed package attempt
+`output/verification-20260930-153350-2207067f/report.json` is incomplete on uv
+cache denial; an approved fresh build passes. Checkout attempt
+`output/verification-20260930-153350-fe0abe08/report.json` began before the final
+outcome-accounting edit and was stopped after 40 passing module records / 285
+tests; it cannot certify final source. The exploratory full installed attempt
+`output/verification-20260930-153536-dad1f1b7/report.json` was stopped after 12
+passing wheel-3.12 module records / 74 tests when the applicable tooling-only
+installed scope was selected. Both remain incomplete, without final timings or
+a full-suite claim; their task-owned process trees were identified by PID and
+creation time before stopping. The fresh focused report supplies completed
+package evidence without editing or reconciling those incomplete logs.
+
+Final-source `.venv/Scripts/python.exe tools/verify.py` passes, exit 0,
+**607 tests in 84 modules**, **1383.722 s wall**, with zero reused modules.
+Independent unittest discovery also finds 607 IDs and no collection errors.
+Every module retains successful suite completion evidence. The only named skip
+is `test_mcp_documents.DocumentTests.test_symlink_rejection` for unavailable
+Windows symlink privilege; junction/reparse checks run. Both retained-observation
+modules pass with all seven declared inputs present and byte-bound, unchanged
+between execution and final checks. Report:
+`output/verification-20260930-154052-71cf99d9/report.json`.
+The largest module is `test_curved_rest`, **488.811 s wall / 409.000 s worker
+CPU**; concurrent exploratory work and load differ from earlier runs, so this is
+not an isolated performance comparison or a reason to open geometry optimization.
+Worker CPU still excludes subprocess descendants; command CPU remains null.
+
+Syntax checks `.venv/Scripts/python.exe -m compileall -q cambam_builder
+legacy_cambam_builder tools tests/test_verification_runner.py` and the documented
+CBProject import/construction smoke pass. Target ancestry, intended commit
+inventory, `git diff --check main...HEAD` and working `git diff --check` pass
+against the base/HEAD above. Working source/test repair diff and relevant retained
+epic contracts were inspected; the independent read-only reviewer accepts the
+completion and observation repairs after the outcome/repeated-ID witnesses.
+The earlier complete committed epic review remains useful unchanged-CAM evidence;
+this does not substitute for the final committed-branch gate after the repair
+commit. Seven added documentation links/anchors resolve after the status update.
+Final status contains only `tools/verify.py`, `tests/test_verification_runner.py`
+and the three owning documentation edits, with no untracked candidates. The
+ignored CAM scan returns no `.cb`/`.nc` candidates outside `output/`; denied cache
+and old temporary-directory traversal prevents claiming an exhaustive filesystem
+scan. No byte fixture is added or changed, and source has no dependency on ignored
+task scripts/reports. Local evidence remains under the unique task/run directories.
+
+Local and overall outcome: the runner's reopened engineering gate is closed,
+and both selected epic capabilities are accepted for their declared offline scope.
+The current five-file repair increment is ready to commit. User-owned actions
+are its commit and eventual merge; no file was staged or committed and no branch
+was merged. A clean final committed-tree review against `main` remains required
+before a merge-ready claim or merge commands. No user/domain observation is
+required for this developer tool. This is a good fresh-session breakpoint after
+the user's commit: evidence and limits are durable, all checks have completed,
+and the remaining delivery review has a distinct scope. Suggested commit:
+`fix: bind runner completion and retained observation evidence`.
+Next agent task: [review the final committed epic against main](PROGRESS.md#post-merge-task-queue).
+
 ## Final CAM verification epic review - 2026-09-30
 
 **Review complete; changes required before delivery.** Reviewed the complete

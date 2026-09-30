@@ -36,27 +36,30 @@ capability and external-acceptance follow-ups below are outside this epic.
    remain in their owner. No manual observation is required for this offline scope;
    stock/setup are caller declarations, and runtime/physical acceptance is separate.
    Multiple V stages and other unsupported evaluator mixes remain deferred.
-2. **Implemented as `6e7cde0`; engineering acceptance reopened by final review
-   2026-09-30:** repeatable regression/package execution
+2. **Completed; accepted by engineering 2026-09-30; final-review repairs ready to
+   commit:** repeatable regression/package execution
    and evidence reporting. `tools/verify.py` provides focused/full unittest runs,
    clean wheel/sdist verification, module logs/results, timings and explicit
-   identity-checked reconciliation after failures or interruptions. The matrix
-   is declared in `pyproject.toml`; no runtime behavior, dependency or CI provider
-   changed. The [runbook](DEVELOPMENT.md#regression-execution-and-reporting) owns
-   commands and status meanings. Focused installed verification passes 49 tests
-   each on the 3.12/3.13 wheels and independent 3.12 sdist, with all package and
-   base-only smoke gates passing. Real package-report reconciliation also passes,
-   reusing 15 modules after fresh identity and smoke checks. Full checkout
-   execution passes **599 tests in 84 modules**, with one documented Windows
-   symlink-privilege skip, on the same source identity as the package matrix. The
-   [review record](REVIEW.md#regression-package-runner---2026-09-30) owns evidence,
-   measurements and limits. No manual observation is needed for this offline
-   development tool. Final committed review of `ea52545` against `main` found
-   two reproducible reporting/reconciliation gaps: a stopped suite can pass with
-   selected tests unexecuted, and resume can reuse observation-test success after
-   ignored input files change. The [final review](REVIEW.md#final-cam-verification-epic-review---2026-09-30)
-   owns reproductions, checks and repair criteria. These findings block epic
-   delivery; the standalone-V acceptance above remains closed.
+   identity-checked reconciliation after failures or interruptions. The original
+   runner is committed as `6e7cde0`; schema 2 repairs now account for every selected
+   outcome/lifecycle or fixture skip and bind reuse to seven retained observation
+   inputs. Eight added fault regressions close stopped/omitted execution and
+   changed/added/removed inputs; eighteen focused runner tests pass. The matrix
+   remains declared in `pyproject.toml`; no CAM runtime behavior, dependency or CI
+   provider changed. The [runbook](DEVELOPMENT.md#regression-execution-and-reporting)
+   owns commands and compatibility. Final-source checkout passes **607 tests in
+   84 modules**, with one documented Windows symlink-privilege skip. Fresh
+   3.12/3.13 wheels and an independent 3.12 sdist each pass **77 selected tests in
+   eight modules**, with only their two absent-observation skips; all package and
+   base-only smoke gates pass. Real package reconciliation reuses all **24 module
+   records / 231 tests** after fresh identity/smoke and completion checks. Source
+   identity matches across the completed checkout/package/reconciliation runs.
+   The [repair record](REVIEW.md#runner-evidence-repair-and-delivery-verification---2026-09-30)
+   owns exact checks, before/after evidence, timings and limits; the
+   [original final review](REVIEW.md#final-cam-verification-epic-review---2026-09-30)
+   preserves the defects. No manual observation is required for this offline
+   development tool. Epic implementation and engineering acceptance are complete;
+   final committed-branch delivery review remains after the user's repair commit.
 3. **Conditional capability follow-ups:** multiple V stages and broader predecessor
    combinations need a named combined-tool job; rest smoothing/air-cut reduction
    need measurable finish or efficiency goals; automatic tool selection needs
@@ -75,21 +78,19 @@ Backlog 7's bounded Manual-tab authoring and backlog 8-10's MOP audit, calculati
 planning helpers and entity refactor are complete. Additional native Pocket role
 parity, fresh Triangle-tab output and wider tab geometry still require their named
 native evidence; they are not unfinished acceptance for the merged bounded jobs.
-**Next agent task:** repair both runner evidence gaps identified by the
-[final review](REVIEW.md#final-cam-verification-epic-review---2026-09-30), preserving
-legitimate unittest skips and binding reuse to specific retained observation
-inputs (or rerunning affected modules). Add synthetic fault regressions for
-stopped-suite completion and changed/absent observation inputs, then rerun the
-applicable checkout/package and final committed
-[branch delivery gates](DEVELOPMENT.md#verification-entry-points) against `main`.
-Stop when both reproductions are non-green or correctly rerun and the existing
-runner/package acceptance contract passes; do not add a general input-tracing
-framework or unrelated CAM extensions.
-This matters now because reliable completion and reuse are the runner's delivery
-contract; normal regression passes cannot compensate for these false passes.
-The user handles the review-documentation commit and eventual `--no-ff` merge
-separately. A fresh repair session is appropriate: contracts, reproductions,
-limits and the bounded next scope are durable, with no required user observation.
+**Next agent task:** review the final committed CAM verification epic against
+`main` using the [branch delivery gates](DEVELOPMENT.md#verification-entry-points).
+After the user commits the repair increment, require a clean worktree, the intended
+commit range, complete `main...HEAD` diff review and confirmation that the completed
+checks apply to the final tree. Stop at the delivery decision and, if merge-ready,
+provide the default `--no-ff` merge commands for the user. Do not commit or merge
+without separate authorization or extend CAM scope during this delivery review.
+This matters now because both selected capabilities and the runner fault repairs
+are implemented and accepted; final committed-tree verification is the remaining
+epic gate. The user handles the repair commit and eventual merge separately.
+A fresh session is appropriate after the repair commit: contracts, completed
+evidence, limits and the distinct review scope are durable, with no pending test
+result or required external observation.
 Conditional CAM extensions remain outside this delivery scope.
 
 **Accepted 2026-09-26 safe native arc hybrid:** the bounded

@@ -236,6 +236,10 @@ describes the recorded patterns and named skips, never unselected tests or
 physical/controller acceptance. Inspect named skips under the policy above.
 Standard unittest expected failures remain visible as `expected_failure` and
 do not fail the module; an unexpected success does fail it.
+Completion accounts for every selected test through an outcome and `stopTest`
+or its named `setUpClass`/`setUpModule` skip. A stopped suite or an omitted selected test is
+non-green, even when unittest's executed tests all passed. Worker results retain
+completion details and missing IDs; resume requires that completion evidence.
 
 Explicitly reconcile a previous attempt with:
 
@@ -255,6 +259,17 @@ until reconciliation is finished. A setup interruption before identities and
 inventory were established requires a fresh invocation. Source/configuration or
 dependency changes require fresh evidence; resume refuses them. This conservative
 rule deliberately avoids reasoning about which tests a code change might affect.
+Schema 2 reports also bind presence and SHA-256 bytes for the four retained B/C
+files consumed by `test_tabbed_cutout` and the three retained M1 files consumed
+by `test_native_series`. Changed, added or removed observation inputs rerun that
+module, including a previously skipped observation. Input changes detected after
+module execution or at final verification make the invocation `incomplete`.
+These paths are relative to each target's snapshot: fresh installed targets still
+record absent observations and their named skips. Unrelated `output/` history
+does not invalidate reuse. Keep the bounded `OBSERVATION_INPUTS` list in
+`tools/verify.py` aligned when adding or changing retained-input tests; this is
+not automatic input tracing. Schema 1 reports require a fresh invocation because
+they lack the repaired evidence contract.
 
 `wall_seconds` measures elapsed execution separately from worker `cpu_seconds`.
 Worker CPU covers its Python process (including native extension work), not
@@ -263,7 +278,8 @@ unavailable. Reused timings remain marked as reused; the new invocation's wall
 time is measured independently. `summary.slowest_modules` exposes repeated
 geometry cost without selecting caching, numerical changes or parallelism.
 The [dated evidence](REVIEW.md#regression-package-runner---2026-09-30) owns measured
-results and remaining limits. Runtime/dependency changes still require the
+results and remaining limits; [repair evidence](REVIEW.md#runner-evidence-repair-and-delivery-verification---2026-09-30)
+owns the completion and retained-input fault checks. Runtime/dependency changes still require the
 normal verification scope; reporting convenience cannot narrow acceptance.
 
 ### Historical package baseline

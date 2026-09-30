@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import hashlib
 import importlib.metadata
 import json
@@ -16,7 +17,23 @@ import unittest
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHEMA = 1
+SCHEMA = 2
+
+# Retained observations are outside source_identity and fresh package snapshots.
+# Keep this bounded list aligned with the two observation tests, not output history.
+OBSERVATION_INPUTS = {
+    "test_tabbed_cutout": tuple("output/tabbed-cutout-20260927-04/fixtures/" + name
+        for name in ("B-fresh-manual.cb", "B-fresh-manual.nc",
+                     "C-fresh-manual.cb", "C-fresh-manual.nc")),
+    "test_native_series": ("output/m1-polygon-20260924-04/source.cb",
+        "output/m1-polygon-20260924-04/native/m1-native.cb",
+        "output/m1-polygon-20260924-04/native/m1-native.nc"),
+}
+
+
+def observation_identity(snapshot, module):
+    return {name: digest(snapshot / name) if (snapshot / name).is_file() else None
+            for name in OBSERVATION_INPUTS.get(module, ())}
 
 
 def digest(path):
@@ -91,9 +108,23 @@ class RecordingResult(unittest.TextTestResult):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.records = []
+        self.completed_ids = []
+        self.fixture_skips = []
+        self.outcome_ids = set()
+
+    def startTest(self, test):
+        super().startTest(test)
+        self.outcome_ids.discard(test.id())
+
+    def stopTest(self, test):
+        super().stopTest(test)
+        if test.id() in self.outcome_ids:
+            self.completed_ids.append(test.id())
+        self.outcome_ids.discard(test.id())
 
     def record(self, test, status, detail=None):
         self.records.append({"id": test.id(), "status": status, "detail": detail})
+        self.outcome_ids.add(test.id())
 
     def addSuccess(self, test):
         super().addSuccess(test)
@@ -110,6 +141,10 @@ class RecordingResult(unittest.TextTestResult):
     def addSkip(self, test, reason):
         super().addSkip(test, reason)
         self.record(test, "skip", reason)
+        # unittest represents setUpModule/setUpClass skips as _ErrorHolder,
+        # without startTest/stopTest. Ordinary per-test skips complete normally.
+        if not isinstance(test, unittest.TestCase):
+            self.fixture_skips.append(test.id())
 
     def addExpectedFailure(self, test, err):
         super().addExpectedFailure(test, err)
@@ -123,6 +158,7 @@ class RecordingResult(unittest.TextTestResult):
         super().addSubTest(test, subtest, err)
         if err is not None:
             self.record(subtest, "fail", self._exc_info_to_string(err, test))
+            self.outcome_ids.add(test.id())
 
 
 def worker(snapshot, module, destination):
@@ -134,11 +170,26 @@ def worker(snapshot, module, destination):
         sys.path.insert(0, str(snapshot))
         loader = unittest.TestLoader()
         suite = loader.discover(str(snapshot / "tests"), pattern=module + ".py")
-        ids = [test.id() for test in flatten(suite)]
+        selected = list(flatten(suite))
+        ids = [test.id() for test in selected]
+        scopes = {test.id(): (f"setUpModule ({type(test).__module__})",
+                             f"setUpClass ({type(test).__module__}.{type(test).__qualname__})")
+                  for test in selected}
         result = unittest.TextTestRunner(verbosity=2, resultclass=RecordingResult).run(suite)
+        accounted = Counter(result.completed_ids)
+        for test_id in ids:
+            if any(scope in result.fixture_skips for scope in scopes[test_id]):
+                accounted[test_id] += 1
+        missing = list((Counter(ids) - accounted).elements())
+        complete = bool(ids) and not result.shouldStop and not missing
+        status = "fail" if not result.wasSuccessful() or loader.errors or not ids else (
+            "pass" if complete else "incomplete")
         report.update(test_ids=ids, tests=result.records, tests_run=result.testsRun,
                       collection_errors=loader.errors,
-                      status="pass" if result.wasSuccessful() and not loader.errors and ids else "fail")
+                      completion={"complete": complete, "stopped": result.shouldStop,
+                                  "completed_ids": result.completed_ids,
+                                  "fixture_skips": result.fixture_skips, "missing_ids": missing},
+                      status=status)
     except BaseException:
         report["error"] = traceback.format_exc()
         raise
@@ -306,10 +357,15 @@ def run(args):
             for module in report["inventory"][name]:
                 key = name + "/" + module
                 old = prior.get("modules", {}).get(key, {}) if prior else {}
-                if old.get("status") == "pass" and module not in args.rerun:
+                inputs = observation_identity(Path(target["snapshot"]), module)
+                if (old.get("status") == "pass" and module not in args.rerun
+                        and old.get("observation_inputs") == inputs):
                     result_path = Path(old["result"])
                     if digest(result_path) != old["result_sha256"]:
                         raise ValueError(f"reused evidence was modified: {key}")
+                    retained = json.loads(result_path.read_text(encoding="utf-8"))
+                    if retained.get("status") != "pass" or not retained.get("completion", {}).get("complete"):
+                        raise ValueError(f"reused evidence lacks suite completion: {key}")
                     report["modules"][key] = {**old, "reused_from": str(prior_path)}
                 else:
                     result_path = output / (name + "-" + module + ".json")
@@ -319,9 +375,13 @@ def run(args):
                         clean_env(Path(target["snapshot"]), temporary), check=False)
                     result = json.loads(result_path.read_text(encoding="utf-8")) if result_path.exists() else {}
                     status = result.get("status", "incomplete")
-                    if command["returncode"] != 0 and status == "pass":
+                    if status == "pass" and (command["returncode"] != 0
+                            or not result.get("completion", {}).get("complete")):
+                        status = "incomplete"
+                    if inputs != observation_identity(Path(target["snapshot"]), module):
                         status = "incomplete"
                     report["modules"][key] = {"status": status, "result": str(result_path),
+                        "observation_inputs": inputs, "completion": result.get("completion"),
                         "result_sha256": digest(result_path) if result_path.exists() else None,
                         "command": command, "wall_seconds": result.get("wall_seconds"),
                         "cpu_seconds": result.get("cpu_seconds"), "tests_run": result.get("tests_run", 0),
@@ -330,6 +390,12 @@ def run(args):
         if report["identity"] != source_identity(root):
             raise ValueError("source/configuration changed during execution; rerun required")
         for target in targets:
+            for module in report["inventory"][target["name"]]:
+                key = target["name"] + "/" + module
+                if report["modules"][key]["observation_inputs"] != observation_identity(
+                        Path(target["snapshot"]), module):
+                    report["modules"][key]["status"] = "incomplete"
+                    raise ValueError(f"observation inputs changed during execution: {key}")
             probe = output / (target["name"] + "-environment-final.json")
             commands(target["name"] + " final environment", [target["python"],
                      str(Path(__file__).resolve()), "_probe", str(probe)], Path(target["cwd"]),
