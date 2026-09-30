@@ -1,5 +1,108 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Final CAM verification epic review - 2026-09-30
+
+**Review complete; changes required before delivery.** Reviewed the complete
+committed `main...HEAD` diff (19 files, 2224 insertions/107 deletions) with target
+`main=d05ebc2baae9371b3fc5556c27319269e58fc551` and
+`HEAD=ea525450e87939bf78f4505539d1be925e65654f` on
+`feat/cam-verification-hardening`. The four intended commits are standalone V
+`5f38024`, epic grouping `b90164c`, runner `6e7cde0` and handoff policy `ea52545`.
+Initial worktree and untracked inventory were clean; ancestry and
+`git diff --check main...HEAD` passed. No code was changed, staged or committed
+during this review. REVIEW/PROGRESS edits record the result and next priority.
+
+Reviewed the V decoded reconstruction, continuous protected sweep, full rapid
+travel, source/revision and stockless/mixed-evaluator boundaries against their
+callers and synthetic witnesses. No additional actionable CAM defect was found
+within the declared linear standalone/one-cylinder-then-V scope. Its accepted
+offline contract remains closed. Package archive/provenance and fixture byte
+policy review found no further concrete blocker. A separate read-only reviewer
+checked the runner/package boundary; the lead independently reproduced both
+findings below with task-owned synthetic inputs.
+
+1. **P2: stopped unittest suites can produce and reuse a partial pass.**
+   `tools/verify.py:139-141` uses `result.wasSuccessful()` and a nonempty selected
+   ID list to declare completion, without checking `shouldStop` or whether the
+   selected suite completed. A first synthetic test calls
+   `self._outcome.result.stop()`; a second selected test would fail. Both the
+   worker and top-level runner exit 0/status `pass`, reporting two selected IDs
+   but only one executed test. Resume then reuses that partial pass. This violates
+   the runbook's requirement that every selected unit completes and interrupted
+   execution stays non-green. Repair completion accounting and reuse admission;
+   include a top-level/resume regression. Preserve legitimate `setUpClass` and
+   `setUpModule` skips: raw `testsRun == len(test_ids)` is not sufficient.
+2. **P2: resume does not bind retained observation inputs.**
+   `source_identity` (`tools/verify.py:33-43`) excludes `output/`, while reuse
+   (`:309-313`) accepts a passing module based on unchanged source/environment,
+   module inventory and prior result-file hash. Existing
+   `tests/test_tabbed_cutout.py:17-20,160-172` depends on four ignored B/C native
+   inputs, chooses a named skip by presence, and verifies pinned byte hashes.
+   A fresh run detects changed bytes, but resume can reuse the old observation
+   pass; adding previously absent inputs can likewise retain a stale skip.
+   A synthetic test reading its own `output/witness.txt` passes initially;
+   changing `good` to `changed` leaves source identity equal, and resume exits
+   0/status `pass` with reused success. A fresh invocation exits 1/status `fail`.
+   No retained user input was accessed or modified for this reproduction.
+   Bind the specific external inputs' presence/bytes to reuse and execution,
+   or deliberately rerun affected observation modules. Do not hash unrelated
+   `output/` history or treat unchanged test code as evidence of unchanged inputs.
+
+Both findings are reproducible runner-contract defects, independent of the
+current normal suite's success. Runtime/controller/physical validation cannot
+close them; no user observation is needed. The runner's earlier engineering
+acceptance is reopened, and the epic is **not merge-ready**. Normal existing
+checks are useful regression evidence, but cannot supply the missing fault
+coverage. Stop this review with these specific repair criteria rather than
+extending CAM scope or silently fixing implementation during a review request.
+
+Exact checks and results:
+
+- `git status --short --branch`, `git log --oneline main..HEAD`,
+  `git merge-base --is-ancestor main HEAD`, `git diff --check main...HEAD`,
+  complete diff inspection: passed on the reviewed committed tree.
+- `.venv/Scripts/python.exe -m compileall -q cambam_builder legacy_cambam_builder tools`
+  and the documented CBProject import/construction smoke: passed.
+- `.venv/Scripts/python.exe tools/verify.py --pattern test_verification_runner.py --pattern test_verification_package.py --pattern test_standalone_v.py --pattern test_ordered_job.py --pattern test_ordered_dialects.py`:
+  exit 0/pass, **40 tests in five modules**, zero skips, Python 3.13.5,
+  49.604 seconds wall. The existing runner tests do not cover either reproduced
+  defect. Report: `output/verification-20260930-150339-e518e47e/report.json`.
+- `.venv/Scripts/python.exe output/final-epic-review-20260930-01/reproduce.py`:
+  exit 0 (witness script completed), reproducing the two **incorrect green**
+  outcomes above and the expected fresh changed-input failure. Runner SHA-256
+  `6d59d82081deb2a0d725f5d4745e75725b9d8dbde8d5f9b6607ded6ef4406737`.
+  The script, `reproduction.json`, logs and exact committed diff remain local.
+- `.venv/Scripts/python.exe tools/verify.py`: deliberately interrupted after the
+  completion defect was confirmed, exit 1/incomplete, nine of 84 module records
+  passing at interruption; no full-suite pass claimed. Retained report:
+  `output/verification-20260930-145536-eeae4389/report.json`.
+- `.venv/Scripts/python.exe tools/verify.py --package`: first sandbox attempt
+  remained incomplete on uv cache access denial. Approved retry built and
+  inspected both archives, installed fresh 3.12/3.13 wheels, independent 3.12
+  sdist and base-only wheel, and passed all four installed smoke gates. It was
+  deliberately interrupted after the review blocker, exit 1/incomplete, with
+  four of 252 module records passing. No installed full-suite pass claimed.
+  Retained report: `output/verification-20260930-145629-48dce191/report.json`.
+
+Final tracked whitespace and changed-owner documentation anchors passed;
+status contains only `docs/PROGRESS.md` and `docs/REVIEW.md` edits, with no
+untracked candidates. HEAD and target base remain the reviewed commits.
+The ignored-CAM scan returned no `.cb`/`.nc` candidates outside `output/`.
+Permission-denied cache and old/task temporary directories limit exhaustive
+filesystem enumeration; no versioned fixture was added and no source depends on
+the local reproductions. Preserve task logs as incomplete evidence. The review
+record edits are ready to commit; they do not repair
+the runner or establish delivery readiness. Suggested documentation commit:
+`docs: record final epic review blockers`.
+
+This is a good fresh-session breakpoint after the review: both findings and
+their acceptance criteria are durable, the implementation scope is distinct,
+and there is no required external observation. Overall, the CAM capability is
+closed while runner correctness blocks this epic's delivery. Next agent task:
+[repair the two runner evidence gaps](PROGRESS.md#post-merge-task-queue), then
+repeat applicable verification and committed-branch review. The user owns
+committing and the later merge; no merge command is recommended before repair.
+
 ## Regression package runner - 2026-09-30
 
 **Accepted by engineering; ready to commit.** This increment

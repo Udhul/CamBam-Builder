@@ -36,7 +36,8 @@ capability and external-acceptance follow-ups below are outside this epic.
    remain in their owner. No manual observation is required for this offline scope;
    stock/setup are caller declarations, and runtime/physical acceptance is separate.
    Multiple V stages and other unsupported evaluator mixes remain deferred.
-2. **Completed; accepted by engineering 2026-09-30; committed as `6e7cde0`:** repeatable regression/package execution
+2. **Implemented as `6e7cde0`; engineering acceptance reopened by final review
+   2026-09-30:** repeatable regression/package execution
    and evidence reporting. `tools/verify.py` provides focused/full unittest runs,
    clean wheel/sdist verification, module logs/results, timings and explicit
    identity-checked reconciliation after failures or interruptions. The matrix
@@ -50,8 +51,12 @@ capability and external-acceptance follow-ups below are outside this epic.
    symlink-privilege skip, on the same source identity as the package matrix. The
    [review record](REVIEW.md#regression-package-runner---2026-09-30) owns evidence,
    measurements and limits. No manual observation is needed for this offline
-   development tool. The user committed this increment; the final committed-branch
-   review against `main` remains pending.
+   development tool. Final committed review of `ea52545` against `main` found
+   two reproducible reporting/reconciliation gaps: a stopped suite can pass with
+   selected tests unexecuted, and resume can reuse observation-test success after
+   ignored input files change. The [final review](REVIEW.md#final-cam-verification-epic-review---2026-09-30)
+   owns reproductions, checks and repair criteria. These findings block epic
+   delivery; the standalone-V acceptance above remains closed.
 3. **Conditional capability follow-ups:** multiple V stages and broader predecessor
    combinations need a named combined-tool job; rest smoothing/air-cut reduction
    need measurable finish or efficiency goals; automatic tool selection needs
@@ -70,17 +75,22 @@ Backlog 7's bounded Manual-tab authoring and backlog 8-10's MOP audit, calculati
 planning helpers and entity refactor are complete. Additional native Pocket role
 parity, fresh Triangle-tab output and wider tab geometry still require their named
 native evidence; they are not unfinished acceptance for the merged bounded jobs.
-**Next agent task:** review the final committed epic
-against `main` using the [branch delivery gates](DEVELOPMENT.md#verification-entry-points).
-Require a clean worktree, the intended branch commits, complete `main...HEAD`
-diff review and checks applicable to the final tree before declaring merge-ready.
-This matters now because both selected epic capabilities are implemented and
-accepted; another CAM extension would delay delivery without a named consumer.
-The user handles any pending documentation commit and the eventual `--no-ff`
-merge separately from the agent task. A fresh review session is appropriate:
-contracts, evidence, remaining limits and the next scope are
-durable, with no pending test result or external observation. Conditional CAM
-extensions remain outside this delivery scope.
+**Next agent task:** repair both runner evidence gaps identified by the
+[final review](REVIEW.md#final-cam-verification-epic-review---2026-09-30), preserving
+legitimate unittest skips and binding reuse to specific retained observation
+inputs (or rerunning affected modules). Add synthetic fault regressions for
+stopped-suite completion and changed/absent observation inputs, then rerun the
+applicable checkout/package and final committed
+[branch delivery gates](DEVELOPMENT.md#verification-entry-points) against `main`.
+Stop when both reproductions are non-green or correctly rerun and the existing
+runner/package acceptance contract passes; do not add a general input-tracing
+framework or unrelated CAM extensions.
+This matters now because reliable completion and reuse are the runner's delivery
+contract; normal regression passes cannot compensate for these false passes.
+The user handles the review-documentation commit and eventual `--no-ff` merge
+separately. A fresh repair session is appropriate: contracts, reproductions,
+limits and the bounded next scope are durable, with no required user observation.
+Conditional CAM extensions remain outside this delivery scope.
 
 **Accepted 2026-09-26 safe native arc hybrid:** the bounded
 level XY G2/G3 path now preserves direction/center through the native,
