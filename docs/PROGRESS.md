@@ -20,7 +20,8 @@ epic from `feat/cam-verification-hardening` into `main` with merge commit
 `3c010b6`. Its tree equals reviewed tip `86ec581`; both tasks below are delivered
 for their accepted offline scope. The final committed review and merge checks are
 recorded in [REVIEW](REVIEW.md#cam-verification-epic-merge-closure-and-priority-assessment---2026-09-30).
-Conditional capability and external-acceptance follow-ups remain separate work.
+The recommended next framework increment is task 3 below; further capability
+and external-acceptance follow-ups remain separate work.
 
 1. **Completed; accepted by engineering 2026-09-30; committed as `5f38024`:** standalone
    Region-V ordered stock verification. One V stage now emits and independently
@@ -61,13 +62,28 @@ Conditional capability and external-acceptance follow-ups remain separate work.
    preserves the defects. No manual observation is required for this offline
    development tool. Final committed-branch review passed and the epic is merged;
    its documented controller/runtime/physical limits remain unchanged.
-3. **Conditional capability follow-ups:** multiple V stages and broader predecessor
-   combinations need a named combined-tool job; rest smoothing/air-cut reduction
-   need measurable finish or efficiency goals; automatic tool selection needs
+3. **Recommended next capability task; planned, not implemented:** cumulative
+   Region-V stock verification for multiple tools. Use the synthetic
+   **MV01 flat-V primary plus pointed-V finish** job to carry decoded stock from
+   one V stage into the next and report residuals after every prefix. Existing
+   Stage/Job construction can express that sequence, but the stock auditor
+   explicitly rejects multiple V stages. Keep one shared target and included
+   angle; prove that the second tool removes material the first leaves, with
+   overlap-safe cumulative evidence. The
+   [implementation packet](REST_MACHINING_PLAN.md#multi-stage-region-v-stock-verification-mv01)
+   owns scope, independent acceptance and the stopping condition. This advances
+   the stated combined-tool framework direction without requiring a personal
+   machining project or a new controller profile.
+4. **Following capability candidates; reassess after MV01:** independent design/tool
+   angles would let different-angle tools work against one fixed finish target;
+   cleared-union access would broaden supported entry/link proofs. Their backlog 6
+   consumers and acceptance still need their own bounded packets. Broader
+   predecessor combinations need a named composed job; rest smoothing/air-cut
+   reduction needs measurable finish or efficiency goals; automatic tool selection needs
    tools and an objective. Broader surfaces, fixtures and travel/body clearance
    need a job outside the current supported model. Their
    [backlog 6 reopening criteria](#remaining-backlog-in-order) remain in force.
-4. **Conditional external acceptance:** prioritize controller runtime and supervised
+5. **Conditional external acceptance:** prioritize controller runtime and supervised
    physical validation if the user's next goal is cutting a real part. Select the
    machine/controller, tooling, stock and setup first, then prepare the acceptance
    artifacts and exact observations. The existing
@@ -79,28 +95,25 @@ Backlog 7's bounded Manual-tab authoring and backlog 8-10's MOP audit, calculati
 planning helpers and entity refactor are complete. Additional native Pocket role
 parity, fresh Triangle-tab output and wider tab geometry still require their named
 native evidence; they are not unfinished acceptance for the merged bounded jobs.
-**Priority assessment, 2026-09-30:** no unconditional implementation task remains
-in the selected epics. Backlog 6's extensions have no new named consumer, finish
-goal or blocked supported job; backlog 5 has no new remote/multi-client need.
-Native Pocket role parity, fresh Triangle-tab output and broader tab geometry
-retain their specific evidence requirements. Do not reopen completed foundations
-or select another nearby geometric example merely to continue development.
+**Priority reassessment, 2026-09-30:** the user asked for the natural next task
+after delivery. A named consumer can be a synthetic framework job defined by
+engineering; it need not be the user's next physical part. MV01 is recommended
+ahead of unequal-angle semantics, broader access proofs, optimization or remote
+transport because it establishes cumulative composition using already-supported
+plans, tools and output dialects. These other candidates remain real backlog
+work, with distinct consumers and acceptance; no new remote/multi-client need
+or physical-setup observation has been supplied. The
+[reassessment evidence](REVIEW.md#next-framework-task-reassessment---2026-09-30)
+records the comparison and corrects the earlier personal-job dependency.
 
-**Next agent task:** scope the user's next concrete part or authoring workflow
-against the accepted capabilities and [remaining backlog](#remaining-backlog-in-order).
-Record its desired result, source/target geometry and relevant tools/setup; then
-select one useful increment with owners, executable acceptance and a stopping
-condition. A supported job should use the existing API before extending it. For
-a real-cutting goal, prioritize controller/runtime and supervised physical
-acceptance, establish the actual machine/setup, and prepare artifacts and exact
-observations before requesting validation. For a development goal, promote only
-the demonstrated capability or workflow gap. Product input is needed to select
-that next job; no engineering approval or further observation is owed for the
-closed epic. This matters now because delivery is complete and the next useful
-outcome should be driven by use rather than speculative breadth.
-The closure record is ready for a documentation commit. A fresh session is
-appropriate once the next job is supplied: contracts, evidence and conditional
-reopening criteria are durable, with no pending verification process.
+**Next agent task:** implement
+[multi-stage Region-V stock verification for MV01](REST_MACHINING_PLAN.md#multi-stage-region-v-stock-verification-mv01)
+through the existing ordered-job/output workflow, with independent cumulative
+stock and rejection tests, then the required shared-verifier/package checks.
+The task is recommended and planned, not yet started or accepted. No personal
+part or machine observation is required for its offline engineering scope.
+A fresh implementation session is appropriate: the job, scope and acceptance
+are durable, with no pending result or product choice required to begin.
 
 **Accepted 2026-09-26 safe native arc hybrid:** the bounded
 level XY G2/G3 path now preserves direction/center through the native,
@@ -2093,9 +2106,10 @@ reopening criteria; historical milestones do not create new active work.
    **Remaining strategy extensions after the completed delivery review:**
    standalone Region-V ordered verification is implemented; its completion and
    acceptance state is owned by the [post-merge queue](#post-merge-task-queue).
-   Reopen multi-stage V stock composition for a named composed output job;
-   acceptance must decode actual paths and establish virgin-entry, protected
-   sweep and residual evidence without inventing a roughing stage. General
+   Multi-stage V stock composition now has the proposed MV01 consumer; its
+   planning and priority are owned by the [post-merge queue](#post-merge-task-queue).
+   Acceptance must decode actual paths and establish virgin-entry, protected
+   sweep and cumulative residual evidence without inventing a roughing stage. General
    cleared-union/helical cleanup access needs a depth-aware coverage proof when
    a supported job is blocked by the present single-sweep clearance predicate.
    Conditional rest smoothing/overlap budgets need a concrete finish/access or

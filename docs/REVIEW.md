@@ -1,5 +1,58 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Next framework task reassessment - 2026-09-30
+
+The user challenged the closure handoff's request for a next personal part or
+workflow and asked for the natural next task. That request was too restrictive:
+the framework direction already names combined-tool V/rest capabilities, and
+a bounded synthetic consumer can establish the next engineering increment.
+The previous merge closure remains valid; only its recommendation to wait for
+personal-job input is superseded. Initial worktree is clean on `main` at
+`a73d8f3`, the user's committed delivery-closure record.
+
+Review of the remaining backlog and framework direction confirms a concrete
+composition gap: `ordered_job.audit` returns `unsupported` for multiple V stages,
+although Stage/Job can express them and `v_region` supports primary plans.
+`VTarget.section` currently uses the tool's included angle to define the finish
+surface, so a first cumulative job must bind a common target and angle rather
+than compare different physical targets as one residual. Existing stock evidence
+supports one V plan or a cylindrical predecessor; it does not establish cumulative
+removal by several V profiles.
+
+**Recommendation:** the planned MV01 flat-V primary plus pointed-V finish job
+proves cumulative Region-V stock through existing ordered APIs and both output
+dialects, with independent overlap/removal witnesses. It addresses the user's
+combined-tool framework direction and a currently rejected caller workflow.
+The [packet](REST_MACHINING_PLAN.md#multi-stage-region-v-stock-verification-mv01)
+owns scope, proposed consumer, executable acceptance and stopping condition;
+priority remains only in PROGRESS. Parameters and positive dependent removal
+must be established during implementation, not assumed from this planning text.
+
+Compared with adjacent options, independent design/tool angles require a larger
+target-semantics change; union-only entry/link proofs require a new clearance
+foundation; smoothing/tool search require measured objectives and candidate
+selection. Native parity, physical execution and remote transport retain their
+external evidence/setup needs. Those are real future tasks, but cumulative
+same-angle V composition has the clearest immediate end-to-end consumer using
+the accepted plans/output foundation. This is an engineering recommendation,
+not implementation acceptance or permission to execute a machine.
+
+This increment changes only PROGRESS, REST_MACHINING_PLAN and REVIEW; runtime,
+tests, dependencies and the merged epic's accepted limits remain unchanged.
+Documentation diff, whitespace and added link/anchor checks are sufficient;
+no manual validation or runtime suite supplies additional evidence. The task-local
+`output/mv01-planning-20260930-f2b2dbbf/check_plan.py` exits 0: working
+`git diff --check` and all six added local links/anchors pass. Final status has
+only the three intended documentation edits, with no untracked candidates. No
+ignored CAM candidates were found outside `output/`; denied traversal of existing
+cache/temporary directories limits exhaustive enumeration. The inspected diff,
+script and checks JSON stay local; this packet and record own the durable facts.
+No runtime or manual check is required for this planning-only increment. No files
+are staged or committed. The documentation is ready to commit. Suggested commit:
+`docs: plan cumulative multi-stage Region-V verification`.
+The implementation packet is a coherent fresh-session starting point, with no
+personal-part decision needed to begin its bounded offline work.
+
 ## CAM verification epic merge closure and priority assessment - 2026-09-30
 
 **Delivery closed; both selected capabilities accepted for their offline scope.**

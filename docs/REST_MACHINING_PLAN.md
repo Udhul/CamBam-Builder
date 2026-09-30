@@ -25,6 +25,77 @@ The implemented reusable-job direction and later packets are in
 The [first generated acceptance job](#first-generated-acceptance-job-rc01)
 now gives user-accepted synthetic inputs and separate standalone/native acceptance gates.
 
+## Multi-stage Region-V stock verification (MV01)
+
+**Recommended next increment, 2026-09-30; planned, not implemented.**
+Priority is owned by the [post-merge queue](PROGRESS.md#post-merge-task-queue).
+The named consumer is a synthetic combined-tool framework job, not a required
+personal part or machine observation. Existing standalone and one-cylinder/V
+acceptance remains unchanged until the new evaluator passes its own gates.
+
+**Outcome:** a caller supplies an ordered tuple of Region-V stages against one
+shared target and obtains independently decoded cumulative stock/access/residual
+evidence after every prefix. The current Stage/Job API already represents these
+stages, but `ordered_job.audit` rejects multiple V stages. Repeated tools and
+overlapping passes must retain their actual ordered removal, not overwrite the
+prefix or sum overlapping swept volumes twice.
+
+**MV01 starting job:** use a synthetic rectangular Region with an interior
+rectangular protected island, a shallow finite depth cap and a shared 90-degree
+included angle. A flat-tip primary tool leaves corner/near-wall material; a
+pointed finish tool must demonstrably remove new material from that residual.
+Select and freeze valid dimensions, profile envelopes and planning controls
+while establishing this first slice; record them with independent section and
+volume witnesses. This is a proposed consumer, not an already measured result.
+An annular case and a three-stage/repeated-tool case then establish that support
+does not depend on the first job's name, rectangular geometry or exactly two
+stages. Generate all regression inputs at test time; session files stay under
+unique ignored `output/` directories.
+
+**Scope and owners:** `cam_core/v_region.py` owns profile/sweep and cumulative
+stock geometry; `cam_core/ordered_job.py` owns ordered decoded admission and
+prefix evidence. `integrations/ordered_output.py` and `ordered_dialects.py`
+retain complete-byte and transition authority. Reuse the existing public
+constructors and numerical policies before introducing any new abstraction.
+Require identical target geometry/source/depth and included angle across V
+stages so every residual measures one physical design. Unequal design/tool
+angles, arbitrary mixed evaluators, generated rest-only path optimization and
+controller runtime remain separate increments. Supplied full-target plans may
+recut cleared material; this task verifies their cumulative effect, not improved
+machining efficiency.
+
+**Acceptance:**
+
+- Emit and independently decode the composed job in UCCNC and Grbl; replay
+  decoded coordinates with each stage's own tool profile and report initial,
+  per-prefix and final section/volume bounds. Every accepted prefix protects
+  the original Region/island at all modeled cutter heights.
+- Establish independent capsule/overlap oracles and material-membership
+  witnesses. The finish must remove a positive witnessed region left by the
+  primary tool; repeated/duplicate cuts must not invent extra removal.
+  Adding safe cuts must preserve cumulative stock inclusion under one declared
+  numerical policy, with partial completion and bound uncertainty explicit.
+- Keep source/target/tool/stage/frame/transition identities bound to evidence.
+  Changed or reordered stages require fresh replay; do not assume every reordered
+  job is geometrically unsafe. Reject stale evidence, inconsistent targets/angles,
+  changed decoded feeds/motion, protected sweeps and unsafe complete rapid travel.
+  Preserve stockless `not_evaluated` and precise unsupported-mix diagnostics.
+- Exercise two- and three-stage jobs, repeated tools, the supported profiles and
+  raster/offset plans. Preserve standalone and one-cylinder/V regressions. A
+  controlled omitted-prefix or last-stage-only replay mutation must fail the
+  independent cumulative-stock tests.
+- Run focused checks, full discovery and the supported Python/package gates
+  required for a shared verifier change by DEVELOPMENT. Inspect generated
+  evidence and skips; do not substitute test counts for the independent oracles.
+  Version changed verifier evidence and invalidate old reports when necessary.
+
+**Stop:** MV01 and the breadth/rejection witnesses pass through public APIs,
+the cumulative contract and exact evidence are documented, and required checks
+close offline engineering acceptance. No CamBam/controller/physical observation
+is needed unless implementation adds a claim depending on it. Reassess the
+remaining backlog after this outcome; do not automatically expand into tool
+search, unequal angles, rest-only generation or arbitrary evaluator mixtures.
+
 ## Standalone Region-V ordered stock verification
 
 **Implemented, accepted by engineering offline and merged, 2026-09-30.**
