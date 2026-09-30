@@ -148,7 +148,8 @@ User/production validation: pending / observed / not required (specific reason)
 Acceptance authority/evidence: engineering checks or actual user/domain observation
 Remaining risks, blockers and reopening criteria:
 Delivery state: working / ready to commit / merge-ready (target base and HEAD)
-Recommended next increment:
+Recommended next agent task (exclude user-owned commit/merge actions):
+User actions, listed separately:
 Suggested commit message:
 ```
 

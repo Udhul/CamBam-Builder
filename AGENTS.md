@@ -65,7 +65,10 @@
   risks, required user validation, next increment and suggested commit message.
   End the final response with a short, actionable next-task statement describing
   what to do, not how, linked to its backlog details so it can trigger the next
-  turn/session. Separately recommend continuing this session or starting a new one.
+  turn/session. This formatted handoff contains only the next AI agent's work;
+  keep user-owned actions such as committing or merging in separate final-response
+  prose unless explicitly delegated to the agent. Separately recommend continuing
+  this session or starting a new one.
 - At the end of each round, assess both the local workstream and overall project
   progress. State whether this is a good fresh-session breakpoint and why. Prefer
   a breakpoint after a coherent outcome is implemented, verified and required

@@ -128,7 +128,14 @@ delivery remains the final committed-branch review against `main`. This is a
 good fresh-session breakpoint after committing because the next task has a
 distinct scope and no pending result, decision or manual observation. Suggested
 commit: `build: add auditable regression and package runner`.
-Next: [commit the runner and review the final epic](PROGRESS.md#post-merge-task-queue).
+Next agent task: [review the final committed epic](PROGRESS.md#post-merge-task-queue).
+
+Subsequent delivery update: the user committed the runner as `6e7cde0`.
+Final committed-branch review remains pending; the pre-commit acceptance above
+does not establish merge readiness. The user also clarified that formatted
+next-session handoffs contain only agent work; commit/merge reminders belong in
+separate user-facing prose. This convention is now recorded in AGENTS and the
+workflow handoff template.
 
 ## Standalone Region-V ordered stock verification - 2026-09-30
 

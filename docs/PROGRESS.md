@@ -36,7 +36,7 @@ capability and external-acceptance follow-ups below are outside this epic.
    remain in their owner. No manual observation is required for this offline scope;
    stock/setup are caller declarations, and runtime/physical acceptance is separate.
    Multiple V stages and other unsupported evaluator mixes remain deferred.
-2. **Completed; accepted by engineering 2026-09-30; ready to commit:** repeatable regression/package execution
+2. **Completed; accepted by engineering 2026-09-30; committed as `6e7cde0`:** repeatable regression/package execution
    and evidence reporting. `tools/verify.py` provides focused/full unittest runs,
    clean wheel/sdist verification, module logs/results, timings and explicit
    identity-checked reconciliation after failures or interruptions. The matrix
@@ -50,8 +50,8 @@ capability and external-acceptance follow-ups below are outside this epic.
    symlink-privilege skip, on the same source identity as the package matrix. The
    [review record](REVIEW.md#regression-package-runner---2026-09-30) owns evidence,
    measurements and limits. No manual observation is needed for this offline
-   development tool. Commit this increment separately and review
-   the final epic against `main`; the agent has not staged or committed it.
+   development tool. The user committed this increment; the final committed-branch
+   review against `main` remains pending.
 3. **Conditional capability follow-ups:** multiple V stages and broader predecessor
    combinations need a named combined-tool job; rest smoothing/air-cut reduction
    need measurable finish or efficiency goals; automatic tool selection needs
@@ -70,14 +70,15 @@ Backlog 7's bounded Manual-tab authoring and backlog 8-10's MOP audit, calculati
 planning helpers and entity refactor are complete. Additional native Pocket role
 parity, fresh Triangle-tab output and wider tab geometry still require their named
 native evidence; they are not unfinished acceptance for the merged bounded jobs.
-**Next task:** commit the runner increment and review the final committed epic
+**Next agent task:** review the final committed epic
 against `main` using the [branch delivery gates](DEVELOPMENT.md#verification-entry-points).
 Require a clean worktree, the intended branch commits, complete `main...HEAD`
 diff review and checks applicable to the final tree before declaring merge-ready.
 This matters now because both selected epic capabilities are implemented and
 accepted; another CAM extension would delay delivery without a named consumer.
-The user performs the eventual `--no-ff` merge. A fresh session is appropriate
-after committing: contracts, evidence, remaining limits and the next scope are
+The user handles any pending documentation commit and the eventual `--no-ff`
+merge separately from the agent task. A fresh review session is appropriate:
+contracts, evidence, remaining limits and the next scope are
 durable, with no pending test result or external observation. Conditional CAM
 extensions remain outside this delivery scope.
 
