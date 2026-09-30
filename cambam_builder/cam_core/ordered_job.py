@@ -1,7 +1,7 @@
 """Small, controller-neutral ordered machining job and decoded-motion audit.
 
-Stock evaluators cover cylindrical replay, one terminal rounded-V finish after
-one cylindrical predecessor, and bounded layered 3D flat-endmill stages.
+Stock evaluators cover cylindrical replay, one Region-V stage from virgin stock
+or after one cylindrical predecessor, and bounded layered 3D flat-endmill stages.
 Other mixes remain explicit capability limits.
 """
 
@@ -12,7 +12,7 @@ import math
 from . import replay, v_region
 
 
-VERSION = "ordered-job-v2-evidence-boundaries"
+VERSION = "ordered-job-v3-standalone-region-v"
 MATCH_TOLERANCE_MM = 0.000051
 
 
@@ -121,7 +121,7 @@ class Stage:
     rpm: float
     offset_mm: float = 0.0
     operation: object = None          # replay, volume3d, surface3d or inlay
-    v_plan: object = None             # v_region.VPlan for terminal V finish
+    v_plan: object = None             # v_region.VPlan for primary/terminal V
     source_revision: str = ""
     transition: object = None
     tool_length_mm: float = 0.0
@@ -178,6 +178,13 @@ class Stage:
 
 @dataclass(frozen=True)
 class Job:
+    """Resolved ordered motion with caller-declared stock and setup.
+
+    For a single V stage, stock_present=True declares virgin material at Z=0
+    throughout the finite V target. It does not infer a previously cleared
+    opening. The target/profile define the volume whose residual is measured;
+    material outside it is protected, not included in the residual bounds.
+    """
     source_fingerprint: str
     stages: tuple
     initial_tip: tuple
@@ -327,10 +334,18 @@ def _replay_endmills(job, stages, motions):
 
 def _decoded_v_plan(plan, motions):
     """Rebuild V paths from decoded coordinates before stock calculations."""
+    if any(motion.arc_g for motion in motions):
+        raise ValueError("Region V stock supports linear motion only")
     intended = v_region.complete_motion(plan, motions[0].start)
     if len(motions) != len(intended):
         raise ValueError("decoded V motion count differs")
     prefix = int(intended[0].role == "rapid")
+    external = motions[:prefix] + motions[prefix + len(plan.motions):]
+    if any(move.role != "rapid" for move in external):
+        raise ValueError("V external links must be rapid")
+    for move in motions:
+        if move.role == "rapid":
+            verify_safe_travel((move.start, move.end))
     middle = motions[prefix:prefix + len(plan.motions)]
     paths, points = [], None
     for move in middle:
@@ -418,6 +433,10 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
     for stage in job.stages:
         if abs(stage.offset_mm - stage.tool_length_mm) > 1e-9:
             raise ValueError("effective tool-tip offset differs from setup")
+        if stage.v_plan is not None and (
+                stage.source_revision != stage.v_plan.fingerprint or
+                job.source_fingerprint != stage.v_plan.target.source_id):
+            raise ValueError("stale V stage revision or source")
     assumptions = [s.transition.completion_token for s in job.stages[1:]]
     report = {
         "job_fingerprint": job.fingerprint,
@@ -529,19 +548,26 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
             "cuts_by_prefix": tuple(len(stock.cuts) for _, stock in prefixes),
             "trace_fingerprint": prefixes[-1][0].motion_fingerprint}
         return report
-    if endmill_count != 1 or endmill_count != len(job.stages) - 1:
+    if endmill_count not in (0, 1) or endmill_count != len(job.stages) - 1:
         report["stock_access_residual"] = {"status": "unsupported",
-                                           "reason": "V stock requires one endmill predecessor"}
+            "reason": "V stock supports one standalone stage or one endmill then V"}
         return report
     plan = _decoded_v_plan(job.stages[-1].v_plan, actual[-1])
-    rest = v_region.with_prior(plan, prefixes[-1][0])
+    rest = v_region.with_prior(plan, prefixes[-1][0]) if prefixes else plan
+    depth = min(1, plan.target.cap_depth)
     report["stock_access_residual"] = {
-        "status": "pass", "scope": "decoded endmill then decoded rounded V",
-        "cuts_by_prefix": (len(rest.prior_stock.cuts),),
-        "prior_section_1_mm2": v_region.section_report(rest, 1, final=False),
-        "section_1_mm2": v_region.section_report(rest, 1),
+        "status": "pass", "scope": ("decoded endmill then decoded Region V"
+            if prefixes else "decoded standalone Region V from virgin stock"),
+        "initial_stock": "decoded_endmill_prefix" if prefixes else "virgin",
+        "plan_status": plan.status,
+        "section_depth_mm": depth,
+        "cuts_by_prefix": (len(rest.prior_stock.cuts),) if prefixes else (),
+        "prior_section_1_mm2": v_region.section_report(rest, depth, final=False),
+        "section_1_mm2": v_region.section_report(rest, depth),
         "prior_volume_mm3": v_region.volume_bounds(rest, final=False),
         "volume_mm3": v_region.volume_bounds(rest),
-        "decoded_prior_fingerprint": prefixes[-1][0].motion_fingerprint,
         "decoded_v_plan_fingerprint": plan.fingerprint}
+    if prefixes:
+        report["stock_access_residual"]["decoded_prior_fingerprint"] = (
+            prefixes[-1][0].motion_fingerprint)
     return report

@@ -67,7 +67,7 @@ def _native(root, order=("FIRST", "SECOND", "THIRD"), boundary="split"):
 
 
 class OrderedJobTests(unittest.TestCase):
-    def test_primary_v_plan_does_not_imply_supported_ordered_stock(self):
+    def test_primary_v_plan_has_decoded_virgin_stock_evidence(self):
         target = v_region.VTarget.polygon(
             "standalone-v", ((0, 0), (6, 0), (6, 6), (0, 6)), (), 1)
         plan = v_region.plan(target, v_region.VProfile("pointed", 90, 0, 3, 2),
@@ -83,9 +83,14 @@ class OrderedJobTests(unittest.TestCase):
         job = Job(target.source_id, (stage,), start)
         _, report = emit(job, "uccnc")
         self.assertEqual(report["motion_equivalence"]["status"], "pass")
-        self.assertEqual(report["stock_access_residual"], {
-            "status": "unsupported",
-            "reason": "V stock requires one endmill predecessor"})
+        stock = report["stock_access_residual"]
+        self.assertEqual(stock["status"], "pass")
+        self.assertEqual(stock["initial_stock"], "virgin")
+        self.assertEqual(stock["plan_status"], "partial")
+        self.assertEqual(stock["prior_section_1_mm2"],
+                         v_region.section_report(plan, 1, final=False))
+        self.assertLessEqual(stock["section_1_mm2"][1], stock["prior_section_1_mm2"][1])
+        self.assertGreater(stock["volume_mm3"][1], 0)
         self.assertEqual(report["runtime_parity"]["status"], "not_evaluated")
         self.assertEqual(report["physical_setup"]["status"], "not_evaluated")
 

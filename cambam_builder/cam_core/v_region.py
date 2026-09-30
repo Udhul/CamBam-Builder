@@ -421,15 +421,24 @@ def plan(target, tool, *, stepover_mm=1.0, xy_step_mm=1.0,
 
 def verify(result):
     """Check the full profile between vertices and complete ordered motion."""
-    if (type(result) is not VPlan or result.status not in ("partial", "infeasible") or
+    if (type(result) is not VPlan or type(result.target) is not VTarget or
+            type(result.tool) is not VProfile or
+            result.status not in ("partial", "infeasible") or
             result.fill_pattern not in ("raster", "offset")):
         raise ValueError("invalid V plan")
+    if (any(type(value) not in (int, float) or not math.isfinite(value)
+            for value in (result.safe_z, result.margin_mm, result.stepover_mm)) or
+            result.safe_z <= 0 or result.margin_mm <= 1e-5 or
+            result.stepover_mm <= 0):
+        raise ValueError("V path controls exceed tool/setup limits")
     if result.motions != _motions(result.paths, result.safe_z):
         raise ValueError("V motion differs from paths")
     if not result.paths:
         if result.status != "infeasible":
             raise ValueError("missing V paths")
         return result
+    if result.status == "infeasible":
+        raise ValueError("infeasible V plan carries executable paths")
     boundary = result.target.safe.boundary
     tool = result.tool
     for path in result.paths:

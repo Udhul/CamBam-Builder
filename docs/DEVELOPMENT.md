@@ -193,42 +193,94 @@ and sdist installs have identical runtime/test bytes and numerical dependencies,
 the same complete regression evidence may cover their unchanged behavior;
 fresh installation, asset/fixture and entry-point checks are still required.
 
-### Planned regression execution and reporting hardening
+<a id="planned-regression-execution-and-reporting-hardening"></a>
 
-**Planned, not implemented.** Priority is owned by the
-[post-merge queue](PROGRESS.md#post-merge-task-queue). Session 5 required disposable
-matrix scripts, repair of test-report serialization and manual reconciliation
-after interruption. This is the measured maintenance problem to address.
+### Regression execution and reporting
 
-The bounded outcome is a repository-owned verification entry point with clear
-commands for focused tests, full discovery and clean wheel/sdist verification
-on the declared 3.12/3.13 matrix. Place any reusable runner under `tools/`;
-keep unittest and the existing `uv` toolchain. This runbook owns usage and report
-meaning; REVIEW owns before/after evidence. No CI provider is selected. A future
-CI wrapper should invoke the same commands if a concrete automation need arises.
+Run the repository-owned unittest runner from the root using the declared
+interpreter. `uv` remains the package toolchain; no additional dependency or CI
+provider is required. The supported matrix is declared once in
+`pyproject.toml` under `[tool.cambam-verification].python`; package execution
+reads that list and uses its first entry for the independent sdist and base-only
+wheel checks.
 
-Acceptance for that future task:
+```powershell
+# Focused modules (repeat --pattern to combine selections).
+& $ProjectPython tools/verify.py --pattern test_verification_runner.py
+& $ProjectPython tools/verify.py --pattern test_standalone_v.py
+# Full checkout discovery.
+& $ProjectPython tools/verify.py
+# Clean wheel matrix, independent sdist discovery, base-only boundary.
+& $ProjectPython tools/verify.py --package
+# Focused installed checks; this reports only the selected coverage.
+& $ProjectPython tools/verify.py --package --pattern test_native_owner_migration.py
+```
 
-- Logs and structured results live in a unique ignored `output/` task directory.
-  Record commit/worktree identity, runtime/test/artifact hashes, interpreter and
-  dependencies, exact commands, timings, test IDs and named skips.
-- Distinguish pass, fail and incomplete execution; interruption, setup failure
-  or report failure cannot produce a green result. Retain logs when reporting fails.
-- Support deliberate reruns of failed/incomplete modules and explicit reconciliation.
-  Reuse completed evidence only after checking relevant code, test, configuration
-  and dependency identity. Never silently omit tests after an interruption.
-- Preserve installed-package provenance checks and the declared wheel/sdist and
-  optional-dependency boundaries. Derive the supported matrix from one declared
-  configuration; avoid another manually maintained set of version lists.
-- Measure a representative geometry-heavy module and package checks; report
-  wall time separately from available execution/CPU time. Identify expensive
-  repeated work before proposing caching, geometry changes or extra parallelism.
-  Any later optimization must preserve numerical and mutation oracles.
+Every invocation creates `output/verification-<timestamp>-<unique>/` and prints
+its `report.json` path before setup. The report stores commit/worktree identity,
+SHA-256 identities for runtime/test/tool/configuration inputs and artifacts,
+interpreter/dependency versions, exact argument vectors, working directories,
+test IDs, outcomes and named skips. Command logs and command JSON records are
+written independently, so a reporting failure does not erase execution logs.
+Package execution checks archive contents and installed provenance, runs from
+outside the checkout with a source-free test snapshot, and checks both optional
+dependencies present and absent as described above. Only authored tests/fixtures
+and the acceptance helper enter the snapshot; ignored native observations remain
+outside fresh-install coverage.
 
-Stop once existing verification is repeatable and interrupted evidence is auditable
-without hand-editing logs. Do not turn this into a general test platform or select
-performance changes without measurements. Runtime/dependency changes still require
-the normal checks; reporting convenience cannot weaken their acceptance.
+The top-level status is `pass` only when every selected module and setup/smoke
+gate completed successfully. Unexpected assertion/collection failures are `fail`;
+interruption, setup/report failure or changed inputs are `incomplete`. Both
+return nonzero. Empty selection or an empty test module cannot pass. A pass
+describes the recorded patterns and named skips, never unselected tests or
+physical/controller acceptance. Inspect named skips under the policy above.
+Standard unittest expected failures remain visible as `expected_failure` and
+do not fail the module; an unexpected success does fail it.
+Completion accounts for every selected test through an outcome and `stopTest`
+or its named `setUpClass`/`setUpModule` skip. A stopped suite or an omitted selected test is
+non-green, even when unittest's executed tests all passed. Worker results retain
+completion details and missing IDs; resume requires that completion evidence.
+
+Explicitly reconcile a previous attempt with:
+
+```powershell
+& $ProjectPython tools/verify.py --resume output/verification-<original>
+& $ProjectPython tools/verify.py --package --resume output/verification-<original>
+# Also retry a previously passing module (module stem, without .py).
+& $ProjectPython tools/verify.py --resume output/verification-<original> --rerun test_mcp_protocol
+```
+
+Resume creates a new report, checks input/environment/artifact identities and
+the complete selected module inventory, then reuses intact passing module
+records and reruns all failed/incomplete modules. Reuse is explicitly attributed
+to the previous report and result hashes are checked. The original attempt
+remains unchanged. Keep its environments, snapshots, artifacts and result files
+until reconciliation is finished. A setup interruption before identities and
+inventory were established requires a fresh invocation. Source/configuration or
+dependency changes require fresh evidence; resume refuses them. This conservative
+rule deliberately avoids reasoning about which tests a code change might affect.
+Schema 2 reports also bind presence and SHA-256 bytes for the four retained B/C
+files consumed by `test_tabbed_cutout` and the three retained M1 files consumed
+by `test_native_series`. Changed, added or removed observation inputs rerun that
+module, including a previously skipped observation. Input changes detected after
+module execution or at final verification make the invocation `incomplete`.
+These paths are relative to each target's snapshot: fresh installed targets still
+record absent observations and their named skips. Unrelated `output/` history
+does not invalidate reuse. Keep the bounded `OBSERVATION_INPUTS` list in
+`tools/verify.py` aligned when adding or changing retained-input tests; this is
+not automatic input tracing. Schema 1 reports require a fresh invocation because
+they lack the repaired evidence contract.
+
+`wall_seconds` measures elapsed execution separately from worker `cpu_seconds`.
+Worker CPU covers its Python process (including native extension work), not
+subprocess descendants; command CPU is `null` where portable accounting is
+unavailable. Reused timings remain marked as reused; the new invocation's wall
+time is measured independently. `summary.slowest_modules` exposes repeated
+geometry cost without selecting caching, numerical changes or parallelism.
+The [dated evidence](REVIEW.md#regression-package-runner---2026-09-30) owns measured
+results and remaining limits; [repair evidence](REVIEW.md#runner-evidence-repair-and-delivery-verification---2026-09-30)
+owns the completion and retained-input fault checks. Runtime/dependency changes still require the
+normal verification scope; reporting convenience cannot narrow acceptance.
 
 ### Historical package baseline
 
@@ -1830,6 +1882,50 @@ not change native document emission. The
 [implemented contract](structure_spec.md#reusable-ordered-job-output-and-verification)
 names the supported geometry and transition limits.
 
+### Standalone Region-V ordered stock verification
+
+Run the synthetic first consumer, independent capsule witness and misuse tests:
+
+```powershell
+& $ProjectPython -m unittest tests.test_standalone_v tests.test_v_region tests.test_ordered_job tests.test_ordered_dialects tests.test_execution_evidence tests.test_native_v_hybrid -v
+```
+
+The first consumer is the radius-9 mm annulus with a radius-2 mm protected hole
+and 2 mm cap. Pointed/flat/rounded tools and raster/offset fills pass independently
+decoded UCCNC and Grbl checks. Tests generate all inputs; no retained session
+artifact or CamBam post is required. The hand-authored capsule checks section and
+volume bounds against analytic values. Short flutes retain partial residual;
+infeasible empty plans refuse emission. Matching motion with a protected-boundary
+violation, stale source/revision/setup, altered feed/depth/XY and forged bundle
+reports must fail. See the [implemented contract](structure_spec.md#standalone-region-v-virgin-stock-contract).
+
+Minimal public construction, with caller feeds and virgin stock explicitly set:
+
+```python
+from cambam_builder.cam_core import ordered_job, v_region
+from cambam_builder.integrations.ordered_output import emit
+
+target = v_region.VTarget.polygon(
+    "square-source", ((0, 0), (6, 0), (6, 6), (0, 6)), (), 1)
+plan = v_region.plan(target, v_region.VProfile("pointed", 90, 0, 3, 2))
+start = (-2, -2, plan.safe_z)
+stage = ordered_job.Stage(
+    "primary-v", "T41",
+    tuple(ordered_job.JobMove(m.role, m.start, m.end,
+                             0 if m.role == "rapid" else 100)
+          for m in v_region.complete_motion(plan, start)),
+    11000, v_plan=plan, source_revision=plan.fingerprint)
+job = ordered_job.Job(target.source_id, (stage,), start, stock_present=True)
+programs, report = emit(job, "uccnc")
+assert report["stock_access_residual"]["initial_stock"] == "virgin"
+assert report["stock_access_residual"]["plan_status"] == "partial"
+```
+
+This is offline geometric acceptance. Full discovery and the installed 3.12/3.13
+package matrix remain required for changes to the shared verifier. Runtime and
+physical setup are separately unevaluated; no manual validation adds evidence
+to the synthetic mathematical claims.
+
 ### Native posted predecessor and generated V cleanup
 
 The prepared local fixture is
@@ -2341,10 +2437,15 @@ and lower-level calls:
 & $ProjectPython -m unittest discover -s tests -p 'test_mcp_*.py' -v
 ```
 
-Shared parser, replay or verifier changes also require full discovery. Native
+Shared parser, replay or verifier changes also require full discovery. Historical
+hash-bound fixtures use scoped `.gitattributes`: optimizer source/posts, RC01
+posts and their pinned JSON metadata are CRLF; generated RC01 XML sources are LF.
+Preserve those manifest-bound
+bytes regardless of `core.autocrlf`; do not rehash changed fixtures to bypass
+freshness. Native
 Default posts may use CRLF/LF; strict controller outputs and canonical direct
 reference files retain their exact byte grammar. The ordered verifier version
-`ordered-job-v2-evidence-boundaries` requires fresh bundles and recomputed
+`ordered-job-v3-standalone-region-v` requires fresh bundles and recomputed
 reports. Existing source/post observation does not need repeating when its bytes
 and claimed behavior are unchanged. See the
 [session 4 evidence](REVIEW.md#branch-review-session-4---2026-09-29).

@@ -1,4 +1,7 @@
 include tests/fixtures/rest_vcarve_acceptance.json
 include demos/mcp_client_acceptance_verify.py
+include tools/verify.py
+include tools/verification_package.py
+recursive-include tests *.py
 recursive-include tests/fixtures/optimizer_corpus *.json *.cb *.nc
 recursive-include tests/fixtures/rc01_native_stock *.json *.cb *.nc

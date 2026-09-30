@@ -3,9 +3,9 @@
 Status: **M0-M5 bounded outcomes accepted offline.** The reusable ordered-job
 packet closed M5's native-MOP edit/order gap; the five subsequent job packets
 also passed their bounded offline gates. The branch review is complete and merged
-at `6faf4a5`. The next capability packet is
-[standalone Region-V ordered stock verification](#standalone-region-v-ordered-stock-verification);
-execution priority stays in [PROGRESS.md](PROGRESS.md#post-merge-task-queue).
+at `6faf4a5`. [Standalone Region-V ordered stock verification](#standalone-region-v-ordered-stock-verification)
+is also accepted offline; the next priority stays in
+[PROGRESS.md](PROGRESS.md#post-merge-task-queue).
 Requested 2026-09-08 and expanded 2026-09-22/23. Priority belongs only to
 [PROGRESS.md](PROGRESS.md#active-work-and-next-priority).
 This document owns the problem, proposed outcomes, technical reasoning and future
@@ -27,8 +27,13 @@ now gives user-accepted synthetic inputs and separate standalone/native acceptan
 
 ## Standalone Region-V ordered stock verification
 
-**Planning decision, 2026-09-29; not implemented.** This is one substantial
-feature task, which may span sessions. The completed M0-M5 epic and five later
+**Implemented and accepted by engineering offline, 2026-09-30; ready to commit.**
+The single-stage evaluator, fourteen synthetic regressions, supported Python
+matrix and package gates are complete. [Exact evidence and remaining limits](REVIEW.md#standalone-region-v-ordered-stock-verification---2026-09-30)
+are recorded in REVIEW; the implemented guarantees and reproduction commands
+are owned by the specification/runbook linked below. The stopping condition is
+satisfied; no new CamBam post, controller or physical observation is required.
+The completed M0-M5 epic and five later
 job packets retain their accepted boundaries. Scope expansion needs a named
 consumer and an updated acceptance boundary in PROGRESS.
 
@@ -37,16 +42,19 @@ consumer and an updated acceptance boundary in PROGRESS.
 A caller can create a single Region-V stage from virgin stock, emit a supported
 controller program, decode it and obtain stock/access/residual evidence through
 the public ordered-job workflow. No synthetic cylindrical predecessor is required.
-`v_region.plan`, `verify`, `section_report` and `volume_bounds` already support
-primary V plans; `ordered_job.audit` currently returns stock `unsupported` unless
-exactly one endmill stage precedes the terminal V stage. This task closes that
-specific composition gap, using the existing mathematical owners.
+`v_region.plan`, `verify`, `section_report` and `volume_bounds` already supported
+primary V plans; before this task `ordered_job.audit` returned stock `unsupported`
+unless exactly one endmill stage preceded the terminal V stage. This task closes
+that composition gap using the existing mathematical owners. Existing public
+`Stage`/`Job` constructors suffice; no general stage framework or helper was added.
+The [implemented contract](structure_spec.md#standalone-region-v-virgin-stock-contract)
+owns stock meaning, controls, decoded access and residual guarantees.
 
 The first complete consumer is the existing annular Region-V example in
 `tests/test_v_region.py::VRegionTests.test_accepted_letter_and_curved_annulus_all_profiles`.
-Reuse its synthetic geometry and declared tool/profile parameters to construct a
-V-only job against virgin stock. Persist exact task parameters and numeric results
-in REVIEW when implemented; session files belong under unique ignored `output/`.
+Its synthetic geometry and declared tool/profile parameters were reused for the
+V-only job against virgin stock. Exact task parameters and numeric results are
+persisted in REVIEW; session files remain under unique ignored `output/`.
 The annulus is the first proof of the API, not a fixture-name restriction in it.
 
 ### Owners and bounded scope
@@ -56,16 +64,17 @@ The annulus is the first proof of the API, not a fixture-name restriction in it.
   decoded V-plan reconstruction and ordered audit results.
 - `integrations/ordered_output.py`, `ordered_dialects.py` and existing UCCNC/Grbl
   adapters: output and decoding through the current supported dialect contracts.
-- `tests/test_v_region.py`, `test_ordered_job.py` and `test_ordered_dialects.py`:
+- `tests/test_standalone_v.py`, `test_v_region.py`, `test_ordered_job.py` and `test_ordered_dialects.py`:
   independent mathematical, composition and output/misuse regressions.
 - `structure_spec.md` owns the implemented API/guarantees after closure;
   DEVELOPMENT owns reproduction commands; REVIEW owns evidence and limits.
 
-Support one V stage within the current finite planar Region domain, with explicit
-stock/frame/source/setup and supported pointed, flat and rounded profiles. Preserve
-existing endmill-then-V behavior and explicit partial/infeasible outcomes. Inspect
-callers before choosing whether existing constructors suffice or a public helper
-is needed; do not design a general stage framework before proving this slice.
+The implemented scope supports one V stage within the current finite planar
+Region domain, with explicit stock/frame/source/setup and supported pointed,
+flat and rounded profiles. Existing endmill-then-V behavior and explicit
+partial/infeasible outcomes are preserved. Inspecting callers established that
+existing constructors suffice; no public helper or
+general stage framework was needed to prove this slice.
 Multiple V stages, arbitrary mixed evaluators, tool search, smoothing, unequal
 design/tool angles, broader fixtures and machine execution remain separate work.
 Existing unsupported combinations must keep a precise refusal.

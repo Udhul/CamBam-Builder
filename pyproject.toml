@@ -28,6 +28,9 @@ packages = ["cambam_builder", "cambam_builder.native", "cambam_builder.cam_core"
 [tool.setuptools.dynamic]
 version = {attr = "cambam_builder.__version__"} # Read the 'version' from the '__version__' attribute of the 'cambam_builder' module
 
+[tool.cambam-verification]
+python = ["3.12", "3.13"]
+
 # [project.scripts]
 # cambam-cli = "cambam_builder.main:main" # Add cambam_builder/main.py to CLI
 

@@ -1,0 +1,7 @@
+# Reconstruct historical hash-bound bytes from Git's normalized text blobs.
+tests/fixtures/optimizer_corpus/*.cb text eol=crlf
+tests/fixtures/optimizer_corpus/*.nc text eol=crlf
+tests/fixtures/optimizer_corpus/*.json text eol=crlf
+tests/fixtures/rc01_native_stock/*.cb text eol=lf
+tests/fixtures/rc01_native_stock/*.nc text eol=crlf
+tests/fixtures/rc01_native_stock/*.json text eol=crlf
