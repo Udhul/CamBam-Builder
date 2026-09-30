@@ -1,5 +1,93 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Ornamental CAM and inlay expectation refinement - 2026-09-30
+
+**Planning/refinement complete; runtime implementation has not begun.** The user
+explicitly requested expectations and follow-ups for pointed/flat/combined and
+varied-angle V carving, maximum depth, paired plug/receiver inlays, fit and sanding,
+endmill/V rest jobs, optimal bundles, fully native rest MOPs/derived primitives
+and shape-aware decorative/3D routing. Initial status is clean on `main` at
+`dca4081`, the user's committed MV01 planning record. This request expands the
+product requirements and precedes further verification work; it does not reopen
+the merged epic's correctly bounded offline acceptance.
+
+The lead inspected contracts, implementations and relevant test assertions;
+two bounded read-only reviews independently checked V/inlay and native-rest/
+bundle boundaries. Those reviews add inspection, not unperformed runtime checks.
+Evidence that changes the plan:
+
+| Owner / evidence | Present contract and consequence |
+| --- | --- |
+| `cam_core/v_region.py`: `VProfile`, `VTarget.section`, `verify`, `section_report`; `tests/test_v_region.py::test_tool_angle_changes_the_defined_v_target_section` | Pointed/flat/rounded profiles, caps and varied angles are implemented, but tool angle defines the measured design. An unlike-angle tool can silently describe a different part if treated as an equivalent alternative. Separate fixed target geometry before generalized comparison/composition. |
+| `cam_core/ordered_job.py::audit`, `v_region.with_prior` | Stock replay supports one V or one cylindrical predecessor then V. Further V/mixed stages are rejected. Prior stock is combined with unchanged V paths, not used to generate efficient rest-only machining. MV01/MX01 and candidate generation have separate outcomes. |
+| `cam_core/inlay.py`: `InlayRequest`, `generate`, `assembly`, `audit_pair`; `tests/test_paired_inlay.py` | One circular pointed-tool pair has separate stock and analytic insertion/registration checks. Radial allowance is nonnegative; bottom/facing depth differences are coupled. There is no general ornamental pair, independent backing/surface controls, composite-stock facing or sanding-result verification. |
+| `integrations/cambam/rc01_adapter.py::_attach_native_cleanup`, `native_polygon_rest.py::_make_native` | Four recipe-specific corner windows or two Pockets on one original Region do not establish arbitrary native rest-boundary synthesis. The retained M1 post has twelve descents violating its declared predecessor-cleared entry requirement; that does not prove every separately modeled fresh-stock entry is invalid. |
+| `integrations/cambam/native_series_audit.py::_bind_source_target`, `audit_linear_native_series` | Current native audit binds MOPs to the same original primitive/target. Derived machining boundaries need provenance to the unchanged design plus actual-post stock/access checks, not relaxed target equality. |
+| `integrations/cambam/native_curved_rest.py`: `_make_preview`, `_make_explicit`, `audit_preview` | Engrave centerline preview and Drill/CustomScript transport are separate capabilities; neither substitutes for native Pocket algorithm acceptance. |
+| `cam_extensions/strategy.py::select_strategy`, `machining_planning.py::plan_milling` | Supplied audited routes can be ranked, and process calculations supply constraints. No stock-aware tool/path bundle generation, cost objective or global optimality proof exists. |
+| `cam_core/surface3d.py`, `volume3d.py`; their specification/test oracles | Affine/spherical/stepped cases establish bounded contact and supplied-motion replay, not a general 3D relief backend, feature-guided planner or native Surface/3D MOP interchange. |
+
+**Engineering decision:** recommend DT01 fixed design and cutter-independent
+verification before the previously recommended MV01. The user now supplies the
+concrete unlike-angle/mixed-tool/inlay consumers that justify this shared semantic
+repair/extension. DT01 proves a useful existing-API slice without a speculative
+universal geometry model; MV01 then composes stock, followed by mixed endmill/V
+and residual/feature-guided planning. Native rest-boundary synthesis, general
+paired assemblies/finishing, bounded planar bundle search and shape-aware relief
+foundations are explicit follow-ups, not requirements to be satisfied by one
+successively enlarged test fixture. Independent target versus cutter and original
+design versus derived machining boundary are the common architectural needs.
+
+The [expectation map and follow-up contracts](REST_MACHINING_PLAN.md#product-expectations-and-capability-follow-ups-2026-09-30)
+record all requested outcomes, proposed synthetic consumers, practical limits,
+additional enabled uses and acceptance. PROGRESS owns the revised execution
+order; structure_spec records the durable target direction while retaining its
+present implementation guarantees. BO01 starts with finite supported planar
+families rather than waiting for a universal 3D optimizer. Native and detached
+routes remain separate options; actual native posts, material-fit coupons and
+controller/physical acceptance require their specifically named observations.
+
+Primary research verified distinctions rather than importing another product's
+semantics: [Vectric inlay parameters and clearance tools](https://docs.vectric.com/docs/V12.5/Aspire/ENU/Help/form/VCarve%20Inlay%20Toolpath/index.html),
+[plug backing removal](https://docs.vectric.com/docs/V12.5/Aspire/ENU/Help/form/vcarve-inlay-toolpath-plug/index.html),
+[Autodesk Morph](https://help.autodesk.com/view/fusion360/ENU/?contextId=MFG-REF-3D-MORPH-CMD)
+and [Steep and Shallow](https://help.autodesk.com/cloudhelp/ENU/Fusion-CAM/files/GUID-A6933B73-D98F-43AD-BCFD-A450D91C4E61.htm),
+[OpenCAMLib contact/waterline algorithms](https://github.com/aewallin/opencamlib),
+and the [CamBam 1.0 3D tutorial](https://cambam.net/doc/1.0/tutorials/3d-profile.html).
+Some direct CamBam operation URLs were inaccessible; the retrieved tutorial and
+local posted evidence supply the bounded conclusions. These references do not
+establish compatibility, provider adoption, machining gains or physical fit for
+this project. No dependency is installed/selected and no private assets or task
+reports were sent externally.
+
+Limits are explicit: finite cutters/access constrain achievable detail; an
+ordinary fixed-axis setup cannot reach every undercut; same angle does not alone
+establish mating surfaces. Sanding/facing can change an inlay's visible outline
+and needs a fixed finish surface plus allowed removal, not an assumed nominal
+fit. Numerical/model tolerance is not material-fit tolerance. Geometric models
+cannot predict wood/glue response or certified cutting loads without process
+facts. "Best" requires a declared finite search/objective or reported heuristic
+scope; path-length/feed alone is not exact machine runtime. Outline tracing must
+verify complete target coverage and can supplement waterline/raster strategies.
+
+This unit changes only PROGRESS, REST_MACHINING_PLAN, structure_spec and REVIEW.
+Documentation-only verification checks the diff, whitespace, added local links/
+anchors and artifact scope. No runtime suite or manual validation is needed for
+this planning outcome; no implementation or production acceptance is claimed.
+Task-local `.venv/Scripts/python.exe
+output/cam-expectations-20260930-3256c53a/check_expectations.py` exits 0: working
+`git diff --check`, all nine added local links/anchors, two explicit test-file
+references and the four-document scope checks pass. The full working diff was
+inspected; untracked inventory is empty. No ignored `.cb`/`.nc` candidate is
+found outside `output/`; denied traversal of existing cache/temporary directories
+limits exhaustive enumeration. The validator, diff and JSON stay local; the
+expectation map and this record retain conclusions when artifacts are unavailable.
+The documentation is ready to commit. No files are staged, committed or merged.
+This is a coherent fresh-session breakpoint: the expanded expectations, next packet,
+acceptance limits and remaining work are durable, with no pending product choice
+needed for the offline DT01 slice. Suggested commit:
+`docs: refine ornamental CAM expectations and foundation roadmap`.
+
 ## Next framework task reassessment - 2026-09-30
 
 The user challenged the closure handoff's request for a next personal part or

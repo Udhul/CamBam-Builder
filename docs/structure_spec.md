@@ -123,6 +123,28 @@ and volume contour following, additional machining methods and versioned CamBam
 behavior compatibility are intended extensions. The user's current machine and
 manual workflow supply test cases, not the framework's capability ceiling.
 
+**Expanded product direction, 2026-09-30; target contracts, not implementation.**
+The user expects pointed/flat/combined V carving, varied cutter angles and depth
+caps, paired decorative inlays with fit/glue/seating allowances and post-assembly
+finishing, mixed endmill/V rest jobs, fully native rest MOP/primitive synthesis,
+and shape-aware tool/path planning for ornaments, friezes and 3D reliefs.
+The [expectation map and follow-up contracts](REST_MACHINING_PLAN.md#product-expectations-and-capability-follow-ups-2026-09-30)
+own detailed product behavior and staged acceptance. PROGRESS owns priority.
+
+The design surface/volume must have its own identity independent of cutter
+profile and independent of derived MOP machining boundaries. Required removal,
+allowed relief and evolving known-free stock remain distinct. Candidate tools,
+paths and order are checked against that same target. Paired parts retain their
+separate stock/setup identities plus an assembly relation and a specified final
+finish plane. Feature-guided strategies and cost-aware bundle search consume
+geometric/contact/stock capabilities; they do not redefine finish intent or
+replace independent motion/coverage verification. General surface contact,
+composite assembly stock, native derived-boundary binding and search are staged
+foundation work. Current tool-defined V targets, circular inlays and supplied
+candidate ranking retain the narrower guarantees stated below until implemented
+extensions pass their own acceptance. No backend or new dependency is selected
+by this product-direction refinement.
+
 The tables above identify present owners; this section defines the target
 contracts. A completed reference job does not imply these contracts are all
 implemented. The existing [small shared model](REST_MACHINING_PLAN.md#small-shared-model)

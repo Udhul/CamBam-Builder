@@ -25,11 +25,272 @@ The implemented reusable-job direction and later packets are in
 The [first generated acceptance job](#first-generated-acceptance-job-rc01)
 now gives user-accepted synthetic inputs and separate standalone/native acceptance gates.
 
+## Product expectations and capability follow-ups (2026-09-30)
+
+**User-requested framework direction; planned beyond the implemented bounded
+slices.** The user expects decorative V carving, paired inlays and combined-tool
+rest machining, with shape-aware planning for ornaments, friezes and 3D reliefs.
+This section records the product requirements and engineering interpretation;
+PROGRESS alone owns execution order. The current specification still owns what
+actually works. Synthetic consumers may establish engineering acceptance; a
+personal machining job is not a prerequisite for framework development.
+
+### Expectation-to-capability map
+
+Here, receiver means the cavity; plug/insert means the retained mating component.
+The software must keep design intent, actual cutter geometry, remaining stock,
+derived machining boundaries and output authority distinct.
+
+| Expected outcome | Implemented evidence today | Required follow-up |
+| --- | --- | --- |
+| Pointed, flat-tip and rounded V carving, selectable angles and maximum depth | `v_region` supports these profiles, polygon/curved openings, raster/offset paths and finite caps; output remains partial when tools/spacing leave stock. Tool angle currently defines the target walls. | DT01 makes the desired surface independent of cutter angle/tip. Distinguish design cap, reachable depth and permitted depth per pass; tool limits cannot silently redesign the part. |
+| Flat/pointed combinations and other tool sequences | Standalone V and one cylindrical predecessor followed by one V stage have decoded stock evidence. Multiple V stages and broader interleavings are rejected. | MV01 establishes cumulative V stock; MX01 extends supported endmill/V combinations with one unchanged design and actual per-stage sweeps. |
+| Receiver/plug inlays with meaningful tolerances | One circular, pointed-tool pair verifies separate stocks, registration, insertion and zero/positive radial clearance. | IN01 generalizes paired contours/islands, tool sequences, seating, independent side/bottom/surface gaps, backing and final visible shape. |
+| Sanding/facing to the finished assembled design | The circular model locates assembly/backing but has no composite-stock finishing operation. | IN01 records the finish plane and removal allowance; composite-stock facing and remaining thickness/outline verification need their own slice. Model sanding as a declared removal/tolerance envelope or measured result. |
+| Endmill plus V rest machining that reduces leftover | Bounded generated/native hybrids and smaller-endmill cleanup have stock evidence. `with_prior` measures unchanged V paths; it does not generate efficient rest-only cuts. | MX01 then RP01: residual-driven candidates, safe entry/links through prior clearance, preserved original target and quantified new removal/air cutting. |
+| Calculate the best tool/path bundle under user constraints | `strategy.select_strategy` ranks supplied audited routes; no bundle generation or cutting/time/tool-change optimization is implemented. | BO01 searches a declared finite inventory and strategy family, verifies candidates and reports the objective, alternatives, budget and uncertainty. |
+| Fully native CamBam rest machining using derived primitives/MOPs | Native motion normalization and some posted jobs work; RC01 corner windows and M1 native Pockets are bounded trials. M1's native cleanup fails its declared cleared-entry gate. | NR01 derives editable rest machining boundaries, authors native Pocket/Profile/appropriate MOPs, and accepts complete actual CamBam posts against the unchanged design. |
+| Shape tracing with tools fitting local geometry; decorative planar detail | Existing offsets follow boundaries, and bounded V and endmill paths have continuous geometric checks. No general medial/contact/feature planning exists. | RP01 adds feature/contact guidance, narrow-detail and curvature-aware candidates, with full residual/coverage and access verification. |
+| Shape-aware 3D relief/ornament routing rather than one universal fill pattern | Analytic stepped, sloped and spherical jobs verify supplied paths; there is no general relief contact backend or freeform strategy generator. | SF01 establishes bounded surface/contact and stock queries, then feature-guided, contour/flow/morph/pencil/scallop candidates and suitable tool selection. |
+| Native CamBam 3D operations for those shapes | General native Surface/3D Surface authoring/normalization is outside current interchange support. | NR03 is a separate mesh/entity/MOP/post compatibility slice; detached shape-aware paths can precede it. |
+
+These are achievable development goals within declared geometry, tooling and
+machine-access limits. They are not claims that current examples already deliver
+general decorative jobs. The first proofs should include asymmetric ornament
+contours, holes, narrow bridges, acute corners and broad areas, not only circles
+or rectangular pockets. Preserve connectivity, minimum thickness, sharp-feature
+intent and boundary deviation as well as area/volume; a low residual total can
+conceal a missing decorative detail or destroyed bridge.
+
+### Engineering interpretation and practical limits
+
+**A fixed design drives tool choice.** A depth-capped ideal V recess has a flat
+floor only where its opening is wide enough; narrow features rise before the cap.
+A flat-tip tool cannot create every ideal pointed valley, and a V tool cannot
+finish every sharp vertical-wall pocket corner without changing the wall. Some
+targets need smaller/different tools, allowed relief, another setup or an explicit
+partial/unreachable result. The engine must report those choices and residual
+locations. Numerical geometry budgets, machining stock-to-leave, runout/setup
+uncertainty and inlay fit allowances are different quantities with separate
+units/conventions and evaluators.
+
+**Inlay fit is an assembly problem.** Receiver and plug have independent stock,
+machining frames and tool bundles, with an explicit flip/registration/insertion
+relation. Distinguish lateral or surface-normal side fit, bottom glue space,
+surface separation, seating, backing thickness and facing/sanding allowance.
+Verify the insertion sweep, final seating, premature shoulder/backing contact,
+and the visible motif at the final finish plane. For a straight tapered wall,
+moving that plane axially by `delta_z` changes lateral position by
+`abs(delta_z)*tan(design_half_angle)`; finishing can change the visible outline.
+At a 90-degree included design angle, 0.1 mm axial change gives 0.1 mm local
+movement per sloping wall, under this straight-wall model. Derive both mating
+targets from the intended finished motif rather than assume mirrored top outlines
+will fit after sanding. Keep their shared assembly revision bound when either
+part is edited. Signed interference may be represented intentionally, but rigid
+geometry cannot certify wood compression, adhesive flow, grain tearing, clamping
+force or a universal good-fit allowance. Calibration coupons and physical
+observations establish those process facts.
+
+**Shape-aware does not mean outline-only.** Prefer strategies that respect
+important ridges, valleys, concave corners, borders and flow directions when
+their evidence supports the requested finish. Candidate families include planar
+medial/contact tracing, contour offsets, guide-curve morph/flow, pencil cleanup
+and scallop-controlled surface passes. Local tool fit considers cutting shape,
+concave curvature, reach and shank/holder access, not diameter alone. Combine
+feature passes with bulk clearing and remaining-area finishing where needed.
+Waterlines already follow constant-height shape contours and can be useful for
+steep regions/roughing; contour-aware paths are an additional choice, not a
+presumption that every waterline or raster strategy is inferior. Compare useful
+removal, protected-detail error, cusp/residual thickness, air travel and estimated
+cost against a baseline under the same target and constraints.
+
+**Best must name its objective.** Hard requirements include target protection,
+depth/reach, fixtures, tool availability, process/pass limits and accepted finish
+tolerances. Then rank feasible bundles by declared priorities or a Pareto set:
+residual/detail quality, cutting and air motion, tool changes, setup cost and
+estimated time. Report search completeness, candidate family, model assumptions,
+budget and any optimality bound. Exhaustive search can prove best among a finite
+declared candidate set under its model; heuristics must state their limits. Do
+not promise a universal globally optimal continuous toolpath or exact runtime
+from path length/feed alone. Acceleration, controller blending, engagement,
+material and actual tool-change times need their own models/calibration.
+
+**Software cannot remove access limits.** A fixed-axis cutter cannot reach every
+undercut, and finite tools cannot reproduce arbitrary zero-radius detail. Extra
+setups, suitable specialty cutters or multi-axis poses/kinematics may address
+some cases; their stock transforms, collision and controller support require
+additional core/output contracts. Height fields suit non-overhanging reliefs;
+general overhangs/multiple vertical intervals need a different representation.
+Select contact/stock backends from representative jobs, error bounds and measured
+cost. No new geometry dependency or universal voxel/mesh model is selected here.
+
+### Follow-up contracts and representative consumers
+
+The identifiers below name substantial capability outcomes, not a claim that
+implementation has begun or a second priority queue. Each owns its acceptance
+detail here; execution order and live state remain in PROGRESS.
+
+- **DT01: fixed design and cutter-independent verification.** The packet below
+  proves one capped V target with independently chosen cutter profiles/angles.
+  Preserve original design identity separately from any derived cutting boundary.
+- **MV01/MX01: cumulative composed stock.** MV01 retains its flat/pointed consumer
+  below, now based on DT01. MX01 then proves a supplied endmill/V/cleanup sequence
+  against the same design with independently decoded per-prefix stock, overlap,
+  entries and whole-tool protection. Demonstrate a later stage's positive useful
+  removal and reject a last-stage-only or double-counted replay. Extend only the
+  named supported mixes; separate assembly bodies still keep separate stocks.
+  Add explicit axial pass/entry limits and allowance stages when generating an
+  executable candidate: a final depth cap alone is not a safe one-pass schedule.
+  Stock evidence must follow those actual depth passes. Unknown engagement/load
+  constraints stay unassessed rather than acquire invented defaults.
+- **RP01: feature-aware rest candidate generation.** Use a synthetic frieze with
+  lobes, protected islands, narrow valleys and a broad capped area. Generate
+  contact/contour/medial-guided detail and rest-only candidates with verified
+  entry/links, bounded cusp/edge error and residual location. Compare with the
+  existing raster/offset baseline; prove either better stated detail/coverage or
+  less redundant motion at equivalent tolerances. Neither gain is assumed.
+  Include union-cleared entry/link proof when a concrete candidate needs it;
+  path fitting/smoothing must retain containment, topology and declared deviation.
+- **NR01: derived rest boundaries and fully native MOPs.** Use a native pocket
+  with an island and disconnected corner residuals. Derive cutter-compensated
+  Regions/Plines/windows and useful overlap with prior cleared space; pure rest,
+  feasible centers and a Pocket target are different sets. Preserve original CAD
+  and editable source-to-derived provenance. Extend native source binding to
+  certify derived MOP boundaries against one original design, not simply drop
+  current target-equality checks. Strict save/reopen, then obtain a real CamBam
+  post and replay all cutting/entry/link/setup moves and resulting stock. A valid
+  stock-cutting entry may be permitted if separately modeled; a cleared descent
+  cannot assume material absent. Engrave previews and CustomScript transport do
+  not close fully native planner acceptance. Shape authoring/preparation is
+  offline; actual native algorithm behavior requires the named external post.
+  Native Pocket/Profile/Engrave parameters cannot encode every arbitrary generated
+  variable-Z or feature-guided path. Return a precise representability limit and
+  offer the separately accepted generated-output route when appropriate; do not
+  relabel a literal carrier as fully native planning. Broader native 3D and any
+  plugin-specific V behavior require their own versioned support evidence.
+- **IN01: general ornamental inlay and assembly finishing.** Use one asymmetric
+  motif with a hole, thin bridge, bounded receiver and retained plug/backing.
+  Independent part plans may combine endmills and suitable V profiles. Establish
+  nominal side-fit plus separately controlled bottom/surface gaps, insertion and
+  topology; reject registration/tool/revision changes, collisions and fragile
+  or unreachable features. Extend to signed fit requests with explicit limits.
+  A subsequent composite-stock facing slice checks final motif/plane and minimum
+  retained thickness; sanding uses an explicit removal envelope. Begin with a
+  flat finished face; later shaped relief finishing requires a target surface
+  and assembly stock queries, not merely one scalar sanding thickness. Record
+  assembly/cure and renewed setup as declared process boundaries before cutting
+  the combined part. The same target
+  semantics must support flat/rounded tips through achievable mating surfaces,
+  not assume that two cutter labels or equal angles establish a fit. Physical
+  material-fit and finishing coupons have separately prepared acceptance gates.
+- **SF01: shape-aware 3D relief foundation and routing.** Begin with an analytic
+  curved moulding/valley and ridge motif, then a bounded non-overhanging relief
+  representation. Establish contact/normal/curvature queries, whole cutter/body
+  occupancy, evolving stock and error/coverage bounds before a general strategy
+  claim. Compare a guided contour/flow or pencil-plus-surface-finish candidate
+  against waterline/parallel baselines with ball, tapered-ball or other justified
+  profiles. Measure detail retention, scallop/residual thickness and motion cost;
+  contact agreement alone is insufficient. **NR03** separately binds native mesh
+  entities/3D MOP states and actual posts if fully native 3D output is required.
+- **BO01: constrained bundle generation and search.** Use a finite tool inventory
+  and at least two independently verified strategy families on the ornament/rest
+  job. Generate single/multiple-tool and useful-order alternatives, replay each,
+  reject dominated/unsafe candidates and omit no-benefit stages. Include a case
+  where minimum residual, minimum estimated time and minimum changes choose
+  different bundles, and a small exhaustively enumerable optimum as an oracle.
+  Manual tool/order choices remain available. State budget/completeness and cost
+  confidence; extend the same search to SF01 only after those evaluators exist.
+
+These foundations also enable supported chamfer/edge finishing, prismatic or
+bas-relief lettering, repeated ornament placement, two-sided registrations,
+stock-to-leave/finish allowance planning, tool feasibility/detail-loss reports,
+rest heatmaps, setup comparison and explainable tool/path recommendations. Each
+needs a named acceptance slice rather than a blanket promise. Adaptive engagement
+control, chip/load prediction, material-aware feed scheduling and multi-axis
+machining are later extensions with their own process/pose models.
+
+### Primary references for the refinement
+
+The requirements above come from the user and local contracts; the proposed
+engineering relationships are our synthesis, not claims of matching other CAM
+products. These references establish useful method/parameter distinctions:
+
+- [Vectric inlay documentation](https://docs.vectric.com/docs/V12.5/Aspire/ENU/Help/form/VCarve%20Inlay%20Toolpath/index.html)
+  distinguishes pocket depth, glue space, surface separation and ordered clearance
+  tools. Its same-V-bit restriction is that product's workflow, not a universal
+  framework invariant. Do not copy its parameter formulas without an assembly model.
+- [Vectric plug finishing](https://docs.vectric.com/docs/V12.5/Aspire/ENU/Help/form/vcarve-inlay-toolpath-plug/index.html)
+  treats backing removal after gluing as a separate operation with an explicit datum.
+- [Autodesk Morph](https://help.autodesk.com/view/fusion360/ENU/?contextId=MFG-REF-3D-MORPH-CMD)
+  uses bounding guide curves; [Steep and Shallow](https://help.autodesk.com/cloudhelp/ENU/Fusion-CAM/files/GUID-A6933B73-D98F-43AD-BCFD-A450D91C4E61.htm)
+  combines slope-dependent finish strategies. These demonstrate distinct routing
+  families, not an algorithm or performance guarantee for this framework.
+- [OpenCAMLib](https://github.com/aewallin/opencamlib) distinguishes drop-cutter
+  contact from push-cutter waterline construction and supports several cutter
+  profiles. It is a potential provider to evaluate, not an adopted dependency
+  or stock/safety authority. Python/toolchain and distribution suitability need
+  verification before any adoption.
+- [CamBam 1.0 3D tutorial](https://cambam.net/doc/1.0/tutorials/3d-profile.html)
+  separates waterline roughing, surface finishing and machining boundaries.
+  CamBam-native behavior remains version/post-bound and needs actual output evidence.
+
+## Fixed design target and cutter-independent V verification (DT01)
+
+**Recommended next increment after the expectation review; planned, not
+implemented.** The current `VTarget.section(depth, tangent)` and protection checks
+derive the ideal finish from the selected tool angle. Various angles work as
+different jobs today; they do not establish unlike-angle cutters working on one
+fixed design. DT01 fixes this owning contract before extending MV01 stock reuse.
+
+**Outcome and consumer:** one immutable capped V design has explicit wall angle,
+tip/floor convention, opening/islands, depth and coordinate frame. Tool profile
+is independent. A synthetic holed ornament with broad floor and narrow features
+supports comparing a pointed and flat-tip cutter, plus a different-angle cutter,
+against that same desired surface. Independent sections, contact/sweeps and
+protected-boundary witnesses distinguish feasible partial work from gouging or
+unreachable detail. Begin with the ideal pointed V envelope; design-flat/rounded
+surfaces are explicit future target evaluators, not inferred from the chosen bit.
+
+**Owners:** `cam_core/v_region.py` owns target/profile and geometric checks;
+`ordered_job.py` and output/native bindings own source/frame/evidence identity.
+Keep the existing public route usable through an explicit compatibility mapping
+for previously tool-defined targets; freeze its resulting design before tool
+comparison. Preserve accepted same-angle geometry and output evidence where
+their semantics remain unchanged; version/invalidate changed evidence honestly.
+Do not introduce a universal solid backend or a public generic workflow engine.
+
+**Acceptance:**
+
+- Independently specified design sections/volume remain identical when only the
+  candidate cutter changes. Source/geometry/design-angle/depth changes invalidate
+  target evidence; cutter changes invalidate the operation without rewriting design.
+- Verify actual full-profile continuous motion against that fixed target at all
+  relevant heights, including flatter/sharper candidate angles and explicit
+  rejected overcut. A requested cap does not become a tool-limited shallower design.
+  Model reach/profile limits as partial/infeasible with located residual.
+- Preserve required-removal, allowed-removal and known-free distinctions and
+  original-design versus derived-boundary identity. Prove a depth-dependent
+  endmill roughing section preserves the V wall; full-opening floor pocketing
+  must not silently erase it. Do not claim generalized native boundary binding
+  before NR01 supplies that acceptance.
+- Recheck pointed/flat/rounded, same-angle current consumers, standalone and
+  one-cylinder/V ordered output. Add independent fixed-design/changed-cutter
+  mutation witnesses, then focused/full supported Python and package checks for
+  the shared contract. No personal part or physical validation is needed for
+  this offline slice.
+
+**Stop:** a fixed design and independently selected supported tools are usable
+through the current public workflow with truthful residual/protection evidence,
+compatibility limits recorded and required checks complete. MV01 then composes
+those values. Unequal-angle path generation may remain partial if the first
+planner cannot meet the finish; do not redefine the surface to make it pass.
+
 ## Multi-stage Region-V stock verification (MV01)
 
-**Recommended next increment, 2026-09-30; planned, not implemented.**
+**Planned follow-up after DT01, 2026-09-30; not implemented.**
 Priority is owned by the [post-merge queue](PROGRESS.md#post-merge-task-queue).
-The named consumer is a synthetic combined-tool framework job, not a required
+DT01 now precedes this packet so cumulative evidence binds an explicit fixed
+design. The named consumer is a synthetic combined-tool framework job, not a required
 personal part or machine observation. Existing standalone and one-cylinder/V
 acceptance remains unchanged until the new evaluator passes its own gates.
 
@@ -57,9 +318,10 @@ stock geometry; `cam_core/ordered_job.py` owns ordered decoded admission and
 prefix evidence. `integrations/ordered_output.py` and `ordered_dialects.py`
 retain complete-byte and transition authority. Reuse the existing public
 constructors and numerical policies before introducing any new abstraction.
-Require identical target geometry/source/depth and included angle across V
-stages so every residual measures one physical design. Unequal design/tool
-angles, arbitrary mixed evaluators, generated rest-only path optimization and
+Require identical design geometry/source/depth across V stages so every residual
+measures one physical design. The first consumer retains same-angle cutters;
+DT01 separates that fixture choice from the design/tool contract. General
+unequal-angle path generation, arbitrary mixed evaluators, rest-only optimization and
 controller runtime remain separate increments. Supplied full-target plans may
 recut cleared material; this task verifies their cumulative effect, not improved
 machining efficiency.
@@ -77,7 +339,7 @@ machining efficiency.
   numerical policy, with partial completion and bound uncertainty explicit.
 - Keep source/target/tool/stage/frame/transition identities bound to evidence.
   Changed or reordered stages require fresh replay; do not assume every reordered
-  job is geometrically unsafe. Reject stale evidence, inconsistent targets/angles,
+  job is geometrically unsafe. Reject stale evidence, inconsistent design targets,
   changed decoded feeds/motion, protected sweeps and unsafe complete rapid travel.
   Preserve stockless `not_evaluated` and precise unsupported-mix diagnostics.
 - Exercise two- and three-stage jobs, repeated tools, the supported profiles and

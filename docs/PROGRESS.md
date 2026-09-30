@@ -62,28 +62,40 @@ and external-acceptance follow-ups remain separate work.
    preserves the defects. No manual observation is required for this offline
    development tool. Final committed-branch review passed and the epic is merged;
    its documented controller/runtime/physical limits remain unchanged.
-3. **Recommended next capability task; planned, not implemented:** cumulative
-   Region-V stock verification for multiple tools. Use the synthetic
-   **MV01 flat-V primary plus pointed-V finish** job to carry decoded stock from
-   one V stage into the next and report residuals after every prefix. Existing
-   Stage/Job construction can express that sequence, but the stock auditor
-   explicitly rejects multiple V stages. Keep one shared target and included
-   angle; prove that the second tool removes material the first leaves, with
-   overlap-safe cumulative evidence. The
-   [implementation packet](REST_MACHINING_PLAN.md#multi-stage-region-v-stock-verification-mv01)
-   owns scope, independent acceptance and the stopping condition. This advances
-   the stated combined-tool framework direction without requiring a personal
-   machining project or a new controller profile.
-4. **Following capability candidates; reassess after MV01:** independent design/tool
-   angles would let different-angle tools work against one fixed finish target;
-   cleared-union access would broaden supported entry/link proofs. Their backlog 6
-   consumers and acceptance still need their own bounded packets. Broader
-   predecessor combinations need a named composed job; rest smoothing/air-cut
-   reduction needs measurable finish or efficiency goals; automatic tool selection needs
-   tools and an objective. Broader surfaces, fixtures and travel/body clearance
-   need a job outside the current supported model. Their
-   [backlog 6 reopening criteria](#remaining-backlog-in-order) remain in force.
-5. **Conditional external acceptance:** prioritize controller runtime and supervised
+3. **Recommended next implementation, planned:** DT01 fixed design target and
+   cutter-independent verification. The user now explicitly expects varied-angle
+   V tools, endmill/V combinations, general inlays, native rest output and
+   shape-aware ornaments/reliefs. Today cutter angle changes the measured V
+   design, so unlike-angle tool comparisons can compare different parts. The
+   [DT01 packet](REST_MACHINING_PLAN.md#fixed-design-target-and-cutter-independent-v-verification-dt01)
+   fixes that shared contract with independent contact/section/protection witnesses
+   before the next composition verification. No implementation has started.
+4. **Following planned implementation:** MV01 cumulative flat/pointed V stock,
+   using DT01's fixed design and the existing
+   [MV01 packet](REST_MACHINING_PLAN.md#multi-stage-region-v-stock-verification-mv01).
+   It remains a useful proof; it is now a follow-up rather than the whole
+   combined-tool roadmap. No personal machining part is required for either task.
+5. **User-requested capability follow-ups, in recommended development order:**
+
+   | Increment | Useful outcome / dependency |
+   | --- | --- |
+   | MX01 | Endmill/V/cleanup composed stock and whole-tool access against one design; depends on DT01/MV01. |
+   | RP01 | Feature-aware planar V/rest candidates for a synthetic frieze, with residual-driven cutting and measured baseline comparison; depends on composed stock. |
+   | NR01 | Derived editable rest Regions/Plines and fully native CamBam MOPs, original-design binding and actual-post acceptance; uses computed rest/cutter reach. |
+   | IN01 | Ornamental receiver/plug targets, independent fit/glue/seating/backing allowances and insertion; then assembled-stock facing/sanding-envelope and final motif checks. Uses fixed design/composed part stock. |
+   | BO01 | Generate and search finite tool/path bundles under explicit finish/cost/setup constraints, with independent candidate verification and search-quality reporting. Start with the supported planar families; extend to SF01 afterward. |
+   | SF01 | General bounded relief contact/stock foundation and shape-aware 3D tracing/finishing; NR03 separately establishes native Surface/3D MOP/post interoperability. |
+
+   All are planned backlog, not accepted or implemented capabilities. Their
+   [expectation map and follow-up contracts](REST_MACHINING_PLAN.md#product-expectations-and-capability-follow-ups-2026-09-30)
+   own representative consumers, limits and acceptance. Reassess order after each
+   coherent outcome; these dependencies do not require finishing all native work
+   before detached inlay or relief development. Synthetic jobs may establish
+   offline acceptance; actual native posts and physical fit have named separate
+   gates. Smoothing, union-cleared access, tool search and broader surfaces are
+   explicit requirements within their owning follow-ups rather than forgotten
+   conditional notes. Broader fixture/pose/process models retain scoped proofs.
+6. **Conditional external acceptance:** prioritize controller runtime and supervised
    physical validation if the user's next goal is cutting a real part. Select the
    machine/controller, tooling, stock and setup first, then prepare the acceptance
    artifacts and exact observations. The existing
@@ -95,25 +107,22 @@ Backlog 7's bounded Manual-tab authoring and backlog 8-10's MOP audit, calculati
 planning helpers and entity refactor are complete. Additional native Pocket role
 parity, fresh Triangle-tab output and wider tab geometry still require their named
 native evidence; they are not unfinished acceptance for the merged bounded jobs.
-**Priority reassessment, 2026-09-30:** the user asked for the natural next task
-after delivery. A named consumer can be a synthetic framework job defined by
-engineering; it need not be the user's next physical part. MV01 is recommended
-ahead of unequal-angle semantics, broader access proofs, optimization or remote
-transport because it establishes cumulative composition using already-supported
-plans, tools and output dialects. These other candidates remain real backlog
-work, with distinct consumers and acceptance; no new remote/multi-client need
-or physical-setup observation has been supplied. The
-[reassessment evidence](REVIEW.md#next-framework-task-reassessment---2026-09-30)
-records the comparison and corrects the earlier personal-job dependency.
+**Expectation refinement, 2026-09-30:** the user's expanded workflow requirements
+supersede the earlier recommendation to start MV01 immediately. Fixed target
+semantics is now the highest-impact prerequisite: every tool must preserve the
+same desired part, and derived native MOP boundaries must not become new finish
+targets. The [expectation review](REVIEW.md#ornamental-cam-and-inlay-expectation-refinement---2026-09-30)
+records implemented-versus-planned evidence, research and the revised priority.
+The previous merged epic remains accepted within its existing scope. The user
+requested planning before further verification; this round changes documentation
+only and does not start DT01, MV01 or another runtime feature.
 
 **Next agent task:** implement
-[multi-stage Region-V stock verification for MV01](REST_MACHINING_PLAN.md#multi-stage-region-v-stock-verification-mv01)
-through the existing ordered-job/output workflow, with independent cumulative
-stock and rejection tests, then the required shared-verifier/package checks.
-The task is recommended and planned, not yet started or accepted. No personal
-part or machine observation is required for its offline engineering scope.
-A fresh implementation session is appropriate: the job, scope and acceptance
-are durable, with no pending result or product choice required to begin.
+[DT01 fixed design target and cutter-independent V verification](REST_MACHINING_PLAN.md#fixed-design-target-and-cutter-independent-v-verification-dt01),
+preserving same-angle callers and independent geometric/output evidence. Stop
+at its documented acceptance before proceeding to MV01. A fresh implementation
+session is appropriate: expectations, consumers and limits are durable, with no
+pending result or personal-part decision required to begin offline work.
 
 **Accepted 2026-09-26 safe native arc hybrid:** the bounded
 level XY G2/G3 path now preserves direction/center through the native,
@@ -2106,24 +2115,28 @@ reopening criteria; historical milestones do not create new active work.
    **Remaining strategy extensions after the completed delivery review:**
    standalone Region-V ordered verification is implemented; its completion and
    acceptance state is owned by the [post-merge queue](#post-merge-task-queue).
-   Multi-stage V stock composition now has the proposed MV01 consumer; its
-   planning and priority are owned by the [post-merge queue](#post-merge-task-queue).
+   The user-requested ornamental/inlay/native-rest and shape-aware routing scope
+   now has [explicit expectations and follow-up contracts](REST_MACHINING_PLAN.md#product-expectations-and-capability-follow-ups-2026-09-30).
+   DT01 precedes the proposed MV01 consumer; subsequent mixed-tool, rest strategy,
+   native-boundary, assembly-finish, relief and bundle-search work is ordered in
+   the [post-merge queue](#post-merge-task-queue).
    Acceptance must decode actual paths and establish virgin-entry, protected
    sweep and cumulative residual evidence without inventing a roughing stage. General
    cleared-union/helical cleanup access needs a depth-aware coverage proof when
    a supported job is blocked by the present single-sweep clearance predicate.
-   Conditional rest smoothing/overlap budgets need a concrete finish/access or
-   redundant-cutting requirement and post-fit coverage/topology/edge checks.
-   Automatic bundle search and cutting/air/tool-change costs need declared tools,
-   objectives and a consumer for which supplied-candidate ranking is insufficient.
-   Independent Region-V design/tool angles need a caller comparing unequal-angle
-   tools against one fixed surface; currently the tool angle also defines that
-   surface, so such plans cannot be ranked as equivalent targets.
+   RP01 now owns rest smoothing/overlap and redundant-cutting comparisons with
+   post-fit coverage/topology/edge checks. BO01 owns automatic bundle search and
+   declared cutting/air/tool-change objectives using a finite inventory and
+   synthetic ornament consumer. DT01 owns independent Region-V design/tool
+   angles for candidates preserving one fixed surface; currently the tool angle
+   also defines that surface, so unlike-angle plans cannot yet be ranked as
+   equivalent targets.
    The hand-authored surface jobs prove bounded replay and improvement, not a
    general final-coverage budget; require independent target/coverage oracles
    when a named automatic surface strategy or finish requirement is introduced.
-   These broader extensions follow the selected standalone task only when their
-   named consumer and acceptance criteria justify them.
+   SF01 now supplies the named relief consumer and coverage/finish comparisons.
+   These broader extensions remain planned until their acceptance passes;
+   completed standalone verification does not imply they are implemented.
    Inlay body/fixture occupancy and body checks during helix or transition travel
    remain explicitly rejected; reopen only for a named job needing those checks,
    with continuous decoded-motion and setup-binding evidence. See the
