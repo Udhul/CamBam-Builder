@@ -8887,3 +8887,51 @@ another capability. This is a coherent fresh-session breakpoint with no live
 verification process, pending decision or unsaved result. Suggested commit:
 `build: require Python 3.12 and close branch delivery review`.
 Next: [commit the policy change and verify the final branch](PROGRESS.md#branch-review-session-queue).
+
+## Merge closure and next-task planning - 2026-09-29
+
+The user committed the Python support policy as
+`199f1f4986556f925b830955cd70480a30a61ad4`. Post-commit review confirmed a clean
+worktree, remote feature/main refs matching the reviewed commits, 96 branch
+commits and complete coverage of 171 changed paths against `18dbb99`.
+All 84 runtime files, two MCP resources, 102 test/fixture/helper files and the
+package inputs matched the tested wheel/sdist bytes. Ancestry, whitespace,
+compile/import and artifact-hygiene gates passed; the recorded regression
+evidence applied to the committed tree. The branch was declared merge-ready.
+
+The user then merged with `--no-ff`: `6faf4a5` has parents `18dbb99` and
+`199f1f4`. Its tree matches the reviewed feature tip. This closes the delivery
+state described as ready to commit in the preceding historical entry; the
+accepted offline scope and external/runtime limitations remain the same.
+
+The user requested durable plans for the recommended next work. The
+[current queue](PROGRESS.md#post-merge-task-queue) now distinguishes the selected
+standalone Region-V feature, subsequent regression/reporting hardening and
+conditional capability or external-acceptance work. The
+[Region-V packet](REST_MACHINING_PLAN.md#standalone-region-v-ordered-stock-verification)
+owns the concrete annular consumer, implementation owners, reusable scope,
+independent acceptance and stopping condition. The
+[hardening contract](DEVELOPMENT.md#planned-regression-execution-and-reporting-hardening)
+owns the future runner/report behavior and interruption/evidence requirements.
+Neither task is implemented by this documentation change.
+
+Standalone Region-V was selected because primary planning already exists but
+ordered stock verification still requires an endmill predecessor. Closing that
+gap adds a usable complete workflow with limited new mathematical machinery.
+Multiple V stages, rest smoothing, automatic tool selection and broader geometry
+remain gated by concrete consumers. Regression hardening addresses the observed
+manual orchestration/reporting and interruption cost; optimization and CI-service
+selection require their own measured need. Existing completed MOP, calculation
+and entity-refactor work is not reopened by stale historical headings.
+
+This increment changes planning/status documentation only. Link/heading and
+whitespace checks are sufficient; runtime tests and manual CamBam observations
+add no evidence. Final checks on 2026-09-30 passed all 19 added local links/anchors,
+`git diff --check` and reviewed-tip/merge-tree equality. Status contains only the
+four intended documentation edits, with no untracked candidates. The ignored
+CAM-file scan reported no files outside `output/`, but permission-denied cache
+and temporary directories prevent claiming exhaustive artifact enumeration.
+The merge state, priorities and next packet are durable, making
+a fresh implementation session appropriate. These documentation edits are ready
+to commit; no commit or further merge is authorized or performed here.
+Suggested commit: `docs: plan standalone V verification and regression hardening`.

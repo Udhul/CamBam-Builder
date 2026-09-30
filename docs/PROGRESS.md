@@ -7,6 +7,51 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
+### Post-merge task queue
+
+**Baseline:** the rest/V branch and all five review sessions are complete for
+their recorded offline scope. The user merged reviewed commit `199f1f4` into
+`main` with merge commit `6faf4a5` on 2026-09-29. Python >=3.12 is required;
+3.13 remains the development default. The dated entries below preserve earlier
+checkpoints; this queue owns the current execution order.
+
+1. **Next feature task, planned; implementation not started:** standalone Region-V
+   ordered stock verification. Planning already accepts virgin stock, but the
+   ordered verifier requires one cylindrical predecessor. Close that integration
+   gap through a reusable one-V-stage workflow, using the existing annular example
+   as the first complete job and independent boundary/misuse cases for breadth.
+   This is one substantial capability task, potentially spanning sessions;
+   it is not a reopening of the completed epic. The
+   [implementation packet](REST_MACHINING_PLAN.md#standalone-region-v-ordered-stock-verification)
+   defines owners, supported scope, acceptance and the stopping condition.
+2. **Following hardening task, planned:** repeatable regression/package execution
+   and evidence reporting. Session 5 exposed costly manual orchestration and
+   interrupted runs. Provide repeatable commands, timings, explicit incomplete
+   results and safe evidence reuse under the
+   [planned hardening contract](DEVELOPMENT.md#planned-regression-execution-and-reporting-hardening).
+   Measure geometry cost before choosing an optimization; no new CI service or
+   numerical change is selected by this plan.
+3. **Conditional capability follow-ups:** multiple V stages and broader predecessor
+   combinations need a named combined-tool job; rest smoothing/air-cut reduction
+   need measurable finish or efficiency goals; automatic tool selection needs
+   tools and an objective. Broader surfaces, fixtures and travel/body clearance
+   need a job outside the current supported model. Their
+   [backlog 6 reopening criteria](#remaining-backlog-in-order) remain in force.
+4. **Conditional external acceptance:** prioritize controller runtime and supervised
+   physical validation if the user's next goal is cutting a real part. Select the
+   machine/controller, tooling, stock and setup first, then prepare the acceptance
+   artifacts and exact observations. The existing
+   [job packets](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27)
+   retain their offline/runtime boundaries. Remote MCP transport remains backlog 5
+   and requires an actual remote-PC or multi-client need.
+
+Backlog 7's bounded Manual-tab authoring and backlog 8-10's MOP audit, calculation/
+planning helpers and entity refactor are complete. Additional native Pocket role
+parity, fresh Triangle-tab output and wider tab geometry still require their named
+native evidence; they are not unfinished acceptance for the merged bounded jobs.
+Start a fresh session with task 1 and its linked packet. No user decision or
+external observation is required to begin its offline implementation.
+
 **Accepted 2026-09-26 safe native arc hybrid:** the bounded
 level XY G2/G3 path now preserves direction/center through the native,
 UCCNC/Grbl and ordered replay boundaries. Synthetic native-arc plus generated
@@ -234,8 +279,8 @@ remain unassessed. The five selected packets are complete.
 
 ### Branch review session queue
 
-**All five review sessions are accepted by engineering. Session 5 is ready to
-commit under the user-approved Python >=3.12 policy.** The [review plan](BRANCH_REVIEW_PLAN.md) preserves the
+**All five review sessions are accepted by engineering and merged into `main`
+at `6faf4a5`.** The [review plan](BRANCH_REVIEW_PLAN.md) preserves the
 2026-09-27 request: assess native/extended separation, core versus workflow
 responsibilities, reusable geometry/stock foundations, primary V-carving,
 rest/tool-bundle strategies and conditional smoothing, mathematical assumptions,
@@ -270,7 +315,8 @@ and fresh audit; unchanged native source/post observations keep their byte scope
 Session 5 review, package/test repairs and fixture disposition are committed in
 `755fa49`. The user approved Python >=3.12 on 2026-09-29, retiring the older
 interpreter gate BR-5-006. Replacement package checks and final evidence
-reconciliation pass; the support-policy changes remain uncommitted.
+reconciliation pass; the support-policy changes were committed in `199f1f4`
+and included in merge `6faf4a5`.
 
 **Test adequacy is required in every session:** map intended behavior to tests,
 audit independent oracles and assertion strength, and identify missing core,
@@ -285,7 +331,7 @@ must close alongside final branch gates; a green suite alone is insufficient.
 | 2 | [Geometry, topology and numerical foundations](BRANCH_REVIEW_PLAN.md#session-2-geometry-topology-and-numerical-foundations) | Accepted by engineering 2026-09-28; included in reviewed HEAD `6188a60`. [Findings and coverage](REVIEW.md#branch-review-session-2---2026-09-28) |
 | 3 | [Machining strategies, rest behavior and reuse](BRANCH_REVIEW_PLAN.md#session-3-machining-strategies-rest-behavior-and-reuse) | Accepted by engineering 2026-09-28; included in reviewed HEAD `20402d5`. [Findings and coverage](REVIEW.md#branch-review-session-3---2026-09-28) |
 | 4 | [Execution safety, evidence and misuse resistance](BRANCH_REVIEW_PLAN.md#session-4-execution-safety-evidence-and-misuse-resistance) | Accepted by engineering 2026-09-29; included in reviewed HEAD `4f3ab98`. [Findings and coverage](REVIEW.md#branch-review-session-4---2026-09-29) |
-| 5 | [Integrated regression and delivery decision](BRANCH_REVIEW_PLAN.md#session-5-integrated-regression-and-delivery-decision) | Accepted by engineering 2026-09-29; prior repairs committed in `755fa49`, Python >=3.12 policy and closure ready to commit. [Policy, checks and delivery evidence](REVIEW.md#python-312-minimum-and-session-5-closure---2026-09-29) |
+| 5 | [Integrated regression and delivery decision](BRANCH_REVIEW_PLAN.md#session-5-integrated-regression-and-delivery-decision) | Accepted by engineering 2026-09-29; repairs in `755fa49`, policy/closure in `199f1f4`, merged at `6faf4a5`. [Policy, checks and delivery evidence](REVIEW.md#python-312-minimum-and-session-5-closure---2026-09-29) |
 
 Each session records coverage/findings in REVIEW and updates this queue with the
 exact next task. Retain unfinished sessions as active instead of skipping gates.
@@ -328,27 +374,18 @@ interpreters. Newer Python versions are permitted by metadata but need separate
 verification before a tested-version claim. No new CamBam or physical observation
 is required for this support-policy change.
 
-**Next increment:** commit the Python >=3.12 support policy and session-5 closure,
-then verify the final committed branch against `main`. Current reviewed HEAD is
-`755fa49`, target `main` is `18dbb99`, and all 95 branch commits plus the current
-support-policy changes are accounted for. This work is ready to commit, not
-merge-ready: the user performs the commit and merge, and exact branch gates must
-be rerun after the commit. Suggested commit: `build: require Python 3.12 and close
-branch delivery review`. Delivery of the reviewed foundations takes priority
-over another machining extension. This is a good fresh-session breakpoint:
-contracts, acceptance, evidence and next action are durable; no process, result
-or user observation is pending.
+**Delivery closed:** post-commit gates passed for `199f1f4` against `18dbb99`:
+96 branch commits, 171 reviewed paths, clean worktree and tested-artifact equality.
+The user then performed merge `6faf4a5`. The
+[post-merge task queue](#post-merge-task-queue) now owns the next work; the
+[merge and planning record](REVIEW.md#merge-closure-and-next-task-planning---2026-09-29)
+preserves the transition. No review result or user observation remains pending.
 
 The
 [M0-M5 scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
 is 6/6 accepted for its stated offline domain; the later five job packets are
-also accepted. On `feat/rest-machining-and-vcarving`, review the exact
-`main...HEAD` change set, confirm source/artifact hygiene and required native
-observations, rerun branch-level automated/package gates after the latest
-commit, and repair only demonstrated delivery defects. Stop when the branch
-is merge-ready under [delivery rules](WORKFLOW.md#verification-and-handoff-checklist)
-or a specific failing gate is recorded. The user performs the merge. This is
-a delivery increment, not a sixth job packet or a new machining feature.
+also accepted. The branch delivery review and user merge are complete under
+the [delivery rules](WORKFLOW.md#verification-and-handoff-checklist).
 No new CamBam post or user validation is presently required for the accepted
 offline jobs; a demonstrated defect may reopen its affected acceptance scope.
 UCCNC runtime, physical machining, failed native Pocket role parity,
@@ -1813,8 +1850,8 @@ were accepted by the user on 2026-09-08: all conditions met, full outline match
 and identity transforms. Later clarification establishes CamBam Plus 1.0 as the
 validation environment. See
 [acceptance evidence](REVIEW.md#rect-baking-display-acceptance).
-The following MOP group-source compatibility increment is recorded above;
-core ownership/interchange is active above. General component ordering,
+The MOP group-source compatibility and core ownership/interchange increments
+are completed and recorded above. General component ordering,
 curved geometry and alignment remain outside this increment.
 Phases 1 and 2 (project discovery and working
 agreement) and [phase 3 (initial engineering review)](REVIEW.md#phase-3-completion-audit)
@@ -1908,6 +1945,10 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
 
 ## Remaining backlog, in order
 
+The [post-merge task queue](#post-merge-task-queue) sets the current execution
+order. Numbered items below preserve stable references, completed scope and
+reopening criteria; historical milestones do not create new active work.
+
 1a. **Completed 2026-09-08.** Exact Arc sweep and bulged-Pline extrema, the
     finite-affine transform/tolerance policy and focused regressions are recorded
     in the implemented specification and review.
@@ -1989,16 +2030,19 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    All five selected packets are accepted. M0-M5's separate bounded
    [scorecard](REST_MACHINING_PLAN.md#bounded-epic-completion-contract-and-milestone-scorecard-2026-09-24)
    is also complete: the reusable ordered-job evidence closed M5's native
-   disabled/reordered source case. Branch delivery review is the active next
-   increment above. A later machining capability needs a new named job and
+   disabled/reordered source case. Branch delivery review is complete and merged.
+   The selected standalone Region-V task is specified in its
+   [packet](REST_MACHINING_PLAN.md#standalone-region-v-ordered-stock-verification).
+   A later machining capability needs a new named job and
    acceptance boundary. Historical entries below retain earlier stage limits; they
    do not permanently restrict the framework to RC01 or a fixed-axis sample
    workflow.
 
-   **Session 3 strategy extensions, deferred behind execution/delivery review:**
+   **Remaining strategy extensions after the completed delivery review:**
    primary Region-V planning and analysis are available, but its ordered decoded
-   stock evaluator requires one cylindrical predecessor. Reopen primary or
-   multi-stage V stock composition for a named standalone/composed output job;
+   stock evaluator requires one cylindrical predecessor. Standalone Region-V
+   verification is now selected in the [post-merge queue](#post-merge-task-queue).
+   Reopen multi-stage V stock composition for a named composed output job;
    acceptance must decode actual paths and establish virgin-entry, protected
    sweep and residual evidence without inventing a roughing stage. General
    cleared-union/helical cleanup access needs a depth-aware coverage proof when
@@ -2013,8 +2057,8 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    The hand-authored surface jobs prove bounded replay and improvement, not a
    general final-coverage budget; require independent target/coverage oracles
    when a named automatic surface strategy or finish requirement is introduced.
-   These gaps do not supersede session 5: installed-package and final branch
-   verification have greater delivery impact than another nominal recipe.
+   These broader extensions follow the selected standalone task only when their
+   named consumer and acceptance criteria justify them.
    Inlay body/fixture occupancy and body checks during helix or transition travel
    remain explicitly rejected; reopen only for a named job needing those checks,
    with continuous decoded-motion and setup-binding evidence. See the
@@ -2169,10 +2213,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    the core/MCP XML authoring contract is also tested. Fresh Triangle output and
    curved, reversed, transformed or multi-target variants remain evidence-bound.
    [Acceptance](REVIEW.md#fresh-writer-cambam-default-post-acceptance---2026-09-27).
-8. **Future MOP semantic, native-export and framework/MCP parity audit.** Perform this
-   as three bounded increments after the current SpiralMill prompt-free acceptance;
-   do not treat every CamBam feature found as automatically in scope for
-   implementation.
+8. **Completed 2026-09-20: MOP semantic, native-export and framework/MCP parity audit.**
+   The original slices and evidence follow. Reopen only for the concrete native
+   encoding, parity or safety-relevant ambiguity described below.
    **8a common-field slice implemented and automatically verified (2026-09-19).**
    All 18 modeled fields shared by Profile, Pocket, Engrave and Drill now have a
    durable semantics inventory and one declarative fresh-export policy. Explicit
@@ -2322,8 +2365,9 @@ See [contract](structure_spec.md#export-failure-and-state-saving-contract) and
    have concrete fixture requests and reopening criteria. Production G-code safety
    and exhaustive CamBam feature parity remain outside this audit unless separately
    authorized.
-9. **Future feeds, speeds and engagement planning helpers** (requested 2026-09-20).
-   Replace ad hoc machine-specific guesses with pure, unit-explicit calculation and
+9. **Completed 2026-09-21: feeds, speeds and engagement planning helpers**
+   (requested 2026-09-20). The original goal was to replace ad hoc machine-specific
+   guesses with pure, unit-explicit calculation and
    recommendation helpers; never restore an implicit MOP export fallback. The removed
    `round(350 * abs(target_depth) + 6500)` rule is retained only as historical evidence:
    it was useful for one user's machine/material context but has no general machining
@@ -2469,7 +2513,7 @@ the current RPM/feed intervals or for evidenced safe coupling/derating behavior;
 neither catalog/persistence nor MCP profile authoring is implied.
 
 10. **Completed 2026-09-21: Framework entity module boundary refactor** (requested
-    2026-09-21). The current `cambam_entities.py` is 2,488 lines and mixes shared
+    2026-09-21). At the start, `cambam_entities.py` was 2,488 lines and mixed shared
     identity/geometry foundations, Layer and six ordinary CAD primitives, Part,
     four MOP families and their XML policy tables. `region.py` is 838 lines, but about
     580 lines are one cohesive curved-contour topology/intersection engine; physically

@@ -193,6 +193,45 @@ and sdist installs have identical runtime/test bytes and numerical dependencies,
 the same complete regression evidence may cover their unchanged behavior;
 fresh installation, asset/fixture and entry-point checks are still required.
 
+### Planned regression execution and reporting hardening
+
+**Planned, not implemented.** Priority is owned by the
+[post-merge queue](PROGRESS.md#post-merge-task-queue). Session 5 required disposable
+matrix scripts, repair of test-report serialization and manual reconciliation
+after interruption. This is the measured maintenance problem to address.
+
+The bounded outcome is a repository-owned verification entry point with clear
+commands for focused tests, full discovery and clean wheel/sdist verification
+on the declared 3.12/3.13 matrix. Place any reusable runner under `tools/`;
+keep unittest and the existing `uv` toolchain. This runbook owns usage and report
+meaning; REVIEW owns before/after evidence. No CI provider is selected. A future
+CI wrapper should invoke the same commands if a concrete automation need arises.
+
+Acceptance for that future task:
+
+- Logs and structured results live in a unique ignored `output/` task directory.
+  Record commit/worktree identity, runtime/test/artifact hashes, interpreter and
+  dependencies, exact commands, timings, test IDs and named skips.
+- Distinguish pass, fail and incomplete execution; interruption, setup failure
+  or report failure cannot produce a green result. Retain logs when reporting fails.
+- Support deliberate reruns of failed/incomplete modules and explicit reconciliation.
+  Reuse completed evidence only after checking relevant code, test, configuration
+  and dependency identity. Never silently omit tests after an interruption.
+- Preserve installed-package provenance checks and the declared wheel/sdist and
+  optional-dependency boundaries. Derive the supported matrix from one declared
+  configuration; avoid another manually maintained set of version lists.
+- Measure a representative geometry-heavy module and package checks; report
+  wall time separately from available execution/CPU time. Identify expensive
+  repeated work before proposing caching, geometry changes or extra parallelism.
+  Any later optimization must preserve numerical and mutation oracles.
+
+Stop once existing verification is repeatable and interrupted evidence is auditable
+without hand-editing logs. Do not turn this into a general test platform or select
+performance changes without measurements. Runtime/dependency changes still require
+the normal checks; reporting convenience cannot weaken their acceptance.
+
+### Historical package baseline
+
 Historical baseline (before the rest/V branch):
 
 Verified 2026-09-10 using `uv 0.10.2`. The minimum is Python 3.9: Python 3.8

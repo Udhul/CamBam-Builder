@@ -2,8 +2,10 @@
 
 Status: **M0-M5 bounded outcomes accepted offline.** The reusable ordered-job
 packet closed M5's native-MOP edit/order gap; the five subsequent job packets
-also passed their bounded offline gates. The next priority is branch delivery
-review, recorded in [PROGRESS.md](PROGRESS.md#active-work-and-next-priority).
+also passed their bounded offline gates. The branch review is complete and merged
+at `6faf4a5`. The next capability packet is
+[standalone Region-V ordered stock verification](#standalone-region-v-ordered-stock-verification);
+execution priority stays in [PROGRESS.md](PROGRESS.md#post-merge-task-queue).
 Requested 2026-09-08 and expanded 2026-09-22/23. Priority belongs only to
 [PROGRESS.md](PROGRESS.md#active-work-and-next-priority).
 This document owns the problem, proposed outcomes, technical reasoning and future
@@ -22,6 +24,85 @@ The implemented reusable-job direction and later packets are in
 [From reference jobs to reusable CAM capabilities](#from-reference-jobs-to-reusable-cam-capabilities).
 The [first generated acceptance job](#first-generated-acceptance-job-rc01)
 now gives user-accepted synthetic inputs and separate standalone/native acceptance gates.
+
+## Standalone Region-V ordered stock verification
+
+**Planning decision, 2026-09-29; not implemented.** This is one substantial
+feature task, which may span sessions. The completed M0-M5 epic and five later
+job packets retain their accepted boundaries. Scope expansion needs a named
+consumer and an updated acceptance boundary in PROGRESS.
+
+### Outcome and starting evidence
+
+A caller can create a single Region-V stage from virgin stock, emit a supported
+controller program, decode it and obtain stock/access/residual evidence through
+the public ordered-job workflow. No synthetic cylindrical predecessor is required.
+`v_region.plan`, `verify`, `section_report` and `volume_bounds` already support
+primary V plans; `ordered_job.audit` currently returns stock `unsupported` unless
+exactly one endmill stage precedes the terminal V stage. This task closes that
+specific composition gap, using the existing mathematical owners.
+
+The first complete consumer is the existing annular Region-V example in
+`tests/test_v_region.py::VRegionTests.test_accepted_letter_and_curved_annulus_all_profiles`.
+Reuse its synthetic geometry and declared tool/profile parameters to construct a
+V-only job against virgin stock. Persist exact task parameters and numeric results
+in REVIEW when implemented; session files belong under unique ignored `output/`.
+The annulus is the first proof of the API, not a fixture-name restriction in it.
+
+### Owners and bounded scope
+
+- `cam_core/v_region.py`: target/profile/plan validation and section/volume evidence.
+- `cam_core/ordered_job.py`: stage admission, explicit initial-stock meaning,
+  decoded V-plan reconstruction and ordered audit results.
+- `integrations/ordered_output.py`, `ordered_dialects.py` and existing UCCNC/Grbl
+  adapters: output and decoding through the current supported dialect contracts.
+- `tests/test_v_region.py`, `test_ordered_job.py` and `test_ordered_dialects.py`:
+  independent mathematical, composition and output/misuse regressions.
+- `structure_spec.md` owns the implemented API/guarantees after closure;
+  DEVELOPMENT owns reproduction commands; REVIEW owns evidence and limits.
+
+Support one V stage within the current finite planar Region domain, with explicit
+stock/frame/source/setup and supported pointed, flat and rounded profiles. Preserve
+existing endmill-then-V behavior and explicit partial/infeasible outcomes. Inspect
+callers before choosing whether existing constructors suffice or a public helper
+is needed; do not design a general stage framework before proving this slice.
+Multiple V stages, arbitrary mixed evaluators, tool search, smoothing, unequal
+design/tool angles, broader fixtures and machine execution remain separate work.
+Existing unsupported combinations must keep a precise refusal.
+
+### Implementation and acceptance
+
+1. Define the virgin-stock and first-stage admission contract. An absent predecessor
+   must be distinct from missing required stock/source evidence. Document entry,
+   links, flute/depth limits and the meaning of residual bounds.
+2. Prove the annular V-only job through public construction, emission, independent
+   decoding and ordered auditing. Compute stock evidence from decoded motion;
+   changed output must not inherit the planned path's acceptance.
+3. Cover supported profiles and representative ordinary/holed or disconnected
+   geometry using existing independent analytic witnesses. Exercise both raster
+   and offset modes where the current planner supports them. Assert initial and
+   final stock bounds, protected sweeps and explicit finite-tool residual.
+4. Exercise entry into virgin material, boundary crossing, no fitting tool,
+   short-flute partial results, stale source/setup, changed depth/feed/motion and
+   forged or reused evidence. State separately which checks are exact, bounded
+   numerical or nominal GEOS checks. Demonstrate that a plausible bypass of a
+   critical stock/protected-boundary check is detected.
+5. Check supported UCCNC and Grbl output/decoding and the existing endmill-plus-V
+   route. Run focused tests, then the applicable shared-contract regression and
+   supported Python/package gates from DEVELOPMENT. Inspect skip reasons and
+   preserve failed attempts. Do not use generator/decoder agreement as the sole
+   mathematical oracle.
+
+**Stop:** the reusable single-stage route satisfies these gates, its supported
+domain and remaining limitations are recorded, and a fresh checkout can reproduce
+the synthetic regressions without session artifacts. Do not continue directly into
+multi-tool search or a succession of additional nominal jobs. Engineering can close
+this offline task; a CamBam post, controller run or physical cut is required only
+if a new claim specifically depends on that external observation.
+
+**Follow-on decision:** use measured results and the queue in PROGRESS to choose
+regression hardening or a named combined-tool consumer. Multi-V composition is a
+possible later capability; it is not an automatic second phase of this task.
 
 ## Bounded epic completion contract and milestone scorecard (2026-09-24)
 
