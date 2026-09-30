@@ -1,5 +1,135 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Regression package runner - 2026-09-30
+
+**Accepted by engineering; ready to commit.** This increment
+addresses Session 5's disposable matrix scripts, report serialization repair and
+manual interrupted-run reconciliation. It changes development tools, tests,
+sdist contents and the runbook; no CAM runtime or numerical contract changed.
+The [runbook](DEVELOPMENT.md#regression-execution-and-reporting) owns commands and
+report semantics; [status](PROGRESS.md#post-merge-task-queue) owns delivery order.
+
+`tools/verify.py` executes unittest modules separately and checkpoints the entire
+selected inventory before running tests. Every invocation writes a new ignored
+task directory containing command logs, independently written command records,
+test IDs/outcomes/skips, source and artifact hashes, interpreter/dependency
+identities, elapsed times and available worker CPU times. `--resume` explicitly
+reconciles intact passing records and reruns failed/incomplete modules after
+checking source/configuration, environment, snapshot, artifact and inventory
+identity. Setup, interruption and reporting errors remain non-green. Source and
+environment identities are checked again after execution. Standard unittest
+expected-failure semantics are preserved and explicitly documented.
+
+`tools/verification_package.py` reads the matrix from `pyproject.toml`, checks
+archive completeness and exact authored bytes, rejects disposable/untracked CAM
+and test data, creates fresh wheel/sdist/base-only environments, and verifies
+installed imports, native XML, metadata, resources and entry-point loading.
+Source-free snapshots include distributed tests/fixtures and the two runner
+tools; an import guard also enforces site-packages provenance in subprocesses.
+The independent source installation uses tests/tools extracted from the sdist.
+
+Checks against worktree based on `b90164cc3cc366632d16d4776a97f83931343b95`:
+
+```powershell
+.\.venv\Scripts\python.exe tools/verify.py --pattern test_verification_runner.py
+.\.venv\Scripts\python.exe -m unittest discover -s tests -p test_verification_package.py -v
+.\.venv\Scripts\python.exe tools/verify.py --package --pattern test_verification_runner.py --pattern test_standalone_v.py --pattern test_native_owner_migration.py --pattern test_mcp_protocol.py --pattern test_rest_vcarve_acceptance_fixtures.py
+.\.venv\Scripts\python.exe tools/verify.py --package --resume output/verification-20260930-115110-bcaa1cdb
+.\.venv\Scripts\python.exe tools/verify.py
+.\.venv\Scripts\python.exe -m compileall -q tools/verify.py tools/verification_package.py tests/test_verification_runner.py tests/test_verification_package.py
+git diff --check
+```
+
+- Ten runner regressions pass: named outcomes/skips, failed subtests and unexpected
+  successes, collection errors, empty modules, forced worker termination, report
+  write failure with retained logs, setup failure, identity/inventory rejection,
+  module selection and end-to-end failed-module reconciliation. Three package
+  helper regressions pass for unsafe/disposable archive members, stale archive
+  bytes and rejecting checkout imports in a subprocess.
+- Clean wheel 3.12.10, wheel 3.13.5 and independent sdist 3.12.10 each pass the
+  selected **49 tests**, with **zero skips**; all four package smoke gates pass.
+  NumPy is 2.5.3, Shapely 2.1.2, GEOS 3.13.1 and MCP 2.2.0. The base-only wheel
+  has NumPy 2.5.3 with Shapely/MCP absent; analytic/native behavior and both
+  optional-backend rejection boundaries pass.
+- Explicit package reconciliation passes in **20.358 s**, reusing all **15
+  completed modules / 147 tests** with original result hashes and attribution.
+  Installed smoke and both identity probes run afresh; no test result was edited.
+- Full discovery inventory independently matches unittest: **599 IDs in 84
+  modules**, with no collection errors. Full checkout execution reports
+  **599 tests in 807.841 s wall**, successful with the one documented
+  `test_mcp_documents.DocumentTests.test_symlink_rejection` skip for unavailable
+  Windows symlink privilege; junction/reparse checks run. Its source identity
+  exactly matches the installed package run.
+
+The focused installed run took **301.322 s wall**. Package build took 13.167 s;
+wheel installs took 3.086/2.527 s, independent source install 9.894 s, and
+base-only install 1.708 s. Package smoke took 6.510/6.367/7.638/1.510 s for
+wheel 3.12/wheel 3.13/sdist/base respectively. Portable CPU accounting is not
+available for these uv/subprocess commands, so their CPU field is null.
+
+| Representative standalone-V module | Wall seconds | Worker CPU seconds |
+| --- | ---: | ---: |
+| Wheel 3.12 | 20.206 | 19.484 |
+| Wheel 3.13 | 18.461 | 17.719 |
+| Sdist 3.12 | 15.690 | 15.313 |
+
+These are observations, not controlled interpreter benchmarks. Repeated full
+matrix geometry and MCP startup work are visible costs: the selected MCP module
+took 32.5-34.3 s wall per target, while its parent CPU excludes child server work.
+An exploratory dependency probe took 49.127 s; redundant per-file Windows path
+resolution was removed without dropping byte hashes. Later package probes ranged
+from 0.770 to 2.260 s after a 25.211 s first probe. Cache/load effects are not
+isolated. No test-result cache, geometry algorithm change, added parallelism or
+new CI service is selected by these measurements.
+Full discovery identifies `test_curved_rest` as the largest completed module:
+**209.940 s wall / 205.141 s CPU**. The next is `test_uccnc_m5` at **46.866 s wall /
+45.781 s CPU**. These measurements identify future profiling candidates without
+changing the numerical/mutation oracles or automatically opening another task.
+
+Failure evidence remains local: the first build was correctly incomplete on
+sandbox denial of uv's AppData cache; an approved retry passed. A later sandboxed
+resume could not read the approved build artifacts and remained incomplete;
+the approved resume passed. A development run detected source changes during
+execution and refused closure. Forced termination and report-write faults are
+durably reproduced by the runner regressions. These are execution/evidence
+boundaries, not renewed CAM observations.
+
+Local reports: `output/verification-20260930-115110-bcaa1cdb/report.json`
+(installed checks), `output/verification-20260930-133209-441928cf/report.json`
+(reconciliation), and `output/verification-20260930-133104-8effbb5a/report.json`
+(full checkout). The installed run's combined source identity is
+`5d0ccbfc64478b762ac4ca86a11a16428dd66f00989e6fc6af2c3dc56cd4eea8`
+(SHA-256 of UTF-8 `json.dumps(identity, sort_keys=True)`; 86 runtime and 104
+test/fixture files plus tool/configuration inputs). Wheel SHA-256:
+`51e8106ad7866d0005080a52fe7631742ba26874355591ebc3bb1e8f5c469637`;
+sdist SHA-256:
+`b42fee3cc50c8f53b9169636798597f8bcb51924626bbce7527183827449bd31`.
+Reports preserve individual hashes and exact commands; these durable conclusions
+do not depend on retaining ignored files in a fresh checkout.
+
+Manual CamBam/controller validation adds no evidence for this development-only
+increment. Full installed runtime suites were not repeated for this tooling-only
+change: focused installed coverage, full checkout execution and prior bounded
+runtime acceptance have distinct scopes. Runtime/dependency changes still require
+the normal broader gates. Reopen reporting on a reproducible false-green,
+identity/recovery gap or a concrete CI consumer; optimize only a measured costly
+workload while retaining its numerical/mutation oracles.
+
+Final compilation, tracked diff whitespace, untracked Python whitespace and the
+four new/retained documentation anchors pass. Status contains only the intended
+five tracked edits and four new tool/test files. The ignored CAM-file scan finds
+no `.cb`/`.nc` candidates outside `output/`; pre-existing permission-denied cache
+and old temporary directories prevent claiming an exhaustive filesystem scan.
+No session CAM files or dependencies on ignored reports were added to source.
+
+No files were staged or committed. The local workstream and both selected epic
+capabilities are implemented, verified and accepted for their offline scope;
+delivery remains the final committed-branch review against `main`. This is a
+good fresh-session breakpoint after committing because the next task has a
+distinct scope and no pending result, decision or manual observation. Suggested
+commit: `build: add auditable regression and package runner`.
+Next: [commit the runner and review the final epic](PROGRESS.md#post-merge-task-queue).
+
 ## Standalone Region-V ordered stock verification - 2026-09-30
 
 **Accepted by engineering for the bounded offline contract; ready to commit.**

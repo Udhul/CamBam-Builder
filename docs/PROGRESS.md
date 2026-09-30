@@ -36,17 +36,22 @@ capability and external-acceptance follow-ups below are outside this epic.
    remain in their owner. No manual observation is required for this offline scope;
    stock/setup are caller declarations, and runtime/physical acceptance is separate.
    Multiple V stages and other unsupported evaluator mixes remain deferred.
-2. **Next task, planned:** repeatable regression/package execution
-   and evidence reporting. Session 5 exposed costly manual orchestration and
-   interrupted runs. Provide repeatable commands, timings, explicit incomplete
-   results and safe evidence reuse under the
-   [planned hardening contract](DEVELOPMENT.md#planned-regression-execution-and-reporting-hardening).
-   This increment again required interrupted-run reconciliation and an isolated
-   startup-timeout rerun, so this maintenance outcome matters before another CAM
-   capability. Measure geometry cost before choosing an optimization; no new CI
-   service or numerical change is selected by this plan. This is a good fresh-session
-   breakpoint: the V contract, evidence and remaining limits are persisted, and
-   the next scope needs no unsaved decisions or pending results.
+2. **Completed; accepted by engineering 2026-09-30; ready to commit:** repeatable regression/package execution
+   and evidence reporting. `tools/verify.py` provides focused/full unittest runs,
+   clean wheel/sdist verification, module logs/results, timings and explicit
+   identity-checked reconciliation after failures or interruptions. The matrix
+   is declared in `pyproject.toml`; no runtime behavior, dependency or CI provider
+   changed. The [runbook](DEVELOPMENT.md#regression-execution-and-reporting) owns
+   commands and status meanings. Focused installed verification passes 49 tests
+   each on the 3.12/3.13 wheels and independent 3.12 sdist, with all package and
+   base-only smoke gates passing. Real package-report reconciliation also passes,
+   reusing 15 modules after fresh identity and smoke checks. Full checkout
+   execution passes **599 tests in 84 modules**, with one documented Windows
+   symlink-privilege skip, on the same source identity as the package matrix. The
+   [review record](REVIEW.md#regression-package-runner---2026-09-30) owns evidence,
+   measurements and limits. No manual observation is needed for this offline
+   development tool. Commit this increment separately and review
+   the final epic against `main`; the agent has not staged or committed it.
 3. **Conditional capability follow-ups:** multiple V stages and broader predecessor
    combinations need a named combined-tool job; rest smoothing/air-cut reduction
    need measurable finish or efficiency goals; automatic tool selection needs
@@ -65,8 +70,16 @@ Backlog 7's bounded Manual-tab authoring and backlog 8-10's MOP audit, calculati
 planning helpers and entity refactor are complete. Additional native Pocket role
 parity, fresh Triangle-tab output and wider tab geometry still require their named
 native evidence; they are not unfinished acceptance for the merged bounded jobs.
-Start a fresh session with task 2 and its linked hardening contract. No user decision or
-external observation is required to begin its offline implementation.
+**Next task:** commit the runner increment and review the final committed epic
+against `main` using the [branch delivery gates](DEVELOPMENT.md#verification-entry-points).
+Require a clean worktree, the intended branch commits, complete `main...HEAD`
+diff review and checks applicable to the final tree before declaring merge-ready.
+This matters now because both selected epic capabilities are implemented and
+accepted; another CAM extension would delay delivery without a named consumer.
+The user performs the eventual `--no-ff` merge. A fresh session is appropriate
+after committing: contracts, evidence, remaining limits and the next scope are
+durable, with no pending test result or external observation. Conditional CAM
+extensions remain outside this delivery scope.
 
 **Accepted 2026-09-26 safe native arc hybrid:** the bounded
 level XY G2/G3 path now preserves direction/center through the native,
