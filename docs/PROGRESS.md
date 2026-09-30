@@ -15,7 +15,14 @@ their recorded offline scope. The user merged reviewed commit `199f1f4` into
 3.13 remains the development default. The dated entries below preserve earlier
 checkpoints; this queue owns the current execution order.
 
-1. **Completed; accepted by engineering 2026-09-30; ready to commit:** standalone
+**Delivery grouping, selected by the user 2026-09-30:** tasks 1 and 2 form the
+CAM verification and delivery epic on `feat/cam-verification-hardening`.
+Keep each increment in separate commits on this branch; merge the epic after
+the regression/package runner meets its acceptance contract and the final
+committed tree passes branch delivery review against `main`. Conditional
+capability and external-acceptance follow-ups below are outside this epic.
+
+1. **Completed; accepted by engineering 2026-09-30; committed as `5f38024`:** standalone
    Region-V ordered stock verification. One V stage now emits and independently
    decodes virgin-stock/access/residual evidence using existing Stage/Job
    constructors, with pointed/flat/rounded profiles and raster/offset fills.
@@ -58,7 +65,7 @@ Backlog 7's bounded Manual-tab authoring and backlog 8-10's MOP audit, calculati
 planning helpers and entity refactor are complete. Additional native Pocket role
 parity, fresh Triangle-tab output and wider tab geometry still require their named
 native evidence; they are not unfinished acceptance for the merged bounded jobs.
-Start a fresh session with task 1 and its linked packet. No user decision or
+Start a fresh session with task 2 and its linked hardening contract. No user decision or
 external observation is required to begin its offline implementation.
 
 **Accepted 2026-09-26 safe native arc hybrid:** the bounded
