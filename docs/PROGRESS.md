@@ -15,12 +15,12 @@ their recorded offline scope. The user merged reviewed commit `199f1f4` into
 3.13 remains the development default. The dated entries below preserve earlier
 checkpoints; this queue owns the current execution order.
 
-**Delivery grouping, selected by the user 2026-09-30:** tasks 1 and 2 form the
-CAM verification and delivery epic on `feat/cam-verification-hardening`.
-Keep each increment in separate commits on this branch; merge the epic after
-the regression/package runner meets its acceptance contract and the final
-committed tree passes branch delivery review against `main`. Conditional
-capability and external-acceptance follow-ups below are outside this epic.
+**Delivery closed 2026-09-30:** the user merged the CAM verification and delivery
+epic from `feat/cam-verification-hardening` into `main` with merge commit
+`3c010b6`. Its tree equals reviewed tip `86ec581`; both tasks below are delivered
+for their accepted offline scope. The final committed review and merge checks are
+recorded in [REVIEW](REVIEW.md#cam-verification-epic-merge-closure-and-priority-assessment---2026-09-30).
+Conditional capability and external-acceptance follow-ups remain separate work.
 
 1. **Completed; accepted by engineering 2026-09-30; committed as `5f38024`:** standalone
    Region-V ordered stock verification. One V stage now emits and independently
@@ -36,13 +36,14 @@ capability and external-acceptance follow-ups below are outside this epic.
    remain in their owner. No manual observation is required for this offline scope;
    stock/setup are caller declarations, and runtime/physical acceptance is separate.
    Multiple V stages and other unsupported evaluator mixes remain deferred.
-2. **Completed; accepted by engineering 2026-09-30; final-review repairs ready to
-   commit:** repeatable regression/package execution
+2. **Completed; accepted by engineering and merged 2026-09-30:** repeatable
+   regression/package execution
    and evidence reporting. `tools/verify.py` provides focused/full unittest runs,
    clean wheel/sdist verification, module logs/results, timings and explicit
    identity-checked reconciliation after failures or interruptions. The original
-   runner is committed as `6e7cde0`; schema 2 repairs now account for every selected
-   outcome/lifecycle or fixture skip and bind reuse to seven retained observation
+   runner is committed as `6e7cde0`, with repairs committed as `86ec581`; schema 2
+   now accounts for every selected outcome/lifecycle or fixture skip and binds
+   reuse to seven retained observation
    inputs. Eight added fault regressions close stopped/omitted execution and
    changed/added/removed inputs; eighteen focused runner tests pass. The matrix
    remains declared in `pyproject.toml`; no CAM runtime behavior, dependency or CI
@@ -58,8 +59,8 @@ capability and external-acceptance follow-ups below are outside this epic.
    owns exact checks, before/after evidence, timings and limits; the
    [original final review](REVIEW.md#final-cam-verification-epic-review---2026-09-30)
    preserves the defects. No manual observation is required for this offline
-   development tool. Epic implementation and engineering acceptance are complete;
-   final committed-branch delivery review remains after the user's repair commit.
+   development tool. Final committed-branch review passed and the epic is merged;
+   its documented controller/runtime/physical limits remain unchanged.
 3. **Conditional capability follow-ups:** multiple V stages and broader predecessor
    combinations need a named combined-tool job; rest smoothing/air-cut reduction
    need measurable finish or efficiency goals; automatic tool selection needs
@@ -78,20 +79,28 @@ Backlog 7's bounded Manual-tab authoring and backlog 8-10's MOP audit, calculati
 planning helpers and entity refactor are complete. Additional native Pocket role
 parity, fresh Triangle-tab output and wider tab geometry still require their named
 native evidence; they are not unfinished acceptance for the merged bounded jobs.
-**Next agent task:** review the final committed CAM verification epic against
-`main` using the [branch delivery gates](DEVELOPMENT.md#verification-entry-points).
-After the user commits the repair increment, require a clean worktree, the intended
-commit range, complete `main...HEAD` diff review and confirmation that the completed
-checks apply to the final tree. Stop at the delivery decision and, if merge-ready,
-provide the default `--no-ff` merge commands for the user. Do not commit or merge
-without separate authorization or extend CAM scope during this delivery review.
-This matters now because both selected capabilities and the runner fault repairs
-are implemented and accepted; final committed-tree verification is the remaining
-epic gate. The user handles the repair commit and eventual merge separately.
-A fresh session is appropriate after the repair commit: contracts, completed
-evidence, limits and the distinct review scope are durable, with no pending test
-result or required external observation.
-Conditional CAM extensions remain outside this delivery scope.
+**Priority assessment, 2026-09-30:** no unconditional implementation task remains
+in the selected epics. Backlog 6's extensions have no new named consumer, finish
+goal or blocked supported job; backlog 5 has no new remote/multi-client need.
+Native Pocket role parity, fresh Triangle-tab output and broader tab geometry
+retain their specific evidence requirements. Do not reopen completed foundations
+or select another nearby geometric example merely to continue development.
+
+**Next agent task:** scope the user's next concrete part or authoring workflow
+against the accepted capabilities and [remaining backlog](#remaining-backlog-in-order).
+Record its desired result, source/target geometry and relevant tools/setup; then
+select one useful increment with owners, executable acceptance and a stopping
+condition. A supported job should use the existing API before extending it. For
+a real-cutting goal, prioritize controller/runtime and supervised physical
+acceptance, establish the actual machine/setup, and prepare artifacts and exact
+observations before requesting validation. For a development goal, promote only
+the demonstrated capability or workflow gap. Product input is needed to select
+that next job; no engineering approval or further observation is owed for the
+closed epic. This matters now because delivery is complete and the next useful
+outcome should be driven by use rather than speculative breadth.
+The closure record is ready for a documentation commit. A fresh session is
+appropriate once the next job is supplied: contracts, evidence and conditional
+reopening criteria are durable, with no pending verification process.
 
 **Accepted 2026-09-26 safe native arc hybrid:** the bounded
 level XY G2/G3 path now preserves direction/center through the native,

@@ -27,7 +27,10 @@ now gives user-accepted synthetic inputs and separate standalone/native acceptan
 
 ## Standalone Region-V ordered stock verification
 
-**Implemented and accepted by engineering offline, 2026-09-30; ready to commit.**
+**Implemented, accepted by engineering offline and merged, 2026-09-30.**
+The user merged the reviewed CAM verification epic as `3c010b6`; its
+[delivery closure](REVIEW.md#cam-verification-epic-merge-closure-and-priority-assessment---2026-09-30)
+preserves the existing offline acceptance and runtime/physical limits.
 The single-stage evaluator, fourteen synthetic regressions, supported Python
 matrix and package gates are complete. [Exact evidence and remaining limits](REVIEW.md#standalone-region-v-ordered-stock-verification---2026-09-30)
 are recorded in REVIEW; the implemented guarantees and reproduction commands

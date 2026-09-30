@@ -1,5 +1,101 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## CAM verification epic merge closure and priority assessment - 2026-09-30
+
+**Delivery closed; both selected capabilities accepted for their offline scope.**
+The final committed review examined all 19 changed paths across the six intended
+commits on `feat/cam-verification-hardening`, from target
+`main=d05ebc2baae9371b3fc5556c27319269e58fc551` to reviewed tip
+`86ec581a5c4cb77b35207e4363b0dd488f3dad9a`. Complete diff review found no remaining
+actionable defect within the declared CAM/tooling contracts. Clean worktree,
+commit inventory, ancestry and `git diff --check main...HEAD` passed. The two
+earlier runner findings are repaired, not waived; their fault evidence remains
+in the historical entries below.
+
+Post-commit checks on the reviewed tip:
+
+- `.venv/Scripts/python.exe tools/verify.py --pattern test_verification_runner.py
+  --pattern test_verification_package.py`: exit 0/pass, **21 tests in two
+  modules**, zero skips, **9.652 s wall**, no reuse. Report:
+  `output/verification-20260930-161535-c2ba44de/report.json`.
+- `.venv/Scripts/python.exe tools/verify.py --resume
+  output/verification-20260930-154052-71cf99d9`: exit 0/pass, **607 tests in
+  84 modules**, all 84 records explicitly reused after fresh identity,
+  inventory, retained-input and worker-result/completion checks, **4.427 s wall**.
+  The single named skip remains Windows symlink privilege; junction/reparse
+  checks run. Report: `output/verification-20260930-161641-046d70f9/report.json`.
+- `.venv/Scripts/python.exe tools/verify.py --package --resume
+  output/verification-20260930-154819-4e9a37cb`: approved retry exits 0/pass,
+  **231 tests / 24 modules**, all 24 reused, **19.090 s wall**. Fresh installed
+  smoke and identity checks bind the 3.12/3.13 wheels, independent 3.12 sdist,
+  base-only environment, snapshots and archives. Each full target retains only
+  its two absent-observation skips. Report:
+  `output/verification-20260930-161703-27b42a91/report.json`.
+  The preceding sandbox attempt remained incomplete on archive read permission;
+  `output/verification-20260930-161641-cc848af7/report.json` is preserved and
+  supplies no passing evidence.
+- `.venv/Scripts/python.exe -m compileall -q cambam_builder
+  legacy_cambam_builder tools` and the documented CBProject import/construction
+  smoke pass. No runtime source, test, fixture or package input changed between
+  those checks and the user's merge. Reconciliation is identity-checked reuse
+  of completed evidence, not a claim of freshly executing every test again.
+
+The user then performed the visible merge:
+`3c010b65b0de790ee8298a58545c2dafa2994867` has parents
+`d05ebc2baae9371b3fc5556c27319269e58fc551` and
+`86ec581a5c4cb77b35207e4363b0dd488f3dad9a`. On resumption, `main` and local
+`origin/main` both point to that merge, with a clean worktree.
+`git diff --exit-code 86ec581 HEAD` exits 0: the merge tree equals the reviewed
+feature tree. This closes the prior ready-to-commit and pending-review delivery
+states. Offline geometric/tooling acceptance remains separate from controller
+runtime, measured stock/setup and physical machining. No new manual observation
+or repeated runtime suite is needed to record an unchanged merge tree.
+
+### Conditional follow-up assessment
+
+The selected epic is complete; the remaining backlog does not establish a new
+unconditional implementation priority. The lead compared the adjacent options
+with the existing [backlog and reopening criteria](PROGRESS.md#remaining-backlog-in-order):
+
+- Broader V composition, unequal design/tool angles, clearance, surfaces and
+  occupancy have named consumer boundaries. No new combined-tool job or blocked
+  supported input was supplied; another nominal geometry example would not
+  establish which gap matters to the user.
+- Smoothing, air-cut reduction and automatic tool search need a measurable
+  finish/efficiency objective and relevant tools. Existing timing observations
+  identify cost but do not select an optimization or invalidate accepted evidence.
+- Controller/physical acceptance is the appropriate next increment for a
+  real-cutting goal. No next part, machine/controller, tooling or setup was
+  selected in this closure request; offline acceptance cannot invent those facts.
+- Native Pocket role parity, fresh Triangle output and broader tab authoring
+  remain conditional on the particular native evidence/workflow. Remote MCP
+  transport remains conditional on an actual remote-PC or multi-client need.
+  Completed MOP/calculation/entity work is not reopened by historical headings.
+
+**Decision:** elicit the next concrete part or authoring workflow, compare it
+with existing public capabilities, and promote one bounded outcome only when
+its need and acceptance can be stated. This is missing product direction for
+new work, not an unresolved engineering gate on either merged epic. No broader
+CAM feature, optimization, transport or physical execution is authorized by
+this assessment. Current priority remains solely in PROGRESS.
+
+This closure increment updates PROGRESS, REVIEW and the standalone packet's
+delivery status in REST_MACHINING_PLAN. It changes documentation only; whitespace,
+new/changed local links and merge-tree checks are sufficient. The task-local
+`output/merge-closure-20260930-d06d276a/check_closure.py` exits 0: merge-tree equality,
+`git diff --check HEAD^1...HEAD`, working `git diff --check` and all four added
+local links/anchors pass. Status contains only the three intended documentation
+edits, with no untracked candidates. The ignored-CAM scan returns no candidates
+outside `output/`; denied traversal of the pre-existing cache/temporary
+directories prevents an exhaustive filesystem claim. Its checks JSON and exact
+documentation diff remain local; durable conclusions do not depend on them.
+No runtime test is repeated for these documentation-only changes. No files are
+staged, committed or merged by the agent. The documentation is ready to commit;
+controller/physical validation adds no evidence to it. The project
+has a coherent fresh-session breakpoint, with no pending automated result and
+the next job's desired outcome still needed. Suggested commit:
+`docs: close CAM verification delivery and assess next priority`.
+
 ## Runner evidence repair and delivery verification - 2026-09-30
 
 **Implemented, verified and accepted by engineering; ready to commit.** Both
