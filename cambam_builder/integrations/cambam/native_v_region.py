@@ -95,7 +95,7 @@ def _prior_trace(source_bytes, plan, start, supplied=None):
         # It is a supplied-motion authority for tests, not a production
         # roughing recommendation.
         clearance = (op.tool.radius + plan.target.cap_depth *
-                     plan.tool.tangent + 0.02)
+                     plan.target.tangent + 0.02)
         centers = plan.target.safe.buffer(-clearance, quad_segs=32)
         if centers.is_empty:
             raise ValueError("no V prior cylindrical center region")

@@ -12,7 +12,7 @@ import math
 from . import replay, v_region
 
 
-VERSION = "ordered-job-v3-standalone-region-v"
+VERSION = "ordered-job-v4-fixed-v-design"
 MATCH_TOLERANCE_MM = 0.000051
 
 
@@ -214,6 +214,9 @@ class Job:
                 raise ValueError("occupancy setup needs matching frame and stock")
         at = self.initial_tip
         for index, stage in enumerate(self.stages):
+            if stage.v_plan is not None and stage.v_plan.target.frame not in (
+                    None, self.program_frame):
+                raise ValueError("V design frame differs from ordered job")
             if stage.motions[0].start != at:
                 raise ValueError("ordered stage initial tip differs")
             if index and (stage.transition is None or
@@ -435,7 +438,8 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
             raise ValueError("effective tool-tip offset differs from setup")
         if stage.v_plan is not None and (
                 stage.source_revision != stage.v_plan.fingerprint or
-                job.source_fingerprint != stage.v_plan.target.source_id):
+                job.source_fingerprint != stage.v_plan.target.source_id or
+                stage.v_plan.target.frame not in (None, job.program_frame)):
             raise ValueError("stale V stage revision or source")
     assumptions = [s.transition.completion_token for s in job.stages[1:]]
     report = {
@@ -560,6 +564,9 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
             if prefixes else "decoded standalone Region V from virgin stock"),
         "initial_stock": "decoded_endmill_prefix" if prefixes else "virgin",
         "plan_status": plan.status,
+        "design_fingerprint": plan.target.fingerprint,
+        "design_angle_degrees": plan.target.design_angle_degrees,
+        "design_frame": plan.target.frame,
         "section_depth_mm": depth,
         "cuts_by_prefix": (len(rest.prior_stock.cuts),) if prefixes else (),
         "prior_section_1_mm2": v_region.section_report(rest, depth, final=False),

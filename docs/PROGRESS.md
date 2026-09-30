@@ -62,14 +62,27 @@ and external-acceptance follow-ups remain separate work.
    preserves the defects. No manual observation is required for this offline
    development tool. Final committed-branch review passed and the epic is merged;
    its documented controller/runtime/physical limits remain unchanged.
-3. **Recommended next implementation, planned:** DT01 fixed design target and
+3. **Implemented; automated verification incomplete at user-requested wrap-up:** DT01 fixed design target and
    cutter-independent verification. The user now explicitly expects varied-angle
    V tools, endmill/V combinations, general inlays, native rest output and
    shape-aware ornaments/reliefs. Today cutter angle changes the measured V
    design, so unlike-angle tool comparisons can compare different parts. The
    [DT01 packet](REST_MACHINING_PLAN.md#fixed-design-target-and-cutter-independent-v-verification-dt01)
    fixes that shared contract with independent contact/section/protection witnesses
-   before the next composition verification. No implementation has started.
+   before the next composition verification. `VTarget` now freezes a design angle
+   independently of pointed/flat/rounded cutters; full-profile continuous
+   contact, derived cylinder centers and located residual preserve that design.
+   The same API verifies a holed ornament and curved annulus with UCCNC/Grbl
+   decoding. Eleven DT01 regressions and the final Python 3.13 checkout suite
+   (**618 tests / 85 modules**) pass. The full Python 3.12 wheel also completed
+   **618 tests / 85 modules**, with its named missing-observation/symlink skips.
+   Package verification is still running; Python 3.13 wheel/source-install
+   completion and final identity gates remain pending. No product decision or
+   manual observation is pending. Owners and
+   limits live in the [fixed-design contract](structure_spec.md#fixed-v-design-and-independent-cutter-contract-dt01).
+   The [review record](REVIEW.md#dt01-fixed-design-and-independent-cutter-verification---2026-09-30)
+   owns reports and continuation commands. Work is uncommitted; technical
+   acceptance awaits the remaining checks. No stage/commit/merge is authorized.
 4. **Following planned implementation:** MV01 cumulative flat/pointed V stock,
    using DT01's fixed design and the existing
    [MV01 packet](REST_MACHINING_PLAN.md#multi-stage-region-v-stock-verification-mv01).
@@ -119,21 +132,21 @@ semantics is now the highest-impact prerequisite: every tool must preserve the
 same desired part, and derived native MOP boundaries must not become new finish
 targets. The [expectation review](REVIEW.md#ornamental-cam-and-inlay-expectation-refinement---2026-09-30)
 records implemented-versus-planned evidence, research and the revised priority.
-The previous merged epic remains accepted within its existing scope. The user
-requested planning before further verification; this round changes documentation
-only and does not start DT01, MV01 or another runtime feature.
+The previous merged epic remains accepted within its existing scope. The earlier
+planning-only round is complete; the user subsequently authorized DT01 implementation.
 The subsequent [fundamentals-first clarification](REVIEW.md#fundamentals-first-roadmap-clarification---2026-09-30)
 preserves this priority and treats every named workflow as a consumer of shared
 capabilities, with reuse challenged beyond its initial example.
 
-**Next agent task:** implement
-[DT01 fixed design target and cutter-independent V verification](REST_MACHINING_PLAN.md#fixed-design-target-and-cutter-independent-v-verification-dt01),
-preserving same-angle callers and independent geometric/output evidence. Its
-ornament is a proof consumer of reusable target/tool contracts; also challenge
-those contracts with a different supported opening/topology. Stop
-at its documented acceptance before proceeding to MV01. A fresh implementation
-session is appropriate: expectations, consumers and limits are durable, with no
-pending result or personal-part decision required to begin offline work.
+**Next agent task:** finish DT01's pending package verification and record its
+offline acceptance using the [saved continuation evidence](REVIEW.md#dt01-fixed-design-and-independent-cutter-verification---2026-09-30).
+Then implement [MV01 cumulative fixed-design Region-V stock verification](REST_MACHINING_PLAN.md#multi-stage-region-v-stock-verification-mv01):
+compose supplied flat/pointed stages against one frozen design, with decoded
+prefix/residual/protection evidence and a materially different supported input.
+The user requested wrap-up while package verification was running. A fresh
+session must first inspect that pending result; this is not a fully verified
+breakpoint yet. Contracts, limits and continuation state are saved, with no
+unanswered product decision or personal-part validation required.
 
 **Accepted 2026-09-26 safe native arc hybrid:** the bounded
 level XY G2/G3 path now preserves direction/center through the native,
@@ -2139,9 +2152,9 @@ reopening criteria; historical milestones do not create new active work.
    post-fit coverage/topology/edge checks. BO01 owns automatic bundle search and
    declared cutting/air/tool-change objectives using a finite inventory and
    synthetic ornament consumer. DT01 owns independent Region-V design/tool
-   angles for candidates preserving one fixed surface; currently the tool angle
-   also defines that surface, so unlike-angle plans cannot yet be ranked as
-   equivalent targets.
+   angles for candidates preserving one fixed surface; its current state is in
+   the post-merge queue. Comparing alternatives requires one frozen design,
+   not repeated compatibility mapping of an unresolved opening.
    The hand-authored surface jobs prove bounded replay and improvement, not a
    general final-coverage budget; require independent target/coverage oracles
    when a named automatic surface strategy or finish requirement is introduced.

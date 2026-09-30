@@ -1,5 +1,114 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## DT01 fixed design and independent cutter verification - 2026-09-30
+
+Started from a clean worktree on `main` at `c29dbb9`. The authorized outcome is
+the reusable fixed design/profile/evidence contract, not a new ornament recipe
+or cumulative V-stage stock engine. Runtime owners are `cam_core.v_region`,
+`ordered_job`, and the existing native-V/tabbed consumers. Current APIs and
+compatibility are owned by the
+[specification](structure_spec.md#fixed-v-design-and-independent-cutter-contract-dt01).
+
+Eleven new synthetic regressions challenge the same evaluator through a holed
+20x16 mm opening with a 10x4 mm island (2 mm narrow left band, 2 mm cap), and a
+curved R8/R2 annulus (1 mm cap). Both have explicit 90-degree designs. Candidate
+profiles include pointed 60/90/120 degrees, flat 90 degrees with .6 mm tip radius,
+and rounded 60 degrees with .5 mm tip radius. The independently computed holed
+section at .5 mm is `19*15 - (40 + 28*.5 + pi*.25)` mm2; annular desired volume
+is `50*pi` mm3. Section/volume enclosures remain invariant under cutter-only
+changes; residual and operation identities can change. UCCNC/Grbl decode the
+same design-bound caller workflow. No motif discriminator was added to the core.
+
+The decisive full-profile counterexamples are a 60-degree pointed cutter at
+1 mm penetration/.8 mm wall clearance (tip violates design despite fitting at
+the top), a 120-degree cutter at 1 mm/1.3 mm clearance (top violates design),
+and a rounded 60-degree R.5 cutter at .5 mm/.65 mm clearance. In the latter,
+both endpoint-height occupancies (.5 and .577350269 mm) fit, but the interior
+maximum is .707106781 mm. All reject. Changing-Z safe motion passes; a chord
+crossing an island rejects. The contact envelope includes spherical stationary
+height, join and endpoints, covering every height/continuous segment rather than
+sampling the verification certificate.
+
+A supplied two-depth cylinder prefix derives safe centers at .2/.8 mm while
+retaining the original design opening as its replay target. Deep evidence
+includes only the deeper row; full-opening floor cuts that fit the opening but
+erase its V wall reject. A derived center boundary substituted as the original
+replay target also rejects; generalized native binding remains NR01. Short
+flutes preserve the cap and locate untouched deeper sections; no-fitting flat
+tips remain infeasible. Source, geometry, cap, design angle, frame, cutter and
+cached-stock mutations cannot reuse stale evidence.
+
+Independent engineering review found and closed two additional defects: a
+replaced `VRest.plan` could reuse cached cylinder stock without checking the new
+source/frame/design, and .1/.2 mm caps with eleven design-volume slabs could
+round the final section above the cap. Section consumption now reconstructs
+and compares the replay/protection evidence; the final integration level is
+the exact cap. Regressions reproduce both failures. The new focused command
+`& .\.venv\Scripts\python.exe tools/verify.py --pattern test_fixed_v_design.py`
+passes **11 tests / one module**. Final checkout
+`& .\.venv\Scripts\python.exe tools/verify.py` passes **618 tests / 85 modules**
+on Python 3.13, with the existing Windows symlink-privilege skip. Its report is
+`output/verification-20260930-211812-81321dd1/report.json`. Installed package
+results remain pending; the earlier full attempt was discontinued as superseded
+and its module records are not reused.
+
+**User-requested wrap-up with pending verification:** the package command
+`& .\.venv\Scripts\python.exe tools/verify.py --package` is still running in
+`output/verification-20260930-211800-b91a2c4f/`. At wrap-up its full Python 3.12
+wheel completed **618 tests / 85 modules**, all module records passing and
+complete. Named skips are Windows symlink privilege, retained M1 native-post
+observation absent from the package snapshot, and retained B/C tabbed native
+observations absent from the snapshot. Python 3.13 wheel had completed 42 modules
+without failures (including all DT01 cases); source-install test execution and
+final source/environment identity gates were still pending. All four installed
+targets' initial environment/provenance smoke checks ran before module execution.
+The package and passing checkout reports bind identical runtime/test/tool/config
+input hashes. The overall package report is **incomplete**, not accepted as a
+full matrix pass. Leave all environments, snapshots, results and logs intact.
+
+On continuation, first inspect that report. If the process is still running,
+await it rather than launch a duplicate. Its runner PID was `17752`, started
+2026-09-30 21:17:59 local process time; verify identity before managing it (PID
+alone is not durable authority). If it finished, inspect final status, every
+selected module/completion record and named skips. If interrupted, reconcile:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py --package --resume output/verification-20260930-211800-b91a2c4f
+```
+
+Resume rechecks retained identities and reruns incomplete/failed modules. If
+inputs/environments/artifacts changed or retained temporary working directories
+are unavailable, perform a fresh package run. Do not claim acceptance from the
+partial matrix or silently change its recorded selection. Runtime/test code has
+not changed since these final runs began. `git diff --check`, new-test whitespace
+inspection and scoped ignored `.cb`/`.nc` inspection passed; no accidental
+tracked-folder input copies were found. Broader ignored-file enumeration warned
+about inaccessible pre-existing cache/output directories, not new part files.
+
+Implementation and independent technical review are complete; offline acceptance
+remains pending verification. No manual observation adds evidence for this scope.
+Work remains uncommitted, with suggested message
+`feat(cam): decouple fixed V designs from cutter profiles`. The local workstream
+now establishes the design/tool foundation; project priority remains closing its
+checks before MV01 cumulative stock. A fresh session is needed because the user
+is going offline, but it must resolve the saved package result before treating
+this as a verified breakpoint. No architecture/product decision remains unsaved.
+
+Verification artifacts are local under unique `output/verification-*` runs.
+The first package attempt (`20260930-211546-93431080`) was **incomplete**, denied
+access to uv's existing cache before build; a reviewed rerun has cache/network
+access. An early full run predates final repairs and is not final-tree evidence.
+No new native source/post observation or physical validation is needed for this
+offline gate. Required/allowed removal coincide for the ideal envelope, with
+geometric enclosures distinct from permissions; known-free stock requires motion.
+Legacy unresolved openings must be frozen before tool comparison; their omitted
+frames remain unbound until explicitly supplied. Conditional GEOS numerical
+bounds, conservative path envelopes and finite spacing remain limits. Reopen
+for design-flat/rounded surfaces, a named unsupported topology, generalized
+native binding or a demonstrated missing contact enclosure. MV01 is the next
+composition capability, before MX01/RP01; no need to pursue adjacent planner
+optimization during DT01 closure.
+
 ## Fundamentals-first roadmap clarification - 2026-09-30
 
 The user clarified that the ornamental/inlay workflows are examples of the CAM

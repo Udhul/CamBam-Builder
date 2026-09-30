@@ -54,7 +54,7 @@ derived machining boundaries and output authority distinct.
 
 | Expected outcome | Implemented evidence today | Required follow-up |
 | --- | --- | --- |
-| Pointed, flat-tip and rounded V carving, selectable angles and maximum depth | `v_region` supports these profiles, polygon/curved openings, raster/offset paths and finite caps; output remains partial when tools/spacing leave stock. Tool angle currently defines the target walls. | DT01 makes the desired surface independent of cutter angle/tip. Distinguish design cap, reachable depth and permitted depth per pass; tool limits cannot silently redesign the part. |
+| Pointed, flat-tip and rounded V carving, selectable angles and maximum depth | DT01 separates the ideal capped design angle from these cutter profiles. Polygon/curved openings and raster/offset paths retain partial output when tools/spacing leave stock. | MV01 composes independently selected cutters against that fixed design. Design-flat/rounded evaluators and generalized pass-depth scheduling remain extensions; tool reach cannot redesign the part. |
 | Flat/pointed combinations and other tool sequences | Standalone V and one cylindrical predecessor followed by one V stage have decoded stock evidence. Multiple V stages and broader interleavings are rejected. | MV01 establishes cumulative V stock; MX01 extends supported endmill/V combinations with one unchanged design and actual per-stage sweeps. |
 | Receiver/plug inlays with meaningful tolerances | One circular, pointed-tool pair verifies separate stocks, registration, insertion and zero/positive radial clearance. | IN01 generalizes paired contours/islands, tool sequences, seating, independent side/bottom/surface gaps, backing and final visible shape. |
 | Sanding/facing to the finished assembled design | The circular model locates assembly/backing but has no composite-stock finishing operation. | IN01 records the finish plane and removal allowance; composite-stock facing and remaining thickness/outline verification need their own slice. Model sanding as a declared removal/tolerance envelope or measured result. |
@@ -256,11 +256,14 @@ products. These references establish useful method/parameter distinctions:
 
 ## Fixed design target and cutter-independent V verification (DT01)
 
-**Recommended next increment after the expectation review; planned, not
-implemented.** The current `VTarget.section(depth, tangent)` and protection checks
+**Implemented 2026-09-30; final verification in progress.** The former `VTarget.section(depth, tangent)` and protection checks
 derive the ideal finish from the selected tool angle. Various angles work as
 different jobs today; they do not establish unlike-angle cutters working on one
 fixed design. DT01 fixes this owning contract before extending MV01 stock reuse.
+The [implemented contract](structure_spec.md#fixed-v-design-and-independent-cutter-contract-dt01)
+owns APIs, compatibility, mathematical bounds and remaining limits; PROGRESS owns
+the final acceptance state. The original acceptance packet below is retained as
+the implementation gate, not a second backlog.
 
 **Outcome and consumer:** one immutable capped V design has explicit wall angle,
 tip/floor convention, opening/islands, depth and coordinate frame. Tool profile

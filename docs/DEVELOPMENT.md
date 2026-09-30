@@ -1841,6 +1841,28 @@ records the remaining native order/edit case and reusable state-model work.
 Use the user's actual controller, sender, offset and changer configuration
 only after a separate production profile and machine acceptance exist.
 
+### Fixed V design and independent cutter checks
+
+DT01 is an offline shared-contract change. Run the fixed-design witnesses with
+existing same-angle planning, native candidates, standalone output and cylinder/V
+composition, then full checkout and installed supported-matrix checks:
+
+```powershell
+& $ProjectPython tools/verify.py --pattern test_fixed_v_design.py --pattern test_v_region.py --pattern test_native_v_region.py --pattern test_standalone_v.py --pattern test_ordered_job.py
+& $ProjectPython tools/verify.py
+& $ProjectPython tools/verify.py --package
+```
+
+The [contract](structure_spec.md#fixed-v-design-and-independent-cutter-contract-dt01)
+owns design/tool separation and compatibility. Tests generate their inputs and
+keep orchestration outside core code: a holed ornament with a narrow wall band,
+curved annulus, independently computed areas/volume, pointed/flat/rounded and
+sharper/broader contact, a rounded interior-height gouge, continuous hole crossing,
+short-flute/infeasible located residual, two-depth cylinder roughing and stale
+source/frame/design/cutter/cached-stock witnesses. All use the existing decoded
+ordered workflow. No manual observation adds evidence for this synthetic gate;
+native derived-boundary binding, runtime and physical checks remain separate.
+
 ### Reusable ordered-job output and verification
 
 The caller builds `cam_core.ordered_job.Job` directly or adapts an existing
@@ -2445,7 +2467,7 @@ bytes regardless of `core.autocrlf`; do not rehash changed fixtures to bypass
 freshness. Native
 Default posts may use CRLF/LF; strict controller outputs and canonical direct
 reference files retain their exact byte grammar. The ordered verifier version
-`ordered-job-v3-standalone-region-v` requires fresh bundles and recomputed
+`ordered-job-v4-fixed-v-design` requires fresh bundles and recomputed
 reports. Existing source/post observation does not need repeating when its bytes
 and claimed behavior are unchanged. See the
 [session 4 evidence](REVIEW.md#branch-review-session-4---2026-09-29).
@@ -2454,7 +2476,7 @@ For strategy, rest-coverage or route-selection changes, run the owned planners
 and both supplied-audit consumers:
 
 ```powershell
-& $ProjectPython -m unittest tests.test_rc01 tests.test_convex_rest tests.test_polygon_rest tests.test_curved_rest tests.test_vcarve_slot tests.test_variable_vcarve tests.test_v_region tests.test_paired_inlay tests.test_strategy_selection tests.test_native_series_audit tests.test_m4_curved_workflow -v
+& $ProjectPython -m unittest tests.test_rc01 tests.test_convex_rest tests.test_polygon_rest tests.test_curved_rest tests.test_vcarve_slot tests.test_variable_vcarve tests.test_v_region tests.test_fixed_v_design tests.test_paired_inlay tests.test_strategy_selection tests.test_native_series_audit tests.test_m4_curved_workflow -v
 ```
 
 Planner changes that alter generated paths also require their native/direct and

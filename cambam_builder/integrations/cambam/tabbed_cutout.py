@@ -197,7 +197,7 @@ def _section_prefixes(stock, plan, order):
             a, b = plan.paths[0].points
             radius = (plan.tool.radius(a[2] - depth) + 1e-6) / math.cos(math.pi / 256)
             groove = LineString((a[:2], b[:2])).buffer(radius, quad_segs=64)
-            if not plan.target.section(depth, plan.tool.tangent).covers(groove):
+            if not plan.target.section(depth).covers(groove):
                 raise ValueError("generated V cutter crosses interior target")
         else:
             groove = Polygon()
@@ -244,7 +244,7 @@ def audit(case, generated_bytes, *, order=("interior-v", "native-profile")):
     prefixes, protected = _section_prefixes(stock, decoded_plan, order)
     section = v_region.section_report(decoded_plan, 0.25)
     if section[0] >= decoded_plan.target.section(
-            0.25, decoded_plan.tool.tangent).area or section[2] > 1e-6:
+            0.25).area or section[2] > 1e-6:
         raise ValueError("generated V section lacks bounded stock removal")
     if any(m.role not in ("rapid", "entry", "cut", "retract") for m in observed):
         raise ValueError("unexpected generated entry, link or retract role")

@@ -606,7 +606,7 @@ input hashes does not preserve acceptance. Native stock audits require explicit
 Part stock containing the replay target at stock top Z=0; stockless parsing and
 motion comparison remain available without stock authority.
 
-Verifier `ordered-job-v3-standalone-region-v` includes the program/work frame,
+Verifier `ordered-job-v4-fixed-v-design` includes the program/work frame,
 units and matching tolerance in prefix identity as well as whole-job identity.
 Pre-review ordered bundles must be regenerated and audited under this verifier;
 their stored reports cannot be carried forward. Prior actual CamBam observations
@@ -643,7 +643,7 @@ Construct one `Stage` with `v_plan`, `source_revision=plan.fingerprint`, and
 resolved program frame and translation. Existing constructors suffice; this
 route does not invent a cylindrical predecessor. `stock_present=True` declares
 virgin material at program Z=0 throughout the finite Region target and its depth
-cap. The target's safe/outer planar bounds, cap and tool angle define the measured
+cap. The target's safe/outer planar bounds, cap and frozen design angle define the measured
 V volume; the complement (including holes) is protected. This is a caller stock
 assertion, not observation of physical stock. `stock_present=False` returns stock
 `not_evaluated`, never virgin-stock success. Every V stage's revision must match
@@ -679,7 +679,7 @@ residual evidence uses `prior_section_1_mm2`, `section_1_mm2`,
 section field names are retained; `section_depth_mm=min(1, cap_depth)` specifies
 their actual depth, including shallow targets. Each section tuple is residual
 lower, residual upper, conservative outer-sweep area outside the safe section.
-Volume bounds use eight slabs and measure only the tool-angle V target. Initial
+Volume bounds use eight slabs and measure only the fixed V design. Initial
 bounds contain no assumed removed material. These are conditional GEOS bounds
 with chord/numeric allowances, not interval-certified Booleans; independent
 analytic witnesses assess their enclosure. No fitting tool yields an
@@ -687,11 +687,80 @@ analytic witnesses assess their enclosure. No fitting tool yields an
 
 The one-cylinder-then-V route retains its replayed prefix, initial bounds and
 decoded predecessor fingerprint. Multiple V stages, a nonterminal V stage and
-more than one cylindrical predecessor remain explicitly `unsupported`. The v3
+more than one cylindrical predecessor remain explicitly `unsupported`. The v4
 verifier invalidates all earlier ordered bundles: regenerate their reports and
 program binding before reuse. Unchanged actual source/post observations retain
 their original byte scope. Synthetic proof and misuse evidence live in
 `tests/test_standalone_v.py` and the dated review; machine acceptance is separate.
+
+### Fixed V design and independent cutter contract (DT01)
+
+`cam_core.v_region.VTarget` owns caller-supplied source identity, safe/outer
+opening bounds (including islands), cap, design included angle and coordinate
+frame. Its evaluator is an **ideal pointed V envelope**, truncated at the cap
+with a flat floor: `section(t)` erodes the opening by
+`t*tan(design_angle_degrees/2)`. Design-flat and design-rounded surfaces are
+future evaluators; cutter tip style never selects the design convention.
+Explicit `polygon(..., design_angle_degrees=90, frame="program")` and `curved`
+constructors default to the program frame. Frames label the supplied coordinates;
+no target-frame transform is inferred. Job translation retains its existing
+program-to-output role.
+
+Legacy constructors omitting the angle remain supported. `target.freeze(tool)`
+maps their historical tool-defined intent once; `plan` and `VPlan` construction
+perform that mapping automatically. Use `first_plan.target` or the returned
+frozen value for cutter alternatives, rather than planning the unresolved
+opening again. A legacy omitted frame remains unbound for existing native/XY
+callers; callers migrating to frame-bound evidence must set it explicitly.
+Unresolved `section(t, tangent)` remains a compatibility query; resolved targets
+reject a conflicting tangent. New queries use `section(t)`.
+
+Target fingerprints bind source, both geometric bounds, cap, sagitta, design
+angle, frame and evaluator version. Operation fingerprints additionally bind
+cutter and motion. Tool-only changes preserve target identity but invalidate
+operation evidence. `ordered-job-v4-fixed-v-design` invalidates older bundles;
+regenerate them and recompute reports. Native source/post observations retain
+their original byte/geometry scope, but old target-bound manifests must be
+recomputed. Job and prior-trace frames must match a bound target, even for jobs
+whose stock is not evaluated.
+
+`contact_radius(target, tool, d)` maximizes `t*q + rho(d-t)` continuously for
+`0 <= t <= d`, where `q` is the **design** tangent. Linear pointed/flat profiles
+need only endpoint checks. A rounded profile also checks the sphere/cone join
+and spherical stationary height `h=R*(1-q/sqrt(1+q*q))`, clipped to its spherical
+domain and penetration. This envelope is monotone in penetration. Planner
+inversion limits each segment's depth by its whole-line boundary clearance;
+verification uses maximum endpoint depth for the whole segment, conservatively
+covering every intermediate XYZ position and the entry/retract columns. A
+sharper cutter can leave wall stock, a broader cutter can leave deeper detail,
+and a rounded cutter can conflict at an interior height. Requested cap is never
+reduced by flute or profile reach. Finite paths remain `partial`; no positive
+admissible path is `infeasible`. No unlike-angle finish completeness is claimed.
+
+Required removal and allowed removal coincide for this ideal design; no extra
+relief is granted. Safe/outer sections are geometric uncertainty bounds, not
+different permissions. `target.volume_bounds(slabs)` measures desired removal
+independently of tools. `section_evidence` returns required inner/outer geometry,
+known-free sweep bounds, located residual inner/outer geometry and possible
+overcut, bound to design fingerprint/depth. Only verified cutting motion or a
+replayed prefix establishes known-free material. `section_report` retains the
+existing residual-lower/upper/possible-overcut area tuple. GEOS/chord/numeric
+enclosures remain conditional, not interval-certified Booleans.
+
+`target.roughing_centers(depth, radius, margin_mm=...)` derives an inward-safe
+cylinder-center boundary from the design section at that depth. It is a query
+result, never a new finish target or pre-cleared region. The existing cylinder
+prefix contract still binds its replay target to the original source opening
+and checks `radius + path_error + depth*q` continuously. A full-opening floor
+pocket that fits the opening but erases the V wall is rejected. General native
+derived-boundary binding remains NR01; multiple V stages remain MV01. These
+contracts cover the cutting profile, not holder occupancy, engagement limits,
+controller runtime or physical setup, which retain their separate gates.
+
+The reusable API is challenged by a holed polygonal ornament with broad floor
+and a narrow wall band, and a curved annulus through the same evaluator, planner,
+section evidence and decoded UCCNC/Grbl workflow. Orchestration and dimensions
+live in `tests/test_fixed_v_design.py`, with no core motif discriminator.
 
 ### Bounded native helical Circle Pocket and generated cleanup
 
@@ -1465,10 +1534,11 @@ at tiny positive clearances. A clearance below the tip radius is infeasible,
 including the immediately adjacent representable value below a flat tip.
 
 For a tip penetration `d` and section `t`, cutter occupancy measured from the
-original boundary is `t*tan + rho(d-t) <= rho(d)` for all three supported
-profiles. Each straight XYZ segment, including changing Z between vertices,
-must remain inside the inward-safe source and at least `rho(max endpoint d)`
-from its boundary with a clearance margin. This continuous segment test covers
+original boundary is `t*design_tan + rho(d-t)`. The analytic maximum over all
+heights replaces the original same-angle bound `rho(d)`; see DT01 below.
+Each straight XYZ segment, including changing Z between vertices,
+must remain inside the inward-safe source and at least this maximum evaluated
+at its maximum endpoint depth from the boundary with a clearance margin. This continuous segment test covers
 the full cutting profile and rejects a chord across a hole even when its
 endpoints fit. A separate process bound limits tip-depth change to 2 mm per
 XY millimetre on each cut segment. Entry feeds descend at the verified first
@@ -1993,12 +2063,11 @@ intermediate enclosure cannot erase earlier proof of less remaining stock.
 Overlapping intervals are not proof of an increase and remain eligible. Selection
 does not tighten or manufacture the supplied final report.
 
-Region-V's current finish angle is supplied by `VProfile`, not stored separately
-in `VTarget`. The opening, cap **and tool angle** jointly define the requested
-surface. Same-target alternatives must retain that angle; comparing 60-degree
-and 90-degree plans on one opening compares different design surfaces. Independent
-design/tool angles remain an extension. Tip style, finite radius and flute length
-may vary at the same angle without redefining the ideal pointed finish envelope.
+Region-V's finish angle is stored independently in `VTarget`; see the
+[fixed design contract](#fixed-v-design-and-independent-cutter-contract-dt01).
+Legacy tool-defined openings must first be frozen to one design before comparing
+unlike-angle tools. Tip style, radius, flute length and cutter angle can then
+vary without redefining the finish envelope; reach and coverage may be partial.
 
 Region-V planning halves its shallow seed when necessary and inserts an interior
 row for each reachable component missed by the normal raster/offset passes.
