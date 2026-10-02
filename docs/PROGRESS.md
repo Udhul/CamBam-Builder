@@ -23,6 +23,22 @@ recorded in [REVIEW](REVIEW.md#cam-verification-epic-merge-closure-and-priority-
 The current framework priority follows the queue below; further capability
 and external-acceptance follow-ups remain separate work.
 
+**MV01/MX01 delivery closed; committed review passed 2026-10-02:** the user committed MV01 as
+`142b420` and MX01 as `e44186f`, then merged `feat/composed-stock-verification`
+into `main` at `2f10b07`. The current `feat/feature-aware-v-rest` branch starts
+at that same merge commit; no second merge is needed. Review uses pre-merge base
+`1dfae81` and feature tip `e44186f`, with identical feature-tip/merge trees.
+Complete committed-diff review, final checkout/package evidence and delivery
+closure are recorded in the
+[review owner](REVIEW.md#mv01mx01-committed-review-and-merged-delivery---2026-10-02).
+Fresh checkout passes **638 tests / 87 modules**; Python 3.12/3.13 wheels and the
+independent 3.12 source installation each pass the same full suite. All 282
+package commands, completion, installed smoke/base-only and final identity gates
+pass, with the established symlink and absent retained-observation skips. No
+blocking review finding or required user observation remains. Only the delivery
+documentation is uncommitted and **ready to commit**; the implementation is
+already merged. RP01 remains the next implementation priority.
+
 1. **Completed; accepted by engineering 2026-09-30; committed as `5f38024`:** standalone
    Region-V ordered stock verification. One V stage now emits and independently
    decodes virgin-stock/access/residual evidence using existing Stage/Job
@@ -175,8 +191,8 @@ requires independently executable cylinder stages and initial-stock clearance
 for non-cutting body; cross-stage cavity credit and rest-only generation remain
 RP01 work. No manual observation adds evidence to this offline gate; runtime,
 engagement/load and physical setup remain separate. Ordered v6 bundles require
-regeneration. Work is uncommitted and **ready to commit**; no staging, commit or
-merge was performed.
+regeneration. MX01 is committed as `e44186f` and merged at `2f10b07`; the delivery
+review above owns verification against the committed tree.
 
 **Next agent task:** implement RP01 feature-aware planar V/rest candidates for a
 synthetic frieze, using fixed-design/composed-stock queries and residual-driven
@@ -190,7 +206,8 @@ retain their separate priorities. This is a good fresh-session breakpoint:
 contracts, parameters, evidence, limits and next priority are saved, with no
 pending results or product choices. Start a fresh session for this distinct
 strategy scope. Commit/merge actions remain user-owned unless delegated.
-Suggested commit: `feat(cam): verify mixed endmill/V/cleanup composition`.
+The implementation commit is complete; the current review record has its own
+delivery state above.
 
 **Accepted 2026-09-26 safe native arc hybrid:** the bounded
 level XY G2/G3 path now preserves direction/center through the native,

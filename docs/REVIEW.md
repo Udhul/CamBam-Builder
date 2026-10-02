@@ -1,6 +1,117 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## MV01/MX01 committed review and merged delivery - 2026-10-02
+
+The requested committed-branch review began with a clean worktree on
+`feat/feature-aware-v-rest` at `2f10b07aed9e97c1f475a3abe31d90d9e6087f0b`.
+Local `main` and the current branch already point to the user's visible merge
+commit. Its first parent is DT01 `1dfae817a7ee4edc57b825b0053db4303c877912`,
+and its second parent is the composed-stock feature tip
+`e44186fec1144d6a6e0019334bf8dd18dd0b78b9`. The actual feature range contains
+MV01 `142b420` and MX01 `e44186f`. Review therefore uses
+`1dfae81...e44186f`; an empty current `main...HEAD` diff cannot review those
+already integrated changes. The feature-tip and merge trees are identical,
+and the feature tip is an ancestor of `main`. No additional merge is needed.
+
+The bounded review covers all eleven changed files, especially decoded
+per-prefix union, fixed source/design/frame identity, cylinder containment,
+linear axial-pass witnesses, continuous cutter/shank/holder occupancy, existing
+standalone/one-cylinder-V compatibility, test-oracle independence and published
+limits. The committed diff has 1,769 additions and 101 deletions. Whitespace,
+sixteen added local links/headings, syntax/import smoke and scoped artifact
+checks pass. No untracked source or ignored part files outside `output/` were
+found; the thirteen historical tracked part fixtures are unchanged. Broad ignored
+enumeration warned about pre-existing inaccessible `.pytest_cache` and old
+`output/` paths; these were preserved. The source-owner scans were complete.
+
+Earlier MX01 reports describe pre-commit bytes. Identity-checked checkout
+reconciliation refused five changed byte hashes: `README.md`, `ordered_job.py`,
+`v_region.py` and the two new test modules. Both tests match the old hashes after
+CRLF-to-LF conversion, but that is not exact-byte identity and does not override
+the runner's refusal. The failed report is
+`output/verification-20261002-052927-0099b4b8/report.json`. Package reconciliation
+also could not read the retained wheel in the sandbox
+(`verification-20261002-052927-af2a3881`). A fresh package attempt
+(`verification-20261002-053016-3d4b0cee`) failed to initialize uv's existing
+outside-workspace cache. These attempts are incomplete evidence. Fresh package
+verification was started with approved cache access; no toolchain or dependency
+was added. Existing artifacts and failed reports were preserved.
+
+Fresh full-checkout and supported Python wheel/sdist verification commands:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py
+& .\.venv\Scripts\python.exe tools/verify.py --package
+```
+
+Full checkout passed **638 tests / 87 modules**, with no reused results, all
+89 commands successful and complete suite/final identity evidence:
+`output/verification-20261002-053005-c8a87e49/report.json`. Its sole named skip is
+the established Windows symlink-privilege limit. All report source hashes match
+the current tree; canonical sorted-JSON identity SHA-256 is
+`a4359a071da6193b1567bc5bf97fb80fabd829a40efcf24f028d30e28ba07f29`.
+Package report `output/verification-20261002-053037-da825833/report.json` also
+passes: Python 3.12.10/3.13.5 wheels and the independent 3.12.10 source
+installation each complete **638 tests / 87 modules** (**1,914 tests / 261 module
+records**), with no reused results. All **282 commands**, archive-content/byte
+checks, installed provenance/import/resource smoke, base-only optional-dependency
+boundary, completion and final source/environment/artifact/snapshot identity
+gates pass. Its source identity equals the checkout and current tree. Full
+targets use NumPy 2.5.3, Shapely 2.1.2 and MCP 2.2.0; the base-only target has
+NumPy alone. Each installed target has three named skips: Windows symlink
+privilege, absent retained M1 user post and absent accepted B/C tabbed one-off
+observations. Their synthetic checks run; absent private posts are not renewed
+observations. Checkout and package wall times were **1,153.00 s / 2,749.93 s**,
+including overlapping execution, not controller-performance measurements.
+
+The lead reviewed the complete committed diff and the independent read-only
+second review found no blocking defect in the scoped runtime/tests/contracts;
+it did not rerun the lead's tests. Fresh synthetic overlap and mixed bundles
+through both dialects pass final byte audit and re-audit. Inspection confirms
+T1/T3/T3/T3/T2 order, explicit .5/1/1.5 mm passes, UCCNC split ends and four Grbl
+pauses, and returns at Z=3 mm. The mixed design/job fingerprints and residual
+section **[132.91328863448044, 132.9303562759611] mm2** reproduce the implementation
+record below; the overlap section **[60.20389079009379, 60.21492635108933] mm2**
+encloses independent `64-3-pi/4`. Both have zero modeled possible-overcut area
+and retain partial coverage. The prior numeric/volume witnesses remain in their
+existing acceptance records, rather than being promoted to physical guarantees.
+Local audit/bundle support is under `output/mv01-mx01-review-20261002-01/`;
+it is supplementary, not a durable owner.
+
+Final delivery checks re-inspect status, ancestry, the two-commit range,
+`git diff --check 1dfae81...e44186f`, feature/merge tree equality and the complete
+branch diff. Both verification reports started at clean `2f10b07` and bind the
+unchanged final runtime/test/tool/configuration bytes. The local audit also
+checks all module-result hashes and suite completion against the reports.
+Syntax/import smoke, final documentation links/whitespace and scoped part-file
+checks pass. The only working changes are `docs/PROGRESS.md` and `docs/REVIEW.md`;
+there are no untracked candidates or staged changes.
+
+No manual observation adds evidence to this synthetic offline scope. Controller
+runtime, installation, engagement/load and physical cutting remain outside its
+acceptance. **Accepted by engineering:** committed MV01/MX01 passes the bounded
+offline correctness and delivery review. **Delivery state: already merged** at
+`2f10b07`; this is not a pending merge-ready branch. Only the review documentation
+is uncommitted and **ready to commit**. No staging, commit, merge, publishing or
+cleanup of pre-existing artifacts was performed by this review. Suggested
+documentation commit: `docs: record MV01/MX01 committed delivery review`.
+
+Reopen for a supported violating sweep/design/prefix, stale decoded evidence,
+changed numerical contract or material source/environment/fixture bytes. The
+existing explicit limits on conditional GEOS bounds, exact axial retraces,
+whole-tool box occupancy, cross-stage cavity credit and physical process remain.
+The local composition-verification outcome is implemented, verified and delivered.
+Overall priority remains RP01: verified composed stock can assess feature-aware,
+residual-driven candidates against existing baselines, so strategy work now has
+the stock foundation it needs. Native derived boundaries, inlay assembly, tool
+search and relief remain separate priorities. A fresh session is recommended
+for RP01's distinct scope; contracts, evidence, remaining limits and next priority
+are saved, with no pending result or unanswered product choice.
+
 ## MX01 mixed fixed-design stock and whole-tool access - 2026-10-02
+
+Historical implementation wrap-up below; its pre-commit delivery state is
+superseded by the committed review and merged-delivery record above.
 
 Implemented the supplied mixed-tool increment on the clean MV01 baseline
 `142b420`. `v_region.VComposition` extends the existing section/volume owner
