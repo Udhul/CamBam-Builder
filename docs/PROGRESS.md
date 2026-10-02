@@ -9,6 +9,15 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ### Post-merge task queue
 
+**Workflow correction completed 2026-10-02:** proportional reading, verification,
+delegation and handoffs now distinguish routine delivery checks from engineering
+changes. Applicable prior evidence is reused; expensive expansions require a
+named gap and cost explanation. See
+[workflow rules](WORKFLOW.md#proportional-effort-and-evidence-reuse) and the
+[brief review](REVIEW.md#proportional-effort-correction---2026-10-02).
+This documentation-only correction does not reopen MV01/MX01 acceptance; RP01
+remains the next implementation priority.
+
 **Baseline:** the rest/V branch and all five review sessions are complete for
 their recorded offline scope. The user merged reviewed commit `199f1f4` into
 `main` with merge commit `6faf4a5` on 2026-09-29. Python >=3.12 is required;

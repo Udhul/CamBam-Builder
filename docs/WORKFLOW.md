@@ -74,6 +74,45 @@ current contract in its normal owner and link to this evidence. Do not manufactu
 rejected alternatives for trivial edits. Add a domain-specific record only when
 volume warrants it and update the topic map rather than creating a parallel wiki.
 
+## Proportional effort and evidence reuse
+
+Choose work that answers the user's requested outcome and its acceptance criteria.
+Account for elapsed time, token spend and context growth, without a scoring ritual.
+Use established session context and targeted searches; expand reading only for a
+specific dependency or uncertainty. Checklists and command examples are resources,
+not instructions to execute every available step on every request.
+
+For status, commit and delivery checks, inspect Git state, the relevant diff and
+existing review/acceptance evidence first. Confirm completed checks cover the
+current behavior, test inputs, relevant environment and required scope. A commit,
+merge or documentation update alone does not invalidate behavior evidence.
+If already merged, report the integrated state and complete the requested review;
+do not automatically reopen certification or generate replacement bundles.
+
+An evidence mismatch needs diagnosis before reruns. Identify the changed files
+and determine whether they affect the claimed behavior. Never assume formatting
+or line endings are harmless, alter old reports to force reuse, or relax exact
+byte checks for part files, posts, fixtures or other byte-sensitive contracts.
+The runner's strict reconciliation may refuse reuse even when a documented
+engineering comparison establishes unchanged behavior. Attribute manually reused
+evidence and its limits explicitly; never describe a refused run as passing.
+If equivalence cannot be established, the uncovered gate remains open.
+
+Run focused checks for changed behavior or a concrete gap; broaden where shared
+contracts or explicit acceptance require it. Repeat passed checks only after a
+relevant change, failure or unresolved concern. A full suite, package matrix,
+second reviewer or new helper must supply evidence the existing work lacks.
+Before expensive work, state that gap, why narrower checks or existing evidence
+are insufficient, and expected runtime when measured timings are available.
+Ask only when the expansion requires a new user decision or changes the requested
+scope; routine checks already required by the authorized task need no new approval.
+
+Scale documentation and artifacts to lasting value. Update facts in their owner;
+use a short completion note for routine delivery changes. Do not generate audit
+scripts, synthetic bundles, duplicated reviews or backlog reassessments merely
+to make a small task look complete. Stop once the requested outcome and required
+evidence are complete; unrelated follow-ups stay outside this increment.
+
 ## Delegation execution
 
 [MODEL_ROUTING.md](MODEL_ROUTING.md) is the sole role-selection guide. Keep the
@@ -130,12 +169,18 @@ Use delivery labels precisely:
   verification, confirm the worktree stayed clean and rerun the branch-level status,
   ancestry, commit-range and diff checks against the final `HEAD`. Never promote an
   earlier implementation-ready conclusion into a merge-ready claim by assumption.
+  These are Git/evidence applicability checks, not an automatic behavior-test
+  rerun. Use the proportional-effort rules above to resolve any actual gap.
 - For merge-ready feature work, hand off a `git merge --no-ff <feature-branch>`
   command by default. Its merge commit preserves the branch-and-join topology in the
   graph even if the feature ref is later deleted. Use fast-forward, squash or rebase
   integration only when the user explicitly chooses linear history.
 
 ### Completion record / handoff template
+
+Use the fields relevant to a substantive engineering increment. Routine answers
+and small edits may use a brief result with evidence; omit empty fields. A delivery
+status update normally needs only the changed state and its supporting checks.
 
 ```text
 Slice and date:

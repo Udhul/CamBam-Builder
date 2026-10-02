@@ -1,5 +1,23 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## Proportional effort correction - 2026-10-02
+
+The user reported excessive testing, runtime, token spend and context growth on
+simple tasks and authorized tightening the operating rules. The preceding delivery
+review repeated full checkout (1,153 s) and package (2,750 s) verification after
+strict hash reconciliation refused reuse, although the branch was already merged.
+The new evidence is valid, but mismatch diagnosis and task scope should have
+determined the next checks before that expensive expansion.
+
+AGENTS, WORKFLOW and DEVELOPMENT now require proportional effort, evidence-first
+delivery review, targeted gap-driven reruns and compact routine handoffs. Required
+shared-contract checks, exact byte contracts and honest incomplete-gate reporting
+remain. The runner is unchanged; manual applicability review cannot turn a refused
+run into a pass. Checked changed links/headings, policy consistency and whitespace;
+no runtime tests add evidence for this instruction-only edit. RP01 remains next.
+Revisit these rules if necessary checks are omitted or routine work still expands
+without a named gap. No new verification infrastructure or dependencies were added.
+
 ## MV01/MX01 committed review and merged delivery - 2026-10-02
 
 The requested committed-branch review began with a clean worktree on
