@@ -11,25 +11,20 @@ own those contracts; [REVIEW](REVIEW.md) owns dated acceptance and limitations.
 
 ### NR01: editable native rest boundaries and MOPs
 
-**Implemented; native observation pending, 2026-10-02.** Compensated editable Regions and a fully
-native Pocket bound to immutable original CAD and verified predecessor stock.
-Owners: `cam_core/rest_boundaries.py`, `integrations/cambam/native_rest.py` and
-the native series/ordered source binders. Acceptance: strict save/reopen and
-mutation rejection; island/disconnected-corner and second geometry consumers;
-complete actual CamBam posts with entry/link/setup replay, positive useful
-removal and protected-stock bounds. Synthetic posts prove verifier behavior
-only. The local hidden native host timed out before loading the drawing.
-Automated verification and exact prepared external steps belong to
-[NR01 evidence](REVIEW.md#nr01-editable-native-rest-preparation---2026-10-02).
-The user's actual rough post passed replay; its stock now supplies the final
-editable candidate. The first composed post lacked an explicit spindle stop at
-tool change; setup-only footer repair is implemented and verified. Next action:
-obtain and audit its regenerated actual native post. No architectural
-or product decision is missing; this is a specific unavailable external observation.
+**Accepted 2026-10-02; implementation committed as `3122803`.** Editable derived
+Regions and a native Pocket preserve original CAD and certify predecessor stock.
+The user's regenerated complete CamBam post passes all required motion, setup,
+entry/link, useful-removal and protected-stock gates. The
+[NR01 contract](structure_spec.md#editable-native-rest-boundaries-and-mops-nr01)
+owns scope; [acceptance evidence](REVIEW.md#nr01-editable-native-rest-preparation---2026-10-02)
+owns exact hashes, results, partial-completion limits and regression applicability.
+No native observation remains pending for this bounded slice. Acceptance/status
+documentation is ready to commit; controller/runtime and physical gates remain
+separate.
 
 ### RP01: feature-aware planar V/rest candidates
 
-**Accepted by engineering 2026-10-02; ready to commit.** Contact and
+**Accepted by engineering 2026-10-02; implemented in `096ba97`.** Contact and
 sampled-medial candidates consume composed stock, omit union-proved air sweeps,
 retain safe high links and report located residual/overlap and floor cusp bounds.
 The synthetic frieze demonstrates better detail coverage than raster/offset at
@@ -61,24 +56,24 @@ work before detached inlay or relief work.
 
 | Order | Backlog increment | Useful next outcome |
 | --- | --- | --- |
-| 1 | **NR01** | Editable derived rest Regions/Plines and fully native MOPs bound to the original design; accept complete actual CamBam posts. |
-| 2 | **IN01** | Ornamental receiver/plug targets with independent fit, glue, seating and backing allowances; insertion and assembled-stock finishing/final motif checks. |
-| 3 | **BO01** | Generate and search finite tool/path bundles under explicit finish, cost and setup constraints; independently verify candidates and report search quality. |
-| 4 | **SF01** | Bounded relief contact/stock foundation and shape-aware 3D tracing/finishing. **NR03** separately establishes native Surface/3D MOP/post interoperability. |
+| 1 | **IN01** | Ornamental receiver/plug targets with independent fit, glue, seating and backing allowances; insertion and assembled-stock finishing/final motif checks. |
+| 2 | **BO01** | Generate and search finite tool/path bundles under explicit finish, cost and setup constraints; independently verify candidates and report search quality. |
+| 3 | **SF01** | Bounded relief contact/stock foundation and shape-aware 3D tracing/finishing. **NR03** separately establishes native Surface/3D MOP/post interoperability. |
 
 The [follow-up contracts and representative consumers](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers)
-own scope, dependencies and acceptance. RP01's bounded output establishes useful
-detached ornamental planning; NR01 now matters because editable native rest output
-is the next distinct workflow gap. Conditional fitting/overlap/low-access work is
-listed below; finite tool search belongs to BO01; broader surfaces
+own scope, dependencies and acceptance. RP01 establishes detached ornamental
+planning and NR01 closes the bounded editable native rest workflow. IN01 now
+adds the distinct receiver/plug allowance, insertion and assembled-stock
+capabilities; further native variants need a named consumer. Conditional
+fitting/overlap/low-access work is listed below; finite tool search belongs to BO01; broader surfaces
 belong to SF01. Reassess order after each coherent outcome. Pre-v6 ordered
 bundles require regeneration under the [MX01 contract](structure_spec.md#mixed-cylindricalv-composition-and-whole-tool-access-mx01).
 
-**Next agent task:** replay NR01's composed actual post under the
-[prepared external gate](REVIEW.md#nr01-editable-native-rest-preparation---2026-10-02).
-Continue this session for the observation: the offline implementation is coherent,
-but actual native acceptance remains open. Parameters, limits and commands are
-durable if a later session is needed; defer IN01 until this observation is assessed.
+**Next agent task:** implement IN01 ornamental receiver/plug targets and assembly
+verification under its
+[follow-up contract](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers).
+Start a fresh session: NR01 is accepted with durable contracts/evidence and no
+pending observation; IN01 has a distinct geometry, fit and assembly scope.
 
 ### Branch review session queue
 
@@ -162,7 +157,8 @@ and [verification evidence](REVIEW.md#export-failure-and-state-path-verification
 Current baseline acceptance/delivery links are in the [post-merge queue](#post-merge-task-queue).
 Dated evidence stays in REVIEW; current contracts stay in their topic owners;
 [development commands](DEVELOPMENT.md) and [acceptance/handoff procedures](WORKFLOW.md)
-own verification practice. NR01's offline authoring/certification is implemented;
-actual CamBam post acceptance remains open with prepared artifacts and durable
-criteria. Continue this session after the user supplies the native rough post.
-No commit or merge was performed in this work round.
+own verification practice. NR01's offline and bounded actual native-post gates
+are closed. Its implementation is committed; acceptance/status documentation
+is ready to commit. This is a good fresh-session breakpoint for IN01 because
+no decision, external result or unsaved context remains. No commit or merge was
+performed by the agent in this work round.

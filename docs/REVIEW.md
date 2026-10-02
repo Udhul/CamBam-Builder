@@ -7,8 +7,9 @@ contracts. Historical next-task and pending statements describe their entry date
 
 ## NR01 editable native rest preparation - 2026-10-02
 
-The bounded offline authoring/certification slice is accepted by engineering;
-actual native planner acceptance is pending. The
+The bounded offline authoring/certification and actual native Pocket/post slice
+are accepted. The user supplied the actual CamBam generation observations;
+engineering accepted the complete source-bound motion and stock replay. The
 [NR01 contract](structure_spec.md#editable-native-rest-boundaries-and-mops-nr01)
 owns compensation, editable provenance, original-design binding and limits.
 No parser, replay/enclosure algorithm, native entity/MOP schema or dependency
@@ -111,27 +112,59 @@ MOP footer, matching its already-observed final return/stop. It changes no
 cutting path and does not introduce CustomScript or a literal cutting carrier.
 The corrected strictly reopened `rest-actual.cb` has SHA-256
 `51103f89dd840556d540a5ca96edf0a7f5c42779e158e750d267f2c3abd7f681`.
-Native acceptance awaits regeneration from that corrected file; the user must
-close/reopen it before regenerating all toolpaths and `rest-actual.nc`.
-The initial synthetic
+The user subsequently reported re-exporting `rest-actual.nc`. Its **665-line
+complete actual Default post passes** the existing audit, including original
+CAD/derived-boundary binding, unchanged predecessor motion, all cutting,
+entry/link/retract moves and explicit spindle-stop/tool-change setup. The
+corrected candidate bytes remain unchanged. Accepted post SHA-256:
+`5ee306453114168328cb70a15e9609865af3acde91a9500c6e85dfae4284050e`;
+normalized motion SHA-256:
+`078b7874f4fc255db286d4465a01a95537c34254aeb0d57e08ea40fb321e63a0`.
+
+At both checked depths, 1 and 2 mm, the final residual area is
+**1.869375635-1.878836429 mm2** and protected-overcut upper report is **0 mm2**
+(gate <= .001 mm2). Conservative new floor removal is
+**6.717648038-6.737152233 mm2**, exceeding the required 1 mm2 minimum.
+Final residual volume is **3.738751271-3.757672859 mm3**. This establishes useful
+fully native rest cleanup with explicit partial completion, not removal of
+every finite-tool corner residual. Both stages pass motion, target, tool,
+entry, link, stock, post and residual gates. No further user observation is
+required for this bounded native file/post acceptance.
+
+Acceptance command: `& .\.venv\Scripts\python.exe output/nr01-d54675d889/validate_native.py audit`.
+Result: `output/nr01-d54675d889/audit-rest-actual.json` and `actual-audit.log`.
+The parser-only `parsed_evidence` subrecords deliberately retain
+`stock_access_residual: not_evaluated`; the separate completed stage audits and
+top-level `verifier_status: pass` supply that authority. The initial synthetic
 results above remain dated verifier evidence, not freshness evidence for the
 replaced `rough.nc`.
+
+Implementation is committed as `3122803`. At this acceptance continuation the
+worktree was clean, and every source/configuration hash in the final focused
+report matched the committed tree; the recorded regression evidence applies
+without rerunning unchanged behavior tests. Main ancestry and
+`git diff --check main...HEAD` passed. This is not a whole-branch merge-ready
+review. These acceptance/status documentation updates are ready to commit;
+no staging, commit or merge was performed by the agent. The completed native
+gate is a fresh-session breakpoint for the distinct IN01 scope; its current
+priority remains owned by PROGRESS.
 
 **External workflow used:** in CamBam Plus 1.0, open `rough.cb`, select
 Default / Default mm, generate all toolpaths with Ctrl+T and the complete post
 with Ctrl+W; save as `rough-actual.nc` beside the input. Expected authored values
 are one ROUGH Pocket, T1 diameter 6 mm, floor Z=-2 mm, .005 mm allowance and the
-unchanged 8 x 10 mm island. Report generation success/failure and the post path.
-The agent will replay all emitted motion; any unproved entry/link/setup move or
-protected overcut above .001 mm2 fails the external gate. No machine run is
-requested. After this observation, run from the root:
+unchanged 8 x 10 mm island. The returned actual post establishes predecessor
+stock through complete replay. This workflow is now accepted; no repeated post
+is needed unless its pinned inputs or claimed behavior change. Reproduction
+from the preserved rough post uses:
 
 ```powershell
 & .\.venv\Scripts\python.exe output/nr01-d54675d889/validate_native.py prepare
 ```
 
-This audits the actual predecessor and prepares `rest-actual.cb`. The user then
-posts that result as `rest-actual.nc`; the agent runs the helper's `audit` mode.
+This audits the actual predecessor and prepares `rest-actual.cb`; regenerating
+that candidate changes its identity and requires a fresh actual post. For the
+preserved accepted files, use only the helper's `audit` mode.
 Acceptance requires unchanged original CAD and predecessor motion, certified
 boundaries, complete role/access replay, protected-overcut upper <= .001 mm2
 at depths 1 and 2 mm and at least 1 mm2 conservative new floor removal. Residual

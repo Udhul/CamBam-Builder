@@ -51,7 +51,7 @@ derived machining boundaries and output authority distinct.
 | Sanding/facing to the finished assembled design | The circular model locates assembly/backing but has no composite-stock finishing operation. | IN01 records the finish plane and removal allowance; composite-stock facing and remaining thickness/outline verification need their own slice. Model sanding as a declared removal/tolerance envelope or measured result. |
 | Endmill plus V rest machining that reduces leftover | Supplied endmill/V/cleanup has fixed-design prefix stock and independently witnessed positive cleanup removal. It does not generate efficient rest-only cuts. | RP01: residual-driven candidates, safe entry/links through prior clearance and quantified new removal/air cutting. |
 | Calculate the best tool/path bundle under user constraints | `strategy.select_strategy` ranks supplied audited routes; no bundle generation or cutting/time/tool-change optimization is implemented. | BO01 searches a declared finite inventory and strategy family, verifies candidates and reports the objective, alternatives, budget and uncertainty. |
-| Fully native CamBam rest machining using derived primitives/MOPs | Native motion normalization and some posted jobs work; RC01 corner windows and M1 native Pockets are bounded trials. M1's native cleanup fails its declared cleared-entry gate. | NR01 derives editable rest machining boundaries, authors native Pocket/Profile/appropriate MOPs, and accepts complete actual CamBam posts against the unchanged design. |
+| Fully native CamBam rest machining using derived primitives/MOPs | NR01's bounded editable Regions/native Pocket and complete actual-post replay are accepted; [contract and limits](structure_spec.md#editable-native-rest-boundaries-and-mops-nr01). | Wider native strategies require a named consumer and their own source/post evidence. |
 | Shape tracing with tools fitting local geometry; decorative planar detail | Existing offsets follow boundaries, and bounded V and endmill paths have continuous geometric checks. No general medial/contact/feature planning exists. | RP01 adds feature/contact guidance, narrow-detail and curvature-aware candidates, with full residual/coverage and access verification. |
 | Shape-aware 3D relief/ornament routing rather than one universal fill pattern | Analytic stepped, sloped and spherical jobs verify supplied paths; there is no general relief contact backend or freeform strategy generator. | SF01 establishes bounded surface/contact and stock queries, then feature-guided, contour/flow/morph/pencil/scallop candidates and suitable tool selection. |
 | Native CamBam 3D operations for those shapes | General native Surface/3D Surface authoring/normalization is outside current interchange support. | NR03 is a separate mesh/entity/MOP/post compatibility slice; detached shape-aware paths can precede it. |
@@ -174,23 +174,14 @@ remain outside those shared mechanisms.
   [RP01 contract](structure_spec.md#feature-aware-planar-vrest-candidates-rp01);
   measured acceptance and remaining limits live in
   [REVIEW](REVIEW.md#rp01-feature-aware-planar-rest-candidates---2026-10-02).
-- **NR01: derived rest boundaries and fully native MOPs.** Use a native pocket
-  with an island and disconnected corner residuals. Derive cutter-compensated
-  Regions/Plines/windows and useful overlap with prior cleared space; pure rest,
-  feasible centers and a Pocket target are different sets. Preserve original CAD
-  and editable source-to-derived provenance. Extend native source binding to
-  certify derived MOP boundaries against one original design, not simply drop
-  current target-equality checks. Strict save/reopen, then obtain a real CamBam
-  post and replay all cutting/entry/link/setup moves and resulting stock. A valid
-  stock-cutting entry may be permitted if separately modeled; a cleared descent
-  cannot assume material absent. Engrave previews and CustomScript transport do
-  not close fully native planner acceptance. Shape authoring/preparation is
-  offline; actual native algorithm behavior requires the named external post.
-  Native Pocket/Profile/Engrave parameters cannot encode every arbitrary generated
-  variable-Z or feature-guided path. Return a precise representability limit and
-  offer the separately accepted generated-output route when appropriate; do not
-  relabel a literal carrier as fully native planning. Broader native 3D and any
-  plugin-specific V behavior require their own versioned support evidence.
+- **NR01: derived rest boundaries and fully native MOPs.** The bounded planar
+  Region/native Pocket slice is implemented and accepted through complete actual
+  CamBam posts. Its [contract](structure_spec.md#editable-native-rest-boundaries-and-mops-nr01)
+  owns compensation, original-design certification, entry/setup semantics and
+  native representability limits; [evidence](REVIEW.md#nr01-editable-native-rest-preparation---2026-10-02)
+  records the protected-island/disconnected-corner consumer, useful removal,
+  partial completion and rejected first post. Broader native 3D or plugin-specific
+  V behavior still requires its own versioned support evidence.
 - **IN01: general ornamental inlay and assembly finishing.** Use one asymmetric
   motif with a hole, thin bridge, bounded receiver and retained plug/backing.
   Independent part plans may combine endmills and suitable V profiles. Establish

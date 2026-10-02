@@ -942,7 +942,7 @@ Engrave previews, CustomScript and literal-motion carriers do not establish it.
 Arbitrary feature-guided or variable-Z paths are not representable by this
 native Pocket contract. Controller runtime, engagement/load, whole-holder/setup
 occupancy and physical machining require their own declared evidence. Current
-acceptance and the pending native observation live in
+acceptance and the observed complete native posts live in
 [NR01 evidence](REVIEW.md#nr01-editable-native-rest-preparation---2026-10-02).
 
 ### Fixed V design and independent cutter contract (DT01)
@@ -1004,8 +1004,10 @@ cylinder-center boundary from the design section at that depth. It is a query
 result, never a new finish target or pre-cleared region. The existing cylinder
 prefix contract still binds its replay target to the original source opening
 and checks `radius + path_error + depth*q` continuously. A full-opening floor
-pocket that fits the opening but erases the V wall is rejected. General native
-derived-boundary binding remains NR01; cumulative all-V stock follows the
+pocket that fits the opening but erases the V wall is rejected. The
+[NR01 derived-boundary binding](#editable-native-rest-boundaries-and-mops-nr01)
+supports planar cylindrical Pocket cleanup; variable-Z/native V-wall boundary
+binding remains outside that scope. Cumulative all-V stock follows the
 [MV01 contract](#cumulative-region-v-virgin-stock-contract-mv01). These
 contracts cover the cutting profile, not holder occupancy, engagement limits,
 controller runtime or physical setup, which retain their separate gates.
