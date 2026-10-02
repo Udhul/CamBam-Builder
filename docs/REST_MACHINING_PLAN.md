@@ -197,6 +197,10 @@ remain outside those shared mechanisms.
   semantics must support flat/rounded tips through achievable mating surfaces,
   not assume that two cutter labels or equal angles establish a fit. Physical
   material-fit and finishing coupons have separately prepared acceptance gates.
+  The first straight-wall cylindrical consumer is implemented under the
+  [paired-stock and assembly contract](structure_spec.md#ornamental-straight-wall-paired-stock-and-assembly-in01).
+  Its declared finishing envelope does not close tapered mating or executable
+  composite-stock facing; the requirements above remain the broader acceptance.
 - **SF01: shape-aware 3D relief foundation and routing.** Begin with an analytic
   curved moulding/valley and ridge motif, then a bounded non-overhanging relief
   representation. Establish contact/normal/curvature queries, whole cutter/body

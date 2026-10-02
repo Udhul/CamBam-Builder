@@ -2370,6 +2370,19 @@ so a CamBam GUI post adds no evidence; the
 [contract](structure_spec.md#bounded-spherical-bowl-ball-finish-and-rest)
 defines represented shapes and numerical limits.
 
+### Ornamental straight-wall inlay verification
+
+The [IN01 contract](structure_spec.md#ornamental-straight-wall-paired-stock-and-assembly-in01)
+uses synthetic runtime-generated stock/motion and complete in-memory controller
+outputs. Run its tests plus the reused stock/output boundaries:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_ornamental_inlay tests.test_paired_inlay tests.test_execution_evidence tests.test_ordered_job tests.test_ordered_dialects tests.test_polygon_rest -q
+```
+
+No CamBam observation is required for this detached offline slice. Facing paths,
+controller execution and physical-fit coupons have separate acceptance scopes.
+
 ### Packet 4 paired V-carve inlay
 
 Run from the repository root with the declared interpreter:

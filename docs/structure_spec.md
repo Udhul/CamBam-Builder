@@ -1202,6 +1202,63 @@ surface offset, real holder installation or controller runtime is claimed.
 See the [packet 3 runbook](DEVELOPMENT.md#packet-3-spherical-bowl-ball-finish-and-rest)
 and [evidence](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest--2026-09-27).
 
+### Ornamental straight-wall paired stock and assembly (IN01)
+
+`cam_core.ornamental_inlay.Design` defines a tool-independent Polygon motif,
+finite stock footprint and separate receiver/plug removal Regions. Receiver
+depth is seating plus bottom glue gap; plug clearing depth is seating plus
+surface gap, with backing retained below it. Positive signed side fit erodes
+the plug laterally; negative fit expands it and requests interference within a
+caller-supplied limit. Offsets use the declared GEOS polygon approximation
+(128 segments/quadrant), so this is not an exact curved-surface contract.
+The minimum-web gate erodes by half the requested web and requires a connected
+core with unchanged hole count. It detects the representative bridge collapse;
+it is not a general local-thickness or material-strength certificate.
+
+`targets(side)` produces reusable `replay.Target` Regions for independently
+supplied cylindrical plans. Plug exterior clearing and hole pockets are separate
+components. Clearing is bounded by the stock footprint plus explicit edge access;
+that extension permits cutter travel outside the blank, not through fixtures.
+The plug machining frame is mirrored in X. Assembly maps physical XYZ by
+`(x,y,-u) -> (-x+dx,y+dy,u-insertion)`, a proper rigid flip rather than a Z-only
+reflection. General rotations, tilted assemblies and undercuts are unsupported.
+
+`verify_pair` requires each complete `replay.Trace`, design/side/frame binding
+and expected motion fingerprint. It replays tool dimensions, target identity,
+entries, cuts and retracts; only level linear cylindrical cuts are supported.
+Existing polygonal sweep bounds establish actual retained stock as finite blank
+minus removed stock. No required removal or nominal target earns machined-stock
+credit. Both tools may differ without changing the target design.
+
+The verifier splits seated stock at every cutter-depth discontinuity. Top-down
+cylindrical subtraction makes retained plug sections grow with machining depth,
+so every earlier insertion section is contained in the seated section at the
+same receiver depth. This proves continuous straight insertion, not just sampled
+poses. It also checks the full requested bottom clearance and above-surface
+shoulder clearance. `pass` requires zero possible collision and both clearance
+checks; positive lower collision volume is `collision`; otherwise the result is
+`unresolved`. Zero nominal side fit is permitted but numerical/actual residual
+stock can prevent certification. Evidence includes both motion hashes and XY
+registration. GEOS floating-point topology and existing sweep enclosures remain
+the numerical boundary; there is no nonzero area tolerance that grants fit.
+
+`finish_envelope` checks a declared full-plane removal range after explicit
+assembly, cure and renewed-setup declarations. It reports worst missing/excess
+visible plug area, section-enclosure topology, receiver floor and minimum **nominal-core** retained
+thickness over all section intervals. Excess ledges have no minimum-thickness
+claim. Matching enclosure topology does not prove actual material topology in
+the uncertainty band. This is a sanding/facing removal model, not an executed finishing path or
+proof of cure. `integrations.inlay_output.audit_pair` separately binds both
+detached ordered jobs and every output-file hash, audits UCCNC/Grbl bytes and
+passes their reconstructed decoded traces to the core assembly verifier.
+
+The [verification record](REVIEW.md#in01-straight-wall-ornamental-assembly---2026-10-02)
+owns the asymmetric holed bridge and independent rectangular consumer evidence.
+Tapered/flat-tip/rounded-tip mating stock, actual composite facing motion,
+native output, holder/fixture access and physical material-fit coupons remain
+outside this slice; [IN01 follow-up scope](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers)
+and [current priority](PROGRESS.md#active-work-and-next-priority) own the remainder.
+
 ### Bounded circular paired V-carve inlay
 
 `cam_core.inlay` composes two independent one-stage ordered jobs from one

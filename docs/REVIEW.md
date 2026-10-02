@@ -5,6 +5,73 @@ checkpoints. [PROGRESS](PROGRESS.md) owns current priority and state; the
 [specification](structure_spec.md) and [MCP contract](MCP_CONTRACT.md) own current
 contracts. Historical next-task and pending statements describe their entry date.
 
+## IN01 straight-wall ornamental assembly - 2026-10-02
+
+The [bounded contract](structure_spec.md#ornamental-straight-wall-paired-stock-and-assembly-in01)
+adds independent paired targets, actual-stock insertion verification and a
+declared finishing-envelope consumer. It reuses cylinder replay and existing
+polygonal sweep enclosures without changing those shared owners. Complete-byte
+orchestration lives in `integrations.inlay_output`, not the CAM core. The
+historical circular V consumer is unchanged.
+
+The asymmetric synthetic motif is the union of a 6 by 6 mm body, a 3 by 1 mm
+bridge and a 3 by 3 mm lobe, minus a 2 by 3 mm hole: analytic area **42 mm2**.
+Seating is **1.2 mm**, bottom gap **0.3 mm**, surface gap **0.4 mm**, backing
+**1 mm**, receiver thickness **3 mm**, and signed lateral clearance **0.15 mm**
+within a **0.3 mm** caller limit. The minimum-web erosion control is **0.4 mm**.
+Independent cylinder radii **0.12 mm** and **0.1 mm** clear the receiver and
+physically X-flipped plug, including its separate hole pocket. Tests require
+zero possible collision volume throughout insertion and both requested gaps.
+An alternative **0.08 mm** plug tool passes against the same targets.
+
+Fault-sensitive witnesses include a retained plug hole colliding with the
+receiver island (definite collision above **5 mm3**), **0.4 mm** registration
+error, signed **-0.1 mm** interference, oversized tools, bridge collapse,
+stale revision/motion/tool/frame, and missing glue clearance. A plug shoulder
+cleared only **0.1 mm** beyond seating is collision-free but fails the requested
+surface gap. Another shoulder collides only in the top **0.05 mm** of the
+receiver, establishing why all section breakpoints must be checked. Rectangular
+offset areas have independent analytic references for positive, zero and
+negative fit; nominal zero fit is not automatically certified for machined stock.
+
+The declared **0..0.2 mm** full-plane finishing envelope requires assembly,
+cure and renewed-setup declarations, retains **1 mm** over the nominal plug
+core, and asserts missing motif area below **1e-6 mm2** and excess below
+**0.1 mm2**. These area limits are regression observations, not a global finish
+tolerance. Matching section-enclosure topology does not establish actual
+topology within the numerical uncertainty band or thickness of excess ledges.
+This consumer does not generate or verify an actual facing/sanding toolpath.
+
+Independent code review caught and repaired three report/evidence gaps: actual
+shoulder clearance was initially untested, assembly registration was absent from
+the certificate, and retained thickness needed explicit nominal-core scope.
+A final review corrected the topology label to match its enclosure evidence.
+No consequential insertion false-pass remained under the stated level-cylinder
+scope. The proof uses nested retained sections and the proper rigid flip; a
+Z-only reflection would be invalid for this asymmetric motif.
+
+Verification: the new slice and reused circular/ordered-output/polygon boundaries
+passed **43 tests** on repository Python **3.13.5** in **190.844 s**, with no skips.
+The final focused rerun passed **11 tests** in **146.903 s**, covering the
+topology-report naming correction and a multi-operation holed output consumer
+in both UCCNC and Grbl. Output-byte and job-fingerprint mutations reject before
+assembly. The final independent mirrored-hole landmark assertion passed with
+its assembly test in **23.432 s**. Syntax and whitespace checks also passed;
+new untracked source/test files were inspected separately from Git's tracked diff.
+Commands live in the
+[runbook](DEVELOPMENT.md#ornamental-straight-wall-inlay-verification).
+Logs are local under `output/in01-20261002-01/`; the assertions and synthetic
+fixtures are self-contained in `tests/test_ornamental_inlay.py`.
+
+Implementation and engineering acceptance are complete for the straight-wall
+slice; changes are ready to commit. Manual CamBam observation adds no
+evidence to this detached gate. Native integration, physical fit/material
+compression, actual cure/setup, cutter-body/fixture access, tapered mating
+profiles and executable composite finishing are not accepted. Reopen this
+contract for a named tapered/profile/tilted consumer or an actual cutting job,
+not merely a new nominal ornament. Full IN01 remains open in
+[current priority](PROGRESS.md#active-work-and-next-priority).
+
 ## NR01 editable native rest preparation - 2026-10-02
 
 The bounded offline authoring/certification and actual native Pocket/post slice

@@ -9,6 +9,19 @@ own those contracts; [REVIEW](REVIEW.md) owns dated acceptance and limitations.
 
 <a id="doc01-documentation-consolidation-backlog"></a>
 
+### IN01: ornamental paired-stock and assembly verification
+
+**Accepted by engineering 2026-10-02; ready to commit.** The first straight-wall
+slice defines independent allowances and verifies asymmetric holed/bridge motifs
+from separate replayed cylindrical stocks, continuous insertion, complete decoded
+outputs and a declared finishing envelope. The
+[contract](structure_spec.md#ornamental-straight-wall-paired-stock-and-assembly-in01)
+owns the bounded semantics; [review evidence](REVIEW.md#in01-straight-wall-ornamental-assembly---2026-10-02)
+owns acceptance and limits. No external observation is needed for this offline
+slice. The full IN01 item remains open for tapered/profile-aware mating surfaces
+and executable composite-stock finishing under its
+[follow-up contract](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers).
+
 ### NR01: editable native rest boundaries and MOPs
 
 **Accepted 2026-10-02; implementation committed as `3122803`.** Editable derived
@@ -56,24 +69,26 @@ work before detached inlay or relief work.
 
 | Order | Backlog increment | Useful next outcome |
 | --- | --- | --- |
-| 1 | **IN01** | Ornamental receiver/plug targets with independent fit, glue, seating and backing allowances; insertion and assembled-stock finishing/final motif checks. |
+| 1 | **IN01 remainder** | Extend accepted straight-wall paired stock to tapered/profile-aware mating surfaces, then executable assembled-stock finishing and final motif/thickness checks. |
 | 2 | **BO01** | Generate and search finite tool/path bundles under explicit finish, cost and setup constraints; independently verify candidates and report search quality. |
 | 3 | **SF01** | Bounded relief contact/stock foundation and shape-aware 3D tracing/finishing. **NR03** separately establishes native Surface/3D MOP/post interoperability. |
 
 The [follow-up contracts and representative consumers](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers)
 own scope, dependencies and acceptance. RP01 establishes detached ornamental
 planning and NR01 closes the bounded editable native rest workflow. IN01 now
-adds the distinct receiver/plug allowance, insertion and assembled-stock
-capabilities; further native variants need a named consumer. Conditional
+establishes independent allowances and straight-wall assembly stock. Its remaining
+profile-aware mating work matters before tool search because candidate tools must
+be judged against achievable paired surfaces. Further native variants need a named consumer. Conditional
 fitting/overlap/low-access work is listed below; finite tool search belongs to BO01; broader surfaces
 belong to SF01. Reassess order after each coherent outcome. Pre-v6 ordered
 bundles require regeneration under the [MX01 contract](structure_spec.md#mixed-cylindricalv-composition-and-whole-tool-access-mx01).
 
-**Next agent task:** implement IN01 ornamental receiver/plug targets and assembly
-verification under its
+**Next agent task:** extend IN01 paired targets and actual-stock assembly to
+tapered mating surfaces with independently chosen pointed/flat/rounded profiles under its
 [follow-up contract](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers).
-Start a fresh session: NR01 is accepted with durable contracts/evidence and no
-pending observation; IN01 has a distinct geometry, fit and assembly scope.
+Start a fresh session: this slice is verified and its contracts and tests persist
+the state; tapered surface/stock enclosures have a distinct scope. No decision or
+external observation remains pending for the accepted straight-wall slice.
 
 ### Branch review session queue
 
@@ -158,7 +173,7 @@ Current baseline acceptance/delivery links are in the [post-merge queue](#post-m
 Dated evidence stays in REVIEW; current contracts stay in their topic owners;
 [development commands](DEVELOPMENT.md) and [acceptance/handoff procedures](WORKFLOW.md)
 own verification practice. NR01's offline and bounded actual native-post gates
-are closed. Its implementation is committed; acceptance/status documentation
-is ready to commit. This is a good fresh-session breakpoint for IN01 because
-no decision, external result or unsaved context remains. No commit or merge was
-performed by the agent in this work round.
+are closed. IN01 straight-wall implementation and verification are complete and
+ready to commit. This is a good fresh-session breakpoint: evidence and remaining
+scope are durable, with no unsaved dependency on this conversation. No commit or
+merge was performed by the agent in this work round.
