@@ -102,21 +102,20 @@ and external-acceptance follow-ups remain separate work.
    86 modules**; all completion, smoke/base-only and final identity gates pass.
    The [acceptance evidence](REVIEW.md#mv01-cumulative-fixed-design-region-v-stock---2026-10-01)
    owns exact commands, numeric witnesses, nine named package skips and limits.
-   No manual observation adds evidence to this offline gate. Work is uncommitted
-   and **ready to commit**; no staging/commit/merge was performed. Mixed
-   endmill/V/cleanup remains MX01, and ordered v4 bundles require regeneration.
+   No manual observation adds evidence to this offline gate. The user subsequently
+   committed MV01 as `142b420`; MX01's mixed endmill/V/cleanup is accepted below.
 5. **Capability follow-ups with illustrative consumers, in recommended development order:**
 
    | Increment | Useful outcome / dependency |
    | --- | --- |
-   | MX01 | Endmill/V/cleanup composed stock and whole-tool access against one design; depends on DT01/MV01. |
+   | MX01 (accepted 2026-10-02) | Supplied endmill/V/cleanup stock, axial/entry limits and conservative whole-tool access against one design; evidence below. |
    | RP01 | Feature-aware planar V/rest candidates for a synthetic frieze, with residual-driven cutting and measured baseline comparison; depends on composed stock. |
    | NR01 | Derived editable rest Regions/Plines and fully native CamBam MOPs, original-design binding and actual-post acceptance; uses computed rest/cutter reach. |
    | IN01 | Ornamental receiver/plug targets, independent fit/glue/seating/backing allowances and insertion; then assembled-stock facing/sanding-envelope and final motif checks. Uses fixed design/composed part stock. |
    | BO01 | Generate and search finite tool/path bundles under explicit finish/cost/setup constraints, with independent candidate verification and search-quality reporting. Start with the supported planar families; extend to SF01 afterward. |
    | SF01 | General bounded relief contact/stock foundation and shape-aware 3D tracing/finishing; NR03 separately establishes native Surface/3D MOP/post interoperability. |
 
-   All are planned backlog, not accepted or implemented capabilities. Their
+   MX01 is accepted offline; the remaining rows are planned backlog, led by RP01. Their
    [expectation map and follow-up contracts](REST_MACHINING_PLAN.md#product-expectations-and-capability-follow-ups-2026-09-30)
    own representative consumers, limits and acceptance. Reassess order after each
    coherent outcome; these dependencies do not require finishing all native work
@@ -155,17 +154,43 @@ The subsequent [fundamentals-first clarification](REVIEW.md#fundamentals-first-r
 preserves this priority and treats every named workflow as a consumer of shared
 capabilities, with reuse challenged beyond its initial example.
 
-**Next agent task:** implement MX01's supplied endmill/V/cleanup composition and
-whole-tool access against one unchanged design, with independently decoded
-per-prefix stock, positive cleanup removal and explicit entry/pass limits. See
-the [follow-up contract](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers)
-and queue row above. DT01 and MV01 are accepted offline; the next material gap
-is mixed-tool composition, which supplies stock/access foundations for later
-feature-aware rest, native boundaries and inlay consumers. Broader tool search,
-rest-only optimization and relief strategies remain separate priorities.
-This is a good fresh-session breakpoint: implemented contracts, numeric evidence,
-limits and final checks are saved, with no pending results or product decisions.
-Commit/merge actions remain user-owned unless explicitly delegated.
+**MX01 completed; accepted by engineering 2026-10-02:** supplied endmill/V/cleanup
+now preserves one unchanged design through decoded per-prefix sweep unions,
+explicit axial/entry limits and conservative cutter/shank/holder protection.
+`v_region.VComposition`, `depth_passes` and `ordered_job.AxialLimits` reuse the
+existing geometry/occupancy owners without a motif or fixed tool-count recipe.
+Ten regressions prove independent overlap/membership, positive cleanup section
+and volume, a different protected-island/60-degree-cutter consumer through both
+dialects, skipped/crossing-depth pass rejection, excessive entry, full-cylinder
+and continuous-holder counterexamples, and stale/reordered evidence. Focused
+final-source verification passes **60 tests / seven modules**; full checkout and
+each fresh 3.12/3.13 wheel plus independent 3.12 source installation pass
+**638 tests / 87 modules**. All 282 package commands, archive/provenance,
+smoke/base-only, completion and final identity gates pass. The existing checkout
+symlink skip and nine named package skips retain their previous observation
+limits. Exact reports, numeric witnesses and failure evidence live in the
+[MX01 review](REVIEW.md#mx01-mixed-fixed-design-stock-and-whole-tool-access---2026-10-02).
+The [contract](structure_spec.md#mixed-cylindricalv-composition-and-whole-tool-access-mx01)
+requires independently executable cylinder stages and initial-stock clearance
+for non-cutting body; cross-stage cavity credit and rest-only generation remain
+RP01 work. No manual observation adds evidence to this offline gate; runtime,
+engagement/load and physical setup remain separate. Ordered v6 bundles require
+regeneration. Work is uncommitted and **ready to commit**; no staging, commit or
+merge was performed.
+
+**Next agent task:** implement RP01 feature-aware planar V/rest candidates for a
+synthetic frieze, using fixed-design/composed-stock queries and residual-driven
+cuts with measured comparison against the raster/offset baseline. See its queue
+row and [follow-up contract](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers).
+This matters now because the verified mixed stock foundation can measure useful
+detail/coverage or reduced redundant motion; neither improvement is assumed.
+Add union-cleared access only when the concrete candidate needs that proof.
+Native derived boundaries, inlay assembly, tool search and relief strategies
+retain their separate priorities. This is a good fresh-session breakpoint:
+contracts, parameters, evidence, limits and next priority are saved, with no
+pending results or product choices. Start a fresh session for this distinct
+strategy scope. Commit/merge actions remain user-owned unless delegated.
+Suggested commit: `feat(cam): verify mixed endmill/V/cleanup composition`.
 
 **Accepted 2026-09-26 safe native arc hybrid:** the bounded
 level XY G2/G3 path now preserves direction/center through the native,

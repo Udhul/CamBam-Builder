@@ -378,7 +378,7 @@ the initial behavior-to-test matrix and audit gaps belong in REVIEW.
 | Reference jobs: `rc01.generate/verify`, `mixed.verify_mixed`, `inlay.generate/assembly/audit_pair` | Current `cam_core`; section/replay/profile values; paired audit also calls output integration | RC01 nominal rectangle/island/process recipe; mixed RC01/slot recipe; circular pointed-V receiver/plug family with independent stocks. Reference dimensions/tool recipes are not generic framework invariants. | Public reference conveniences with bounded offline evidence. Keep reusable geometry/stock separate; move orchestration when a concrete caller requires it. `audit_pair` is the explicit layering exception above. |
 | Recommendation/pass policy: root `machining_calculations`, `machining_recommendations`, `machining_planning` | Formula kernel, immutable contexts, pluggable recommendation strategy | Unit-explicit inputs, feed/RPM/range constraints and through-cut pass planning. No toolpath generation, stock clearance or curated material authority. | Existing public APIs, unchanged owners followed as dependencies. A candidate recommendation is not a stock certificate. |
 | Route selection: `cam_extensions.strategy.select_strategy` | Detached policy over caller-supplied `StageAudit` and residual bounds | Checks source/predecessor chain, required gates and completeness; ranks feasible then safe partial candidates by upper residual area, volume and declared tie order. Manual choice cannot select an unsafe candidate. | Public supplied-candidate ranking, not bundle search, cutting-time optimization or independent validation of caller assertions. No global optimum claim. |
-| Caller-owned execution: `ordered_job.Job/Stage/Transition`, `from_prior_v`, `audit` | `cam_core.ordered_job`; replay, V and bounded 3D evaluators | Caller labels/tools/order/feed/RPM; resolved mm/G54 translation. All-cylinder, standalone or cumulative all-V, one cylinder then terminal V, homogeneous bounded layered/surface/inlay sequences have distinct evaluators. | Public bounded composition. `audit` consumes already-decoded values; `ordered_output` is the complete-byte/native-binding authority. Unsupported mixtures must not be read as stock success. |
+| Caller-owned execution: `ordered_job.Job/Stage/Transition/AxialLimits`, `from_prior_v`, `audit` | `cam_core.ordered_job`; replay, V and bounded 3D evaluators | Caller labels/tools/order/feed/RPM; resolved mm/G54 translation. All-cylinder, standalone/cumulative all-V, bounded mixed cylinder/V, homogeneous layered/surface/inlay sequences have distinct evaluators. Mixed V requires explicit axial/entry limits and whole-tool setup. | Public bounded composition. `audit` consumes already-decoded values; `ordered_output` is the complete-byte/native-binding authority. Unsupported mixtures must not be read as stock success. |
 | Native/generated composition: `native_ordered_job.from_native_series/from_native_v`, `NativeBinding.check` | Native integration to detached ordered job | Repeated tools and supported native stage order; one native cylinder plus source-bound V finish. `from_native_circle_cleanup` is specifically the diameter-24/depth-2/T1-T2 observed recipe. | Public bounded adapter plus named reference helper. Source/current-post binding is required at output; no mandatory global document session. |
 | Output and evidence: `ordered_dialects.render/decode`, `ordered_output.emit/audit_files/write_bundle/audit_bundle`; `direct_variable_v`/`direct_rc01` | `integrations`; core values, strict independent decoders | UCCNC split and Grbl pause profiles, explicit offset/transition effects, 4/6 decimal coordinates. Older `direct_*` writers use a strict reference dialect, not machine profiles. File helpers have fixed artifacts; in-memory emit/decode do not require them. | Public output adapters and bounded reference conveniences. `direct_rc01` reuses the CamBam Default-post reader; it is not fully independent of that adapter package. Runtime/physical setup remain unassessed. |
 | Agent protocol: document/MOP tools and schema | `mcp_adapter.service/schema/server/paths`; native project and existing planning owners | Volatile document sessions, validated requests and workspace transport. No exposure of arbitrary detached CAM/replay/controller entry points through MCP. | Public versioned tool contract, separate from direct Python API. Mirror supported native authoring changes in schema/service/tests; do not relocate machining truth into protocol handlers. |
@@ -586,8 +586,8 @@ the following NC command applies the new tool length.
 profile, numerical policy, job/source and prefix fingerprints, final program
 hashes and any external-effect hashes. The controller-neutral auditor compares
 every decoded move to intended motion within 0.000051 mm, then replays actual
-decoded cylindrical cuts stage by stage, standalone or cumulative all-V plans, or one
-cylindrical predecessor plus a terminal decoded V plan. It reuses `replay` and `v_region` geometry
+decoded cylindrical cuts stage by stage, standalone or cumulative all-V plans,
+or the bounded mixed cylindrical/V composition below. It reuses `replay` and `v_region` geometry
 evaluators and never calls the selected generator to fill absent decoded
 motion. A stockless job can retain source and motion comparison while stock
 evidence is `not_evaluated`; an unsupported stock stage mix is `unsupported`.
@@ -606,7 +606,7 @@ input hashes does not preserve acceptance. Native stock audits require explicit
 Part stock containing the replay target at stock top Z=0; stockless parsing and
 motion comparison remain available without stock authority.
 
-Verifier `ordered-job-v5-cumulative-v-stock` includes the program/work frame,
+Verifier `ordered-job-v6-mixed-v-stock` includes the program/work frame,
 units and matching tolerance in prefix identity as well as whole-job identity.
 Pre-review ordered bundles must be regenerated and audited under this verifier;
 their stored reports cannot be carried forward. Prior actual CamBam observations
@@ -627,10 +627,11 @@ evidence, not a physical controller trajectory guarantee. Linear `JobMove`
 representation remains stable; verifier-version changes invalidate old job evidence.
 
 The planar geometry domain supports fixed-axis cylindrical replay and standalone
-or cumulative pointed, flat or rounded Region-V stages against one fixed design;
+or cumulative pointed, flat or rounded Region-V stages and bounded cylinder/V
+interleavings against one fixed design;
 the separate stepped-volume contract below
 extends the same decoded boundary. Generic native Pocket/Profile
-path reproduction, multiple endmill predecessors before V, arbitrary macros,
+path reproduction, cross-stage mixed cleared-access credit, arbitrary macros,
 non-flat fixtures, rotations/kinematics and controller runtime parity require
 named extensions. The [ordered-job packet](REST_MACHINING_PLAN.md#next-implementation-packet-reusable-ordered-jobs-and-verification)
 and [verification](REVIEW.md#reusable-ordered-jobs-and-verification---2026-09-26)
@@ -688,8 +689,8 @@ analytic witnesses assess their enclosure. No fitting tool yields an
 
 The one-cylinder-then-V route retains its replayed prefix, initial bounds and
 decoded predecessor fingerprint. Homogeneous all-V sequences use the cumulative
-contract below. Other cylinder/V interleavings and more than one cylindrical
-predecessor before V remain explicitly `unsupported`. The v5
+contract below. Other cylinder/V interleavings use the bounded MX01 contract.
+The v6
 verifier invalidates all earlier ordered bundles: regenerate their reports and
 program binding before reuse. Unchanged actual source/post observations retain
 their original byte scope. Synthetic proof and misuse evidence live in
@@ -740,9 +741,8 @@ residual lower/upper using eight slabs. Empty initial sweep and every decoded
 prefix are separately identifiable. Single-stage and one-cylinder/V report
 shapes retain their existing contracts.
 
-Stockless jobs retain `not_evaluated`; unknown stock evaluator sequences and
-known unsupported cylinder/V mixes have distinct `unsupported` reasons. Arbitrary
-interleavings and multiple cylinders before V remain separate work. Finite
+Stockless jobs retain `not_evaluated`; unknown stock evaluator sequences report
+`unsupported`. Cylinder/V interleavings use the bounded MX01 contract below. Finite
 spacing and profile reach retain partial stock and bound uncertainty; full-target
 plans may recut removed material. This verifies cumulative effect, not rest-only
 optimization, removal efficiency or a completeness claim. Bounds retain the
@@ -753,6 +753,78 @@ engagement limits, controller runtime or physical setup; optional occupancy and
 production acceptance retain their separate gates. Synthetic witnesses live in
 `tests/test_multistage_v.py`; standalone and cylinder/V regressions remain owners
 of their earlier compatibility scope.
+
+#### Mixed cylindrical/V composition and whole-tool access (MX01)
+
+`v_region.VComposition(target, stages)` accepts one frozen `VTarget` and an
+ordered nonempty tuple of verified `VPlan` values or single-operation cylinder
+`replay.Trace` values. Construction and evidence consumption re-establish each
+stage's source/frame and original design. Cylinder targets must equal the
+original opening and full depth cap, including holes; derived center Regions
+cannot replace that target. Every cylinder entry/cut must keep its full radius,
+path error and `depth * design.tangent` inside the original boundary. V stages
+retain DT01 full-profile protection. No stage can authorize cutting protected
+walls, islands or stock below the cap.
+
+The existing located section and residual-volume queries union all actual
+cylinder and per-profile V sweeps. Prefixes use `stages[:n]`; `final=False`
+measures virgin design stock. Overlap and repeated passes are unioned, never
+summed. Cylinder stock and clearance are replayed from each complete stage;
+a stage may use its own proved clearance but cannot infer a cavity from earlier
+V or cylinder stages. Cross-stage union-cleared descent/link/body queries remain
+an explicit RP01 extension, reopened when a concrete rest candidate needs them.
+
+The ordered auditor reconstructs each stage from decoded coordinates. Beyond
+the historical one-cylinder/terminal-V compatibility slice, mixed stages require
+`Stage.axial_limits=AxialLimits(max_stepdown_mm, max_entry_depth_mm)` on every
+stage and a matching `Job.occupancy_setup`. The axial gate supports linear
+motion, vertical stock-cutting entry and exact XY retraces. Tip advance on a new
+segment starts at virgin depth zero; a deeper segment can credit one earlier
+identical-profile segment with the same XY endpoints (either direction).
+Endpoint depths bound the full linear-depth advance. Earlier crossing-depth
+passes keep separate witnesses: their deepest endpoints must not be combined
+into fictitious interior clearance. Entry credits only prior cutting endpoints,
+never itself, and separately obeys the absolute plunge-depth limit. Changed or
+omitted earlier passes fail independently of final depth-cap protection. This
+axial comparison allows 1e-7 mm numerical tolerance on decoded tip depths. The
+conservative policy does not grant credit for nearby/partially overlapping paths,
+different profiles, arcs, or unknown engagement/load limits.
+
+`v_region.depth_passes(plan, max_stepdown_mm, depth_cap_mm=None)` clips verified
+XY paths to shallow-to-deep axial levels, preserving their original design.
+A positive optional cap at or below the target cap leaves a declared axial
+allowance; a later stage may finish deeper. This is an axial scheduling helper,
+not normal-to-wall allowance, rest-only generation or a process recommendation.
+Callers still declare entry permission, feed/RPM and body/setup. Unknown radial
+engagement, chip load and machine limits remain unassessed.
+
+The existing continuous occupancy verifier checks every decoded entry, cut,
+retract and rapid against closed fixture boxes for cutter/shank/holder bands.
+Shank and holder clear the initial stock box without cavity credit; tool bands
+must match each stage's cutting length and enclose its actual cutter radius.
+Modeled/decoded transition travel remains unsupported with occupancy. Thus a
+tip or cutting-stock success alone cannot establish whole-tool clearance.
+
+Mixed `stock_access_residual` uses
+`scope="decoded cumulative cylindrical/Region V from virgin stock"`,
+`initial_stock="virgin"`, `plan_status="partial"`, the same fixed-design and
+initial/final section/volume keys as MV01, and ordered `prefixes` containing
+`stage_id`, `prefix_fingerprint`, `decoded_stage_fingerprint`,
+`decoded_sequence_fingerprint`, `plan_status`, `section_1_mm2`, `volume_mm3`.
+`axial_process_limits` reports declared limits and actual maximum advance/plunge
+per stage, with engagement/load `not_evaluated`; `tool_fixture_occupancy` remains
+separate. `access_policy` names independent cylinder replay and above-stock V
+links; `cross_stage_cavity_credit="not_evaluated"` prevents inferred union access.
+Verifier v6 invalidates stored ordered bundles, including bundles
+whose NC bytes remain identical. Legacy one-cylinder/V and all-V construction
+retain their previous optional-setup behavior and report shapes.
+
+Tests in `tests/test_mixed_v_composition.py` own synthetic composition and safety
+witnesses; the [runbook](DEVELOPMENT.md#mixed-cylindricalv-composition-checks)
+owns executable checks. Conditional GEOS/numerical bounds, partial residual,
+operator tool-installation assumptions and unevaluated controller/physical
+acceptance remain explicit. This shared capability contains no motif or fixed
+tool-count discriminator; different supported consumers use the same queries.
 
 ### Fixed V design and independent cutter contract (DT01)
 
@@ -779,7 +851,7 @@ reject a conflicting tangent. New queries use `section(t)`.
 Target fingerprints bind source, both geometric bounds, cap, sagitta, design
 angle, frame and evaluator version. Operation fingerprints additionally bind
 cutter and motion. Tool-only changes preserve target identity but invalidate
-operation evidence. `ordered-job-v5-cumulative-v-stock` invalidates older bundles;
+operation evidence. `ordered-job-v6-mixed-v-stock` invalidates older bundles;
 regenerate them and recompute reports. Native source/post observations retain
 their original byte/geometry scope, but old target-bound manifests must be
 recomputed. Job and prior-trace frames must match a bound target, even for jobs
@@ -2114,7 +2186,7 @@ does not make missing search or smoothing capabilities available.
 | `vcarve.generate_slot`, `tapered_vcarve.generate` | Primary 90-degree pointed-cone machining without a predecessor; explicit target, finite tool and complete above-stock links, with independent residual references | Finite passes leave corner/floor residual. Capped-slot generation is specifically width 4/cap 1 mm; full-depth slots and the straight increasing-depth groove support their declared variable dimensions. Output setup constants belong to the reference adapter. |
 | `convex_rest.generate` | Replays one supplied cone column and extends it along a verified rising-clearance straight line in a convex target | One prior column and fixed cone family; this is not an arbitrary Region rest planner. |
 | `polygon_rest.generate`, `curved_region.generate` | Source-bound supplied cylindrical prefixes, smaller-tool original-boundary contours, interior rows and replayed cleared descent/cutting connectors; curved input uses inward-safe geometry | One connected feasible center Region, full-depth predecessor and supported tool pair required. Candidate rows/access are bounded heuristics; residual reports, not tool reachability, establish coverage. No arbitrary tabs or released-body model. |
-| `v_region.plan`, `verify`, `with_prior`, `VSequence` | Primary raster/offset planning on polygon/curved inward-safe geometry, full-profile containment, explicit high links and partial residual reporting; optional one-cylinder predecessor or supplied all-V sweep union | Planning is not a geometric completeness or global path-search proof. A short flute limits penetration while the original deeper target remains in residual reports. Supplied plans are not regenerated to minimize air cuts. |
+| `v_region.plan`, `verify`, `with_prior`, `VSequence`, `VComposition`, `depth_passes` | Raster/offset planning on inward-safe geometry, full-profile containment, high links, partial residual and supplied all-V or mixed cylinder/V sweep unions; bounded retraced axial passes preserve the design | Planning is not a completeness or global path-search proof. Short flutes retain deeper residual. Mixed ordered output requires entry/pass limits and whole-tool setup; cross-stage cavity credit and air-cut minimization remain separate work. |
 | `ordered_job.audit` | Decoded Region-V stock supports standalone or cumulative all-V stages from virgin stock, or exactly one endmill predecessor followed by one V stage | Arbitrary mixed stock evaluators remain unsupported. Partial plans retain residual bounds; infeasible empty plans cannot emit a cutting job. |
 | `replay._covered` | A cleared descent/link requires an enclosing prior sweep at the queried depth | Cylinder coverage is proved against one prior sweep at a time. Union-only access and a smaller cylinder around an approximated helical chord can conservatively reject. This is not a general clearance-path finder. |
 | `strategy.select_strategy` | Supplied safe routes rank by budget feasibility, final upper residual area, upper volume, then declared tie order. Manual choice preserves safe partial status; failed gates cannot win | No bundle generation, automatic tool choice, cutting/air/time/tool-change cost, engagement objective or global optimum. Caller audits must describe the same physical target and metric; records remain trusted assertions. |

@@ -295,33 +295,67 @@ class VRest:
             self.prior_trace.motion_fingerprint)).encode("utf-8")).hexdigest()
 
 
-def with_prior(plan, prior_trace):
-    """Replay supplied prior motion and prove its entire cylinder fits the V target."""
-    verify(plan)
-    if (type(prior_trace) is not replay.Trace or
-            prior_trace.source_fingerprint != plan.target.source_id or
-            (plan.target.frame is not None and prior_trace.frame != plan.target.frame)):
+@dataclass(frozen=True)
+class VComposition:
+    """Actual cylindrical/V stages sharing one fixed design and virgin stock.
+
+    Cylinder traces are independently executable: they do not infer access
+    through another stage's cavity. Section stock unions every supplied sweep.
+    """
+    target: VTarget
+    stages: tuple
+
+    def __post_init__(self):
+        if (type(self.target) is not VTarget or
+                self.target.design_angle_degrees is None or
+                type(self.stages) is not tuple or not self.stages):
+            raise ValueError("fixed design and nonempty composed stages required")
+        for stage in self.stages:
+            if type(stage) is VPlan:
+                verify(stage)
+                if stage.target.fingerprint != self.target.fingerprint:
+                    raise ValueError("composed design targets differ")
+            elif type(stage) is replay.Trace:
+                _cylindrical_stock(self.target, stage)
+            else:
+                raise ValueError("composed stock requires V plans or cylinder traces")
+
+    @property
+    def fingerprint(self):
+        return hashlib.sha256(repr(("v-composition-v1", self.target.fingerprint,
+            tuple(s.fingerprint if type(s) is VPlan else s.motion_fingerprint
+                  for s in self.stages))).encode("utf-8")).hexdigest()
+
+
+def _cylindrical_stock(target, trace, margin_mm=0):
+    """Re-establish source, original boundary and full-height cylinder safety."""
+    if (type(trace) is not replay.Trace or
+            trace.source_fingerprint != target.source_id or
+            (target.frame is not None and trace.frame != target.frame)):
         raise ValueError("stale V prior source")
-    stock = replay.replay(prior_trace,
-                          expected_source=plan.target.source_id)
-    if not stock.cuts or len(prior_trace.operations) != 1:
+    stock = replay.replay(trace, expected_source=target.source_id)
+    if not stock.cuts or len(trace.operations) != 1:
         raise ValueError("complete V prior cut required")
-    op = prior_trace.operations[0]
+    op = trace.operations[0]
     if (op.tool.kind != "cylinder" or not op.target.region_shell or
-            op.target.depth != plan.target.cap_depth or
-            not Polygon(op.target.region_shell,
-                        op.target.region_holes).equals(plan.target.safe)):
+            op.target.depth != target.cap_depth or
+            not Polygon(op.target.region_shell, op.target.region_holes).equals(target.safe)):
         raise ValueError("V prior tool or target differs from source")
-    boundary = plan.target.safe.boundary
     for cut in stock.cuts:
         depth = -cut.bottom
         line = LineString((cut.a, cut.b)) if cut.a != cut.b else Point(cut.a)
-        required = (cut.tool.radius + cut.path_error_mm +
-                    depth * plan.target.tangent)
-        if (cut.tool != op.tool or not 0 < depth <= plan.target.cap_depth or
-                not plan.target.safe.covers(line) or
-                line.distance(boundary) + 1e-8 < required + plan.margin_mm * 0.5):
+        required = cut.tool.radius + cut.path_error_mm + depth * target.tangent
+        if (cut.tool != op.tool or not 0 < depth <= target.cap_depth or
+                not target.safe.covers(line) or
+                line.distance(target.safe.boundary) + 1e-8 < required + margin_mm * .5):
             raise ValueError("V prior cut crosses capped finish target")
+    return stock
+
+
+def with_prior(plan, prior_trace):
+    """Replay supplied prior motion and prove its entire cylinder fits the V target."""
+    verify(plan)
+    stock = _cylindrical_stock(plan.target, prior_trace, plan.margin_mm)
     return VRest(plan, prior_trace, stock)
 
 
@@ -554,6 +588,32 @@ def plan(target, tool, *, stepover_mm=1.0, xy_step_mm=1.0,
     return result
 
 
+def depth_passes(plan, max_stepdown_mm, *, depth_cap_mm=None):
+    """Clip a verified candidate into explicit axial passes on unchanged XY paths.
+
+    An optional shallower cap leaves an axial allowance without changing the
+    desired part. Entry permission and engagement remain caller-owned policies.
+    """
+    verify(plan)
+    step = _finite(max_stepdown_mm, "maximum stepdown")
+    if step <= 0 or not plan.paths:
+        raise ValueError("positive stepdown and executable V paths required")
+    cap = max(p[2] for path in plan.paths for p in path.points)
+    if depth_cap_mm is not None:
+        limit = _finite(depth_cap_mm, "pass depth cap")
+        if not 0 < limit <= plan.target.cap_depth:
+            raise ValueError("pass depth cap outside fixed design")
+        cap = min(cap, limit)
+    result = []
+    for i in range(1, math.ceil(cap / step) + 1):
+        depth = min(cap, i * step)
+        paths = tuple(replace(path, points=tuple((x, y, min(d, depth))
+                      for x, y, d in path.points)) for path in plan.paths)
+        result.append(verify(replace(plan, paths=paths,
+                                    motions=_motions(paths, plan.safe_z))))
+    return tuple(result)
+
+
 def verify(result):
     """Check the full profile between vertices and complete ordered motion."""
     if (type(result) is not VPlan or type(result.target) is not VTarget or
@@ -628,7 +688,13 @@ class VSectionEvidence:
 
 def section_evidence(result, depth, *, final=True):
     """Located conditional GEOS section evidence against the original design."""
-    if type(result) is VRest:
+    if type(result) is VComposition:
+        result = VComposition(result.target, result.stages)
+        target = result.target
+        plans = tuple(s for s in result.stages if type(s) is VPlan) if final else ()
+        prior_cuts = tuple(c for s in result.stages if type(s) is replay.Trace
+                           for c in _cylindrical_stock(target, s).cuts) if final else ()
+    elif type(result) is VRest:
         # A frozen container is still replaceable. Re-establish source/frame,
         # full-cylinder containment and replay identity before trusting stock.
         checked = with_prior(result.plan, result.prior_trace)
@@ -641,10 +707,12 @@ def section_evidence(result, depth, *, final=True):
         plan, prior_cuts = result.plans[0], ()
     else:
         plan, prior_cuts = result, ()
-    verify(plan)
-    plans = result.plans if type(result) is VSequence else (plan,)
+    if type(result) is not VComposition:
+        verify(plan)
+        target = plan.target
+        plans = (result.plans if type(result) is VSequence else (plan,)) if final else ()
     depth = _finite(depth, "section depth")
-    if not 0 <= depth <= plan.target.cap_depth:
+    if not 0 <= depth <= target.cap_depth:
         raise ValueError("section outside V target")
     inner, outer = [], []
     # Each primitive is a disk or straight capsule, so its round caps span
@@ -660,7 +728,7 @@ def section_evidence(result, depth, *, final=True):
                                      quad_segs=32))
             outer.append(line.buffer((cut.tool.radius + cut.path_error_mm +
                                       1e-6) * inflation, quad_segs=32))
-    for swept_plan in plans if final else ():
+    for swept_plan in plans:
         for path in swept_plan.paths:
             for a, b in zip(path.points, path.points[1:]):
                 low, high = min(a[2], b[2]), max(a[2], b[2])
@@ -674,9 +742,9 @@ def section_evidence(result, depth, *, final=True):
                         inner.append(line.buffer(radius, quad_segs=32))
     outer_sweep = unary_union(outer) if outer else Polygon()
     inner_sweep = unary_union(inner) if inner else Polygon()
-    safe = plan.target.section(depth)
-    cover = plan.target.section(depth, outer=True)
-    return VSectionEvidence(plan.target.fingerprint, depth, safe, cover,
+    safe = target.section(depth)
+    cover = target.section(depth, outer=True)
+    return VSectionEvidence(target.fingerprint, depth, safe, cover,
         inner_sweep, outer_sweep, safe.difference(outer_sweep),
         cover.difference(inner_sweep), outer_sweep.difference(safe))
 
@@ -690,13 +758,14 @@ def volume_bounds(result, slabs=8, *, final=True):
     """Conservative geometric slab bounds for remaining V-target volume."""
     if type(slabs) is not int or slabs <= 0:
         raise ValueError("positive integer V volume slabs required")
-    plan = (result.plans[0] if type(result) is VSequence else
-            result.plan if type(result) is VRest else result)
-    levels = [plan.target.cap_depth * i / slabs for i in range(slabs + 1)]
-    levels[-1] = plan.target.cap_depth
+    target = (result.target if type(result) is VComposition else
+              result.plans[0].target if type(result) is VSequence else
+              result.plan.target if type(result) is VRest else result.target)
+    levels = [target.cap_depth * i / slabs for i in range(slabs + 1)]
+    levels[-1] = target.cap_depth
     sections = [section_report(result, t, final=final) for t in levels]
-    target_safe = [plan.target.section(t).area for t in levels]
-    target_outer = [plan.target.section(t, outer=True).area
+    target_safe = [target.section(t).area for t in levels]
+    target_outer = [target.section(t, outer=True).area
                     for t in levels]
     lower = upper = 0.0
     for i in range(slabs):

@@ -1,8 +1,7 @@
 """Small, controller-neutral ordered machining job and decoded-motion audit.
 
-Stock evaluators cover cylindrical replay, cumulative Region-V stages from
-virgin stock, one V stage after one cylindrical predecessor, and bounded layered
-3D flat-endmill stages.
+Stock evaluators cover cylindrical replay, cumulative Region-V and mixed
+cylindrical/V stages from virgin stock, and bounded layered 3D flat-endmill stages.
 Other mixes remain explicit capability limits.
 """
 
@@ -13,7 +12,7 @@ import math
 from . import replay, v_region
 
 
-VERSION = "ordered-job-v5-cumulative-v-stock"
+VERSION = "ordered-job-v6-mixed-v-stock"
 MATCH_TOLERANCE_MM = 0.000051
 
 
@@ -115,6 +114,22 @@ class Transition:
 
 
 @dataclass(frozen=True)
+class AxialLimits:
+    """Caller-declared axial tip advance and absolute stock-cutting plunge.
+
+    Deeper passes credit only earlier identical-profile, retraced XY segments.
+    These geometric controls do not assess radial engagement or cutting load.
+    """
+    max_stepdown_mm: float
+    max_entry_depth_mm: float
+
+    def __post_init__(self):
+        if any(type(v) not in (int, float) or not math.isfinite(v) or v <= 0
+               for v in (self.max_stepdown_mm, self.max_entry_depth_mm)):
+            raise ValueError("positive finite axial and entry limits required")
+
+
+@dataclass(frozen=True)
 class Stage:
     id: str
     tool_id: str
@@ -126,6 +141,7 @@ class Stage:
     source_revision: str = ""
     transition: object = None
     tool_length_mm: float = 0.0
+    axial_limits: object = None
 
     def __post_init__(self):
         if (type(self.id) is not str or not self.id or
@@ -139,7 +155,9 @@ class Stage:
                 not math.isfinite(n) for n in (self.offset_mm, self.tool_length_mm))
                 or (self.operation is not None and self.v_plan is not None)
                 or (self.transition is not None and
-                    type(self.transition) is not Transition)):
+                    type(self.transition) is not Transition)
+                or (self.axial_limits is not None and
+                    type(self.axial_limits) is not AxialLimits)):
             raise ValueError("invalid ordered stage")
         if self.operation is not None:
             op = self.operation
@@ -308,8 +326,9 @@ def _observed_stage(stage, decoded, translation):
     return tuple(actual)
 
 
-def _replay_endmills(job, stages, motions):
-    operations, items, active, at = [], [], None, job.initial_tip
+def _replay_endmills(job, stages, motions, *, initial_tip=None):
+    initial_tip = job.initial_tip if initial_tip is None else initial_tip
+    operations, items, active, at = [], [], None, initial_tip
     results = []
     for stage, observed in zip(stages, motions):
         operations.append(stage.operation)
@@ -330,7 +349,7 @@ def _replay_endmills(job, stages, motions):
             at = motion.end
         items.append(replay.Event("spindle_stop", stage.tool_id, at))
         trace = replay.Trace(job.source_fingerprint, job.program_frame,
-                             job.initial_tip, tuple(operations), tuple(items))
+                             initial_tip, tuple(operations), tuple(items))
         results.append((trace, replay.replay(
             trace, expected_source=job.source_fingerprint)))
     return results
@@ -377,6 +396,101 @@ def _decoded_v_plan(plan, motions):
                                     for m in middle))
     v_region.verify(decoded)
     return decoded
+
+
+def _axial_evidence(stages, motions):
+    """Check supplied passes; only exact same-profile XY retraces earn credit."""
+    segments, endpoints, records = {}, {}, []
+    for stage, moves in zip(stages, motions):
+        limits = stage.axial_limits
+        if limits is None:
+            continue
+        if stage.v_plan is not None:
+            profile = stage.v_plan.tool
+        elif type(stage.operation) is replay.Operation:
+            tool = stage.operation.tool
+            profile = (tool.kind, tool.radius, tool.cutting_length)
+        else:
+            raise ValueError("axial limits require cylindrical or Region V stages")
+        advances = []
+        entries = []
+        for move in moves:
+            if move.arc_g:
+                raise ValueError("axial pass evidence supports linear motion only")
+            if move.role not in ("entry", "cut"):
+                continue
+            a, b = move.start[:2], move.end[:2]
+            da, db = max(0, -move.start[2]), max(0, -move.end[2])
+            if move.role == "entry":
+                if a != b or move.end[2] >= move.start[2]:
+                    raise ValueError("axial policy requires vertical stock-cutting entry")
+                advance = db - endpoints.get((profile, b), 0)
+                if db > limits.max_entry_depth_mm + 1e-7:
+                    raise ValueError("stock-cutting entry exceeds declared depth limit")
+                entries.append(db)
+            else:
+                earlier = segments.get((profile, a, b), ((0, 0),))
+                advance = min(max(da - old[0], db - old[1]) for old in earlier)
+            if advance > limits.max_stepdown_mm + 1e-7:
+                raise ValueError("axial pass exceeds declared stepdown; earlier retrace required")
+            advances.append(max(0, advance))
+            if move.role == "cut":
+                # Keep complete earlier linear-depth witnesses. Combining the
+                # deepest endpoints of crossing passes invents interior reach.
+                key = profile, a, b
+                old = segments.get(key, ())
+                if not any(x >= da and y >= db for x, y in old):
+                    depths = tuple((x, y) for x, y in old if not (da >= x and db >= y))
+                    depths += ((da, db),)
+                    segments[key] = depths
+                    segments[profile, b, a] = tuple((y, x) for x, y in depths)
+                for point, depth in ((a, da), (b, db)):
+                    key = profile, point
+                    endpoints[key] = max(endpoints.get(key, 0), depth)
+        records.append({"stage_id": stage.id,
+            "max_stepdown_mm": limits.max_stepdown_mm,
+            "max_entry_depth_mm": limits.max_entry_depth_mm,
+            "maximum_observed_advance_mm": max(advances, default=0),
+            "maximum_observed_entry_depth_mm": max(entries, default=0)})
+    return {"status": "pass", "scope": "decoded axial retraces and vertical cutting entries",
+            "engagement_and_load": "not_evaluated", "stages": tuple(records)}
+
+
+def _mixed_v_stock(job, actual):
+    target = next(s.v_plan.target for s in job.stages if s.v_plan is not None)
+    sweeps, cumulative = [], []
+    depth = min(1, target.cap_depth)
+    for i, (stage, moves) in enumerate(zip(job.stages, actual)):
+        if stage.v_plan is not None:
+            sweep = _decoded_v_plan(stage.v_plan, moves)
+        else:
+            sweep = _replay_endmills(job, (stage,), (moves,),
+                                     initial_tip=moves[0].start)[0][0]
+        sweeps.append(sweep)
+        prefix = v_region.VComposition(target, tuple(sweeps))
+        cumulative.append({"stage_id": stage.id,
+            "prefix_fingerprint": job.prefixes[i],
+            "decoded_stage_fingerprint": (sweep.fingerprint
+                if type(sweep) is v_region.VPlan else sweep.motion_fingerprint),
+            "decoded_sequence_fingerprint": prefix.fingerprint,
+            "plan_status": "partial",
+            "section_1_mm2": v_region.section_report(prefix, depth),
+            "volume_mm3": v_region.volume_bounds(prefix)})
+    sequence = v_region.VComposition(target, tuple(sweeps))
+    return {"status": "pass",
+        "scope": "decoded cumulative cylindrical/Region V from virgin stock",
+        "initial_stock": "virgin", "plan_status": "partial",
+        "access_policy": "independently replayable cylinder stages and above-stock V links",
+        "cross_stage_cavity_credit": "not_evaluated",
+        "design_fingerprint": target.fingerprint,
+        "design_angle_degrees": target.design_angle_degrees,
+        "design_frame": target.frame, "section_depth_mm": depth,
+        "prior_section_1_mm2": v_region.section_report(sequence, depth, final=False),
+        "prior_volume_mm3": v_region.volume_bounds(sequence, final=False),
+        "section_1_mm2": cumulative[-1]["section_1_mm2"],
+        "volume_mm3": cumulative[-1]["volume_mm3"],
+        "decoded_sequence_fingerprint": sequence.fingerprint,
+        "prefixes": tuple(cumulative)}
 
 
 def audit(job, decoded, *, dialect, expected_fingerprint=None):
@@ -483,6 +597,16 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
         report["stock_access_residual"] = {"status": "not_evaluated",
                                            "reason": "no supplied initial stock"}
         return report
+    v_count = sum(s.v_plan is not None for s in job.stages)
+    mixed = (0 < v_count < len(job.stages) and
+             all(s.v_plan is not None or type(s.operation) is replay.Operation
+                 for s in job.stages) and
+             not (len(job.stages) == 2 and job.stages[1].v_plan is not None))
+    if mixed and (job.occupancy_setup is None or
+                  any(s.axial_limits is None for s in job.stages)):
+        raise ValueError("mixed V composition requires whole-tool setup and axial entry limits")
+    if any(s.axial_limits is not None for s in job.stages):
+        report["axial_process_limits"] = _axial_evidence(job.stages, actual)
     from . import inlay
     if all(type(s.operation) is inlay.InlayOperation for s in job.stages):
         if job.occupancy_setup is not None:
@@ -523,6 +647,9 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
                 raise ValueError("occupancy cutter differs from stage tool")
         report["tool_fixture_occupancy"] = occupancy.verify(
             setup, job.stages, actual)
+    if mixed:
+        report["stock_access_residual"] = _mixed_v_stock(job, actual)
+        return report
     if all(s.surface_operation is not None for s in job.stages):
         from . import surface3d
         report["stock_access_residual"] = surface3d.replay_stages(
