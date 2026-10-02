@@ -169,6 +169,11 @@ remain outside those shared mechanisms.
   less redundant motion at equivalent tolerances. Neither gain is assumed.
   Include union-cleared entry/link proof when a concrete candidate needs it;
   path fitting/smoothing must retain containment, topology and declared deviation.
+  The implemented bounded contact/medial consumer, conservative union-air pruning,
+  floor cusp query and high-link access scope live in the
+  [RP01 contract](structure_spec.md#feature-aware-planar-vrest-candidates-rp01);
+  measured acceptance and remaining limits live in
+  [REVIEW](REVIEW.md#rp01-feature-aware-planar-rest-candidates---2026-10-02).
 - **NR01: derived rest boundaries and fully native MOPs.** Use a native pocket
   with an island and disconnected corner residuals. Derive cutter-compensated
   Regions/Plines/windows and useful overlap with prior cleared space; pure rest,
@@ -1849,7 +1854,8 @@ verified contours/straight fills and permit cutting connectors within the
 original target after a proved cleared descent. They do not expose a generic
 conditional smoother, fitted-arc deviation contract or overlap-cost budget.
 Region-V `with_prior` adds prior-stock analysis to an existing primary plan;
-it does not prune or optimize that plan against rest. The following paragraphs
+the [RP01 planner](structure_spec.md#feature-aware-planar-vrest-candidates-rp01)
+separately generates feature guidance and prunes proven-air segments. The following paragraphs
 remain the broader design proposal. Current strategy guarantees and composition
 limits are owned by [the architecture contract](structure_spec.md#strategy-guarantees-and-composition-limits),
 and extension priority/reopening criteria by backlog 6 in PROGRESS.

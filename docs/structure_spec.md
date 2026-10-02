@@ -375,6 +375,7 @@ the initial behavior-to-test matrix and audit gaps belong in REVIEW.
 | Non-cutting occupancy: `occupancy.ToolBody`, `OccupancySetup`, `verify` | `cam_core.occupancy` and replay segments | Fixed-axis cylindrical tool bands and axis-aligned stock/fixture boxes; continuous supported travel, separate cutter/shank/holder checks. Unsupported transition motion rejects when occupancy is requested. | Public bounded verification. Cutting-stock pass alone says nothing about holder/fixture clearance. Extend for a named unsupported fixture/job. |
 | Primary V: `vcarve.generate_slot/verify_slot`, `tapered_vcarve.generate/verify`, `v_region.plan/verify/section_report/volume_bounds` | Current `cam_core` strategy modules and replay; Region planner requires Shapely | Slot and increasing-X straight variable-depth families use pointed 90-degree cones; Region planner accepts polygon/curved bounds and pointed/flat/rounded profiles, raster/offset fills. No roughing predecessor needed to plan or analyze. Finite-tool residual is partial; no fitting center yields infeasible. | Public bounded machining capabilities. Target/profile/strategy are separate values; no GUI, files or fixture IDs required. General rest smoothing and globally optimal paths are not implemented. |
 | Rest analysis/generation: `convex_rest.generate`, `polygon_rest.generate`, `curved_region.approximate/generate`, `v_region.with_prior` | Current `cam_core`; replayed supplied predecessor, target and cutter | Convex/straight/curved planar domains with explicit numerical envelopes. A source/motion fingerprint is required where exposed. `with_prior` requires one complete cylindrical operation on the same target; earlier overcut is not forgiven by later removal. | Public bounded strategies and stock queries. Cleared-overlap/path fitting is distinct from changing target edges; generic conditional smoothing remains an extension. |
+| Feature-aware V/rest: `planar_rest.generate`, `cutting_sweep_clear`, `Candidate.section/floor_cusp` | `cam_core.planar_rest`; fixed design and composed stock | Contact/medial guidance, conservative union-air pruning and located residual/cusp evidence; see [RP01](#feature-aware-planar-vrest-candidates-rp01). | Public bounded strategy; high links and explicit axial/setup gates. Partial coverage and retained overlap remain visible. |
 | Reference jobs: `rc01.generate/verify`, `mixed.verify_mixed`, `inlay.generate/assembly/audit_pair` | Current `cam_core`; section/replay/profile values; paired audit also calls output integration | RC01 nominal rectangle/island/process recipe; mixed RC01/slot recipe; circular pointed-V receiver/plug family with independent stocks. Reference dimensions/tool recipes are not generic framework invariants. | Public reference conveniences with bounded offline evidence. Keep reusable geometry/stock separate; move orchestration when a concrete caller requires it. `audit_pair` is the explicit layering exception above. |
 | Recommendation/pass policy: root `machining_calculations`, `machining_recommendations`, `machining_planning` | Formula kernel, immutable contexts, pluggable recommendation strategy | Unit-explicit inputs, feed/RPM/range constraints and through-cut pass planning. No toolpath generation, stock clearance or curated material authority. | Existing public APIs, unchanged owners followed as dependencies. A candidate recommendation is not a stock certificate. |
 | Route selection: `cam_extensions.strategy.select_strategy` | Detached policy over caller-supplied `StageAudit` and residual bounds | Checks source/predecessor chain, required gates and completeness; ranks feasible then safe partial candidates by upper residual area, volume and declared tie order. Manual choice cannot select an unsafe candidate. | Public supplied-candidate ranking, not bundle search, cutting-time optimization or independent validation of caller assertions. No global optimum claim. |
@@ -771,8 +772,9 @@ cylinder and per-profile V sweeps. Prefixes use `stages[:n]`; `final=False`
 measures virgin design stock. Overlap and repeated passes are unioned, never
 summed. Cylinder stock and clearance are replayed from each complete stage;
 a stage may use its own proved clearance but cannot infer a cavity from earlier
-V or cylinder stages. Cross-stage union-cleared descent/link/body queries remain
-an explicit RP01 extension, reopened when a concrete rest candidate needs them.
+V or cylinder stages. [RP01](#feature-aware-planar-vrest-candidates-rp01) adds
+cutting-profile union clearance for air pruning; cross-stage low descent/link
+and body cavity credit still require a concrete independently verified consumer.
 
 The ordered auditor reconstructs each stage from decoded coordinates. Beyond
 the historical one-cylinder/terminal-V compatibility slice, mixed stages require
@@ -825,6 +827,59 @@ owns executable checks. Conditional GEOS/numerical bounds, partial residual,
 operator tool-installation assumptions and unevaluated controller/physical
 acceptance remain explicit. This shared capability contains no motif or fixed
 tool-count discriminator; different supported consumers use the same queries.
+
+### Feature-aware planar V/rest candidates (RP01)
+
+`cam_core.planar_rest.generate(prior, tool, ...)` consumes a verified
+`v_region.VComposition` against one frozen design. Contact contours retain every
+guide vertex and all components/island rings; sampled-boundary Voronoi edges
+guide narrow detail. This is not an exact medial-axis or global search claim.
+Continuous all-height `v_region.verify` checks each proposed segment before
+pruning. The design, pure residual, known-free stock and center guides remain
+separate. No design corner is filleted or island removed to accommodate a path.
+
+Controls declare maximum stepover, floor cusp, XY sampling, margin, safe height
+and finite guide/site/path budgets. Pitch is at most `2 * tool.radius(cusp)`;
+this is a floor-spacing criterion, not an assumed global coverage bound.
+`Candidate.floor_cusp()` checks actual composed inner removal at `cap - cusp`
+against the original capped-floor outer enclosure. Empty `unproved` geometry
+establishes the axial cusp bound over that floor; otherwise it locates the gap
+and reports partial. Walls and uncapped narrow details require separate located
+section residuals. Retained guide vertices bound XY guide deviation by
+`sagitta_mm + sqrt(2) * 0.5e-7` mm; this does not bound medial-axis approximation
+error or certify machined-wall finish. The deviation is relative to constructed
+polygonal guides; curved-source enclosures remain owned by `VTarget`, without an
+additional native-offset Hausdorff claim. No fitted arc or generic smoothing is
+introduced.
+
+`cutting_sweep_clear(prior, tool, a, b, slabs=8)` proves cutting-profile clearance
+through the union of verified cylinder/V stages. Each slab compares an inflated
+maximum-penetration candidate footprint at the upper plane with prior inner
+removal at the lower plane. Monotone sections establish intervening heights;
+failure means unproved. Exact same-profile XY retraces, including reverse
+orientation and shallower endpoint depths, independently prove clearance where
+a pointed floor has zero area. This query grants no rapid, body or fixture
+permission. Candidate pruning omits only such proved-air segments; every retained
+segment can still contain air cutting. Pure-rest clipping alone is not clearance.
+
+The returned `Candidate` holds the verified ordinary `VPlan`, prior composition,
+proposed/omitted XY cutting lengths and guide error. `section(depth)` exposes
+located residuals and conditional new-removal/overlap area intervals using
+candidate inner minus prior outer, candidate outer minus prior inner, and
+corresponding intersections. `composition` adds retained sweeps to all prior
+stages. These reports recompute their stock evidence; stored result geometry is
+not an independent authority. Empty retained paths mean no admissible unproved-
+clear guide was found, not a proof that the target is unreachable or complete.
+
+Entry is target-contained vertical stock cutting; links retract above stock.
+Use explicit `v_region.depth_passes`, axial/entry limits and whole-tool setup for
+ordered output. Cross-stage low linking and body cavity credit remain unsupported;
+this candidate does not need them. Unknown engagement/load, controller/runtime,
+physical finish, optimization and broader native representability remain separate.
+Tests generate a lobed/island/valley/broad-cap frieze and challenge reuse with a
+different-angle cylinder/V island job through both output dialects. Measured
+coverage, cost and acceptance belong to the
+[RP01 evidence](REVIEW.md#rp01-feature-aware-planar-rest-candidates---2026-10-02).
 
 ### Fixed V design and independent cutter contract (DT01)
 
@@ -2180,6 +2235,7 @@ does not make missing search or smoothing capabilities available.
 | `convex_rest.generate` | Replays one supplied cone column and extends it along a verified rising-clearance straight line in a convex target | One prior column and fixed cone family; this is not an arbitrary Region rest planner. |
 | `polygon_rest.generate`, `curved_region.generate` | Source-bound supplied cylindrical prefixes, smaller-tool original-boundary contours, interior rows and replayed cleared descent/cutting connectors; curved input uses inward-safe geometry | One connected feasible center Region, full-depth predecessor and supported tool pair required. Candidate rows/access are bounded heuristics; residual reports, not tool reachability, establish coverage. No arbitrary tabs or released-body model. |
 | `v_region.plan`, `verify`, `with_prior`, `VSequence`, `VComposition`, `depth_passes` | Raster/offset planning on inward-safe geometry, full-profile containment, high links, partial residual and supplied all-V or mixed cylinder/V sweep unions; bounded retraced axial passes preserve the design | Planning is not a completeness or global path-search proof. Short flutes retain deeper residual. Mixed ordered output requires entry/pass limits and whole-tool setup; cross-stage cavity credit and air-cut minimization remain separate work. |
+| `planar_rest.generate`, `cutting_sweep_clear` | Contact/medial-guided V candidates, union-proved air pruning, located new-removal/overlap/residual and capped-floor cusp checks; see [RP01](#feature-aware-planar-vrest-candidates-rp01) | Sampled guidance and finite budgets remain partial. Above-stock links, explicit depth passes and whole-tool setup are required; retained paths can contain overlap. No generic fitting, low-link or global optimization claim. |
 | `ordered_job.audit` | Decoded Region-V stock supports standalone/cumulative all-V stages, one endmill/V pair and bounded cylinder/V interleavings against one fixed design; see the [ordered-job contracts](#reusable-ordered-job-output-and-verification) | Other mixed stock evaluators remain unsupported. MX01 requires explicit axial limits and whole-tool setup; partial plans retain residual bounds and infeasible empty plans cannot emit a cutting job. |
 | `replay._covered` | A cleared descent/link requires an enclosing prior sweep at the queried depth | Cylinder coverage is proved against one prior sweep at a time. Union-only access and a smaller cylinder around an approximated helical chord can conservatively reject. This is not a general clearance-path finder. |
 | `strategy.select_strategy` | Supplied safe routes rank by budget feasibility, final upper residual area, upper volume, then declared tie order. Manual choice preserves safe partial status; failed gates cannot win | No bundle generation, automatic tool choice, cutting/air/time/tool-change cost, engagement objective or global optimum. Caller audits must describe the same physical target and metric; records remain trusted assertions. |

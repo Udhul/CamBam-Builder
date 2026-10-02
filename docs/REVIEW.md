@@ -5,6 +5,102 @@ checkpoints. [PROGRESS](PROGRESS.md) owns current priority and state; the
 [specification](structure_spec.md) and [MCP contract](MCP_CONTRACT.md) own current
 contracts. Historical next-task and pending statements describe their entry date.
 
+## RP01 feature-aware planar rest candidates - 2026-10-02
+
+Accepted by engineering for the bounded offline scope; ready to commit.
+The [RP01 contract](structure_spec.md#feature-aware-planar-vrest-candidates-rp01)
+owns the reusable contact/medial planner, conditional union-air proof, located
+residual/overlap queries and floor cusp gate. No shared replay/enclosure owner or
+dependency changed. All session inputs/results are synthetic and live under
+`output/rp01-20261002-103924/`; no versioned part fixture was introduced.
+
+The authored polygonal frieze combines a 20 x 8 mm broad rectangle, three lobes
+centered at (3,8), (10,8), (17,8) with 3 mm radius/32-segment boundaries, a
+1 mm-wide neck from Y=10 to 13, a 1.3 mm-radius/32-segment terminal lobe at
+(10,13), and a protected rectangular island (8,3)-(10,4). Boolean unions and
+island subtraction define the polygonal design, not an analytic-circle claim.
+The fixed design is 90 degrees, cap 1 mm, program frame; fingerprint
+`8684d6f2876ac40181ed6eb7659c11d9fcfbd87bb673904d4ea5842a6f260442`.
+Prior stock comes from a flat 90-degree V profile with tip radius .3 mm,
+cutting length 2 mm and maximum radius 3 mm, raster pitch .7 mm. Cleanup uses
+a pointed 90-degree profile with the same length/envelope. All comparison paths
+declare XY sampling 1 mm, margin .02 mm and safe Z=3 mm; cleanup/baseline pitch
+is .6 mm and the requested floor cusp is .3 mm.
+
+| Candidate with the same prior stock | Residual at .5 mm depth, mm2 | Cleanup XY cutting, mm | Total XYZ motion, mm |
+| --- | --- | --- | --- |
+| Feature/contact/medial | 1.621820-1.682768 | 420.783792 | 1469.771032 |
+| Existing raster | 2.674667-3.379187 | 405.895348 | 1004.269420 |
+| Existing offset | 2.295815-2.741401 | 395.681557 | 658.788241 |
+
+The feature upper residual is below both baseline lower residuals at .25, .5
+and .75 mm. Independent analytic disk/segment-distance witnesses prove new
+removal in the narrow valley that neither baseline nor prior removed. At .5 mm,
+new removal is enclosed by 2.981391-4.005562 mm2 and retained overlap by
+155.747085-156.735750 mm2. Of 465.061431 mm proposed XY cutting, 44.277639 mm
+is proved redundant and omitted. This is a detail/coverage gain, not a speed or
+minimum-overlap claim: retained air/overlap is substantial and total travel grows.
+The actual inner sweep union covers the entire 128.653628 mm2 capped-floor outer
+enclosure at depth .7 mm, proving axial cusp <=.3 mm there. An independent disk
+grid challenges that continuous enclosure; holes remain protected. Guide rounding
+deviation is <=7.071068e-8 mm for this exact polygonal input. Floor sections remain
+partial at depth 1; neither finite-tip completeness nor general wall finish is
+claimed. The same composed-floor gate passes the raster baseline; offset leaves
+a 0.0000758654 mm2 unproved patch and is not credited with that bound. The
+comparison uses equal requested controls, without assuming every candidate meets
+every tolerance.
+
+The emitted four-stage UCCNC frieze consists of .5/1 mm prior and cleanup axial
+passes. Actual decoded cumulative stock, motion equivalence, axial advance/entry
+and whole-tool occupancy all pass. Its residual section at cap is
+34.681131-58.916150 mm2; eight-slab residual volume is 0-19.347237 mm3. Those
+wide conditional intervals do not weaken the independently proved floor-cusp
+gate. Cutter/shank/holder declarations enclose each profile, the stock box follows
+the original bounds, and entries/links are explicitly replayed. The session NC
+and audit JSON remain local supporting evidence, not native CamBam/runtime or
+physical acceptance.
+
+Shared queries are challenged by an analytic union of two overlapping cylinder
+capsules that neither stage clears alone, plus gap and shallow-depth rejection.
+Reverse variable-depth same-profile retraces, changed source/island targets,
+invalid controls and exhausted budgets reject or retain uncertainty appropriately.
+A different-angle 120-degree pointed cutter on a protected-island cylinder/V
+job includes exactly the stock used during generation, explicit .5 mm passes,
+axial/entry limits and continuous whole-tool occupancy through UCCNC and Grbl.
+Changing an emitted rapid to Z=-.1 rejects. Repeating generated guides against
+their own composed stock omits every segment without claiming target completion.
+
+Independent review found that a mutated NaN cusp could manufacture a bounded
+report at depth zero. Report-time finite-positive validation now rejects it;
+the regression also covers infinity, zero, negative and boolean tolerances.
+An initial package attempt could not write uv's sandboxed cache; the final gate
+uses the existing cache with authorized tool escalation. Earlier broad runs were
+stopped after the report-validation fix made their snapshots stale. Final checks
+are bounded to the new strategy and its original-design, native/decoded, stock,
+occupancy and execution-evidence consumers under the
+[RP01 runbook](DEVELOPMENT.md#feature-aware-planar-rest-candidate-checks).
+No manual observation adds evidence to this synthetic offline scope.
+
+Final-tree checkout verification passed 107 tests in 13 selected modules, zero
+skips, using the runbook command; report
+`output/verification-20261002-105301-2838047f/report.json`. Clean-package checks
+passed the same scope in Python 3.12/3.13 wheels and a Python 3.12 sdist: 321
+tests in 39 module runs, zero skips. Archive byte checks, each installed smoke
+and the base-only Python 3.12 smoke also passed; report
+`output/verification-20261002-105307-45b18eb4/report.json`. The package gate covers
+the actual untracked new runtime/test files, without staging them. Syntax/import,
+added-link/anchor, working-diff and untracked-whitespace checks pass. Scoped
+source/test/docs scans found no new ignored `.cb`/`.nc` artifacts outside
+`output/`; historical tracked fixtures are unchanged. These are scoped strategy
+and compatibility checks, not a full-discovery claim.
+
+General fitted smoothing, hard overlap caps and low union-cleared motion/body
+access remain conditional: reopen for an actual consumer requiring them and its
+continuous containment/coverage proof. Native editable derived-rest output is a
+distinct higher-value workflow gap; its task remains in the
+[current queue](PROGRESS.md#post-merge-task-queue). Controller, engagement/load
+and physical finish are outside this acceptance scope.
+
 ## MV01/MX01 committed review and merged delivery - 2026-10-02
 
 The requested committed-branch review began with a clean worktree on

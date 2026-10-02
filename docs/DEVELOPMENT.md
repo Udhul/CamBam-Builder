@@ -1907,6 +1907,32 @@ separate gates. Verifier `ordered-job-v6-mixed-v-stock` requires regeneration of
 old bundles; unchanged native source/post observations retain their recorded
 scope.
 
+### Feature-aware planar rest candidate checks
+
+RP01 adds detached feature guidance and conservative composed-stock air pruning.
+Run its ornamental consumer and whole-height clearance/corruption witnesses with
+the existing stock and ordered-output owners:
+
+```powershell
+& $ProjectPython tools/verify.py --pattern test_planar_rest.py --pattern test_planar_frieze.py --pattern test_v_region.py --pattern test_fixed_v_design.py --pattern test_standalone_v.py --pattern test_native_v_region.py --pattern test_native_v_hybrid.py --pattern test_mixed_v_composition.py --pattern test_multistage_v.py --pattern test_occupancy.py --pattern test_ordered_job.py --pattern test_ordered_dialects.py --pattern test_execution_evidence.py
+& $ProjectPython tools/verify.py --package --pattern test_planar_rest.py --pattern test_planar_frieze.py --pattern test_v_region.py --pattern test_fixed_v_design.py --pattern test_standalone_v.py --pattern test_native_v_region.py --pattern test_native_v_hybrid.py --pattern test_mixed_v_composition.py --pattern test_multistage_v.py --pattern test_occupancy.py --pattern test_ordered_job.py --pattern test_ordered_dialects.py --pattern test_execution_evidence.py
+```
+
+Inspect located residual intervals, independently witnessed narrow-detail gain,
+floor cusp coverage and XY versus total motion cost. Neither gain nor complete
+coverage is assumed. Union-only capsule clearance, gap/depth rejection and
+same-profile retraces challenge pruning; a different-angle protected-island job
+checks explicit axial passes, whole-tool occupancy and corrupted decoded bytes
+through both dialects. All inputs are synthetic, generated at test time. No
+manual observation adds evidence to this offline gate. The
+[RP01 contract](structure_spec.md#feature-aware-planar-vrest-candidates-rp01)
+owns API semantics and limits; [REVIEW](REVIEW.md#rp01-feature-aware-planar-rest-candidates---2026-10-02)
+owns measured evidence.
+This scope checks the new strategy and its existing native/decoded consumers;
+it does not require unrelated endmill/surface recipes. Changes to shared replay
+or stock enclosure owners still require full discovery under
+[required checks](#required-checks-by-change).
+
 ### Reusable ordered-job output and verification
 
 The caller builds `cam_core.ordered_job.Job` directly or adapts an existing
