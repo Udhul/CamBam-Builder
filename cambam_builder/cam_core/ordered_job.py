@@ -1,7 +1,8 @@
 """Small, controller-neutral ordered machining job and decoded-motion audit.
 
-Stock evaluators cover cylindrical replay, one Region-V stage from virgin stock
-or after one cylindrical predecessor, and bounded layered 3D flat-endmill stages.
+Stock evaluators cover cylindrical replay, cumulative Region-V stages from
+virgin stock, one V stage after one cylindrical predecessor, and bounded layered
+3D flat-endmill stages.
 Other mixes remain explicit capability limits.
 """
 
@@ -12,7 +13,7 @@ import math
 from . import replay, v_region
 
 
-VERSION = "ordered-job-v4-fixed-v-design"
+VERSION = "ordered-job-v5-cumulative-v-stock"
 MATCH_TOLERANCE_MM = 0.000051
 
 
@@ -121,7 +122,7 @@ class Stage:
     rpm: float
     offset_mm: float = 0.0
     operation: object = None          # replay, volume3d, surface3d or inlay
-    v_plan: object = None             # v_region.VPlan for primary/terminal V
+    v_plan: object = None             # v_region.VPlan for a supplied V stage
     source_revision: str = ""
     transition: object = None
     tool_length_mm: float = 0.0
@@ -180,7 +181,7 @@ class Stage:
 class Job:
     """Resolved ordered motion with caller-declared stock and setup.
 
-    For a single V stage, stock_present=True declares virgin material at Z=0
+    For an all-V sequence, stock_present=True declares virgin material at Z=0
     throughout the finite V target. It does not infer a previously cleared
     opening. The target/profile define the volume whose residual is measured;
     material outside it is protected, not included in the residual bounds.
@@ -441,6 +442,10 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
                 job.source_fingerprint != stage.v_plan.target.source_id or
                 stage.v_plan.target.frame not in (None, job.program_frame)):
             raise ValueError("stale V stage revision or source")
+    all_v = all(stage.v_plan is not None for stage in job.stages)
+    if all_v and any(stage.v_plan.target.fingerprint !=
+                     job.stages[0].v_plan.target.fingerprint for stage in job.stages):
+        raise ValueError("V sequence design targets differ")
     assumptions = [s.transition.completion_token for s in job.stages[1:]]
     report = {
         "job_fingerprint": job.fingerprint,
@@ -536,13 +541,48 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
         report["stock_access_residual"] = {"status": "unsupported",
                                            "reason": "mixed volume stock evaluators"}
         return report
+    if all_v and len(job.stages) > 1:
+        plans = tuple(_decoded_v_plan(stage.v_plan, moves)
+                      for stage, moves in zip(job.stages, actual))
+        sequence = v_region.VSequence(plans)
+        depth = min(1, sequence.target.cap_depth)
+        cumulative = []
+        for index, (stage, plan) in enumerate(zip(job.stages, plans), 1):
+            prefix = v_region.VSequence(plans[:index])
+            cumulative.append({
+                "stage_id": stage.id,
+                "prefix_fingerprint": job.prefixes[index - 1],
+                "decoded_v_plan_fingerprint": plan.fingerprint,
+                "decoded_sequence_fingerprint": prefix.fingerprint,
+                "plan_status": plan.status,
+                "section_1_mm2": v_region.section_report(prefix, depth),
+                "volume_mm3": v_region.volume_bounds(prefix)})
+        report["stock_access_residual"] = {
+            "status": "pass",
+            "scope": "decoded cumulative Region V from virgin stock",
+            "initial_stock": "virgin",
+            "plan_status": "partial",
+            "design_fingerprint": sequence.target.fingerprint,
+            "design_angle_degrees": sequence.target.design_angle_degrees,
+            "design_frame": sequence.target.frame,
+            "section_depth_mm": depth,
+            "prior_section_1_mm2": v_region.section_report(sequence, depth, final=False),
+            "prior_volume_mm3": v_region.volume_bounds(sequence, final=False),
+            "section_1_mm2": cumulative[-1]["section_1_mm2"],
+            "volume_mm3": cumulative[-1]["volume_mm3"],
+            "decoded_sequence_fingerprint": sequence.fingerprint,
+            "prefixes": tuple(cumulative)}
+        return report
     endmill_count = next((i for i, s in enumerate(job.stages)
                           if s.v_plan is not None), len(job.stages))
-    if any(type(s.operation) is not replay.Operation
-           for s in job.stages[:endmill_count]) or any(
-            s.v_plan is not None for s in job.stages[endmill_count + 1:]):
+    if any(s.v_plan is None and type(s.operation) is not replay.Operation
+           for s in job.stages):
         report["stock_access_residual"] = {"status": "unsupported",
                                            "reason": "unsupported stock evaluator sequence"}
+        return report
+    if any(s.v_plan is not None for s in job.stages[endmill_count + 1:]):
+        report["stock_access_residual"] = {"status": "unsupported",
+            "reason": "mixed cylindrical/V stock supports exactly one endmill then one V"}
         return report
     prefixes = _replay_endmills(job, job.stages[:endmill_count],
                                actual[:endmill_count]) if endmill_count else []
@@ -554,7 +594,7 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
         return report
     if endmill_count not in (0, 1) or endmill_count != len(job.stages) - 1:
         report["stock_access_residual"] = {"status": "unsupported",
-            "reason": "V stock supports one standalone stage or one endmill then V"}
+            "reason": "mixed cylindrical/V stock supports exactly one endmill then one V"}
         return report
     plan = _decoded_v_plan(job.stages[-1].v_plan, actual[-1])
     rest = v_region.with_prior(plan, prefixes[-1][0]) if prefixes else plan

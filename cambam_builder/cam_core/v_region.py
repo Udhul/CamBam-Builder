@@ -255,6 +255,34 @@ class VPlan:
 
 
 @dataclass(frozen=True)
+class VSequence:
+    """Ordered verified V sweeps against one fixed design, from virgin stock.
+
+    Stock is the union of actual per-plan cutter sweeps, never a sum of their
+    areas. No cached geometry or inferred pre-cleared opening is admitted.
+    """
+    plans: tuple
+
+    def __post_init__(self):
+        if (type(self.plans) is not tuple or not self.plans or
+                any(type(plan) is not VPlan for plan in self.plans)):
+            raise ValueError("nonempty V plan tuple required")
+        for plan in self.plans:
+            verify(plan)
+            if plan.target.fingerprint != self.target.fingerprint:
+                raise ValueError("V sequence design targets differ")
+
+    @property
+    def target(self):
+        return self.plans[0].target
+
+    @property
+    def fingerprint(self):
+        return hashlib.sha256(repr(("v-sequence-v1", self.target.fingerprint,
+            tuple(plan.fingerprint for plan in self.plans))).encode("utf-8")).hexdigest()
+
+
+@dataclass(frozen=True)
 class VRest:
     """A source-bound cylindrical stock prefix followed by a V path plan."""
     plan: VPlan
@@ -607,9 +635,14 @@ def section_evidence(result, depth, *, final=True):
         if checked.prior_stock != result.prior_stock:
             raise ValueError("stale V prior stock evidence")
         plan, prior_cuts = checked.plan, checked.prior_stock.cuts
+    elif type(result) is VSequence:
+        # Re-establish validity at consumption, as for the other value types.
+        result = VSequence(result.plans)
+        plan, prior_cuts = result.plans[0], ()
     else:
         plan, prior_cuts = result, ()
     verify(plan)
+    plans = result.plans if type(result) is VSequence else (plan,)
     depth = _finite(depth, "section depth")
     if not 0 <= depth <= plan.target.cap_depth:
         raise ValueError("section outside V target")
@@ -627,17 +660,18 @@ def section_evidence(result, depth, *, final=True):
                                      quad_segs=32))
             outer.append(line.buffer((cut.tool.radius + cut.path_error_mm +
                                       1e-6) * inflation, quad_segs=32))
-    for path in plan.paths if final else ():
-        for a, b in zip(path.points, path.points[1:]):
-            low, high = min(a[2], b[2]), max(a[2], b[2])
-            line = LineString((a[:2], b[:2]))
-            if high >= depth:
-                radius = plan.tool.radius(high - depth) + 1e-6
-                outer.append(line.buffer(radius * inflation, quad_segs=32))
-            if low >= depth:
-                radius = max(0.0, plan.tool.radius(low - depth) - 1e-6)
-                if radius:
-                    inner.append(line.buffer(radius, quad_segs=32))
+    for swept_plan in plans if final else ():
+        for path in swept_plan.paths:
+            for a, b in zip(path.points, path.points[1:]):
+                low, high = min(a[2], b[2]), max(a[2], b[2])
+                line = LineString((a[:2], b[:2]))
+                if high >= depth:
+                    radius = swept_plan.tool.radius(high - depth) + 1e-6
+                    outer.append(line.buffer(radius * inflation, quad_segs=32))
+                if low >= depth:
+                    radius = max(0.0, swept_plan.tool.radius(low - depth) - 1e-6)
+                    if radius:
+                        inner.append(line.buffer(radius, quad_segs=32))
     outer_sweep = unary_union(outer) if outer else Polygon()
     inner_sweep = unary_union(inner) if inner else Polygon()
     safe = plan.target.section(depth)
@@ -656,7 +690,8 @@ def volume_bounds(result, slabs=8, *, final=True):
     """Conservative geometric slab bounds for remaining V-target volume."""
     if type(slabs) is not int or slabs <= 0:
         raise ValueError("positive integer V volume slabs required")
-    plan = result.plan if type(result) is VRest else result
+    plan = (result.plans[0] if type(result) is VSequence else
+            result.plan if type(result) is VRest else result)
     levels = [plan.target.cap_depth * i / slabs for i in range(slabs + 1)]
     levels[-1] = plan.target.cap_depth
     sections = [section_report(result, t, final=final) for t in levels]

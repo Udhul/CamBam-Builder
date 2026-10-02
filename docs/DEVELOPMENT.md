@@ -1863,6 +1863,41 @@ source/frame/design/cutter/cached-stock witnesses. All use the existing decoded
 ordered workflow. No manual observation adds evidence for this synthetic gate;
 native derived-boundary binding, runtime and physical checks remain separate.
 
+### Cumulative Region-V stock checks
+
+MV01 extends the shared verifier to caller-supplied all-V sequences against one
+fixed design. Run its synthetic cumulative witnesses alongside existing design,
+standalone, cylinder/V, dialect and execution-evidence compatibility checks, then
+full checkout and installed supported-matrix verification:
+
+```powershell
+& $ProjectPython tools/verify.py --pattern test_multistage_v.py --pattern test_fixed_v_design.py --pattern test_v_region.py --pattern test_standalone_v.py --pattern test_ordered_job.py --pattern test_ordered_dialects.py --pattern test_native_v_hybrid.py --pattern test_execution_evidence.py
+& $ProjectPython tools/verify.py
+& $ProjectPython tools/verify.py --package
+```
+
+Tests generate every input. The rectangular protected-island consumer checks a
+flat primary and pointed finish with independently witnessed positive residual
+removal. Analytic capsule overlap and integrated volume references reject
+double-counting and omitted-prefix replay; variable-depth decoded disk witnesses
+retain contributions from both tools. Annular raster/offset cases cover all three
+profiles and three-stage jobs, while repeated/duplicate passes check inclusion.
+Both UCCNC and Grbl routes exercise complete-byte decoding, prefix identity,
+stale or reordered bundles, changed feeds/motion and protected/unsafe rapid
+travel. Inspect the verifier summary, skips and numeric evidence rather than
+treating test counts as geometry proof.
+
+The [cumulative contract](structure_spec.md#cumulative-region-v-virgin-stock-contract-mv01)
+defines `VSequence(plans)`, virgin `final=False`, per-stage sweep union and
+per-prefix report keys. Single-stage and one-cylinder/V APIs retain their earlier
+behavior; broader mixed evaluators remain unsupported. No manual observation
+adds evidence for these synthetic geometric claims. Conditional GEOS bounds,
+partial coverage, runtime, engagement and physical setup limits remain explicit.
+`ordered-job-v5-cumulative-v-stock` requires fresh ordered bundles and reports;
+unchanged historical source/post observations retain their original acceptance
+scope. Final measured check results belong in the dated review and progress
+owners, not this command reference.
+
 ### Reusable ordered-job output and verification
 
 The caller builds `cam_core.ordered_job.Job` directly or adapts an existing
@@ -2467,7 +2502,7 @@ bytes regardless of `core.autocrlf`; do not rehash changed fixtures to bypass
 freshness. Native
 Default posts may use CRLF/LF; strict controller outputs and canonical direct
 reference files retain their exact byte grammar. The ordered verifier version
-`ordered-job-v4-fixed-v-design` requires fresh bundles and recomputed
+`ordered-job-v5-cumulative-v-stock` requires fresh bundles and recomputed
 reports. Existing source/post observation does not need repeating when its bytes
 and claimed behavior are unchanged. See the
 [session 4 evidence](REVIEW.md#branch-review-session-4---2026-09-29).

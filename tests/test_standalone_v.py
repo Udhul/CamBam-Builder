@@ -276,8 +276,11 @@ class StandaloneVTests(unittest.TestCase):
                              "manual-install"))
         multiple = replace(job, stages=(stage, second))
         _, report = emit(multiple, "uccnc")
-        self.assertEqual(report["stock_access_residual"]["status"],
-                         "unsupported")
+        stock = report["stock_access_residual"]
+        self.assertEqual(stock["status"], "pass")
+        for first, repeated in zip(stock["prefixes"][0]["section_1_mm2"],
+                                   stock["prefixes"][1]["section_1_mm2"]):
+            self.assertAlmostEqual(first, repeated, delta=1e-10)
 
         unknown = ordered_job.Stage(
             "unknown-stage", "T42", second_motion, 11000,
