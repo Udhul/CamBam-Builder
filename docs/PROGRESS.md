@@ -20,7 +20,7 @@ epic from `feat/cam-verification-hardening` into `main` with merge commit
 `3c010b6`. Its tree equals reviewed tip `86ec581`; both tasks below are delivered
 for their accepted offline scope. The final committed review and merge checks are
 recorded in [REVIEW](REVIEW.md#cam-verification-epic-merge-closure-and-priority-assessment---2026-09-30).
-The recommended next framework increment is task 3 below; further capability
+The current framework priority follows the queue below; further capability
 and external-acceptance follow-ups remain separate work.
 
 1. **Completed; accepted by engineering 2026-09-30; committed as `5f38024`:** standalone
@@ -62,7 +62,7 @@ and external-acceptance follow-ups remain separate work.
    preserves the defects. No manual observation is required for this offline
    development tool. Final committed-branch review passed and the epic is merged;
    its documented controller/runtime/physical limits remain unchanged.
-3. **Implemented; automated verification incomplete at user-requested wrap-up:** DT01 fixed design target and
+3. **Completed; accepted by engineering 2026-10-01; committed as `1dfae81`:** DT01 fixed design target and
    cutter-independent verification. The user now explicitly expects varied-angle
    V tools, endmill/V combinations, general inlays, native rest output and
    shape-aware ornaments/reliefs. Today cutter angle changes the measured V
@@ -76,30 +76,46 @@ and external-acceptance follow-ups remain separate work.
    decoding. Eleven DT01 regressions and the final Python 3.13 checkout suite
    (**618 tests / 85 modules**) pass. The full Python 3.12 wheel also completed
    **618 tests / 85 modules**, with its named missing-observation/symlink skips.
-   Package verification is still running; Python 3.13 wheel/source-install
-   completion and final identity gates remain pending. No product decision or
-   manual observation is pending. Owners and
+   Reconciled package verification now passes **618 tests / 85 modules** in each
+   Python 3.12/3.13 wheel and the independent 3.12 source installation. All
+   completion, smoke/base-only and final identity gates pass; the retained wheel
+   results are explicitly reused after hash checks. Named skips remain the
+   absent retained native observations and Windows symlink privilege.
+   No product decision or manual observation is pending. Owners and
    limits live in the [fixed-design contract](structure_spec.md#fixed-v-design-and-independent-cutter-contract-dt01).
-   The [review record](REVIEW.md#dt01-fixed-design-and-independent-cutter-verification---2026-09-30)
-   owns reports and continuation commands. Work is uncommitted; technical
-   acceptance awaits the remaining checks. No stage/commit/merge is authorized.
-4. **Following planned implementation:** MV01 cumulative flat/pointed V stock,
+   The [acceptance closure](REVIEW.md#dt01-package-verification-and-engineering-acceptance---2026-10-01)
+   owns final reports, reuse and failure evidence. This closes the offline gate;
+   controller/runtime/physical acceptance remains separate.
+4. **Completed; accepted by engineering 2026-10-02:** MV01 cumulative flat/pointed V stock,
    using DT01's fixed design and the existing
    [MV01 packet](REST_MACHINING_PLAN.md#multi-stage-region-v-stock-verification-mv01).
-   It remains a useful proof; it is now a follow-up rather than the whole
-   combined-tool roadmap. No personal machining part is required for either task.
+   Scope: caller-supplied all-V Stage/Job sequences sharing one frozen design,
+   per-profile decoded prefix stock, overlap/inclusion and positive finish
+   removal; owners are `v_region`, `ordered_job` and synthetic regressions.
+   Ten synthetic regressions pass independent section/volume and decoded
+   membership witnesses, rectangular/island plus annular/three-stage breadth,
+   overlap/repeat inclusion and misuse rejection. No personal part was required.
+   Implementation and independent review are complete; the focused final-source
+   gate passes **62 tests / six modules**. Full checkout passes **628 tests /
+   86 modules**, with the existing symlink-privilege skip. Fresh Python 3.12/3.13
+   wheels and the independent 3.12 source install each pass **628 tests /
+   86 modules**; all completion, smoke/base-only and final identity gates pass.
+   The [acceptance evidence](REVIEW.md#mv01-cumulative-fixed-design-region-v-stock---2026-10-01)
+   owns exact commands, numeric witnesses, nine named package skips and limits.
+   No manual observation adds evidence to this offline gate. The user subsequently
+   committed MV01 as `142b420`; MX01's mixed endmill/V/cleanup is accepted below.
 5. **Capability follow-ups with illustrative consumers, in recommended development order:**
 
    | Increment | Useful outcome / dependency |
    | --- | --- |
-   | MX01 | Endmill/V/cleanup composed stock and whole-tool access against one design; depends on DT01/MV01. |
+   | MX01 (accepted 2026-10-02) | Supplied endmill/V/cleanup stock, axial/entry limits and conservative whole-tool access against one design; evidence below. |
    | RP01 | Feature-aware planar V/rest candidates for a synthetic frieze, with residual-driven cutting and measured baseline comparison; depends on composed stock. |
    | NR01 | Derived editable rest Regions/Plines and fully native CamBam MOPs, original-design binding and actual-post acceptance; uses computed rest/cutter reach. |
    | IN01 | Ornamental receiver/plug targets, independent fit/glue/seating/backing allowances and insertion; then assembled-stock facing/sanding-envelope and final motif checks. Uses fixed design/composed part stock. |
    | BO01 | Generate and search finite tool/path bundles under explicit finish/cost/setup constraints, with independent candidate verification and search-quality reporting. Start with the supported planar families; extend to SF01 afterward. |
    | SF01 | General bounded relief contact/stock foundation and shape-aware 3D tracing/finishing; NR03 separately establishes native Surface/3D MOP/post interoperability. |
 
-   All are planned backlog, not accepted or implemented capabilities. Their
+   MX01 is accepted offline; the remaining rows are planned backlog, led by RP01. Their
    [expectation map and follow-up contracts](REST_MACHINING_PLAN.md#product-expectations-and-capability-follow-ups-2026-09-30)
    own representative consumers, limits and acceptance. Reassess order after each
    coherent outcome; these dependencies do not require finishing all native work
@@ -138,15 +154,43 @@ The subsequent [fundamentals-first clarification](REVIEW.md#fundamentals-first-r
 preserves this priority and treats every named workflow as a consumer of shared
 capabilities, with reuse challenged beyond its initial example.
 
-**Next agent task:** finish DT01's pending package verification and record its
-offline acceptance using the [saved continuation evidence](REVIEW.md#dt01-fixed-design-and-independent-cutter-verification---2026-09-30).
-Then implement [MV01 cumulative fixed-design Region-V stock verification](REST_MACHINING_PLAN.md#multi-stage-region-v-stock-verification-mv01):
-compose supplied flat/pointed stages against one frozen design, with decoded
-prefix/residual/protection evidence and a materially different supported input.
-The user requested wrap-up while package verification was running. A fresh
-session must first inspect that pending result; this is not a fully verified
-breakpoint yet. Contracts, limits and continuation state are saved, with no
-unanswered product decision or personal-part validation required.
+**MX01 completed; accepted by engineering 2026-10-02:** supplied endmill/V/cleanup
+now preserves one unchanged design through decoded per-prefix sweep unions,
+explicit axial/entry limits and conservative cutter/shank/holder protection.
+`v_region.VComposition`, `depth_passes` and `ordered_job.AxialLimits` reuse the
+existing geometry/occupancy owners without a motif or fixed tool-count recipe.
+Ten regressions prove independent overlap/membership, positive cleanup section
+and volume, a different protected-island/60-degree-cutter consumer through both
+dialects, skipped/crossing-depth pass rejection, excessive entry, full-cylinder
+and continuous-holder counterexamples, and stale/reordered evidence. Focused
+final-source verification passes **60 tests / seven modules**; full checkout and
+each fresh 3.12/3.13 wheel plus independent 3.12 source installation pass
+**638 tests / 87 modules**. All 282 package commands, archive/provenance,
+smoke/base-only, completion and final identity gates pass. The existing checkout
+symlink skip and nine named package skips retain their previous observation
+limits. Exact reports, numeric witnesses and failure evidence live in the
+[MX01 review](REVIEW.md#mx01-mixed-fixed-design-stock-and-whole-tool-access---2026-10-02).
+The [contract](structure_spec.md#mixed-cylindricalv-composition-and-whole-tool-access-mx01)
+requires independently executable cylinder stages and initial-stock clearance
+for non-cutting body; cross-stage cavity credit and rest-only generation remain
+RP01 work. No manual observation adds evidence to this offline gate; runtime,
+engagement/load and physical setup remain separate. Ordered v6 bundles require
+regeneration. Work is uncommitted and **ready to commit**; no staging, commit or
+merge was performed.
+
+**Next agent task:** implement RP01 feature-aware planar V/rest candidates for a
+synthetic frieze, using fixed-design/composed-stock queries and residual-driven
+cuts with measured comparison against the raster/offset baseline. See its queue
+row and [follow-up contract](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers).
+This matters now because the verified mixed stock foundation can measure useful
+detail/coverage or reduced redundant motion; neither improvement is assumed.
+Add union-cleared access only when the concrete candidate needs that proof.
+Native derived boundaries, inlay assembly, tool search and relief strategies
+retain their separate priorities. This is a good fresh-session breakpoint:
+contracts, parameters, evidence, limits and next priority are saved, with no
+pending results or product choices. Start a fresh session for this distinct
+strategy scope. Commit/merge actions remain user-owned unless delegated.
+Suggested commit: `feat(cam): verify mixed endmill/V/cleanup composition`.
 
 **Accepted 2026-09-26 safe native arc hybrid:** the bounded
 level XY G2/G3 path now preserves direction/center through the native,

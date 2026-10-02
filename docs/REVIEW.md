@@ -1,6 +1,314 @@
 # Initial workflow and engineering review — 2026-09-07
 
+## MX01 mixed fixed-design stock and whole-tool access - 2026-10-02
+
+Implemented the supplied mixed-tool increment on the clean MV01 baseline
+`142b420`. `v_region.VComposition` extends the existing section/volume owner
+with actual cylindrical and per-profile V sweep unions. `ordered_job` rebuilds
+every stage from decoded coordinates and retains ordered prefix identities.
+Extended mixes require explicit `AxialLimits` and the existing continuous
+tool/fixture occupancy setup; the historical one-cylinder/terminal-V route
+retains its earlier construction/report contract. Verifier
+`ordered-job-v6-mixed-v-stock` requires fresh bundles. Current executable
+contracts and limits live in the
+[specification](structure_spec.md#mixed-cylindricalv-composition-and-whole-tool-access-mx01),
+with commands in the
+[runbook](DEVELOPMENT.md#mixed-cylindricalv-composition-checks).
+
+The chosen access boundary is conservative: each cylindrical stage is
+independently replayable, V links stay above stock, and shank/holder clear initial
+stock without prior-cavity credit. This establishes supplied endmill/V/cleanup
+composition and whole-tool protection without implying a general cleared-link
+solver. RP01 owns that extension when a concrete rest candidate needs it.
+Axial scheduling credits only one earlier identical-profile XY retrace, retaining
+complete endpoint-depth pairs. Combining the deepest endpoints of crossing
+passes was rejected because it invents reach between them; a regression supplies
+earlier .5/1.5 and 1.5/.5 paths and rejects constant depth 1.6 at stepdown .25.
+Entry never creates its own cutting-pass credit. Absolute vertical plunge depth
+is separately declared; engagement/load are unassessed. The pass helper retains
+the original design and can leave a declared axial cap allowance, without
+claiming a normal-to-wall allowance or rest-only strategy.
+
+Ten synthetic regressions use an original 16 x 12 mm, 90-degree design with
+1.5 mm cap, stepped T1 radius .5 mm cylinder, three .5 mm V depth passes,
+and stepped T2 radius .4 mm cleanup. All flutes are 3 mm; the nominal V profile
+is pointed 90 degrees with maximum radius 4 mm. Caller declarations use 11000
+rpm, cylinder entry/cut/retract feeds 60/180/100 mm/min, V feed 100 mm/min,
+stepdown .5 mm and absolute entry depth 1.5 mm, initial tip (-2,-2,3), program
+frame `program`/G54, no translation or length offsets, and assumed operator
+installation at split/pause boundaries. Bodies have cutter/shank/holder axial
+bands [0,3]/[3,4]/[4,6] mm; shank radius equals the cutter band's conservative
+radius (.5/3/.4 mm for T1/T3/T2), and all holder radii are .8 mm. Initial stock
+is [0,16] x [0,12] x [-1.5,0] mm. These are synthetic declarations, not machining
+recommendations. Nominal fixed-design fingerprint is
+`44b068c87da5669f5e76621ac217430c7c3f80284497da65b2e353cb88d9a0f8`; the UCCNC job
+fingerprint is `c59842b0273ba9e286f0eb752c61d8948707065316dfafb74d05c7825b8135dc`.
+All cuts share a Y=5 mm centerline, with
+respective X intervals [4,6], [7,9], [9,11]. At section depth 1 mm, independent
+capsule arithmetic gives 140 mm2 required design area and exact new cleanup
+removal **1.4995036077867807 mm2**, including positive V/cleanup overlap.
+Decoded prefix residual bounds before cleanup are
+**[134.4132099883855, 134.42984870217867] mm2**, after cleanup
+**[132.91328863448044, 132.9303562759611] mm2**, with zero possible-overcut area.
+Their certified new-removal lower bound is **1.4828537124244 mm2**; last-stage-only
+stock loses over 4.9 mm2 of earlier removal. Independent decoded membership
+witnesses (4,5.2), (8,5.2), (11,5.2) retain distinct rough/V/cleanup contributions
+through every prefix. Actual overlaps and repeated shallow passes are unioned.
+
+Independent analytic transverse-interval Simpson integration at 120/240 depth
+slabs gives residual volumes **215.68215074701453 / 215.68213844509327 mm3**,
+changing by **0.00001230192126 mm3**, below the declared .003 mm3 witness tolerance.
+Production stock rebuilt directly from the dialect decoder at 128 slabs encloses
+that reference in **[215.14313232150346, 216.20228378510083] mm3**; before cleanup
+the interval is **[217.11550077634263, 218.19101253853563] mm3**. The certified
+positive cleanup-volume lower bound is **0.9132169912418 mm3**. These finer queries
+supplement the standard report's deliberately broader eight-slab residual
+interval. Bounds remain conditional GEOS/chord/numeric evidence, not certified
+topology or a physical cutting guarantee.
+
+The materially different consumer adds a protected [7,9] x [8,10] mm island
+and uses a 60-degree pointed cutter against the same 90-degree design through
+both UCCNC and Grbl. Protected-island membership and full-cylinder slope/wall
+counterexamples reject; a holder hits a clamp at X~5 between clear X=4/6
+endpoints although the cutter clears it. Missing passes/setup/limits, excessive
+entry, changed source/design/frame, reordered program files and changed limits
+invalidate evidence. Reverse retraces and shallower allowance passes pass.
+Independent delegated review of the runtime diff found no blocking issue; the
+lead reviewed the tests, geometric references, integration and declared limits.
+
+Verification is complete. Exploratory focused runner attempts
+`verification-20261002-034825-c8e141e0`, `034934-dc3c2031` and
+`035352-9b1f5c54` were invalidated by ongoing source/test/README edits and are
+retained as incomplete evidence, never final-source acceptance. The first package
+attempt `verification-20261002-035633-a409f91a` could not initialize uv's existing
+cache outside the sandbox (access denied); the same declared package command
+was rerun with approved cache access. No dependencies or toolchain were added.
+The final focused command from the runbook passed **60 tests / seven modules**,
+with no skips, in 171.99 s:
+`output/verification-20261002-035622-8f7eccd7/report.json`. Full checkout and clean
+supported-package reports are
+`output/verification-20261002-035643-a04cc834/report.json` and
+`output/verification-20261002-035706-6aedd474/report.json`, respectively. Their
+runtime/test/tool/config identities match the focused run (canonical sorted-JSON
+SHA-256 `c53b5d5db0595d07fa77930eac920c2630441f43071c4a86146224a68502f781`).
+Full checkout passed **638 tests / 87 modules**, with the existing Windows
+symlink-privilege skip. Its completion and final identity gates pass. The
+clean supported-package gate passed: its Python 3.12/3.13 wheels and independent
+3.12 source installation each passed **638 tests / 87 modules** (**1914 tests /
+261 module records**, no reused results). All **282 commands**, archive-content
+and byte checks, installed provenance/import/resource smoke, base-only boundary,
+completion and final source/environment/artifact/snapshot identity gates pass.
+The package run took 3081.62 s; checkout took 1484.81 s. These are verification
+wall times, with overlapping runs, not controller performance measurements.
+Each package target has the same three named skips: Windows symlink privilege,
+absent retained M1 native-post observation, and absent accepted B/C tabbed
+one-off observations. Their synthetic tests run; the skipped private posts do
+not receive new acceptance. Detailed IDs/reasons remain in the final report.
+No manual observation adds evidence for the synthetic offline claims; native
+post/controller/runtime and physical setup have no new acceptance here.
+
+Reopen this boundary for concrete cross-stage cleared entry/link or non-cutting
+body travel through cavities, non-retraced axial-pass credit, arc pass policies,
+normal allowance, or physical engagement limits. Those are separate measurable
+capabilities; do not expand MX01 merely to increase its fixture count. The next
+priority remains RP01 feature-aware residual-driven candidate generation, using
+the composed stock and fixed-design queries established here. Implementation
+is uncommitted and **ready to commit**; no staging, commit or merge was performed.
+
+**Accepted by engineering 2026-10-02:** implementation, independent review and
+required automated checks close the bounded MX01 offline gate. Final tracked
+diff/whitespace, untracked-test syntax/whitespace, owner links/headings and scoped
+part-file inspection pass. Only the intended synthetic test is untracked; new
+session NC/bundle files remain under ignored `output/`, and the thirteen
+historical tracked part fixtures are unchanged. Pre-existing inaccessible cache
+and old output directories were not altered. No user observation or product
+choice is pending. This is a good fresh-session breakpoint: RP01 has a distinct
+strategy outcome, and all contracts/evidence/limits are persisted in their owners.
+Suggested commit: `feat(cam): verify mixed endmill/V/cleanup composition`.
+
+## MV01 cumulative fixed-design Region-V stock - 2026-10-01
+
+After closing DT01 at `1dfae81`, implemented cumulative all-V stock through the
+existing caller-owned Stage/Job and UCCNC/Grbl output APIs. The owning
+[contract](structure_spec.md#cumulative-region-v-virgin-stock-contract-mv01)
+uses a frozen `VSequence(plans)` and per-profile union of verified decoded
+sweeps. Prefix identities retain source/design/frame/tool/order/transition
+binding; every residual measures the same fixed ideal-V design. One-stage and
+one-cylinder/V compatibility remains; known unsupported cylinder/V mixes and
+unknown stock evaluators have distinct diagnostics. No new backend, dependency,
+workflow recipe or rest-only planner was introduced. Verifier v5 invalidates
+earlier ordered reports/bundles; original unchanged source/post observations
+retain their byte scope.
+
+Ten self-contained regressions challenge overlap, cumulative inclusion,
+positive newly removed stock, variable depth, three profiles, raster/offset,
+repeated tools and stale/altered evidence. The first consumer is a 20x16 mm
+opening with a protected 4x4 mm island spanning (8,6)-(12,10), explicit 90-degree
+design and 1.5 mm cap in the program frame. Both tools have 90-degree profiles,
+4 mm maximum radius and 2 mm cutting length; the flat primary has .6 mm tip
+radius and the finish is pointed. Planning uses .6 mm stepover, .4 mm XY sampling,
+3 mm safe height, default .001 mm margin and raster fill. Each has 35 paths
+(1260/1479 points) and remains partial. Stage feeds are 100 mm/min, spindle
+11000 rpm, no tool offsets, and transitions are explicitly assumed operator
+installations (UCCNC split / Grbl pause). These are offline declarations, not
+validated machining process defaults.
+
+At section depth 1 mm, independently derived virgin area is
+`216.8584073464 mm2`; desired removal volume is `357.9657082647 mm3`.
+An independently decoded disk centered at (1.35,1.05) with radius
+`.0128681735 mm` is retained by the flat primary and removed by the pointed
+finish: primary outer membership margin is `-.2043005789 mm`, finish inner
+margin is `+.0129681735 mm`. A .0001 mm inward allowance separates the witness
+from the declared four-decimal coordinate roundoff. Both dialects yield primary residual
+section `[1.7842387963,2.2168548124] mm2` and final
+`[1.0383911254,1.2492982057] mm2`, zero modeled possible overcut. Residual volume
+upper bounds decrease from `29.2153842826` to `27.7166888981 mm3`; both lower
+bounds remain zero under the deliberately conservative eight-slab policy.
+That volume interval does not certify exact removal or finish completeness.
+
+Independent overlap oracle: a 10x10 mm, 90-degree, 1.5 mm-cap design has two
+collinear 2 mm cuts shifted by 1 mm, so their union centerline is 3 mm. At depth
+1 mm, exact final residual is `64-3-pi/4 = 60.2146018366 mm2`; exact residual
+volume is `109.5-3*1.5^2-pi*1.5^3/3 = 99.2157082647 mm3`. Capsule/chord bounds
+enclose these values, including a 64-slab volume query. Duplicate sweeps do not
+add removal, and a controlled last-stage-only replay through public `emit`
+fails the independent section enclosure assertion even when the mutated
+report says `pass`. A separate R8/R2 annulus has desired volume `67.5*pi mm3`
+and supplies flat/rounded/pointed raster and offset stages. Variable-depth
+flat/pointed disjoint disk witnesses retain both contributions.
+
+An independent runtime review found no blocker. A full generated duplicate
+union changed a residual area by roughly `1.5e-14 mm2` through GEOS Boolean
+rounding; its compatibility assertion uses `1e-10 mm2` tolerance. This is
+numeric evidence under the existing conditional geometry contract, not an
+interval-certified Boolean claim. Continuous island crossing with safe
+endpoints, protected walls, changed decoded feeds/motion, complete low rapid
+return, inconsistent designs and stale/reordered/tampered bundles reject.
+Safe reordered jobs receive fresh replay instead of being declared unsafe.
+
+Focused final-source verification passes **62 tests / six modules**, no skips:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py --pattern test_multistage_v.py --pattern test_fixed_v_design.py --pattern test_standalone_v.py --pattern test_v_region.py --pattern test_ordered_job.py --pattern test_ordered_dialects.py
+```
+
+Report: `output/verification-20261001-171849-f49c429f/report.json`.
+Retained complete-byte bundles in `output/mv01-20261001-01/evidence/{uccnc,grbl}/`
+pass `write_bundle`'s final byte audit and independent decoded disk checks;
+their inspected headers, tool/pause boundaries and above-stock returns agree
+with the declarations. The synthetic design fingerprint is
+`2baa32074e036dbad8728934fca8491775ef7741d389c83b9e13a4bd6eb63c49`.
+UCCNC program SHA-256 values are
+`2cef19ff825978ecb6b954281820c062dd2f786a118687ae2de26d5955d94404` and
+`6d93b42c2840f402d9d44388764c6285a3e2d56d11c6d98fced178a42a672160`;
+the whole-job Grbl program SHA-256 is
+`888819693bdf893520caee8652f9d4dd6ac87d31d7334cd4f23099834f2f5333`.
+Numerical policy is four decimal coordinates, .000051 mm matching tolerance,
+fixture top Z=0 and unchanged chord/numeric section enclosures. Bundle/witness
+results are saved in `output/mv01-20261001-01/final_observations.json`; they
+establish offline output authority only.
+Full checkout `tools/verify.py` passes **628 tests / 86 modules**, including
+all ten MV01 cases, with the single documented Windows symlink-privilege skip.
+Its report is `output/verification-20261001-172022-3f447d5f/report.json`.
+Full package `tools/verify.py --package` passes in
+`output/verification-20261001-172037-3e846e3b/report.json`. Fresh Python 3.12/3.13
+wheels and an independently built/installed 3.12 sdist each pass **628 tests /
+86 modules** (**1884 tests / 258 module records**, no reused results), including
+all ten MV01 cases in each target. Every suite has complete evidence; all
+**279 commands**, archive-content/byte checks, installed provenance/import/resource
+smoke and final source/environment/artifact/snapshot identity gates pass.
+The separate base-only environment passes the analytic/native boundary and
+absence of optional dependencies. Installed full targets use NumPy 2.5.3,
+Shapely 2.1.2 and MCP 2.2.0; base-only has NumPy alone.
+Each installed target has the same three named skips: Windows symlink privilege,
+absent retained M1 native-post observation and absent retained B/C tabbed
+observations. Their synthetic checks run; skipped private posts are not renewed
+observations. The checkout has only the symlink skip. Checkout, focused and
+package source identities match the unchanged final runtime/test/tool/config
+tree (canonical sorted-JSON SHA-256
+`c9b175adce511a29f43421ba4a05b1b92159342bea178bf4cd2b858c86a12fee`).
+The package run spans an overnight interruption: its 34619-second wall measure
+does not describe uninterrupted execution performance or controller runtime.
+
+Local numeric observations and temporary drafts live under ignored
+`output/mv01-tests-20261001-0644/` and
+`output/mv01-20261001-01/`; the parameters and conclusion above remain
+understandable without them. Final `git diff --check`, untracked-test whitespace,
+owning links/headings and scoped `.cb`/`.nc` inspection pass. The only untracked
+source candidate is `tests/test_multistage_v.py`; new NC/bundle artifacts stay
+under `output/`, and existing historical tracked fixtures are unchanged. Broad
+ignored enumeration warned about inaccessible pre-existing cache/output paths;
+the explicit source-owner scan found only the thirteen existing tracked part
+fixtures, with no accidental new copies or session-file dependencies.
+
+**Accepted by engineering 2026-10-02:** implementation, independent review and
+required automated checks are complete for supplied cumulative all-V stock.
+No manual observation adds evidence to this offline scope. Conditional geometry,
+partial coverage, holder/engagement and controller/runtime/physical limits remain
+explicit; reopen for a violating supported sweep/design/prefix or a changed
+numerical contract. Work is uncommitted and **ready to commit**, with suggested
+message `feat(cam): verify cumulative fixed-design V stock`. No staging, commit,
+merge, publishing or cleanup of pre-existing artifacts was performed.
+
+The local workstream now establishes fixed-design, cumulative V stock through
+public decoded output APIs. The overall project next needs MX01's bounded
+endmill/V/cleanup composition and whole-tool access: those missing stock/access
+facts support the later feature-aware rest, native boundary and inlay consumers.
+RP01 rest-only efficiency, BO01 tool search and broader relief/assembly work
+remain separate priorities. A fresh session is recommended because this coherent
+outcome is implemented, verified and accepted with contracts/evidence saved;
+MX01 has distinct scope and no unsaved decision or pending result to inherit.
+
+## DT01 package verification and engineering acceptance - 2026-10-01
+
+Resumed from a clean worktree at the user's committed DT01 `1dfae81`. The
+previous `17752` process had ended and its package report remained incomplete.
+All recorded runtime/test/tool/config hashes match the committed source; the
+checkout and package identity maps are identical (canonical sorted-JSON SHA-256
+`1a53fb0c81e91cc40f80c4173eb52208e985875488dc4f5f08809dfad2be26f6`).
+
+Exact closure command:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py --package --resume output/verification-20260930-211800-b91a2c4f
+```
+
+Final successful report: `output/verification-20261001-165847-ceda0e61/report.json`.
+Both wheels (Python 3.12/3.13) and the independently installed 3.12 sdist each
+pass **618 tests / 85 modules**, every selected module has complete suite
+evidence, and all **93 reconciliation commands** pass. Reuse is explicit:
+170 wheel modules and four already-complete sdist modules retain hash-checked
+results; 81 unfinished sdist modules run afresh. All four targets pass fresh
+installed/environment smoke and final source/environment/artifact/snapshot
+identity checks, including the base-only optional-dependency boundary. Dependencies
+are NumPy 2.5.3, Shapely 2.1.2 and MCP 2.2.0 for full targets; the base target
+has NumPy alone. The original checkout passes 618 tests / 85 modules on 3.13.
+
+Each installed target's three named skips are Windows symlink privilege,
+unavailable retained M1 native-post observation and unavailable retained B/C
+tabbed observations. Their synthetic regressions run; the absent private posts
+are not new user observations. The checkout's only skip is symlink privilege.
+The earlier resumed attempts remain incomplete evidence: sandbox access to the
+retained wheel failed, then a Windows atomic report replacement failed. The
+successful retry preserved the original records and completed the same selection;
+neither failed report substitutes for its final result. Retained wall times that
+span the overnight interruption do not measure uninterrupted execution cost.
+
+**Accepted by engineering:** DT01 implementation, independent technical review
+and required automated gates are complete for the fixed ideal-V design/tool
+contract. No manual observation adds evidence to this offline scope. Native
+derived-boundary semantics, controller/runtime and physical setup remain separate.
+Reopen for a violating supported profile/design/motion or changed numerical
+contract; unchanged source/post observations retain their recorded byte scope.
+The work is already committed; no new staging, commit or merge was performed.
+MV01 is the next authorized increment because cumulative stock now measures one
+fixed design. It remains bounded to supplied all-V stages before MX01 mixed-tool
+composition; no personal machining part or unresolved product choice is needed.
+
 ## DT01 fixed design and independent cutter verification - 2026-09-30
+
+Historical wrap-up below; its pending gate is closed by the
+[2026-10-01 acceptance](#dt01-package-verification-and-engineering-acceptance---2026-10-01).
 
 Started from a clean worktree on `main` at `c29dbb9`. The authorized outcome is
 the reusable fixed design/profile/evidence contract, not a new ornament recipe

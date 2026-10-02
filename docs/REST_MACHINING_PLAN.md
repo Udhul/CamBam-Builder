@@ -54,11 +54,11 @@ derived machining boundaries and output authority distinct.
 
 | Expected outcome | Implemented evidence today | Required follow-up |
 | --- | --- | --- |
-| Pointed, flat-tip and rounded V carving, selectable angles and maximum depth | DT01 separates the ideal capped design angle from these cutter profiles. Polygon/curved openings and raster/offset paths retain partial output when tools/spacing leave stock. | MV01 composes independently selected cutters against that fixed design. Design-flat/rounded evaluators and generalized pass-depth scheduling remain extensions; tool reach cannot redesign the part. |
-| Flat/pointed combinations and other tool sequences | Standalone V and one cylindrical predecessor followed by one V stage have decoded stock evidence. Multiple V stages and broader interleavings are rejected. | MV01 establishes cumulative V stock; MX01 extends supported endmill/V combinations with one unchanged design and actual per-stage sweeps. |
+| Pointed, flat-tip and rounded V carving, selectable angles and maximum depth | DT01 separates the ideal capped design from cutter profiles; MV01 composes them and MX01 supplies bounded axial passes. Polygon/curved raster/offset paths retain partial output when tools/spacing leave stock. | Design-flat/rounded evaluators and non-retraced/arc pass policies remain extensions; tool reach cannot redesign the part. |
+| Flat/pointed combinations and other tool sequences | Standalone/cumulative all-V and bounded mixed cylinder/V stages share one fixed design through decoded sweep unions. Mixed output requires axial/entry limits and whole-tool setup; cross-stage cavity credit remains unsupported. | RP01 supplies residual-driven candidates using the MX01 composed stock foundation; broader access needs a concrete bounded proof. |
 | Receiver/plug inlays with meaningful tolerances | One circular, pointed-tool pair verifies separate stocks, registration, insertion and zero/positive radial clearance. | IN01 generalizes paired contours/islands, tool sequences, seating, independent side/bottom/surface gaps, backing and final visible shape. |
 | Sanding/facing to the finished assembled design | The circular model locates assembly/backing but has no composite-stock finishing operation. | IN01 records the finish plane and removal allowance; composite-stock facing and remaining thickness/outline verification need their own slice. Model sanding as a declared removal/tolerance envelope or measured result. |
-| Endmill plus V rest machining that reduces leftover | Bounded generated/native hybrids and smaller-endmill cleanup have stock evidence. `with_prior` measures unchanged V paths; it does not generate efficient rest-only cuts. | MX01 then RP01: residual-driven candidates, safe entry/links through prior clearance, preserved original target and quantified new removal/air cutting. |
+| Endmill plus V rest machining that reduces leftover | Supplied endmill/V/cleanup has fixed-design prefix stock and independently witnessed positive cleanup removal. It does not generate efficient rest-only cuts. | RP01: residual-driven candidates, safe entry/links through prior clearance and quantified new removal/air cutting. |
 | Calculate the best tool/path bundle under user constraints | `strategy.select_strategy` ranks supplied audited routes; no bundle generation or cutting/time/tool-change optimization is implemented. | BO01 searches a declared finite inventory and strategy family, verifies candidates and reports the objective, alternatives, budget and uncertainty. |
 | Fully native CamBam rest machining using derived primitives/MOPs | Native motion normalization and some posted jobs work; RC01 corner windows and M1 native Pockets are bounded trials. M1's native cleanup fails its declared cleared-entry gate. | NR01 derives editable rest machining boundaries, authors native Pocket/Profile/appropriate MOPs, and accepts complete actual CamBam posts against the unchanged design. |
 | Shape tracing with tools fitting local geometry; decorative planar detail | Existing offsets follow boundaries, and bounded V and endmill paths have continuous geometric checks. No general medial/contact/feature planning exists. | RP01 adds feature/contact guidance, narrow-detail and curvature-aware candidates, with full residual/coverage and access verification. |
@@ -163,6 +163,13 @@ remain outside those shared mechanisms.
   executable candidate: a final depth cap alone is not a safe one-pass schedule.
   Stock evidence must follow those actual depth passes. Unknown engagement/load
   constraints stay unassessed rather than acquire invented defaults.
+  MX01's implementation contract is owned by the
+  [mixed composition specification](structure_spec.md#mixed-cylindricalv-composition-and-whole-tool-access-mx01):
+  linear supplied passes with conservative identical-profile retrace credit,
+  vertical stock-cutting entry, independently replayable cylinder stages and
+  whole-tool protection against the initial stock/fixture boxes. Cross-stage
+  union-cleared access remains in RP01 until a candidate requires that proof;
+  the accepted offline scope does not assert efficient rest-only generation.
 - **RP01: feature-aware rest candidate generation.** Use a synthetic frieze with
   lobes, protected islands, narrow valleys and a broad capped area. Generate
   contact/contour/medial-guided detail and rest-only candidates with verified
@@ -256,7 +263,7 @@ products. These references establish useful method/parameter distinctions:
 
 ## Fixed design target and cutter-independent V verification (DT01)
 
-**Implemented 2026-09-30; final verification in progress.** The former `VTarget.section(depth, tangent)` and protection checks
+**Completed; accepted by engineering 2026-10-01.** The former `VTarget.section(depth, tangent)` and protection checks
 derive the ideal finish from the selected tool angle. Various angles work as
 different jobs today; they do not establish unlike-angle cutters working on one
 fixed design. DT01 fixes this owning contract before extending MV01 stock reuse.
@@ -314,17 +321,21 @@ planner cannot meet the finish; do not redefine the surface to make it pass.
 
 ## Multi-stage Region-V stock verification (MV01)
 
-**Planned follow-up after DT01, 2026-09-30; not implemented.**
+**Completed; accepted by engineering 2026-10-02.**
 Priority is owned by the [post-merge queue](PROGRESS.md#post-merge-task-queue).
 DT01 now precedes this packet so cumulative evidence binds an explicit fixed
 design. The named consumer is a synthetic combined-tool framework job, not a required
 personal part or machine observation. Existing standalone and one-cylinder/V
-acceptance remains unchanged until the new evaluator passes its own gates.
+acceptance remains unchanged; the new evaluator passed its own independent
+synthetic, full checkout and supported package gates. The
+[review evidence](REVIEW.md#mv01-cumulative-fixed-design-region-v-stock---2026-10-01)
+owns exact results and remaining limits.
 
 **Outcome:** a caller supplies an ordered tuple of Region-V stages against one
 shared target and obtains independently decoded cumulative stock/access/residual
-evidence after every prefix. The current Stage/Job API already represents these
-stages, but `ordered_job.audit` rejects multiple V stages. Repeated tools and
+evidence after every prefix. The existing Stage/Job API now admits these stages
+through the [cumulative contract](structure_spec.md#cumulative-region-v-virgin-stock-contract-mv01).
+The previous verifier rejected multiple V stages. Repeated tools and
 overlapping passes must retain their actual ordered removal, not overwrite the
 prefix or sum overlapping swept volumes twice.
 
