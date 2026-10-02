@@ -69,6 +69,10 @@
   prefers linear history. The user performs the merge unless they explicitly
   authorize the agent to do it.
 - Separate implementation, automated verification and user/production acceptance.
+  Whenever repository changes are made, include a suggested commit message in
+  the final response, in a fenced `text` block containing only the copyable
+  message. This is required for small code or documentation edits as well as
+  substantive work. Keep it separate from the next-agent task handoff.
   Scale the response using the [handoff guidance](docs/WORKFLOW.md#completion-record--handoff-template);
   use existing owners for durable facts, not copies of the response in several docs.
   For substantive work, end with a short, actionable next-task statement describing
