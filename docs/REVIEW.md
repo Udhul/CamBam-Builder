@@ -1,4 +1,9 @@
-# Initial workflow and engineering review — 2026-09-07
+# Review and acceptance history
+
+Entries below are dated historical evidence, including superseded decisions and
+checkpoints. [PROGRESS](PROGRESS.md) owns current priority and state; the
+[specification](structure_spec.md) and [MCP contract](MCP_CONTRACT.md) own current
+contracts. Historical next-task and pending statements describe their entry date.
 
 ## MV01/MX01 committed review and merged delivery - 2026-10-02
 
@@ -3771,6 +3776,8 @@ erases the expected benefit. Reopen provider setup if a profile-backed GLM subag
 fails or a later Codex release claims cross-provider children are supported; retain
 exact errors rather than inferring model quality or access.
 
+## Initial workflow and engineering review — 2026-09-07
+
 ## Scope and workflow assessment
 
 The initial working tree was clean. This pass changed documentation and ignored
@@ -4667,7 +4674,7 @@ checks were:
   before reader capture and now passes after the fix.
 
 The native edit is retained as
-[`C_native_edited.cb`](../output/mop-core-validation-1roowlbtpza/C_native_edited.cb).
+`C_native_edited.cb` (`output/mop-core-validation-1roowlbtpza/C_native_edited.cb`; historical artifact).
 The C-to-D import/export comparison exited 0 and preserved five enabled
 operations in the order Drill, Engrave, Pocket, Profile, Profile. It preserved
 the operation names/order/targets and exact parameter/state sets: the fourth
@@ -4675,7 +4682,7 @@ Profile targets `pocket-square`, has CutFeedrate 450 and ClearancePlane Default,
 and the last Profile targets `profile-square`. Independent XML comparison also
 matched all four shapes' coordinates, closure flags and identity transforms; the
 native check logs report no warnings or errors. See
-[`C_framework_roundtrip.cb`](../output/mop-core-validation-1roowlbtpza/C_framework_roundtrip.cb)
+`C_framework_roundtrip.cb` (`output/mop-core-validation-1roowlbtpza/C_framework_roundtrip.cb`; historical artifact)
 and the adjacent inspection JSON, `native-check.log` and
 `native-geometry-check.log`.
 
@@ -4820,14 +4827,14 @@ late-clone failures, subtree relationships, UUID/name/group remapping, source
 preservation, transfer cleanup, MOP closure, world pose, and two XML round trips
 covering outlines, root/leaf poses, primitive/MOP UUIDs, parent/layer assignments,
 MOP parameters and targets.
-The retained logs are [focused.log](../output/copy-transfer-checks-final-7c34ab/focused.log)
-and [full.log](../output/copy-transfer-checks-final-7c34ab/full.log).
+The retained logs are focused.log (`output/copy-transfer-checks-final-7c34ab/focused.log`; historical artifact)
+and full.log (`output/copy-transfer-checks-final-7c34ab/full.log`; historical artifact).
 
 The bounded `Rect.to_xml_element` repair applies the complete ancestor world
 transform when emitting the world-baked Pline representation, preserving its
 identity XML matrix and outline through the transfer round trips. Compileall and
-the import/construct smoke check also pass; [compile.log](../output/copy-transfer-checks-final-7c34ab/compile.log)
-and [import.log](../output/copy-transfer-checks-final-7c34ab/import.log) are retained.
+the import/construct smoke check also pass; compile.log (`output/copy-transfer-checks-final-7c34ab/compile.log`; historical artifact)
+and import.log (`output/copy-transfer-checks-final-7c34ab/import.log`; historical artifact) are retained.
 `git diff --check` exits 0 with only line-ending normalization warnings. No manual
 CamBam validation adds evidence for these registry and known XML-encoding checks;
 production toolpaths remain outside scope. Packaging is unverified.
@@ -4867,6 +4874,15 @@ coverage for invalid topology, coincident arcs, near-identity bakes, reflected
 queries, finite Z, contour ownership and export revalidation.
 
 ### Native Region fixture finding
+
+Initial local discovery found a `CADFile` root named `region_example` with
+`Version="0.9.8.0"`, a `layer` under `layers` and `xsi:type="Region"`.
+Its `OuterCurve` contains direct `pts`; `HoleCurves` contains nested `Polyline`
+contours. One closed outer curve uses extensive bulges and has two closed holes;
+all sampled vertex Z values are zero and no source MOPs are present. These
+observations establish the native example's schema, not varying-Z support or
+rest-machining behavior. The private file remains local, unchanged and outside
+the regression suite; authored synthetic equivalents cover supported inputs.
 
 Local import of the private `output/region_example.cb` exercises the expected
 schema but fails strict topology validation: the first hole self-intersects
@@ -5042,7 +5058,7 @@ Suggested commit: `feat: support varying-z bulges in plines and regions`.
 
 # Packaging and supported Python verification
 
-Date: 2026-09-10.
+Date: 2026-09-10. Validation used `uv 0.10.2`.
 
 The former Python >=3.8 declaration was not credible because the distributed
 legacy implementation evaluates built-in generic annotations such as
@@ -6787,6 +6803,18 @@ Second-set fixture SHA-256 hashes:
 
 ## Dimensional milling formula kernel - 2026-09-21
 
+Initial planning research (2026-09-20) used Sandvik Coromant's
+[metric milling formulas](https://cdn.sandvik.coromant.com/files/sitecollectiondocuments/services/metal-cutting-e-learning/formulas-and-definitions/formulas-and-deinitions-for-milling-metric-enu.pdf)
+and Kennametal's [speed/feed formulas](https://www.kennametal.com/us/en/resources/engineering-calculators/miscellaneous/speed-and-feed.html).
+The recommendation boundary also considered LMT Onsrud's
+[material-specific routing data](https://onsrud.com/Forms/Cutting-Data-Recommendations.asp)
+and Harvey Performance's [chip-load guidance](https://www.harveyperformance.com/in-the-loupe/speeds-and-feeds-101/).
+These were research references, not imported tables or framework defaults. Tool
+substrate/coating, stickout/runout, material condition, coolant, machine limits
+and workholding affect their applicability; provenance, usage terms and version
+are required before adopting source data. This research is retained from the
+original backlog proposal during DOC01 consolidation.
+
 Backlog 9a is implemented as a pure library module, separate from CamBam documents,
 MOP defaults and the MCP adapter. The formula conventions follow Sandvik Coromant's
 metric and inch milling references: table feed is chip load times RPM times effective
@@ -8109,7 +8137,10 @@ deferred until that consumer exposes a specific shared owner boundary.
 The tracked A01 Region has shell area 1596 mm² and a triangular 64 mm² hole,
 so its original target area is 1532 mm². The bounded M1 case uses the source
 shell/hole unchanged, 8 mm stock and floor, T1 radius 2.5 mm with 0.5 mm
-allowance, and T2 radius 1 mm at Z=-2/-4/-6/-8. A complete source-SHA-bound
+allowance, and T2 radius 1 mm at Z=-2/-4/-6/-8. The synthetic tools have
+10 mm cutting length, with declared shank/holder starts 10/20 mm above the tip;
+both remain above Z=0 at the Z=-8 floor. These are setup assumptions, not
+physical clearance observations. A complete source-SHA-bound
 supplied T1 trace is replayed first. T2 starts every below-stock descent at
 an actual full-depth T1 cut endpoint, cuts to its planned contour/raster
 path inside the original Region and retracts before the next path. Shared

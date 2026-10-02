@@ -31,70 +31,26 @@ project.add_rect(layer=layer, identifier='outline', width=100, height=50)
 See `demos/` for larger examples and the runbook for their limitations.
 Licensed under the [MIT license](LICENSE).
 
-Document-independent CAM calculations and planning live under
-`cambam_builder.cam_core`; native CamBam entities/XML and the MCP adapter remain
-separate. The first generated roughing/cleanup slice is `cam_core.rc01`.
-A validated family of straight variable-depth V grooves supports detached
-planning and edited native inputs. The accepted baseline and one edited member
-also have verified headless G-code reference output. The nominal RC01
-roughing/cleanup job also has a parsed and stock-replayed headless reference
-file. Their strict millimetre dialect is not a machine controller profile.
-The first bounded UCCNC profile emits an independently decoded, stock-replayed
-synthetic T1/T3 pair. A Grbl v1.1 portability fixture now checks in-program
-manual and modeled automatic transitions through the same stock verifier;
-the reusable ordered-job API now accepts caller-supplied stages, raster or
-offset V plans, and supported native-normalized linear and XY arc motion for UCCNC or
-Grbl output with decoded stock evidence. One actual CamBam-posted linear
-Profile predecessor and generated rounded-V cleanup now pass together in a
-source-bound two-stage UCCNC job. A fresh CamBam G3 Pocket post and generated
-rounded-V finish now pass bounded decoded two-stage UCCNC stock and continuous
-tool-body/box occupancy gates. A posted G2 helical Circle Pocket and generated
-smaller-tool cleanup also pass source-bound decoded two-stage UCCNC stock and
-protected-boundary checks. A separate synthetic stepped-volume case
-replays decoded waterline and dependent rest cuts with a protected thin rib and
-conservative residual-volume bounds. A bounded sloped-plane ball-cutter case
-checks analytic contact and volume against decoded, conservative two-stage
-stock replay. A shallow spherical-bowl ball finish/rest case adds a protected
-rim, a dependent smaller tool and a declared side-clamp/body check. A bounded
-circular paired V-carve inlay now checks separate plug/receiver stock, decoded
-output and analytic assembly at zero or positive radial clearance. The fully
-generated nominal RC01 T1/T2 rough/cleanup job also emits two complete
-six-decimal UCCNC programs with decoded all-height RC01 stock and process
-evidence; its tool handoff remains a declared offline assumption. Runtime,
-physical setup and freeform surfaces remain unassessed. Supplied mixed
-endmill/V/cleanup sequences now preserve one fixed design through decoded
-per-prefix stock, explicit axial passes and cutter/shank/holder protection;
-cross-stage cavity credit and rest-only generation remain follow-ups.
-See the
-[current status](docs/PROGRESS.md#active-work-and-next-priority).
+Document-independent CAM planning lives under `cambam_builder.cam_core`, with
+native CamBam interchange and output adapters in separate owners. Bounded
+rest/V, ordered stock verification, surface and inlay capabilities are described
+in the [implemented capability map](docs/structure_spec.md#capability-and-public-api-boundary-map).
+The [ordered-job contract](docs/structure_spec.md#reusable-ordered-job-output-and-verification)
+defines decoded UCCNC/Grbl evidence and its limits; controller runtime and physical
+machining have separate acceptance gates. See [current status and next priority](docs/PROGRESS.md#active-work-and-next-priority)
+for delivery state and planned extensions.
 
 Python 3.12 or newer is required. For development, install the environment with
 `uv sync --python 3.13`, then run the project through `.venv\Scripts\python.exe`.
 The verification matrix covers Python 3.12 and 3.13;
 see the [development runbook](docs/DEVELOPMENT.md#environment-and-setup).
 
-The optional local MCP server exposes thirty-seven document, planning and authoring
-tools for AI clients, including verified geometry authoring (Rect, Circle,
-Arc, Pline, Points, Text, Region), Profile/Pocket/Engrave/Drill MOPs with
-target replacement, open-Pline Profile side diagnostics, automatic and bounded
-point-authored Manual Profile holding tabs, Text-targeted Profile/Pocket/Engrave,
-signed Profile/Pocket/Engrave roughing
-clearance, CannedCycle and SpiralMill CW/CCW Drill authoring, and VCutter-path
-engraving, similarity transforms with baking, and parent/group/copy
-relationships including cross-document subtree copy and transfer between two
-open documents. Part stock coordinates and native Grid/IsoGrid nesting are explicitly
-configurable; imported valid Manual/PointList nesting is inspectable and preserved. Stock
-inspection reports both Part-local offsets and the derived drawing-space stock origin. Layer
-display settings are also configurable. Complete UTF-8 `.cb` XML can be imported across hosts. On the normal
-same-host path, `document_list` exposes the shared staging directory so a client can
-binary-copy an existing or manually edited `.cb` there and hash-guard `document_open`;
-this avoids model-mediated XML. Export returns inline content and explicitly creates
-no file; same-host clients can instead copy an exact server-generated `document_save`
-handoff artifact and verify its SHA-256. Install
-with `uv sync --python 3.13 --extra mcp`;
-see [MCP setup and client configuration](docs/DEVELOPMENT.md#local-mcp-setup-and-verification).
-Clean Windows installation, an agentic OpenCode stdio workflow and CamBam Plus 1.0
-domain acceptance are verified for the bounded Rect/Outside-Profile A/B slice.
+The optional local MCP server provides document inspection, geometry/MOP authoring,
+transforms and cross-document operations for AI clients. The [MCP contract](docs/MCP_CONTRACT.md)
+owns supported tools, native field semantics and file handoff behavior. Install
+with `uv sync --python 3.13 --extra mcp`; see
+[MCP setup and client configuration](docs/DEVELOPMENT.md#local-mcp-setup-and-verification)
+and the [bounded installation/client acceptance record](docs/REVIEW.md#mcp-4e-acceptance-completion---2026-09-21).
 
 For a new AI-assisted CamBam project, copy the packaged
 [`consumer_AGENTS.template.md`](cambam_builder/mcp_adapter/consumer_AGENTS.template.md)

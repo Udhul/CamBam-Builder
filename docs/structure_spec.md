@@ -1079,7 +1079,7 @@ representation is exact spherical contact and section references plus
 conservative cells for evolving stock; no freeform mesh, overhang, general
 surface offset, real holder installation or controller runtime is claimed.
 See the [packet 3 runbook](DEVELOPMENT.md#packet-3-spherical-bowl-ball-finish-and-rest)
-and [evidence](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest---2026-09-27).
+and [evidence](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest--2026-09-27).
 
 ### Bounded circular paired V-carve inlay
 
@@ -1120,7 +1120,7 @@ oracle. The supported geometry is a circle with a parallel-plane Z flip and
 one pointed cutter; process loads, plunge capability, material response,
 machine setup and physical fit are unassessed. Native CamBam emission is not
 part of this detached route. See the [runbook](DEVELOPMENT.md#packet-4-paired-v-carve-inlay)
-and [evidence](REVIEW.md#packet-4-paired-v-carve-inlay---2026-09-27).
+and [evidence](REVIEW.md#packet-4-paired-v-carve-inlay--2026-09-27).
 Decoded inlay entries and retracts must be vertical between the declared cut
 depth and a positive safe height. Their role labels cannot hide diagonal stock
 motion. Supplying body/fixture occupancy for inlay is explicitly unsupported;
@@ -1562,18 +1562,12 @@ radius-1 mm low-level crossing.
 Section residuals use inner/outer capsule polygons with 128 quarter-circle
 segments, radius perturbation 0.000001 mm and a circumscribing outer radius.
 Area intervals are integrated across constant-depth slabs to report nominal
-remaining volume. For A01 the prior leaves 1097.74561–1097.84293 mm³ and
-the T2 path leaves 10.50611–10.54823 mm³.
-The original 1532 mm² Region, including its triangular hole, remains the
-target; the prior rest boundary never becomes a wall. All four section slabs
-have rough rest 137.21820–137.23037 mm² and final rest
-1.31326–1.31853 mm². The separate analytic six-convex-corner finite-tool
-limit is 1.190659933 mm² per slab. Inflated sweep overcut and final residual
-outside the ideal-or-original-boundary 0.05 mm envelope evaluate to zero in
-this fixture, conditional on GEOS topology. Completion is partial. Synthetic
-tools have 10 mm cutting length; their declared shank starts 10 mm and holder
-20 mm above the tip, leaving both above Z=0 at the Z=-8 floor. Physical tool
-error, material forces, fixtures and controller behavior remain unassessed.
+remaining volume against the original Region. Completion remains partial;
+the prior rest boundary never becomes a wall. The
+[M1 actual-post record](REVIEW.md#m1-first-actual-cambam-posts-and-contour-only-revision---2026-09-24)
+owns the A01 section/volume witnesses, finite-tool limit and native-route
+failure. Physical tool error, material forces, fixtures and controller
+behavior remain unassessed.
 
 `integrations.cambam.native_polygon_rest` strictly reimports the original
 zero-Z eight-edge shell, triangular hole and one Part with stock X=[-26,26],
@@ -1974,7 +1968,7 @@ or transition token reject. The accepted result is offline controller-dialect
 output for this synthetic job; runtime state, physical tools/fixtures and
 machining suitability have no acceptance. See the
 [runbook](DEVELOPMENT.md#packet-5-generated-rc01-uccnc-output) and
-[evidence](REVIEW.md#packet-5-generated-rc01-uccnc-output---2026-09-27).
+[evidence](REVIEW.md#packet-5-generated-rc01-uccnc-output--2026-09-27).
 
 ### RC01 native input and comparison candidates
 
@@ -2072,12 +2066,11 @@ M6, changed spindle speed without M3 and hidden control separators. Native
 LF/CRLF formatting remains supported. G98 is a return-mode selection only;
 no canned-cycle execution is admitted by the wrapper option.
 
-The user-posted newline-repaired file passed all 2,945 items, with per-slab
-rough rest 7.775010615955999–7.787678472024001 mm² and final rest
-0.9214411294439999–0.9263453527720001 mm². This establishes the bounded
-explicit-script E output slice for the accepted synthetic RC01 job; it does
-not establish XYZ/Engrave parity, native Pocket N, arbitrary controller
-dialects, physical machining, or formal GEOS topology interval proof.
+The [literal-motion acceptance record](REVIEW.md#rc01-literal-motion-cambam-output-acceptance---2026-09-23)
+owns the user-posted item comparisons and rough/final residual witnesses.
+That bounded explicit-script route does not establish XYZ/Engrave parity,
+native Pocket output, arbitrary controller dialects, physical machining
+or formal GEOS topology interval proof.
 
 ### Native optimiser mapping corpus boundary
 
@@ -2187,7 +2180,7 @@ does not make missing search or smoothing capabilities available.
 | `convex_rest.generate` | Replays one supplied cone column and extends it along a verified rising-clearance straight line in a convex target | One prior column and fixed cone family; this is not an arbitrary Region rest planner. |
 | `polygon_rest.generate`, `curved_region.generate` | Source-bound supplied cylindrical prefixes, smaller-tool original-boundary contours, interior rows and replayed cleared descent/cutting connectors; curved input uses inward-safe geometry | One connected feasible center Region, full-depth predecessor and supported tool pair required. Candidate rows/access are bounded heuristics; residual reports, not tool reachability, establish coverage. No arbitrary tabs or released-body model. |
 | `v_region.plan`, `verify`, `with_prior`, `VSequence`, `VComposition`, `depth_passes` | Raster/offset planning on inward-safe geometry, full-profile containment, high links, partial residual and supplied all-V or mixed cylinder/V sweep unions; bounded retraced axial passes preserve the design | Planning is not a completeness or global path-search proof. Short flutes retain deeper residual. Mixed ordered output requires entry/pass limits and whole-tool setup; cross-stage cavity credit and air-cut minimization remain separate work. |
-| `ordered_job.audit` | Decoded Region-V stock supports standalone or cumulative all-V stages from virgin stock, or exactly one endmill predecessor followed by one V stage | Arbitrary mixed stock evaluators remain unsupported. Partial plans retain residual bounds; infeasible empty plans cannot emit a cutting job. |
+| `ordered_job.audit` | Decoded Region-V stock supports standalone/cumulative all-V stages, one endmill/V pair and bounded cylinder/V interleavings against one fixed design; see the [ordered-job contracts](#reusable-ordered-job-output-and-verification) | Other mixed stock evaluators remain unsupported. MX01 requires explicit axial limits and whole-tool setup; partial plans retain residual bounds and infeasible empty plans cannot emit a cutting job. |
 | `replay._covered` | A cleared descent/link requires an enclosing prior sweep at the queried depth | Cylinder coverage is proved against one prior sweep at a time. Union-only access and a smaller cylinder around an approximated helical chord can conservatively reject. This is not a general clearance-path finder. |
 | `strategy.select_strategy` | Supplied safe routes rank by budget feasibility, final upper residual area, upper volume, then declared tie order. Manual choice preserves safe partial status; failed gates cannot win | No bundle generation, automatic tool choice, cutting/air/time/tool-change cost, engagement objective or global optimum. Caller audits must describe the same physical target and metric; records remain trusted assertions. |
 

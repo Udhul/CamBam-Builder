@@ -11,14 +11,14 @@ Read this map after the root README; follow only the relevant owner.
 | Delegation, lifecycle, acceptance ownership and handoff | [WORKFLOW.md](WORKFLOW.md) | Engineering closure versus concrete user observations; reusable working procedures |
 | Model selection and cost-aware routing | [MODEL_ROUTING.md](MODEL_ROUTING.md) | Reusable risk model for main-thread and worker selection |
 | Review evidence and rejected approaches | [REVIEW.md](REVIEW.md) | Dated findings, acceptance evidence and reopening conditions; not a second backlog |
-| Rest/V branch review execution | [BRANCH_REVIEW_PLAN.md](BRANCH_REVIEW_PLAN.md) | Five session scopes and gates against `main`; live state stays in PROGRESS, findings in REVIEW |
-| Local MCP requirements and delivery outline | [MCP_PLAN.md](MCP_PLAN.md) | Increment scope/acceptance; priority stays in PROGRESS |
-| Local MCP protocol, state, tools and compatibility contract | [MCP_CONTRACT.md](MCP_CONTRACT.md) and [tool schemas](../cambam_builder/mcp_adapter/contract_v1.schema.json) | Document foundation and modern/legacy protocols; authoring and desktop/second-PC acceptance follow |
+| Historical rest/V branch review programme | [BRANCH_REVIEW_PLAN.md](BRANCH_REVIEW_PLAN.md) | Closed session scopes and routes to dated REVIEW evidence; current procedures stay in WORKFLOW |
+| Historical local MCP delivery outline | [MCP_PLAN.md](MCP_PLAN.md) | Closed increments and routes to current contract, commands and acceptance evidence |
+| Local MCP protocol, state, tools and compatibility contract | [MCP_CONTRACT.md](MCP_CONTRACT.md) and [tool schemas](../cambam_builder/mcp_adapter/contract_v1.schema.json) | Document state, modern/legacy protocols, native authoring and transport boundaries |
 | Reusable consuming-project agent policy | [consumer_AGENTS.template.md](../cambam_builder/mcp_adapter/consumer_AGENTS.template.md) | Copy-and-customize bootstrap plus daily natural-language CamBam collaboration workflow; not repository development policy |
-| Region and all-shape Z-coordinate parity | [SHAPE_PARITY_PLAN.md](SHAPE_PARITY_PLAN.md) | Independent upstream feature support; priority stays in PROGRESS |
-| Rest machining, V-cutter and shared CAM execution design | [REST_MACHINING_PLAN.md](REST_MACHINING_PLAN.md) | Active core/output proposal, native versus headless workflows, edit invalidation, open decisions, research and acceptance; priority stays in PROGRESS |
+| Historical Region and all-shape Z-coordinate parity plan | [SHAPE_PARITY_PLAN.md](SHAPE_PARITY_PLAN.md) | Closed scope and routes to implemented shape contracts and native acceptance evidence |
+| Rest machining, V-cutter and shared CAM execution design | [REST_MACHINING_PLAN.md](REST_MACHINING_PLAN.md) | Product intent, proposed extensions, research and acceptance criteria; closed packets link to current contracts/evidence and priority stays in PROGRESS |
 | Package metadata, dependencies and source-archive contents | `pyproject.toml`, `MANIFEST.in` | `pyproject.toml` owns published metadata/direct dependencies; `MANIFEST.in` includes the existing regression fixture data in the sdist |
-| Executable API behavior | `cambam_builder/` and future regression tests | Actual implementation; document divergences from target explicitly |
+| Executable API behavior | `cambam_builder/` and `tests/` | Actual implementation and regressions; document divergences from target explicitly |
 | License | [LICENSE](../LICENSE) | MIT terms; does not authorize external processing of user data |
 
 ## Code and artifact boundaries
@@ -38,10 +38,9 @@ Runtime module ownership and data flow live in
   tracked tests generate synthetic inputs at run time. User input files are private
   data.
 
-No issue tracker, CI configuration, pre-existing decision log or dedicated test suite
-was found during initial discovery. This documentation now provides a review record.
-An external tracker may exist; if one is
-designated, move task ownership there and retain only baseline/active links in
+The repository uses `tests/` for regressions and REVIEW for dated acceptance evidence.
+If an external issue tracker is designated, move task ownership there and retain
+only baseline/active links in
 [PROGRESS.md](PROGRESS.md). Do not mirror issue descriptions.
 
 Completed plans must move lasting contracts to the specification or runbook and
