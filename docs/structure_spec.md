@@ -36,7 +36,7 @@ are outside that runtime package list.
 | `cambam_builder/machining_planning.py` | Pure through-cut pass balancing and composition of recommendation profiles with formula/machine diagnostics | Candidate planning only; the existing MCP depth tool delegates here, while full profile construction remains a direct-Python API |
 | `cambam_builder/native/writer.py` | XML ID assignment and layer/part traversal; delegates individual encoding to entities | Output structure and reference resolution |
 | `cambam_builder/native/reader.py` | XML parsing, entity reconstruction, ID mapping and deferred parent/MOP linking | Import defaults, malformed data and round-trip reconstruction |
-| `cambam_builder/integrations/cambam/` | Native `.cb` input/attachment, M2 curved candidates, actual posted MOP-series normalization and bounded posted-stock comparison; depends on native model and detached CAM values | Bridge between native documents, generated motion and CamBam output; no source model ownership |
+| `cambam_builder/integrations/cambam/` | Native `.cb` input/attachment, editable rest Pocket authoring/certification, M2 curved candidates, actual posted MOP-series normalization and bounded posted-stock comparison; depends on native model and detached CAM values | Bridge between native documents, generated motion and CamBam output; no source model ownership |
 | `cambam_builder/integrations/direct_*.py` | Bounded headless V and RC01 reference-dialect writers, parsed-output audits and evidence manifests | Output adapters; consume detached plans/traces and preserve their target verifiers |
 | `cambam_builder/integrations/{uccnc_m5,uccnc_reader,grbl_m5_reader,m5_portability,m5_decoded}.py` | Bounded controller fixture emission, independent complete-byte dialect decoding, common decoded-stage values and shared T1/T3 stock audit | Consume the detached M4 plan; no controller syntax in `cam_core` |
 | `cambam_builder/integrations/{ordered_dialects,ordered_output}.py` and `integrations/cambam/native_ordered_job.py` | Reusable strict UCCNC/Grbl lowering and independent decoding, hash-bound output audit, and supported native-series-to-job mapping | Controller bytes/effects stay outside `cam_core`; native input retains its source/post freshness contract |
@@ -380,6 +380,7 @@ the initial behavior-to-test matrix and audit gaps belong in REVIEW.
 | Recommendation/pass policy: root `machining_calculations`, `machining_recommendations`, `machining_planning` | Formula kernel, immutable contexts, pluggable recommendation strategy | Unit-explicit inputs, feed/RPM/range constraints and through-cut pass planning. No toolpath generation, stock clearance or curated material authority. | Existing public APIs, unchanged owners followed as dependencies. A candidate recommendation is not a stock certificate. |
 | Route selection: `cam_extensions.strategy.select_strategy` | Detached policy over caller-supplied `StageAudit` and residual bounds | Checks source/predecessor chain, required gates and completeness; ranks feasible then safe partial candidates by upper residual area, volume and declared tie order. Manual choice cannot select an unsafe candidate. | Public supplied-candidate ranking, not bundle search, cutting-time optimization or independent validation of caller assertions. No global optimum claim. |
 | Caller-owned execution: `ordered_job.Job/Stage/Transition/AxialLimits`, `from_prior_v`, `audit` | `cam_core.ordered_job`; replay, V and bounded 3D evaluators | Caller labels/tools/order/feed/RPM; resolved mm/G54 translation. All-cylinder, standalone/cumulative all-V, bounded mixed cylinder/V, homogeneous layered/surface/inlay sequences have distinct evaluators. Mixed V requires explicit axial/entry limits and whole-tool setup. | Public bounded composition. `audit` consumes already-decoded values; `ordered_output` is the complete-byte/native-binding authority. Unsupported mixtures must not be read as stock success. |
+| Editable native rest: `rest_boundaries.derive`, `native_rest.prepare/author/audit`, `RestBinding` | Detached boundary derivation plus native integration | [NR01 contract](#editable-native-rest-boundaries-and-mops-nr01); compensated planar Regions, native Pocket and original-design certification | Public bounded API; synthetic offline evidence and actual native planner acceptance are separate. |
 | Native/generated composition: `native_ordered_job.from_native_series/from_native_v`, `NativeBinding.check` | Native integration to detached ordered job | Repeated tools and supported native stage order; one native cylinder plus source-bound V finish. `from_native_circle_cleanup` is specifically the diameter-24/depth-2/T1-T2 observed recipe. | Public bounded adapter plus named reference helper. Source/current-post binding is required at output; no mandatory global document session. |
 | Output and evidence: `ordered_dialects.render/decode`, `ordered_output.emit/audit_files/write_bundle/audit_bundle`; `direct_variable_v`/`direct_rc01` | `integrations`; core values, strict independent decoders | UCCNC split and Grbl pause profiles, explicit offset/transition effects, 4/6 decimal coordinates. Older `direct_*` writers use a strict reference dialect, not machine profiles. File helpers have fixed artifacts; in-memory emit/decode do not require them. | Public output adapters and bounded reference conveniences. `direct_rc01` reuses the CamBam Default-post reader; it is not fully independent of that adapter package. Runtime/physical setup remain unassessed. |
 | Agent protocol: document/MOP tools and schema | `mcp_adapter.service/schema/server/paths`; native project and existing planning owners | Volatile document sessions, validated requests and workspace transport. No exposure of arbitrary detached CAM/replay/controller entry points through MCP. | Public versioned tool contract, separate from direct Python API. Mirror supported native authoring changes in schema/service/tests; do not relocate machining truth into protocol handlers. |
@@ -880,6 +881,69 @@ Tests generate a lobed/island/valley/broad-cap frieze and challenge reuse with a
 different-angle cylinder/V island job through both output dialects. Measured
 coverage, cost and acceptance belong to the
 [RP01 evidence](REVIEW.md#rp01-feature-aware-planar-rest-candidates---2026-10-02).
+
+### Editable native rest boundaries and MOPs (NR01)
+
+`cam_core.rest_boundaries.derive(trace, radius_mm=..., overlap_mm=...,
+margin_mm=0.01)` consumes complete replayable cylindrical predecessor motion
+against one planar Region target. It distinguishes pure floor rest, feasible
+smaller-tool centers and native Pocket targets. Feasible centers lie inside the
+original design eroded by radius plus margin. Reachable residual components
+select nearby centers; outward compensation produces windows with deliberate
+overlap into prior cleared space. Overlapping windows merge before authoring.
+The original outline and holes remain unchanged. These are full-depth machining
+boundaries, not a promise of rest-only motion or an entry/access certificate.
+
+`RestBoundaries` retains the target, predecessor motion fingerprint, controls,
+editable polygon rings, pure-rest area interval and reachable-rest area.
+Window simplification uses `margin_mm / 4`, preserves topology and is followed
+by nine-decimal interchange rounding and original-design containment checks.
+The margin and polygonal sweep oracle have conditional GEOS numerical/topology
+limits; no exact offset, universal finish tolerance or continuous fitted-path
+claim is made. Empty, invalid, untraversable or non-useful windows reject.
+Supported predecessors reach the target floor with constant-depth cylinder
+sweeps; helical/variable-depth predecessors and V/rounded/surface cleanup need
+their separate generated-output or interoperability routes.
+
+`integrations.cambam.native_rest.prepare` first audits the pinned native
+predecessor and original source stock, then derives a `RestBinding`.
+Rectangular targets normalize to polygonal shells. `author` appends editable
+Regions and one native Pocket with an explicitly numbered smaller endmill,
+caller-supplied depth increment, clearance, spindle and feeds. It refuses output
+aliases of original/predecessor inputs and strictly reopens the saved candidate.
+The final predecessor gets a setup-only native MOP footer: its already-observed
+positive-Z return followed by `M5`. Default otherwise delays that return under
+the next MOP's section and omits the explicit stop before M6. The footer contains
+no cutting motion; every cutting path remains native planner output. Its exact
+state is certified against the predecessor post. Literal cutting transport and
+unproved predecessor returns reject.
+Each Region's persisted description records original identity, semantic source,
+predecessor evidence and derivation fingerprint. The binding recomputes geometry
+from fresh predecessor evidence; provenance text alone grants no authority.
+
+The existing target-equality gate remains the default. Its explicit
+`derived_binding=RestBinding` route certifies current window rings/provenance,
+Pocket selection/type/cutter/floor, original CAD and complete predecessor motion
+instead. The composed post must retain every predecessor event and movement,
+ignoring only line numbers. An edited boundary, tool, floor, selection,
+source/predecessor or transport header invalidates that certificate. Boundary
+edits require fresh derivation/certification; valid parameter edits still require
+a fresh actual post. `native_rest.audit` replays all actual moves against the
+original target, reports cumulative section/volume residual and protected
+overcut, and enforces a caller-declared positive new floor-removal minimum.
+Virgin vertical entry is modeled stock cutting. A cleared descent must be
+proved from actual preceding sweeps; overlap does not assume material absent.
+`NativeBinding(..., derived_binding=binding)` extends both ordered controller
+consumers through the same original-design certification.
+
+Synthetic posts establish offline authoring/verifier behavior only. Actual
+CamBam Pocket algorithm acceptance requires a complete externally observed post;
+Engrave previews, CustomScript and literal-motion carriers do not establish it.
+Arbitrary feature-guided or variable-Z paths are not representable by this
+native Pocket contract. Controller runtime, engagement/load, whole-holder/setup
+occupancy and physical machining require their own declared evidence. Current
+acceptance and the pending native observation live in
+[NR01 evidence](REVIEW.md#nr01-editable-native-rest-preparation---2026-10-02).
 
 ### Fixed V design and independent cutter contract (DT01)
 

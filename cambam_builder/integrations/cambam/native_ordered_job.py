@@ -17,6 +17,7 @@ class NativeBinding:
     candidate_path: object
     post_path: object
     setup: object = None
+    derived_binding: object = None
 
     def check(self, job):
         if (type(job) is not ordered_job.Job or job.source_kind != "native" or
@@ -67,7 +68,7 @@ class NativeBinding:
             if any(target != targets[0] for target in targets[1:]):
                 raise ValueError("native ordered stock targets differ")
             _bind_source_target(self.source_path, self.candidate_path,
-                                self.series, targets[0])
+                                self.series, targets[0], self.derived_binding)
             if hybrid:
                 v_stage = job.stages[-1]
                 shape = v_stage.v_plan.target.safe

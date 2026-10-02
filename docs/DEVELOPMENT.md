@@ -1933,6 +1933,47 @@ it does not require unrelated endmill/surface recipes. Changes to shared replay
 or stock enclosure owners still require full discovery under
 [required checks](#required-checks-by-change).
 
+### Editable native rest preparation and actual-post gate
+
+NR01's [contract](structure_spec.md#editable-native-rest-boundaries-and-mops-nr01)
+owns supported geometry, compensation, binding and representability. Run its
+synthetic authoring/mutation witnesses with the existing native/ordered owners:
+
+```powershell
+& $ProjectPython tools/verify.py --pattern test_native_rest.py --pattern test_native_series.py --pattern test_native_series_audit.py --pattern test_native_v_hybrid.py --pattern test_native_arc_replay.py --pattern test_ordered_job.py --pattern test_ordered_dialects.py
+```
+
+Changes to shared verifier binding require full checkout discovery. Tests create
+their own synthetic inputs; no versioned `.cb`/`.nc` fixture is required.
+
+The external gate has two phases. First post a native rough Pocket from the
+unchanged source design using **Default / Default mm**. Normalize with
+`normalize_native_series(source, rough_candidate, rough_post,
+initial_position=..., setup={"units": "mm", "postprocessor": "Default"})`.
+Declare the original `replay.Target`, cutting length and entry mode, then call
+`native_rest.prepare(..., radius_mm=..., overlap_mm=...)`. Use its returned
+`binding.boundaries.target` for subsequent replay/ordered adapters.
+`native_rest.author(binding, rest_candidate, tool_number=...,
+depth_increment_mm=..., clearance_mm=..., spindle_rpm=...,
+plunge_feed_mm_min=..., cut_feed_mm_min=...)` saves and strictly reopens the
+editable native result.
+
+Then open that result in CamBam, generate all toolpaths and the complete Default
+post. Call `native_rest.audit(binding, rest_candidate, rest_post,
+cutting_length_mm=..., entry_mode="virgin"|"cleared",
+section_depths_mm=(...), max_protected_overcut_mm2=...,
+min_new_floor_area_mm2=...)`. Require fresh source/post binding, the unchanged
+predecessor motion, all emitted entry/link/setup roles, positive useful cleanup
+and the declared overcut/residual limits. Record actual post provenance
+separately; a synthetic or hand-edited post cannot supply native planner
+acceptance. Any low rapid, straight ramp or other unproved role fails rather
+than receiving an inferred clearance. Default posts do not encode initial
+machine position; the supplied program-frame tip remains an explicit assumption.
+No machine run is required for this native file/post gate.
+
+The current prepared consumer, exact parameters and observation steps are in
+[NR01 evidence](REVIEW.md#nr01-editable-native-rest-preparation---2026-10-02).
+
 ### Reusable ordered-job output and verification
 
 The caller builds `cam_core.ordered_job.Job` directly or adapts an existing

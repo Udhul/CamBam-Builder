@@ -5,6 +5,142 @@ checkpoints. [PROGRESS](PROGRESS.md) owns current priority and state; the
 [specification](structure_spec.md) and [MCP contract](MCP_CONTRACT.md) own current
 contracts. Historical next-task and pending statements describe their entry date.
 
+## NR01 editable native rest preparation - 2026-10-02
+
+The bounded offline authoring/certification slice is accepted by engineering;
+actual native planner acceptance is pending. The
+[NR01 contract](structure_spec.md#editable-native-rest-boundaries-and-mops-nr01)
+owns compensation, editable provenance, original-design binding and limits.
+No parser, replay/enclosure algorithm, native entity/MOP schema or dependency
+changed. The native audit/ordered binders now admit an explicit rest certificate
+while retaining target equality for all existing callers.
+
+The synthetic consumer is a 40 x 30 mm opening at (0,0), protected island
+(16,10)-(24,20), floor Z=-2 mm and matching 2 mm-thick Part stock. Program-frame
+incoming tip is declared (0,0,5) mm; Default does not encode it. T1 is a 6 mm
+endmill, declared cutting length 5 mm, rough allowance .005 mm, native depth
+increment 2 mm. T2 is a 2 mm endmill, length 5 mm, with derived overlap .5 mm,
+margin .01 mm and depth increment 1 mm. Both declare 12,000 rpm, plunge
+60 mm/min, cut 240 mm/min and clearance Z=5 mm; no lead-in, no optimization,
+zero crossover. These are synthetic file/post controls, not assessed material
+engagement or machine recommendations.
+
+The independently supplied synthetic predecessor has compensated outer/island
+contours plus horizontal rows at 2 mm spacing, with vertical stock-cutting
+entries and full retracts. It produces four disconnected corner windows.
+Pure floor rest is **8.596376600-8.606366211 mm2**; the nominal reachable
+rest query is **6.752571746 mm2**. Four supplied synthetic cleanup entry/cuts
+reduce residual to **3.409725548-3.419495202 mm2** at both 1 and 2 mm depths,
+with **0 mm2** protected-overcut upper report. This deliberately partial
+synthetic post validates the verifier and positive useful removal, not native
+Pocket planning or full finish coverage. A second native Rect consumer accepts
+the bare rectangular target via normalization and also derives four windows.
+
+Strict save/reopen checks counts, original world geometry/identity, derived
+Region rings/provenance, Pocket references and controls. Recomputed derivation,
+changed predecessor motion, original/input freshness, false cleared descent,
+invalid controls, input overwrite and fresh candidate ring/floor/tool/header/
+selection mutations are exercised. Complete synthetic streams pass both UCCNC
+and Grbl ordered consumers. Final-source focused verification passed
+**45 tests / seven modules**, including six NR01 regressions, with zero
+skips/reused results, using Python 3.13.5, NumPy 2.5.3 and Shapely 2.1.2. Command:
+`& .\.venv\Scripts\python.exe tools/verify.py --pattern test_native_rest.py --pattern test_native_series.py --pattern test_native_series_audit.py --pattern test_native_v_hybrid.py --pattern test_native_arc_replay.py --pattern test_ordered_job.py --pattern test_ordered_dialects.py`.
+Final report after the setup-footer repair:
+`output/verification-20261002-155531-4ad7ca33/report.json`.
+Independent bounded review identified input-overwrite and bare-Rect normalization
+defects; both were fixed and regression-tested. Full checkout
+`& .\.venv\Scripts\python.exe tools/verify.py` passed **655 tests / 90 modules**
+(654 passes; one Windows symlink privilege skip, while junction/reparse checks
+ran), report `output/verification-20261002-152918-251b3afb/report.json`.
+That full run predates the setup-footer repair. Exact final-tree hash comparison
+finds only `native_rest.py` and `test_native_rest.py` changed; shared binders,
+parser, replay, all other runtime/configuration inputs and 89 test modules match.
+Repository caller search confirms only `test_native_rest` imports the new owner
+or supplies `derived_binding`; existing callers use the unchanged default gate.
+Engineering therefore reuses the unaffected full-run modules, supplemented by
+the fresh final seven-module/45-test run and six repaired NR01 regressions.
+This is explicitly scoped evidence reuse, not a claim that the old full report
+has final-tree byte identity. Compile/import, tracked diff and untracked-source
+whitespace checks also pass.
+An earlier focused runner attempt was **incomplete**, because source changed
+during execution; it is not passing final-tree evidence.
+
+Session artifacts are in `output/nr01-d54675d889/`: `source.cb`, `rough.cb`,
+initial synthetic `rough.nc`, editable `rest-draft.cb`, synthetic
+`rest-draft-synthetic.nc`, `validate_native.py` and preparation/audit JSON.
+The original source SHA-256 is
+`715b44e4c98a232374a0e24d9a4bc2cc11103896d9ae49cf1ec54f0e4173d64e`;
+rough candidate is
+`130bb4acc2fac7eb8dd024659678ca7b3ca13c0fb31783367875611f18a0bd6f`;
+synthetic prior post is
+`dbde4940964e457acb4883e72d8ec035b7a0ff6c578180ea7c49c25a803b6091`.
+The derivation fingerprint is
+`ecf95dafc7d649884c0e3b060438e75c3887be4bd8a65be1cd21d9322bffe3c5`.
+These synthetic hashes preserve the evidence scope even without local output.
+
+A read-only installed API probe found public native path/post methods in the
+recorded CamBam 1.0 assembly. A bounded 32-bit STA hidden helper then used normal
+configuration/application initialization without reading license contents,
+bypassing license checks or saving settings. Configuration initialized, but
+`CamBamUI()` did not return within 45 seconds; the task-owned helper was stopped.
+No document, native paths or actual post were generated. This is an unresolved
+host-initialization observation, not evidence of a license failure or established
+headless support. Logs/helpers remain in `output/nr01-api-2fb597a823/`.
+
+**Actual rough post observed:** the user reported `GENERATED`; CamBam's Default
+post appeared as `rough.nc`, replacing the initial synthetic post. Its exact
+copy is retained as `rough-actual.nc`, SHA-256
+`5e644d9382ff87606c065ebde3635f42483224a377259b688ec5bd4a12f54948`.
+The rough candidate bytes were unchanged. Complete G0/G1/G3 replay passed,
+including all vertical stock entries, island arcs, high links and retracts.
+Actual floor residual is **8.596484467-8.606527868 mm2**, and the protected-
+overcut upper report passes the predecessor gate. Actual-motion derivation
+produces four editable windows, fingerprint
+`9e09466ed115bf07b42929289570ec7e7901da677bb98390df3a2c728180a5d7`.
+`rest-actual.cb` strictly reopens with ROUGH then REST, four attached Regions,
+unchanged original design and T2 diameter 2 mm/depth increment 1 mm/floor -2 mm.
+The initial candidate SHA-256 was
+`acf9cdb96829e5deb1acc67393663af68b12076a192ec3bdb0c308350fdf4725`.
+The user reported the composed post `generated`, but its complete audit rejected
+**line 75: tool change without explicit spindle stop**. Default placed the final
+T1 retract after the REST marker, then emitted T2 M6 without M5. Preserve the
+rejection as `rest-missing-stop.cb/.nc`; post SHA-256
+`ca596d0a7feaf0a72c5b6ea25b89d7c7cdc2ca992e7de4f387a67d4b15c0accb`.
+The owning author now adds only `G0 Z5.0` / `M5` to the final predecessor's native
+MOP footer, matching its already-observed final return/stop. It changes no
+cutting path and does not introduce CustomScript or a literal cutting carrier.
+The corrected strictly reopened `rest-actual.cb` has SHA-256
+`51103f89dd840556d540a5ca96edf0a7f5c42779e158e750d267f2c3abd7f681`.
+Native acceptance awaits regeneration from that corrected file; the user must
+close/reopen it before regenerating all toolpaths and `rest-actual.nc`.
+The initial synthetic
+results above remain dated verifier evidence, not freshness evidence for the
+replaced `rough.nc`.
+
+**External workflow used:** in CamBam Plus 1.0, open `rough.cb`, select
+Default / Default mm, generate all toolpaths with Ctrl+T and the complete post
+with Ctrl+W; save as `rough-actual.nc` beside the input. Expected authored values
+are one ROUGH Pocket, T1 diameter 6 mm, floor Z=-2 mm, .005 mm allowance and the
+unchanged 8 x 10 mm island. Report generation success/failure and the post path.
+The agent will replay all emitted motion; any unproved entry/link/setup move or
+protected overcut above .001 mm2 fails the external gate. No machine run is
+requested. After this observation, run from the root:
+
+```powershell
+& .\.venv\Scripts\python.exe output/nr01-d54675d889/validate_native.py prepare
+```
+
+This audits the actual predecessor and prepares `rest-actual.cb`. The user then
+posts that result as `rest-actual.nc`; the agent runs the helper's `audit` mode.
+Acceptance requires unchanged original CAD and predecessor motion, certified
+boundaries, complete role/access replay, protected-overcut upper <= .001 mm2
+at depths 1 and 2 mm and at least 1 mm2 conservative new floor removal. Residual
+and volume remain explicit partial-completion reports. Actual CamBam generation
+must be observed separately from successful parsing. Rejected native paths must
+retain the precise unsupported role/geometry witness rather than being replaced
+with a literal carrier. Wider native strategies, controller, tool-body/setup,
+material/load and physical acceptance remain outside this gate.
+
 ## RP01 feature-aware planar rest candidates - 2026-10-02
 
 Accepted by engineering for the bounded offline scope; ready to commit.
