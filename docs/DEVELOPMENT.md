@@ -48,9 +48,7 @@ The optional MCP document foundation is described in the
 below for installation and protocol acceptance. The base library needs no MCP SDK.
 
 Select checks using [proportional effort and evidence reuse](WORKFLOW.md#proportional-effort-and-evidence-reuse)
-and [required checks by change](#required-checks-by-change). Commands below are
-entry points, not a checklist for every request. Documentation-only changes do
-not need syntax/import or behavior tests unless they change executable examples.
+and [required checks by change](#required-checks-by-change).
 
 Run applicable commands from the repository root, using the interpreter selected above:
 
@@ -85,10 +83,6 @@ The worktree must be clean, the commit range must contain the intended work, and
 commands must succeed. Review the complete `main...HEAD` diff, not merely its stat.
 Run required behavior checks after the last material content edit; after a later
 commit, rerun these branch-level gates against the final `HEAD`.
-Confirm existing verification applies before launching new tests; a commit or
-merge alone does not require full discovery or package verification. If the work
-is already integrated, report that state and use the actual feature/base range
-only when a substantive review is requested.
 
 The repository preference is to preserve visible feature-branch topology. Unless the
 user explicitly requests linear history, hand off these merge commands after the
@@ -268,10 +262,8 @@ until reconciliation is finished. A setup interruption before identities and
 inventory were established requires a fresh invocation. Source/configuration or
 dependency changes require fresh evidence; resume refuses them. This conservative
 rule deliberately avoids reasoning about which tests a code change might affect.
-A refusal is not an instruction to repeat the whole matrix. Diagnose the mismatch
-and select missing checks using the workflow's evidence-reuse rules. Any manual
-applicability assessment is separate from runner reconciliation; preserve the
-refused report and attribute prior evidence rather than relabeling it as a pass.
+For mismatch diagnosis and manual applicability assessment, use the
+[evidence-reuse procedure](WORKFLOW.md#proportional-effort-and-evidence-reuse).
 Schema 2 reports also bind presence and SHA-256 bytes for the four retained B/C
 files consumed by `test_tabbed_cutout` and the three retained M1 files consumed
 by `test_native_series`. Changed, added or removed observation inputs rerun that
@@ -2528,10 +2520,8 @@ increment, and no runtime or packaging changes are implied by these commands.
 
 ### Required checks by change
 
-These requirements apply to material changes and uncovered acceptance gates.
-Reviewing or recording an already verified change does not itself trigger every
-command for that historical change. Reuse applicable evidence, and select fresh
-checks only for identified gaps under the workflow rules above.
+Select applicable requirements under the
+[proportional-effort procedure](WORKFLOW.md#proportional-effort-and-evidence-reuse).
 
 For execution/evidence changes, check byte grammar, decoded motion, stale source
 and result mutation, transitions, and occupancy through both public integration

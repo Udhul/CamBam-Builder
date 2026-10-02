@@ -7,8 +7,8 @@ item by recording objective, affected owners and executable acceptance criteria.
 Record blockers there; implementation detail belongs in the domain owner.
 Close a slice by separately recording implementation, automated verification and
 the applicable acceptance authority. Required pending user observations must
-remain visible. Retire completed
-plans after transferring durable facts and failure evidence to their owners.
+remain visible. Apply [documentation maintenance](README.md#maintenance-rules)
+when persisting changed facts; closing a round does not require updating every guide.
 
 Use these states explicitly: **backlog**, **active**, **blocked**, **implemented**,
 **automated checks complete**, and **accepted**. A recommendation is still backlog
@@ -67,12 +67,8 @@ Ask the user for missing decisions only when they materially change architecture
 behavior, acceptance, destructive actions or expensive work. Existing authorization
 continues to apply; a routine technical review is not a new permission gate.
 
-For a consequential decision or failed investigation, append a compact dated record
-to `docs/REVIEW.md`: question/context, evidence, chosen approach, rejected alternatives
-and why, reopening criteria, and verification/acceptance state. Put the resulting
-current contract in its normal owner and link to this evidence. Do not manufacture
-rejected alternatives for trivial edits. Add a domain-specific record only when
-volume warrants it and update the topic map rather than creating a parallel wiki.
+Persist decisions and evidence under the documentation-maintenance rules linked
+above; routine answers and policy edits do not need a new review record.
 
 ## Proportional effort and evidence reuse
 
@@ -102,13 +98,14 @@ Run focused checks for changed behavior or a concrete gap; broaden where shared
 contracts or explicit acceptance require it. Repeat passed checks only after a
 relevant change, failure or unresolved concern. A full suite, package matrix,
 second reviewer or new helper must supply evidence the existing work lacks.
+For prose/instruction-only edits, inspect the diff, changed links and consistency;
+runtime tests add value only when code, executable examples or behavioral claims change.
 Before expensive work, state that gap, why narrower checks or existing evidence
 are insufficient, and expected runtime when measured timings are available.
 Ask only when the expansion requires a new user decision or changes the requested
 scope; routine checks already required by the authorized task need no new approval.
 
-Scale documentation and artifacts to lasting value. Update facts in their owner;
-use a short completion note for routine delivery changes. Do not generate audit
+Scale artifacts to lasting value. Do not generate audit
 scripts, synthetic bundles, duplicated reviews or backlog reassessments merely
 to make a small task look complete. Stop once the requested outcome and required
 evidence are complete; unrelated follow-ups stay outside this increment.
@@ -181,6 +178,7 @@ Use delivery labels precisely:
 Use the fields relevant to a substantive engineering increment. Routine answers
 and small edits may use a brief result with evidence; omit empty fields. A delivery
 status update normally needs only the changed state and its supporting checks.
+This is a response guide, not a template to append to multiple documents.
 
 ```text
 Slice and date:
@@ -198,6 +196,5 @@ User actions, listed separately:
 Suggested commit message:
 ```
 
-Keep the live state in [PROGRESS.md](PROGRESS.md) (or its designated issue). The review record
-owns detailed completed evidence; handoffs link to it and do not create another
-status file. A failed/unperformed required check keeps technical closure pending.
+Link to existing authoritative records under [documentation maintenance](README.md#maintenance-rules).
+A failed/unperformed required check keeps technical closure pending.

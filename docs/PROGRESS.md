@@ -7,16 +7,20 @@ not a guarantee of complete round-trip fidelity. MOP target selections are proje
 
 ## Active work and next priority
 
-### Post-merge task queue
+### DOC01: documentation consolidation (backlog)
 
-**Workflow correction completed 2026-10-02:** proportional reading, verification,
-delegation and handoffs now distinguish routine delivery checks from engineering
-changes. Applicable prior evidence is reused; expensive expansions require a
-named gap and cost explanation. See
-[workflow rules](WORKFLOW.md#proportional-effort-and-evidence-reuse) and the
-[brief review](REVIEW.md#proportional-effort-correction---2026-10-02).
-This documentation-only correction does not reopen MV01/MX01 acceptance; RP01
-remains the next implementation priority.
+The user wants durable intent, status and evidence without repeated maintenance
+or excessive context. A separate documentation increment should compact the live
+status surface and consolidate repeated contracts/results across README, plans,
+specification, runbook and review history under the
+[ownership rules](README.md#maintenance-rules). Preserve unique acceptance/failure
+evidence and incoming anchors; label historical records and replace copies with
+direct owner links. Acceptance: one owner per consolidated fact, a concise current
+queue, no lost observations or broken references. No new documentation system or
+runtime verification is needed. RP01 remains the next implementation priority;
+take DOC01 before another broad documentation/delivery review.
+
+### Post-merge task queue
 
 **Baseline:** the rest/V branch and all five review sessions are complete for
 their recorded offline scope. The user merged reviewed commit `199f1f4` into
@@ -32,21 +36,10 @@ recorded in [REVIEW](REVIEW.md#cam-verification-epic-merge-closure-and-priority-
 The current framework priority follows the queue below; further capability
 and external-acceptance follow-ups remain separate work.
 
-**MV01/MX01 delivery closed; committed review passed 2026-10-02:** the user committed MV01 as
-`142b420` and MX01 as `e44186f`, then merged `feat/composed-stock-verification`
-into `main` at `2f10b07`. The current `feat/feature-aware-v-rest` branch starts
-at that same merge commit; no second merge is needed. Review uses pre-merge base
-`1dfae81` and feature tip `e44186f`, with identical feature-tip/merge trees.
-Complete committed-diff review, final checkout/package evidence and delivery
-closure are recorded in the
-[review owner](REVIEW.md#mv01mx01-committed-review-and-merged-delivery---2026-10-02).
-Fresh checkout passes **638 tests / 87 modules**; Python 3.12/3.13 wheels and the
-independent 3.12 source installation each pass the same full suite. All 282
-package commands, completion, installed smoke/base-only and final identity gates
-pass, with the established symlink and absent retained-observation skips. No
-blocking review finding or required user observation remains. Only the delivery
-documentation is uncommitted and **ready to commit**; the implementation is
-already merged. RP01 remains the next implementation priority.
+**MV01/MX01 accepted offline and merged at `2f10b07` (2026-10-02).** No blocking
+review finding or required observation remains for that scope. The
+[committed review](REVIEW.md#mv01mx01-committed-review-and-merged-delivery---2026-10-02)
+owns commit-range, verification and acceptance evidence.
 
 1. **Completed; accepted by engineering 2026-09-30; committed as `5f38024`:** standalone
    Region-V ordered stock verification. One V stage now emits and independently
@@ -179,44 +172,12 @@ The subsequent [fundamentals-first clarification](REVIEW.md#fundamentals-first-r
 preserves this priority and treats every named workflow as a consumer of shared
 capabilities, with reuse challenged beyond its initial example.
 
-**MX01 completed; accepted by engineering 2026-10-02:** supplied endmill/V/cleanup
-now preserves one unchanged design through decoded per-prefix sweep unions,
-explicit axial/entry limits and conservative cutter/shank/holder protection.
-`v_region.VComposition`, `depth_passes` and `ordered_job.AxialLimits` reuse the
-existing geometry/occupancy owners without a motif or fixed tool-count recipe.
-Ten regressions prove independent overlap/membership, positive cleanup section
-and volume, a different protected-island/60-degree-cutter consumer through both
-dialects, skipped/crossing-depth pass rejection, excessive entry, full-cylinder
-and continuous-holder counterexamples, and stale/reordered evidence. Focused
-final-source verification passes **60 tests / seven modules**; full checkout and
-each fresh 3.12/3.13 wheel plus independent 3.12 source installation pass
-**638 tests / 87 modules**. All 282 package commands, archive/provenance,
-smoke/base-only, completion and final identity gates pass. The existing checkout
-symlink skip and nine named package skips retain their previous observation
-limits. Exact reports, numeric witnesses and failure evidence live in the
-[MX01 review](REVIEW.md#mx01-mixed-fixed-design-stock-and-whole-tool-access---2026-10-02).
-The [contract](structure_spec.md#mixed-cylindricalv-composition-and-whole-tool-access-mx01)
-requires independently executable cylinder stages and initial-stock clearance
-for non-cutting body; cross-stage cavity credit and rest-only generation remain
-RP01 work. No manual observation adds evidence to this offline gate; runtime,
-engagement/load and physical setup remain separate. Ordered v6 bundles require
-regeneration. MX01 is committed as `e44186f` and merged at `2f10b07`; the delivery
-review above owns verification against the committed tree.
-
 **Next agent task:** implement RP01 feature-aware planar V/rest candidates for a
-synthetic frieze, using fixed-design/composed-stock queries and residual-driven
-cuts with measured comparison against the raster/offset baseline. See its queue
-row and [follow-up contract](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers).
-This matters now because the verified mixed stock foundation can measure useful
-detail/coverage or reduced redundant motion; neither improvement is assumed.
-Add union-cleared access only when the concrete candidate needs that proof.
-Native derived boundaries, inlay assembly, tool search and relief strategies
-retain their separate priorities. This is a good fresh-session breakpoint:
-contracts, parameters, evidence, limits and next priority are saved, with no
-pending results or product choices. Start a fresh session for this distinct
-strategy scope. Commit/merge actions remain user-owned unless delegated.
-The implementation commit is complete; the current review record has its own
-delivery state above.
+synthetic frieze under its
+[follow-up contract](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers).
+The accepted [MX01 contract](structure_spec.md#mixed-cylindricalv-composition-and-whole-tool-access-mx01)
+and [implementation evidence](REVIEW.md#mx01-mixed-fixed-design-stock-and-whole-tool-access---2026-10-02)
+provide its stock foundation. Existing ordered v6 bundles require regeneration.
 
 **Accepted 2026-09-26 safe native arc hybrid:** the bounded
 level XY G2/G3 path now preserves direction/center through the native,

@@ -33,9 +33,9 @@
   Fixture limits and the user's current machine/workflow are evidence boundaries,
   not permanent framework constraints; apply the
   [framework direction](docs/structure_spec.md#framework-direction-and-extension-principles).
-- Keep project facts in their documentation owner, identified by the topic map.
-  Update `docs/PROGRESS.md` when priority or completion changes; preserve useful failure
-  evidence and reopening criteria. Do not create a competing wiki or backlog.
+- Keep each fact/rule in one authoritative owner; follow
+  [documentation maintenance](docs/README.md#maintenance-rules). Update only owners
+  whose facts changed; use direct links instead of copied rules, evidence or status.
 - Use deterministic tools for discovery, transformation and validation. Use models
   for bounded semantic judgment supported by evidence. Add infrastructure or
   dependencies only for a measured or user-expressed need with an identified owner.
@@ -52,10 +52,7 @@
   send secrets, credentials, private/user assets or generated reports externally unless
   the task explicitly requires and authorizes them.
 - Use the declared toolchain and commands in `docs/DEVELOPMENT.md`. Run focused
-  checks for changed behavior; broaden for shared-contract impacts or an explicit
-  acceptance gate. Reuse applicable completed evidence for unchanged work.
-  Repeat or expand checks only for a material change, failure or identified gap;
-  explain the need and expected cost before expensive runs. Inspect artifacts
+  checks and apply the proportional-effort procedure linked above. Inspect artifacts
   where exit status alone is insufficient. Never claim unperformed checks passed.
 - Distinguish implementation closure from delivery state. Uncommitted work may be
   called **ready to commit**, never **merge-ready**. Before a merge-ready claim,
@@ -72,10 +69,8 @@
   prefers linear history. The user performs the merge unless they explicitly
   authorize the agent to do it.
 - Separate implementation, automated verification and user/production acceptance.
-  For engineering increments, report changed areas, material decisions, checks,
-  limits, required validation and suggested commit. Routine questions, status
-  checks and small edits need only the relevant result and evidence; omit empty
-  template fields and do not create a new review record for every exchange.
+  Scale the response using the [handoff guidance](docs/WORKFLOW.md#completion-record--handoff-template);
+  use existing owners for durable facts, not copies of the response in several docs.
   For substantive work, end with a short, actionable next-task statement describing
   what to do, not how, linked to its backlog details so it can trigger the next
   turn/session. This formatted handoff contains only the next AI agent's work;

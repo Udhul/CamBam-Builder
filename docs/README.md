@@ -50,12 +50,38 @@ first; indexing/RAG requires measured discovery failures and a maintenance owner
 
 ## Maintenance rules
 
-The author of a change updates its owning guide in the same increment; the lead
-reviews consistency with code and status. Link to facts elsewhere rather than
-copying them. Keep current contracts in the specification, dated evidence in the
-review, and live priority in status. The MCP plan captures the requested future
-integration; add further linked plans only if acceptance/dependencies outgrow a bounded status item.
-The plan owns execution detail, while status retains the single priority order.
+This section owns documentation maintenance policy. Give each fact or rule one
+authoritative home from the topic map; update that owner when the fact changes.
+Other documents may give a short orientation sentence and a direct link, but must
+not mirror rules, test results, acceptance narratives or backlog descriptions.
+An ordinary change can require only one document update; document count is not
+evidence of completion.
+
+- Keep `AGENTS.md` compact: mandatory boundaries and routes to relevant procedures.
+  WORKFLOW owns working procedures; DEVELOPMENT owns executable commands and
+  troubleshooting. A policy edit does not need completion entries in status/review.
+- PROGRESS owns current task state, priority, blockers and next action. Update it
+  only when those change; summarize a completed capability briefly and link to its
+  evidence. REVIEW owns unique dated acceptance evidence, consequential decisions
+  and useful failed investigations, not a log of every exchange or document edit.
+- Keep user intent, current contracts and related constraints together in the
+  domain owner. Plans own proposed scope and acceptance detail, not another priority
+  order. On closure, transfer lasting contracts to their owner and replace proposal
+  text with a closure link; retain unique evidence and rejected approaches in REVIEW.
+- Link directly to the authoritative file/heading with a label that names the
+  needed information. Co-locate details normally used together; avoid chains of
+  pointer-only pages or splitting small topics. A short stable orientation summary
+  is useful when it saves a read, but mutable values and detailed claims stay in
+  their owner. Read that owner's relevant section, not every linked document.
+- Distinguish dated history from current instructions. Consolidation must preserve
+  unique user observations, parameters/hashes, numeric witnesses, acceptance scope,
+  failures and reopening criteria. Check incoming links before moving sections;
+  repair references or retain a useful redirect. When a duplication/conflict is
+  discovered, fix its owner and the affected copies within scope; backlog wider
+  cleanup rather than reviewing the whole documentation set on every change.
+
+This uses progressive disclosure and task-specific retrieval, consistent with
+[OpenAI's guidance on agent instructions](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra).
 
 One root agent file covers this small, coupled library. Add nested instructions
 only when a subtree gains distinct operational requirements that meaningfully
