@@ -1,6 +1,6 @@
 # Current status
 
-Status reviewed 2026-10-02. The modern package implements native CAD/CAM
+Status reviewed 2026-10-03. The modern package implements native CAD/CAM
 interchange, detached bounded CAM calculation, ordered stock verification and
 local MCP authoring. The [implemented architecture and capability boundaries](structure_spec.md#0-implemented-architecture-and-change-ownership)
 own those contracts; [REVIEW](REVIEW.md) owns dated acceptance and limitations.
@@ -11,16 +11,16 @@ own those contracts; [REVIEW](REVIEW.md) owns dated acceptance and limitations.
 
 ### IN01: ornamental paired-stock and assembly verification
 
-**Tapered/profile-aware slice accepted by engineering 2026-10-02; ready to commit.**
-The straight-wall slice is committed as `db55841`. Its extension verifies
-independently selected pointed/flat/rounded cutter stock, continuous insertion
-and decoded component outputs under the
-[tapered contract](structure_spec.md#tapered-profile-aware-paired-stock-in01).
-The [review evidence](REVIEW.md#in01-tapered-profile-aware-assembly---2026-10-02)
-owns acceptance and limits. No external observation is needed for this offline
-slice. The full IN01 item remains open for executable composite-stock finishing
-and final visible motif/thickness checks under its
-[follow-up contract](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers).
+**Composite facing accepted by engineering 2026-10-03; ready to commit.**
+Straight-wall assembly is committed as `db55841`, tapered/profile-aware assembly
+as `33d3b48`. Executable flat facing now consumes accepted paired stock after
+declared assembly/cure and renewed setup, checking the exposed motif, plane and
+retained plug core/receiver floor under the
+[composite contract](structure_spec.md#composite-stock-facing-and-final-inlay-verification-in01).
+The [acceptance evidence](REVIEW.md#in01-composite-facing-and-final-verification---2026-10-03)
+records automated checks, source reconciliation and limits.
+No external observation is needed for this bounded offline slice; controller
+runtime, shaped finishing, fixture occupancy and physical fit remain separate.
 
 ### NR01: editable native rest boundaries and MOPs
 
@@ -32,8 +32,8 @@ entry/link, useful-removal and protected-stock gates. The
 owns scope; [acceptance evidence](REVIEW.md#nr01-editable-native-rest-preparation---2026-10-02)
 owns exact hashes, results, partial-completion limits and regression applicability.
 No native observation remains pending for this bounded slice. Acceptance/status
-documentation is ready to commit; controller/runtime and physical gates remain
-separate.
+documentation is committed as `010829a`; controller/runtime and physical gates
+remain separate.
 
 ### RP01: feature-aware planar V/rest candidates
 
@@ -69,28 +69,34 @@ work before detached inlay or relief work.
 
 | Order | Backlog increment | Useful next outcome |
 | --- | --- | --- |
-| 1 | **IN01 remainder** | Execute assembled-stock finishing and verify the final visible motif, plane and retained thickness against accepted paired stock. |
-| 2 | **BO01** | Generate and search finite tool/path bundles under explicit finish, cost and setup constraints; independently verify candidates and report search quality. |
-| 3 | **SF01** | Bounded relief contact/stock foundation and shape-aware 3D tracing/finishing. **NR03** separately establishes native Surface/3D MOP/post interoperability. |
+| 1 | **BO01** | Generate and search finite tool/path bundles under explicit finish, cost and setup constraints; independently verify candidates and report search quality. |
+| 2 | **SF01** | Bounded relief contact/stock foundation and shape-aware 3D tracing/finishing. **NR03** separately establishes native Surface/3D MOP/post interoperability. |
 
 The [follow-up contracts and representative consumers](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers)
 own scope, dependencies and acceptance. RP01 establishes detached ornamental
 planning and NR01 closes the bounded editable native rest workflow. IN01 now
-establishes independent allowances and straight-wall/tapered assembly stock.
-Composite finishing comes next because paired fit alone does not establish the
-finished ornament or retained thickness; that acceptance is needed before tool
-search can rank complete inlay bundles. Further native variants need a named consumer. Conditional
+establishes independent allowances, straight-wall/tapered assembly stock and
+composite finishing. BO01 matters next because these evaluators can now check
+complete inlay candidates before tool/path search ranks them. Further native
+variants need a named consumer. Conditional
 fitting/overlap/low-access work is listed below; finite tool search belongs to BO01; broader surfaces
 belong to SF01. Reassess order after each coherent outcome. Pre-v6 ordered
 bundles require regeneration under the [MX01 contract](structure_spec.md#mixed-cylindricalv-composition-and-whole-tool-access-mx01).
 
-**Next agent task:** implement executable composite-stock facing after declared
-assembly/cure and renewed setup, then verify final motif, plane and retained
-thickness under the IN01
+### Current branch closure
+
+`feat/feature-aware-v-rest` targets `main`. With IN01's offline acceptance,
+**zero named implementation tasks remain for this branch**. **One agent task
+remains:** review the final committed `main...HEAD` diff, clean worktree and
+applicability of required evidence before a merge-ready decision. Committing
+and merging are user-owned delivery actions. BO01 and SF01 are the two later
+capability increments, not requirements for closing this branch; conditional
+backlog items below are not automatically promoted into it.
+
+**Next agent task:** after the user's commit, complete the final branch delivery
+review against `main` under the [delivery gates](WORKFLOW.md#verification-and-handoff-checklist).
+Then begin BO01 in a distinct increment under its
 [follow-up contract](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers).
-Start a fresh session: the contracts and tests persist the verified state,
-and composite facing has a distinct stock/process scope.
-No product decision or external observation is pending for tapered assembly.
 
 ### Branch review session queue
 
@@ -176,7 +182,9 @@ Current baseline acceptance/delivery links are in the [post-merge queue](#post-m
 Dated evidence stays in REVIEW; current contracts stay in their topic owners;
 [development commands](DEVELOPMENT.md) and [acceptance/handoff procedures](WORKFLOW.md)
 own verification practice. NR01's offline and bounded actual native-post gates
-are closed. IN01 tapered assembly implementation and verification are complete
-and ready to commit. This is a good fresh-session breakpoint: contracts, evidence
-and the next composite-finishing scope are durable, with no unsaved dependency
-on this conversation. No commit or merge was performed by the agent in this round.
+are closed. Composite IN01 implementation and offline acceptance are complete
+and ready to commit. This is a good fresh-session breakpoint: contracts,
+reproducible tests, evidence and the distinct final branch-review task are
+durable, with no pending decision or external observation. Start a fresh session
+for that review after the user's commit. No commit or merge was performed by
+the agent in this round.

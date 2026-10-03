@@ -5,6 +5,84 @@ checkpoints. [PROGRESS](PROGRESS.md) owns current priority and state; the
 [specification](structure_spec.md) and [MCP contract](MCP_CONTRACT.md) own current
 contracts. Historical next-task and pending statements describe their entry date.
 
+## IN01 composite facing and final verification - 2026-10-03
+
+The [composite contract](structure_spec.md#composite-stock-facing-and-final-inlay-verification-in01)
+adds assembled retained-stock sections, flat raster facing and final
+plane/motif/core/floor gates over both accepted straight-wall and tapered pairs.
+It reuses existing replay, polygon/V enclosures and complete-output audits;
+their shared implementations are unchanged. Independent review checked the
+rigid flip, finite stock domains, monotone finish-section bounds and decoded
+source/job/hash bindings. A review-found registration false rejection was fixed:
+thickness follows the registered plug's own nominal tip core, while motif
+alignment remains measured against the fixed design.
+
+The straight-wall asymmetric 42 mm2 holed bridge uses the existing paired
+fixture with 1.2 mm seating, 0.4 mm surface gap, 1 mm backing and 3 mm receiver
+thickness. Facing removes 0.2 mm below receiver top, so the backing-top program
+cuts to 1.6 mm. Explicit controls are a 0.6 mm radius cylinder, 4 mm cutting
+length, 0.7 mm maximum stepover, 0.5 mm maximum stepdown and 2 mm clearance.
+Plane tolerance is 0.001 mm; lateral motif tolerance is 0.02 mm. Assertions
+require zero unfaced upper area, a 1 mm retained nominal plug core and 1.5 mm
+receiver floor. Independent section landmarks distinguish the solid backing,
+receiver island in the hole, and plug in the asymmetric right lobe. A second
+rectangular consumer checks the nominal 3.7 by 2.7 mm final outline. A 0.01 mm
+registration shift remains acceptable with a 0.03 mm motif tolerance.
+
+The tapered consumer retains the preceding 30-degree design with independent
+flat receiver/rounded plug profiles. A 0.05 mm finish removal yields a 0.3 mm
+nominal tip-core thickness and conservative 2.25 mm receiver floor; the declared
+lateral motif tolerance is 0.2 mm. Both families cover complete independent
+part outputs followed by facing outputs through UCCNC and Grbl. No nominal
+part target receives removed-stock credit. Byte/hash, revision, tool, frame and
+setup changes reject. Missing rows and insufficient facing depth remain
+unresolved; incomplete planes expose no certified plane/motif values. Excessive
+depth rejects in replay, while excessive core/floor minima and tighter motif
+tolerances fail their independent finishing gates.
+
+Verification used repository Python 3.13.5 and Shapely 2.1.2. The initial new
+suite passed **8 tests in 1019.864 s**; the added registration regression passed
+in **120.550 s**, yielding **9 distinct composite tests**. After tightening
+incomplete-plane reporting, its affected row/depth regression passed again in
+**107.049 s**. The other successful-path behavior is unchanged. The affected
+owners passed **43 tests**: execution evidence 9, ordered dialects 5, ordered
+jobs 8, straight-wall inlay 11 and tapered inlay 10. There were no skips or
+failing test IDs. Commands and reproducible synthetic consumers live in the
+[runbook](DEVELOPMENT.md#composite-inlay-facing-and-final-verification)
+and `tests/test_composite_inlay.py`; no saved CAM asset is required.
+
+The runner's overall report is **incomplete**, not a reported pass: its end-of-run
+source check caught the concurrent incomplete-result reporting edit, associated
+assertions and adapter docstring clarification. Exact SHA-256 reconciliation
+found only those three changed source/test files and reconstructed their
+pre-edit bytes to the runner's original hashes. Every other input, including
+all 43 regression tests and their shared owners, was unchanged. Those individual
+module passes are reused by engineering review; the changed composite negative
+case was rerun on the final code. The initial composite suite's zero-registration
+consumers are unaffected by the separately verified registered-core repair.
+No report was rewritten to claim a full runner pass. Local records are under
+`output/verification-20261003-060215-3c39217b/` and
+`output/in01-composite-20261003-01/`; the latter contains the exact byte
+reconciliation and final partial-facing test log.
+
+Syntax/import compilation, whitespace (including the untracked source/test),
+changed documentation links and task-scoped artifact hygiene passed. Engineering
+acceptance is complete for this bounded offline increment; implementation is
+**ready to commit**, not merge-ready. No staging, commit or merge was performed.
+Shared replay/enclosure/planner owners remain unchanged, so the affected-owner
+and complete decoded-consumer evidence closes this increment without full
+discovery. Current delivery and later feature priority stay in PROGRESS.
+
+Acceptance is bounded to detached offline motion/stock evidence. Process tokens
+declare assembly, cure and renewed setup; they do not observe those processes.
+Thickness applies to the registered nominal tip core and conservative receiver
+floor, not all tapered ledges. Enclosure topology remains conditional on the
+uncertainty band and existing GEOS/cutter bounds. Native CamBam facing,
+holder/fixture access, actual controller operation, adhesive mechanics and
+physical coupons remain separate scopes. No manual observation adds missing
+evidence to this offline gate. Reopen for a concrete consumer needing those
+capabilities or a shaped rather than flat assembled finish.
+
 ## IN01 tapered profile-aware assembly - 2026-10-02
 
 The [tapered contract](structure_spec.md#tapered-profile-aware-paired-stock-in01)

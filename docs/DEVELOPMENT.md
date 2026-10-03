@@ -2380,8 +2380,9 @@ outputs. Run its tests plus the reused stock/output boundaries:
 & .\.venv\Scripts\python.exe -m unittest tests.test_ornamental_inlay tests.test_paired_inlay tests.test_execution_evidence tests.test_ordered_job tests.test_ordered_dialects tests.test_polygon_rest -q
 ```
 
-No CamBam observation is required for this detached offline slice. Facing paths,
-controller execution and physical-fit coupons have separate acceptance scopes.
+No CamBam observation is required for this detached offline slice. Executable
+facing is covered below; controller execution and physical-fit coupons have
+separate acceptance scopes.
 
 ### Tapered profile-aware ornamental inlay
 
@@ -2398,6 +2399,24 @@ They cover differing profiles/angles, continuous section bounds, independent
 analytic witnesses, mixed cylinder/V output and omitted/stale machining.
 No CamBam observation is needed for this offline scope; native, controller and
 physical acceptance remain separate.
+
+### Composite inlay facing and final verification
+
+The [composite contract](structure_spec.md#composite-stock-facing-and-final-inlay-verification-in01)
+adds assembled stock, explicit process/setup binding, a flat raster candidate,
+and decoded facing verification without changing shared replay/enclosures.
+Run the new consumer and the affected paired/output owners:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py --pattern test_composite_inlay.py --pattern test_ornamental_inlay.py --pattern test_tapered_inlay.py --pattern test_ordered_job.py --pattern test_ordered_dialects.py --pattern test_execution_evidence.py
+```
+
+Synthetic inputs and complete UCCNC/Grbl files are built in memory. Assertions
+cover holed bridge and rectangular consumers, independent landmarks/areas,
+plane coverage, motif and core/floor minima, stale setup/stock/output bindings,
+missing rows and insufficient or excessive depth. There is no pending manual
+observation for this offline gate. Cutting an actual part requires separately
+selected machine/tool/fixture/process conditions and physical acceptance.
 
 ### Packet 4 paired V-carve inlay
 

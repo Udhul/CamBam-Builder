@@ -47,8 +47,8 @@ derived machining boundaries and output authority distinct.
 | --- | --- | --- |
 | Pointed, flat-tip and rounded V carving, selectable angles and maximum depth | DT01 separates the ideal capped design from cutter profiles; MV01 composes them and MX01 supplies bounded axial passes. Polygon/curved raster/offset paths retain partial output when tools/spacing leave stock. | Design-flat/rounded evaluators and non-retraced/arc pass policies remain extensions; tool reach cannot redesign the part. |
 | Flat/pointed combinations and other tool sequences | Standalone/cumulative all-V and bounded mixed cylinder/V stages share one fixed design through decoded sweep unions. Mixed output requires axial/entry limits and whole-tool setup; cross-stage cavity credit remains unsupported. | RP01 supplies residual-driven candidates using the MX01 composed stock foundation; broader access needs a concrete bounded proof. |
-| Receiver/plug inlays with meaningful tolerances | One circular, pointed-tool pair verifies separate stocks, registration, insertion and zero/positive radial clearance. | IN01 generalizes paired contours/islands, tool sequences, seating, independent side/bottom/surface gaps, backing and final visible shape. |
-| Sanding/facing to the finished assembled design | The circular model locates assembly/backing but has no composite-stock finishing operation. | IN01 records the finish plane and removal allowance; composite-stock facing and remaining thickness/outline verification need their own slice. Model sanding as a declared removal/tolerance envelope or measured result. |
+| Receiver/plug inlays with meaningful tolerances | IN01 verifies bounded straight-wall and tapered ornamental pairs with independent cutter stocks, gaps, registration and continuous insertion; [paired contracts](structure_spec.md#ornamental-straight-wall-paired-stock-and-assembly-in01). | General poses, fixture access and physical material-fit need named consumers and acceptance evidence. |
+| Sanding/facing to the finished assembled design | IN01 implements decoded flat composite facing and final motif/plane/retained-core checks; [composite contract](structure_spec.md#composite-stock-facing-and-final-inlay-verification-in01). | Shaped finishing and physical process acceptance remain separate. Sanding uses a declared removal/tolerance envelope or measured result. |
 | Endmill plus V rest machining that reduces leftover | Supplied endmill/V/cleanup has fixed-design prefix stock and independently witnessed positive cleanup removal. It does not generate efficient rest-only cuts. | RP01: residual-driven candidates, safe entry/links through prior clearance and quantified new removal/air cutting. |
 | Calculate the best tool/path bundle under user constraints | `strategy.select_strategy` ranks supplied audited routes; no bundle generation or cutting/time/tool-change optimization is implemented. | BO01 searches a declared finite inventory and strategy family, verifies candidates and reports the objective, alternatives, budget and uncertainty. |
 | Fully native CamBam rest machining using derived primitives/MOPs | NR01's bounded editable Regions/native Pocket and complete actual-post replay are accepted; [contract and limits](structure_spec.md#editable-native-rest-boundaries-and-mops-nr01). | Wider native strategies require a named consumer and their own source/post evidence. |
@@ -200,9 +200,11 @@ remain outside those shared mechanisms.
   The first straight-wall cylindrical consumer is implemented under the
   [paired-stock and assembly contract](structure_spec.md#ornamental-straight-wall-paired-stock-and-assembly-in01).
   Tapered mating now has a [profile-aware stock contract](structure_spec.md#tapered-profile-aware-paired-stock-in01)
-  for independently supplied cutter plans. The declared finishing envelope
-  does not close executable composite-stock facing and final motif/thickness
-  verification; those requirements remain the next assembly-finishing slice.
+  for independently supplied cutter plans. Executable flat facing and final
+  motif/plane/retained-core verification are implemented under the
+  [composite finishing contract](structure_spec.md#composite-stock-facing-and-final-inlay-verification-in01).
+  The declared sanding envelope remains a separate process model; shaped
+  finishing and physical coupons require their own named acceptance scope.
 - **SF01: shape-aware 3D relief foundation and routing.** Begin with an analytic
   curved moulding/valley and ridge motif, then a bounded non-overhanging relief
   representation. Establish contact/normal/curvature queries, whole cutter/body
