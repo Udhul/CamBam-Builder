@@ -83,9 +83,27 @@ class RestBinding:
         expected = tuple(stage.name for stage in self.prior_series.stages)
         if tuple(m.name for m in mops) != expected + (self.cleanup_name,):
             raise ValueError("native rest MOP order differs from predecessor and cleanup")
-        if (mops[-2].custom_mop_header or
-                mops[-2].custom_mop_footer != self.predecessor_footer):
-            raise ValueError("native rest predecessor lacks explicit safe return and spindle stop")
+        prior = read_cambam_bytes(Path(self.prior_candidate_path).read_bytes())
+        prior_mops = [m for m in prior.list_mops() if m.enabled]
+        if tuple(m.name for m in prior_mops) != expected:
+            raise ValueError("native rest predecessor MOP order changed")
+        # Posted XYZ/tool numbers alone do not encode the cutter footprint,
+        # selected design or intended floor. Keep that original native contract
+        # when bypassing the ordinary common-target binding for derived Regions.
+        fields = ("tool_profile", "tool_number", "tool_diameter", "target_depth",
+                  "stock_surface", "work_plane", "custom_mop_header")
+        for index, (mop, previous) in enumerate(zip(mops[:-1], prior_mops)):
+            footer = (self.predecessor_footer if index == len(prior_mops) - 1
+                      else previous.custom_mop_footer)
+            targets = tuple(sorted(project.get_primitive(uid).user_identifier
+                                   for uid in project.get_mop_targets(mop)))
+            prior_targets = tuple(sorted(prior.get_primitive(uid).user_identifier
+                                         for uid in prior.get_mop_targets(previous)))
+            if (type(mop) is not type(previous) or
+                    any(getattr(mop, field) != getattr(previous, field)
+                        for field in fields) or targets != prior_targets or
+                    mop.custom_mop_footer != footer):
+                raise ValueError("native rest predecessor MOP intent changed; regenerate boundaries")
         mop = mops[-1]
         if (type(mop) is not PocketMop or mop.tool_profile != "EndMill" or
                 mop.tool_diameter != 2 * self.boundaries.radius_mm or
@@ -120,10 +138,10 @@ class RestBinding:
         self.check_candidate(candidate_path)
         count = len(self.prior_series.stages)
         if (len(series.stages) != count + 1 or
-                tuple(s.name for s in series.stages[:count]) !=
-                tuple(s.name for s in self.prior_series.stages) or
+                tuple(replace(s, first_line=0) for s in series.stages[:count]) !=
+                tuple(replace(s, first_line=0) for s in self.prior_series.stages) or
                 series.stages[-1].target_ids != tuple(sorted(self.names))):
-            raise ValueError("native rest posted stages differ from certified selections")
+            raise ValueError("native rest posted predecessor or cleanup stages differ from certification")
         # Strip only source line numbers. All actual predecessor setup and motion
         # must recur unchanged in the composed post before trusting its stock.
         previous = tuple(replace(item, line=0) for item in self.prior_series.items)

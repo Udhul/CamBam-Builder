@@ -23,7 +23,7 @@ SETUP = {"units": "mm", "postprocessor": "Default"}
 START = (0, 0, 5)
 
 
-def make_case(root, *, island=True):
+def make_case(root, *, island=True, second_predecessor=False):
     shell = ((0, 0), (40, 0), (40, 30), (0, 30))
     holes = (((16, 10), (24, 10), (24, 20), (16, 20)),) if island else ()
     target = replay.Target("design", (0, 0, 40, 30), 2,
@@ -44,6 +44,11 @@ def make_case(root, *, island=True):
                            roughing_clearance=0.005,
                            lead_in_type="None", max_crossover_distance=0,
                            optimisation_mode="None")
+    if second_predecessor:
+        project.add_pocket_mop(part, targets=[region], name="ROUGH-2", tool_number=1,
+            tool_diameter=6, tool_profile="EndMill", target_depth=-2,
+            depth_increment=2, stock_surface=0, clearance_plane=5,
+            spindle_speed=12000, plunge_feedrate=60, cut_feedrate=240)
     candidate = root / "rough.cb"
     project.save(str(candidate))
     feasible = Polygon(shell, holes).buffer(-3.005, quad_segs=32)
@@ -63,12 +68,16 @@ def make_case(root, *, island=True):
         for x, y in path[1:]:
             lines.append(f"G1 F240 X{x} Y{y}")
         lines.append("G0 Z5")
-    lines.extend(("G0 X0 Y0", "M5", "M30"))
+    lines.extend(("G0 X0 Y0", "M5"))
+    if second_predecessor:
+        lines.extend(("( ROUGH-2 )", "M3 S12000", *lines[9:]))
+    lines.append("M30")
     post.write_text("\n".join(lines) + "\n", encoding="utf-8")
     series = normalize_native_series(source, candidate, post, initial_position=START, setup=SETUP)
     binding = native_rest.prepare(
         series, source, candidate, post, target=target,
-        cutting_lengths_mm={"T1": 5}, entry_modes={"ROUGH": "virgin"},
+        cutting_lengths_mm={"T1": 5},
+        entry_modes={s.name: "virgin" for s in series.stages},
         radius_mm=1, overlap_mm=0.5, setup=SETUP)
     return binding
 
@@ -251,6 +260,76 @@ class NativeRestTests(unittest.TestCase):
                                                    post, SETUP, binding)
                     with self.assertRaises(ValueError):
                         write_bundle(root / edit, job, "uccnc", source_binding=source_binding)
+
+    def test_fresh_predecessor_mutations_reject_in_public_consumers(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            binding = make_case(root, island=False, second_predecessor=True)
+            candidate = self.author(root, binding)
+            post = root / "rest.nc"
+            add_cleanup_post(binding, candidate, post)
+            original = candidate.read_bytes()
+            for edit in ("diameter", "floor", "selection", "header", "footer"):
+                with self.subTest(edit=edit):
+                    project = read_cambam_bytes(original)
+                    mop = project.list_mops()[0]
+                    if edit == "diameter":
+                        # Both predecessor MOPs use T1; retain a valid fresh
+                        # series while changing its physical removed stock.
+                        for previous in project.list_mops()[:-1]:
+                            previous.tool_diameter = 4
+                    elif edit == "floor":
+                        mop.target_depth = -1
+                    elif edit == "selection":
+                        project.set_mop_targets(mop,
+                            [project.get_primitive(binding.names[0])])
+                    elif edit == "header":
+                        mop.custom_mop_header = "G0 Z5"
+                    else:
+                        mop.custom_mop_footer = "G0 Z5\nM5"
+                    project.save(str(candidate))
+                    fresh = normalize_native_series(binding.source_path, candidate,
+                        post, initial_position=START, setup=SETUP)
+                    with self.assertRaisesRegex(ValueError, "predecessor"):
+                        native_rest.audit(binding, candidate, post,
+                            cutting_length_mm=5, entry_mode="virgin",
+                            section_depths_mm=(2,), max_protected_overcut_mm2=.001,
+                            min_new_floor_area_mm2=1)
+                    args = dict(
+                        targets={s.name: binding.boundaries.target for s in fresh.stages},
+                        cutting_lengths_mm={"T1": 5, "T2": 5},
+                        entry_modes={s.name: "virgin" for s in fresh.stages})
+                    job = from_native_series(fresh, **args)
+                    source_binding = NativeBinding(fresh, binding.source_path,
+                        candidate, post, SETUP, binding)
+                    with self.assertRaisesRegex(ValueError, "predecessor"):
+                        source_binding.check(job)
+
+    def test_predecessor_line_changes_and_nonbinding_parameters_remain_accepted(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            binding = make_case(root, island=False, second_predecessor=True)
+            candidate = self.author(root, binding)
+            post = root / "rest.nc"
+            add_cleanup_post(binding, candidate, post)
+            project = read_cambam_bytes(candidate.read_bytes())
+            # Native planning controls can change when the fresh actual post
+            # still proves precisely the certified predecessor stock/motion.
+            project.list_mops()[0].stepover = .3
+            project.save(str(candidate))
+            post.write_text("\n\n" + post.read_text(), encoding="utf-8")
+            series, _ = native_rest.audit(binding, candidate, post,
+                cutting_length_mm=5, entry_mode="virgin", section_depths_mm=(2,),
+                max_protected_overcut_mm2=.001, min_new_floor_area_mm2=1)
+            self.assertNotEqual(series.stages[0].first_line,
+                                binding.prior_series.stages[0].first_line)
+            # The binding also checks the complete normalized stage contract;
+            # byte freshness belongs to each public consumer above it.
+            changed = replace(series, stages=(replace(series.stages[0],
+                kind="ProfileMop"),) + series.stages[1:])
+            with self.assertRaisesRegex(ValueError, "predecessor"):
+                binding.check(binding.source_path, candidate, changed,
+                              binding.boundaries.target)
 
     def test_rect_source_accepts_bare_rectangular_target(self):
         with tempfile.TemporaryDirectory() as folder:

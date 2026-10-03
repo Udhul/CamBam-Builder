@@ -81,6 +81,9 @@ git diff --stat main...HEAD
 
 The worktree must be clean, the commit range must contain the intended work, and all
 commands must succeed. Review the complete `main...HEAD` diff, not merely its stat.
+These commands establish delivery state only. A readiness claim also needs the
+[correctness evidence and compact readiness record](WORKFLOW.md#correctness-evidence-before-a-readiness-decision);
+passing Git checks does not close a missing correctness or behavioral gate.
 Run required behavior checks after the last material content edit; after a later
 commit, rerun these branch-level gates against the final `HEAD`.
 

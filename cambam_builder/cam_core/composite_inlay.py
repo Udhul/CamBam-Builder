@@ -82,6 +82,11 @@ class Assembly:
                     self.expected_receiver if side == "receiver" else self.expected_plug)
                 inner, outer = straight._removed(cuts, u)
             else:
+                # A removal target ends at its machining cap, but the physical
+                # blank continues through backing/floor material. No supported
+                # component can remove stock below this side's allowed depth.
+                if u > self.design.depth(side):
+                    return blank, blank
                 inner, outer = tapered.section(stock, u)
             return blank.difference(outer), blank.difference(inner)
 

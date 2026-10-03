@@ -11,7 +11,7 @@ own those contracts; [REVIEW](REVIEW.md) owns dated acceptance and limitations.
 
 ### IN01: ornamental paired-stock and assembly verification
 
-**Composite facing committed as `bcc3e8f`; final PR review requires a repair.**
+**Composite facing committed as `bcc3e8f`; section repair verified and ready to commit.**
 Straight-wall assembly is committed as `db55841`, tapered/profile-aware assembly
 as `33d3b48`. Executable flat facing now consumes accepted paired stock after
 declared assembly/cure and renewed setup, checking the exposed motif, plane and
@@ -69,7 +69,6 @@ work before detached inlay or relief work.
 
 | Order | Backlog increment | Useful next outcome |
 | --- | --- | --- |
-| 0 | **RQ01** | After the two branch repairs, establish a compact, evidence-backed readiness gate before the next merge-ready decision; [scope and acceptance](#rq01-reliable-and-proportionate-merge-readiness). |
 | 1 | **BO01** | Generate and search finite tool/path bundles under explicit finish, cost and setup constraints; independently verify candidates and report search quality. |
 | 2 | **SF01** | Bounded relief contact/stock foundation and shape-aware 3D tracing/finishing. **NR03** separately establishes native Surface/3D MOP/post interoperability. |
 
@@ -77,7 +76,8 @@ The [follow-up contracts and representative consumers](REST_MACHINING_PLAN.md#fo
 own scope, dependencies and acceptance. RP01 establishes detached ornamental
 planning and NR01 closes the bounded editable native rest workflow. IN01 now
 establishes independent allowances, straight-wall/tapered assembly stock and
-composite finishing. After RQ01, BO01 is the next capability increment because these evaluators can check
+composite finishing. BO01 is the next capability increment because these
+evaluators can check
 complete inlay candidates before tool/path search ranks them. Further native
 variants need a named consumer. Conditional
 fitting/overlap/low-access work is listed below; finite tool search belongs to BO01; broader surfaces
@@ -86,60 +86,31 @@ bundles require regeneration under the [MX01 contract](structure_spec.md#mixed-c
 
 ### Current branch closure
 
-`feat/feature-aware-v-rest` targets `main`. **Not merge-ready:** the final PR
-quality review found two P2 defects after the initial delivery review: NR01
-accepts changed predecessor cutter metadata against stale rest derivation, and
-IN01 tapered composite section queries reject uncut backing/floor material.
-The [review findings and reproduction evidence](REVIEW.md#final-branch-pr-quality-review---2026-10-03)
-own exact witnesses and closure criteria. Existing bounded fixture acceptance
-stands; these uncovered cases must close before merging. Committing and merging
-remain user-owned actions.
+`feat/feature-aware-v-rest` targets `main`. **Both PR blockers are repaired and
+verified; changes are ready to commit.** Native rest certification now preserves
+predecessor machining semantics; tapered composite queries retain uncut stock
+beyond machining caps. RQ01 is complete for this branch. The
+[repair and readiness evidence](REVIEW.md#pr-blocker-repairs-and-rq01-readiness-evidence---2026-10-03)
+owns fault-sensitive regressions, correctness review, native acceptance reuse,
+check cost and limits. No new external observation is required for this scope.
+Committing and merging remain user-owned actions; uncommitted repairs prevent a
+merge-ready claim.
 
-**Next agent task:** repair both findings with focused regressions, then complete
-[RQ01](#rq01-reliable-and-proportionate-merge-readiness) before renewing the
-merge-ready decision against `main`. Candidate search must consume reliable stock
-certificates and section queries; BO01 and SF01 remain later capability increments.
+**Next agent task:** after the user's commit, review final committed delivery
+against `main` and confirm evidence applicability under the
+[readiness procedure](WORKFLOW.md#correctness-evidence-before-a-readiness-decision).
+Reuse unchanged passing behavior evidence. BO01 is the next distinct capability
+increment after branch delivery; do not expand this repair into bundle search.
 
 ### RQ01: reliable and proportionate merge readiness
 
-**Queued by the user 2026-10-03, immediately after the two branch repairs and
-before BO01 or the next merge-ready claim.** The final review exposed a process
-gap: matching previously tested bytes and passing delivery checks did not expose
-missing predecessor semantics or untested valid stock domains. The
-[confirmed findings](REVIEW.md#final-branch-pr-quality-review---2026-10-03)
-are the concrete acceptance examples; do not repeat their evidence here.
-
-Outcome: make a readiness claim traceable to correctness review, relevant tests
-and final Git state, without promising defect-free software or requiring the user
-to request an extra quality review. Use existing owners and the verification
-runner; no new service, dependency or blanket full-suite/second-agent requirement.
-
-- Define a small changed-contract evidence table for substantive behavior:
-  claimed invariant, owning boundary/caller, meaningful positive and negative
-  witness, review conclusion and remaining limit. Reuse existing tests and
-  evidence; do not create a table row or test for every implementation detail.
-- Require an explicit correctness pass that challenges the implementation's
-  assumptions: omitted binding inputs, valid domain boundaries and adapter/core
-  agreement. Distinct reasoning is required; a separate agent is optional when
-  its independence justifies the cost. Git/hash checks cannot substitute for it.
-- Prefer cheap independent synthetic witnesses and parameterized boundary or
-  mutation regressions. Broaden testing only for affected shared contracts or
-  unresolved evidence gaps, with an explicit stopping condition. Test counts
-  alone are not coverage or readiness evidence.
-- Specify a compact readiness record naming base/HEAD, correctness disposition,
-  test evidence and reuse scope, open blockers and acceptance limits. Keep
-  mechanical checks separate from engineering judgment; fail closed on missing
-  required evidence. Revalidate only evidence invalidated by subsequent changes.
-- Prove the procedure on this repaired branch: both discovered bug classes must
-  be represented by fault-sensitive regressions and the correctness review;
-  the receipt must expose a missing gate rather than still claiming readiness.
-  Record measured review/check cost and explain evidence reused. Stop after this
-  end-to-end demonstration; extend infrastructure only for a demonstrated gap.
-
-On delivery, WORKFLOW owns the readiness procedure, DEVELOPMENT owns executable
-commands, tests own reusable regressions, and REVIEW owns demonstration evidence.
-PROGRESS retains only current state/priority and links. This is a distinct process
-increment, not authorization to start BO01 or expand physical acceptance.
+**Implemented and demonstrated 2026-10-03; ready to commit with the repairs.**
+WORKFLOW owns [correctness evidence and readiness decisions](WORKFLOW.md#correctness-evidence-before-a-readiness-decision);
+DEVELOPMENT links that gate from the existing delivery commands. The
+[demonstration](REVIEW.md#pr-blocker-repairs-and-rq01-readiness-evidence---2026-10-03)
+records changed-contract evidence, missing-evidence refusal, scoped review/check
+cost and reuse. No new checker, service, dependency or mandatory broad review was
+introduced. Further process expansion requires a concrete failure of this gate.
 
 ### Branch review session queue
 
@@ -224,7 +195,8 @@ and [verification evidence](REVIEW.md#export-failure-and-state-path-verification
 Current baseline acceptance/delivery links are in the [post-merge queue](#post-merge-task-queue).
 Dated evidence stays in REVIEW; current contracts stay in their topic owners;
 [development commands](DEVELOPMENT.md) and [acceptance/handoff procedures](WORKFLOW.md)
-own verification practice. The final PR review reopens two bounded correctness
-cases; see [branch closure](#current-branch-closure). Fixes and regression checks
-are pending. This is a usable fresh-session handoff because both reproductions,
-limits and closure criteria are recorded, but branch acceptance is not complete.
+own verification practice. Both PR repairs and RQ01 are complete; see
+[branch closure](#current-branch-closure). Continue this session for the short
+committed-delivery check once the user commits. After branch delivery, BO01 is a
+good fresh-session breakpoint: its distinct scope and the accepted contracts,
+repair evidence and remaining limits are durable, with no pending observation.

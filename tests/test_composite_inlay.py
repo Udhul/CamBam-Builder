@@ -224,5 +224,50 @@ class CompositeInlayTests(unittest.TestCase):
             self.assertEqual(result["status"], "pass", result)
 
 
+@unittest.skipUnless(HAS_PLANAR, "optional planar backend is absent")
+class TaperedAssemblySectionTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        q = tapered(motif=box(0, 0, 3, 3), stock_xy=box(-1, -1, 4, 4))
+        r, p = stock(q, "receiver", "flat"), stock(q, "plug", "rounded")
+        cls.a = ci.Assembly(q, r, p, r.fingerprint, p.fingerprint,
+                            registration_xy=(.01, 0), slabs=4)
+
+    def test_uncut_backing_floor_and_blank_boundaries(self):
+        # Independent 5 x 5 blanks, including the registered plug position.
+        receiver_blank, plug_blank = box(-1, -1, 4, 4), box(-.99, -1, 4.01, 4)
+        for depth, side, expected in ((-.8, 1, plug_blank),
+                                     (-1.05, 1, plug_blank),
+                                     (1., 0, receiver_blank),
+                                     (3., 0, receiver_blank)):
+            with self.subTest(depth=depth, side=side):
+                bounds = self.a.section(depth)[side]
+                for shape in bounds:
+                    self.assertTrue(shape.equals_exact(expected, 1e-12) or
+                                    shape.symmetric_difference(expected).area < 1e-12)
+                    self.assertAlmostEqual(shape.area, 25.)
+        for depth in (-1.050001, 3.000001):
+            with self.subTest(outside=depth):
+                self.assertTrue(all(s.is_empty for pair in self.a.section(depth) for s in pair))
+
+    def test_cap_sections_preserve_cut_stock_and_v_query_limits(self):
+        from cambam_builder.cam_core import v_region
+        q = self.a.design
+        cap = q.depth("receiver")
+        receiver = self.a.section(cap)[0]
+        # Flat receiver cuts still remove finite area exactly at the cap.
+        self.assertLess(receiver[1].area, 25.)
+        self.assertTrue(receiver[1].covers(receiver[0]))
+        for shape in self.a.section(cap + 1e-8)[0]:
+            self.assertAlmostEqual(shape.area, 25.)
+        plug_cap = q.allowances.seating_mm - q.depth("plug")
+        plug = self.a.section(plug_cap)[1]
+        self.assertTrue(plug[1].covers(plug[0]))
+        for shape in self.a.section(plug_cap - 1e-8)[1]:
+            self.assertAlmostEqual(shape.area, 25.)
+        with self.assertRaisesRegex(ValueError, "section outside V target"):
+            v_region.section_evidence(self.a.receiver.components[0], cap + .01)
+
+
 if __name__ == "__main__":
     unittest.main()

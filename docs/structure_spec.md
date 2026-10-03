@@ -925,8 +925,14 @@ from fresh predecessor evidence; provenance text alone grants no authority.
 The existing target-equality gate remains the default. Its explicit
 `derived_binding=RestBinding` route certifies current window rings/provenance,
 Pocket selection/type/cutter/floor, original CAD and complete predecessor motion
-instead. The composed post must retain every predecessor event and movement,
-ignoring only line numbers. An edited boundary, tool, floor, selection,
+instead. Predecessor normalized stages must match apart from source line
+numbers. Reopened predecessor MOP type, tool, floor, plane, stock surface,
+selection and literal transport intent must also match; only the final
+predecessor footer is replaced by the declared safe return/spindle stop.
+Planning controls such as stepover can change when freshly bound posted motion
+and all certified semantics remain identical. The composed post must retain
+every predecessor event and movement, ignoring only line numbers. An edited
+boundary, tool, floor, selection,
 source/predecessor or transport header invalidates that certificate. Boundary
 edits require fresh derivation/certification; valid parameter edits still require
 a fresh actual post. `native_rest.audit` replays all actual moves against the
@@ -1321,7 +1327,11 @@ both actual part stocks and their expected fingerprints, plus fixed XY
 registration. Construction and finishing verification require the paired
 insertion/gap audit to pass. `section(depth)` returns separate receiver and plug
 retained inner/outer bounds in assembly coordinates, clipped to their finite
-blanks and thicknesses. Depth is positive below the receiver surface; negative
+blanks and thicknesses. Beyond a side's machining cap, retained bounds equal
+its full blank until the physical thickness ends; the exact cap still uses
+removed-stock evidence. Outside the physical blank the section is empty. This
+does not extend the valid depth domain of the underlying V removal query.
+Depth is positive below the receiver surface; negative
 depths include the shoulder and backing. The plug uses the existing proper
 rigid flip and registration. No target is substituted for machined stock.
 

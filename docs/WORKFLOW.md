@@ -152,6 +152,40 @@ Result form: findings with file/symbol evidence, patch, or tests; no transcript
 - Identify user/domain validation, next increment and suggested commit message.
 - Do not conflate passing synthetic checks with CamBam or machining acceptance.
 
+### Correctness evidence before a readiness decision
+
+For substantive behavior changes, record a compact table in the dated REVIEW
+entry: changed claim/invariant, owning boundary and consumer, positive and
+fault-sensitive negative/boundary evidence, correctness disposition and limits.
+Link existing tests/results; do not duplicate their implementation or create a
+row for every detail. Ordinary prose-only edits need only their scoped checks.
+
+Perform a distinct correctness pass before closing the increment. Challenge
+inputs omitted from bindings, supported domain endpoints, adapter/core agreement
+and whether the test oracle shares the implementation's assumption. Use concrete
+counterexamples and independent expected values; a test count or matching source
+hash establishes neither completeness nor correctness. A second agent is optional
+when independence closes a named gap at reasonable cost. Review changed shared
+contracts and their callers; keep unchanged reviewed evidence in scope by reference.
+
+Close the review when relevant claims have evidence, actionable findings are
+resolved, required checks apply to the current tree and remaining limits are
+explicit. Broaden only to resolve an identified gap. Prefer cheap synthetic
+boundary/mutation checks, reuse unaffected results and record actual check/review
+cost when evaluating the procedure. Missing required evidence leaves the gate
+open; never infer acceptance from the absence of a reported failure.
+
+The readiness record states: target base and HEAD (plus uncommitted scope when
+present), correctness disposition and evidence link, automated checks/reuse scope,
+required user/domain acceptance, unresolved blockers/limits, and delivery state.
+These fields may be one short paragraph/table, not a new generated artifact.
+Mechanical Git/hash checks and engineering judgment are separate gates. After a
+commit, check delivery and evidence applicability; repeat correctness/behavior
+work only for changes invalidating it. A known defect or missing required review
+cannot be converted into merge readiness by clean Git status or passing tests.
+Readiness means the stated gates are satisfied for this revision and scope; it
+is not a guarantee that the software contains no undiscovered defects.
+
 Use delivery labels precisely:
 
 - **Ready to commit** means the bounded implementation and required checks are
@@ -160,8 +194,9 @@ Use delivery labels precisely:
   Git's working-tree diff does not include them.
 - **Merge-ready** means the target base is named, the worktree is clean, the branch
   contains the intended commit(s), `git diff --check <base>...HEAD` passes, the
-  complete branch diff was reviewed, and every required automated and user/domain
-  acceptance gate is satisfied or correctly declared not required.
+  complete branch diff and its correctness evidence were reviewed under the
+  procedure above, and every required automated and user/domain acceptance gate
+  is satisfied or correctly declared not required.
 - Run behavior checks after the last material content edit. If someone commits after
   verification, confirm the worktree stayed clean and rerun the branch-level status,
   ancestry, commit-range and diff checks against the final `HEAD`. Never promote an

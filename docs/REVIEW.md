@@ -5,6 +5,78 @@ checkpoints. [PROGRESS](PROGRESS.md) owns current priority and state; the
 [specification](structure_spec.md) and [MCP contract](MCP_CONTRACT.md) own current
 contracts. Historical next-task and pending statements describe their entry date.
 
+## PR blocker repairs and RQ01 readiness evidence - 2026-10-03
+
+This repairs the two [final PR findings](#final-branch-pr-quality-review---2026-10-03)
+and demonstrates the [correctness/readiness procedure](WORKFLOW.md#correctness-evidence-before-a-readiness-decision).
+Review scope is `main` at `2f10b07` through committed HEAD `8baacc2`, plus the
+uncommitted two-owner repairs, focused tests and owning documentation. The full
+branch review from the preceding session is reused; this pass checks the repairs
+and their integration, not another unbounded search over unchanged code.
+
+| Changed claim / owner and consumer | Positive and negative evidence | Correctness disposition / limit |
+| --- | --- | --- |
+| NR01 rest windows remain tied to predecessor stock; `RestBinding` through native audit and `NativeBinding` | New two-predecessor mutation test rejects changed diameter, floor, selection, non-final header/footer through both consumers. Stage-kind mutation rejects. Shifted line numbers and fresh stepover changes with identical motion still pass. Existing final-footer and both ordered-dialect consumers pass. | Lead reviewed reopened intent and full normalized-stage comparison, permitted footer replacement and preserved default binding. Posted XYZ alone cannot bind cutter footprint; native planning provenance still requires actual observation. |
+| Tapered full-stock sections; `Assembly.section` and decoded composite facing | New tests use independent 5 x 5 blank geometry with .01 mm registration. Backing/floor and physical boundary sections are 25 mm2; outside sections are empty. Exact receiver cap retains flat-tool removal; just-beyond-cap sections are solid; low-level V queries still reject beyond their domain. | Independent bounded reviewer confirmed strict cap inequality, blank clipping before the shortcut, rigid flip/registration and validated component cap limits. Underlying sweep/enclosure algorithms are unchanged. |
+
+Fault sensitivity was demonstrated before implementation: the new native tests
+failed six assertions, and the two section tests produced five out-of-domain
+errors. After repair, `tests.test_native_rest` passed **8 tests in 43.157 s**;
+`tests.test_composite_inlay.TaperedAssemblySectionTests` passed **2 tests in
+1.972 s**, with no skips. Commands use repository Python 3.13.5 from the root:
+
+```powershell
+& .\.venv\Scripts\python.exe -B -m unittest tests.test_native_rest -v
+& .\.venv\Scripts\python.exe -B -m unittest tests.test_composite_inlay.TaperedAssemblySectionTests -v
+& .\.venv\Scripts\python.exe -B -m unittest tests.test_composite_inlay.CompositeInlayTests.test_tapered_flat_rounded_parts_and_decoded_composite_finish -v
+```
+
+The existing tapered decoded-pair/facing consumer passed **1 test in 673.697 s**,
+covering UCCNC and Grbl and final plane/motif/core/floor acceptance through actual
+decoded outputs. This round therefore completed **11 tests with no skips**.
+The inherited complete consumer dominates the measured check cost; the new
+section regressions take about two seconds. Do not repeat this consumer merely
+because the verified changes are committed. Both engineering repair gates are
+closed, and the evidence table/decision walkthrough completes RQ01.
+
+The original accepted NR01 actual post was re-audited under the repaired binding:
+all five published input hashes and the motion/derivation fingerprints are
+unchanged, and every resulting stage metric equals the preserved accepted audit.
+No new CamBam generation is required. Native logs and the new revalidation report
+are in `output/native-binding-repair-7dea3fa51b8e467bac5700a33e330469/`;
+composite logs are in `output/pr-repairs-3d1c8f3d74/`. No original observation
+artifact was overwritten. Future reproduction uses the self-contained tests;
+actual-post replay needs the original accepted bytes under the existing NR01
+acceptance boundary.
+
+Evidence reuse is explicit: comparison to the final historical NR01 snapshot
+finds only `native_rest.py` and `test_native_rest.py` changed among its 208 inputs.
+The historical IN01 regression snapshot adds those two changes to its already
+recorded three-file reconciliation. Shared parser/replay, V/cylinder enclosures,
+ordered engines, RP01 and other fixture inputs are unchanged. Fresh tests cover
+the repaired branches and relevant consumers; previous unaffected regression
+results remain applicable. This is not a new full-suite or package-matrix pass.
+The extra review used one bounded independent composite review plus lead native
+contract/caller review; no duplicate broad reviewer or full-suite run was needed.
+
+RQ01 decision walkthrough: without the predecessor mutation witness, native
+correctness remains unclosed despite a clean tree and historical passes. Without
+the cap/blank witness, the section-domain claim remains unclosed. With either
+required consumer result pending, engineering acceptance stays pending. Once
+these gates close, uncommitted repairs permit only **ready to commit**; a clean
+committed revision and final diff/evidence applicability checks are still required
+for **merge-ready**. This demonstrates missing-evidence refusal without introducing
+another checker that merely mirrors a human's pass/fail assertions. WORKFLOW owns
+the reusable procedure, and DEVELOPMENT links it from the existing Git commands.
+Physical/controller/fixture acceptance and GEOS enclosure limits remain unchanged.
+Final changed-source syntax, added documentation links, working and committed
+branch whitespace, main ancestry and task-scoped artifact hygiene passed.
+Delivery is **ready to commit**, not merge-ready: HEAD is still `8baacc2`, with
+these repairs/tests/docs uncommitted. The next delivery check must inspect the
+final committed diff and confirm these results still apply. No implementation
+blocker or required new external observation remains for this repair scope.
+Current delivery and next priority remain in PROGRESS.
+
 ## Final branch PR quality review - 2026-10-03
 
 Reviewed `main` at `2f10b07aed9e97c1f475a3abe31d90d9e6087f0b` through
