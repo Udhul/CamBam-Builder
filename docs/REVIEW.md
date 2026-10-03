@@ -5,6 +5,56 @@ checkpoints. [PROGRESS](PROGRESS.md) owns current priority and state; the
 [specification](structure_spec.md) and [MCP contract](MCP_CONTRACT.md) own current
 contracts. Historical next-task and pending statements describe their entry date.
 
+## Final branch PR quality review - 2026-10-03
+
+Reviewed `main` at `2f10b07aed9e97c1f475a3abe31d90d9e6087f0b` through
+`feat/feature-aware-v-rest` at `bcc3e8f5c2cfe61103259163447bd3feaeed0159`.
+The initial worktree was clean. The preceding delivery review established
+recorded-check applicability, ancestry, branch whitespace and documentation-link
+integrity. This additional correctness review found two P2 defects that supersede
+that merge-ready recommendation. Existing passing fixtures do not cover these
+cases; their recorded acceptance remains limited to those fixtures.
+
+1. **NR01 predecessor cutter changes retain stale boundary certification.**
+   `RestBinding.check` in `integrations/cambam/native_rest.py` compares predecessor
+   stage names and posted moves/events, but those comparisons omit cutter diameter.
+   Reproduction uses `tests.test_native_rest.make_case(..., island=False)`, authors
+   the cleanup and its synthetic post, changes the candidate ROUGH diameter from
+   6 to 4 mm without changing T1 or posted coordinates, then freshly normalizes
+   the candidate/post. `binding.check` returns `True`; `native_rest.audit` with
+   section depth 2 mm, protected-overcut limit .001 mm2 and minimum new removal
+   1 mm2 also accepts. Final residual is
+   **127.99540964604216-128.00078005903265 mm2**. Final replay uses the smaller
+   cutter conservatively, but windows/provenance still certify the original
+   6 mm predecessor stock. Predecessor machining semantics must be bound to the
+   derivation and changed cutter/selection intent must require re-derivation.
+   Closure needs a regression rejecting this freshly normalized mutation while
+   retaining the accepted explicit predecessor retract/spindle-stop footer.
+2. **IN01 tapered retained-stock sections reject uncut backing/floor material.**
+   `composite_inlay.Assembly.section` delegates every in-blank tapered section to
+   `tapered_inlay.section`, whose V evidence requires depth at or above each
+   removal target's cap. A valid stock section may be deeper than that cap.
+   Reproduction uses `tests.test_tapered_inlay.tapered` with motif
+   `box(0,0,3,3)`, stock `box(-1,-1,4,4)`, flat receiver and rounded plug stocks,
+   and four assembly slabs. Assembly passes; both cut caps are .75 mm.
+   `assembly.section(-.8)` (plug backing) and `assembly.section(1.0)` (receiver
+   floor) raise `ValueError: section outside V target`. Both sections are inside
+   their physical blanks; the relevant retained section should be the full
+   **25 mm2** blank. Closure needs full-blank results beyond removal caps,
+   without weakening V-target query validation, and regressions for backing,
+   receiver floor, cap boundaries and outside-blank sections.
+
+Both witnesses were independently reproduced on repository Python 3.13.5.
+The native witness used real XML serialization/parsing with file I/O mocked into
+memory; the tapered witness used actual stock constructors and verifiers.
+No machining files or reusable tests were added and no behavior suite was rerun.
+The interrupted duplicate assembly-suite attempt supplies no new test evidence.
+Source review found no additional actionable defect in RP01 guide/clearance,
+straight/tapered insertion bounds or complete-byte inlay adapters. This is bounded
+review evidence, not a proof of absence of further defects. Physical/controller
+acceptance remains outside scope. Current repair priority belongs to
+[branch closure](PROGRESS.md#current-branch-closure).
+
 ## IN01 composite facing and final verification - 2026-10-03
 
 The [composite contract](structure_spec.md#composite-stock-facing-and-final-inlay-verification-in01)

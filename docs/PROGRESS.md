@@ -11,7 +11,7 @@ own those contracts; [REVIEW](REVIEW.md) owns dated acceptance and limitations.
 
 ### IN01: ornamental paired-stock and assembly verification
 
-**Composite facing accepted by engineering 2026-10-03; ready to commit.**
+**Composite facing committed as `bcc3e8f`; final PR review requires a repair.**
 Straight-wall assembly is committed as `db55841`, tapered/profile-aware assembly
 as `33d3b48`. Executable flat facing now consumes accepted paired stock after
 declared assembly/cure and renewed setup, checking the exposed motif, plane and
@@ -85,18 +85,19 @@ bundles require regeneration under the [MX01 contract](structure_spec.md#mixed-c
 
 ### Current branch closure
 
-`feat/feature-aware-v-rest` targets `main`. With IN01's offline acceptance,
-**zero named implementation tasks remain for this branch**. **One agent task
-remains:** review the final committed `main...HEAD` diff, clean worktree and
-applicability of required evidence before a merge-ready decision. Committing
-and merging are user-owned delivery actions. BO01 and SF01 are the two later
-capability increments, not requirements for closing this branch; conditional
-backlog items below are not automatically promoted into it.
+`feat/feature-aware-v-rest` targets `main`. **Not merge-ready:** the final PR
+quality review found two P2 defects after the initial delivery review: NR01
+accepts changed predecessor cutter metadata against stale rest derivation, and
+IN01 tapered composite section queries reject uncut backing/floor material.
+The [review findings and reproduction evidence](REVIEW.md#final-branch-pr-quality-review---2026-10-03)
+own exact witnesses and closure criteria. Existing bounded fixture acceptance
+stands; these uncovered cases must close before merging. Committing and merging
+remain user-owned actions.
 
-**Next agent task:** after the user's commit, complete the final branch delivery
-review against `main` under the [delivery gates](WORKFLOW.md#verification-and-handoff-checklist).
-Then begin BO01 in a distinct increment under its
-[follow-up contract](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers).
+**Next agent task:** repair both findings with focused regressions, then repeat
+final branch delivery checks against `main`. This matters before BO01 because
+candidate search must consume reliable stock certificates and section queries.
+BO01 and SF01 remain later capability increments, not requirements for this repair.
 
 ### Branch review session queue
 
@@ -181,10 +182,7 @@ and [verification evidence](REVIEW.md#export-failure-and-state-path-verification
 Current baseline acceptance/delivery links are in the [post-merge queue](#post-merge-task-queue).
 Dated evidence stays in REVIEW; current contracts stay in their topic owners;
 [development commands](DEVELOPMENT.md) and [acceptance/handoff procedures](WORKFLOW.md)
-own verification practice. NR01's offline and bounded actual native-post gates
-are closed. Composite IN01 implementation and offline acceptance are complete
-and ready to commit. This is a good fresh-session breakpoint: contracts,
-reproducible tests, evidence and the distinct final branch-review task are
-durable, with no pending decision or external observation. Start a fresh session
-for that review after the user's commit. No commit or merge was performed by
-the agent in this round.
+own verification practice. The final PR review reopens two bounded correctness
+cases; see [branch closure](#current-branch-closure). Fixes and regression checks
+are pending. This is a usable fresh-session handoff because both reproductions,
+limits and closure criteria are recorded, but branch acceptance is not complete.
