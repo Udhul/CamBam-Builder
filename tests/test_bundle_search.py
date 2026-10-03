@@ -271,6 +271,7 @@ class GeneratedBundleTests(unittest.TestCase):
             constraints=b.Constraints(1000, 1000, max_floor_cusp_mm=.0001))
         self.assertEqual(result.assessments[0].status, 'constrained')
         self.assertGreater(result.assessments[0].bundle.unproved_floor_area_mm2, 0)
+        self.assertEqual(result.assessments[0].bundle.section_depth_mm, .6)
         self.assertIsNone(result.chosen)
 
     def test_extreme_sampling_control_is_rejected_without_aborting_search(self):

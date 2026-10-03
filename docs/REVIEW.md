@@ -5,6 +5,114 @@ checkpoints. [PROGRESS](PROGRESS.md) owns current priority and state; the
 [specification](structure_spec.md) and [MCP contract](MCP_CONTRACT.md) own current
 contracts. Historical next-task and pending statements describe their entry date.
 
+## BO01-B mixed and paired search - 2026-10-03
+
+This increment extends committed BO01-A `7ab21cc` on
+`feat/tool-path-bundle-search` (starting HEAD `6686adb`). The worktree was clean
+before changes. The [implemented consumer contract](structure_spec.md#mixed-tool-and-paired-inlay-search-bo01-b)
+owns API, cost and support semantics; this entry owns acceptance evidence.
+Existing IN01, ordered replay, decoders and occupancy remain verification
+authorities. No recipe-specific verifier, dependency or native output route
+was introduced.
+
+| Claim / owner | Independent or fault-sensitive evidence | Boundary |
+| --- | --- | --- |
+| Mixed finite orders; `bundle_search` and `planar_rest.generate_cylindrical` | Generated protected-island cylinder/RP01 consumer beats the supplied all-V raster/RP01 baseline under identical finish budgets. A second motif exhausts all four cylindrical/V orders through Grbl; V/cylinder/V also decodes and audits. | Benefit is against this declared baseline, not all possible V paths. Feature families remain V-only; unsupported combinations retain diagnostics. |
+| Original design and decoded predecessor stock | Cylinder-only scores are recomputed against the original tapered target, with positive residual and protected-island exclusion. Independent source-bound cylinder tests check full-height radius plus design taper, axial retraces and short-flute residual. | Deepest-safe XY roughing intentionally leaves upper-wall rest. V omission earns no body/fixture or low-link credit. |
+| Independent paired stocks and final facing; IN01 consumer | Generated receiver/plug complete outputs pass decoded insertion and facing; downstream re-audits confirm both bindings. Compound cost is checked against decoded distances/feeds plus declared within/between-job setup and tool changes, assembly and cure. | Separate bodies, frames and complete setups stay authoritative. Process tokens/times are declarations, not production observations. |
+| Partial/manual/unsupported quality | Part residual limits, registration collision/unresolved insertion, retained-core failure, fixture collision and compound change limits prevent selection. Manual/budget paths retain component and assembly/facing reasons. Cylinder-only tapered components expose the existing adapter's matching-V-design limit. | Safe partial results cannot win; failed/unsupported orders retain subset quality. Missing component requests and conflicting physical profiles reject at the input boundary. |
+| Reopened generated offset gap; `v_region._sample` | Both tapered targets reproduced short closed rings sampled as identical endpoints. Two planner regressions cover nonzero closed traversal and rounded-coordinate deduplication; strict verification remains unchanged. | No blanket completeness claim for a requested pitch. Coarse sampling may still leave unresolved insertion/finish evidence. |
+
+Mixed ornament: the same generated 8 x 7 mm lobed/necked motif and protected
+1 x 1 mm island used by A, fixed 90-degree design, cap .6 mm. T1 is a flat
+90-degree V cutter, tip radius .2 mm, flute 2 mm, feed 100 mm/min; T2 is a
+.5 mm-radius cylinder, flute 2 mm, feed 1800 mm/min. Both use .75 mm stepdown,
+2 mm entry limit, entries 120, retracts 600, rapids 3000 mm/min; raster/feature
+pitch .6 mm, XY step 1 mm, margin .02 mm and feature cusp .3 mm. Shared limits
+are area .8 mm2 and volume 2.2 mm3. Cylinder raster then V feature reports upper
+area **.676979 mm2**, upper volume **2.136095 mm3**, estimated **140.924 s**;
+the supplied all-V raster/feature baseline reports **1.578073 mm2**,
+**2.215913 mm3**, **212.947 s**. The mixed upper area is below the baseline's
+lower area (.969095 mm2), so the residual improvement exceeds enclosure
+uncertainty. Only the mixed route meets both finish budgets. Each is evaluated
+as an explicit one-order budget within its respective finite space.
+
+The second planar consumer is a 4 x 3 mm holed motif, cap .4 mm and fixed
+60-degree design, using a flat 60-degree V profile with .15 mm tip and a .3 mm
+cylinder. Grbl enumerates all four one/two-action orders without unresolved
+orders; estimated time chooses the cylinder-only bundle. Source/stock identity,
+decoded pauses, protected island and V/cylinder/V order remain checked.
+
+Generated paired acceptance uses a 2 x 2 mm motif in independent 3 x 3 mm
+blanks, 30-degree design, seating .35 mm, bottom/surface gaps .05 mm, side fit
+.18 mm, backing 1 mm, receiver thickness 3 mm and .35 mm overtravel on each
+part. Both machining caps are .75 mm; design fingerprint is
+`8cc06064c6ab179e882a22e19ccb8474bce563053b5726f4a330413f935705a8`.
+Flat/rounded 30-degree V profiles have
+.03 mm tip radii and 2 mm flutes; the cylindrical rougher has .2 mm radius.
+Offset pitch .12 mm, XY step .15 mm and margin .002 mm are explicit controls.
+Eight insertion slabs report zero upper collision and both .05 mm gaps.
+Final flat facing uses a .6 mm-radius cutter, .7 mm pitch, .5 mm stepdown,
+3 mm safe Z, removal .05 mm, plane tolerance .001 mm and motif tolerance
+.2 mm. Decoded facing has zero unfaced area, nominal core .30 mm, receiver
+floor 2.25 mm and flat-tip motif excess upper .023630 mm2. The accepted plane
+interval is [.049, .050] mm. Declared assembly/cure times are 10/20 s; costs
+include 2 s initial setup per job, 3 s per boundary and 5 s per tool change.
+Paired inventory RPM is 10000. Flat/rounded cut feeds are 200/900 mm/min,
+their entry feed 100; roughing cut/entry feeds are 1200/200 and facing feeds
+800/200. All retracts use 600 and rapids 3000 mm/min. Each part declares its
+own cutter/shank/holder bands and target-envelope box; facing declares the
+padded [-1.5, -1.5, 3.5, 3.5] mm XY box to depth 1.101 mm. The separate
+setups carry no inter-job transfer-motion or assembly-body occupancy claim.
+Coarser .6 mm XY sampling on a 3 x 3 mm motif yielded explicit unresolved fit;
+it was not accepted or used to weaken a gate.
+
+Bounded review found a metric regression while adding cylinder-only scoring:
+the cusp proof reused the residual section-depth variable. Separate cusp depth
+and a regression preserve the declared `min(1 mm, cap)` area metric. Review also
+confirmed shared compound enumeration/ranking, cost accounting and the explicit
+cylinder-only paired binding limit. Final judgment rests on the generated and
+independent acceptance above, not reviewer assertions alone.
+
+Final verification ran from the repository root with Python **3.13.5**, NumPy
+**2.5.3**, Shapely **2.1.2** and MCP **2.2.0**:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py
+```
+
+Full checkout passed **721 tests / 97 modules** (**720 passes, one named Windows
+symlink-privilege skip**; junction/reparse tests ran). All **99 commands** passed,
+all module completion records are complete with no missing IDs, no module
+results were reused, and final source/environment identities passed. Wall time
+was **2627.506 s**. Report:
+`output/verification-20261003-171140-4513d20b/report.json`.
+The 64 search/planner-owner tests include 7 paired tests (764.672 s), 5 mixed
+tests (91.420 s), 4 cylindrical tests, 16 V-region tests, 11 fixed-design tests,
+14 foundation search tests and 7 RP01 tests. Existing native/direct/ordered,
+stock, IN01/composite and supplied-selection consumers also pass in that run.
+Current runtime/test/tool/configuration hashes match the report; canonical
+sorted-JSON source-identity SHA-256 is
+`6f36730c00aa5b3edaa693fc514d4d21ed8815ce3918ec9a7a8c01ff6d2b9337`.
+
+Final compileall, import/construct smoke, working diff, untracked Python
+AST/whitespace, local links and artifact-hygiene checks pass. There are no
+untracked CAM files in the affected source/test/document owners. Session reports
+and synthetic artifacts stay under ignored `output/`; no versioned CAM fixture
+or dependency was added.
+
+**BO01-B is accepted by engineering and ready to commit.** No manual CamBam,
+controller or physical observation adds evidence to this detached offline gate.
+The [contract limits](structure_spec.md#mixed-tool-and-paired-inlay-search-bo01-b)
+retain finite-family/subset quality, conservative stock sampling, declared cost
+and setup confidence, cylinder-only paired binding and broader occupancy/runtime
+boundaries. Broader setup/geometry support reopens for a named blocked consumer
+with its independent proof; physical fit requires actual material observations.
+BO01-C remains the distinct bounded epic/branch closure task. This is a good
+fresh-session breakpoint: contracts, inputs, evidence, limits and next priority
+are durable, with no pending process or user decision. Work is uncommitted;
+staging, commit and merge remain user-owned, and no merge-ready claim is made.
+
 ## BO01-A finite planar bundle search - 2026-10-03
 
 The new `feat/tool-path-bundle-search` branch starts at merged `main`

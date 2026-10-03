@@ -8,7 +8,7 @@ import math
 
 from shapely.errors import GEOSException
 
-from cambam_builder.cam_core import ordered_job as oj, planar_rest, v_region as v
+from cambam_builder.cam_core import ordered_job as oj, planar_rest, replay, v_region as v
 from cambam_builder.cam_core.occupancy import OccupancySetup
 from cambam_builder.integrations import ordered_dialects
 from cambam_builder.integrations.ordered_output import emit
@@ -28,7 +28,7 @@ def _count(value, name, *, positive=False):
 @dataclass(frozen=True)
 class Tool:
     tool_id: str
-    profile: v.VProfile
+    profile: object               # VProfile or named cylindrical ToolProfile
     axial_limits: oj.AxialLimits
     rpm: float
     cut_feed_mm_min: float
@@ -37,9 +37,11 @@ class Tool:
 
     def __post_init__(self):
         if (type(self.tool_id) is not str or not self.tool_id or
-                type(self.profile) is not v.VProfile or
+                not (type(self.profile) is v.VProfile or
+                     (type(self.profile) is replay.ToolProfile and
+                      self.profile.kind == 'cylinder' and self.profile.name == self.tool_id)) or
                 type(self.axial_limits) is not oj.AxialLimits):
-            raise ValueError('named V tool and axial/entry limits required')
+            raise ValueError('named V/cylindrical tool and axial/entry limits required')
         ordered_dialects._tool(self.tool_id)
         for name in ('rpm', 'cut_feed_mm_min', 'entry_feed_mm_min', 'retract_feed_mm_min'):
             _number(getattr(self, name), name, positive=True)
@@ -152,12 +154,16 @@ class SearchResult:
     design_fingerprint: str
 
 
-def _composition(job, files, dialect):
+def _composition(job, files, dialect, target=None):
     # Reuse the stock owner's reconstruction; cached reports never guide cuts.
     decoded = ordered_dialects.decode(files, dialect, initial_work_tip=job.initial_tip)
-    plans = tuple(oj._decoded_v_plan(s.v_plan, oj._observed_stage(s, d, job.translation_xyz_mm))
-                  for s, d in zip(job.stages, decoded.stages))
-    return v.VComposition(plans[0].target, plans), decoded
+    target = target or next(s.v_plan.target for s in job.stages if s.v_plan is not None)
+    sweeps = []
+    for stage, observed in zip(job.stages, decoded.stages):
+        moves = oj._observed_stage(stage, observed, job.translation_xyz_mm)
+        sweeps.append(oj._decoded_v_plan(stage.v_plan, moves) if stage.v_plan is not None
+            else oj._replay_endmills(job, (stage,), (moves,), initial_tip=moves[0].start)[0][0])
+    return v.VComposition(target, tuple(sweeps)), decoded
 
 
 def _cost(job, decoded, model):
@@ -189,26 +195,65 @@ def _plan(prior, tool, family, safe_z):
     return v.plan(prior.target, tool.profile, fill_pattern=family.kind, **controls)
 
 
+def _limit_reasons(area, volume, cost, constraints):
+    reasons = []
+    for name, actual, limit in (
+            ('residual area', area[1], constraints.max_area_mm2),
+            ('residual volume', volume[1], constraints.max_volume_mm3),
+            ('estimated time', cost.estimated_time_s, constraints.max_time_s),
+            ('tool changes', cost.tool_changes, constraints.max_tool_changes),
+            ('setup boundaries', cost.setup_boundaries, constraints.max_setup_boundaries)):
+        if limit is not None and actual > limit:
+            reasons.append(f'{name} exceeds declared limit')
+    return reasons
+
+
 def _evaluate(actions, target, tools, families, constraints, model, setup,
               initial_tip, safe_z, dialect):
     stages, executed, omitted = [], [], []
-    seed = v.VPlan(target, next(iter(tools.values())).profile, (), (),
+    seed_profile = next((t.profile for t in tools.values() if type(t.profile) is v.VProfile),
+                        v.VProfile('pointed', target.design_angle_degrees, 0, 1, 1))
+    seed = v.VPlan(target, seed_profile, (), (),
                    safe_z, .02, 1, 'infeasible', 'virgin stock; no removal')
     prior = v.VComposition(target, (seed,))
     boundary = 'pause' if dialect == 'grbl' else 'split'
     try:
         for action in actions:
             tool, family = tools[action[0]], families[action[1]]
-            plan = _plan(prior, tool, family, safe_z)
-            v.verify(plan)
+            cylinder = type(tool.profile) is replay.ToolProfile
+            if cylinder:
+                if family.kind == 'feature':
+                    raise ValueError('feature family supports V profiles only')
+                trace = planar_rest.generate_cylindrical(target, tool.profile,
+                    stepover_mm=family.stepover_mm, xy_step_mm=family.xy_step_mm,
+                    margin_mm=family.margin_mm, safe_z=safe_z, max_paths=family.max_paths,
+                    max_stepdown_mm=tool.axial_limits.max_stepdown_mm,
+                    initial_tip=initial_tip, fill_pattern=family.kind)
+                if trace is None:
+                    omitted.append(action)
+                    continue
+                moves = tuple(oj.JobMove(m.role, m.start, m.end,
+                    0 if m.role == 'rapid' else tool.entry_feed_mm_min if m.role == 'entry'
+                    else tool.retract_feed_mm_min if m.role == 'retract' else tool.cut_feed_mm_min)
+                    for m in trace.items if type(m) is replay.Motion)
+                transition = None if not stages else oj.Transition('operator', boundary,
+                    tool.tool_id, initial_tip, 'declared-offline-resume')
+                stage_id = f'search-{len(stages)+1}'
+                stages.append(oj.Stage(stage_id, tool.tool_id, moves,
+                    tool.rpm, operation=replace(trace.operations[0], name=stage_id),
+                    source_revision=trace.motion_fingerprint,
+                    transition=transition, axial_limits=tool.axial_limits))
+            else:
+                plan = _plan(prior, tool, family, safe_z)
+                v.verify(plan)
             # Retain unproved benefit. Omit only wholly proved cutting-profile
             # air against previously decoded stock, never caller assertions.
-            if not plan.paths or (prior.stages and all(
+            if not cylinder and (not plan.paths or (prior.stages and all(
                     planar_rest.cutting_sweep_clear(prior, tool.profile, a, b)
-                    for path in plan.paths for a, b in zip(path.points, path.points[1:]))):
+                    for path in plan.paths for a, b in zip(path.points, path.points[1:])))):
                 omitted.append(action)
                 continue
-            for passed in v.depth_passes(plan, tool.axial_limits.max_stepdown_mm):
+            for passed in (() if cylinder else v.depth_passes(plan, tool.axial_limits.max_stepdown_mm)):
                 moves = tuple(oj.JobMove(m.role, m.start, m.end,
                     0 if m.role == 'rapid' else tool.entry_feed_mm_min if m.role == 'entry'
                     else tool.retract_feed_mm_min if m.role == 'retract' else tool.cut_feed_mm_min)
@@ -223,7 +268,7 @@ def _evaluate(actions, target, tools, families, constraints, model, setup,
             job = oj.Job(target.source_id, tuple(stages), initial_tip,
                          program_frame=setup.frame, occupancy_setup=bounded)
             files, report = emit(job, dialect, coordinate_decimals=6 if dialect == 'uccnc' else 4)
-            prior, decoded = _composition(job, files, dialect)
+            prior, decoded = _composition(job, files, dialect, target)
             executed.append(action)
         if not stages:
             return Assessment(actions, (), tuple(omitted), 'empty', ('no executable cutting paths',))
@@ -231,25 +276,17 @@ def _evaluate(actions, target, tools, families, constraints, model, setup,
                      'tool_fixture_occupancy', 'axial_process_limits'):
             if report[gate]['status'] != 'pass':
                 raise ValueError(f'missing passing {gate}')
-        stock = report['stock_access_residual']
+        depth = min(1, target.cap_depth)
         cost = _cost(job, decoded, model)
         floor_gap = None
         if constraints.max_floor_cusp_mm is not None:
-            depth = max(0, target.cap_depth-constraints.max_floor_cusp_mm)
+            cusp_depth = max(0, target.cap_depth-constraints.max_floor_cusp_mm)
             floor_gap = target.section(target.cap_depth, outer=True).difference(
-                v.section_evidence(prior, depth).known_free_inner).area
-        bundle = Bundle(job, files, dialect, tuple(stock['section_1_mm2']),
-            tuple(stock['volume_mm3']), stock['section_depth_mm'], floor_gap, cost,
+                v.section_evidence(prior, cusp_depth).known_free_inner).area
+        bundle = Bundle(job, files, dialect, tuple(v.section_report(prior, depth)),
+            tuple(v.volume_bounds(prior)), depth, floor_gap, cost,
             tuple(report['motion_equivalence']['program_sha256']))
-        reasons = []
-        for name, actual, limit in (
-                ('residual area', bundle.area_mm2[1], constraints.max_area_mm2),
-                ('residual volume', bundle.volume_mm3[1], constraints.max_volume_mm3),
-                ('estimated time', cost.estimated_time_s, constraints.max_time_s),
-                ('tool changes', cost.tool_changes, constraints.max_tool_changes),
-                ('setup boundaries', cost.setup_boundaries, constraints.max_setup_boundaries)):
-            if limit is not None and actual > limit:
-                reasons.append(f'{name} exceeds declared limit')
+        reasons = _limit_reasons(bundle.area_mm2, bundle.volume_mm3, cost, constraints)
         if floor_gap is not None and floor_gap > 0:
             reasons.append('floor cusp unproved over located floor area')
         return Assessment(actions, tuple(executed), tuple(omitted),
@@ -283,16 +320,9 @@ def _rank(assessment, objective):
             'tool_changes': (changes, time, area, volume, boundaries)}[objective] + (assessment.actions,)
 
 
-def search(target, tools, families, *, constraints, cost_model, setup,
-           initial_tip, safe_z, max_operations, max_evaluations,
-           objective='residual', dialect='uccnc', manual_order=None):
-    """Enumerate distinct tool/family actions, single operations before longer orders.
-
-    Manual order is evaluated first, consuming the same budget. It may choose a
-    dominated feasible bundle but cannot bypass safety or constraints. Complete
-    enumeration optimizes reported bounds/estimated costs in these finite
-    families, never all possible paths or real machining time.
-    """
+def _validate(target, tools, families, constraints, cost_model, setup,
+              initial_tip, safe_z, max_operations, max_evaluations,
+              objective, dialect, manual_order):
     if (type(target) is not v.VTarget or target.design_angle_degrees is None or
             type(constraints) is not Constraints or type(cost_model) is not CostModel or
             type(setup) is not OccupancySetup):
@@ -320,23 +350,20 @@ def search(target, tools, families, *, constraints, cost_model, setup,
             len(manual_order) > max_operations or any(a not in actions for a in manual_order)
             or len(set(manual_order)) != len(manual_order)):
         raise ValueError('manual order must contain distinct declared actions within the bound')
-    total = sum(math.perm(len(actions), n) for n in range(1, max_operations+1))
+    return actions
 
-    def orders():
-        if manual_order is not None:
-            yield manual_order
-        for n in range(1, max_operations+1):
-            for order in permutations(actions, n):
-                if order != manual_order:
-                    yield order
 
-    assessments = []
-    for order in orders():
-        assessments.append(_evaluate(order, target, {t.tool_id: t for t in tools},
-            {f.family_id: f for f in families}, constraints, cost_model, setup,
-            initial_tip, safe_z, dialect))
-        if len(assessments) >= max_evaluations:
-            break
+def _orders(actions, max_operations, manual_order=None):
+    if manual_order is not None:
+        yield manual_order
+    for n in range(1, max_operations+1):
+        for order in permutations(actions, n):
+            if order != manual_order:
+                yield order
+
+
+def _result(assessments, total, objective, fingerprint, manual_order=None):
+    """Shared finite-space acceptance, ranking and completeness policy."""
     feasible = [a for a in assessments if a.status == 'feasible']
     frontier, dominated = [], []
     for a in feasible:
@@ -357,4 +384,25 @@ def search(target, tools, families, *, constraints, cost_model, setup,
                assessments[0].status in ('constrained', 'empty'))) else 'unresolved')
     return SearchResult(status, chosen, tuple(assessments),
         tuple(frontier), tuple(dominated), total, len(assessments), complete, unresolved,
-        objective, quality, target.fingerprint)
+        objective, quality, fingerprint)
+
+
+def search(target, tools, families, *, constraints, cost_model, setup,
+           initial_tip, safe_z, max_operations, max_evaluations,
+           objective='residual', dialect='uccnc', manual_order=None):
+    """Search distinct V/cylindrical tool/family orders under independent audits.
+
+    Manual order consumes the same budget and gates. Complete enumeration
+    optimizes reported bounds/estimated costs only in the declared finite space.
+    """
+    actions = _validate(target, tools, families, constraints, cost_model, setup,
+        initial_tip, safe_z, max_operations, max_evaluations, objective, dialect, manual_order)
+    total = sum(math.perm(len(actions), n) for n in range(1, max_operations+1))
+    assessments = []
+    for order in _orders(actions, max_operations, manual_order):
+        assessments.append(_evaluate(order, target, {t.tool_id: t for t in tools},
+            {f.family_id: f for f in families}, constraints, cost_model, setup,
+            initial_tip, safe_z, dialect))
+        if len(assessments) >= max_evaluations:
+            break
+    return _result(assessments, total, objective, target.fingerprint, manual_order)

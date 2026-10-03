@@ -1938,10 +1938,11 @@ or stock enclosure owners still require full discovery under
 
 ### Finite planar bundle search checks
 
-BO01-A search and its RP01/supplied-selection boundaries use:
+BO01-A/B search and its RP01/supplied-selection boundaries use:
 
 ```powershell
 & .\.venv\Scripts\python.exe tools/verify.py --pattern test_bundle_search.py --pattern test_planar_rest.py --pattern test_strategy_selection.py
+& .\.venv\Scripts\python.exe tools/verify.py --pattern test_mixed_bundle_search.py --pattern test_inlay_search.py --pattern test_planar_cylinder.py --pattern test_v_region.py --pattern test_fixed_v_design.py
 ```
 
 Self-contained tests enumerate an analytic capsule space with three objective
@@ -1953,6 +1954,17 @@ without caller-asserted audit authority. Inputs/output bytes are generated in
 memory; the verification runner owns ignored session logs. See the
 [search contract](structure_spec.md#finite-planar-toolpath-bundle-search-bo01-a)
 and [evidence](REVIEW.md#bo01-a-finite-planar-bundle-search---2026-10-03).
+
+BO01-B adds generated cylindrical/V protected-island orders, a changed
+motif/profile with Grbl, original-target cylinder-only scoring, independent
+tapered receiver/plug orders, decoded insertion and final facing, compound cost
+ranking and unsupported/setup/part/facing diagnostics. The generated offset
+consumer reopened the short closed-contour sampler gap; its strict-verifier
+regressions cover both part targets. Changes to this shared path sampler require
+full checkout discovery (`tools/verify.py`) under
+[required checks](#required-checks-by-change). See the
+[mixed/paired contract](structure_spec.md#mixed-tool-and-paired-inlay-search-bo01-b)
+and [BO01-B evidence](REVIEW.md#bo01-b-mixed-and-paired-search---2026-10-03).
 
 ### Editable native rest preparation and actual-post gate
 

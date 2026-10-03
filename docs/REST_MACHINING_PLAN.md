@@ -263,20 +263,12 @@ objectives select three different bundles and exhaust its finite space.
 Stopping condition: these reusable all-V contracts are implemented, tested and
 accepted by engineering. This closes one session, not the bounded epic.
 
-**BO01-B: mixed-tool and paired-inlay search consumer.** Extend the same
-finite-search policy to cylindrical/V ornamental orders and independently
-planned receiver/plug stocks. Keep original designs, allowances and separate
-bodies authoritative; evaluate fit/insertion, declared assembly/cure and final
-facing through IN01 before a pair may win. Rank compound motion/setup costs and
-return explicit partial/infeasible reasons when part or assembly limits fail.
-Challenge with a second supported tool/profile or motif and show an actual
-benefit over the V-only/supplied baseline at comparable constraints. The known
-tapered offset zero-length path gap reopens only if a selected generated family
-hits it; repair its planner owner with a regression then. Respect current
-fixture/occupancy representation limits and add a named proof when a candidate
-requires more. Do not introduce a recipe-specific verifier or universal backend.
-Stopping condition: mixed and paired consumers share search policy and pass
-independent part plus assembly/facing acceptance, with unsupported setups explicit.
+**BO01-B: mixed-tool and paired-inlay search consumer.** Implemented through
+the [mixed/paired search contract](structure_spec.md#mixed-tool-and-paired-inlay-search-bo01-b),
+sharing finite policy and existing independent part, insertion and facing owners.
+The [acceptance record](REVIEW.md#bo01-b-mixed-and-paired-search---2026-10-03)
+owns generated benefits, profile/dialect challenges, the reopened offset repair
+and explicit support limits; live acceptance/delivery state stays in PROGRESS.
 
 **BO01-C: bounded epic / intended branch closure.** Review the final changed
 contracts and consumers, the finite oracle, objective disagreements, omission,

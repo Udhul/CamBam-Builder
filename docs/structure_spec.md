@@ -30,6 +30,7 @@ are outside that runtime package list.
 | `cambam_builder/stock.py` | Exact conditional disk-sweep occupancy, remaining-section bounds and supplied section-motion verification | Horizontal cuts and explicit travel inside rectangular stock/target; no generated or native path integration |
 | `cambam_builder/cam_core/` | Document-independent CAM planning, motion and stock analysis; `replay.py` owns ordered XYZ/cut-sweep values, `ordered_job.py` owns caller-supplied stage/state and decoded stock auditing, `volume3d.py` owns bounded layered 3D stock, `surface3d.py` owns affine-plane and spherical-bowl ball contact/stock, `inlay.py` owns bounded circular paired-target assembly/stock, `occupancy.py` owns bounded tool-body/box clearance, and `curved_region.py` owns bounded circular-arc access/rest approximation | Exact nominal and curved endmill stock, stepped-volume, analytic sloped/bowl ball, circular inlay and holder/fixture evidence slices; no native entity, XML or MCP dependency. `inlay.audit_pair` is the documented output-orchestration exception: it calls `integrations.ordered_output.audit_files`. |
 | `cambam_builder/cam_extensions/strategy.py` | Deterministic selection among separately audited ordered routes, including partial and infeasible outcomes | Policy over evidence records; no XML or native entity dependency |
+| `cambam_builder/cam_extensions/bundle_search.py` and `inlay_search.py` | Finite generation/selection policy and independent mixed/paired consumer orchestration | Reuse existing planners and decoded stock/output/assembly verifiers; no new geometry or safety authority |
 | `cambam_builder/planar.py` and `_planar_shapely.py` | Detached nominal planar values, error/provenance policy, analytic feasible centers and private optional GEOS adapter | Pure planar geometry; no document or stock/path ownership |
 | `cambam_builder/machining_calculations.py` | Pure unit-explicit milling formulas, partial-input constraint solving and derived RPM/feed machine caps | Arithmetic planning kernel; composed by the separate pass planner |
 | `cambam_builder/machining_recommendations.py` | Immutable tool/material/machine contexts, provenance-bearing recommendations, user diameter tables and pluggable pure strategies | Recommendation selection only; contains no curated catalog, persistence, document mutation or safety claim |
@@ -380,7 +381,7 @@ the initial behavior-to-test matrix and audit gaps belong in REVIEW.
 | Ornamental paired stock: `ornamental_inlay.Design/verify_pair/finish_envelope`, `tapered_inlay.Design/PartStock/section/verify_pair`, `composite_inlay.Assembly/Finish/generate/verify` | `cam_core` stock/assembly; complete-byte audits in `integrations.inlay_output` | [Straight-wall](#ornamental-straight-wall-paired-stock-and-assembly-in01), [profile-aware tapered](#tapered-profile-aware-paired-stock-in01) and [composite facing](#composite-stock-facing-and-final-inlay-verification-in01) with supplied independent parts and continuous rigid insertion. | Public bounded offline verification of facing plane, motif enclosures and retained nominal core/floor; declared sanding envelope remains separate. Physical fit and controller execution have separate gates. |
 | Recommendation/pass policy: root `machining_calculations`, `machining_recommendations`, `machining_planning` | Formula kernel, immutable contexts, pluggable recommendation strategy | Unit-explicit inputs, feed/RPM/range constraints and through-cut pass planning. No toolpath generation, stock clearance or curated material authority. | Existing public APIs, unchanged owners followed as dependencies. A candidate recommendation is not a stock certificate. |
 | Route selection: `cam_extensions.strategy.select_strategy` | Detached policy over caller-supplied `StageAudit` and residual bounds | Checks source/predecessor chain, required gates and completeness; ranks feasible then safe partial candidates by upper residual area, volume and declared tie order. Manual choice cannot select an unsafe candidate. | Public supplied-candidate ranking, not bundle search, cutting-time optimization or independent validation of caller assertions. No global optimum claim. |
-| Finite bundle search: `cam_extensions.bundle_search.search` | Detached search policy over existing planar generators and ordered output | Declared V inventory and raster/offset/RP01 feature families; explicit passes, decoded cumulative stock, whole-tool setup, finish/cost limits, finite orders and conservative dominance. | Public bounded all-V search; [BO01-A contract](#finite-planar-toolpath-bundle-search-bo01-a). Mixed/paired and surface consumers remain later scopes. |
+| Finite bundle search: `cam_extensions.bundle_search.search`, `inlay_search.search_pair` | Detached search policy over existing planar generators, ordered output and IN01 | Declared cylindrical/V inventory, explicit passes, decoded cumulative stock, whole-tool setup, finish/cost limits, finite orders and conservative dominance; independent tapered parts plus insertion and final facing. | Public bounded planar and paired search; [foundation](#finite-planar-toolpath-bundle-search-bo01-a) and [BO01-B consumers](#mixed-tool-and-paired-inlay-search-bo01-b). Surface search remains later scope. |
 | Caller-owned execution: `ordered_job.Job/Stage/Transition/AxialLimits`, `from_prior_v`, `audit` | `cam_core.ordered_job`; replay, V and bounded 3D evaluators | Caller labels/tools/order/feed/RPM; resolved mm/G54 translation. All-cylinder, standalone/cumulative all-V, bounded mixed cylinder/V, homogeneous layered/surface/inlay sequences have distinct evaluators. Mixed V requires explicit axial/entry limits and whole-tool setup. | Public bounded composition. `audit` consumes already-decoded values; `ordered_output` is the complete-byte/native-binding authority. Unsupported mixtures must not be read as stock success. |
 | Editable native rest: `rest_boundaries.derive`, `native_rest.prepare/author/audit`, `RestBinding` | Detached boundary derivation plus native integration | [NR01 contract](#editable-native-rest-boundaries-and-mops-nr01); compensated planar Regions, native Pocket and original-design certification | Public bounded API; synthetic offline evidence and actual native planner acceptance are separate. |
 | Native/generated composition: `native_ordered_job.from_native_series/from_native_v`, `NativeBinding.check` | Native integration to detached ordered job | Repeated tools and supported native stage order; one native cylinder plus source-bound V finish. `from_native_circle_cleanup` is specifically the diameter-24/depth-2/T1-T2 observed recipe. | Public bounded adapter plus named reference helper. Source/current-post binding is required at output; no mandatory global document session. |
@@ -947,12 +948,96 @@ or real cycle-time optimum is claimed. Stored measurements are snapshots; use
 Generation/arithmetic/GEOS failures are per-order diagnostics; unexpected
 programming errors are not swallowed.
 
-Mixed cylinder/V, paired-inlay compound selection, native regenerated posts and
-surface search are outside this all-V contract. The
+The [BO01-B consumer contract](#mixed-tool-and-paired-inlay-search-bo01-b)
+extends this policy to mixed cylinder/V and paired-inlay compound selection.
+Native regenerated posts and surface search remain outside it. The
 [epic acceptance and stopping points](REST_MACHINING_PLAN.md#bo01-bounded-search-epic)
 separate reusable mechanism from consumer fit/assembly policy.
 [BO01-A evidence](REVIEW.md#bo01-a-finite-planar-bundle-search---2026-10-03)
 records the finite oracle and generated consumers.
+
+### Mixed-tool and paired-inlay search (BO01-B)
+
+`bundle_search.Tool.profile` also accepts a named `replay.ToolProfile` of kind
+`cylinder`; its name must match the output tool ID. Cylinders use raster or
+offset families through `planar_rest.generate_cylindrical`. RP01 feature families
+remain V-only; incompatible actions are explicit rejected diagnostics. The
+generator derives centers from the original frozen `VTarget`, retaining its
+source, cap, holes and design angle. All axial passes retrace the deepest-safe
+XY paths, so the existing process verifier can establish each advance. Short
+flutes retain deeper residual; no deepest-safe center yields an omitted action.
+This conservative generator leaves upper-wall stock for other stages. It has
+finite pass/path/vertex controls and high entry/retract links without prior-cavity
+credit. Whole-stage proved-air omission remains limited to V profiles.
+
+Every emitted prefix is independently decoded and reconstructed through
+`ordered_job` as a `VComposition` of V plans and cylindrical traces. This also
+re-establishes full-height cylinder containment in the original tapered design.
+Cylinder-only search results use that same design's section/volume enclosures,
+not the cylindrical operation's vertical target. Subsequent RP01 feature
+generation consumes this decoded union. Mixed orders, including V/cylinder/V,
+retain the foundation's constraints, manual-choice gates and finite quality.
+
+`cam_extensions.inlay_search.search_pair` accepts a `tapered_inlay.Design`,
+receiver/plug tuples of `PartRequest`, one request for every component in
+`Design.targets(side)` order, and explicit `Facing` declarations. Each component
+has its own inventory, families, finish limits, whole-tool/fixture setup, safe
+tip and operation bound. Designs and allowances never depend on selected tools;
+receiver and plug bodies, revisions and frames stay independent. A tool ID must
+identify one physical profile throughout the compound workflow.
+
+The compound space is the Cartesian product of the same distinct-action orders
+used by planar search. Enumeration is lazy; `max_evaluations` counts compound
+orders, and identical component orders reuse their decoded audited assessments.
+`manual_orders` specifies every component, receiver first, then plug; it consumes
+the same budget and gates. This consumer shares planar constraint, ranking,
+conservative dominance and completeness policy, rather than selecting local part
+winners before assembly. A `PairAssessment` retains component assessments and
+available assembly/facing diagnostics when no compound bundle can win.
+
+Part limits must pass before `inlay_output.audit_tapered_pair` checks complete
+bytes, independent remaining stocks, continuous fixed-XY insertion, seated fit
+and bottom/surface gaps. `assemble_outputs` constructs the verified assembly;
+`composite_inlay.generate` and `inlay_output.audit_facing` then require final
+plane, motif enclosure/topology and retained plug-core/receiver-floor evidence.
+Failed part, fit or facing limits are constrained partial alternatives; failed
+generation, byte/safety verification and unsupported representations are rejected
+orders with unresolved quality. Only a fully passing compound may rank.
+`PairBundle` returns part bundles, facing job/bytes/hashes, bound `Finish`,
+assembly/facing reports, residual bounds and compound costs. Existing adapters
+remain the byte and stock authority; no recipe-specific verifier is added.
+
+Facing uses a declared cylindrical tool and its axial/entry limits, feeds, RPM,
+overlap, finite path budget, safe height, finish tolerances, retained thicknesses
+and assembly/cure/renewed-setup tokens. Its `OccupancySetup` template frame is
+`assembled-backing-top`; only the frame is rebound to the candidate's
+fingerprinted `Finish.frame`, leaving caller boxes/body coordinates unchanged.
+The stock box must equal the padded facing target bounds/depth, as required by
+the existing ordered verifier. Tokens and assembly/cure seconds are declarations,
+not observations. Parts and facing retain separate complete setups; no motion
+between jobs or inter-component cleared access is inferred.
+
+Compound residual objectives sum independent component section bounds at each
+reported `min(1 mm, cap)` depth and their volume bounds; these are machining
+metrics, not assembly-gap or final-facing residuals. IN01 gates those separately.
+Optional compound floor cusp is unsupported; callers set component cusp limits.
+Compound time sums decoded component/facing costs, initial setup time once per
+complete job, an additional boundary per job transfer, tool-change time when
+adjacent jobs end/start with different IDs, and declared assembly/cure seconds.
+Changes and boundaries include both within-job and between-job events. Aggregate
+area/volume/time/change/setup constraints apply before selection. Confidence
+retains constant-feed and declared-process assumptions, without a runtime claim.
+
+Support is bounded to tapered planar IN01 parts and flat cylindrical facing.
+The current IN01 output adapter requires an executed matching V stage in each
+tapered component job; cylinder-only paired components are explicitly rejected,
+even though planar cylinder-only search is supported. Occupancy retains its
+box-fixture and conservative contiguous cutter/shank/holder-band representation.
+No broader setup, native post, freeform surface, load or physical fit acceptance
+is inferred. Short closed offset rings retain nonzero traversal after coordinate
+rounding; the strict motion verifier still rejects invalid paths. The
+[BO01-B evidence](REVIEW.md#bo01-b-mixed-and-paired-search---2026-10-03) records
+generated benefits, supported profile/dialect challenges and remaining limits.
 
 ### Editable native rest boundaries and MOPs (NR01)
 

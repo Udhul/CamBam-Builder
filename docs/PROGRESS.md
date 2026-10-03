@@ -106,21 +106,23 @@ The current branch is **`feat/tool-path-bundle-search`**, based on `main` at
 
 | Task | State | Outcome / stopping point |
 | --- | --- | --- |
-| **BO01-A**: finite planar V bundle search | Accepted by engineering 2026-10-03; ready to commit | Finite all-V search, constraints, decoded stock and objective/oracle gates pass; [evidence](REVIEW.md#bo01-a-finite-planar-bundle-search---2026-10-03). This session closes A. |
-| **BO01-B**: mixed-tool and paired-inlay consumer | Backlog; next implementation task | Extend the same search to cylindrical/V ornamental work and independently planned receiver/plug stocks, with assembly/facing acceptance and compound costs. |
+| **BO01-A**: finite planar V bundle search | Accepted by engineering 2026-10-03; committed `7ab21cc` | Finite all-V search, constraints, decoded stock and objective/oracle gates pass; [evidence](REVIEW.md#bo01-a-finite-planar-bundle-search---2026-10-03). |
+| **BO01-B**: mixed-tool and paired-inlay consumer | Accepted by engineering 2026-10-03; ready to commit | Shared mixed/paired search, decoded IN01 insertion/facing, compound costs and generated offset repair; [contract](structure_spec.md#mixed-tool-and-paired-inlay-search-bo01-b) and [evidence](REVIEW.md#bo01-b-mixed-and-paired-search---2026-10-03). |
 | **BO01-C**: bounded epic and branch closure | Backlog; intended branch closure task | Reconcile A/B acceptance and remaining limits, inspect the final branch diff and evidence applicability, and close this bounded BO01 scope. Commit/merge delivery remains separate and user-owned. |
 
 [BO01 scope and acceptance](REST_MACHINING_PLAN.md#bo01-bounded-search-epic)
-own the tasks' detailed contracts. **Finishing A does not close the epic or this
+own the tasks' detailed contracts. **Finishing A/B does not close the epic or this
 branch.** C is the intended end of this track; SF01/NR03, general continuous
 optimization and controller/physical validation are outside it. A clean committed
 branch and the existing readiness gate are still required for a merge-ready
 claim against `main`; use a visible `--no-ff` merge when the user integrates it.
 
-**Next agent task:** BO01-B is the next distinct capability outcome because it
-connects the new search to MX01/IN01's useful flat/V and paired-stock workflows.
-A is complete; a fresh session is appropriate. Its contracts, acceptance, limits
-and B's scope are durable, with no pending process or manual observation.
+**Next agent task:** Complete BO01-C's bounded
+epic/branch closure. It matters now because A/B connect finite policy to useful
+mixed ornamental and paired-stock workflows; the remaining task is to reconcile
+their final contracts, evidence and branch scope before ending this track.
+B is accepted. A fresh session is appropriate: contracts, inputs, evidence,
+limits and C's scope are durable, with no pending process or manual observation.
 
 ### RQ01: reliable and proportionate merge readiness
 
@@ -151,13 +153,12 @@ items remain visible without reopening the accepted bounded scopes.
 
 | Pending scope | Reopening need and detail owner |
 | --- | --- |
-| Automatic offset fill on tapered plug components | Reopen when BO01 or another consumer generates these paths: an offset candidate can emit a zero-length V segment. Supplied verified plans close the current target/assembly scope. [Reproducer and boundary](REVIEW.md#in01-tapered-profile-aware-assembly---2026-10-02). |
 | Planar fitted paths, hard overlap caps and low cleared links | Reopen for an actual consumer requiring a declared fit/overlap limit or low-access route; require continuous containment, topology and coverage proof. RP01's high-link candidate needs none of these. [RP01 limits](structure_spec.md#feature-aware-planar-vrest-candidates-rp01). |
 | Controller runtime and supervised physical validation | Prioritize when the next goal is cutting a real part. Select actual controller/machine, tooling, stock and setup; prepare exact observations. [Runtime evidence boundary](REVIEW.md#m5-controller-runtime-evidence-scope---2026-09-26) and [job acceptance packets](REST_MACHINING_PLAN.md#ordered-next-session-job-packets-selected-2026-09-27). |
 | Native Pocket and XYZ/Engrave whole-motion role parity | Reopen for a carrier/post control that can encode missing entry, retract and setup roles, then audit a fresh complete post. NR01 covers useful native rest output. [Pocket route failure](REVIEW.md#rc01-pocketdefault-role-carrier-assessment---2026-09-23), [M1 rejected native entries](REVIEW.md#m1-first-actual-cambam-posts-and-contour-only-revision---2026-09-24) and [XYZ Engrave failure](REVIEW.md#bounded-xyz-engrave-cambam-post-finding---2026-09-24). |
 | Fresh Triangle-tab output and broader tab geometry | Bounded Manual authoring and B/C Square output are accepted. Fresh Triangle output plus curved, reversed, transformed or multi-target variants require their named native evidence. [Manual native fixture and limits](REVIEW.md#manual-profile-tab-native-fixture--2026-09-27), [fresh writer acceptance](REVIEW.md#fresh-writer-cambam-default-post-acceptance--2026-09-27). |
 | Remote MCP transport (historical backlog 5) | Non-urgent; promote only for an actual remote-PC or multi-client need. Define authenticated Streamable HTTP modern/legacy behavior, bind/origin/TLS policy, document lifecycle and cancellation before exposing the write-capable server. [MCP boundary](MCP_PLAN.md#boundary-resolved-by-the-mcp-contract). |
-| Broader geometry, precision and setup occupancy | Reopen for a named target/fixture or tolerance/workload blocked by bounded methods; require independent coverage oracles and decoded motion/setup binding. Non-box fixtures, inlay occupancy and helix/transition body checks remain outside current guarantees. [Strategy guarantees](structure_spec.md#strategy-guarantees-and-composition-limits), [body/fixture contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy) and [stock numerical limits](REVIEW.md#cumulative-directional-stockrest-bounds---2026-09-22). |
+| Broader geometry, precision and setup occupancy | Reopen for a named target/fixture or tolerance/workload blocked by bounded methods; require independent coverage oracles and decoded motion/setup binding. Non-box fixtures, assembled-body/transfer occupancy and helix/transition body checks remain outside current guarantees. BO01-B checks separate part/facing box setups. [Strategy guarantees](structure_spec.md#strategy-guarantees-and-composition-limits), [body/fixture contract](structure_spec.md#bounded-tool-body-and-fixture-occupancy) and [stock numerical limits](REVIEW.md#cumulative-directional-stockrest-bounds---2026-09-22). |
 | Package/core orchestration migration | Promote when a second paired-output consumer, independently packaged core or obstructed dialect proves the need. [Staged organization owner](structure_spec.md#package-organization-decision-and-migration-plan) and [BR-1-004 finding](REVIEW.md#findings-and-dispositions). |
 | MCP sequence repair and geometry affordances | A reorder tool reopens for a named-client misordering/repair need; general containment/parametric helpers require demonstrated authoring benefit. [Existing operation-order observation](REVIEW.md#mcp-agent-geometry-feedback-correction---2026-09-11). |
 | CLI/publishing | Promote only for an actual consuming workflow. [Original packaging scope and reopening criteria](REVIEW.md#packaging-and-supported-python-verification). |

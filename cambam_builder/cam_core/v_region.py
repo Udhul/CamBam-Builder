@@ -382,11 +382,15 @@ def _segments(geometry):
 
 
 def _sample(line, step):
-    count = max(1, math.ceil(line.length / step))
+    # A short closed contour still needs an interior traversal: its endpoints
+    # alone coincide. Keep the final closure, removing only adjacent duplicates
+    # introduced when distinct sampled positions round to the same coordinate.
+    count = max(3 if line.is_ring else 1, math.ceil(line.length / step))
     if count > 50000:
         raise ValueError("V path vertex budget exceeded")
-    return tuple(tuple(round(c, 7) for c in line.interpolate(i / count,
-                        normalized=True).coords[0]) for i in range(count + 1))
+    points = tuple(tuple(round(c, 7) for c in line.interpolate(i / count,
+                         normalized=True).coords[0]) for i in range(count + 1))
+    return tuple(p for i, p in enumerate(points) if i == 0 or p != points[i-1])
 
 
 def contact_radius(target, tool, penetration):
