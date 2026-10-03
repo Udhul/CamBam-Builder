@@ -1,6 +1,716 @@
-# Initial workflow and engineering review — 2026-09-07
+# Review and acceptance history
+
+Entries below are dated historical evidence, including superseded decisions and
+checkpoints. [PROGRESS](PROGRESS.md) owns current priority and state; the
+[specification](structure_spec.md) and [MCP contract](MCP_CONTRACT.md) own current
+contracts. Historical next-task and pending statements describe their entry date.
+
+## PR blocker repairs and RQ01 readiness evidence - 2026-10-03
+
+This repairs the two [final PR findings](#final-branch-pr-quality-review---2026-10-03)
+and demonstrates the [correctness/readiness procedure](WORKFLOW.md#correctness-evidence-before-a-readiness-decision).
+Review scope is `main` at `2f10b07` through committed HEAD `8baacc2`, plus the
+uncommitted two-owner repairs, focused tests and owning documentation. The full
+branch review from the preceding session is reused; this pass checks the repairs
+and their integration, not another unbounded search over unchanged code.
+
+| Changed claim / owner and consumer | Positive and negative evidence | Correctness disposition / limit |
+| --- | --- | --- |
+| NR01 rest windows remain tied to predecessor stock; `RestBinding` through native audit and `NativeBinding` | New two-predecessor mutation test rejects changed diameter, floor, selection, non-final header/footer through both consumers. Stage-kind mutation rejects. Shifted line numbers and fresh stepover changes with identical motion still pass. Existing final-footer and both ordered-dialect consumers pass. | Lead reviewed reopened intent and full normalized-stage comparison, permitted footer replacement and preserved default binding. Posted XYZ alone cannot bind cutter footprint; native planning provenance still requires actual observation. |
+| Tapered full-stock sections; `Assembly.section` and decoded composite facing | New tests use independent 5 x 5 blank geometry with .01 mm registration. Backing/floor and physical boundary sections are 25 mm2; outside sections are empty. Exact receiver cap retains flat-tool removal; just-beyond-cap sections are solid; low-level V queries still reject beyond their domain. | Independent bounded reviewer confirmed strict cap inequality, blank clipping before the shortcut, rigid flip/registration and validated component cap limits. Underlying sweep/enclosure algorithms are unchanged. |
+
+Fault sensitivity was demonstrated before implementation: the new native tests
+failed six assertions, and the two section tests produced five out-of-domain
+errors. After repair, `tests.test_native_rest` passed **8 tests in 43.157 s**;
+`tests.test_composite_inlay.TaperedAssemblySectionTests` passed **2 tests in
+1.972 s**, with no skips. Commands use repository Python 3.13.5 from the root:
+
+```powershell
+& .\.venv\Scripts\python.exe -B -m unittest tests.test_native_rest -v
+& .\.venv\Scripts\python.exe -B -m unittest tests.test_composite_inlay.TaperedAssemblySectionTests -v
+& .\.venv\Scripts\python.exe -B -m unittest tests.test_composite_inlay.CompositeInlayTests.test_tapered_flat_rounded_parts_and_decoded_composite_finish -v
+```
+
+The existing tapered decoded-pair/facing consumer passed **1 test in 673.697 s**,
+covering UCCNC and Grbl and final plane/motif/core/floor acceptance through actual
+decoded outputs. This round therefore completed **11 tests with no skips**.
+The inherited complete consumer dominates the measured check cost; the new
+section regressions take about two seconds. Do not repeat this consumer merely
+because the verified changes are committed. Both engineering repair gates are
+closed, and the evidence table/decision walkthrough completes RQ01.
+
+The original accepted NR01 actual post was re-audited under the repaired binding:
+all five published input hashes and the motion/derivation fingerprints are
+unchanged, and every resulting stage metric equals the preserved accepted audit.
+No new CamBam generation is required. Native logs and the new revalidation report
+are in `output/native-binding-repair-7dea3fa51b8e467bac5700a33e330469/`;
+composite logs are in `output/pr-repairs-3d1c8f3d74/`. No original observation
+artifact was overwritten. Future reproduction uses the self-contained tests;
+actual-post replay needs the original accepted bytes under the existing NR01
+acceptance boundary.
+
+Evidence reuse is explicit: comparison to the final historical NR01 snapshot
+finds only `native_rest.py` and `test_native_rest.py` changed among its 208 inputs.
+The historical IN01 regression snapshot adds those two changes to its already
+recorded three-file reconciliation. Shared parser/replay, V/cylinder enclosures,
+ordered engines, RP01 and other fixture inputs are unchanged. Fresh tests cover
+the repaired branches and relevant consumers; previous unaffected regression
+results remain applicable. This is not a new full-suite or package-matrix pass.
+The extra review used one bounded independent composite review plus lead native
+contract/caller review; no duplicate broad reviewer or full-suite run was needed.
+
+RQ01 decision walkthrough: without the predecessor mutation witness, native
+correctness remains unclosed despite a clean tree and historical passes. Without
+the cap/blank witness, the section-domain claim remains unclosed. With either
+required consumer result pending, engineering acceptance stays pending. Once
+these gates close, uncommitted repairs permit only **ready to commit**; a clean
+committed revision and final diff/evidence applicability checks are still required
+for **merge-ready**. This demonstrates missing-evidence refusal without introducing
+another checker that merely mirrors a human's pass/fail assertions. WORKFLOW owns
+the reusable procedure, and DEVELOPMENT links it from the existing Git commands.
+Physical/controller/fixture acceptance and GEOS enclosure limits remain unchanged.
+Final changed-source syntax, added documentation links, working and committed
+branch whitespace, main ancestry and task-scoped artifact hygiene passed.
+Delivery is **ready to commit**, not merge-ready: HEAD is still `8baacc2`, with
+these repairs/tests/docs uncommitted. The next delivery check must inspect the
+final committed diff and confirm these results still apply. No implementation
+blocker or required new external observation remains for this repair scope.
+Current delivery and next priority remain in PROGRESS.
+
+## Final branch PR quality review - 2026-10-03
+
+Reviewed `main` at `2f10b07aed9e97c1f475a3abe31d90d9e6087f0b` through
+`feat/feature-aware-v-rest` at `bcc3e8f5c2cfe61103259163447bd3feaeed0159`.
+The initial worktree was clean. The preceding delivery review established
+recorded-check applicability, ancestry, branch whitespace and documentation-link
+integrity. This additional correctness review found two P2 defects that supersede
+that merge-ready recommendation. Existing passing fixtures do not cover these
+cases; their recorded acceptance remains limited to those fixtures.
+
+1. **NR01 predecessor cutter changes retain stale boundary certification.**
+   `RestBinding.check` in `integrations/cambam/native_rest.py` compares predecessor
+   stage names and posted moves/events, but those comparisons omit cutter diameter.
+   Reproduction uses `tests.test_native_rest.make_case(..., island=False)`, authors
+   the cleanup and its synthetic post, changes the candidate ROUGH diameter from
+   6 to 4 mm without changing T1 or posted coordinates, then freshly normalizes
+   the candidate/post. `binding.check` returns `True`; `native_rest.audit` with
+   section depth 2 mm, protected-overcut limit .001 mm2 and minimum new removal
+   1 mm2 also accepts. Final residual is
+   **127.99540964604216-128.00078005903265 mm2**. Final replay uses the smaller
+   cutter conservatively, but windows/provenance still certify the original
+   6 mm predecessor stock. Predecessor machining semantics must be bound to the
+   derivation and changed cutter/selection intent must require re-derivation.
+   Closure needs a regression rejecting this freshly normalized mutation while
+   retaining the accepted explicit predecessor retract/spindle-stop footer.
+2. **IN01 tapered retained-stock sections reject uncut backing/floor material.**
+   `composite_inlay.Assembly.section` delegates every in-blank tapered section to
+   `tapered_inlay.section`, whose V evidence requires depth at or above each
+   removal target's cap. A valid stock section may be deeper than that cap.
+   Reproduction uses `tests.test_tapered_inlay.tapered` with motif
+   `box(0,0,3,3)`, stock `box(-1,-1,4,4)`, flat receiver and rounded plug stocks,
+   and four assembly slabs. Assembly passes; both cut caps are .75 mm.
+   `assembly.section(-.8)` (plug backing) and `assembly.section(1.0)` (receiver
+   floor) raise `ValueError: section outside V target`. Both sections are inside
+   their physical blanks; the relevant retained section should be the full
+   **25 mm2** blank. Closure needs full-blank results beyond removal caps,
+   without weakening V-target query validation, and regressions for backing,
+   receiver floor, cap boundaries and outside-blank sections.
+
+Both witnesses were independently reproduced on repository Python 3.13.5.
+The native witness used real XML serialization/parsing with file I/O mocked into
+memory; the tapered witness used actual stock constructors and verifiers.
+No machining files or reusable tests were added and no behavior suite was rerun.
+The interrupted duplicate assembly-suite attempt supplies no new test evidence.
+Source review found no additional actionable defect in RP01 guide/clearance,
+straight/tapered insertion bounds or complete-byte inlay adapters. This is bounded
+review evidence, not a proof of absence of further defects. Physical/controller
+acceptance remains outside scope. Current repair priority belongs to
+[branch closure](PROGRESS.md#current-branch-closure).
+
+## IN01 composite facing and final verification - 2026-10-03
+
+The [composite contract](structure_spec.md#composite-stock-facing-and-final-inlay-verification-in01)
+adds assembled retained-stock sections, flat raster facing and final
+plane/motif/core/floor gates over both accepted straight-wall and tapered pairs.
+It reuses existing replay, polygon/V enclosures and complete-output audits;
+their shared implementations are unchanged. Independent review checked the
+rigid flip, finite stock domains, monotone finish-section bounds and decoded
+source/job/hash bindings. A review-found registration false rejection was fixed:
+thickness follows the registered plug's own nominal tip core, while motif
+alignment remains measured against the fixed design.
+
+The straight-wall asymmetric 42 mm2 holed bridge uses the existing paired
+fixture with 1.2 mm seating, 0.4 mm surface gap, 1 mm backing and 3 mm receiver
+thickness. Facing removes 0.2 mm below receiver top, so the backing-top program
+cuts to 1.6 mm. Explicit controls are a 0.6 mm radius cylinder, 4 mm cutting
+length, 0.7 mm maximum stepover, 0.5 mm maximum stepdown and 2 mm clearance.
+Plane tolerance is 0.001 mm; lateral motif tolerance is 0.02 mm. Assertions
+require zero unfaced upper area, a 1 mm retained nominal plug core and 1.5 mm
+receiver floor. Independent section landmarks distinguish the solid backing,
+receiver island in the hole, and plug in the asymmetric right lobe. A second
+rectangular consumer checks the nominal 3.7 by 2.7 mm final outline. A 0.01 mm
+registration shift remains acceptable with a 0.03 mm motif tolerance.
+
+The tapered consumer retains the preceding 30-degree design with independent
+flat receiver/rounded plug profiles. A 0.05 mm finish removal yields a 0.3 mm
+nominal tip-core thickness and conservative 2.25 mm receiver floor; the declared
+lateral motif tolerance is 0.2 mm. Both families cover complete independent
+part outputs followed by facing outputs through UCCNC and Grbl. No nominal
+part target receives removed-stock credit. Byte/hash, revision, tool, frame and
+setup changes reject. Missing rows and insufficient facing depth remain
+unresolved; incomplete planes expose no certified plane/motif values. Excessive
+depth rejects in replay, while excessive core/floor minima and tighter motif
+tolerances fail their independent finishing gates.
+
+Verification used repository Python 3.13.5 and Shapely 2.1.2. The initial new
+suite passed **8 tests in 1019.864 s**; the added registration regression passed
+in **120.550 s**, yielding **9 distinct composite tests**. After tightening
+incomplete-plane reporting, its affected row/depth regression passed again in
+**107.049 s**. The other successful-path behavior is unchanged. The affected
+owners passed **43 tests**: execution evidence 9, ordered dialects 5, ordered
+jobs 8, straight-wall inlay 11 and tapered inlay 10. There were no skips or
+failing test IDs. Commands and reproducible synthetic consumers live in the
+[runbook](DEVELOPMENT.md#composite-inlay-facing-and-final-verification)
+and `tests/test_composite_inlay.py`; no saved CAM asset is required.
+
+The runner's overall report is **incomplete**, not a reported pass: its end-of-run
+source check caught the concurrent incomplete-result reporting edit, associated
+assertions and adapter docstring clarification. Exact SHA-256 reconciliation
+found only those three changed source/test files and reconstructed their
+pre-edit bytes to the runner's original hashes. Every other input, including
+all 43 regression tests and their shared owners, was unchanged. Those individual
+module passes are reused by engineering review; the changed composite negative
+case was rerun on the final code. The initial composite suite's zero-registration
+consumers are unaffected by the separately verified registered-core repair.
+No report was rewritten to claim a full runner pass. Local records are under
+`output/verification-20261003-060215-3c39217b/` and
+`output/in01-composite-20261003-01/`; the latter contains the exact byte
+reconciliation and final partial-facing test log.
+
+Syntax/import compilation, whitespace (including the untracked source/test),
+changed documentation links and task-scoped artifact hygiene passed. Engineering
+acceptance is complete for this bounded offline increment; implementation is
+**ready to commit**, not merge-ready. No staging, commit or merge was performed.
+Shared replay/enclosure/planner owners remain unchanged, so the affected-owner
+and complete decoded-consumer evidence closes this increment without full
+discovery. Current delivery and later feature priority stay in PROGRESS.
+
+Acceptance is bounded to detached offline motion/stock evidence. Process tokens
+declare assembly, cure and renewed setup; they do not observe those processes.
+Thickness applies to the registered nominal tip core and conservative receiver
+floor, not all tapered ledges. Enclosure topology remains conditional on the
+uncertainty band and existing GEOS/cutter bounds. Native CamBam facing,
+holder/fixture access, actual controller operation, adhesive mechanics and
+physical coupons remain separate scopes. No manual observation adds missing
+evidence to this offline gate. Reopen for a concrete consumer needing those
+capabilities or a shaped rather than flat assembled finish.
+
+## IN01 tapered profile-aware assembly - 2026-10-02
+
+The [tapered contract](structure_spec.md#tapered-profile-aware-paired-stock-in01)
+adds paired fixed-V targets, actual component-stock unions and conservative
+continuous insertion. It reuses existing V/cylindrical enclosures and ordered
+output auditing without changing their shared implementations. Independent
+review found no blocker in the monotone endpoint bounds, gap checks or decoded
+stock bindings. Geometry remains conditional on those existing GEOS enclosures.
+
+The synthetic asymmetric **42 mm2** motif uses the same 6 by 6 mm body,
+3 by 1 mm bridge, 3 by 3 mm lobe and 2 by 3 mm hole as the straight-wall
+consumer. New parameters are **0.35 mm** seating, **0.05 mm** minimum bottom
+and surface gaps, **0.18 mm** signed side fit at the tip plane, **30 degrees**
+design angle, **0.35 mm** overtravel per part, **1 mm** backing and edge
+access, **3 mm** receiver thickness and **0.4 mm** minimum nominal web.
+Actual cut caps are **0.75 mm**. Independent supplied contour/raster plans use
+**0.12 mm** pitch and **0.001 mm** margin. The flat receiver and rounded plug
+both use 30-degree profiles with **0.03 mm** tips; a pointed receiver variant
+uses the same target. Eight slabs yield **0 mm3** possible seated collision
+and certify both requested gaps, hence continuous fixed-XY insertion.
+
+Independent rectangular offset areas and length-1 capsule sections enclose
+`2*r + pi*r^2` for pointed, flat and rounded profiles, including both spherical
+and conical portions of the rounded profile. Section area-bound width is below
+**0.001 mm2**. A separate rectangle pairs a 30-degree flat receiver with a
+20-degree rounded plug while receiver cuts vary continuously in Z. Missing hole
+machining produces more than **1 mm3** definite collision; **0.6 mm**
+registration error, **-0.1 mm** interference, a blocked oversized cutter and
+insufficient pointed-floor clearance fail. Slab refinement narrows the same
+stock's collision interval. Revision, frame, tool and motion mutations reject.
+
+A smaller holed motif verifies complete UCCNC and Grbl component outputs;
+Grbl also includes an endmill stage before the V receiver stage. Byte/hash and
+job-binding mutations reject before assembly. Components use independent
+complete setups, so this does not claim connecting inter-component motion.
+No native/manual observation would add evidence to the stated offline gate.
+Executed composite facing, final visible motif/thickness, controller operation,
+holder/fixture occupancy and physical material-fit remain outside acceptance.
+
+Verification on repository Python **3.13.5**, Shapely **2.1.2**: the final
+tapered suite passed **10 tests** in **167.250 s**; the affected-owner regression
+run passed **88 tests** in **329.797 s**, both with no skips. Syntax, whitespace
+and changed documentation links were checked, including the new untracked
+source/test files. Engineering acceptance is complete for this bounded offline
+scope; the changes are ready to commit. Shared replay/enclosure/planner owners
+are unchanged, so focused owner and decoded-consumer coverage closes the gate
+without full discovery. Commands are in the
+[runbook](DEVELOPMENT.md#tapered-profile-aware-ornamental-inlay); synthetic inputs
+are self-contained in `tests/test_tapered_inlay.py`. Local logs remain under
+`output/in01-tapered-20261002-01/`; no saved machining file is needed to reproduce
+the assertions.
+
+One planning investigation is deliberately deferred. Calling `v_region.plan`
+on the same asymmetric pair with 20-degree flat/rounded profiles, 0.03 mm tips,
+2 mm maximum radius/cutting length, `fill_pattern="offset"`, **0.12 mm**
+stepover, **0.25 mm** XY step and **0.001 mm** margin generated the receiver
+but rejected the plug with `zero-length V segment`. This is a candidate-planner
+limitation, not fit evidence; the accepted independent supplied paths pass the
+whole-profile verifier. Reopen when automatic candidate generation consumes
+these components (notably BO01), rather than expanding the assembly verifier
+into a path-strategy repair. Current priority remains in PROGRESS.
+
+## IN01 straight-wall ornamental assembly - 2026-10-02
+
+The [bounded contract](structure_spec.md#ornamental-straight-wall-paired-stock-and-assembly-in01)
+adds independent paired targets, actual-stock insertion verification and a
+declared finishing-envelope consumer. It reuses cylinder replay and existing
+polygonal sweep enclosures without changing those shared owners. Complete-byte
+orchestration lives in `integrations.inlay_output`, not the CAM core. The
+historical circular V consumer is unchanged.
+
+The asymmetric synthetic motif is the union of a 6 by 6 mm body, a 3 by 1 mm
+bridge and a 3 by 3 mm lobe, minus a 2 by 3 mm hole: analytic area **42 mm2**.
+Seating is **1.2 mm**, bottom gap **0.3 mm**, surface gap **0.4 mm**, backing
+**1 mm**, receiver thickness **3 mm**, and signed lateral clearance **0.15 mm**
+within a **0.3 mm** caller limit. The minimum-web erosion control is **0.4 mm**.
+Independent cylinder radii **0.12 mm** and **0.1 mm** clear the receiver and
+physically X-flipped plug, including its separate hole pocket. Tests require
+zero possible collision volume throughout insertion and both requested gaps.
+An alternative **0.08 mm** plug tool passes against the same targets.
+
+Fault-sensitive witnesses include a retained plug hole colliding with the
+receiver island (definite collision above **5 mm3**), **0.4 mm** registration
+error, signed **-0.1 mm** interference, oversized tools, bridge collapse,
+stale revision/motion/tool/frame, and missing glue clearance. A plug shoulder
+cleared only **0.1 mm** beyond seating is collision-free but fails the requested
+surface gap. Another shoulder collides only in the top **0.05 mm** of the
+receiver, establishing why all section breakpoints must be checked. Rectangular
+offset areas have independent analytic references for positive, zero and
+negative fit; nominal zero fit is not automatically certified for machined stock.
+
+The declared **0..0.2 mm** full-plane finishing envelope requires assembly,
+cure and renewed-setup declarations, retains **1 mm** over the nominal plug
+core, and asserts missing motif area below **1e-6 mm2** and excess below
+**0.1 mm2**. These area limits are regression observations, not a global finish
+tolerance. Matching section-enclosure topology does not establish actual
+topology within the numerical uncertainty band or thickness of excess ledges.
+This consumer does not generate or verify an actual facing/sanding toolpath.
+
+Independent code review caught and repaired three report/evidence gaps: actual
+shoulder clearance was initially untested, assembly registration was absent from
+the certificate, and retained thickness needed explicit nominal-core scope.
+A final review corrected the topology label to match its enclosure evidence.
+No consequential insertion false-pass remained under the stated level-cylinder
+scope. The proof uses nested retained sections and the proper rigid flip; a
+Z-only reflection would be invalid for this asymmetric motif.
+
+Verification: the new slice and reused circular/ordered-output/polygon boundaries
+passed **43 tests** on repository Python **3.13.5** in **190.844 s**, with no skips.
+The final focused rerun passed **11 tests** in **146.903 s**, covering the
+topology-report naming correction and a multi-operation holed output consumer
+in both UCCNC and Grbl. Output-byte and job-fingerprint mutations reject before
+assembly. The final independent mirrored-hole landmark assertion passed with
+its assembly test in **23.432 s**. Syntax and whitespace checks also passed;
+new untracked source/test files were inspected separately from Git's tracked diff.
+Commands live in the
+[runbook](DEVELOPMENT.md#ornamental-straight-wall-inlay-verification).
+Logs are local under `output/in01-20261002-01/`; the assertions and synthetic
+fixtures are self-contained in `tests/test_ornamental_inlay.py`.
+
+Implementation and engineering acceptance are complete for the straight-wall
+slice; changes are ready to commit. Manual CamBam observation adds no
+evidence to this detached gate. Native integration, physical fit/material
+compression, actual cure/setup, cutter-body/fixture access, tapered mating
+profiles and executable composite finishing are not accepted. Reopen this
+contract for a named tapered/profile/tilted consumer or an actual cutting job,
+not merely a new nominal ornament. Full IN01 remains open in
+[current priority](PROGRESS.md#active-work-and-next-priority).
+
+## NR01 editable native rest preparation - 2026-10-02
+
+The bounded offline authoring/certification and actual native Pocket/post slice
+are accepted. The user supplied the actual CamBam generation observations;
+engineering accepted the complete source-bound motion and stock replay. The
+[NR01 contract](structure_spec.md#editable-native-rest-boundaries-and-mops-nr01)
+owns compensation, editable provenance, original-design binding and limits.
+No parser, replay/enclosure algorithm, native entity/MOP schema or dependency
+changed. The native audit/ordered binders now admit an explicit rest certificate
+while retaining target equality for all existing callers.
+
+The synthetic consumer is a 40 x 30 mm opening at (0,0), protected island
+(16,10)-(24,20), floor Z=-2 mm and matching 2 mm-thick Part stock. Program-frame
+incoming tip is declared (0,0,5) mm; Default does not encode it. T1 is a 6 mm
+endmill, declared cutting length 5 mm, rough allowance .005 mm, native depth
+increment 2 mm. T2 is a 2 mm endmill, length 5 mm, with derived overlap .5 mm,
+margin .01 mm and depth increment 1 mm. Both declare 12,000 rpm, plunge
+60 mm/min, cut 240 mm/min and clearance Z=5 mm; no lead-in, no optimization,
+zero crossover. These are synthetic file/post controls, not assessed material
+engagement or machine recommendations.
+
+The independently supplied synthetic predecessor has compensated outer/island
+contours plus horizontal rows at 2 mm spacing, with vertical stock-cutting
+entries and full retracts. It produces four disconnected corner windows.
+Pure floor rest is **8.596376600-8.606366211 mm2**; the nominal reachable
+rest query is **6.752571746 mm2**. Four supplied synthetic cleanup entry/cuts
+reduce residual to **3.409725548-3.419495202 mm2** at both 1 and 2 mm depths,
+with **0 mm2** protected-overcut upper report. This deliberately partial
+synthetic post validates the verifier and positive useful removal, not native
+Pocket planning or full finish coverage. A second native Rect consumer accepts
+the bare rectangular target via normalization and also derives four windows.
+
+Strict save/reopen checks counts, original world geometry/identity, derived
+Region rings/provenance, Pocket references and controls. Recomputed derivation,
+changed predecessor motion, original/input freshness, false cleared descent,
+invalid controls, input overwrite and fresh candidate ring/floor/tool/header/
+selection mutations are exercised. Complete synthetic streams pass both UCCNC
+and Grbl ordered consumers. Final-source focused verification passed
+**45 tests / seven modules**, including six NR01 regressions, with zero
+skips/reused results, using Python 3.13.5, NumPy 2.5.3 and Shapely 2.1.2. Command:
+`& .\.venv\Scripts\python.exe tools/verify.py --pattern test_native_rest.py --pattern test_native_series.py --pattern test_native_series_audit.py --pattern test_native_v_hybrid.py --pattern test_native_arc_replay.py --pattern test_ordered_job.py --pattern test_ordered_dialects.py`.
+Final report after the setup-footer repair:
+`output/verification-20261002-155531-4ad7ca33/report.json`.
+Independent bounded review identified input-overwrite and bare-Rect normalization
+defects; both were fixed and regression-tested. Full checkout
+`& .\.venv\Scripts\python.exe tools/verify.py` passed **655 tests / 90 modules**
+(654 passes; one Windows symlink privilege skip, while junction/reparse checks
+ran), report `output/verification-20261002-152918-251b3afb/report.json`.
+That full run predates the setup-footer repair. Exact final-tree hash comparison
+finds only `native_rest.py` and `test_native_rest.py` changed; shared binders,
+parser, replay, all other runtime/configuration inputs and 89 test modules match.
+Repository caller search confirms only `test_native_rest` imports the new owner
+or supplies `derived_binding`; existing callers use the unchanged default gate.
+Engineering therefore reuses the unaffected full-run modules, supplemented by
+the fresh final seven-module/45-test run and six repaired NR01 regressions.
+This is explicitly scoped evidence reuse, not a claim that the old full report
+has final-tree byte identity. Compile/import, tracked diff and untracked-source
+whitespace checks also pass.
+An earlier focused runner attempt was **incomplete**, because source changed
+during execution; it is not passing final-tree evidence.
+
+Session artifacts are in `output/nr01-d54675d889/`: `source.cb`, `rough.cb`,
+initial synthetic `rough.nc`, editable `rest-draft.cb`, synthetic
+`rest-draft-synthetic.nc`, `validate_native.py` and preparation/audit JSON.
+The original source SHA-256 is
+`715b44e4c98a232374a0e24d9a4bc2cc11103896d9ae49cf1ec54f0e4173d64e`;
+rough candidate is
+`130bb4acc2fac7eb8dd024659678ca7b3ca13c0fb31783367875611f18a0bd6f`;
+synthetic prior post is
+`dbde4940964e457acb4883e72d8ec035b7a0ff6c578180ea7c49c25a803b6091`.
+The derivation fingerprint is
+`ecf95dafc7d649884c0e3b060438e75c3887be4bd8a65be1cd21d9322bffe3c5`.
+These synthetic hashes preserve the evidence scope even without local output.
+
+A read-only installed API probe found public native path/post methods in the
+recorded CamBam 1.0 assembly. A bounded 32-bit STA hidden helper then used normal
+configuration/application initialization without reading license contents,
+bypassing license checks or saving settings. Configuration initialized, but
+`CamBamUI()` did not return within 45 seconds; the task-owned helper was stopped.
+No document, native paths or actual post were generated. This is an unresolved
+host-initialization observation, not evidence of a license failure or established
+headless support. Logs/helpers remain in `output/nr01-api-2fb597a823/`.
+
+**Actual rough post observed:** the user reported `GENERATED`; CamBam's Default
+post appeared as `rough.nc`, replacing the initial synthetic post. Its exact
+copy is retained as `rough-actual.nc`, SHA-256
+`5e644d9382ff87606c065ebde3635f42483224a377259b688ec5bd4a12f54948`.
+The rough candidate bytes were unchanged. Complete G0/G1/G3 replay passed,
+including all vertical stock entries, island arcs, high links and retracts.
+Actual floor residual is **8.596484467-8.606527868 mm2**, and the protected-
+overcut upper report passes the predecessor gate. Actual-motion derivation
+produces four editable windows, fingerprint
+`9e09466ed115bf07b42929289570ec7e7901da677bb98390df3a2c728180a5d7`.
+`rest-actual.cb` strictly reopens with ROUGH then REST, four attached Regions,
+unchanged original design and T2 diameter 2 mm/depth increment 1 mm/floor -2 mm.
+The initial candidate SHA-256 was
+`acf9cdb96829e5deb1acc67393663af68b12076a192ec3bdb0c308350fdf4725`.
+The user reported the composed post `generated`, but its complete audit rejected
+**line 75: tool change without explicit spindle stop**. Default placed the final
+T1 retract after the REST marker, then emitted T2 M6 without M5. Preserve the
+rejection as `rest-missing-stop.cb/.nc`; post SHA-256
+`ca596d0a7feaf0a72c5b6ea25b89d7c7cdc2ca992e7de4f387a67d4b15c0accb`.
+The owning author now adds only `G0 Z5.0` / `M5` to the final predecessor's native
+MOP footer, matching its already-observed final return/stop. It changes no
+cutting path and does not introduce CustomScript or a literal cutting carrier.
+The corrected strictly reopened `rest-actual.cb` has SHA-256
+`51103f89dd840556d540a5ca96edf0a7f5c42779e158e750d267f2c3abd7f681`.
+The user subsequently reported re-exporting `rest-actual.nc`. Its **665-line
+complete actual Default post passes** the existing audit, including original
+CAD/derived-boundary binding, unchanged predecessor motion, all cutting,
+entry/link/retract moves and explicit spindle-stop/tool-change setup. The
+corrected candidate bytes remain unchanged. Accepted post SHA-256:
+`5ee306453114168328cb70a15e9609865af3acde91a9500c6e85dfae4284050e`;
+normalized motion SHA-256:
+`078b7874f4fc255db286d4465a01a95537c34254aeb0d57e08ea40fb321e63a0`.
+
+At both checked depths, 1 and 2 mm, the final residual area is
+**1.869375635-1.878836429 mm2** and protected-overcut upper report is **0 mm2**
+(gate <= .001 mm2). Conservative new floor removal is
+**6.717648038-6.737152233 mm2**, exceeding the required 1 mm2 minimum.
+Final residual volume is **3.738751271-3.757672859 mm3**. This establishes useful
+fully native rest cleanup with explicit partial completion, not removal of
+every finite-tool corner residual. Both stages pass motion, target, tool,
+entry, link, stock, post and residual gates. No further user observation is
+required for this bounded native file/post acceptance.
+
+Acceptance command: `& .\.venv\Scripts\python.exe output/nr01-d54675d889/validate_native.py audit`.
+Result: `output/nr01-d54675d889/audit-rest-actual.json` and `actual-audit.log`.
+The parser-only `parsed_evidence` subrecords deliberately retain
+`stock_access_residual: not_evaluated`; the separate completed stage audits and
+top-level `verifier_status: pass` supply that authority. The initial synthetic
+results above remain dated verifier evidence, not freshness evidence for the
+replaced `rough.nc`.
+
+Implementation is committed as `3122803`. At this acceptance continuation the
+worktree was clean, and every source/configuration hash in the final focused
+report matched the committed tree; the recorded regression evidence applies
+without rerunning unchanged behavior tests. Main ancestry and
+`git diff --check main...HEAD` passed. This is not a whole-branch merge-ready
+review. These acceptance/status documentation updates are ready to commit;
+no staging, commit or merge was performed by the agent. The completed native
+gate is a fresh-session breakpoint for the distinct IN01 scope; its current
+priority remains owned by PROGRESS.
+
+**External workflow used:** in CamBam Plus 1.0, open `rough.cb`, select
+Default / Default mm, generate all toolpaths with Ctrl+T and the complete post
+with Ctrl+W; save as `rough-actual.nc` beside the input. Expected authored values
+are one ROUGH Pocket, T1 diameter 6 mm, floor Z=-2 mm, .005 mm allowance and the
+unchanged 8 x 10 mm island. The returned actual post establishes predecessor
+stock through complete replay. This workflow is now accepted; no repeated post
+is needed unless its pinned inputs or claimed behavior change. Reproduction
+from the preserved rough post uses:
+
+```powershell
+& .\.venv\Scripts\python.exe output/nr01-d54675d889/validate_native.py prepare
+```
+
+This audits the actual predecessor and prepares `rest-actual.cb`; regenerating
+that candidate changes its identity and requires a fresh actual post. For the
+preserved accepted files, use only the helper's `audit` mode.
+Acceptance requires unchanged original CAD and predecessor motion, certified
+boundaries, complete role/access replay, protected-overcut upper <= .001 mm2
+at depths 1 and 2 mm and at least 1 mm2 conservative new floor removal. Residual
+and volume remain explicit partial-completion reports. Actual CamBam generation
+must be observed separately from successful parsing. Rejected native paths must
+retain the precise unsupported role/geometry witness rather than being replaced
+with a literal carrier. Wider native strategies, controller, tool-body/setup,
+material/load and physical acceptance remain outside this gate.
+
+## RP01 feature-aware planar rest candidates - 2026-10-02
+
+Accepted by engineering for the bounded offline scope; ready to commit.
+The [RP01 contract](structure_spec.md#feature-aware-planar-vrest-candidates-rp01)
+owns the reusable contact/medial planner, conditional union-air proof, located
+residual/overlap queries and floor cusp gate. No shared replay/enclosure owner or
+dependency changed. All session inputs/results are synthetic and live under
+`output/rp01-20261002-103924/`; no versioned part fixture was introduced.
+
+The authored polygonal frieze combines a 20 x 8 mm broad rectangle, three lobes
+centered at (3,8), (10,8), (17,8) with 3 mm radius/32-segment boundaries, a
+1 mm-wide neck from Y=10 to 13, a 1.3 mm-radius/32-segment terminal lobe at
+(10,13), and a protected rectangular island (8,3)-(10,4). Boolean unions and
+island subtraction define the polygonal design, not an analytic-circle claim.
+The fixed design is 90 degrees, cap 1 mm, program frame; fingerprint
+`8684d6f2876ac40181ed6eb7659c11d9fcfbd87bb673904d4ea5842a6f260442`.
+Prior stock comes from a flat 90-degree V profile with tip radius .3 mm,
+cutting length 2 mm and maximum radius 3 mm, raster pitch .7 mm. Cleanup uses
+a pointed 90-degree profile with the same length/envelope. All comparison paths
+declare XY sampling 1 mm, margin .02 mm and safe Z=3 mm; cleanup/baseline pitch
+is .6 mm and the requested floor cusp is .3 mm.
+
+| Candidate with the same prior stock | Residual at .5 mm depth, mm2 | Cleanup XY cutting, mm | Total XYZ motion, mm |
+| --- | --- | --- | --- |
+| Feature/contact/medial | 1.621820-1.682768 | 420.783792 | 1469.771032 |
+| Existing raster | 2.674667-3.379187 | 405.895348 | 1004.269420 |
+| Existing offset | 2.295815-2.741401 | 395.681557 | 658.788241 |
+
+The feature upper residual is below both baseline lower residuals at .25, .5
+and .75 mm. Independent analytic disk/segment-distance witnesses prove new
+removal in the narrow valley that neither baseline nor prior removed. At .5 mm,
+new removal is enclosed by 2.981391-4.005562 mm2 and retained overlap by
+155.747085-156.735750 mm2. Of 465.061431 mm proposed XY cutting, 44.277639 mm
+is proved redundant and omitted. This is a detail/coverage gain, not a speed or
+minimum-overlap claim: retained air/overlap is substantial and total travel grows.
+The actual inner sweep union covers the entire 128.653628 mm2 capped-floor outer
+enclosure at depth .7 mm, proving axial cusp <=.3 mm there. An independent disk
+grid challenges that continuous enclosure; holes remain protected. Guide rounding
+deviation is <=7.071068e-8 mm for this exact polygonal input. Floor sections remain
+partial at depth 1; neither finite-tip completeness nor general wall finish is
+claimed. The same composed-floor gate passes the raster baseline; offset leaves
+a 0.0000758654 mm2 unproved patch and is not credited with that bound. The
+comparison uses equal requested controls, without assuming every candidate meets
+every tolerance.
+
+The emitted four-stage UCCNC frieze consists of .5/1 mm prior and cleanup axial
+passes. Actual decoded cumulative stock, motion equivalence, axial advance/entry
+and whole-tool occupancy all pass. Its residual section at cap is
+34.681131-58.916150 mm2; eight-slab residual volume is 0-19.347237 mm3. Those
+wide conditional intervals do not weaken the independently proved floor-cusp
+gate. Cutter/shank/holder declarations enclose each profile, the stock box follows
+the original bounds, and entries/links are explicitly replayed. The session NC
+and audit JSON remain local supporting evidence, not native CamBam/runtime or
+physical acceptance.
+
+Shared queries are challenged by an analytic union of two overlapping cylinder
+capsules that neither stage clears alone, plus gap and shallow-depth rejection.
+Reverse variable-depth same-profile retraces, changed source/island targets,
+invalid controls and exhausted budgets reject or retain uncertainty appropriately.
+A different-angle 120-degree pointed cutter on a protected-island cylinder/V
+job includes exactly the stock used during generation, explicit .5 mm passes,
+axial/entry limits and continuous whole-tool occupancy through UCCNC and Grbl.
+Changing an emitted rapid to Z=-.1 rejects. Repeating generated guides against
+their own composed stock omits every segment without claiming target completion.
+
+Independent review found that a mutated NaN cusp could manufacture a bounded
+report at depth zero. Report-time finite-positive validation now rejects it;
+the regression also covers infinity, zero, negative and boolean tolerances.
+An initial package attempt could not write uv's sandboxed cache; the final gate
+uses the existing cache with authorized tool escalation. Earlier broad runs were
+stopped after the report-validation fix made their snapshots stale. Final checks
+are bounded to the new strategy and its original-design, native/decoded, stock,
+occupancy and execution-evidence consumers under the
+[RP01 runbook](DEVELOPMENT.md#feature-aware-planar-rest-candidate-checks).
+No manual observation adds evidence to this synthetic offline scope.
+
+Final-tree checkout verification passed 107 tests in 13 selected modules, zero
+skips, using the runbook command; report
+`output/verification-20261002-105301-2838047f/report.json`. Clean-package checks
+passed the same scope in Python 3.12/3.13 wheels and a Python 3.12 sdist: 321
+tests in 39 module runs, zero skips. Archive byte checks, each installed smoke
+and the base-only Python 3.12 smoke also passed; report
+`output/verification-20261002-105307-45b18eb4/report.json`. The package gate covers
+the actual untracked new runtime/test files, without staging them. Syntax/import,
+added-link/anchor, working-diff and untracked-whitespace checks pass. Scoped
+source/test/docs scans found no new ignored `.cb`/`.nc` artifacts outside
+`output/`; historical tracked fixtures are unchanged. These are scoped strategy
+and compatibility checks, not a full-discovery claim.
+
+General fitted smoothing, hard overlap caps and low union-cleared motion/body
+access remain conditional: reopen for an actual consumer requiring them and its
+continuous containment/coverage proof. Native editable derived-rest output is a
+distinct higher-value workflow gap; its task remains in the
+[current queue](PROGRESS.md#post-merge-task-queue). Controller, engagement/load
+and physical finish are outside this acceptance scope.
+
+## MV01/MX01 committed review and merged delivery - 2026-10-02
+
+The requested committed-branch review began with a clean worktree on
+`feat/feature-aware-v-rest` at `2f10b07aed9e97c1f475a3abe31d90d9e6087f0b`.
+Local `main` and the current branch already point to the user's visible merge
+commit. Its first parent is DT01 `1dfae817a7ee4edc57b825b0053db4303c877912`,
+and its second parent is the composed-stock feature tip
+`e44186fec1144d6a6e0019334bf8dd18dd0b78b9`. The actual feature range contains
+MV01 `142b420` and MX01 `e44186f`. Review therefore uses
+`1dfae81...e44186f`; an empty current `main...HEAD` diff cannot review those
+already integrated changes. The feature-tip and merge trees are identical,
+and the feature tip is an ancestor of `main`. No additional merge is needed.
+
+The bounded review covers all eleven changed files, especially decoded
+per-prefix union, fixed source/design/frame identity, cylinder containment,
+linear axial-pass witnesses, continuous cutter/shank/holder occupancy, existing
+standalone/one-cylinder-V compatibility, test-oracle independence and published
+limits. The committed diff has 1,769 additions and 101 deletions. Whitespace,
+sixteen added local links/headings, syntax/import smoke and scoped artifact
+checks pass. No untracked source or ignored part files outside `output/` were
+found; the thirteen historical tracked part fixtures are unchanged. Broad ignored
+enumeration warned about pre-existing inaccessible `.pytest_cache` and old
+`output/` paths; these were preserved. The source-owner scans were complete.
+
+Earlier MX01 reports describe pre-commit bytes. Identity-checked checkout
+reconciliation refused five changed byte hashes: `README.md`, `ordered_job.py`,
+`v_region.py` and the two new test modules. Both tests match the old hashes after
+CRLF-to-LF conversion, but that is not exact-byte identity and does not override
+the runner's refusal. The failed report is
+`output/verification-20261002-052927-0099b4b8/report.json`. Package reconciliation
+also could not read the retained wheel in the sandbox
+(`verification-20261002-052927-af2a3881`). A fresh package attempt
+(`verification-20261002-053016-3d4b0cee`) failed to initialize uv's existing
+outside-workspace cache. These attempts are incomplete evidence. Fresh package
+verification was started with approved cache access; no toolchain or dependency
+was added. Existing artifacts and failed reports were preserved.
+
+Fresh full-checkout and supported Python wheel/sdist verification commands:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py
+& .\.venv\Scripts\python.exe tools/verify.py --package
+```
+
+Full checkout passed **638 tests / 87 modules**, with no reused results, all
+89 commands successful and complete suite/final identity evidence:
+`output/verification-20261002-053005-c8a87e49/report.json`. Its sole named skip is
+the established Windows symlink-privilege limit. All report source hashes match
+the current tree; canonical sorted-JSON identity SHA-256 is
+`a4359a071da6193b1567bc5bf97fb80fabd829a40efcf24f028d30e28ba07f29`.
+Package report `output/verification-20261002-053037-da825833/report.json` also
+passes: Python 3.12.10/3.13.5 wheels and the independent 3.12.10 source
+installation each complete **638 tests / 87 modules** (**1,914 tests / 261 module
+records**), with no reused results. All **282 commands**, archive-content/byte
+checks, installed provenance/import/resource smoke, base-only optional-dependency
+boundary, completion and final source/environment/artifact/snapshot identity
+gates pass. Its source identity equals the checkout and current tree. Full
+targets use NumPy 2.5.3, Shapely 2.1.2 and MCP 2.2.0; the base-only target has
+NumPy alone. Each installed target has three named skips: Windows symlink
+privilege, absent retained M1 user post and absent accepted B/C tabbed one-off
+observations. Their synthetic checks run; absent private posts are not renewed
+observations. Checkout and package wall times were **1,153.00 s / 2,749.93 s**,
+including overlapping execution, not controller-performance measurements.
+
+The lead reviewed the complete committed diff and the independent read-only
+second review found no blocking defect in the scoped runtime/tests/contracts;
+it did not rerun the lead's tests. Fresh synthetic overlap and mixed bundles
+through both dialects pass final byte audit and re-audit. Inspection confirms
+T1/T3/T3/T3/T2 order, explicit .5/1/1.5 mm passes, UCCNC split ends and four Grbl
+pauses, and returns at Z=3 mm. The mixed design/job fingerprints and residual
+section **[132.91328863448044, 132.9303562759611] mm2** reproduce the implementation
+record below; the overlap section **[60.20389079009379, 60.21492635108933] mm2**
+encloses independent `64-3-pi/4`. Both have zero modeled possible-overcut area
+and retain partial coverage. The prior numeric/volume witnesses remain in their
+existing acceptance records, rather than being promoted to physical guarantees.
+Local audit/bundle support is under `output/mv01-mx01-review-20261002-01/`;
+it is supplementary, not a durable owner.
+
+Final delivery checks re-inspect status, ancestry, the two-commit range,
+`git diff --check 1dfae81...e44186f`, feature/merge tree equality and the complete
+branch diff. Both verification reports started at clean `2f10b07` and bind the
+unchanged final runtime/test/tool/configuration bytes. The local audit also
+checks all module-result hashes and suite completion against the reports.
+Syntax/import smoke, final documentation links/whitespace and scoped part-file
+checks pass. The only working changes are `docs/PROGRESS.md` and `docs/REVIEW.md`;
+there are no untracked candidates or staged changes.
+
+No manual observation adds evidence to this synthetic offline scope. Controller
+runtime, installation, engagement/load and physical cutting remain outside its
+acceptance. **Accepted by engineering:** committed MV01/MX01 passes the bounded
+offline correctness and delivery review. **Delivery state: already merged** at
+`2f10b07`; this is not a pending merge-ready branch. Only the review documentation
+is uncommitted and **ready to commit**. No staging, commit, merge, publishing or
+cleanup of pre-existing artifacts was performed by this review. Suggested
+documentation commit: `docs: record MV01/MX01 committed delivery review`.
+
+Reopen for a supported violating sweep/design/prefix, stale decoded evidence,
+changed numerical contract or material source/environment/fixture bytes. The
+existing explicit limits on conditional GEOS bounds, exact axial retraces,
+whole-tool box occupancy, cross-stage cavity credit and physical process remain.
+The local composition-verification outcome is implemented, verified and delivered.
+Overall priority remains RP01: verified composed stock can assess feature-aware,
+residual-driven candidates against existing baselines, so strategy work now has
+the stock foundation it needs. Native derived boundaries, inlay assembly, tool
+search and relief remain separate priorities. A fresh session is recommended
+for RP01's distinct scope; contracts, evidence, remaining limits and next priority
+are saved, with no pending result or unanswered product choice.
 
 ## MX01 mixed fixed-design stock and whole-tool access - 2026-10-02
+
+Historical implementation wrap-up below; its pre-commit delivery state is
+superseded by the committed review and merged-delivery record above.
 
 Implemented the supplied mixed-tool increment on the clean MV01 baseline
 `142b420`. `v_region.VComposition` extends the existing section/volume owner
@@ -3660,6 +4370,8 @@ erases the expected benefit. Reopen provider setup if a profile-backed GLM subag
 fails or a later Codex release claims cross-provider children are supported; retain
 exact errors rather than inferring model quality or access.
 
+## Initial workflow and engineering review — 2026-09-07
+
 ## Scope and workflow assessment
 
 The initial working tree was clean. This pass changed documentation and ignored
@@ -4556,7 +5268,7 @@ checks were:
   before reader capture and now passes after the fix.
 
 The native edit is retained as
-[`C_native_edited.cb`](../output/mop-core-validation-1roowlbtpza/C_native_edited.cb).
+`C_native_edited.cb` (`output/mop-core-validation-1roowlbtpza/C_native_edited.cb`; historical artifact).
 The C-to-D import/export comparison exited 0 and preserved five enabled
 operations in the order Drill, Engrave, Pocket, Profile, Profile. It preserved
 the operation names/order/targets and exact parameter/state sets: the fourth
@@ -4564,7 +5276,7 @@ Profile targets `pocket-square`, has CutFeedrate 450 and ClearancePlane Default,
 and the last Profile targets `profile-square`. Independent XML comparison also
 matched all four shapes' coordinates, closure flags and identity transforms; the
 native check logs report no warnings or errors. See
-[`C_framework_roundtrip.cb`](../output/mop-core-validation-1roowlbtpza/C_framework_roundtrip.cb)
+`C_framework_roundtrip.cb` (`output/mop-core-validation-1roowlbtpza/C_framework_roundtrip.cb`; historical artifact)
 and the adjacent inspection JSON, `native-check.log` and
 `native-geometry-check.log`.
 
@@ -4709,14 +5421,14 @@ late-clone failures, subtree relationships, UUID/name/group remapping, source
 preservation, transfer cleanup, MOP closure, world pose, and two XML round trips
 covering outlines, root/leaf poses, primitive/MOP UUIDs, parent/layer assignments,
 MOP parameters and targets.
-The retained logs are [focused.log](../output/copy-transfer-checks-final-7c34ab/focused.log)
-and [full.log](../output/copy-transfer-checks-final-7c34ab/full.log).
+The retained logs are focused.log (`output/copy-transfer-checks-final-7c34ab/focused.log`; historical artifact)
+and full.log (`output/copy-transfer-checks-final-7c34ab/full.log`; historical artifact).
 
 The bounded `Rect.to_xml_element` repair applies the complete ancestor world
 transform when emitting the world-baked Pline representation, preserving its
 identity XML matrix and outline through the transfer round trips. Compileall and
-the import/construct smoke check also pass; [compile.log](../output/copy-transfer-checks-final-7c34ab/compile.log)
-and [import.log](../output/copy-transfer-checks-final-7c34ab/import.log) are retained.
+the import/construct smoke check also pass; compile.log (`output/copy-transfer-checks-final-7c34ab/compile.log`; historical artifact)
+and import.log (`output/copy-transfer-checks-final-7c34ab/import.log`; historical artifact) are retained.
 `git diff --check` exits 0 with only line-ending normalization warnings. No manual
 CamBam validation adds evidence for these registry and known XML-encoding checks;
 production toolpaths remain outside scope. Packaging is unverified.
@@ -4756,6 +5468,15 @@ coverage for invalid topology, coincident arcs, near-identity bakes, reflected
 queries, finite Z, contour ownership and export revalidation.
 
 ### Native Region fixture finding
+
+Initial local discovery found a `CADFile` root named `region_example` with
+`Version="0.9.8.0"`, a `layer` under `layers` and `xsi:type="Region"`.
+Its `OuterCurve` contains direct `pts`; `HoleCurves` contains nested `Polyline`
+contours. One closed outer curve uses extensive bulges and has two closed holes;
+all sampled vertex Z values are zero and no source MOPs are present. These
+observations establish the native example's schema, not varying-Z support or
+rest-machining behavior. The private file remains local, unchanged and outside
+the regression suite; authored synthetic equivalents cover supported inputs.
 
 Local import of the private `output/region_example.cb` exercises the expected
 schema but fails strict topology validation: the first hole self-intersects
@@ -4931,7 +5652,7 @@ Suggested commit: `feat: support varying-z bulges in plines and regions`.
 
 # Packaging and supported Python verification
 
-Date: 2026-09-10.
+Date: 2026-09-10. Validation used `uv 0.10.2`.
 
 The former Python >=3.8 declaration was not credible because the distributed
 legacy implementation evaluates built-in generic annotations such as
@@ -6676,6 +7397,18 @@ Second-set fixture SHA-256 hashes:
 
 ## Dimensional milling formula kernel - 2026-09-21
 
+Initial planning research (2026-09-20) used Sandvik Coromant's
+[metric milling formulas](https://cdn.sandvik.coromant.com/files/sitecollectiondocuments/services/metal-cutting-e-learning/formulas-and-definitions/formulas-and-deinitions-for-milling-metric-enu.pdf)
+and Kennametal's [speed/feed formulas](https://www.kennametal.com/us/en/resources/engineering-calculators/miscellaneous/speed-and-feed.html).
+The recommendation boundary also considered LMT Onsrud's
+[material-specific routing data](https://onsrud.com/Forms/Cutting-Data-Recommendations.asp)
+and Harvey Performance's [chip-load guidance](https://www.harveyperformance.com/in-the-loupe/speeds-and-feeds-101/).
+These were research references, not imported tables or framework defaults. Tool
+substrate/coating, stickout/runout, material condition, coolant, machine limits
+and workholding affect their applicability; provenance, usage terms and version
+are required before adopting source data. This research is retained from the
+original backlog proposal during DOC01 consolidation.
+
 Backlog 9a is implemented as a pure library module, separate from CamBam documents,
 MOP defaults and the MCP adapter. The formula conventions follow Sandvik Coromant's
 metric and inch milling references: table feed is chip load times RPM times effective
@@ -7998,7 +8731,10 @@ deferred until that consumer exposes a specific shared owner boundary.
 The tracked A01 Region has shell area 1596 mm² and a triangular 64 mm² hole,
 so its original target area is 1532 mm². The bounded M1 case uses the source
 shell/hole unchanged, 8 mm stock and floor, T1 radius 2.5 mm with 0.5 mm
-allowance, and T2 radius 1 mm at Z=-2/-4/-6/-8. A complete source-SHA-bound
+allowance, and T2 radius 1 mm at Z=-2/-4/-6/-8. The synthetic tools have
+10 mm cutting length, with declared shank/holder starts 10/20 mm above the tip;
+both remain above Z=0 at the Z=-8 floor. These are setup assumptions, not
+physical clearance observations. A complete source-SHA-bound
 supplied T1 trace is replayed first. T2 starts every below-stock descent at
 an actual full-depth T1 cut endpoint, cuts to its planned contour/raster
 path inside the original Region and retracts before the next path. Shared

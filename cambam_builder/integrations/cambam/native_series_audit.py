@@ -86,10 +86,16 @@ def _polygon_target(target):
                          region_shell=shell)
 
 
-def _bind_source_target(source_path, candidate_path, series, target):
+def _bind_source_target(source_path, candidate_path, series, target, derived_binding=None):
     """Require the replay Region to equal one original native target."""
     from shapely.geometry import Polygon
 
+    if derived_binding is not None:
+        from .native_rest import RestBinding
+        if type(derived_binding) is not RestBinding:
+            raise ValueError("explicit native rest binding required")
+        derived_binding.check(source_path, candidate_path, series, _polygon_target(target))
+        return
     if any(stage.target_ids != (target.name,) for stage in series.stages):
         raise ValueError("native MOP targets differ from common source target")
     source = read_cambam_bytes(Path(source_path).read_bytes(),
@@ -145,7 +151,7 @@ def _bind_source_target(source_path, candidate_path, series, target):
 def audit_linear_native_series(series, source_path, candidate_path, post_path, *,
                                targets, cutting_lengths_mm, entry_modes,
                                section_depths_mm, max_protected_overcut_mm2,
-                               setup=None):
+                               setup=None, derived_binding=None):
     """Recheck bytes, replay every emitted line and report per-prefix stock.
 
     A failed role/access/target/overcut check raises rather than creating a
@@ -171,7 +177,7 @@ def audit_linear_native_series(series, source_path, candidate_path, post_path, *
                                    for target in targets_in_order[1:]):
         raise ValueError("series audit requires one common target")
     target = _polygon_target(targets_in_order[0])
-    _bind_source_target(source_path, candidate_path, series, target)
+    _bind_source_target(source_path, candidate_path, series, target, derived_binding)
     if (any(not 0 < depth <= target.depth for depth in depths) or
             depths[-1] != target.depth):
         raise ValueError("section depths must include the target floor")

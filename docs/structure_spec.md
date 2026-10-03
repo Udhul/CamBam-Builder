@@ -36,7 +36,7 @@ are outside that runtime package list.
 | `cambam_builder/machining_planning.py` | Pure through-cut pass balancing and composition of recommendation profiles with formula/machine diagnostics | Candidate planning only; the existing MCP depth tool delegates here, while full profile construction remains a direct-Python API |
 | `cambam_builder/native/writer.py` | XML ID assignment and layer/part traversal; delegates individual encoding to entities | Output structure and reference resolution |
 | `cambam_builder/native/reader.py` | XML parsing, entity reconstruction, ID mapping and deferred parent/MOP linking | Import defaults, malformed data and round-trip reconstruction |
-| `cambam_builder/integrations/cambam/` | Native `.cb` input/attachment, M2 curved candidates, actual posted MOP-series normalization and bounded posted-stock comparison; depends on native model and detached CAM values | Bridge between native documents, generated motion and CamBam output; no source model ownership |
+| `cambam_builder/integrations/cambam/` | Native `.cb` input/attachment, editable rest Pocket authoring/certification, M2 curved candidates, actual posted MOP-series normalization and bounded posted-stock comparison; depends on native model and detached CAM values | Bridge between native documents, generated motion and CamBam output; no source model ownership |
 | `cambam_builder/integrations/direct_*.py` | Bounded headless V and RC01 reference-dialect writers, parsed-output audits and evidence manifests | Output adapters; consume detached plans/traces and preserve their target verifiers |
 | `cambam_builder/integrations/{uccnc_m5,uccnc_reader,grbl_m5_reader,m5_portability,m5_decoded}.py` | Bounded controller fixture emission, independent complete-byte dialect decoding, common decoded-stage values and shared T1/T3 stock audit | Consume the detached M4 plan; no controller syntax in `cam_core` |
 | `cambam_builder/integrations/{ordered_dialects,ordered_output}.py` and `integrations/cambam/native_ordered_job.py` | Reusable strict UCCNC/Grbl lowering and independent decoding, hash-bound output audit, and supported native-series-to-job mapping | Controller bytes/effects stay outside `cam_core`; native input retains its source/post freshness contract |
@@ -375,10 +375,13 @@ the initial behavior-to-test matrix and audit gaps belong in REVIEW.
 | Non-cutting occupancy: `occupancy.ToolBody`, `OccupancySetup`, `verify` | `cam_core.occupancy` and replay segments | Fixed-axis cylindrical tool bands and axis-aligned stock/fixture boxes; continuous supported travel, separate cutter/shank/holder checks. Unsupported transition motion rejects when occupancy is requested. | Public bounded verification. Cutting-stock pass alone says nothing about holder/fixture clearance. Extend for a named unsupported fixture/job. |
 | Primary V: `vcarve.generate_slot/verify_slot`, `tapered_vcarve.generate/verify`, `v_region.plan/verify/section_report/volume_bounds` | Current `cam_core` strategy modules and replay; Region planner requires Shapely | Slot and increasing-X straight variable-depth families use pointed 90-degree cones; Region planner accepts polygon/curved bounds and pointed/flat/rounded profiles, raster/offset fills. No roughing predecessor needed to plan or analyze. Finite-tool residual is partial; no fitting center yields infeasible. | Public bounded machining capabilities. Target/profile/strategy are separate values; no GUI, files or fixture IDs required. General rest smoothing and globally optimal paths are not implemented. |
 | Rest analysis/generation: `convex_rest.generate`, `polygon_rest.generate`, `curved_region.approximate/generate`, `v_region.with_prior` | Current `cam_core`; replayed supplied predecessor, target and cutter | Convex/straight/curved planar domains with explicit numerical envelopes. A source/motion fingerprint is required where exposed. `with_prior` requires one complete cylindrical operation on the same target; earlier overcut is not forgiven by later removal. | Public bounded strategies and stock queries. Cleared-overlap/path fitting is distinct from changing target edges; generic conditional smoothing remains an extension. |
+| Feature-aware V/rest: `planar_rest.generate`, `cutting_sweep_clear`, `Candidate.section/floor_cusp` | `cam_core.planar_rest`; fixed design and composed stock | Contact/medial guidance, conservative union-air pruning and located residual/cusp evidence; see [RP01](#feature-aware-planar-vrest-candidates-rp01). | Public bounded strategy; high links and explicit axial/setup gates. Partial coverage and retained overlap remain visible. |
 | Reference jobs: `rc01.generate/verify`, `mixed.verify_mixed`, `inlay.generate/assembly/audit_pair` | Current `cam_core`; section/replay/profile values; paired audit also calls output integration | RC01 nominal rectangle/island/process recipe; mixed RC01/slot recipe; circular pointed-V receiver/plug family with independent stocks. Reference dimensions/tool recipes are not generic framework invariants. | Public reference conveniences with bounded offline evidence. Keep reusable geometry/stock separate; move orchestration when a concrete caller requires it. `audit_pair` is the explicit layering exception above. |
+| Ornamental paired stock: `ornamental_inlay.Design/verify_pair/finish_envelope`, `tapered_inlay.Design/PartStock/section/verify_pair`, `composite_inlay.Assembly/Finish/generate/verify` | `cam_core` stock/assembly; complete-byte audits in `integrations.inlay_output` | [Straight-wall](#ornamental-straight-wall-paired-stock-and-assembly-in01), [profile-aware tapered](#tapered-profile-aware-paired-stock-in01) and [composite facing](#composite-stock-facing-and-final-inlay-verification-in01) with supplied independent parts and continuous rigid insertion. | Public bounded offline verification of facing plane, motif enclosures and retained nominal core/floor; declared sanding envelope remains separate. Physical fit and controller execution have separate gates. |
 | Recommendation/pass policy: root `machining_calculations`, `machining_recommendations`, `machining_planning` | Formula kernel, immutable contexts, pluggable recommendation strategy | Unit-explicit inputs, feed/RPM/range constraints and through-cut pass planning. No toolpath generation, stock clearance or curated material authority. | Existing public APIs, unchanged owners followed as dependencies. A candidate recommendation is not a stock certificate. |
 | Route selection: `cam_extensions.strategy.select_strategy` | Detached policy over caller-supplied `StageAudit` and residual bounds | Checks source/predecessor chain, required gates and completeness; ranks feasible then safe partial candidates by upper residual area, volume and declared tie order. Manual choice cannot select an unsafe candidate. | Public supplied-candidate ranking, not bundle search, cutting-time optimization or independent validation of caller assertions. No global optimum claim. |
 | Caller-owned execution: `ordered_job.Job/Stage/Transition/AxialLimits`, `from_prior_v`, `audit` | `cam_core.ordered_job`; replay, V and bounded 3D evaluators | Caller labels/tools/order/feed/RPM; resolved mm/G54 translation. All-cylinder, standalone/cumulative all-V, bounded mixed cylinder/V, homogeneous layered/surface/inlay sequences have distinct evaluators. Mixed V requires explicit axial/entry limits and whole-tool setup. | Public bounded composition. `audit` consumes already-decoded values; `ordered_output` is the complete-byte/native-binding authority. Unsupported mixtures must not be read as stock success. |
+| Editable native rest: `rest_boundaries.derive`, `native_rest.prepare/author/audit`, `RestBinding` | Detached boundary derivation plus native integration | [NR01 contract](#editable-native-rest-boundaries-and-mops-nr01); compensated planar Regions, native Pocket and original-design certification | Public bounded API; synthetic offline evidence and actual native planner acceptance are separate. |
 | Native/generated composition: `native_ordered_job.from_native_series/from_native_v`, `NativeBinding.check` | Native integration to detached ordered job | Repeated tools and supported native stage order; one native cylinder plus source-bound V finish. `from_native_circle_cleanup` is specifically the diameter-24/depth-2/T1-T2 observed recipe. | Public bounded adapter plus named reference helper. Source/current-post binding is required at output; no mandatory global document session. |
 | Output and evidence: `ordered_dialects.render/decode`, `ordered_output.emit/audit_files/write_bundle/audit_bundle`; `direct_variable_v`/`direct_rc01` | `integrations`; core values, strict independent decoders | UCCNC split and Grbl pause profiles, explicit offset/transition effects, 4/6 decimal coordinates. Older `direct_*` writers use a strict reference dialect, not machine profiles. File helpers have fixed artifacts; in-memory emit/decode do not require them. | Public output adapters and bounded reference conveniences. `direct_rc01` reuses the CamBam Default-post reader; it is not fully independent of that adapter package. Runtime/physical setup remain unassessed. |
 | Agent protocol: document/MOP tools and schema | `mcp_adapter.service/schema/server/paths`; native project and existing planning owners | Volatile document sessions, validated requests and workspace transport. No exposure of arbitrary detached CAM/replay/controller entry points through MCP. | Public versioned tool contract, separate from direct Python API. Mirror supported native authoring changes in schema/service/tests; do not relocate machining truth into protocol handlers. |
@@ -771,8 +774,9 @@ cylinder and per-profile V sweeps. Prefixes use `stages[:n]`; `final=False`
 measures virgin design stock. Overlap and repeated passes are unioned, never
 summed. Cylinder stock and clearance are replayed from each complete stage;
 a stage may use its own proved clearance but cannot infer a cavity from earlier
-V or cylinder stages. Cross-stage union-cleared descent/link/body queries remain
-an explicit RP01 extension, reopened when a concrete rest candidate needs them.
+V or cylinder stages. [RP01](#feature-aware-planar-vrest-candidates-rp01) adds
+cutting-profile union clearance for air pruning; cross-stage low descent/link
+and body cavity credit still require a concrete independently verified consumer.
 
 The ordered auditor reconstructs each stage from decoded coordinates. Beyond
 the historical one-cylinder/terminal-V compatibility slice, mixed stages require
@@ -825,6 +829,128 @@ owns executable checks. Conditional GEOS/numerical bounds, partial residual,
 operator tool-installation assumptions and unevaluated controller/physical
 acceptance remain explicit. This shared capability contains no motif or fixed
 tool-count discriminator; different supported consumers use the same queries.
+
+### Feature-aware planar V/rest candidates (RP01)
+
+`cam_core.planar_rest.generate(prior, tool, ...)` consumes a verified
+`v_region.VComposition` against one frozen design. Contact contours retain every
+guide vertex and all components/island rings; sampled-boundary Voronoi edges
+guide narrow detail. This is not an exact medial-axis or global search claim.
+Continuous all-height `v_region.verify` checks each proposed segment before
+pruning. The design, pure residual, known-free stock and center guides remain
+separate. No design corner is filleted or island removed to accommodate a path.
+
+Controls declare maximum stepover, floor cusp, XY sampling, margin, safe height
+and finite guide/site/path budgets. Pitch is at most `2 * tool.radius(cusp)`;
+this is a floor-spacing criterion, not an assumed global coverage bound.
+`Candidate.floor_cusp()` checks actual composed inner removal at `cap - cusp`
+against the original capped-floor outer enclosure. Empty `unproved` geometry
+establishes the axial cusp bound over that floor; otherwise it locates the gap
+and reports partial. Walls and uncapped narrow details require separate located
+section residuals. Retained guide vertices bound XY guide deviation by
+`sagitta_mm + sqrt(2) * 0.5e-7` mm; this does not bound medial-axis approximation
+error or certify machined-wall finish. The deviation is relative to constructed
+polygonal guides; curved-source enclosures remain owned by `VTarget`, without an
+additional native-offset Hausdorff claim. No fitted arc or generic smoothing is
+introduced.
+
+`cutting_sweep_clear(prior, tool, a, b, slabs=8)` proves cutting-profile clearance
+through the union of verified cylinder/V stages. Each slab compares an inflated
+maximum-penetration candidate footprint at the upper plane with prior inner
+removal at the lower plane. Monotone sections establish intervening heights;
+failure means unproved. Exact same-profile XY retraces, including reverse
+orientation and shallower endpoint depths, independently prove clearance where
+a pointed floor has zero area. This query grants no rapid, body or fixture
+permission. Candidate pruning omits only such proved-air segments; every retained
+segment can still contain air cutting. Pure-rest clipping alone is not clearance.
+
+The returned `Candidate` holds the verified ordinary `VPlan`, prior composition,
+proposed/omitted XY cutting lengths and guide error. `section(depth)` exposes
+located residuals and conditional new-removal/overlap area intervals using
+candidate inner minus prior outer, candidate outer minus prior inner, and
+corresponding intersections. `composition` adds retained sweeps to all prior
+stages. These reports recompute their stock evidence; stored result geometry is
+not an independent authority. Empty retained paths mean no admissible unproved-
+clear guide was found, not a proof that the target is unreachable or complete.
+
+Entry is target-contained vertical stock cutting; links retract above stock.
+Use explicit `v_region.depth_passes`, axial/entry limits and whole-tool setup for
+ordered output. Cross-stage low linking and body cavity credit remain unsupported;
+this candidate does not need them. Unknown engagement/load, controller/runtime,
+physical finish, optimization and broader native representability remain separate.
+Tests generate a lobed/island/valley/broad-cap frieze and challenge reuse with a
+different-angle cylinder/V island job through both output dialects. Measured
+coverage, cost and acceptance belong to the
+[RP01 evidence](REVIEW.md#rp01-feature-aware-planar-rest-candidates---2026-10-02).
+
+### Editable native rest boundaries and MOPs (NR01)
+
+`cam_core.rest_boundaries.derive(trace, radius_mm=..., overlap_mm=...,
+margin_mm=0.01)` consumes complete replayable cylindrical predecessor motion
+against one planar Region target. It distinguishes pure floor rest, feasible
+smaller-tool centers and native Pocket targets. Feasible centers lie inside the
+original design eroded by radius plus margin. Reachable residual components
+select nearby centers; outward compensation produces windows with deliberate
+overlap into prior cleared space. Overlapping windows merge before authoring.
+The original outline and holes remain unchanged. These are full-depth machining
+boundaries, not a promise of rest-only motion or an entry/access certificate.
+
+`RestBoundaries` retains the target, predecessor motion fingerprint, controls,
+editable polygon rings, pure-rest area interval and reachable-rest area.
+Window simplification uses `margin_mm / 4`, preserves topology and is followed
+by nine-decimal interchange rounding and original-design containment checks.
+The margin and polygonal sweep oracle have conditional GEOS numerical/topology
+limits; no exact offset, universal finish tolerance or continuous fitted-path
+claim is made. Empty, invalid, untraversable or non-useful windows reject.
+Supported predecessors reach the target floor with constant-depth cylinder
+sweeps; helical/variable-depth predecessors and V/rounded/surface cleanup need
+their separate generated-output or interoperability routes.
+
+`integrations.cambam.native_rest.prepare` first audits the pinned native
+predecessor and original source stock, then derives a `RestBinding`.
+Rectangular targets normalize to polygonal shells. `author` appends editable
+Regions and one native Pocket with an explicitly numbered smaller endmill,
+caller-supplied depth increment, clearance, spindle and feeds. It refuses output
+aliases of original/predecessor inputs and strictly reopens the saved candidate.
+The final predecessor gets a setup-only native MOP footer: its already-observed
+positive-Z return followed by `M5`. Default otherwise delays that return under
+the next MOP's section and omits the explicit stop before M6. The footer contains
+no cutting motion; every cutting path remains native planner output. Its exact
+state is certified against the predecessor post. Literal cutting transport and
+unproved predecessor returns reject.
+Each Region's persisted description records original identity, semantic source,
+predecessor evidence and derivation fingerprint. The binding recomputes geometry
+from fresh predecessor evidence; provenance text alone grants no authority.
+
+The existing target-equality gate remains the default. Its explicit
+`derived_binding=RestBinding` route certifies current window rings/provenance,
+Pocket selection/type/cutter/floor, original CAD and complete predecessor motion
+instead. Predecessor normalized stages must match apart from source line
+numbers. Reopened predecessor MOP type, tool, floor, plane, stock surface,
+selection and literal transport intent must also match; only the final
+predecessor footer is replaced by the declared safe return/spindle stop.
+Planning controls such as stepover can change when freshly bound posted motion
+and all certified semantics remain identical. The composed post must retain
+every predecessor event and movement, ignoring only line numbers. An edited
+boundary, tool, floor, selection,
+source/predecessor or transport header invalidates that certificate. Boundary
+edits require fresh derivation/certification; valid parameter edits still require
+a fresh actual post. `native_rest.audit` replays all actual moves against the
+original target, reports cumulative section/volume residual and protected
+overcut, and enforces a caller-declared positive new floor-removal minimum.
+Virgin vertical entry is modeled stock cutting. A cleared descent must be
+proved from actual preceding sweeps; overlap does not assume material absent.
+`NativeBinding(..., derived_binding=binding)` extends both ordered controller
+consumers through the same original-design certification.
+
+Synthetic posts establish offline authoring/verifier behavior only. Actual
+CamBam Pocket algorithm acceptance requires a complete externally observed post;
+Engrave previews, CustomScript and literal-motion carriers do not establish it.
+Arbitrary feature-guided or variable-Z paths are not representable by this
+native Pocket contract. Controller runtime, engagement/load, whole-holder/setup
+occupancy and physical machining require their own declared evidence. Current
+acceptance and the observed complete native posts live in
+[NR01 evidence](REVIEW.md#nr01-editable-native-rest-preparation---2026-10-02).
 
 ### Fixed V design and independent cutter contract (DT01)
 
@@ -885,8 +1011,10 @@ cylinder-center boundary from the design section at that depth. It is a query
 result, never a new finish target or pre-cleared region. The existing cylinder
 prefix contract still binds its replay target to the original source opening
 and checks `radius + path_error + depth*q` continuously. A full-opening floor
-pocket that fits the opening but erases the V wall is rejected. General native
-derived-boundary binding remains NR01; cumulative all-V stock follows the
+pocket that fits the opening but erases the V wall is rejected. The
+[NR01 derived-boundary binding](#editable-native-rest-boundaries-and-mops-nr01)
+supports planar cylindrical Pocket cleanup; variable-Z/native V-wall boundary
+binding remains outside that scope. Cumulative all-V stock follows the
 [MV01 contract](#cumulative-region-v-virgin-stock-contract-mv01). These
 contracts cover the cutting profile, not holder occupancy, engagement limits,
 controller runtime or physical setup, which retain their separate gates.
@@ -1079,7 +1207,188 @@ representation is exact spherical contact and section references plus
 conservative cells for evolving stock; no freeform mesh, overhang, general
 surface offset, real holder installation or controller runtime is claimed.
 See the [packet 3 runbook](DEVELOPMENT.md#packet-3-spherical-bowl-ball-finish-and-rest)
-and [evidence](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest---2026-09-27).
+and [evidence](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest--2026-09-27).
+
+### Ornamental straight-wall paired stock and assembly (IN01)
+
+`cam_core.ornamental_inlay.Design` defines a tool-independent Polygon motif,
+finite stock footprint and separate receiver/plug removal Regions. Receiver
+depth is seating plus bottom glue gap; plug clearing depth is seating plus
+surface gap, with backing retained below it. Positive signed side fit erodes
+the plug laterally; negative fit expands it and requests interference within a
+caller-supplied limit. Offsets use the declared GEOS polygon approximation
+(128 segments/quadrant), so this is not an exact curved-surface contract.
+The minimum-web gate erodes by half the requested web and requires a connected
+core with unchanged hole count. It detects the representative bridge collapse;
+it is not a general local-thickness or material-strength certificate.
+
+`targets(side)` produces reusable `replay.Target` Regions for independently
+supplied cylindrical plans. Plug exterior clearing and hole pockets are separate
+components. Clearing is bounded by the stock footprint plus explicit edge access;
+that extension permits cutter travel outside the blank, not through fixtures.
+The plug machining frame is mirrored in X. Assembly maps physical XYZ by
+`(x,y,-u) -> (-x+dx,y+dy,u-insertion)`, a proper rigid flip rather than a Z-only
+reflection. General rotations, tilted assemblies and undercuts are unsupported.
+
+`verify_pair` requires each complete `replay.Trace`, design/side/frame binding
+and expected motion fingerprint. It replays tool dimensions, target identity,
+entries, cuts and retracts; only level linear cylindrical cuts are supported.
+Existing polygonal sweep bounds establish actual retained stock as finite blank
+minus removed stock. No required removal or nominal target earns machined-stock
+credit. Both tools may differ without changing the target design.
+
+The verifier splits seated stock at every cutter-depth discontinuity. Top-down
+cylindrical subtraction makes retained plug sections grow with machining depth,
+so every earlier insertion section is contained in the seated section at the
+same receiver depth. This proves continuous straight insertion, not just sampled
+poses. It also checks the full requested bottom clearance and above-surface
+shoulder clearance. `pass` requires zero possible collision and both clearance
+checks; positive lower collision volume is `collision`; otherwise the result is
+`unresolved`. Zero nominal side fit is permitted but numerical/actual residual
+stock can prevent certification. Evidence includes both motion hashes and XY
+registration. GEOS floating-point topology and existing sweep enclosures remain
+the numerical boundary; there is no nonzero area tolerance that grants fit.
+
+`finish_envelope` checks a declared full-plane removal range after explicit
+assembly, cure and renewed-setup declarations. It reports worst missing/excess
+visible plug area, section-enclosure topology, receiver floor and minimum **nominal-core** retained
+thickness over all section intervals. Excess ledges have no minimum-thickness
+claim. Matching enclosure topology does not prove actual material topology in
+the uncertainty band. This is a sanding/facing removal model, not an executed finishing path or
+proof of cure. `integrations.inlay_output.audit_pair` separately binds both
+detached ordered jobs and every output-file hash, audits UCCNC/Grbl bytes and
+passes their reconstructed decoded traces to the core assembly verifier.
+
+The [verification record](REVIEW.md#in01-straight-wall-ornamental-assembly---2026-10-02)
+owns the asymmetric holed bridge and independent rectangular consumer evidence.
+Tapered mating is covered by the [profile-aware extension](#tapered-profile-aware-paired-stock-in01).
+Executable finishing is owned by the [composite facing contract](#composite-stock-facing-and-final-inlay-verification-in01).
+Native output, holder/fixture access and physical material-fit coupons remain
+outside this slice.
+
+### Tapered profile-aware paired stock (IN01)
+
+`cam_core.tapered_inlay.Design` combines the straight-wall allowance value with
+an independent design angle and explicit receiver/plug overtravel. Its receiver
+opening is the motif; its retained plug tip is the motif offset inward by
+`seating*tan(angle/2) + side_fit`. Signed fit is therefore referenced at the
+seated tip plane. Plug removal is the exterior and each hole in the mirrored
+machining frame. Each removal component is a fixed `v_region.VTarget`, shrinking
+with machining depth under the existing inner/outer offset convention. The plug
+grows towards its backing. Offsetting inward and outward need not recover the
+original motif around corners; equal design/tool angles never establish a fit.
+
+The minimum-web/topology check covers the smallest nominal receiver and plug
+sections. Edge access must clear the finite blank boundary even at the deepest
+plug section. Overtravel permits additional machining beyond the requested
+minimum bottom/surface gaps; it must leave receiver thickness and plug backing.
+It is particularly relevant to pointed and rounded tips whose nominal floor
+contact alone cannot clear a finite floor area. It is not inferred from a tool.
+
+`PartStock` accepts component `VComposition` values, including independent
+pointed/flat/rounded plans and source-bound cylinder stages. `section` returns
+the union of actual removed-stock inner/outer bounds. Missing components remain
+uncut. Core consumers revalidate each composition against its original target,
+frame, revision and expected stock fingerprint; changing a tool changes that
+fingerprint. Shared V verification owns complete motion and whole-profile
+containment. This extension supplies targets and verification, not a new planner.
+
+`verify_pair` uses the same proper rigid flip as straight-wall assembly. All
+supported profiles have radius nondecreasing with height; removal shrinks with
+depth and retained plug grows towards its backing. At each seated depth slab,
+the largest plug and smallest cavity enclose possible collision, and the
+smallest plug and largest cavity enclose definite collision. Endpoint bounds
+cover continuously varying surfaces and depth discontinuities. Every earlier
+fixed-XY insertion section is contained in the seated plug section, so zero
+upper collision plus both gap checks certifies continuous insertion. The
+requested bottom gap uses the actual cavity at its deepest requested plane;
+the surface gap uses actual plug stock at the deepest requested shoulder plane.
+This is conservative: `unresolved` may need finer slabs, different paths/tools
+or changed explicit allowances. Positive lower collision is `collision`; no
+nonzero area tolerance grants a `pass`. Reports bind both stock fingerprints,
+registration, gap results and every collision slab. GEOS and the existing
+V/cylindrical sweep enclosures remain the numerical boundary.
+
+`integrations.inlay_output.audit_tapered_pair` takes tuples of `ComponentOutput`
+values for each part. Each component has a complete direct ordered job, files,
+expected job fingerprint and all expected file hashes. The integration audits
+UCCNC/Grbl bytes, reconstructs decoded V/cylinder sweeps and assembles those
+stocks. Components have independent complete setups; no connecting low motion
+or pre-cleared access is inferred. Nominal target geometry earns no removal.
+The [verification evidence](REVIEW.md#in01-tapered-profile-aware-assembly---2026-10-02)
+owns the representative consumers and acceptance. The following composite
+contract owns final visible motif/thickness and facing; native output and
+physical fit remain separate gates.
+
+### Composite stock facing and final inlay verification (IN01)
+
+`cam_core.composite_inlay.Assembly` accepts a straight-wall or tapered design,
+both actual part stocks and their expected fingerprints, plus fixed XY
+registration. Construction and finishing verification require the paired
+insertion/gap audit to pass. `section(depth)` returns separate receiver and plug
+retained inner/outer bounds in assembly coordinates, clipped to their finite
+blanks and thicknesses. Beyond a side's machining cap, retained bounds equal
+its full blank until the physical thickness ends; the exact cap still uses
+removed-stock evidence. Outside the physical blank the section is empty. This
+does not extend the valid depth domain of the underlying V removal query.
+Depth is positive below the receiver surface; negative
+depths include the shoulder and backing. The plug uses the existing proper
+rigid flip and registration. No target is substituted for machined stock.
+
+`Finish` binds removal depth, plane and lateral motif tolerances, minimum plug
+core and receiver floor, edge access, and nonempty assembly/cure/renewed-setup
+declarations. Its source and frame fingerprints include those declarations and
+the complete assembly identity. They are caller process claims, not cure or
+machine telemetry. The requested plane band must stay within the seated plug.
+Facing motion uses assembled backing top Z=0, at
+`surface_gap + backing` above the receiver top. Thus a requested receiver-plane
+removal `d` requires cutting depth `surface_gap + backing + d`.
+
+`generate` supplies level cylindrical raster passes across the bounds of both
+registered blanks with explicit stepover, stepdown and positive clearance.
+Every row has a vertical entry and high retract/link; cutting length must reach
+the full depth and edge access must contain the cutter. The bounding rectangle
+plus declared edge access permits outside-blank cutting, not fixture clearance.
+Supplied complete traces may also be verified. The finite target permits only
+the requested plane tolerance below the face; deeper motion rejects in replay.
+
+`verify` replays actual motion and requires the inner removed-section enclosure
+to cover both entire blank footprints at the shallowest acceptable plane.
+Maximum actual cut depth bounds the deepest plane. Missing rows or incomplete
+depth remain `unresolved`, with an unfaced-area bound; no area tolerance grants
+coverage. An incomplete plane has no certified plane interval or final motif
+area values (reported as `None`), rather than treating a predicted exposed
+section as finished stock. Plug retained-section endpoints conservatively enclose all material
+visible across that plane band, including continuous taper and discontinuities.
+The fixed design motif is `plug_xy` for straight walls and the complement of
+nominal plug-clearing sections at the finish plane for taper. The lower retained
+bound must cover its inward lateral-tolerance offset; its outward offset must
+cover the upper bound. Required/inner/outer sections must remain single polygons
+with the intended hole count. Missing/excess areas are reported independently.
+Matching enclosure topology does not prove actual topology in the uncertainty
+band, and tolerance erosion must not erase or disconnect the required motif.
+
+Thickness is certified over the **registered nominal plug tip core**: actual
+tip inner stock must contain it, and monotonicity guarantees this core through
+the retained depth `seating - deepest face`. Tapered edges and excess ledges have
+no minimum-thickness claim. The receiver floor bound subtracts the larger of
+the allowed component cut depth and actual facing depth from receiver thickness;
+it is conservative even when component removal stops shallower. A `pass`
+requires plane, motif and both thickness gates; numerical ambiguity remains
+`unresolved`. GEOS and the existing cylinder/V enclosures remain the boundary.
+
+`integrations.inlay_output.assemble_outputs` audits complete independent
+`ComponentOutput` jobs and reconstructs decoded paired stock before assembly.
+Straight parts supply one complete ordered job each; tapered parts may supply
+multiple component jobs. `facing_job` adapts the trace to existing ordered output;
+`audit_facing` binds the exact facing job and file hashes, then independently
+reconstructs and verifies decoded motion for UCCNC or Grbl. Its ordered audit
+reports a bounding-prism residual; only the separate finishing result describes
+composite stock. Core-stock and decoded-component evidence remain distinguishable
+by the caller's assembly construction route. Controller runtime, native CamBam
+facing, holder/fixture access, adhesive mechanics and physical fit are unclaimed.
+The [acceptance evidence](REVIEW.md#in01-composite-facing-and-final-verification---2026-10-03)
+owns the two synthetic consumers and regression results.
 
 ### Bounded circular paired V-carve inlay
 
@@ -1120,7 +1429,7 @@ oracle. The supported geometry is a circle with a parallel-plane Z flip and
 one pointed cutter; process loads, plunge capability, material response,
 machine setup and physical fit are unassessed. Native CamBam emission is not
 part of this detached route. See the [runbook](DEVELOPMENT.md#packet-4-paired-v-carve-inlay)
-and [evidence](REVIEW.md#packet-4-paired-v-carve-inlay---2026-09-27).
+and [evidence](REVIEW.md#packet-4-paired-v-carve-inlay--2026-09-27).
 Decoded inlay entries and retracts must be vertical between the declared cut
 depth and a positive safe height. Their role labels cannot hide diagonal stock
 motion. Supplying body/fixture occupancy for inlay is explicitly unsupported;
@@ -1562,18 +1871,12 @@ radius-1 mm low-level crossing.
 Section residuals use inner/outer capsule polygons with 128 quarter-circle
 segments, radius perturbation 0.000001 mm and a circumscribing outer radius.
 Area intervals are integrated across constant-depth slabs to report nominal
-remaining volume. For A01 the prior leaves 1097.74561–1097.84293 mm³ and
-the T2 path leaves 10.50611–10.54823 mm³.
-The original 1532 mm² Region, including its triangular hole, remains the
-target; the prior rest boundary never becomes a wall. All four section slabs
-have rough rest 137.21820–137.23037 mm² and final rest
-1.31326–1.31853 mm². The separate analytic six-convex-corner finite-tool
-limit is 1.190659933 mm² per slab. Inflated sweep overcut and final residual
-outside the ideal-or-original-boundary 0.05 mm envelope evaluate to zero in
-this fixture, conditional on GEOS topology. Completion is partial. Synthetic
-tools have 10 mm cutting length; their declared shank starts 10 mm and holder
-20 mm above the tip, leaving both above Z=0 at the Z=-8 floor. Physical tool
-error, material forces, fixtures and controller behavior remain unassessed.
+remaining volume against the original Region. Completion remains partial;
+the prior rest boundary never becomes a wall. The
+[M1 actual-post record](REVIEW.md#m1-first-actual-cambam-posts-and-contour-only-revision---2026-09-24)
+owns the A01 section/volume witnesses, finite-tool limit and native-route
+failure. Physical tool error, material forces, fixtures and controller
+behavior remain unassessed.
 
 `integrations.cambam.native_polygon_rest` strictly reimports the original
 zero-Z eight-edge shell, triangular hole and one Part with stock X=[-26,26],
@@ -1974,7 +2277,7 @@ or transition token reject. The accepted result is offline controller-dialect
 output for this synthetic job; runtime state, physical tools/fixtures and
 machining suitability have no acceptance. See the
 [runbook](DEVELOPMENT.md#packet-5-generated-rc01-uccnc-output) and
-[evidence](REVIEW.md#packet-5-generated-rc01-uccnc-output---2026-09-27).
+[evidence](REVIEW.md#packet-5-generated-rc01-uccnc-output--2026-09-27).
 
 ### RC01 native input and comparison candidates
 
@@ -2072,12 +2375,11 @@ M6, changed spindle speed without M3 and hidden control separators. Native
 LF/CRLF formatting remains supported. G98 is a return-mode selection only;
 no canned-cycle execution is admitted by the wrapper option.
 
-The user-posted newline-repaired file passed all 2,945 items, with per-slab
-rough rest 7.775010615955999–7.787678472024001 mm² and final rest
-0.9214411294439999–0.9263453527720001 mm². This establishes the bounded
-explicit-script E output slice for the accepted synthetic RC01 job; it does
-not establish XYZ/Engrave parity, native Pocket N, arbitrary controller
-dialects, physical machining, or formal GEOS topology interval proof.
+The [literal-motion acceptance record](REVIEW.md#rc01-literal-motion-cambam-output-acceptance---2026-09-23)
+owns the user-posted item comparisons and rough/final residual witnesses.
+That bounded explicit-script route does not establish XYZ/Engrave parity,
+native Pocket output, arbitrary controller dialects, physical machining
+or formal GEOS topology interval proof.
 
 ### Native optimiser mapping corpus boundary
 
@@ -2187,7 +2489,8 @@ does not make missing search or smoothing capabilities available.
 | `convex_rest.generate` | Replays one supplied cone column and extends it along a verified rising-clearance straight line in a convex target | One prior column and fixed cone family; this is not an arbitrary Region rest planner. |
 | `polygon_rest.generate`, `curved_region.generate` | Source-bound supplied cylindrical prefixes, smaller-tool original-boundary contours, interior rows and replayed cleared descent/cutting connectors; curved input uses inward-safe geometry | One connected feasible center Region, full-depth predecessor and supported tool pair required. Candidate rows/access are bounded heuristics; residual reports, not tool reachability, establish coverage. No arbitrary tabs or released-body model. |
 | `v_region.plan`, `verify`, `with_prior`, `VSequence`, `VComposition`, `depth_passes` | Raster/offset planning on inward-safe geometry, full-profile containment, high links, partial residual and supplied all-V or mixed cylinder/V sweep unions; bounded retraced axial passes preserve the design | Planning is not a completeness or global path-search proof. Short flutes retain deeper residual. Mixed ordered output requires entry/pass limits and whole-tool setup; cross-stage cavity credit and air-cut minimization remain separate work. |
-| `ordered_job.audit` | Decoded Region-V stock supports standalone or cumulative all-V stages from virgin stock, or exactly one endmill predecessor followed by one V stage | Arbitrary mixed stock evaluators remain unsupported. Partial plans retain residual bounds; infeasible empty plans cannot emit a cutting job. |
+| `planar_rest.generate`, `cutting_sweep_clear` | Contact/medial-guided V candidates, union-proved air pruning, located new-removal/overlap/residual and capped-floor cusp checks; see [RP01](#feature-aware-planar-vrest-candidates-rp01) | Sampled guidance and finite budgets remain partial. Above-stock links, explicit depth passes and whole-tool setup are required; retained paths can contain overlap. No generic fitting, low-link or global optimization claim. |
+| `ordered_job.audit` | Decoded Region-V stock supports standalone/cumulative all-V stages, one endmill/V pair and bounded cylinder/V interleavings against one fixed design; see the [ordered-job contracts](#reusable-ordered-job-output-and-verification) | Other mixed stock evaluators remain unsupported. MX01 requires explicit axial limits and whole-tool setup; partial plans retain residual bounds and infeasible empty plans cannot emit a cutting job. |
 | `replay._covered` | A cleared descent/link requires an enclosing prior sweep at the queried depth | Cylinder coverage is proved against one prior sweep at a time. Union-only access and a smaller cylinder around an approximated helical chord can conservatively reject. This is not a general clearance-path finder. |
 | `strategy.select_strategy` | Supplied safe routes rank by budget feasibility, final upper residual area, upper volume, then declared tie order. Manual choice preserves safe partial status; failed gates cannot win | No bundle generation, automatic tool choice, cutting/air/time/tool-change cost, engagement objective or global optimum. Caller audits must describe the same physical target and metric; records remain trusted assertions. |
 

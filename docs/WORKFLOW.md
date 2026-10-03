@@ -7,8 +7,8 @@ item by recording objective, affected owners and executable acceptance criteria.
 Record blockers there; implementation detail belongs in the domain owner.
 Close a slice by separately recording implementation, automated verification and
 the applicable acceptance authority. Required pending user observations must
-remain visible. Retire completed
-plans after transferring durable facts and failure evidence to their owners.
+remain visible. Apply [documentation maintenance](README.md#maintenance-rules)
+when persisting changed facts; closing a round does not require updating every guide.
 
 Use these states explicitly: **backlog**, **active**, **blocked**, **implemented**,
 **automated checks complete**, and **accepted**. A recommendation is still backlog
@@ -67,12 +67,48 @@ Ask the user for missing decisions only when they materially change architecture
 behavior, acceptance, destructive actions or expensive work. Existing authorization
 continues to apply; a routine technical review is not a new permission gate.
 
-For a consequential decision or failed investigation, append a compact dated record
-to `docs/REVIEW.md`: question/context, evidence, chosen approach, rejected alternatives
-and why, reopening criteria, and verification/acceptance state. Put the resulting
-current contract in its normal owner and link to this evidence. Do not manufacture
-rejected alternatives for trivial edits. Add a domain-specific record only when
-volume warrants it and update the topic map rather than creating a parallel wiki.
+Persist decisions and evidence under the documentation-maintenance rules linked
+above; routine answers and policy edits do not need a new review record.
+
+## Proportional effort and evidence reuse
+
+Choose work that answers the user's requested outcome and its acceptance criteria.
+Account for elapsed time, token spend and context growth, without a scoring ritual.
+Use established session context and targeted searches; expand reading only for a
+specific dependency or uncertainty. Checklists and command examples are resources,
+not instructions to execute every available step on every request.
+
+For status, commit and delivery checks, inspect Git state, the relevant diff and
+existing review/acceptance evidence first. Confirm completed checks cover the
+current behavior, test inputs, relevant environment and required scope. A commit,
+merge or documentation update alone does not invalidate behavior evidence.
+If already merged, report the integrated state and complete the requested review;
+do not automatically reopen certification or generate replacement bundles.
+
+An evidence mismatch needs diagnosis before reruns. Identify the changed files
+and determine whether they affect the claimed behavior. Never assume formatting
+or line endings are harmless, alter old reports to force reuse, or relax exact
+byte checks for part files, posts, fixtures or other byte-sensitive contracts.
+The runner's strict reconciliation may refuse reuse even when a documented
+engineering comparison establishes unchanged behavior. Attribute manually reused
+evidence and its limits explicitly; never describe a refused run as passing.
+If equivalence cannot be established, the uncovered gate remains open.
+
+Run focused checks for changed behavior or a concrete gap; broaden where shared
+contracts or explicit acceptance require it. Repeat passed checks only after a
+relevant change, failure or unresolved concern. A full suite, package matrix,
+second reviewer or new helper must supply evidence the existing work lacks.
+For prose/instruction-only edits, inspect the diff, changed links and consistency;
+runtime tests add value only when code, executable examples or behavioral claims change.
+Before expensive work, state that gap, why narrower checks or existing evidence
+are insufficient, and expected runtime when measured timings are available.
+Ask only when the expansion requires a new user decision or changes the requested
+scope; routine checks already required by the authorized task need no new approval.
+
+Scale artifacts to lasting value. Do not generate audit
+scripts, synthetic bundles, duplicated reviews or backlog reassessments merely
+to make a small task look complete. Stop once the requested outcome and required
+evidence are complete; unrelated follow-ups stay outside this increment.
 
 ## Delegation execution
 
@@ -116,6 +152,40 @@ Result form: findings with file/symbol evidence, patch, or tests; no transcript
 - Identify user/domain validation, next increment and suggested commit message.
 - Do not conflate passing synthetic checks with CamBam or machining acceptance.
 
+### Correctness evidence before a readiness decision
+
+For substantive behavior changes, record a compact table in the dated REVIEW
+entry: changed claim/invariant, owning boundary and consumer, positive and
+fault-sensitive negative/boundary evidence, correctness disposition and limits.
+Link existing tests/results; do not duplicate their implementation or create a
+row for every detail. Ordinary prose-only edits need only their scoped checks.
+
+Perform a distinct correctness pass before closing the increment. Challenge
+inputs omitted from bindings, supported domain endpoints, adapter/core agreement
+and whether the test oracle shares the implementation's assumption. Use concrete
+counterexamples and independent expected values; a test count or matching source
+hash establishes neither completeness nor correctness. A second agent is optional
+when independence closes a named gap at reasonable cost. Review changed shared
+contracts and their callers; keep unchanged reviewed evidence in scope by reference.
+
+Close the review when relevant claims have evidence, actionable findings are
+resolved, required checks apply to the current tree and remaining limits are
+explicit. Broaden only to resolve an identified gap. Prefer cheap synthetic
+boundary/mutation checks, reuse unaffected results and record actual check/review
+cost when evaluating the procedure. Missing required evidence leaves the gate
+open; never infer acceptance from the absence of a reported failure.
+
+The readiness record states: target base and HEAD (plus uncommitted scope when
+present), correctness disposition and evidence link, automated checks/reuse scope,
+required user/domain acceptance, unresolved blockers/limits, and delivery state.
+These fields may be one short paragraph/table, not a new generated artifact.
+Mechanical Git/hash checks and engineering judgment are separate gates. After a
+commit, check delivery and evidence applicability; repeat correctness/behavior
+work only for changes invalidating it. A known defect or missing required review
+cannot be converted into merge readiness by clean Git status or passing tests.
+Readiness means the stated gates are satisfied for this revision and scope; it
+is not a guarantee that the software contains no undiscovered defects.
+
 Use delivery labels precisely:
 
 - **Ready to commit** means the bounded implementation and required checks are
@@ -124,18 +194,26 @@ Use delivery labels precisely:
   Git's working-tree diff does not include them.
 - **Merge-ready** means the target base is named, the worktree is clean, the branch
   contains the intended commit(s), `git diff --check <base>...HEAD` passes, the
-  complete branch diff was reviewed, and every required automated and user/domain
-  acceptance gate is satisfied or correctly declared not required.
+  complete branch diff and its correctness evidence were reviewed under the
+  procedure above, and every required automated and user/domain acceptance gate
+  is satisfied or correctly declared not required.
 - Run behavior checks after the last material content edit. If someone commits after
   verification, confirm the worktree stayed clean and rerun the branch-level status,
   ancestry, commit-range and diff checks against the final `HEAD`. Never promote an
   earlier implementation-ready conclusion into a merge-ready claim by assumption.
+  These are Git/evidence applicability checks, not an automatic behavior-test
+  rerun. Use the proportional-effort rules above to resolve any actual gap.
 - For merge-ready feature work, hand off a `git merge --no-ff <feature-branch>`
   command by default. Its merge commit preserves the branch-and-join topology in the
   graph even if the feature ref is later deleted. Use fast-forward, squash or rebase
   integration only when the user explicitly chooses linear history.
 
 ### Completion record / handoff template
+
+Use the fields relevant to a substantive engineering increment. Routine answers
+and small edits may use a brief result with evidence; omit empty fields. A delivery
+status update normally needs only the changed state and its supporting checks.
+This is a response guide, not a template to append to multiple documents.
 
 ```text
 Slice and date:
@@ -153,6 +231,5 @@ User actions, listed separately:
 Suggested commit message:
 ```
 
-Keep the live state in [PROGRESS.md](PROGRESS.md) (or its designated issue). The review record
-owns detailed completed evidence; handoffs link to it and do not create another
-status file. A failed/unperformed required check keeps technical closure pending.
+Link to existing authoritative records under [documentation maintenance](README.md#maintenance-rules).
+A failed/unperformed required check keeps technical closure pending.

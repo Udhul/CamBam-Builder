@@ -47,7 +47,10 @@ The optional MCP document foundation is described in the
 [MCP contract](MCP_CONTRACT.md). See [local MCP setup](#local-mcp-setup-and-verification)
 below for installation and protocol acceptance. The base library needs no MCP SDK.
 
-Run from the repository root, using the interpreter selected above:
+Select checks using [proportional effort and evidence reuse](WORKFLOW.md#proportional-effort-and-evidence-reuse)
+and [required checks by change](#required-checks-by-change).
+
+Run applicable commands from the repository root, using the interpreter selected above:
 
 ```powershell
 & $ProjectPython -m compileall -q cambam_builder legacy_cambam_builder
@@ -78,6 +81,9 @@ git diff --stat main...HEAD
 
 The worktree must be clean, the commit range must contain the intended work, and all
 commands must succeed. Review the complete `main...HEAD` diff, not merely its stat.
+These commands establish delivery state only. A readiness claim also needs the
+[correctness evidence and compact readiness record](WORKFLOW.md#correctness-evidence-before-a-readiness-decision);
+passing Git checks does not close a missing correctness or behavioral gate.
 Run required behavior checks after the last material content edit; after a later
 commit, rerun these branch-level gates against the final `HEAD`.
 
@@ -259,6 +265,8 @@ until reconciliation is finished. A setup interruption before identities and
 inventory were established requires a fresh invocation. Source/configuration or
 dependency changes require fresh evidence; resume refuses them. This conservative
 rule deliberately avoids reasoning about which tests a code change might affect.
+For mismatch diagnosis and manual applicability assessment, use the
+[evidence-reuse procedure](WORKFLOW.md#proportional-effort-and-evidence-reuse).
 Schema 2 reports also bind presence and SHA-256 bytes for the four retained B/C
 files consumed by `test_tabbed_cutout` and the three retained M1 files consumed
 by `test_native_series`. Changed, added or removed observation inputs rerun that
@@ -284,36 +292,10 @@ normal verification scope; reporting convenience cannot narrow acceptance.
 
 ### Historical package baseline
 
-Historical baseline (before the rest/V branch):
-
-Verified 2026-09-10 using `uv 0.10.2`. The minimum is Python 3.9: Python 3.8
-was not available on the validation machine, and the separately shipped legacy
-package evaluates PEP 585 built-in generic annotations that require Python 3.9.
-The wheel metadata declares version 0.1.0, `Requires-Python: >=3.9`, and
-`Requires-Dist: numpy>=1.23.5`. The wheel and sdist contain both `cambam_builder` and
-`legacy_cambam_builder`; all current modern modules are present.
-
-The wheel was installed into a separate environment per interpreter. From a
-temporary working directory outside the repository, each environment imported
-both package roots, verified installed version/dependency metadata and source-path
-exclusion, constructed a modern and legacy project, performed a modern Rect XML
-write/read cycle, and passed the full 142-test suite:
-
-| Python | NumPy resolved by clean wheel install | Result |
-| --- | --- | --- |
-| 3.9.0 | 2.0.2 | pass |
-| 3.10.9 | 2.2.6 | pass |
-| 3.11.0 | 2.4.6 | pass |
-| 3.12.10 | 2.5.3 | pass |
-| 3.13.9 | 2.5.3 | pass |
-
-The sdist was independently installed under Python 3.9 with NumPy 2.0.2 and
-passed the same imports, installed-path assertion and all 142 tests. Build
-artifacts inspected locally are under
-`output/packaging-validation-20260910-c/`; that ignored directory is supporting
-evidence, not a release location. `legacy_cambam_builder.cambam_builder_cli` is
-a dormant historical module with no declared entry point and is outside the
-supported import surface; no CLI or publishing behavior was added.
+The [2026-09-10 package verification record](REVIEW.md#packaging-and-supported-python-verification)
+owns the earlier Python 3.9-3.13 matrix, dependency versions, archive findings
+and installed results. It is dated evidence, not the current support policy;
+use [environment and setup](#environment-and-setup) for the declared toolchain.
 
 ### Native owner migration checks
 
@@ -1209,7 +1191,7 @@ independently decodes every command and rejects changed output, unsupported
 commands, changed source, precision or transition state. The retained
 [session evidence](../output/packet5-rc01-uccnc-20260927-01/rc01-evidence.json)
 provides one synthetic offline output bundle; its durable bounds and hashes
-are in the [review](REVIEW.md#packet-5-generated-rc01-uccnc-output---2026-09-27).
+are in the [review](REVIEW.md#packet-5-generated-rc01-uccnc-output--2026-09-27).
 No CamBam post or GUI check adds evidence to this fully generated job.
 
 ### RC01 native input and A/B/C comparison preparation
@@ -1895,8 +1877,8 @@ adds evidence for these synthetic geometric claims. Conditional GEOS bounds,
 partial coverage, runtime, engagement and physical setup limits remain explicit.
 `ordered-job-v6-mixed-v-stock` requires fresh ordered bundles and reports;
 unchanged historical source/post observations retain their original acceptance
-scope. Final measured check results belong in the dated review and progress
-owners, not this command reference.
+scope. Final measured check results belong in the
+[dated acceptance record](REVIEW.md#mv01-cumulative-fixed-design-region-v-stock---2026-10-01).
 
 ### Mixed cylindrical/V composition checks
 
@@ -1927,6 +1909,73 @@ credit, radial engagement/load, controller runtime and physical setup are
 separate gates. Verifier `ordered-job-v6-mixed-v-stock` requires regeneration of
 old bundles; unchanged native source/post observations retain their recorded
 scope.
+
+### Feature-aware planar rest candidate checks
+
+RP01 adds detached feature guidance and conservative composed-stock air pruning.
+Run its ornamental consumer and whole-height clearance/corruption witnesses with
+the existing stock and ordered-output owners:
+
+```powershell
+& $ProjectPython tools/verify.py --pattern test_planar_rest.py --pattern test_planar_frieze.py --pattern test_v_region.py --pattern test_fixed_v_design.py --pattern test_standalone_v.py --pattern test_native_v_region.py --pattern test_native_v_hybrid.py --pattern test_mixed_v_composition.py --pattern test_multistage_v.py --pattern test_occupancy.py --pattern test_ordered_job.py --pattern test_ordered_dialects.py --pattern test_execution_evidence.py
+& $ProjectPython tools/verify.py --package --pattern test_planar_rest.py --pattern test_planar_frieze.py --pattern test_v_region.py --pattern test_fixed_v_design.py --pattern test_standalone_v.py --pattern test_native_v_region.py --pattern test_native_v_hybrid.py --pattern test_mixed_v_composition.py --pattern test_multistage_v.py --pattern test_occupancy.py --pattern test_ordered_job.py --pattern test_ordered_dialects.py --pattern test_execution_evidence.py
+```
+
+Inspect located residual intervals, independently witnessed narrow-detail gain,
+floor cusp coverage and XY versus total motion cost. Neither gain nor complete
+coverage is assumed. Union-only capsule clearance, gap/depth rejection and
+same-profile retraces challenge pruning; a different-angle protected-island job
+checks explicit axial passes, whole-tool occupancy and corrupted decoded bytes
+through both dialects. All inputs are synthetic, generated at test time. No
+manual observation adds evidence to this offline gate. The
+[RP01 contract](structure_spec.md#feature-aware-planar-vrest-candidates-rp01)
+owns API semantics and limits; [REVIEW](REVIEW.md#rp01-feature-aware-planar-rest-candidates---2026-10-02)
+owns measured evidence.
+This scope checks the new strategy and its existing native/decoded consumers;
+it does not require unrelated endmill/surface recipes. Changes to shared replay
+or stock enclosure owners still require full discovery under
+[required checks](#required-checks-by-change).
+
+### Editable native rest preparation and actual-post gate
+
+NR01's [contract](structure_spec.md#editable-native-rest-boundaries-and-mops-nr01)
+owns supported geometry, compensation, binding and representability. Run its
+synthetic authoring/mutation witnesses with the existing native/ordered owners:
+
+```powershell
+& $ProjectPython tools/verify.py --pattern test_native_rest.py --pattern test_native_series.py --pattern test_native_series_audit.py --pattern test_native_v_hybrid.py --pattern test_native_arc_replay.py --pattern test_ordered_job.py --pattern test_ordered_dialects.py
+```
+
+Changes to shared verifier binding require full checkout discovery. Tests create
+their own synthetic inputs; no versioned `.cb`/`.nc` fixture is required.
+
+The external gate has two phases. First post a native rough Pocket from the
+unchanged source design using **Default / Default mm**. Normalize with
+`normalize_native_series(source, rough_candidate, rough_post,
+initial_position=..., setup={"units": "mm", "postprocessor": "Default"})`.
+Declare the original `replay.Target`, cutting length and entry mode, then call
+`native_rest.prepare(..., radius_mm=..., overlap_mm=...)`. Use its returned
+`binding.boundaries.target` for subsequent replay/ordered adapters.
+`native_rest.author(binding, rest_candidate, tool_number=...,
+depth_increment_mm=..., clearance_mm=..., spindle_rpm=...,
+plunge_feed_mm_min=..., cut_feed_mm_min=...)` saves and strictly reopens the
+editable native result.
+
+Then open that result in CamBam, generate all toolpaths and the complete Default
+post. Call `native_rest.audit(binding, rest_candidate, rest_post,
+cutting_length_mm=..., entry_mode="virgin"|"cleared",
+section_depths_mm=(...), max_protected_overcut_mm2=...,
+min_new_floor_area_mm2=...)`. Require fresh source/post binding, the unchanged
+predecessor motion, all emitted entry/link/setup roles, positive useful cleanup
+and the declared overcut/residual limits. Record actual post provenance
+separately; a synthetic or hand-edited post cannot supply native planner
+acceptance. Any low rapid, straight ramp or other unproved role fails rather
+than receiving an inferred clearance. Default posts do not encode initial
+machine position; the supplied program-frame tip remains an explicit assumption.
+No machine run is required for this native file/post gate.
+
+The current prepared consumer, exact parameters and observation steps are in
+[NR01 evidence](REVIEW.md#nr01-editable-native-rest-preparation---2026-10-02).
 
 ### Reusable ordered-job output and verification
 
@@ -2060,19 +2109,10 @@ post needs a fresh output directory and job evidence. The offline transition
 still assumes an installed T3. Controller runtime and physical machining
 remain unassessed.
 
-The accepted actual post has one T1 section with 8 linear moves, including a
-vertical G0 retract verified against already cleared stock. The two decoded
-UCCNC stages have 8/221 moves and five cylindrical cuts. Their Z=-1 mm
-prior/final residual intervals are 70.48014297–70.48023554 /
-1.33758636–1.98688732 mm², with zero protected overcut. The separate actual
-source-edit probe was run once with:
-
-```powershell
-& .\.venv\Scripts\python.exe output/hybrid-native-v-20260926-01/check_edit.py
-```
-
-It confirmed that widening a copied source to 13 mm rejects the unchanged
-bundle. The original source, candidate, post and handoff stay untouched.
+The [actual-post acceptance record](REVIEW.md#native-posted-predecessor-and-generated-v-cleanup---2026-09-26)
+owns move counts, residual intervals, hashes and the completed source-edit
+probe. Reopening this gate requires the original bytes or a new matched
+source/candidate/post, followed by fresh output evidence.
 
 The focused synthetic regression and adjacent ordered/native gate are:
 
@@ -2326,13 +2366,60 @@ Inspect the bounded measurements with:
 & .\.venv\Scripts\python.exe -c "from tests.test_spherical_bowl import synthetic_job; from cambam_builder.cam_core.surface3d import compare_representations; from cambam_builder.integrations.ordered_output import emit; import pprint; j=synthetic_job(); pprint.pp(compare_representations(j.stages[0].surface_operation.target)); r=emit(j,'uccnc')[1]; pprint.pp(r['stock_access_residual']); pprint.pp(r['tool_fixture_occupancy'])"
 ```
 
-At 0.125 mm cells, the final residual is enclosed by 0.08655-2.30749 mm³
-and newly removed material has a separate 0.01925 mm³ conservative lower
-bound. The broader interval reflects cell uncertainty; it is not a finish
-tolerance. The setup is synthetic and detached, so a CamBam GUI post adds no
-evidence. The [contract](structure_spec.md#bounded-spherical-bowl-ball-finish-and-rest)
-and [review](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest---2026-09-27)
-state the represented shapes, numerical basis and remaining limits.
+The [packet 3 acceptance record](REVIEW.md#packet-3-spherical-bowl-ball-finish-and-rest--2026-09-27)
+owns measured residual/gain intervals and their interpretation. Cell
+uncertainty is not a finish tolerance. The setup is synthetic and detached,
+so a CamBam GUI post adds no evidence; the
+[contract](structure_spec.md#bounded-spherical-bowl-ball-finish-and-rest)
+defines represented shapes and numerical limits.
+
+### Ornamental straight-wall inlay verification
+
+The [IN01 contract](structure_spec.md#ornamental-straight-wall-paired-stock-and-assembly-in01)
+uses synthetic runtime-generated stock/motion and complete in-memory controller
+outputs. Run its tests plus the reused stock/output boundaries:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_ornamental_inlay tests.test_paired_inlay tests.test_execution_evidence tests.test_ordered_job tests.test_ordered_dialects tests.test_polygon_rest -q
+```
+
+No CamBam observation is required for this detached offline slice. Executable
+facing is covered below; controller execution and physical-fit coupons have
+separate acceptance scopes.
+
+### Tapered profile-aware ornamental inlay
+
+The [tapered IN01 contract](structure_spec.md#tapered-profile-aware-paired-stock-in01)
+reuses fixed-V compositions and their decoded consumers. Run its independent
+synthetic section/assembly tests plus the affected stock/output owners:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_tapered_inlay tests.test_ornamental_inlay tests.test_paired_inlay tests.test_v_region tests.test_fixed_v_design tests.test_multistage_v tests.test_mixed_v_composition tests.test_execution_evidence tests.test_ordered_job tests.test_ordered_dialects tests.test_polygon_rest -q
+```
+
+The tests generate supplied plans and complete component outputs in memory.
+They cover differing profiles/angles, continuous section bounds, independent
+analytic witnesses, mixed cylinder/V output and omitted/stale machining.
+No CamBam observation is needed for this offline scope; native, controller and
+physical acceptance remain separate.
+
+### Composite inlay facing and final verification
+
+The [composite contract](structure_spec.md#composite-stock-facing-and-final-inlay-verification-in01)
+adds assembled stock, explicit process/setup binding, a flat raster candidate,
+and decoded facing verification without changing shared replay/enclosures.
+Run the new consumer and the affected paired/output owners:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py --pattern test_composite_inlay.py --pattern test_ornamental_inlay.py --pattern test_tapered_inlay.py --pattern test_ordered_job.py --pattern test_ordered_dialects.py --pattern test_execution_evidence.py
+```
+
+Synthetic inputs and complete UCCNC/Grbl files are built in memory. Assertions
+cover holed bridge and rectangular consumers, independent landmarks/areas,
+plane coverage, motif and core/floor minima, stale setup/stock/output bindings,
+missing rows and insufficient or excessive depth. There is no pending manual
+observation for this offline gate. Cutting an actual part requires separately
+selected machine/tool/fixture/process conditions and physical acceptance.
 
 ### Packet 4 paired V-carve inlay
 
@@ -2359,7 +2446,7 @@ contact; 0.1 mm clearance has a 0.1 mm radial gap at correct registration.
 This synthetic detached output needs no CamBam post or manual GUI check.
 Controller runtime, center-plunge suitability and physical assembly remain
 outside this offline gate. The [contract](structure_spec.md#bounded-circular-paired-v-carve-inlay)
-and [review](REVIEW.md#packet-4-paired-v-carve-inlay---2026-09-27)
+and [review](REVIEW.md#packet-4-paired-v-carve-inlay--2026-09-27)
 give the geometry and measured evidence.
 
 ### Bounded holder and fixture occupancy
@@ -2514,6 +2601,9 @@ reference tests too. No CamBam manual check adds evidence to this detached desig
 increment, and no runtime or packaging changes are implied by these commands.
 
 ### Required checks by change
+
+Select applicable requirements under the
+[proportional-effort procedure](WORKFLOW.md#proportional-effort-and-evidence-reuse).
 
 For execution/evidence changes, check byte grammar, decoded motion, stale source
 and result mutation, transitions, and occupancy through both public integration
@@ -2703,9 +2793,9 @@ and identity transforms. The CamBam Plus 1.0 baseline above applies. The retaine
 below document the accepted synthetic case; do not repeat without a relevant
 change. See [acceptance evidence](REVIEW.md#rect-baking-display-acceptance).
 
-The prepared local fixtures are [A_reference.cb](../output/rect-bake-validation-20260908-a/A_reference.cb)
-and [B_baked.cb](../output/rect-bake-validation-20260908-a/B_baked.cb). The generator
-at [generate.py](../output/rect-bake-validation-20260908-a/generate.py) creates A as
+The prepared local fixtures are A_reference.cb (`output/rect-bake-validation-20260908-a/A_reference.cb`; historical artifact)
+and B_baked.cb (`output/rect-bake-validation-20260908-a/B_baked.cb`; historical artifact). The generator
+at generate.py (`output/rect-bake-validation-20260908-a/generate.py`; historical artifact) creates A as
 explicit closed Plines and creates B from two 4x2 Rects, then performs a full bake
 and two XML round trips. It also includes a transformed Rect parent and a closed
 child outline. Its command is:
@@ -2830,8 +2920,8 @@ Accepted by the user on 2026-09-07: all described A/B load, operation, target an
 property outcomes were confirmed. The CamBam Plus 1.0 baseline above applies. The retained
 criteria need no repetition unless relevant behavior changes.
 Prepared and XML-inspected files in `output/mop-validation-kpk5hxop/`:
-[A reference](../output/mop-validation-kpk5hxop/A_reference.cb) omits MOP Tags;
-[B result](../output/mop-validation-kpk5hxop/B_roundtrip.cb) retains them after two
+A reference (`output/mop-validation-kpk5hxop/A_reference.cb`; historical artifact) omits MOP Tags;
+B result (`output/mop-validation-kpk5hxop/B_roundtrip.cb`; historical artifact) retains them after two
 library round trips. The ignored generator can be run from the repository root:
 
 ```powershell
@@ -2861,17 +2951,17 @@ The user accepted the prepared A/B CamBam display/property case on 2026-09-08
 and the final native C/D case on 2026-09-08 in the CamBam 1.0 baseline above.
 This accepts supported display/property interchange, not production toolpaths or
 complete native interoperability. The disposable fixture
-directory is [mop-core-validation-1roowlbtpza](../output/mop-core-validation-1roowlbtpza/).
+directory is mop-core-validation-1roowlbtpza (`output/mop-core-validation-1roowlbtpza/`; historical artifact).
 Regenerate its files from the repository root with:
 
 ```powershell
 & $ProjectPython output\mop-core-validation-1roowlbtpza\generate.py
 ```
 
-The generator writes [A_reference.cb](../output/mop-core-validation-1roowlbtpza/A_reference.cb),
-[B_roundtrip.cb](../output/mop-core-validation-1roowlbtpza/B_roundtrip.cb) after two
+The generator writes A_reference.cb (`output/mop-core-validation-1roowlbtpza/A_reference.cb`; historical artifact),
+B_roundtrip.cb (`output/mop-core-validation-1roowlbtpza/B_roundtrip.cb`; historical artifact) after two
 library XML round trips, the intermediate `B_roundtrip_1.cb`, and
-[manifest.json](../output/mop-core-validation-1roowlbtpza/manifest.json). The A file
+manifest.json (`output/mop-core-validation-1roowlbtpza/manifest.json`; historical artifact). The A file
 has native primitive references but no framework MOP identity Tags. It is a
 synthetic metadata-free input, not CamBam-authored evidence. The XML inspection
 must show one layer, one part, four
@@ -2904,7 +2994,7 @@ path; the agent runs the comparison after receiving it. The new operation may
 use CamBam's generated display name.
 
 The native edit was completed in
-[C_native_edited.cb](../output/mop-core-validation-1roowlbtpza/C_native_edited.cb).
+C_native_edited.cb (`output/mop-core-validation-1roowlbtpza/C_native_edited.cb`; historical artifact).
 The comparison command was run successfully (exit 0):
 
 ```powershell
@@ -2912,7 +3002,7 @@ The comparison command was run successfully (exit 0):
   --native-edited <reported-C-path>
 ```
 
-It wrote [C_framework_roundtrip.cb](../output/mop-core-validation-1roowlbtpza/C_framework_roundtrip.cb)
+It wrote C_framework_roundtrip.cb (`output/mop-core-validation-1roowlbtpza/C_framework_roundtrip.cb`; historical artifact)
 and its inspection JSON beside D; it never writes beside or over C. The automated
 comparison passed: both sides retain five enabled operations in the order Drill,
 Engrave, Pocket, Profile, Profile; the fourth targets `pocket-square` with
@@ -2985,9 +3075,9 @@ python output/shape-parity-kvr0bdc2/verify_acceptance_xml.py
 python output/shape-parity-kvr0bdc2/verify_native_roundtrip.py
 ```
 
-- [A: geometry elevations plus hierarchy matrices](../output/shape-parity-kvr0bdc2/A_matrix_elevations.cb)
-- [B: baked world coordinates and identity matrices](../output/shape-parity-kvr0bdc2/B_baked_elevations.cb)
-- [Exact world geometry](../output/shape-parity-kvr0bdc2/expected-world-geometry.json)
+- A: geometry elevations plus hierarchy matrices (`output/shape-parity-kvr0bdc2/A_matrix_elevations.cb`; historical artifact)
+- B: baked world coordinates and identity matrices (`output/shape-parity-kvr0bdc2/B_baked_elevations.cb`; historical artifact)
+- Exact world geometry (`output/shape-parity-kvr0bdc2/expected-world-geometry.json`; historical artifact)
 
 Open A and B in CamBam. Both must load without error and show matching geometry
 in top and oblique views, with eight primitives and one Region containing two
@@ -3013,9 +3103,9 @@ part of that Region. No generated toolpath or machining result is required.
 The user reported every visible A/B check passed. Text displayed at anchor
 `(30,35,2)` with center/center alignment, line spacing 1 and the expected font
 and style. CamBam does not expose `p2` as a property. The user saved B as
-[C](../output/shape-parity-kvr0bdc2/C.cb); native XML retained
+C (`output/shape-parity-kvr0bdc2/C.cb`; historical artifact); native XML retained
 `p2="35,35,7"`. A separate fresh-session
-[Text fixture](../output/shape-parity-kvr0bdc2/text_test.cb) created in CamBam
+Text fixture (`output/shape-parity-kvr0bdc2/text_test.cb`; historical artifact) created in CamBam
 contains only `p1` despite `align="bottom,left"`, proving alignment is encoded
 separately and normal Text does not require `p2`. This matches the
 [official CamBam MText API](https://www.cambam.info/doc/api/MText.htm), which
@@ -3540,7 +3630,7 @@ CamBam-saved [Manual Square](../output/manual-tabs-20260927-01/tabs-manually-pla
 and [Manual Triangle](../output/manual-tabs-20260927-01/tabs-manually-placed-triangle.cb)
 each contain four valid centered points and a matching Default post. Their
 native point encoding and posted tab lifts are recorded in the
-[review](REVIEW.md#manual-profile-tab-native-fixture---2026-09-27).
+[review](REVIEW.md#manual-profile-tab-native-fixture--2026-09-27).
 
 The user completed the native move/add/remove sequence in
 [B](../output/manual-tabs-20260927-01/B-moved.cb),
@@ -3550,7 +3640,7 @@ C's `.nc` contains five tab lifts, but its main `.cb` is a later four-tab save.
 The five-tab CamBam backup was copied without changing the source to
 [C-added-recovered.cb](../output/manual-tabs-20260927-01/C-added-recovered.cb).
 It has `MinimumTabs=MaximumTabs=5`, as the user observed was needed; B and D
-use `4/4`. The [review](REVIEW.md#manual-profile-tab-native-fixture---2026-09-27)
+use `4/4`. The [review](REVIEW.md#manual-profile-tab-native-fixture--2026-09-27)
 records hashes and point/order evidence.
 
 **Fresh writer acceptance completed 2026-09-27.** The user opened
@@ -3559,7 +3649,7 @@ records hashes and point/order evidence.
 Plus 1.0 and generated [B](../output/manual-tabs-20260927-01/B-fresh-manual.nc)
 and [C](../output/manual-tabs-20260927-01/C-fresh-manual.nc) Default posts.
 Their complete machine-command streams match native B/C exactly after CamBam
-comments are removed; the [review](REVIEW.md#fresh-writer-cambam-default-post-acceptance---2026-09-27)
+comments are removed; the [review](REVIEW.md#fresh-writer-cambam-default-post-acceptance--2026-09-27)
 records hashes and scope. No further file creation is needed for this gate.
 For repeatable inspection, B must stay
 `Tab Method=Manual`, `MinimumTabs=MaximumTabs=4`, and show four tabs at

@@ -1,11 +1,17 @@
 # Agent operating agreement
 
-- Start with `README.md`, then `docs/README.md`. Search headings, exact terms,
+- Orient with relevant sections of `README.md`, then `docs/README.md`; reuse
+  context already established in the session. Search headings, exact terms,
   symbols, callers and tests before reading relevant sections; expand only when
   dependencies or ambiguity justify it. Return evidence, not reading transcripts.
 - Inspect `git status --short` before edits. Preserve unrelated changes. Define a
   bounded increment and acceptance criteria; fix the owning contract, avoiding
   opportunistic refactors. Prove abstractions on one end-to-end slice first.
+- Match reading, testing, delegation, artifacts and reporting to the requested
+  outcome. Consider elapsed time, token spend and context growth. Every expansion
+  must close a named evidence gap or advance that outcome; available tools and
+  checklists do not create work. Stop when acceptance is satisfied. Follow
+  [proportional effort](docs/WORKFLOW.md#proportional-effort-and-evidence-reuse).
 - Size increments around meaningful project outcomes, not the smallest possible
   code change. Keep scope testable, but group related fixes/checks that establish
   one useful capability. Before extending a workstream, compare adjacent gaps
@@ -27,9 +33,9 @@
   Fixture limits and the user's current machine/workflow are evidence boundaries,
   not permanent framework constraints; apply the
   [framework direction](docs/structure_spec.md#framework-direction-and-extension-principles).
-- Keep project facts in their documentation owner, identified by the topic map.
-  Update `docs/PROGRESS.md` when priority or completion changes; preserve useful failure
-  evidence and reopening criteria. Do not create a competing wiki or backlog.
+- Keep each fact/rule in one authoritative owner; follow
+  [documentation maintenance](docs/README.md#maintenance-rules). Update only owners
+  whose facts changed; use direct links instead of copied rules, evidence or status.
 - Use deterministic tools for discovery, transformation and validation. Use models
   for bounded semantic judgment supported by evidence. Add infrastructure or
   dependencies only for a measured or user-expressed need with an identified owner.
@@ -46,30 +52,36 @@
   send secrets, credentials, private/user assets or generated reports externally unless
   the task explicitly requires and authorizes them.
 - Use the declared toolchain and commands in `docs/DEVELOPMENT.md`. Run focused
-  checks, broadening for shared-contract changes. Inspect artifacts where exit
-  status alone is insufficient. Never claim unperformed checks passed.
+  checks and apply the proportional-effort procedure linked above. Inspect artifacts
+  where exit status alone is insufficient. Never claim unperformed checks passed.
 - Distinguish implementation closure from delivery state. Uncommitted work may be
   called **ready to commit**, never **merge-ready**. Before a merge-ready claim,
   identify the target base, require a clean worktree and at least one branch commit,
   inspect the exact `base...HEAD` diff (including `git diff --check base...HEAD`),
   and confirm required checks apply to the final tree. `git diff --check` alone does
   not inspect untracked files. After the user or another tool commits, rerun the
-  branch-level gates; do not inherit a pre-commit readiness conclusion.
+  branch-level gates and confirm evidence applies; committing or merging alone
+  does not require new behavior tests. If already merged, report that delivery
+  state without automatically starting fresh certification.
 - When a feature branch is merge-ready, provide commands using `git merge --no-ff`
   by default so `main` retains a visible merge point and branch topology. Do not
   recommend fast-forward, squash or rebase integration unless the user explicitly
   prefers linear history. The user performs the merge unless they explicitly
   authorize the agent to do it.
 - Separate implementation, automated verification and user/production acceptance.
-  End each unit with changed areas, decisions/assumptions, exact checks/results,
-  risks, required user validation, next increment and suggested commit message.
-  End the final response with a short, actionable next-task statement describing
+  Whenever repository changes are made, include a suggested commit message in
+  the final response, in a fenced `text` block containing only the copyable
+  message. This is required for small code or documentation edits as well as
+  substantive work. Keep it separate from the next-agent task handoff.
+  Scale the response using the [handoff guidance](docs/WORKFLOW.md#completion-record--handoff-template);
+  use existing owners for durable facts, not copies of the response in several docs.
+  For substantive work, end with a short, actionable next-task statement describing
   what to do, not how, linked to its backlog details so it can trigger the next
   turn/session. This formatted handoff contains only the next AI agent's work;
   keep user-owned actions such as committing or merging in separate final-response
-  prose unless explicitly delegated to the agent. Separately recommend continuing
-  this session or starting a new one.
-- At the end of each round, assess both the local workstream and overall project
+  prose unless explicitly delegated to the agent. For that handoff, recommend
+  continuing this session or starting a new one.
+- At the end of a substantive work round, assess local work and overall project
   progress. State whether this is a good fresh-session breakpoint and why. Prefer
   a breakpoint after a coherent outcome is implemented, verified and required
   acceptance recorded, when the next task has a distinct scope and does not need
@@ -101,7 +113,8 @@
   `output/` links may aid the current session, but the documented conclusion must
   remain understandable when those files are unavailable in a fresh checkout.
   Before handoff, inspect `git status --short`, untracked candidates and ignored
-  `.cb`/`.nc` files outside `output/`; remove accidental tracked-folder copies
+  `.cb`/`.nc` files in owners this task could affect; avoid unrelated cache/output
+  enumeration. Remove accidental tracked-folder copies
   and dependencies on ignored session files. The root `.gitignore` protects new
   `.cb`/`.nc` files from ordinary Git adds; already tracked historical fixtures
   require a separate deliberate review.
