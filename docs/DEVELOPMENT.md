@@ -2383,6 +2383,22 @@ outputs. Run its tests plus the reused stock/output boundaries:
 No CamBam observation is required for this detached offline slice. Facing paths,
 controller execution and physical-fit coupons have separate acceptance scopes.
 
+### Tapered profile-aware ornamental inlay
+
+The [tapered IN01 contract](structure_spec.md#tapered-profile-aware-paired-stock-in01)
+reuses fixed-V compositions and their decoded consumers. Run its independent
+synthetic section/assembly tests plus the affected stock/output owners:
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest tests.test_tapered_inlay tests.test_ornamental_inlay tests.test_paired_inlay tests.test_v_region tests.test_fixed_v_design tests.test_multistage_v tests.test_mixed_v_composition tests.test_execution_evidence tests.test_ordered_job tests.test_ordered_dialects tests.test_polygon_rest -q
+```
+
+The tests generate supplied plans and complete component outputs in memory.
+They cover differing profiles/angles, continuous section bounds, independent
+analytic witnesses, mixed cylinder/V output and omitted/stale machining.
+No CamBam observation is needed for this offline scope; native, controller and
+physical acceptance remain separate.
+
 ### Packet 4 paired V-carve inlay
 
 Run from the repository root with the declared interpreter:

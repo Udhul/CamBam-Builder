@@ -377,6 +377,7 @@ the initial behavior-to-test matrix and audit gaps belong in REVIEW.
 | Rest analysis/generation: `convex_rest.generate`, `polygon_rest.generate`, `curved_region.approximate/generate`, `v_region.with_prior` | Current `cam_core`; replayed supplied predecessor, target and cutter | Convex/straight/curved planar domains with explicit numerical envelopes. A source/motion fingerprint is required where exposed. `with_prior` requires one complete cylindrical operation on the same target; earlier overcut is not forgiven by later removal. | Public bounded strategies and stock queries. Cleared-overlap/path fitting is distinct from changing target edges; generic conditional smoothing remains an extension. |
 | Feature-aware V/rest: `planar_rest.generate`, `cutting_sweep_clear`, `Candidate.section/floor_cusp` | `cam_core.planar_rest`; fixed design and composed stock | Contact/medial guidance, conservative union-air pruning and located residual/cusp evidence; see [RP01](#feature-aware-planar-vrest-candidates-rp01). | Public bounded strategy; high links and explicit axial/setup gates. Partial coverage and retained overlap remain visible. |
 | Reference jobs: `rc01.generate/verify`, `mixed.verify_mixed`, `inlay.generate/assembly/audit_pair` | Current `cam_core`; section/replay/profile values; paired audit also calls output integration | RC01 nominal rectangle/island/process recipe; mixed RC01/slot recipe; circular pointed-V receiver/plug family with independent stocks. Reference dimensions/tool recipes are not generic framework invariants. | Public reference conveniences with bounded offline evidence. Keep reusable geometry/stock separate; move orchestration when a concrete caller requires it. `audit_pair` is the explicit layering exception above. |
+| Ornamental paired stock: `ornamental_inlay.Design/verify_pair/finish_envelope`, `tapered_inlay.Design/PartStock/section/verify_pair` | `cam_core` stock/assembly; complete-byte audits in `integrations.inlay_output` | [Straight-wall](#ornamental-straight-wall-paired-stock-and-assembly-in01) and [profile-aware tapered](#tapered-profile-aware-paired-stock-in01) targets, supplied independent part plans and continuous rigid insertion. | Public bounded offline verification; declared sanding envelope only. Executed composite facing, final motif/thickness and physical fit have separate gates. |
 | Recommendation/pass policy: root `machining_calculations`, `machining_recommendations`, `machining_planning` | Formula kernel, immutable contexts, pluggable recommendation strategy | Unit-explicit inputs, feed/RPM/range constraints and through-cut pass planning. No toolpath generation, stock clearance or curated material authority. | Existing public APIs, unchanged owners followed as dependencies. A candidate recommendation is not a stock certificate. |
 | Route selection: `cam_extensions.strategy.select_strategy` | Detached policy over caller-supplied `StageAudit` and residual bounds | Checks source/predecessor chain, required gates and completeness; ranks feasible then safe partial candidates by upper residual area, volume and declared tie order. Manual choice cannot select an unsafe candidate. | Public supplied-candidate ranking, not bundle search, cutting-time optimization or independent validation of caller assertions. No global optimum claim. |
 | Caller-owned execution: `ordered_job.Job/Stage/Transition/AxialLimits`, `from_prior_v`, `audit` | `cam_core.ordered_job`; replay, V and bounded 3D evaluators | Caller labels/tools/order/feed/RPM; resolved mm/G54 translation. All-cylinder, standalone/cumulative all-V, bounded mixed cylinder/V, homogeneous layered/surface/inlay sequences have distinct evaluators. Mixed V requires explicit axial/entry limits and whole-tool setup. | Public bounded composition. `audit` consumes already-decoded values; `ordered_output` is the complete-byte/native-binding authority. Unsupported mixtures must not be read as stock success. |
@@ -1254,10 +1255,63 @@ passes their reconstructed decoded traces to the core assembly verifier.
 
 The [verification record](REVIEW.md#in01-straight-wall-ornamental-assembly---2026-10-02)
 owns the asymmetric holed bridge and independent rectangular consumer evidence.
-Tapered/flat-tip/rounded-tip mating stock, actual composite facing motion,
-native output, holder/fixture access and physical material-fit coupons remain
-outside this slice; [IN01 follow-up scope](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers)
+Tapered mating is covered by the [profile-aware extension](#tapered-profile-aware-paired-stock-in01).
+Actual composite facing motion, native output, holder/fixture access and physical
+material-fit coupons remain outside this slice; [IN01 follow-up scope](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers)
 and [current priority](PROGRESS.md#active-work-and-next-priority) own the remainder.
+
+### Tapered profile-aware paired stock (IN01)
+
+`cam_core.tapered_inlay.Design` combines the straight-wall allowance value with
+an independent design angle and explicit receiver/plug overtravel. Its receiver
+opening is the motif; its retained plug tip is the motif offset inward by
+`seating*tan(angle/2) + side_fit`. Signed fit is therefore referenced at the
+seated tip plane. Plug removal is the exterior and each hole in the mirrored
+machining frame. Each removal component is a fixed `v_region.VTarget`, shrinking
+with machining depth under the existing inner/outer offset convention. The plug
+grows towards its backing. Offsetting inward and outward need not recover the
+original motif around corners; equal design/tool angles never establish a fit.
+
+The minimum-web/topology check covers the smallest nominal receiver and plug
+sections. Edge access must clear the finite blank boundary even at the deepest
+plug section. Overtravel permits additional machining beyond the requested
+minimum bottom/surface gaps; it must leave receiver thickness and plug backing.
+It is particularly relevant to pointed and rounded tips whose nominal floor
+contact alone cannot clear a finite floor area. It is not inferred from a tool.
+
+`PartStock` accepts component `VComposition` values, including independent
+pointed/flat/rounded plans and source-bound cylinder stages. `section` returns
+the union of actual removed-stock inner/outer bounds. Missing components remain
+uncut. Core consumers revalidate each composition against its original target,
+frame, revision and expected stock fingerprint; changing a tool changes that
+fingerprint. Shared V verification owns complete motion and whole-profile
+containment. This extension supplies targets and verification, not a new planner.
+
+`verify_pair` uses the same proper rigid flip as straight-wall assembly. All
+supported profiles have radius nondecreasing with height; removal shrinks with
+depth and retained plug grows towards its backing. At each seated depth slab,
+the largest plug and smallest cavity enclose possible collision, and the
+smallest plug and largest cavity enclose definite collision. Endpoint bounds
+cover continuously varying surfaces and depth discontinuities. Every earlier
+fixed-XY insertion section is contained in the seated plug section, so zero
+upper collision plus both gap checks certifies continuous insertion. The
+requested bottom gap uses the actual cavity at its deepest requested plane;
+the surface gap uses actual plug stock at the deepest requested shoulder plane.
+This is conservative: `unresolved` may need finer slabs, different paths/tools
+or changed explicit allowances. Positive lower collision is `collision`; no
+nonzero area tolerance grants a `pass`. Reports bind both stock fingerprints,
+registration, gap results and every collision slab. GEOS and the existing
+V/cylindrical sweep enclosures remain the numerical boundary.
+
+`integrations.inlay_output.audit_tapered_pair` takes tuples of `ComponentOutput`
+values for each part. Each component has a complete direct ordered job, files,
+expected job fingerprint and all expected file hashes. The integration audits
+UCCNC/Grbl bytes, reconstructs decoded V/cylinder sweeps and assembles those
+stocks. Components have independent complete setups; no connecting low motion
+or pre-cleared access is inferred. Nominal target geometry earns no removal.
+The [verification evidence](REVIEW.md#in01-tapered-profile-aware-assembly---2026-10-02)
+owns the representative consumers and acceptance. Final visible motif/thickness,
+executed composite facing, native output and physical fit remain separate gates.
 
 ### Bounded circular paired V-carve inlay
 

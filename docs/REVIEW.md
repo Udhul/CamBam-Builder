@@ -5,6 +5,68 @@ checkpoints. [PROGRESS](PROGRESS.md) owns current priority and state; the
 [specification](structure_spec.md) and [MCP contract](MCP_CONTRACT.md) own current
 contracts. Historical next-task and pending statements describe their entry date.
 
+## IN01 tapered profile-aware assembly - 2026-10-02
+
+The [tapered contract](structure_spec.md#tapered-profile-aware-paired-stock-in01)
+adds paired fixed-V targets, actual component-stock unions and conservative
+continuous insertion. It reuses existing V/cylindrical enclosures and ordered
+output auditing without changing their shared implementations. Independent
+review found no blocker in the monotone endpoint bounds, gap checks or decoded
+stock bindings. Geometry remains conditional on those existing GEOS enclosures.
+
+The synthetic asymmetric **42 mm2** motif uses the same 6 by 6 mm body,
+3 by 1 mm bridge, 3 by 3 mm lobe and 2 by 3 mm hole as the straight-wall
+consumer. New parameters are **0.35 mm** seating, **0.05 mm** minimum bottom
+and surface gaps, **0.18 mm** signed side fit at the tip plane, **30 degrees**
+design angle, **0.35 mm** overtravel per part, **1 mm** backing and edge
+access, **3 mm** receiver thickness and **0.4 mm** minimum nominal web.
+Actual cut caps are **0.75 mm**. Independent supplied contour/raster plans use
+**0.12 mm** pitch and **0.001 mm** margin. The flat receiver and rounded plug
+both use 30-degree profiles with **0.03 mm** tips; a pointed receiver variant
+uses the same target. Eight slabs yield **0 mm3** possible seated collision
+and certify both requested gaps, hence continuous fixed-XY insertion.
+
+Independent rectangular offset areas and length-1 capsule sections enclose
+`2*r + pi*r^2` for pointed, flat and rounded profiles, including both spherical
+and conical portions of the rounded profile. Section area-bound width is below
+**0.001 mm2**. A separate rectangle pairs a 30-degree flat receiver with a
+20-degree rounded plug while receiver cuts vary continuously in Z. Missing hole
+machining produces more than **1 mm3** definite collision; **0.6 mm**
+registration error, **-0.1 mm** interference, a blocked oversized cutter and
+insufficient pointed-floor clearance fail. Slab refinement narrows the same
+stock's collision interval. Revision, frame, tool and motion mutations reject.
+
+A smaller holed motif verifies complete UCCNC and Grbl component outputs;
+Grbl also includes an endmill stage before the V receiver stage. Byte/hash and
+job-binding mutations reject before assembly. Components use independent
+complete setups, so this does not claim connecting inter-component motion.
+No native/manual observation would add evidence to the stated offline gate.
+Executed composite facing, final visible motif/thickness, controller operation,
+holder/fixture occupancy and physical material-fit remain outside acceptance.
+
+Verification on repository Python **3.13.5**, Shapely **2.1.2**: the final
+tapered suite passed **10 tests** in **167.250 s**; the affected-owner regression
+run passed **88 tests** in **329.797 s**, both with no skips. Syntax, whitespace
+and changed documentation links were checked, including the new untracked
+source/test files. Engineering acceptance is complete for this bounded offline
+scope; the changes are ready to commit. Shared replay/enclosure/planner owners
+are unchanged, so focused owner and decoded-consumer coverage closes the gate
+without full discovery. Commands are in the
+[runbook](DEVELOPMENT.md#tapered-profile-aware-ornamental-inlay); synthetic inputs
+are self-contained in `tests/test_tapered_inlay.py`. Local logs remain under
+`output/in01-tapered-20261002-01/`; no saved machining file is needed to reproduce
+the assertions.
+
+One planning investigation is deliberately deferred. Calling `v_region.plan`
+on the same asymmetric pair with 20-degree flat/rounded profiles, 0.03 mm tips,
+2 mm maximum radius/cutting length, `fill_pattern="offset"`, **0.12 mm**
+stepover, **0.25 mm** XY step and **0.001 mm** margin generated the receiver
+but rejected the plug with `zero-length V segment`. This is a candidate-planner
+limitation, not fit evidence; the accepted independent supplied paths pass the
+whole-profile verifier. Reopen when automatic candidate generation consumes
+these components (notably BO01), rather than expanding the assembly verifier
+into a path-strategy repair. Current priority remains in PROGRESS.
+
 ## IN01 straight-wall ornamental assembly - 2026-10-02
 
 The [bounded contract](structure_spec.md#ornamental-straight-wall-paired-stock-and-assembly-in01)
