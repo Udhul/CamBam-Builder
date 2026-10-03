@@ -380,6 +380,7 @@ the initial behavior-to-test matrix and audit gaps belong in REVIEW.
 | Ornamental paired stock: `ornamental_inlay.Design/verify_pair/finish_envelope`, `tapered_inlay.Design/PartStock/section/verify_pair`, `composite_inlay.Assembly/Finish/generate/verify` | `cam_core` stock/assembly; complete-byte audits in `integrations.inlay_output` | [Straight-wall](#ornamental-straight-wall-paired-stock-and-assembly-in01), [profile-aware tapered](#tapered-profile-aware-paired-stock-in01) and [composite facing](#composite-stock-facing-and-final-inlay-verification-in01) with supplied independent parts and continuous rigid insertion. | Public bounded offline verification of facing plane, motif enclosures and retained nominal core/floor; declared sanding envelope remains separate. Physical fit and controller execution have separate gates. |
 | Recommendation/pass policy: root `machining_calculations`, `machining_recommendations`, `machining_planning` | Formula kernel, immutable contexts, pluggable recommendation strategy | Unit-explicit inputs, feed/RPM/range constraints and through-cut pass planning. No toolpath generation, stock clearance or curated material authority. | Existing public APIs, unchanged owners followed as dependencies. A candidate recommendation is not a stock certificate. |
 | Route selection: `cam_extensions.strategy.select_strategy` | Detached policy over caller-supplied `StageAudit` and residual bounds | Checks source/predecessor chain, required gates and completeness; ranks feasible then safe partial candidates by upper residual area, volume and declared tie order. Manual choice cannot select an unsafe candidate. | Public supplied-candidate ranking, not bundle search, cutting-time optimization or independent validation of caller assertions. No global optimum claim. |
+| Finite bundle search: `cam_extensions.bundle_search.search` | Detached search policy over existing planar generators and ordered output | Declared V inventory and raster/offset/RP01 feature families; explicit passes, decoded cumulative stock, whole-tool setup, finish/cost limits, finite orders and conservative dominance. | Public bounded all-V search; [BO01-A contract](#finite-planar-toolpath-bundle-search-bo01-a). Mixed/paired and surface consumers remain later scopes. |
 | Caller-owned execution: `ordered_job.Job/Stage/Transition/AxialLimits`, `from_prior_v`, `audit` | `cam_core.ordered_job`; replay, V and bounded 3D evaluators | Caller labels/tools/order/feed/RPM; resolved mm/G54 translation. All-cylinder, standalone/cumulative all-V, bounded mixed cylinder/V, homogeneous layered/surface/inlay sequences have distinct evaluators. Mixed V requires explicit axial/entry limits and whole-tool setup. | Public bounded composition. `audit` consumes already-decoded values; `ordered_output` is the complete-byte/native-binding authority. Unsupported mixtures must not be read as stock success. |
 | Editable native rest: `rest_boundaries.derive`, `native_rest.prepare/author/audit`, `RestBinding` | Detached boundary derivation plus native integration | [NR01 contract](#editable-native-rest-boundaries-and-mops-nr01); compensated planar Regions, native Pocket and original-design certification | Public bounded API; synthetic offline evidence and actual native planner acceptance are separate. |
 | Native/generated composition: `native_ordered_job.from_native_series/from_native_v`, `NativeBinding.check` | Native integration to detached ordered job | Repeated tools and supported native stage order; one native cylinder plus source-bound V finish. `from_native_circle_cleanup` is specifically the diameter-24/depth-2/T1-T2 observed recipe. | Public bounded adapter plus named reference helper. Source/current-post binding is required at output; no mandatory global document session. |
@@ -882,6 +883,76 @@ Tests generate a lobed/island/valley/broad-cap frieze and challenge reuse with a
 different-angle cylinder/V island job through both output dialects. Measured
 coverage, cost and acceptance belong to the
 [RP01 evidence](REVIEW.md#rp01-feature-aware-planar-rest-candidates---2026-10-02).
+
+### Finite planar tool/path bundle search (BO01-A)
+
+`cam_extensions.bundle_search.search(target, tools, families, ...)` owns finite
+search policy. It uses `v_region.plan` for raster/offset and
+`planar_rest.generate` for RP01 contact/medial guidance; stock, motion and setup
+verification remain in their owners. `Tool` binds a numeric output tool ID,
+pointed/flat/rounded V profile, RPM, separate cut/entry/retract feeds and
+`ordered_job.AxialLimits`. `Family` declares pitch, XY sampling, margin and
+finite path/site controls. The caller supplies the frozen design, inventory
+body/fixture `OccupancySetup`, initial tip/safe height, `Constraints`,
+`CostModel`, dialect, operation bound and evaluation budget. Tooling, feeds
+and operator times are explicit caller declarations.
+
+The finite space consists of every ordered selection of distinct `(tool ID,
+family ID)` actions up to `max_operations`. Enumeration visits singles then
+longer permutations in declared inventory order. Different families may reuse
+one installed tool; repeated identical actions are excluded. Explicit
+`v_region.depth_passes` become executable ordered stages with declared
+operator split/pause resumes. Every action prefix is rendered, independently
+decoded and audited through `ordered_output.emit`. Subsequent feature guidance
+and wholly proved-air stage omission consume reconstructed **decoded** stock.
+An empty verified V plan represents virgin stock for the first proposal and is
+never emitted. Empty and wholly proved-clear actions are reported as omitted;
+unproved benefit is retained. No-benefit omission grants no low link, body or
+fixture credit. Protected design, axial/entry, high travel and whole-body gates
+must pass before ranking; unsafe or failed candidates remain diagnostic records.
+
+Finish uses conservative upper residual area at the explicitly reported
+`min(1 mm, cap)` section and upper residual volume. Optional floor cusp applies
+RP01's capped-floor inner-removal proof to decoded cumulative stock; a nonempty
+unproved floor fails that constraint, irrespective of requested family pitch.
+It does not certify global wall/detail finish. Other optional hard limits
+bound estimated seconds, actual tool-ID changes and emitted setup boundaries.
+Unfinished alternatives retain measured bounds and violated limits; they are
+not selected. Manual order is evaluated first within the same budget and must
+pass the same gates; it may choose a feasible alternative outside the frontier.
+
+`CostModel` uses declared rapid speed, constant decoded feed lengths, initial
+setup seconds, seconds per split/pause and additional seconds per tool-ID change.
+Every pass boundary counts even when its tool is unchanged; initial installation
+is not a change. Above/below-stock travel distances do not measure all
+cutting-profile air or useful removal. Acceleration, engagement/load, variable
+machine feed and actual operator/controller timing remain unassessed. Cost
+confidence states those assumptions without a fabricated numeric uncertainty.
+Objectives rank lexicographically by residual (area then volume), time, or
+changes, with deterministic secondary cost/bounds and action identity ties.
+Dominance requires a competitor's residual **upper** bounds to be no greater
+than the other's **lower** bounds, plus no-worse cost/change/setup metrics and
+at least one strict improvement; overlapping uncertainty is retained.
+
+`SearchResult` exposes requested/executed/omitted orders, rejected reasons,
+verified `Bundle` job/bytes/hashes and measurements, frontier, total/evaluated
+counts, enumeration completeness and unresolved failures. Exhausting all orders
+with no failed generation/verification establishes the best reported feasible
+score only in this declared finite space. Budget exhaustion or failed families
+retain subset quality. With no verified feasible bundle, status is `unresolved`
+while orders remain unresolved/unevaluated, otherwise `infeasible` within that
+space (or for the explicit manual order). No global geometry, physical finish
+or real cycle-time optimum is claimed. Stored measurements are snapshots; use
+`ordered_output.audit_files` on the job and current bytes before external handoff.
+Generation/arithmetic/GEOS failures are per-order diagnostics; unexpected
+programming errors are not swallowed.
+
+Mixed cylinder/V, paired-inlay compound selection, native regenerated posts and
+surface search are outside this all-V contract. The
+[epic acceptance and stopping points](REST_MACHINING_PLAN.md#bo01-bounded-search-epic)
+separate reusable mechanism from consumer fit/assembly policy.
+[BO01-A evidence](REVIEW.md#bo01-a-finite-planar-bundle-search---2026-10-03)
+records the finite oracle and generated consumers.
 
 ### Editable native rest boundaries and MOPs (NR01)
 

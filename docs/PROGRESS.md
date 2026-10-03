@@ -9,9 +9,16 @@ own those contracts; [REVIEW](REVIEW.md) owns dated acceptance and limitations.
 
 <a id="doc01-documentation-consolidation-backlog"></a>
 
+### BO01: tool/path bundle search track
+
+The [dedicated branch and A/B/C tasks](#current-branch-closure) own live state
+and the intended closure point; [epic scope](REST_MACHINING_PLAN.md#bo01-bounded-search-epic)
+explains the RP01/IN01 dependencies and acceptance.
+
 ### IN01: ornamental paired-stock and assembly verification
 
-**Composite facing committed as `bcc3e8f`; section repair verified and ready to commit.**
+**Closed offline implementation; delivered to `main` in merge `b400610`.**
+Composite facing is committed as `bcc3e8f`, section repair as `9b4ba03`.
 Straight-wall assembly is committed as `db55841`, tapered/profile-aware assembly
 as `33d3b48`. Executable flat facing now consumes accepted paired stock after
 declared assembly/cure and renewed setup, checking the exposed motif, plane and
@@ -24,7 +31,8 @@ runtime, shaped finishing, fixture occupancy and physical fit remain separate.
 
 ### NR01: editable native rest boundaries and MOPs
 
-**Accepted 2026-10-02; implementation committed as `3122803`.** Editable derived
+**Accepted 2026-10-02; delivered to `main` in merge `b400610`.**
+Implementation is committed as `3122803`, binding repair as `9b4ba03`. Editable derived
 Regions and a native Pocket preserve original CAD and certify predecessor stock.
 The user's regenerated complete CamBam post passes all required motion, setup,
 entry/link, useful-removal and protected-stock gates. The
@@ -37,7 +45,8 @@ remain separate.
 
 ### RP01: feature-aware planar V/rest candidates
 
-**Accepted by engineering 2026-10-02; implemented in `096ba97`.** Contact and
+**Accepted by engineering 2026-10-02; delivered to `main` in merge `b400610`.**
+Implemented in `096ba97`. Contact and
 sampled-medial candidates consume composed stock, omit union-proved air sweeps,
 retain safe high links and report located residual/overlap and floor cusp bounds.
 The synthetic frieze demonstrates better detail coverage than raster/offset at
@@ -69,7 +78,7 @@ work before detached inlay or relief work.
 
 | Order | Backlog increment | Useful next outcome |
 | --- | --- | --- |
-| 1 | **BO01** | Generate and search finite tool/path bundles under explicit finish, cost and setup constraints; independently verify candidates and report search quality. |
+| 1 | **BO01** (active dedicated track) | [A/B/C task state and branch closure](#current-branch-closure); finite bundle search under explicit finish, cost and setup constraints. |
 | 2 | **SF01** | Bounded relief contact/stock foundation and shape-aware 3D tracing/finishing. **NR03** separately establishes native Surface/3D MOP/post interoperability. |
 
 The [follow-up contracts and representative consumers](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers)
@@ -86,25 +95,36 @@ bundles require regeneration under the [MX01 contract](structure_spec.md#mixed-c
 
 ### Current branch closure
 
-`feat/feature-aware-v-rest` targets `main`. **Both PR blockers are repaired and
-verified; changes are ready to commit.** Native rest certification now preserves
-predecessor machining semantics; tapered composite queries retain uncut stock
-beyond machining caps. RQ01 is complete for this branch. The
-[repair and readiness evidence](REVIEW.md#pr-blocker-repairs-and-rq01-readiness-evidence---2026-10-03)
-owns fault-sensitive regressions, correctness review, native acceptance reuse,
-check cost and limits. No new external observation is required for this scope.
-Committing and merging remain user-owned actions; uncommitted repairs prevent a
-merge-ready claim.
+The previous `feat/feature-aware-v-rest` track is **closed and merged** at
+`b400610` (parents `2f10b07`, `9b4ba03`); its merge tree equals the repaired
+feature tip. IN01, NR01, RP01, DOC01 and RQ01 are delivered for their recorded
+scopes. [Repair evidence](REVIEW.md#pr-blocker-repairs-and-rq01-readiness-evidence---2026-10-03)
+remains applicable; the merge alone does not require new behavior tests.
 
-**Next agent task:** after the user's commit, review final committed delivery
-against `main` and confirm evidence applicability under the
-[readiness procedure](WORKFLOW.md#correctness-evidence-before-a-readiness-decision).
-Reuse unchanged passing behavior evidence. BO01 is the next distinct capability
-increment after branch delivery; do not expand this repair into bundle search.
+The current branch is **`feat/tool-path-bundle-search`**, based on `main` at
+`b400610`. It carries the bounded **BO01 epic** across scoped agent sessions:
+
+| Task | State | Outcome / stopping point |
+| --- | --- | --- |
+| **BO01-A**: finite planar V bundle search | Accepted by engineering 2026-10-03; ready to commit | Finite all-V search, constraints, decoded stock and objective/oracle gates pass; [evidence](REVIEW.md#bo01-a-finite-planar-bundle-search---2026-10-03). This session closes A. |
+| **BO01-B**: mixed-tool and paired-inlay consumer | Backlog; next implementation task | Extend the same search to cylindrical/V ornamental work and independently planned receiver/plug stocks, with assembly/facing acceptance and compound costs. |
+| **BO01-C**: bounded epic and branch closure | Backlog; intended branch closure task | Reconcile A/B acceptance and remaining limits, inspect the final branch diff and evidence applicability, and close this bounded BO01 scope. Commit/merge delivery remains separate and user-owned. |
+
+[BO01 scope and acceptance](REST_MACHINING_PLAN.md#bo01-bounded-search-epic)
+own the tasks' detailed contracts. **Finishing A does not close the epic or this
+branch.** C is the intended end of this track; SF01/NR03, general continuous
+optimization and controller/physical validation are outside it. A clean committed
+branch and the existing readiness gate are still required for a merge-ready
+claim against `main`; use a visible `--no-ff` merge when the user integrates it.
+
+**Next agent task:** BO01-B is the next distinct capability outcome because it
+connects the new search to MX01/IN01's useful flat/V and paired-stock workflows.
+A is complete; a fresh session is appropriate. Its contracts, acceptance, limits
+and B's scope are durable, with no pending process or manual observation.
 
 ### RQ01: reliable and proportionate merge readiness
 
-**Implemented and demonstrated 2026-10-03; ready to commit with the repairs.**
+**Closed and delivered 2026-10-03 in `9b4ba03` / merge `b400610`.**
 WORKFLOW owns [correctness evidence and readiness decisions](WORKFLOW.md#correctness-evidence-before-a-readiness-decision);
 DEVELOPMENT links that gate from the existing delivery commands. The
 [demonstration](REVIEW.md#pr-blocker-repairs-and-rq01-readiness-evidence---2026-10-03)
@@ -195,8 +215,7 @@ and [verification evidence](REVIEW.md#export-failure-and-state-path-verification
 Current baseline acceptance/delivery links are in the [post-merge queue](#post-merge-task-queue).
 Dated evidence stays in REVIEW; current contracts stay in their topic owners;
 [development commands](DEVELOPMENT.md) and [acceptance/handoff procedures](WORKFLOW.md)
-own verification practice. Both PR repairs and RQ01 are complete; see
-[branch closure](#current-branch-closure). Continue this session for the short
-committed-delivery check once the user commits. After branch delivery, BO01 is a
-good fresh-session breakpoint: its distinct scope and the accepted contracts,
-repair evidence and remaining limits are durable, with no pending observation.
+own verification practice. Previous repairs and RQ01 are delivered. The
+[current BO01 track](#current-branch-closure) owns this round's stopping condition
+and next scoped task. A's checks and engineering acceptance are recorded; a fresh session can start
+B from durable contracts, with no pending manual observation for A's offline gate.

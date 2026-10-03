@@ -1936,6 +1936,24 @@ it does not require unrelated endmill/surface recipes. Changes to shared replay
 or stock enclosure owners still require full discovery under
 [required checks](#required-checks-by-change).
 
+### Finite planar bundle search checks
+
+BO01-A search and its RP01/supplied-selection boundaries use:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py --pattern test_bundle_search.py --pattern test_planar_rest.py --pattern test_strategy_selection.py
+```
+
+Self-contained tests enumerate an analytic capsule space with three objective
+winners and a generated protected-island ornament, challenge another
+design/profile through Grbl, verify decoded constant-feed cost and depth/setup
+accounting, and reject mutated travel, fixtures, entries, unproved cusp and
+invalid/extreme controls. Manual orders and budget/failure quality are covered
+without caller-asserted audit authority. Inputs/output bytes are generated in
+memory; the verification runner owns ignored session logs. See the
+[search contract](structure_spec.md#finite-planar-toolpath-bundle-search-bo01-a)
+and [evidence](REVIEW.md#bo01-a-finite-planar-bundle-search---2026-10-03).
+
 ### Editable native rest preparation and actual-post gate
 
 NR01's [contract](structure_spec.md#editable-native-rest-boundaries-and-mops-nr01)

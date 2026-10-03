@@ -5,6 +5,81 @@ checkpoints. [PROGRESS](PROGRESS.md) owns current priority and state; the
 [specification](structure_spec.md) and [MCP contract](MCP_CONTRACT.md) own current
 contracts. Historical next-task and pending statements describe their entry date.
 
+## BO01-A finite planar bundle search - 2026-10-03
+
+The new `feat/tool-path-bundle-search` branch starts at merged `main`
+`b4006109194fc415090a366aac73b9b9a60b694f`. Git confirms merge parents `2f10b07`
+and `9b4ba03`, and `git diff --quiet b400610^2 b400610` confirms exact repaired-tip
+/ merge-tree equality. This closes the previous feature track and delivers
+IN01/NR01/RP01/DOC01/RQ01 for their recorded scopes. Existing repair/native
+observations remain applicable; no merge-triggered behavior recertification was
+performed. Current branch tasks live only in [PROGRESS](PROGRESS.md#current-branch-closure).
+
+The [BO01-A contract](structure_spec.md#finite-planar-toolpath-bundle-search-bo01-a)
+adds finite all-V search policy over existing path, decoded-stock, whole-tool
+and ordered-output owners. No shared planner/replay/decoder was modified and
+`strategy.select_strategy` keeps its supplied-audit behavior.
+
+| Changed claim / owner and consumer | Positive and fault-sensitive evidence | Correctness disposition / limit |
+| --- | --- | --- |
+| Finite generation/ranking; `bundle_search.search` through ordered output | All 16 one/two-action orders over two tools and raster/feature families on a lobed, narrow-neck, protected-island motif generate and audit. A separate three-action capsule corpus exhausts nine orders and selects three different objective winners. | Lead reviewed distinct-action enumeration, deterministic ties and constraints. Complete quality applies only to declared finite generators with no rejected orders; no global path optimum. |
+| Decoded predecessor and no-benefit omission; RP01/ordered stock owners | Actual emitted predecessor stock drives later proposals. Exact duplicate capsule action is omitted while its two explicit axial passes remain; RP01 union/gap/deep-stock/reverse-retrace tests pass. Protected island remains outside outer removed geometry. | Bounded reviewer found the raw-decoder/canonical-role mismatch; fixed through `ordered_job._observed_stage` before the existing reconstruction. No new replay authority or cavity/body credit. |
+| Finish/safety/setup gates; existing stock/occupancy/output boundaries | Area/volume/time failures, strict unproved floor cusp, tool-change/setup limits, entry-depth failure, fixture collision and mutated low Grbl rapid reject or constrain. Both dialects pass, including multi-tool Grbl pause/resume. | Every successful action prefix passes decoded motion, stock, axial/entry and whole-tool checks. Manual choice cannot bypass gates; infeasible and unresolved search quality remain distinct. |
+| Cost/dominance/quality; search policy over decoded motion | Independent decoded distance/feed calculation matches cost; nonzero initial/boundary/change costs count 7+3+11 s. Overlapping residual intervals cannot dominate; separated intervals can. One-order budget and generation/extreme-sampling failures retain unresolved quality. | Reviewer identified upper-bound-only dominance and uncaught numeric overflow; corrected conservative interval dominance and narrow arithmetic/GEOS failure handling. Time is a constant-feed estimate, not observed runtime; unknown load/engagement remains unassessed. |
+
+Synthetic oracle: fixed 90-degree 10 x 8 mm design, cap 1.5 mm; three pointed
+90-degree profiles, cutting length 2 mm, maximum radius 4 mm. T1 cuts a 5 mm
+line at Y=4 and 20 mm/min; T2 cuts a 2 mm left line at Y=4, T3 a disjoint 2 mm
+right line at Y=5, both at 1200 mm/min. Entries are 120, retracts 600 and rapids
+3000 mm/min; one 1.5 mm pass, declared entry limit 2 mm. At depth 1 mm,
+target area is exactly 48 mm2 and section radius .5 mm. Area limit 43 mm2 and
+volume limit 100 mm3 make minimum residual choose T1+T3 (39.4292036732 mm2),
+minimum estimated time T2+T3 (42.4292036732 mm2), and minimum changes T1 alone
+(42.2146018366 mm2). Independent capsule formulas lie inside reported bounds;
+each section interval is narrower than .02 mm2. Orders remain distinct even
+when geometry/cost tie. The supplied oracle paths bypass only guide construction,
+not output decoding, stock, process or setup verification.
+
+The actual generator consumer spans 8 x 7 mm, cap .6 mm, design angle 90 degrees,
+flat-tip radius .2 mm / 90-degree and pointed / 120-degree tools, pitch 1.2 mm,
+XY sampling 2 mm, margin .02 mm and feature pitch cusp .3 mm. A second 7 x 5 mm
+60-degree target uses offset/Grbl output; its result and low-travel mutation
+challenge the same public contract. Regression inputs/bytes are synthesized in
+memory; no session CAM files or new dependencies enter tracked directories.
+
+Final verification uses repository Python 3.13.5 and Shapely 2.1.2 from the root:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py --pattern test_bundle_search.py --pattern test_planar_rest.py --pattern test_strategy_selection.py
+& .\.venv\Scripts\python.exe tools/verify.py --pattern test_bundle_search.py
+```
+
+The combined run passed 13 initial search tests, 7 RP01 tests and 9 supplied
+selection tests (109.398 s total). The final search run adds the Grbl/nonzero-cost
+and unresolved-budget witness and passes **14 tests in 78.616 s**. All **30
+distinct tests** pass with no skips or missing IDs. Reports are
+`output/verification-20261003-122705-4bb16570/report.json` and
+`output/verification-20261003-123242-b86e9fca/report.json`; final search source
+is unchanged between these passing runs, and the RP01/selection source/tests
+remain byte-identical. These are focused checks, not a full-suite or package
+matrix pass. Unchanged native, paired-stock and composite-facing evidence is
+reused within its previous scope; new mixed/paired search has not been tested.
+
+Final source/test AST and untracked whitespace checks, 19 newly introduced
+local links/anchors, `git diff --check`, final source/test evidence hashes and
+artifact hygiene pass. Only the two intended source/test files are untracked;
+there are no ignored `.cb`/`.nc` files in affected strategy/test/document owners.
+The task-scoped check summary is `output/bo01-final-991ef71d8372/checks.json`.
+
+**BO01-A is accepted by engineering and ready to commit.** No manual CamBam,
+controller or physical observation adds evidence to this detached offline gate.
+BO01-B remains the distinct mixed/paired consumer outcome; BO01-C is the intended
+bounded epic/branch closure task. Time uncertainty, setup assertions, finite-family
+coverage and later inlay/occupancy extensions remain explicit limits. A fresh
+session can proceed from the tracked owners with no unsaved decision or pending
+verification. Commit/merge actions remain user-owned; the branch has no new
+commits yet and is not merge-ready.
+
 ## PR blocker repairs and RQ01 readiness evidence - 2026-10-03
 
 This repairs the two [final PR findings](#final-branch-pr-quality-review---2026-10-03)

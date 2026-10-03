@@ -50,9 +50,9 @@ derived machining boundaries and output authority distinct.
 | Receiver/plug inlays with meaningful tolerances | IN01 verifies bounded straight-wall and tapered ornamental pairs with independent cutter stocks, gaps, registration and continuous insertion; [paired contracts](structure_spec.md#ornamental-straight-wall-paired-stock-and-assembly-in01). | General poses, fixture access and physical material-fit need named consumers and acceptance evidence. |
 | Sanding/facing to the finished assembled design | IN01 implements decoded flat composite facing and final motif/plane/retained-core checks; [composite contract](structure_spec.md#composite-stock-facing-and-final-inlay-verification-in01). | Shaped finishing and physical process acceptance remain separate. Sanding uses a declared removal/tolerance envelope or measured result. |
 | Endmill plus V rest machining that reduces leftover | Supplied endmill/V/cleanup has fixed-design prefix stock and independently witnessed positive cleanup removal. It does not generate efficient rest-only cuts. | RP01: residual-driven candidates, safe entry/links through prior clearance and quantified new removal/air cutting. |
-| Calculate the best tool/path bundle under user constraints | `strategy.select_strategy` ranks supplied audited routes; no bundle generation or cutting/time/tool-change optimization is implemented. | BO01 searches a declared finite inventory and strategy family, verifies candidates and reports the objective, alternatives, budget and uncertainty. |
+| Calculate the best tool/path bundle under user constraints | BO01-A generates and audits finite planar V orders under declared limits; [implemented search contract](structure_spec.md#finite-planar-toolpath-bundle-search-bo01-a). `strategy.select_strategy` retains supplied-audit ranking. | [Bounded BO01 epic](#bo01-bounded-search-epic) adds mixed/paired consumers; SF01 reuse waits for surface evaluators. |
 | Fully native CamBam rest machining using derived primitives/MOPs | NR01's bounded editable Regions/native Pocket and complete actual-post replay are accepted; [contract and limits](structure_spec.md#editable-native-rest-boundaries-and-mops-nr01). | Wider native strategies require a named consumer and their own source/post evidence. |
-| Shape tracing with tools fitting local geometry; decorative planar detail | Existing offsets follow boundaries, and bounded V and endmill paths have continuous geometric checks. No general medial/contact/feature planning exists. | RP01 adds feature/contact guidance, narrow-detail and curvature-aware candidates, with full residual/coverage and access verification. |
+| Shape tracing with tools fitting local geometry; decorative planar detail | RP01 implements bounded contact contours and sampled-medial guidance; [contract](structure_spec.md#feature-aware-planar-vrest-candidates-rp01). | Generic fitting, hard overlap caps and low links remain conditional in PROGRESS; BO01 consumes these verified generators. |
 | Shape-aware 3D relief/ornament routing rather than one universal fill pattern | Analytic stepped, sloped and spherical jobs verify supplied paths; there is no general relief contact backend or freeform strategy generator. | SF01 establishes bounded surface/contact and stock queries, then feature-guided, contour/flow/morph/pencil/scallop candidates and suitable tool selection. |
 | Native CamBam 3D operations for those shapes | General native Surface/3D Surface authoring/normalization is outside current interchange support. | NR03 is a separate mesh/entity/MOP/post compatibility slice; detached shape-aware paths can precede it. |
 
@@ -214,7 +214,7 @@ remain outside those shared mechanisms.
   profiles. Measure detail retention, scallop/residual thickness and motion cost;
   contact agreement alone is insufficient. **NR03** separately binds native mesh
   entities/3D MOP states and actual posts if fully native 3D output is required.
-- **BO01: constrained bundle generation and search.** Use a finite tool inventory
+- **BO01: constrained bundle generation and search.** The [bounded epic](#bo01-bounded-search-epic) scopes the dedicated track. Use a finite tool inventory
   and at least two independently verified strategy families on the ornament/rest
   job. Generate single/multiple-tool and useful-order alternatives, replay each,
   reject dominated/unsafe candidates and omit no-benefit stages. Include a case
@@ -230,6 +230,63 @@ rest heatmaps, setup comparison and explainable tool/path recommendations. Each
 needs a named acceptance slice rather than a blanket promise. Adaptive engagement
 control, chip/load prediction, material-aware feed scheduling and multi-axis
 machining are later extensions with their own process/pose models.
+
+### BO01 bounded search epic
+
+BO01 is a separate search capability built **on RP01**, not unfinished RP01
+acceptance. RP01 proposes safe feature/rest paths and located stock evidence;
+BO01 generates finite tool/family/order alternatives, independently decodes
+and audits them, applies caller constraints and ranks their declared outcomes.
+DT01 fixes design identity, MV01/MX01 supply ordered stock and setup verification,
+and IN01 supplies independent part, assembly and final-facing evaluators. NR01
+remains the accepted native workflow; a native BO01 route requires fresh actual
+post evidence if introduced. SF01's relief geometry/contact foundation and NR03
+native 3D interoperability remain distinct successors, not branch prerequisites.
+
+The bounded epic establishes useful planar ornamental and paired-inlay search,
+with honest finite-space quality and cost confidence. Live task states and the
+branch/delivery stopping point belong only in [PROGRESS](PROGRESS.md#current-branch-closure).
+
+**BO01-A: planar V search foundation.** Implement search policy in
+`cam_extensions.bundle_search`, retaining path, stock, motion, setup and byte
+verification in their current owners. Generate single and ordered multiple
+V-tool alternatives over explicit raster/offset/RP01 feature families, with
+finite operation and evaluation budgets. Accept only independently audited
+bundles that meet declared residual, optional floor-cusp, estimated-time,
+tool-change and setup-boundary limits; manual orders obey the same gates.
+Use decoded predecessor stock for feature planning and whole-stage proved-air
+omission. Report alternatives, conservatively established dominance, budget
+completeness and unresolved generation/verification failures. Verify a generated
+ornament with protected island and a changed geometry/profile/dialect consumer;
+a separately authored capsule oracle must make residual, time and tool-change
+objectives select three different bundles and exhaust its finite space.
+Stopping condition: these reusable all-V contracts are implemented, tested and
+accepted by engineering. This closes one session, not the bounded epic.
+
+**BO01-B: mixed-tool and paired-inlay search consumer.** Extend the same
+finite-search policy to cylindrical/V ornamental orders and independently
+planned receiver/plug stocks. Keep original designs, allowances and separate
+bodies authoritative; evaluate fit/insertion, declared assembly/cure and final
+facing through IN01 before a pair may win. Rank compound motion/setup costs and
+return explicit partial/infeasible reasons when part or assembly limits fail.
+Challenge with a second supported tool/profile or motif and show an actual
+benefit over the V-only/supplied baseline at comparable constraints. The known
+tapered offset zero-length path gap reopens only if a selected generated family
+hits it; repair its planner owner with a regression then. Respect current
+fixture/occupancy representation limits and add a named proof when a candidate
+requires more. Do not introduce a recipe-specific verifier or universal backend.
+Stopping condition: mixed and paired consumers share search policy and pass
+independent part plus assembly/facing acceptance, with unsupported setups explicit.
+
+**BO01-C: bounded epic / intended branch closure.** Review the final changed
+contracts and consumers, the finite oracle, objective disagreements, omission,
+manual-choice and failure/budget evidence. Reconcile exact branch changes and
+reuse unchanged passing evidence; run only checks needed to close named gaps.
+Record engineering closure and remaining limits in their owners. This is the
+intended BO01 branch closure task after A and B; commit/merge delivery has its
+separate existing readiness gates. Broader inventory sourcing, load/engagement
+prediction, global continuous optimality, freeform/3D search and physical or
+controller acceptance remain future consumers with their own evidence needs.
 
 ### Primary references for the refinement
 
