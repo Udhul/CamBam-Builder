@@ -32,17 +32,36 @@ Implementation, acceptance and authorized local delivery are complete.
 No product choice or external observation is outstanding. Controller/physical
 execution and a general NC interpreter remain outside this completed scope.
 
-**Next priority:** scope CADBitmap artwork registration from the
-[remaining backlog](#remaining-backlog-in-order). This advances native entity
-coverage for applications that retain a visual reference alongside editable
-machining geometry. It needs independent native image-placement/save evidence
-and an explicit image dependency policy; NCFile integrity does not establish
-image semantics. ScriptEntity execution, further 3D modes and detached relief
-heuristics remain conditional on a stronger concrete consumer.
+**Next autonomous bundle — planned, implementation not started:** complete the
+NC02 follow-on native CADBitmap artwork-registration consumer together with
+**CG01 constructive geometry and shape-guided CAM**. The user's 2026-10-26
+clarification promotes compact editable source construction and geometry-aware
+tracing/depth into an explicit product requirement, rather than leaving it as
+an optional relief heuristic. [CG01](REST_MACHINING_PLAN.md#constructive-geometry-and-shape-guided-cam-cg01)
+owns that requirement, candidate mechanisms and complete acceptance criteria.
+The [native coverage map](NATIVE_COVERAGE.md#geometry-classes-and-drawing-commands)
+owns CADBitmap's independent native placement/save/dependency evidence gap.
 
-This is a good fresh-session breakpoint:
-NC02 is a coherent accepted outcome, its contracts/limits/evidence are persisted,
-and the next image consumer has a distinct scope with no unsaved context.
+Deliver both capabilities through a decorative-frieze consumer and a materially
+different constructive shape. The bitmap is reference context; constructive
+geometry remains design authority. Establish the native image contract first
+where it unblocks that consumer; develop independent constructive-source/CAM
+work without waiting on unrelated image details. Reuse existing native and CAM
+owners, introducing shared abstractions only when the consumer proves reuse.
+NC02 itself remains complete and must not be reimplemented or recertified without
+a relevant change. Script execution and unrelated native modes remain deferred.
+
+Stopping condition: both workstreams meet their linked implementation, source
+editability/fidelity, comparative routing/depth, dependency, native and installed
+acceptance gates and are delivered locally. A plan, first mesh or first passing
+subcase is not bundle completion. Record wider representation/reconstruction
+limits honestly; the long-term direction is not a universal-geometry claim.
+The user requested a bootstrap for this bundle; planning is recorded now,
+implementation begins when that bootstrap is invoked.
+
+This is a good fresh-session breakpoint: NC02 is delivered, and the expanded
+next bundle's intent, scope and acceptance live in their owners without unsaved
+conversational context.
 
 ### Native engine delivery bundle
 
@@ -185,11 +204,12 @@ proposals stay in the [rest/V design](REST_MACHINING_PLAN.md#follow-up-contracts
 
 ## Remaining backlog, in order
 
-These are conditional/deferred items, not additional active work.
+These are planned or conditional items, not additional active implementation.
 
 | Scope | Promotion trigger and owner |
 | --- | --- |
-| Native CADBitmap artwork registration | **Recommended next scope.** Use a synthetic image beside editable geometry; establish native placement, save/reopen, identity and external-image dependency behavior before choosing the API. This is the next concrete unsupported native entity consumer, not image-to-toolpath generation. [Coverage requirement](NATIVE_COVERAGE.md#geometry-classes-and-drawing-commands). |
+| Native CADBitmap artwork registration | **Next bundle, alongside CG01.** Use a synthetic image beside editable geometry; establish native placement, save/reopen, identity and external-image dependency behavior before choosing the API. The image remains reference context. [Coverage requirement](NATIVE_COVERAGE.md#geometry-classes-and-drawing-commands). |
+| CG01 constructive geometry and shape-guided CAM | **Next bundle, user-promoted 2026-10-26.** Retain compact modifier-friendly construction; derive or explicitly reconstruct usable shape descriptors for constrained tracing and depth adjustment. Complete the frieze plus second-shape consumers, measured strategy comparisons, fidelity/edit/regeneration and independent machining checks in the [acceptance owner](REST_MACHINING_PLAN.md#constructive-geometry-and-shape-guided-cam-cg01). |
 | Existing engine edge cases | BO01's integrated closed-offset repair covers the tapered-plug zero-length segment. Hard overlap caps, fitted paths and lateral low cleared links need a named consumer and continuous containment/access evidence. [RP01 limits](structure_spec.md#feature-aware-planar-vrest-candidates-rp01). |
 | Further native parameter/shape variants | Broader tab geometry and fresh Triangle output need named native observations; retain accepted Square-tab evidence. [Manual tab evidence](REVIEW.md#manual-profile-tab-native-fixture--2026-09-27). Native field/state coverage belongs to NC01, not MCP parity. |
 | Full independent G-code / optional native automation bridge | Future capability with explicit controller/post semantics and actual runtime acceptance where claimed. Existing bounded adapters stay supported; native `.cb` export and core engine development must not wait. [Execution boundary](REST_MACHINING_PLAN.md#programmatic-execution-requirement). |

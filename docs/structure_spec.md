@@ -202,6 +202,13 @@ and shape-aware tool/path planning for ornaments, friezes and 3D reliefs.
 The [expectation map and follow-up contracts](REST_MACHINING_PLAN.md#product-expectations-and-capability-follow-ups-2026-09-30)
 own detailed product behavior and staged acceptance. PROGRESS owns priority.
 
+**Constructive-source clarification, 2026-10-26.** Compact, editable construction
+intent should drive geometry and shape-aware tracing/depth choices; tessellation
+is a derived representation. The [CG01 requirement and acceptance](REST_MACHINING_PLAN.md#constructive-geometry-and-shape-guided-cam-cg01)
+own the user's modifier/edge-flow analogy, explicit reconstruction limits and
+proposed CAD/CAM mechanisms. This is planned direction, not an expansion of
+today's spline, Surface or relief coverage claims.
+
 **Fundamentals-first clarification, 2026-09-30.** These consumers expose domain
 requirements; they do not enumerate the framework's possible workflows or define
 its module boundaries. Develop reusable machining capabilities that callers can

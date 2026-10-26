@@ -130,6 +130,99 @@ general overhangs/multiple vertical intervals need a different representation.
 Select contact/stock backends from representative jobs, error bounds and measured
 cost. No new geometry dependency or universal voxel/mesh model is selected here.
 
+### Constructive geometry and shape-guided CAM (CG01)
+
+**User requirement, 2026-10-26; planned capability, not implemented coverage.**
+Decorative friezes and related shapes should retain compact, editable construction
+information that also helps choose tracing paths and depth. The user's Blender
+analogy is meaningful edge flow, quads and modifier-friendly geometry instead of
+an unnecessarily triangulated result; geometry nodes and SVG illustrate retaining
+the construction or vector description instead of only its sampled output.
+Preserve intended fidelity, future modification and scalable evaluation. Minimize
+unnecessary vertices/information without simplifying away intended features.
+CAD structure and CAM strategy should cooperate: authored or defensibly inferred
+shape descriptors can reveal useful tracing directions, path families and depth
+variation under ordinary machining restrictions.
+
+**Engineering interpretation.** Construction intent is authoritative; display
+meshes, native export meshes, sampled curves and toolpaths are derived artifacts.
+This does not require every representation to be a quad mesh, prohibit triangles
+where a native adapter requires them, or promise exact recovery of information
+already lost in a raster/mesh. Keep the richer source and its derivation links
+alongside such output. Analytical/parametric evaluation preserves the authored
+model; every discretization, fitting and numerical step needs a declared error
+budget. Fewer controls are useful only while fidelity, continuity, topology and
+editable semantics are preserved, not as an unconditional minimum-vertex score.
+
+Candidate mechanisms to evaluate against concrete consumers, rather than build
+as an undemonstrated universal graph system:
+
+- Compact curve networks, analytic segments, profiles swept along spines,
+  lofts/blends, repeated motifs, symmetry and explicit parameter/modifier chains.
+  Retain joins, branch correspondence, sharp features and smoothness intent;
+  use surface parameter directions or quad/edge structure where meaningful.
+- Derive CAM candidates from those same descriptors: spine/profile tracing,
+  boundary/contact offsets, ridge/valley or medial guidance, curvature-aware
+  direction fields, morphing between compatible contours and adaptive spacing.
+  Combine families across a shape where one routine cannot serve all regions;
+  preserve coverage and continuity at joins, tips, branches and seams.
+- Adjust cutting depth from the fixed design and actual cutter contact/shape,
+  with local width/curvature, depth caps, stepdown, stepover/scallop tolerance,
+  stock-to-leave, reach, whole-tool/fixture clearance and entry/link restrictions.
+  Respect feed/machine limits where modeled; diagnose unsupported constraints.
+  Tool limitations must not silently redefine the desired surface.
+- When only lower-information input exists, offer explicit fitting or feature
+  reconstruction with correspondence, residual/error bounds, provenance and
+  ambiguity diagnostics. Prefer supplied construction intent when available.
+  Never silently replace the input with a guessed recipe or certify inferred
+  semantics as the original author's intent. Recovered descriptors propose
+  candidates; independent geometry/stock checks still decide acceptability.
+- Compare feasible alternatives under declared priorities: finish/detail error,
+  residual stock, path smoothness, cutting/air motion, estimated time and tool
+  changes. Report search domain, completeness and confidence. “Optimal” means
+  best within an explicitly supported candidate space/objective, with a bound
+  where available; retain the existing prohibition on universal optimum claims.
+
+**Completion criteria for the first complete reusable capability:**
+
+1. Deliver an installed direct-library constructive-source API and a reproducible
+   decorative-frieze consumer. Show compact editable source, meaningful parameter
+   and modifier edits, repeat/scale changes and regeneration at multiple output
+   resolutions without making tessellation authoritative. Challenge reuse with a
+   materially different shape, such as a swept moulding with changing section.
+2. Demonstrate at least two useful tracing families and geometry-dependent depth
+   on that source, compared with an existing raster/offset baseline under identical
+   tools, stock, tolerances and constraints. Report measured gains and losses;
+   a positive result on one motif must not imply universal superiority. Include
+   a small enumerable choice with an independently known best candidate.
+3. Independently verify geometric deviation, topology/joins/sharp details,
+   contact/gouge/access, evolving stock and located finish/residual bounds.
+   Exercise narrow features, broad regions, varying curvature, branches or seams,
+   unreachable detail and rejected unsafe depth/link choices. Extend existing
+   evaluators where needed instead of using the generator as its own oracle.
+4. Demonstrate bounded reconstruction on deliberately degraded synthetic input
+   with known ground truth, plus an ambiguous case that cannot assert recovered
+   intent. Preserve the input and quantify fit error; this does not establish
+   arbitrary photograph-to-CAD or general mesh reverse engineering.
+5. Preserve editable source identity, construction provenance and dependency
+   invalidation across the supported save/load/native handoff. Native tessellation
+   must retain a verifiable relationship to its source. Source or modifier edits
+   invalidate derived paths/evidence; regeneration restores a fresh binding.
+   Use the accepted native export/actual-post gates for any new carrier claim.
+6. Complete affected regressions, installed consumers, independent correctness
+   review and required native observations. Record implemented contracts, limits,
+   measured comparisons and remaining extensions in their existing owners.
+   Completion covers all these consumer outcomes, not merely a plan, a recipe
+   that emits a dense mesh, or an unverified routing heuristic.
+
+Reuse RP01 contact/medial guidance, SF01 relief/contact/stock, BO01 constrained
+candidate search and NR03 native lowering where their contracts fit. Extend their
+owners only for demonstrated gaps; do not reduce the user's source-model goal to
+choosing a better raster angle. CADBitmap registration supplies an optional visual
+reference with independent placement/dependency acceptance; the image must not
+replace constructive geometry as machining authority. PROGRESS owns the combined
+work bundle and sequencing, not this design section.
+
 ### Follow-up contracts and representative consumers
 
 The identifiers below name substantial capability outcomes, not a claim that
@@ -1016,7 +1109,10 @@ document; verification must reject stale claims for the affected results. Preser
 authored originals separately from derived path geometry. Edited generated paths
 can be supplied as explicit motion only through a supported interpretation and
 renewed verification; do not reconstruct pocket or V-carve design intent from them
-automatically. If derivation links are lost, treat paths as independent input with
+automatically. Explicit [CG01 reconstruction](#constructive-geometry-and-shape-guided-cam-cg01)
+must preserve the input, expose ambiguity and verify the proposed fit before any
+derived planning; it does not restore missing provenance by assertion.
+If derivation links are lost, treat paths as independent input with
 unknown provenance rather than overwrite them as if they were still owned output.
 
 Disabling a roughing MOP invalidates cleanup that assumes its removal. Splitting
