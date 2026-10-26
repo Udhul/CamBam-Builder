@@ -22,15 +22,15 @@ class MopContextTests(unittest.TestCase):
         project = CBProject("native-nesting")
         layer = project.add_layer("Geometry")
         square = project.add_rect(layer, identifier="square")
-        project.add_points(layer, identifier="locations", points=[(3, 4), (20, 8)])
-        part = project.add_part("Part1", nesting_method="PointList")
+        locations = project.add_points(layer, identifier="locations", points=[(3, 4), (20, 8)])
+        part = project.add_part("Part1", nesting_method="PointList", nesting_point_list=locations)
         project.add_profile_mop(part, [square], identifier="profile")
 
         source_tree = build_xml_tree(project)
         source_part = source_tree.getroot().find("./parts/part")
         native_nesting = source_part.find("Nesting")
         point_xml_id = source_tree.getroot().find(".//points").get("id")
-        ET.SubElement(native_nesting, "PointListID").text = point_xml_id
+        native_nesting.find("PointListID").text = point_xml_id
         ET.SubElement(native_nesting, "GCodeOrder").text = "Auto"
         expected_native = signature(native_nesting)
 

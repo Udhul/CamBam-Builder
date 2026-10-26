@@ -9,7 +9,6 @@ Follows the specified reconstruction order to ensure dependencies are met.
 import xml.etree.ElementTree as ET
 import logging
 import uuid
-import json
 import os
 import re
 from copy import deepcopy
@@ -27,6 +26,7 @@ from .cam import (
 )
 from .transformations import identity_matrix, from_cambam_matrix_str # For parsing matrix
 from .region import Region, parse_region_geometry
+from .tags import decode_tag
 
 logger = logging.getLogger(__name__)
 
@@ -343,6 +343,7 @@ def _read_cambam_root(
     # Preserve native project context (styles and other unknown children) for
     # the writer; modeled settings remain owned by the project entity fields.
     project._xml_machining_options = deepcopy(root.find("MachiningOptions"))
+    project._xml_tag = deepcopy(root.find("Tag"))
     logger.info(f"Reconstructing project: {project.project_name}")
 
     # --- Temporary storage during reconstruction ---
@@ -354,6 +355,10 @@ def _read_cambam_root(
 
     try:
         # --- Reconstruction Order ---
+
+        # Absence is distinct from the metric default for newly authored files.
+        # This label never converts the native numeric geometry or CAM values.
+        project.units = root.get("units")
 
         # 1. Parts
         logger.debug("Reading Parts...")
@@ -393,6 +398,34 @@ def _read_cambam_root(
                                                    strict=strict)
                          else:
                             raise CamBamReaderError(f"Unsupported primitive type '{prim_type_tag}' in layer '{layer_elem.get('name')}'")
+
+        # PointList nesting is a primitive relationship, not an opaque numeric
+        # value. Resolve after all primitives exist, independently of source order.
+        for part in project.list_parts():
+            if part.nesting_method != "PointList":
+                continue
+            nesting = part._xml_nesting
+            references = nesting.findall("PointListID") if nesting is not None else []
+            if len(references) != 1:
+                raise CamBamReaderError(
+                    f"Part '{part.user_identifier}' PointList nesting requires one PointListID"
+                )
+            text = (references[0].text or "").strip()
+            if not re.fullmatch(r"[0-9]+", text):
+                raise CamBamReaderError(
+                    f"Part '{part.user_identifier}' has invalid PointListID '{text}'"
+                )
+            points_id = xml_id_to_primitive_uuid.get(int(text))
+            if points_id is None:
+                raise CamBamReaderError(
+                    f"Part '{part.user_identifier}' has unresolved PointListID '{text}'"
+                )
+            try:
+                project.set_part_nesting_points(part, points_id)
+            except ValueError as exc:
+                raise CamBamReaderError(
+                    f"Part '{part.user_identifier}' PointListID '{text}' must reference Points"
+                ) from exc
 
         # 5. Link Relationships using stored temporary data
         logger.debug("Linking relationships...")
@@ -555,6 +588,8 @@ def _reconstruct_layer(project: CamBamProject, layer_elem: ET.Element, *, strict
     )
     if layer is None and strict:
         raise CamBamReaderError(f"Failed to register layer '{name}'")
+    if layer is not None:
+        layer._xml_tag = deepcopy(layer_elem.find("Tag"))
 
 def _reconstruct_part(project: CamBamProject, part_elem: ET.Element, *, strict: bool = False):
     """Parses a <part> element and adds/updates the part in the project."""
@@ -599,7 +634,10 @@ def _reconstruct_part(project: CamBamProject, part_elem: ET.Element, *, strict: 
     default_tool_dia = _parse_float(part_elem.findtext("ToolDiameter"), None) # Use None if not present
     # SpindleSpeed default seems not stored at Part level in standard XML?
     default_spindle_speed = None # Assume None
-    nesting = part_elem.find("Nesting")
+    nesting_elements = part_elem.findall("Nesting")
+    if len(nesting_elements) > 1:
+        raise CamBamReaderError(f"Part '{name}' contains duplicate Nesting elements")
+    nesting = nesting_elements[0] if nesting_elements else None
     nesting_method = nesting.findtext("NestMethod", "None") if nesting is not None else "None"
     nesting_rows = _parse_int(nesting.findtext("Rows"), 1) if nesting is not None else 1
     nesting_columns = _parse_int(nesting.findtext("Columns"), 1) if nesting is not None else 1
@@ -654,22 +692,10 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
     # a fresh identity; complete valid metadata is preserved before registration.
     internal_id = uuid.uuid4()
     mop_identifier = str(internal_id)
-    tag_text = mop_elem.findtext("Tag")
-    if tag_text:
-        try:
-            metadata = json.loads(tag_text)
-            if not isinstance(metadata, dict):
-                raise ValueError("MOP Tag must be an object")
-            candidate_id = metadata.get("user_id")
-            candidate_uuid = metadata.get("internal_id")
-            if not isinstance(candidate_id, str) or not candidate_id:
-                raise ValueError("MOP user_id must be a nonempty string")
-            if not isinstance(candidate_uuid, str):
-                raise ValueError("MOP internal_id must be a UUID string")
-            internal_id = uuid.UUID(candidate_uuid)
-            mop_identifier = candidate_id
-        except (ValueError, TypeError):
-            logger.warning("Invalid MOP identity metadata; allocating a fresh identity.")
+    metadata, native_tag = decode_tag(mop_elem.findtext("Tag"), primitive=False)
+    if metadata:
+        internal_id = uuid.UUID(metadata["internal_id"])
+        mop_identifier = metadata["user_id"]
     if (project._get_entity_by_uuid(internal_id) is not None
             or mop_identifier in project._identifier_registry):
         raise CamBamReaderError(f"Conflicting MOP identity: {mop_identifier} ({internal_id})")
@@ -789,6 +815,7 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
     try:
         mop = mop_class(
             user_identifier=mop_identifier,
+            native_tag=native_tag,
             name=mop_name,
             enabled=enabled,
             target_depth=target_depth,
@@ -902,38 +929,31 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
         raise CamBamReaderError(f"Duplicate primitive XML id {xml_id}")
 
     # --- Parse Tag Data (User ID, Internal UUID, Groups, Parent, Description) ---
-    tag_node = prim_elem.find("Tag")
     user_identifier = f"{prim_elem.tag}_{xml_id}" # Default identifier
     internal_uuid: Optional[uuid.UUID] = None
     groups: List[str] = []
     parent_ref: Optional[Union[int, uuid.UUID, str]] = None # Store XML ID or UUID string
     description = ""
 
-    if tag_node is not None and tag_node.text:
-        try:
-            tag_data = json.loads(tag_node.text)
-            if isinstance(tag_data, dict):
-                 user_identifier = tag_data.get("user_id", user_identifier)
-                 # Try to recover original internal UUID
-                 internal_uuid_str = tag_data.get("internal_id")
-                 if internal_uuid_str:
-                     try: internal_uuid = uuid.UUID(internal_uuid_str)
-                     except ValueError: logger.warning(f"Invalid internal_id format in Tag for XML ID {xml_id}: '{internal_uuid_str}'")
-                 groups = tag_data.get("groups", [])
-                 if not isinstance(groups, list): groups = []
-                 description = tag_data.get("description", "")
-                 # Get parent reference (could be our internal UUID string, or potentially an XML ID if written differently)
-                 parent_ref_str = tag_data.get("parent")
-                 if parent_ref_str:
-                     # Try parsing as UUID first, then as int (XML ID)
-                     try: parent_ref = uuid.UUID(str(parent_ref_str))
-                     except ValueError:
-                          try: parent_ref = int(str(parent_ref_str))
-                          except ValueError: logger.warning(f"Invalid parent reference '{parent_ref_str}' in Tag for XML ID {xml_id}")
-        except json.JSONDecodeError:
-            logger.warning(f"Could not parse JSON from Tag for primitive XML ID {xml_id}.")
-        except Exception as e:
-             logger.warning(f"Error processing Tag data for primitive XML ID {xml_id}: {e}")
+    tag_data, native_tag = decode_tag(prim_elem.findtext("Tag"), primitive=True)
+    if tag_data:
+        user_identifier = tag_data["user_id"]
+        if "internal_id" in tag_data:
+            internal_uuid = uuid.UUID(tag_data["internal_id"])
+        groups = tag_data.get("groups", [])
+        description = tag_data.get("description", "")
+        parent_ref_str = tag_data.get("parent")
+        if parent_ref_str:
+            try:
+                parent_ref = uuid.UUID(str(parent_ref_str))
+            except ValueError:
+                try:
+                    parent_ref = int(str(parent_ref_str))
+                except ValueError:
+                    logger.warning(
+                        "Invalid parent reference '%s' in Tag for XML ID %s",
+                        parent_ref_str, xml_id,
+                    )
 
     # If internal UUID wasn't in Tag, generate a new one
     if internal_uuid is None:
@@ -1045,6 +1065,7 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
             user_identifier=user_identifier,
             groups=groups, # Store groups read from Tag
             description=description,
+            native_tag=native_tag,
             effective_transform=effective_transform, # Store total transform initially
             local_z_offset=world_z_offset,
             **prim_specific_kwargs

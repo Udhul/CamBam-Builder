@@ -1,5 +1,115 @@
 # Review and acceptance history
 
+## CF01 native interchange integrity - 2026-10-26
+
+**Outcome:** engineering acceptance complete for the
+[native interchange contract](structure_spec.md#native-interchange-integrity-cf01).
+Work started from clean `main` at `78fe421` on `feat/cf01-native-interchange`.
+The original units/reference/Tag defects are repaired without a second document
+model. Native project state, UUID relationships and imported context remain the
+owners. New projects default to millimeters; imports preserve absence distinctly.
+No unit conversion, BO01 search work or general unknown-XML support was added.
+
+**Fault sensitivity and integration evidence:**
+
+- Units tests failed before the repair and now cover explicit metric/inches,
+  absent labels, invalid values, edits and cloning without numeric conversion.
+- The original rect ID 10 / Points ID 20 reproducer exported Points as ID 2
+  while retaining PointListID 20 before repair. Tests now prove remapping after
+  ID changes, rebinding, clone/copy/transfer and explicit rejection of unresolved,
+  malformed, wrong-kind, duplicate and unexportable references. Independent
+  review found duplicate Nesting containers could escape validation; all three
+  method variants failed before the added rejection and now pass.
+- Operator Tag tests reproduced missing primitive/MOP notes and root/layer Tag
+  loss. Text, empty strings, JSON-looking notes, collision handling, copy, note
+  edits/removal and Rect-to-Pline export now pass. The adjacent parent suite
+  caught a compatibility regression in malformed parent metadata; the repair
+  retains identity/classification and the established parentless world pose.
+  Its existing fault-sensitive test covers invalid values; no duplicate test
+  was added merely to mirror the repair.
+- The direct metric board is 600 x 300 x 18, with two 6 x 280 grooves, drill
+  points, two placements and Pocket/Drill/Profile operations. Save/reopen edits
+  width to 620, groove depth to -7 and placement spacing to 660. Assertions cover
+  UUIDs, exact world XYZ after inherited XY/Z translations, groups/hierarchy,
+  PointList identity, MOP targets/order and notes. Independent handwritten
+  inches input uses IDs 205/81/7, a 24 x 12 outline edited to 23.5 x 12, 0.25
+  groove/tool dimensions and -0.25/-0.75 operation depths. It proves native
+  input and numeric scale independently of the framework writer.
+
+**Final automated gate:** repository Python 3.13.5 / NumPy 2.5.4;
+`tools/verify.py` selected 19 modules: `test_native_units`,
+`test_pointlist_nesting`, `test_native_tags`, `test_native_interchange`,
+`test_strict_import`, `test_mop_context`, `test_mop_roundtrip`,
+`test_mop_parameters`, `test_mop_native_edits`, `test_parent_roundtrip`,
+`test_global_transforms`, `test_copy_transfer`, `test_project_clone`,
+`test_shape_parity`, `test_export_failures`, `test_state_persistence`,
+`test_tabbed_cutout`, `test_native_owner_migration`, `test_mcp_authoring`.
+**124 passed, 13 skipped, 137 selected**, in 16.68 seconds including runner
+overhead. All **20 new CF01 tests** passed. Twelve skips require the optional
+MCP package; one requires previously accepted B/C native posted files absent
+from ignored output. Four synthetic manual-tab checks passed. The skipped
+native observation was not repeated because its serialization claim is unchanged.
+The earlier combined run exposed the parent regression and is superseded by
+`output/verification-20261026-084847-dec8ccc0/report.json`.
+Syntax compilation and whitespace checks passed. The runbook now separates the
+fast CF01 gate from affected native neighbors; expensive detached-engine suites
+remain intact and were not rerun for unrelated serialization changes.
+
+**Installed consumer:** `uv build --wheel` and `uv pip install` into an isolated
+temporary environment outside the checkout; Python 3.13.5, NumPy 2.5.4, neither
+MCP nor Shapely installed. A copied `demos/native_board.py` ran with `python -I`
+from that directory and passed all ten checks after creating, editing and
+reopening the board. Import provenance resolved to that environment's
+`Lib/site-packages`; all 11 native module bytes matched the tested source.
+Wheel SHA-256: `03833b3265977f2d1c4a126ab6406aa3564d55a12661eb62972a56a9d098b5f8`.
+Session logs and native results are under `output/cf01-delivery-618b8402/`.
+This is a focused base-wheel consumer check, not the future PK01 supported-version
+wheel/sdist release matrix or a published-release claim.
+
+**Native evidence and acceptance authority:** the installed CamBam 1.0 sample
+`opto_input.pcb.output_back.cb` (SHA-256
+`d312e08d61b0ec8494b54e672a505d5f6c2238942547b004a5e431e6c20411d8`)
+was read in place. Its root `units="Inches"` and 425 primitives survive strict
+import/export/reopen. Installed `help/cam/cam-style.html` names `Millimeters`
+and `Inches`; `help/drawing-units.html` explicitly separates changing the label
+from resizing geometry. `help/cad/entities.html` defines Tag as multiline notes
+or parameter data, supporting a single string envelope. PointList encoding has
+the prior [CamBam acceptance](#corrected-native-encoding-acceptance-and-final-hardening--2026-09-19).
+These sources plus decoded XML/reference assertions are sufficient for CF01's
+serialization claims; no additional native observation adds required evidence.
+No CamBam process, toolpath generation, controller or physical cutting was run.
+
+**Limits and reopening:** exact reserved legacy Tag signatures are metadata;
+operator text is visible inside JSON, not a new CamBam notes property. Unknown XML
+and native classes remain bounded, and general 3D setups/unit conversion remain
+separate capabilities. Reopen for a native file contradicting these serialization
+assumptions or a consumer failure within this contract. CF01's original stopping
+condition is satisfied; the next distinct scope and delivery state live only in
+[PROGRESS](PROGRESS.md#active-work-and-next-priority).
+
+### CF01 merge review - 2026-10-26
+
+The lead reviewed the complete CF01 change against local `main` **`78fe421`**,
+with implementation tip **`f763c77`**, reusing the distinct implementation and
+independent correctness passes above. The user explicitly authorized merge once
+ready. No unresolved correctness or scope blocker was found.
+
+| Changed invariant / boundary | Consumer and fault-sensitive evidence | Disposition |
+| --- | --- | --- |
+| Units remain labels; no implicit dimensional conversion | Direct metric/inches board consumers, invalid/absent-unit regressions and the installed 425-primitive inches source | Correct within the documented exact-label policy. |
+| PointList references use owned identity | Import/export and copy/transfer tests force numeric/UUID changes; invalid targets, missing bindings and duplicate Nesting reject | Correct; deletion/transfer intentionally requires rebinding or changing an active Part's method before saving. |
+| Operator text coexists with framework metadata | Primitive/MOP notes, native context, collision, copy/Rect conversion and malformed-parent recovery tests | Correct within the reserved-signature policy; unknown XML remains outside the claim. |
+
+The worktree was clean, `main` remained the branch base, and
+`git diff --check main...HEAD` passed. The prior passing runner's complete
+source/test/configuration fingerprint matched the committed tree exactly:
+124 passes and 13 explicitly named skips, plus the previously completed isolated
+base-wheel consumer. No runtime change invalidated those results, so repeating
+the same behavior suite would add no evidence. The optional MCP and retained
+native-observation skips do not gate the direct-library CF01 contract. No new
+manual observation is required. Subsequent changes in this review are delivery
+status and next-sprint documentation only; merge delivery is owned by PROGRESS.
+
 Entries below are dated historical evidence, including superseded decisions and
 checkpoints. [PROGRESS](PROGRESS.md) owns current priority and state; the
 [specification](structure_spec.md) and [MCP contract](MCP_CONTRACT.md) own current

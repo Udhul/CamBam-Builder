@@ -2,7 +2,6 @@
 
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
-import json
 import logging
 import math
 import uuid
@@ -10,6 +9,7 @@ from copy import deepcopy
 from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 
 import numpy as np
+from .tags import encode_tag
 
 from .transformations import (
     identity_matrix, apply_transform, get_transformed_point,
@@ -531,6 +531,7 @@ class Rect(Primitive):
             user_identifier=f"{self.user_identifier}_as_pline",
             groups=self.groups.copy() if self.groups else [],
             description=f"Converted from Rect: {self.description}",
+            native_tag=self.native_tag,
             effective_transform=identity_matrix(),  # Use identity since we've already applied the transform
             vertices=pline_points,
             closed=True,
@@ -624,7 +625,7 @@ class Rect(Primitive):
             tag_node = pline_elem.find("Tag")
             if tag_node is None:
                 tag_node = ET.SubElement(pline_elem, "Tag")
-            tag_node.text = json.dumps(tag_data)
+            tag_node.text = encode_tag(tag_data, self.native_tag)
 
             # Log that this Rect was converted to Pline
             logger.info(f"Rect '{self.user_identifier}' converted to Pline for XML output due to non-rectangular geometry.")

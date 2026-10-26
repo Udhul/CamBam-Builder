@@ -6,12 +6,12 @@ from dataclasses import dataclass, field
 import weakref
 import uuid
 import logging
-import json
 import math
 from copy import deepcopy
 from typing import List, Dict, Tuple, Union, Optional, Set, Any, Sequence, Type, TypeVar, TYPE_CHECKING
 
 import numpy as np
+from .tags import encode_tag
 
 # Assuming cad_transformations provides these:
 from .transformations import (
@@ -267,6 +267,8 @@ class Primitive(CamBamEntity, ABC):
     Abstract Base Class for geometric primitives.
     Holds intrinsic geometry and transformation state.
     Classification attributes (groups, description) are stored for the XML <Tag>.
+    ``native_tag`` retains operator text separately, including empty strings;
+    ``None`` removes the note. Export rejects non-string, non-None values.
     Layer assignment and parent/child links are managed externally by the project.
     """
     # Intrinsic Attributes
@@ -275,6 +277,8 @@ class Primitive(CamBamEntity, ABC):
     description: str = ""                           # Classification
     output_decimals: Optional[int] = 9              # For XML serialization
     local_z_offset: float = 0.0                     # Local Z-only transform
+    # Opaque operator text, separate from classification; None means no note.
+    native_tag: str | None = field(default=None, kw_only=True)
 
     # Reference back to the project (transient, for context)
     _project_ref: Optional[weakref.ReferenceType] = field(default=None, init=False, repr=False)
@@ -443,7 +447,7 @@ class Primitive(CamBamEntity, ABC):
         }
         # Remove None values for cleaner JSON
         tag_data = {k: v for k, v in tag_data.items() if v is not None}
-        ET.SubElement(element, "Tag").text = json.dumps(tag_data, separators=(',', ':')) # Compact JSON
+        ET.SubElement(element, "Tag").text = encode_tag(tag_data, self.native_tag)
 
         # Add Transformation Matrix
         # The matrix stored in XML is the *total* transformation relative to world origin

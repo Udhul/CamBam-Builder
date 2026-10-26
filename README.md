@@ -45,13 +45,14 @@ parameters. Open the exported file in CamBam for inspection, final toolpath
 generation and G-code export. Operator layout edits are part of this supported
 intermediate workflow; recompute affected derived paths/stock results after edits.
 
-**Current interchange limits:** imported drawing units can be lost on export,
-and PointList nesting references can become invalid when primitive IDs change.
-Verify units explicitly in CamBam; affected native files are not lossless round
-trips. The [CF01 repair scope](docs/PROGRESS.md#cf01-native-interchange-integrity)
-and [audit evidence](docs/REVIEW.md#project-direction-and-foundation-audit---2026-10-26)
-own these findings. Unsupported native classes and arbitrary metadata also have
-limits; the [native inventory](docs/REST_MACHINING_PLAN.md#inventoried-baseline-and-prepared-slice-2026-09-23)
+New documents default to millimeters; use `CBProject("board", units="Inches")`
+for imperial dimensions. Import preserves explicit or unspecified units without
+numeric conversion. PointList placement follows owned geometry through export,
+and operator Tags coexist with framework metadata under the
+[native interchange contract](docs/structure_spec.md#native-interchange-integrity-cf01).
+The [board example](demos/native_board.py) demonstrates editing and reopening a
+complete direct-library job. Unsupported native classes and arbitrary unknown
+XML still have limits; the [native inventory](docs/REST_MACHINING_PLAN.md#inventoried-baseline-and-prepared-slice-2026-09-23)
 distinguishes current support from the full-coverage goal.
 
 ## Capabilities and project documentation
