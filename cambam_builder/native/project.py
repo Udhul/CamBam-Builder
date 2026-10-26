@@ -29,9 +29,10 @@ from .transformations import (
 from .core import CamBamEntity, Primitive, BoundingBox, VertexInput
 from .cad import Layer, Pline, Circle, Rect, Arc, Points, Text, Line, Spline
 from .cam import (
-    Part, Mop, MopType, ProfileMop, PocketMop, EngraveMop, DrillMop,
+    Part, Mop, MopType, ProfileMop, PocketMop, EngraveMop, DrillMop, Surface3DMop,
 )
 from .region import Region
+from .surface import Surface
 
 logger = logging.getLogger(__name__)
 
@@ -801,6 +802,22 @@ class CamBamProject:
 
     # --- Public API: Concrete Primitive Adders ---
 
+    def add_surface(self, layer: Identifiable, vertices: Sequence[VertexInput],
+                    faces: Sequence[tuple[int, int, int]],
+                    identifier: str | None = None, groups: list[str] | None = None,
+                    description: str = "", parent: Identifiable | None = None, *,
+                    display_edges: bool = False, local_z_offset: float = 0.0) -> Surface | None:
+        """Add an editable native triangle mesh with zero-based oriented faces.
+
+        Vertex coordinates use drawing units. Faces must be nondegenerate and
+        reference existing vertices; this does not certify a closed solid or a
+        machinable relief. Returns None for invalid input, like other adders.
+        """
+        return self._add_primitive_internal(
+            Surface, layer, identifier, groups, description, parent,
+            vertices=vertices, faces=faces, display_edges=display_edges,
+            local_z_offset=local_z_offset)
+
     def add_line(self, layer: Identifiable, points: Sequence[VertexInput],
                  identifier: str | None = None, groups: list[str] | None = None,
                  description: str = "", parent: Identifiable | None = None, *,
@@ -929,6 +946,20 @@ class CamBamProject:
 
 
     # --- Public API: Concrete MOP Adders ---
+
+    def add_surface3d_mop(self, part: Identifiable, targets: Sequence[Identifiable] = (),
+                          name: str = "3D Surface", identifier: str | None = None,
+                          target_mop: Identifiable | None = None, place_last: bool = True,
+                          *, target_group: str | None = None, **kwargs) -> Surface3DMop | None:
+        """Add bounded horizontal/vertical native ball finishing intent.
+
+        CamBam generates the toolpaths. The native-relief integration supplies
+        the separate source and posted-motion safety checks. See Surface3DMop
+        for modeled fields and preserved-only imported state.
+        """
+        return self._add_mop_internal(
+            Surface3DMop, part, targets, name, identifier, target_mop, place_last,
+            target_group=target_group, **kwargs)
 
     def add_profile_mop(self, part: Identifiable, targets: Sequence[Identifiable] = (), name: str = 'Profile',
                         identifier: Optional[str] = None, target_mop: Optional[Identifiable] = None, place_last: bool = True, *, target_group: Optional[str] = None, corner_overcut: bool = False, **kwargs) -> Optional[ProfileMop]:

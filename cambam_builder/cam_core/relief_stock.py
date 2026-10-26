@@ -13,7 +13,7 @@ import math
 from . import relief
 
 
-VERSION = "bounded-relief-ball-stock-v1"
+VERSION = "bounded-relief-ball-stock-v2"
 MAX_CELLS = 250_000
 MAX_PROOF_SPLITS = 20_000
 ROUNDING_RELATIVE = 1e-10
@@ -242,7 +242,10 @@ def replay_stages(stages: tuple, decoded_moves: tuple, *,
 
     Only straight fixed-axis ball motion is supported. Supplied axial limits
     conservatively cap absolute virgin-stock depth; no prior retrace credit or
-    engagement/load model is inferred. Unresolved contact refinement rejects.
+    engagement/load model is inferred. A vertical rapid withdrawal may follow
+    a verified feed endpoint: its removal envelope is contained in that already
+    cleared endpoint envelope, so it receives no new removal credit. Unresolved
+    contact refinement rejects.
     """
     if (type(stages) is not tuple or not stages or
             type(decoded_moves) is not tuple or len(stages) != len(decoded_moves) or
@@ -301,6 +304,7 @@ def replay_stages(stages: tuple, decoded_moves: tuple, *,
         prior_count = len(cuts)
         maximum_depth = maximum_entry = 0.0
         at = None
+        cleared_endpoint = None
         for move in moves:
             a, b = move.start, move.end
             _xyz(a)
@@ -312,9 +316,18 @@ def replay_stages(stages: tuple, decoded_moves: tuple, *,
             if move.arc_g:
                 raise ValueError("relief replay supports straight motion only")
             if move.role in ("rapid", "rapid_retract"):
-                if min(a[2], b[2]) <= 0 or (
-                        move.role == "rapid_retract" and (a[:2] != b[:2] or b[2] <= a[2])):
+                if move.role == "rapid_retract" and (a[:2] != b[:2] or b[2] <= a[2]):
                     raise ValueError("rapid crosses initial relief stock")
+                if min(a[2], b[2]) <= 0:
+                    if move.role != "rapid_retract" or a != cleared_endpoint:
+                        raise ValueError("rapid crosses initial relief stock")
+                    # Raising a fixed-axis ball raises its lower surface at
+                    # every XY point. Its swept removal is a subset of the
+                    # preceding verified endpoint's removal, including above
+                    # the ball where the shank has already cleared stock.
+                    cleared_endpoint = b
+                else:
+                    cleared_endpoint = None
                 continue
             if move.role in ("entry", "retract"):
                 if a[:2] != b[:2] or (move.role == "retract") != (b[2] > a[2]):
@@ -337,6 +350,7 @@ def replay_stages(stages: tuple, decoded_moves: tuple, *,
                     raise ValueError("relief entry exceeds declared depth limit")
             if limits is not None and depth > limits.max_stepdown_mm:
                 raise ValueError("relief absolute depth exceeds declared virgin stepdown limit")
+            cleared_endpoint = b
             if low_tip >= 0:
                 continue
             if move.role in ("entry", "retract"):

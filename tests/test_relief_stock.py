@@ -165,6 +165,30 @@ class ReliefStockTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "shank"):
             relief_stock.replay_stages((broken,), (moves,))
 
+    def test_rapid_withdrawal_requires_cleared_endpoint_and_credits_no_stock(self):
+        stage, moves = stage_at(plane_target())
+        feed_report = relief_stock.replay_stages((stage,), (moves,))["prefixes"][0]
+        retract = moves[-2]
+        middle = (*retract.start[:2], -0.1)
+        withdrawn = (*moves[:-2],
+                     replace(retract, role="rapid_retract", end=middle, feed=0),
+                     replace(retract, role="rapid_retract", start=middle, feed=0),
+                     moves[-1])
+        rapid_report = relief_stock.replay_stages((stage,), (withdrawn,))["prefixes"][0]
+        self.assertEqual(rapid_report["cuts"], feed_report["cuts"] - 1)
+        for key in ("residual_volume_mm3", "maximum_residual_thickness_mm",
+                    "newly_removed_volume_lower_mm3"):
+            self.assertEqual(rapid_report[key], feed_report[key])
+        for role, end in (("rapid", retract.end),
+                          ("rapid_retract", (retract.end[0] + 0.01, *retract.end[1:])),
+                          ("rapid_retract", (*retract.start[:2], retract.start[2] - 0.01))):
+            bad = (*moves[:-2], replace(retract, role=role, end=end, feed=0))
+            with self.subTest(role=role, end=end), self.assertRaisesRegex(ValueError, "rapid"):
+                relief_stock.replay_stages((stage,), (bad,))
+        with self.assertRaisesRegex(ValueError, "rapid"):
+            relief_stock.replay_stages((stage,), ((
+                replace(retract, role="rapid_retract", feed=0),),))
+
     def test_public_input_and_arithmetic_limits(self):
         target = plane_target()
         for fields in ({"radius_mm": True}, {"pitch_mm": 1e-8},
