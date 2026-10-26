@@ -39,7 +39,19 @@ The native foundation now has an explicitly versioned consumer contract and
 compatibility notes, with installed wheel/sdist evidence and reusable CF02 proof.
 No manual observation is required for this package/document-authoring checkpoint.
 
-**Native engine delivery is complete; SF01 is next.** Finite search now connects
+**SF01 is active on `feat/sf01-relief-finishing`, from local `main` at `1e48609`.**
+The authorized autonomous bundle establishes bounded relief contact, continuous
+ball-cutter protection and evolving stock, then compares guided finishing with
+parallel/waterline strategies on an analytic valley/ridge and a reusable bilinear
+height-field consumer. Owners are the core relief geometry/stock modules, the
+finishing policy, ordered output, and the [SF01 contract](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers).
+Acceptance requires independent analytic/boundary oracles, decoded output and
+whole-tool checks, cumulative useful-removal evidence, measured residual/detail
+and motion comparisons, and installed consumer evidence. Stop when those gates
+are reviewed, documented and committed; NR03 and physical cutting are separate.
+No product decision or external observation blocks this offline scope.
+
+**Native engine delivery is complete.** Finite search now connects
 to editable source-bound native output, complete actual-post audits and installed
 ornament/front-back consumers. BO01-C and the planned native-library workflow
 close together. SF01 now has an accepted consumer/output foundation from which
@@ -173,7 +185,7 @@ outcome using the [strategy checkpoint](WORKFLOW.md#strategy-checkpoint).
 | Order | Increment | Useful outcome / scope |
 | --- | --- | --- |
 | Delivered on local main | **BO01-C + native extended-engine output + manufacturing consumers** | [Accepted bundle](#native-engine-delivery-bundle); versioned search-to-native-library outcome with native and installed evidence. |
-| Next, fresh session | **SF01** | Establish bounded relief contact/stock and shape-aware finishing through one concrete reusable consumer, using the accepted native/output foundation. NR03 remains a separate native interchange capability. |
+| Active autonomous bundle | **SF01** | Establish bounded relief contact/stock and shape-aware finishing through one concrete reusable consumer, using the accepted native/output foundation. NR03 remains a separate native interchange capability. |
 
 NC01-A closes the first native slice. Further NC01 classes/preservation and NR03
 Surface/3D interchange are conditional on a concrete consumer and the
