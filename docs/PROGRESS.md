@@ -1,17 +1,19 @@
 # Current status
 
-Status updated 2026-10-26: PK01 is implemented and accepted by engineering on
-`feat/pk01-consumer-checkpoint`, targeting local `main` at `19cecba`. Its
+Status updated 2026-10-26: PK01 is delivered on local `main` through authorized
+`--no-ff` merge `2fd43b1` of `feat/pk01-consumer-checkpoint` at `f872d02`. Its
 [acceptance record](REVIEW.md#pk01-consumer-checkpoint---2026-10-26) owns package
 verification and CF02 evidence reuse; [release notes](RELEASE_NOTES.md) define
 the version 0.2.0 consumer scope. CF02 is committed on local `main`; the
 [CF02 acceptance record](REVIEW.md#cf02-manufacturing-composition---2026-10-26)
-owns its verification and scope. PK01 is a local committed checkpoint; no merge,
-tag, push or package registry publication was performed in this session.
+owns its verification and scope. The user authorized a larger autonomous native
+engine delivery bundle, active on `feat/native-engine-delivery-bundle` from that
+merged baseline. Commits are authorized; no push, tag or registry publication is
+authorized by this bundle.
 NC01-A is delivered on local `main` through the
 authorized `--no-ff` merge of `feat/nc01-a-native-geometry` (reviewed tip
 `dc962a1`) into `6514305`. Fetching origin in this session confirms that merge
-is on `origin/main` at `a603d90`; local `main` is one CF02 commit ahead. The
+is on `origin/main` at `a603d90`; CF02 and PK01 remain local additions. The
 [merge review](REVIEW.md#nc01-a-merge-review---2026-10-26) records acceptance
 and evidence reuse.
 CF01 remains delivered locally through merge `9289d4b`. The remote inventory below remains the earlier
@@ -31,11 +33,40 @@ The native foundation now has an explicitly versioned consumer contract and
 compatibility notes, with installed wheel/sdist evidence and reusable CF02 proof.
 No manual observation is required for this package/document-authoring checkpoint.
 
-**Next recommended implementation: BO01-C.** Close and reconcile the existing
-committed search branch before expanding native engine output. This preserves
-already implemented search capability and resolves its outstanding delivery
-gate; it does not reopen continuous optimization or add search features.
-The [post-merge queue](#post-merge-task-queue) owns the scope.
+**Active: native engine delivery bundle.** Connect the existing finite search
+capability to editable, source-bound native manufacturing outputs and prove the
+installed consumer workflow. This bundles BO01-C, native selected-plan output,
+and multi-component/setup consumers into one engineering delivery. It addresses
+the current gap between reusable detached calculation and the native-library
+workflow before introducing SF01's separate relief/contact foundation.
+
+### Native engine delivery bundle
+
+**State:** active. User authorization covers autonomous implementation,
+verification and milestone commits; PK01's merge is complete. Owners and scope:
+
+1. **BO01-C integration and closure:** reconcile the committed BO01-A/B source,
+   current operating/compatibility owners, finite-search correctness and evidence.
+   Preserve search limits and fix material defects; no continuous optimizer.
+2. **Selected-plan native output:** a reusable CamBam integration owner consumes
+   audited selected planar jobs, retains original/protected design and produces
+   editable ordinary geometry/MOPs with source/stage/tool bindings. Establish an
+   explicit distinction between native document fidelity and posted execution;
+   challenge altered geometry, order, settings and source revisions. Investigate
+   an isolated installed-CamBam posting probe before requiring user observation.
+3. **Manufacturing consumers and delivery:** prove an ornamental mixed-tool job
+   and a materially different supported component/setup workflow, reusing CF02
+   rather than introducing recipes into the core. Verify round-trip editability,
+   stale-evidence handling, supported installed packages and compatibility notes.
+
+Acceptance requires useful end-to-end output, fault-sensitive contract tests,
+independent correctness review, applicable package evidence and a clean committed
+bundle against `main`. Native post/whole-motion claims require actual native post
+evidence; document-authoring success alone cannot close that execution gate.
+Stop when these connected outcomes and their declared acceptance are complete.
+SF01, native 3D classes, packing and controller/physical certification remain
+separate scopes. Next action: close BO01 integration while settling the native
+output contract and autonomous native-post feasibility.
 
 ### PK01: consumer release checkpoint
 
@@ -142,9 +173,8 @@ outcome using the [strategy checkpoint](WORKFLOW.md#strategy-checkpoint).
 
 | Order | Increment | Useful outcome / scope |
 | --- | --- | --- |
-| 1 | **BO01-C** | Close/reconcile the existing committed search branch against the current foundation and consumer compatibility policy; preserve useful work without expanding the search epic. Reuse applicable branch evidence and repair material defects or integration conflicts. |
-| 2 | **Native extended-engine output** | Improve reusable rest/V/inlay attachment through ordinary Regions/Plines and MOPs for a named consumer. Retain protected boundaries, signed allowances and specified overlap. Existing XYZ/Engrave whole-motion gaps remain explicit; inspectable path geometry alone is not a complete execution certificate. |
-| 3 | **SF01** | Generalize bounded relief contact/stock and shape-aware finishing when the native/library foundation and a concrete consumer justify it. NR03 remains a separate native interchange capability. |
+| Active bundle | **BO01-C + native extended-engine output + manufacturing consumers** | [Bundle scope and acceptance](#native-engine-delivery-bundle); one connected search-to-native-library outcome with milestone commits. |
+| Next | **SF01** | Generalize bounded relief contact/stock and shape-aware finishing when the native/library foundation and a concrete consumer justify it. NR03 remains a separate native interchange capability. |
 
 NC01-A closes the first native slice. Further NC01 classes/preservation and NR03
 Surface/3D interchange are conditional on a concrete consumer and the
@@ -240,10 +270,7 @@ and [verification](REVIEW.md#export-failure-and-state-path-verification).
 
 ## Completion and verification
 
-PK01's implementation, automated checks and engineering acceptance are complete;
-[REVIEW](REVIEW.md#pk01-consumer-checkpoint---2026-10-26) records the evidence and
-limits. This is a good fresh-session breakpoint: the consumer checkpoint is
-coherent and verified, while BO01-C has a distinct branch-reconciliation scope.
-Its durable requirements are in the queue; no unresolved decision, pending result
-or unsaved context is needed to start it. PK01 commits were authorized; merging
-into `main` remains user-owned.
+PK01 is merged with its accepted evidence unchanged. The larger native engine
+delivery bundle is in progress; continue across internal milestones under the
+user's autonomous-work authorization. Its native-output contract, current probes
+and acceptance results must be persisted before any later session handoff.

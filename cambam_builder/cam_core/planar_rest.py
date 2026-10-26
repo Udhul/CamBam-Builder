@@ -10,6 +10,7 @@ import math
 from shapely.geometry import LineString, MultiPoint, Point
 from shapely.ops import voronoi_diagram
 
+from . import replay
 from . import v_region as v
 
 
@@ -248,3 +249,130 @@ def generate(prior, tool, *, stepover_mm=1, max_cusp_mm=.25,
         "no unproved-clear admissible feature segments", "offset"))
     return Candidate(plan, prior, proposed, omitted, cusp,
                      prior.target.sagitta_mm + math.sqrt(2)*.5e-7)
+
+
+def generate_cylindrical(target, tool, *, stepover_mm=1, xy_step_mm=1,
+                         margin_mm=.01, safe_z=3, max_paths=4000,
+                         max_stepdown_mm=.5, initial_tip=(0, 0, 3),
+                         fill_pattern="raster"):
+    """Generate independent cylindrical roughing against a frozen V design.
+
+    The center regions are derived at each bounded axial depth; the original
+    design remains authoritative for full-height verification and residuals.
+    Every path enters from and retracts to safe Z, with no prior-cavity credit.
+    A short flute limits penetration without changing the design depth cap.
+    All passes retrace the deepest-safe XY paths so declared axial advances
+    have exact earlier witnesses; upper-wall stock remains for other stages.
+    """
+    if (type(target) is not v.VTarget or target.design_angle_degrees is None or
+            type(tool) is not replay.ToolProfile or tool.kind != "cylinder"):
+        raise ValueError("frozen V target and cylindrical replay tool required")
+    if (type(tool.name) is not str or not tool.name.startswith("T") or
+            not tool.name[1:].isascii() or not tool.name[1:].isdecimal() or
+            tool.name[1] == "0"):
+        raise ValueError("positive T-number output tool ID required")
+    pitch = _positive(stepover_mm, "stepover")
+    step = _positive(xy_step_mm, "XY step")
+    margin = _positive(margin_mm, "margin")
+    safe_z = _positive(safe_z, "safe Z")
+    stepdown = _positive(max_stepdown_mm, "maximum stepdown")
+    max_paths = _count(max_paths, "maximum paths")
+    if (min(pitch, step, stepdown) < 1e-6 or margin <= 1e-5 or
+            max_paths > 10000 or fill_pattern not in ("raster", "offset")):
+        raise ValueError("cylindrical controls outside supported finite limits")
+    replay._xyz(initial_tip)
+    if initial_tip[2] < safe_z:
+        raise ValueError("initial tip must be at or above safe Z")
+
+    def budget_count(length, spacing, limit, name):
+        quotient = length / spacing
+        if not math.isfinite(quotient) or quotient > limit:
+            raise ValueError(f"cylindrical {name} budget exceeded")
+        return max(1, math.ceil(quotient))
+
+    cap = min(target.cap_depth, tool.cutting_length)
+    passes = budget_count(cap, stepdown, max_paths, "axial pass")
+    deepest = target.roughing_centers(cap, tool.radius, margin_mm=margin)
+    if deepest.is_empty:
+        return None
+    paths = []
+    vertices = 0
+
+    def add(line, depth):
+        nonlocal vertices
+        if line.length <= 1e-7:
+            return
+        remaining = 50000 - vertices
+        # Bound densification before allocation, including original corners.
+        budget_count(line.length, step, remaining, "vertex")
+        if len(line.coords) + math.ceil(line.length / step) > remaining:
+            raise ValueError("cylindrical vertex budget exceeded")
+        points = _sample(line, step)
+        if len(points) < 2:
+            return
+        vertices += len(points)
+        paths.append((depth, points))
+        if len(paths) > max_paths:
+            raise ValueError("cylindrical path budget exceeded")
+
+    for number in range(1, passes + 1):
+        depth = cap * number / passes
+        centers = target.roughing_centers(depth, tool.radius, margin_mm=margin)
+        if not centers.covers(deepest):
+            raise ValueError("cylindrical axial center containment is unresolved")
+        centers = deepest
+        for polygon in v._polygons(centers):
+            for ring in (polygon.exterior,) + tuple(polygon.interiors):
+                add(LineString(ring.coords), depth)
+        xmin, ymin, xmax, ymax = centers.bounds
+        if fill_pattern == "raster":
+            rows = budget_count(ymax-ymin, pitch, max_paths, "row")
+            for row in range(rows):
+                y = ymin + pitch * (row + .5)
+                if y >= ymax:
+                    break
+                horizontal = LineString(((xmin, y), (xmax, y)))
+                for line in v._segments(centers.intersection(horizontal)):
+                    add(line, depth)
+        else:
+            # Repeated erosion retains disconnected components and island rings.
+            for index in range(max_paths):
+                inset = pitch * (index + .5)
+                if not math.isfinite(inset):
+                    raise ValueError("cylindrical offset arithmetic is unresolved")
+                region = centers.buffer(-inset, quad_segs=32)
+                if region.is_empty:
+                    break
+                for polygon in v._polygons(region):
+                    for ring in (polygon.exterior,) + tuple(polygon.interiors):
+                        add(LineString(ring.coords), depth)
+            else:
+                raise ValueError("cylindrical offset budget exceeded")
+    if not paths:
+        return None
+    operation = replay.Operation("cylindrical-roughing", tool, replay.Target(
+        "original-design", target.safe.bounds, target.cap_depth,
+        region_shell=tuple(target.safe.exterior.coords)[:-1],
+        region_holes=tuple(tuple(ring.coords)[:-1] for ring in target.safe.interiors)))
+    items = [replay.Event("tool_change", tool.name, initial_tip),
+             replay.Event("spindle_start", tool.name, initial_tip)]
+    at = initial_tip
+
+    def move(role, end):
+        nonlocal at
+        if end != at:
+            items.append(replay.Motion(role, tool.name, operation.name, at, end))
+            at = end
+
+    for depth, points in paths:
+        move("rapid", (*points[0], safe_z))
+        move("entry", (*points[0], -depth))
+        for point in points[1:]:
+            move("cut", (*point, -depth))
+        move("retract", (*points[-1], safe_z))
+    move("rapid", initial_tip)
+    items.append(replay.Event("spindle_stop", tool.name, at))
+    trace = replay.Trace(target.source_id, target.frame or "program", initial_tip,
+                         (operation,), tuple(items))
+    v.VComposition(target, (trace,))
+    return trace

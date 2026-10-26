@@ -24,6 +24,15 @@ the active item in the remaining backlog. If an external issue tracker is design
 it owns task state/acceptance and the repository status links to the active issue;
 the repository continues to own contracts and verification instructions.
 
+**User preference, 2026-10-26:** when a larger autonomous work bundle is authorized,
+group dependent backlog items around a substantial caller outcome. Use internal
+milestones with meaningful implementation and acceptance, commit completed work
+when authorized, and continue across milestones without handing each small slice
+back to the user. Parallelize independent implementation or review. Keep one
+explicit bundle scope and stopping condition in PROGRESS; technical difficulty
+or a session boundary alone does not shrink it. Unrelated capabilities still need
+the strategy checkpoint, and genuine external observations remain named gates.
+
 ## Strategy checkpoint
 
 At task selection, after a coherent outcome, and before following a substantial
