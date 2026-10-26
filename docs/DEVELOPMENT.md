@@ -2330,6 +2330,31 @@ because these exact B/C sources and posts already passed the native gate.
 The T3 split file assumes operator installation and initial positioning;
 controller runtime and physical holding are unassessed.
 
+### Native Square and Triangle tab consumer
+
+The [native tab consumer](../demos/native_tabs_workflow.py) prepares paired
+Square/Triangle Manual Profiles with centered, moved and added tab layouts.
+Use the declared interpreter with the `planar` extra. All sources and actual
+posts belong in a new ignored task directory:
+
+```powershell
+& $ProjectPython demos/native_tabs_workflow.py output/native-tabs-<unique>
+# Generate the matching .nc file for each of the six .cb sources in CamBam,
+# using the Default postprocessor without changing the source.
+& $ProjectPython demos/native_tabs_workflow.py output/native-tabs-<unique> --audit
+& $ProjectPython tools/verify.py --pattern test_native_tabs.py --pattern test_tabbed_cutout.py --pattern test_mop_parameters.py --pattern test_mop_roundtrip.py
+```
+
+Preparation checks library reopening and move/add edits, writes `sources.json`,
+and does not generate G-code. The audit re-reads all six source/post pairs and
+rejects changed sources or substituted comparison cases. `report.json` records
+exact source/post hashes, complete decoded motion, conservative stock-section
+widths and connection to surrounding stock. The
+[tab stock contract](structure_spec.md#bounded-native-triangle-tab-consumer)
+owns dimensions, equations and supported motion; a passing tab count alone is
+insufficient. New source edits require fresh generation and binding. The
+historically accepted Square packet above remains a separate unchanged consumer.
+
 ### Packet 2 helical Pocket native post preparation
 
 This post gate passed; the steps below describe the local source/post workflow.

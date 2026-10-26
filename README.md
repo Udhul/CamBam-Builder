@@ -79,6 +79,12 @@ ornament and composed front/back insert setups. Generate the actual post in
 CamBam and audit its complete motion before using its geometric execution
 evidence; document export alone does not establish that evidence.
 
+The [native tab consumer](demos/native_tabs_workflow.py), also using `planar`,
+compares editable Manual Square and Triangle cutouts. It audits actual Default
+posts against source intent and verifies retained bridges at multiple depths;
+the [bounded tab contract](docs/structure_spec.md#bounded-native-triangle-tab-consumer)
+distinguishes stock geometry from physical holding strength.
+
 The base installation also supports [bounded relief finishing](docs/structure_spec.md#bounded-relief-contact-stock-and-finishing-sf01).
 The [relief consumer](demos/relief_finishing.py) compares guided, parallel and
 waterline ball paths on an analytic moulding and a caller-owned bilinear relief,

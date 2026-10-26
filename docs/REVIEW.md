@@ -1,5 +1,135 @@
 # Review and acceptance history
 
+## Native Triangle holding-tab consumer - 2026-10-26
+
+**Outcome: accepted by engineering.** Fresh centered, moved and five-tab Manual Triangle cutouts, paired
+with Square controls, through editable native documents and actual Default
+posts. The [contract](structure_spec.md#bounded-native-triangle-tab-consumer)
+owns parameters and limits; [PROGRESS](PROGRESS.md#active-work-and-next-priority)
+owns delivery and next priority. Work starts from clean local `main` at
+`0d1f56d` on `feat/native-triangle-tabs`. The existing native writer and
+`tabbed_cutout` Square/interior-V consumer are unchanged.
+
+| Changed claim / owning boundary | Positive and fault-sensitive evidence | Disposition |
+| --- | --- | --- |
+| Editable bound Manual sources / `native_tabs.NativeTabDocument` | Six consumer sources reopen and support ordinary MOP move/add edits; [tests](../tests/test_native_tabs.py) reject changed geometry, stock, process, tab style/width/position, forged bindings and unsupported precision | Complete source intent is checked; the broader native authoring API is unchanged |
+| Actual native Triangle compensation / `native_tabs.audit_post` | Six actual Default posts; missing/moved/flattened ramps, Square substitution, wrong corner direction, duplicate/missing traversals and wrong process state reject | Complete three-level contour and tab depth functions are checked, not just tab counts |
+| Retained stock / independent section clipping | Analytic cylindrical-sweep oracle, ascending/descending clipping, conservative arc/disk covers and four section connectivity checks | Triangle and Square retain the measured bridges below; no holding-strength or runtime claim |
+| Comparison integrity / `native_tabs_workflow` | Review reproduced a manifest replacing all Triangle cases with Square; corrected consumer derives required style/layout from fixed case names and rejects the substitution | A passing comparison now requires all six intended cases |
+
+### Native observations and stock results
+
+Sources use the contract's 60 x 30 mm outline and 80 x 50 x 3 mm stock,
+3 mm endmill, three 1 mm depth levels, width 6 and height 1 mm, feed/plunge
+250/80 mm/min, 12000 rpm and 5 mm clearance. Centered tabs are `(40,10)`,
+`(70,25)`, `(40,40)`, `(10,25)`; moved changes the left tab to `(10,33)`;
+added retains that point and adds `(10,17)` with minimum/maximum counts 5/5.
+
+The actual Triangle bottom-edge center path is
+`(35.5,8.5,-3) -> (38.5,8.5,-2) -> (41.5,8.5,-2) -> (44.5,8.5,-3)`.
+This 3 mm ramp / 3 mm plateau / 3 mm ramp compensates the cutter diameter.
+The initial two-ramp point-apex hypothesis was rejected by fresh native
+evidence; a regression now rejects that incorrect stock interpretation.
+Independent review derives minimum stock width `6(d-2)` at depth `d`.
+
+| Section depth (mm) | Triangle ideal / conservative lower width (mm) | Square ideal / conservative lower width (mm) |
+| --- | --- | --- |
+| 2.25 | 1.5 / 1.498392 | 6 / 5.998392 |
+| 2.50 | 3 / 2.998392 | 6 / 5.998392 |
+| 2.75 | 4.5 / 4.498392 | 6 / 5.998392 |
+| 3.00 | 6 / 5.998392 | 6 / 5.998392 |
+
+All six cases retain connection from the part to surrounding stock at all four
+sections. Centered/moved posts contain 46 decoded moves; added contains 50.
+Triangle has 8/8/10 ramp moves; Square has none. Conservative protected-part
+overcut area bounds are at most 0.130294 mm², including geometric cover padding;
+the analytic offset contour is tangent to the protected part. Width shortfall
+is below 0.002 mm. Existing Square acceptance is preserved by unchanged owners,
+their regression checks and these fresh controls; unavailable historical B/C
+bytes were not claimed to have been re-posted or compared byte-for-byte.
+
+Fresh native sources/posts and reports live under ignored
+`output/triangle-tabs-consumer-20261026-a2/`. Their SHA-256 pairs are:
+
+| Case | Source SHA-256 | Actual Default-post SHA-256 |
+| --- | --- | --- |
+| Square centered | `a263adab9071d347486de812ba45c93562ba94a6a74a40f07da8bb7672973a46` | `74fe212cf95074f3734c26a4233047d564833a3295cbacbcfb323b2348d6fc4d` |
+| Square moved | `b9fff24573b5cbfdc64e9aa2cf348ea037aac4208fd034c34669e0803a5ab146` | `ae25f91efb89cab2925e712f3b57c951d62df04650b5a79c3b39949ab224edca` |
+| Square added | `351c44caae9d11a363f97f744280b1309564fc183dd9016a1278738b4d274da5` | `314d11a5a69ce77bdbca56ca67308c682cd5e5a53de1b57cbe174d0cbc8f2522` |
+| Triangle centered | `536a206a0a270cefe5b77ed23a21de012442b9ad3d853c12375688942b0a6137` | `39fe8e97f58fb91d52a092258bb41b08c3a3851c5107101b7e684e9b199f49f5` |
+| Triangle moved | `2556186507a858c6ef105414f5fd34b6da76a193b0285e6ffbbd7d332e5ca329` | `0dd8e96779da7328f203d5c53d651dc9bed78022578f8ab4b2d8d0e7b0eadcc7` |
+| Triangle added | `f5deda98b7290369425e61783fe08260cac4c1ab84629009945f757e574c6f88` | `391a50b7967c36374e42000447309b569b1ea6ec25fdc3a4eb18cc5436c7b2e6` |
+
+A fractional-position probe at 40.12345 mm observed Default rounding to four
+decimal places. The consumer therefore rejects finer tangential placements
+at creation instead of silently widening motion tolerance. A separate actual
+40.1234 mm source/post passed, with hashes
+`8a95e58b3d19863aaeccc8839c11468f218a1360886a52be79c0995b08683c57` /
+`7f1ed5f2d7ececcdf9a9f2bf1071380fb64fab08729d4d69effff1ca40efc7a3`.
+The native writer's perpendicular edge projection at 0.000001 mm remains
+supported and has a boundary regression.
+
+### Native host and acceptance boundaries
+
+Installed CAD **1.0.7364.41819** and Geom **1.0.7364.41817** generated the posts.
+Default-post hash is
+`adc3034633f0f6ad6ddc4c9eabc63844cb59173be8ee780ac47e198a7145c263`;
+configuration hash remained
+`2077820e148d7a7d6ed6ddde8fc69b62cd255cbf69899ff632b86cf6228234ed`.
+Manual `HoldingTab.ParametricPoint` deserialization accesses native application
+context. A task-local compiled 32-bit host supplies only the opening-file flag
+and active document through `MainUI`/`ICADView`; unsupported view calls throw.
+It invokes unchanged `CADFile.Open`, `GenerateToolpaths` and
+`MachineOpToGCode.GetGCode`, writes the returned NC unchanged and verifies source
+and configuration hashes. Independent review inspected that boundary and matched
+all six provenance records. No GUI constructor/form was used in this successful
+probe. Earlier host attempts failed before generation; Computer Use was stopped
+with Escape and was not used for acceptance.
+
+This establishes installed native algorithm/post behavior, not a supported
+general automation bridge. Actual-byte mutations removing G61, reintroducing
+G64 before movement, or replacing the compensated Triangle plateau reject.
+The native G64 preamble precedes only a stationary initial Z5 command; G61 is
+explicit before actual motion. Initial tip `(0,0,5)` is a setup assumption.
+No controller, physical-cutting or GUI-display acceptance is claimed or required
+for this bounded gate. Reopen for another contour/frame/tab mode/post precision,
+changed native library behavior, or contradictory motion/stock evidence.
+
+### Verification and readiness
+
+Final checkout verification used Python **3.13.5**, NumPy **2.5.4** and Shapely
+**2.1.2**. `tools/verify.py` with repeated patterns `test_native_tabs.py`,
+`test_tabbed_cutout.py`, `test_mop_parameters.py` and `test_mop_roundtrip.py`
+ran **41 tests: 40 passed, one named historical B/C fixture skip**, in 19.483 s.
+The report is `output/verification-20261026-230208-bd5e22bb/report.json`.
+The new module contributes ten synthetic tests; accepted native observations
+are separately recorded above and are not required local test fixtures.
+
+The same command with `--package` passed **123 test executions: 120 passed,
+three copies of that named skip**, across clean wheels on Python **3.12.10**
+and **3.13.5** and an independent Python **3.12.10** sdist install. Archive,
+import, resource and base-only boundary smokes also passed. The report is
+`output/verification-20261026-225958-75d07f3f/report.json` (143.779 s).
+All planar installs used NumPy 2.5.4 / Shapely 2.1.2. The initial package
+attempt was incomplete because the sandbox denied the existing uv cache;
+the successful authorized retry performed fresh checks without evidence reuse.
+
+The copied consumer ran with isolated installed interpreters from outside
+the checkout: preparation/edit/reopen passed on the 3.12 wheel, and the six
+actual source/post pairs passed on both wheels and the sdist. Logs remain in
+`output/triangle-tabs-20261026-a1/`. Independent review resolved the comparison
+substitution and edge-projection mismatch, confirmed the compensated native
+stock oracle, checked actual-byte adversarial cases, and found no unresolved
+correctness finding. Syntax compilation, scoped link checks and diff checks
+complete the gate. Shared parser, replay, native writer and MCP behavior were
+unchanged, so full discovery and unrelated engine/MCP suites were not repeated.
+
+Implementation, automated verification and the bounded native-output gate are
+complete. No user observation remains required. The target base is local `main`
+at `0d1f56d`; feature/delivery revisions are recorded in PROGRESS after the
+authorized local integration. General automated hosting and physical machining
+remain outside this accepted capability.
+
 ## Constructive artwork bundle - 2026-10-26
 
 **Outcome:** CADBitmap registration and CG01 implementation, automated checks,

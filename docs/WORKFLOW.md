@@ -91,6 +91,12 @@ Broaden retrieval only when an unresolved symbol, caller, failing check or contr
 dependency supplies a concrete reason. Stop once the slice and its verification
 are supported; unrelated findings become brief evidence for backlog triage.
 
+**User feedback, 2026-10-26:** to open a known local file in its native application,
+prefer a direct application command-line argument or the registered file association
+before automating an Open dialog. On this machine `.cb` is associated with CamBam.
+If a UI route stalls, switch to an available deterministic route instead of
+repeating unproductive focus/dialog interactions.
+
 Use safe, reversible assumptions for minor matters; record material ones with the
 work. The lead resolves implementation choices within the authorized contract.
 Ask the user for missing decisions only when they materially change architecture,
