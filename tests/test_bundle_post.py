@@ -22,7 +22,8 @@ except ModuleNotFoundError as exc:
     HAS_PLANAR = False
 
 
-def _document(specs=(("T1", .5, "v"),), *, fixtures=(), cap_depth=1):
+def _document(specs=(("T1", .5, "v"),), *, fixtures=(), cap_depth=1,
+              supplied_paths=None, axial_limits=None):
     project = CBProject("synthetic source")
     layer = project.add_layer("design")
     project.add_rect(layer=layer, identifier="opening", width=10, height=8)
@@ -33,8 +34,9 @@ def _document(specs=(("T1", .5, "v"),), *, fixtures=(), cap_depth=1):
     start, stages, sweeps = (-1, -1, 3), [], []
     profile = v.VProfile("pointed", 90, 0, 2, 2)
     for index, (tool, depth, kind) in enumerate(specs):
-        paths = (v.VPath("fill", ((3, 3, depth), (5, 3, depth), (6, 3, depth))),
-                 v.VPath("fill", ((3, 5, depth), (6, 5, depth))))
+        paths = supplied_paths or (
+            v.VPath("fill", ((3, 3, depth), (5, 3, depth), (6, 3, depth))),
+            v.VPath("fill", ((3, 5, depth), (6, 5, depth))))
         plan = v.VPlan(design.target, profile, paths, v._motions(paths, 3),
                        3, .02, 1, "partial", "small supplied witness")
         motions = tuple(oj.JobMove(m.role, m.start, m.end,
@@ -52,7 +54,7 @@ def _document(specs=(("T1", .5, "v"),), *, fixtures=(), cap_depth=1):
             v_plan=plan if operation is None else None, operation=operation,
             source_revision=plan.fingerprint if operation is None else design.source_sha256,
             transition=transition,
-            axial_limits=oj.AxialLimits(.5, 1))
+            axial_limits=axial_limits or oj.AxialLimits(.5, 1))
         stages.append(stage)
         if operation is None:
             sweeps.append(plan)
@@ -123,6 +125,30 @@ def _post(document, *, reverse=False):
     return ("\n".join(lines) + "\n").encode()
 
 
+def _shared_endpoint_paths():
+    return (v.VPath("fill", ((3, 3, .25), (5, 3, .25))),
+            v.VPath("fill", ((5, 3, .5), (7, 3, .5))))
+
+
+def _partial_retract_paths():
+    return (v.VPath("fill", ((3, 3, .5), (5, 3, .5))),
+            v.VPath("fill", ((5, 3, .25), (7, 3, .25))))
+
+
+def _joined_post(document):
+    posted = _post(document)
+    boundary = b"G0 Z3\nG0 X5 Y3\n"
+    assert posted.count(boundary) == 1
+    return posted.replace(boundary, b"")
+
+
+def _partial_retract_post(document):
+    posted = _joined_post(document)
+    entry = b"G1 F120 Z-0.25"
+    assert posted.count(entry) == 1
+    return posted.replace(entry, b"G0 Z-0.25")
+
+
 @unittest.skipUnless(HAS_PLANAR, "optional planar backend is absent")
 class BundlePostTests(unittest.TestCase):
     @classmethod
@@ -152,6 +178,91 @@ class BundlePostTests(unittest.TestCase):
             report = self.audit(document, _post(document, reverse=True))
             self.assertEqual(report["axial_process_limits"]["status"], "pass")
             self.assertEqual(report["cutting_path_equivalence"]["within_stage_order_and_direction"], "may differ")
+
+    def test_native_shared_endpoint_descending_reentry_is_fully_checked(self):
+        for kind in ("v", "cylinder"):
+            document = _document((("T1", .5, kind),), supplied_paths=_shared_endpoint_paths())
+            unjoined = self.audit(document)
+            joined = self.audit(document, _joined_post(document))
+            with self.subTest(kind=kind):
+                self.assertEqual(joined["whole_motion_safety"]["same_xy_descending_reentries"], 1)
+                self.assertEqual(joined["cutting_path_equivalence"]["stages"][0]["paths"], 2)
+                self.assertEqual(joined["stock_access_residual"]["section_mm2"],
+                                 unjoined["stock_access_residual"]["section_mm2"])
+                self.assertEqual(joined["stock_access_residual"]["volume_mm3"],
+                                 unjoined["stock_access_residual"]["volume_mm3"])
+                self.assertEqual(joined["axial_process_limits"], unjoined["axial_process_limits"])
+                self.assertEqual(joined["tool_fixture_occupancy"]["checked_moves"],
+                                 unjoined["tool_fixture_occupancy"]["checked_moves"] - 1)
+
+    def test_shared_endpoint_support_rejects_other_low_actions_and_extra_edges(self):
+        document = _document(supplied_paths=_shared_endpoint_paths())
+        posted = _joined_post(document)
+        entry = b"G1 F120 Z-0.5"
+        cases = (posted.replace(entry, b"G1 F120 Z-0.2"),
+                 posted.replace(entry, b"G1 F120 X5.00001 Z-0.5"),
+                 posted.replace(entry, b"G0 Z-0.5"),
+                 posted.replace(entry, b"G1 F119 Z-0.5"),
+                 posted.replace(b"G1 F300 X5 Y3 Z-0.25\n", b""),
+                 posted.replace(entry, entry + b"\nG1 F120 Z-0.6"),
+                 posted.replace(entry, entry + b"\nG1 F300 X8 Y3 Z-0.5"))
+        for candidate in cases:
+            with self.subTest(post=candidate), self.assertRaises(ValueError):
+                self.audit(document, candidate)
+
+    def test_native_shared_endpoint_partial_retract_is_verified_subset(self):
+        for kind in ("v", "cylinder"):
+            document = _document((("T1", .5, kind),), supplied_paths=_partial_retract_paths())
+            unjoined = self.audit(document)
+            joined = self.audit(document, _partial_retract_post(document))
+            with self.subTest(kind=kind):
+                self.assertEqual(joined["whole_motion_safety"]["same_xy_partial_rapid_retracts"], 1)
+                self.assertEqual(joined["whole_motion_safety"]["same_xy_descending_reentries"], 0)
+                self.assertEqual(joined["cutting_path_equivalence"]["stages"][0]["paths"], 2)
+                self.assertEqual(joined["stock_access_residual"]["section_mm2"],
+                                 unjoined["stock_access_residual"]["section_mm2"])
+                self.assertEqual(joined["stock_access_residual"]["volume_mm3"],
+                                 unjoined["stock_access_residual"]["volume_mm3"])
+                self.assertEqual(joined["tool_fixture_occupancy"]["checked_moves"],
+                                 unjoined["tool_fixture_occupancy"]["checked_moves"] - 1)
+
+    def test_partial_retract_support_rejects_other_motion_and_unmatched_endpoint(self):
+        document = _document(supplied_paths=_partial_retract_paths())
+        posted = _partial_retract_post(document)
+        retract = b"G0 Z-0.25"
+        cases = (posted.replace(retract, b"G1 F120 Z-0.25"),
+                 posted.replace(retract, b"G0 X5.00001 Z-0.25"),
+                 posted.replace(retract, b"G0 Z-0.6"),
+                 posted.replace(retract, b"G0 Z-0.2"),
+                 posted.replace(retract, retract + b"\nG0 Z-0.2"),
+                 posted.replace(b"G1 F300 X7 Y3 Z-0.25\n", b""))
+        for candidate in cases:
+            with self.subTest(post=candidate), self.assertRaises(ValueError):
+                self.audit(document, candidate)
+        fixture = occupancy.Box("retract-side clamp", (4.99, 5.00002, -.4, 5.01, 5.1, -.3))
+        body = _document(supplied_paths=_partial_retract_paths(), fixtures=(fixture,))
+        self.audit(body, _partial_retract_post(body))
+        with self.assertRaisesRegex(ValueError, "cutter collision with fixture retract-side clamp"):
+            self.audit(body, _partial_retract_post(body).replace(b"Y3", b"Y3.00004"))
+
+    def test_joined_reentry_retains_actual_axial_protected_depth_and_body_gates(self):
+        paths = _shared_endpoint_paths()
+        retrace_paths = (paths[0], v.VPath("fill", ((5, 3, .5), (3, 3, .5))))
+        stepdown = _document(supplied_paths=retrace_paths, axial_limits=oj.AxialLimits(.25, 1))
+        self.audit(stepdown, _joined_post(stepdown))
+        with self.assertRaisesRegex(ValueError, "stepdown"):
+            self.audit(stepdown, _joined_post(stepdown).replace(b"Z-0.5", b"Z-0.50004"))
+        axial = _document(supplied_paths=paths, axial_limits=oj.AxialLimits(.5, .5))
+        with self.assertRaisesRegex(ValueError, "entry exceeds declared depth limit"):
+            self.audit(axial, _joined_post(axial).replace(b"Z-0.5", b"Z-0.50004"))
+        protected = _document(supplied_paths=paths, cap_depth=.5)
+        with self.assertRaisesRegex(ValueError, "depth/profile limits"):
+            self.audit(protected, _joined_post(protected).replace(b"Z-0.5", b"Z-0.50004"))
+        fixture = occupancy.Box("entry-side clamp", (4.99, 5.00002, -.4, 5.01, 5.1, -.3))
+        body = _document(supplied_paths=paths, fixtures=(fixture,))
+        self.audit(body, _joined_post(body))
+        with self.assertRaisesRegex(ValueError, "cutter collision with fixture entry-side clamp"):
+            self.audit(body, _joined_post(body).replace(b"Y3", b"Y3.00004"))
 
     def test_actual_coordinates_recompute_stock_within_edge_tolerance(self):
         post = _post(self.single).replace(b"X6 Y3", b"X6.00004 Y3")

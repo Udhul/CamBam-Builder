@@ -1170,6 +1170,17 @@ native MOP stage order, tools, feeds, spindle state and safe boundaries, and
 matches the complete cutting-edge multiset at `ordered_job.MATCH_TOLERANCE_MM`.
 Within-stage path order/direction may change; missing, repeated or extra edges,
 low links, diagonal entries, unsupported commands and unplanned movements reject.
+CamBam can join separate paths at the same XY endpoint even with zero crossover.
+A strictly descending vertical G1 continuation below stock is supported only at
+the bound entry feed, after a completed cutting path and before another matched
+cutting path. It splits those paths for reconstruction: the full safe-plane entry
+is a conservative geometry proof for the actual partial descent, while actual
+depth history and motion still undergo axial and tool-body checks. A strictly
+rising same-XY G0 continuation between matched paths is a partial rapid retract,
+contained in the already checked full retract from the preceding cut endpoint;
+it grants no additional removal. Actual tool-body checks still cover that motion.
+Other low rapids, rising feed joins, diagonal moves and unmatched continuation
+endpoints remain rejected; no lateral cleared-cavity travel is inferred.
 G64 is a modal condition: only motion actually executed under blending needs
 unresolved-trajectory evidence. A header G64 replaced by G61 before motion does
 not invalidate ExactStop output, and a later G61 cannot excuse an earlier blended

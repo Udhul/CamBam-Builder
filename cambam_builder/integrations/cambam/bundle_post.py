@@ -147,6 +147,26 @@ def _classify(stage, items, safe_z):
                 raise ValueError(f"stage {stage.id}: native entry feed differs")
             role = "entry"
             points = [end]
+        elif (g == 1 and vertical and points is not None and len(points) >= 2 and
+              end[2] < start[2] < 0):
+            # Default may join separate paths sharing an XY endpoint instead
+            # of retracting. Only a descending entry after a nonempty cut is
+            # admitted. Its following cut must still consume expected edges;
+            # actual entry depth/advance and whole-body occupancy are checked.
+            if not any(abs(feed - f) <= _TOL for f in entry_feed):
+                raise ValueError(f"stage {stage.id}: native re-entry feed differs")
+            paths.append(tuple(points))
+            points = [end]
+            role = "entry"
+        elif (g == 0 and vertical and points is not None and len(points) >= 2 and
+              start[2] < end[2] < 0):
+            # A native shared-endpoint connection may stop its retract below
+            # stock. This exact vertical rise is a subset of the preceding
+            # endpoint's verified full retract for these monotone profiles.
+            # It adds no removal. A following matched cut is still required.
+            paths.append(tuple(points))
+            points = [end]
+            role = "rapid_retract"
         elif (g == 1 and not vertical and points is not None and
               start[2] < 0 and end[2] < 0):
             if not any(abs(feed - f) <= _TOL for f in cut_feed):
@@ -164,8 +184,10 @@ def _classify(stage, items, safe_z):
 def _stock_stage(job, stage, moves, paths):
     if stage.v_plan is not None:
         # Synthetic canonical links are solely the stock owner's required VPlan
-        # representation. Actual links/entries/retracts were all checked above
-        # and are passed unchanged to occupancy and axial verification below.
+        # representation. A full safe-to-depth entry conservatively contains
+        # a joined partial vertical entry, and the preceding full retract
+        # contains a partial rise. Actual links/entries/retracts were checked
+        # above and pass unchanged to occupancy and axial verification.
         actual_paths = tuple(v.VPath("fill", tuple((x, y, -z) for x, y, z in path))
                              for path in paths)
         plan = replace(stage.v_plan, paths=actual_paths,
@@ -271,10 +293,13 @@ def audit_post(document: NativeDocument, post_bytes: bytes, *,
     if observed_events != expected_events:
         raise ValueError("native tool-change/spindle event sequence differs")
     actual, sweeps, records = [], [], []
+    joined_entries = partial_retracts = 0
     for stage, group, name in zip(job.stages, groups, names):
         moves, paths = _classify(stage, group, safe_z)
         count = _edge_multiset(stage, moves)
         actual.append(moves)
+        joined_entries += sum(move.role == "entry" and move.start[2] < 0 for move in moves)
+        partial_retracts += sum(move.role == "rapid_retract" and move.end[2] < 0 for move in moves)
         sweeps.append(_stock_stage(job, stage, moves, paths))
         records.append({"stage_id": stage.id, "mop_name": name,
                         "cutting_edges": count, "paths": len(paths),
@@ -299,6 +324,10 @@ def audit_post(document: NativeDocument, post_bytes: bytes, *,
             "within_stage_order_and_direction": "may differ", "stages": tuple(records)},
         "whole_motion_safety": {"status": "pass",
             "scope": "complete supported straight native stream, including entry, rapid, link and retract",
+            "same_xy_descending_reentries": joined_entries,
+            "reentry_policy": "bound entry feed after nonempty cut; target, cut-edge, axial and body gates apply",
+            "same_xy_partial_rapid_retracts": partial_retracts,
+            "partial_retract_policy": "vertical subset of preceding verified full retract; following matched cut required",
             "recorded_initial_position_warnings": tuple(warnings)},
         "stock_access_residual": {"status": "pass",
             "scope": "actual-coordinate cylindrical/V composition from virgin stock",

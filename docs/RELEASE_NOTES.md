@@ -11,6 +11,8 @@ Checkpoint date: 2026-10-26. This additive checkpoint connects finite planar
 tool/path selection to source-bound editable native files and a separate audit
 of their complete CamBam-generated posts. It retains the 0.2.0 base-library
 surface and dependency policy. Registry delivery is not implied.
+The [acceptance record](REVIEW.md#native-engine-delivery-bundle---2026-10-26)
+owns the BO01 reuse, native post observations and installed-package evidence.
 
 - `cam_extensions.bundle_search` and `inlay_search` add the bounded BO01 planar,
   mixed-tool and paired-inlay search APIs. Finite budgets, manual choices,
@@ -20,7 +22,9 @@ surface and dependency policy. Registry delivery is not implied.
   `bind_design`, `author`, `NativeDesign` and `NativeDocument`.
   `integrations.cambam.bundle_post.audit_post` checks actual Default-post bytes.
   The [native output contract](structure_spec.md#source-bound-native-bundle-documents-and-posted-motion)
-  owns supported source geometry, motion, stock and freshness boundaries.
+  owns supported source geometry, motion, stock and freshness boundaries,
+  including proved vertical feed continuations and partial retracts between
+  shared path endpoints.
 - `Bundle.design_fingerprint` identifies the independently declared fixed design.
   Existing positional construction remains possible, but an empty or mismatched
   fingerprint cannot enter native binding. Regenerate old/unbound search snapshots;
