@@ -1,5 +1,120 @@
 # Review and acceptance history
 
+## SF01 bounded relief finishing - 2026-10-26
+
+**Implementation and offline consumer acceptance:** engineering accepts the
+bounded contact/stock/finishing outcome described below. Work began from clean
+local `main` at `1e48609` on `feat/sf01-relief-finishing`; implementation milestone
+`edba2dd` adds the 0.4.0 API. The [contract](structure_spec.md#bounded-relief-contact-stock-and-finishing-sf01)
+owns supported behavior, the [runbook](DEVELOPMENT.md#sf01-bounded-relief-finishing)
+owns reproduction, and PROGRESS owns bundle delivery state. Final broader and
+installed verification is recorded below when complete; implementation closure
+alone does not imply merge readiness.
+
+### Correctness and independent evidence
+
+| Claim / owner | Positive and fault-sensitive evidence | Disposition / limit |
+| --- | --- | --- |
+| Cutter-independent cubic/bilinear design and contact (`relief`) | Exact affine-ball offset, interior cubic extrema and curvature, saddle differentials, clipped-grid extrema, dense disk oracle, translation and budget/arithmetic refusals in `test_relief` | Bounded fixed-axis contact accepted; clamped exterior is conservative, grid seams have no unique differential sample. |
+| Continuous cutter protection (`relief_stock`) | Interior-ridge gouge with safe endpoints rejects; unsupported arcs, roles, discontinuities, low rapid, stock/flute and process faults reject in `test_relief_stock` | Directional Lipschitz endpoint margin proves the entire segment; exact tangency can remain unresolved and reject. |
+| Evolving stock and useful removal (`relief_stock`) | Independent straight-sweep envelope/analytic volume, refinement enclosures, point detail, cumulative/retrace witnesses and same-cell gain | Complete entry/cut/retract union accepted; finite pitch can give broad bounds, and no volume is credited twice. |
+| Source, output and physical setup (`ordered_job`, `ordered_output`, occupancy) | Both dialects and both representations; explicitly supplied subprecision coordinates reach stock replay only after decoding; changed bytes/source/revision, mismatched stock/body/fixture, and incompatible sequence metadata reject in `test_relief_finishing` | Complete bounded offline output accepted. Unsupported stock mixtures remain explicit; no native 3D or controller evidence inferred. |
+| Strategy and reusable consumer (`relief_finishing`, demo) | Independent replay of parallel, guided and joined waterline paths; analytic moulding and genuinely two-dimensional bilinear ornament; later-stage positive removal | Slope/feature-guided policy accepted for the measured alternatives. No curvature-based constant-scallop or globally optimal strategy claim. |
+
+Independent review checked the contact and continuous-motion mathematics and
+ran **60 randomized cubic contacts**, including clamped edges, against independent
+scalar extrema at **0.000001 mm** requested tolerance; every result was enclosed.
+It reproduced a floating-point sphere-rim membership discontinuity; the final
+radius inflation/deflation guard encloses it. Sequence composition now checks
+source/frame/translation/stock semantics, and generator proposals coalesce
+four-decimal zero motions before output. Joined contour tests preserve every
+fragment once for shuffled chains, cycles, branches and disconnected components;
+joined cubic/saddle waterlines pass four complete UCCNC/Grbl stock/body audits.
+No unresolved correctness finding remains. Local independent artifacts are
+`output/sf01-review-20261026-7a43/cubic-oracle.json` and `joined-waterline.json`.
+
+The focused owner/caller run passed **65 tests in nine modules, zero skips**, in
+**70.795 s** with Python 3.13.5. Report:
+`output/verification-20261026-124230-f3efe424/report.json`. It includes all
+28 initial geometry/stock/finishing checks plus existing slope, bowl, layered
+volume, ordered output and occupancy checks. The later base-install probe found
+that `ordered_job` eagerly imported Shapely through V/inlay/volume owners. Repair
+`988a12e` loads those existing owners only on their applicable paths; a new
+fresh-process test blocks Shapely/MCP imports and completes both relief output
+dialects. Independent review found no changed old-family dispatch or missing
+local import. The **29 final SF01 tests** include this import-boundary regression;
+the final package and full checkout gates below supersede earlier package results.
+
+### Two representations and measured strategy outcomes
+
+`demos/relief_finishing.py` owns the reproducible application recipe. The analytic
+stock is X=[-2,2], Y=[0,3], depth 1.2 mm, with
+`h(x,y)=-0.55-0.3*x+0.1*x**3`; the ridge at X=-1 is Z=-0.35 and valley at X=1
+is Z=-0.75. The ornament uses X=(-1.5,-1,-0.5,0,0.5,1,1.5),
+Y=(0,0.5,1,1.5,2), depth 1.2, and grid heights
+`-0.55+0.16*cos(pi*x)+0.07*sin(pi*y/2)*(x/1.5)`.
+The bilinear interpolation of those values is the actual design, not a guarantee
+about the trigonometric recipe between samples.
+
+All candidates use a 0.25 mm ball radius, 2 mm flute, contiguous shank to 3 mm
+and 0.5 mm-radius holder to 4 mm, safe Z=2, no fixtures, 240 mm/min cut feed,
+120 mm/min plunge/retract, 10000 rpm and 1 mm absolute axial/entry limits.
+Contact tolerance is 0.001 mm, finish allowance 0.001 mm, stock pitch 0.1 mm,
+and path sampling step 0.04 mm. Guided and waterline XY spacing is 0.3 mm;
+parallel spacing is 0.16 mm; waterline level increment is 0.07 mm. These are
+declared synthetic process values, not material-specific cutting recommendations.
+The same **0.20 mm** whole-domain residual ceiling applies to every candidate.
+
+| Design / strategy | Residual volume interval (mm3) | Maximum thickness upper (mm) | Decoded feed travel (mm) | Estimated minutes | Meets finish ceiling |
+| --- | --- | --- | --- | --- | --- |
+| Valley/ridge guided | [0, 1.366200] | 0.173535 | 144.9338 | 0.989448 | Yes |
+| Valley/ridge parallel | [0, 1.396563] | 0.187154 | 184.2223 | 1.188385 | Yes |
+| Valley/ridge waterline | [0.690090, 2.592648] | 0.750001 | 159.7806 | 1.194979 | No |
+| Bilinear ornament guided | [0, 0.681036] | 0.181957 | 121.1277 | 0.873089 | Yes |
+| Bilinear ornament parallel | [0, 0.642448] | 0.123388 | 115.0533 | 0.779091 | Yes |
+| Bilinear ornament waterline | [0.047851, 1.144473] | 0.751200 | 99.1821 | 0.757407 | No |
+
+Table upper bounds round outward. Time uses decoded feed/rapid distance with
+1200 mm/min rapid, excluding dynamics and installation time. Waterlines join
+unambiguous degree-two endpoints; this is still a bounded comparison baseline,
+not a production contour optimizer. All motions pass cutter/body protection;
+the failed finish rows retain partial coverage instead of acquiring completion
+from contact agreement.
+
+At analytic ridge/valley witnesses (-1,1.5)/(1,1.5), guided residual upper bounds
+are **0.001001 / 0.001301 mm**, versus **0.031777 / 0.032077 mm** for parallel.
+Guided feed travel is **21.3267% lower** at the shared finish ceiling. On the
+ornament, guided witness upper bounds at (-1,1), (0,1), (1,1) are
+**0.019367 / 0.003001 / 0.019414 mm**, versus
+**0.038930 / 0.019922 / 0.034697 mm** for parallel. Guided retains those details
+better, while parallel has a tighter global bound and lower motion cost. This
+counterexample to universal guided superiority is preserved in the application.
+
+The cumulative consumer starts with parallel spacing 0.6 mm, sample step 0.12 mm
+and allowance 0.20 mm, then uses the guided finish above. Prefix residual volume
+changes from **[2.657111, 5.346462]** to **[0, 1.366200] mm3**; same-cell evidence
+proves at least **1.650911 mm3** of useful later-stage removal. A pilot using
+0.001 mm coarse allowance proved only 0.060867 mm3 at this pitch and correctly
+failed the application's 0.1 mm3 acceptance threshold. The explicit roughing
+allowance supplies a meaningful finish workload without weakening that gate.
+All seven source workflows and exact program identities are recorded in
+`output/sf01-20261026-4b9f938d/final-consumer/comparison.json`.
+
+### Delivery verification and evidence reuse
+
+The native writer, native bundle/post adapters, parsers, planar generators and
+BO01/CF02 contracts are unchanged. Their [0.3.0 evidence](#native-engine-delivery-bundle---2026-10-26)
+remains applicable to those native bytes and geometric claims. SF01 does not
+repeat or expand the actual CamBam observations, and installed tests do not
+convert the new direct NC files into actual native/controller evidence.
+
+No user observation is required to close this offline scope: automated analytic,
+fault-sensitive, decoded-output and installed checks supply the relevant evidence.
+Physical machining, load, material finish, arbitrary meshes/overhangs, tapered
+profiles and native Surface/3D MOP posting remain separate named limits. Reopen
+the corresponding boundary for a concrete consumer requiring it; do not extend
+SF01 merely to refine nearby heuristic cases.
+
 ## Native engine delivery bundle - 2026-10-26
 
 **Outcome:** implementation, native post and installed consumer gates are
