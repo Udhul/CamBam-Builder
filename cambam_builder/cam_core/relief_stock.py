@@ -47,7 +47,7 @@ class ReliefOperation:
     tool_id: str
     radius_mm: float
     cutting_length_mm: float
-    target: relief.CubicRelief | relief.HeightField
+    target: relief.Relief
     strategy: str
     pitch_mm: float = 0.1
     contact_tolerance_mm: float = 0.001
@@ -55,8 +55,8 @@ class ReliefOperation:
     def __post_init__(self) -> None:
         if (type(self.name) is not str or not self.name or
                 type(self.tool_id) is not str or not self.tool_id or
-                type(self.target) not in (relief.CubicRelief, relief.HeightField) or
-                self.strategy not in ("parallel", "waterline", "guided", "rest") or
+                type(self.target) not in (relief.CubicRelief, relief.HeightField, relief.ConstructiveSource) or
+                self.strategy not in ("parallel", "waterline", "guided", "rest", "spine", "section") or
                 not all(_finite(value) and value > 0 for value in
                         (self.radius_mm, self.cutting_length_mm, self.pitch_mm,
                          self.contact_tolerance_mm)) or
@@ -76,7 +76,7 @@ def _roundoff(*values: float) -> float:
     return ROUNDING_RELATIVE * max(1.0, *(abs(value) for value in values))
 
 
-def _design_guard(target: relief.CubicRelief | relief.HeightField) -> float:
+def _design_guard(target: relief.Relief) -> float:
     values = [*target.stock_xy, target.stock_depth_mm]
     if type(target) is relief.CubicRelief:
         xmax = max(abs(target.stock_xy[0]), abs(target.stock_xy[2]))
@@ -137,7 +137,7 @@ def _sweep_depth(point: tuple[float, float], a: tuple[float, float, float],
     return result
 
 
-def _grid(target: relief.CubicRelief | relief.HeightField,
+def _grid(target: relief.Relief,
           pitch_mm: float):
     x0, y0, x1, y1 = target.stock_xy
     guard = _design_guard(target)
@@ -175,14 +175,14 @@ def _depth_bounds(point: tuple[float, float], delta: float,
     return lower, upper
 
 
-def residual_at(target: relief.CubicRelief | relief.HeightField,
+def residual_at(target: relief.Relief,
                 cuts: list[tuple], x: float, y: float) -> tuple[float, float]:
     """Residual thickness bracket at a design point for sphere-centre cuts.
 
     ``cuts`` contains ``(start_xyz, end_xyz, radius_mm)`` in the program frame.
     This geometric query does not certify gouge, process or motion provenance.
     """
-    if (type(target) not in (relief.CubicRelief, relief.HeightField) or
+    if (type(target) not in (relief.CubicRelief, relief.HeightField, relief.ConstructiveSource) or
             not all(_finite(value) for value in (x, y)) or
             not target.stock_xy[0] <= x <= target.stock_xy[2] or
             not target.stock_xy[1] <= y <= target.stock_xy[3]):
@@ -207,7 +207,7 @@ def _validate_cuts(cuts: list[tuple]) -> None:
             raise ValueError("positive relief sweep radius required")
 
 
-def _residual(target: relief.CubicRelief | relief.HeightField,
+def _residual(target: relief.Relief,
               cuts: list[tuple], pitch_mm: float, prior_count: int) -> dict:
     volume_low = volume_high = maximum_low = maximum_high = gain_low = 0.0
     worst_rect = None

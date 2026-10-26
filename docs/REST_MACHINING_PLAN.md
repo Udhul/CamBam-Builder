@@ -132,7 +132,11 @@ cost. No new geometry dependency or universal voxel/mesh model is selected here.
 
 ### Constructive geometry and shape-guided CAM (CG01)
 
-**User requirement, 2026-10-26; planned capability, not implemented coverage.**
+**User requirement, 2026-10-26.** The bounded implementation is specified in
+[constructive sources and shape-guided CAM](structure_spec.md#constructive-sources-and-shape-guided-cam-cg01);
+[acceptance evidence](REVIEW.md#constructive-artwork-bundle---2026-10-26) closes the
+first reusable capability below. [PROGRESS](PROGRESS.md#active-work-and-next-priority)
+owns delivery and remaining priorities.
 Decorative friezes and related shapes should retain compact, editable construction
 information that also helps choose tracing paths and depth. The user's Blender
 analogy is meaningful edge flow, quads and modifier-friendly geometry instead of
@@ -154,7 +158,7 @@ model; every discretization, fitting and numerical step needs a declared error
 budget. Fewer controls are useful only while fidelity, continuity, topology and
 editable semantics are preserved, not as an unconditional minimum-vertex score.
 
-Candidate mechanisms to evaluate against concrete consumers, rather than build
+Candidate mechanisms for extensions to evaluate against concrete consumers, rather than build
 as an undemonstrated universal graph system:
 
 - Compact curve networks, analytic segments, profiles swept along spines,

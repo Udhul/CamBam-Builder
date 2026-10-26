@@ -5,6 +5,34 @@ These notes define versioned consumer scope. Package metadata comes from
 [PROGRESS](PROGRESS.md). A version in source or a locally built archive does not
 mean a tag, registry release or public distribution has been delivered.
 
+## 0.7.0 constructive sources and reference artwork
+
+Checkpoint date: 2026-10-26. This additive checkpoint retains compact editable
+construction through bounded relief CAM and native Surface handoff, and adds
+native CADBitmap image registration. Python 3.12/3.13 and dependencies are
+unchanged; both consumers run with the base installation.
+
+- `cam_core.constructive.ConstructiveSource` and `SweptRidge` retain analytic
+  swept profiles, max-union seams, repeats, scale and provenance. JSON loading,
+  bounded sampling and explicit correspondence-based spine fitting preserve the
+  distinction between authored design and derived or reconstructed information.
+- `cam_extensions.relief_finishing.generate` adds `spine` and `section` feature
+  tracing with coverage fill and an optional depth cap. The shared contact and
+  decoded stock verifier checks the original constructive design. Applications
+  call `check_source` with their current source before reusing a job or evidence.
+- `integrations.cambam.native_constructive` retains the editable source inside
+  a derived Surface's native Tag and checks units, identity, placement, geometry
+  and approximation bounds. It authors no new machining carrier or native MOP.
+- `native.bitmap.CADBitmap` and `CBProject.add_bitmap` retain placed reference
+  artwork. `integrations.cambam.bitmap_bundle` explicitly captures, checks and
+  packages image dependencies. Ordinary import/export performs no image IO.
+
+The [constructive contract](structure_spec.md#constructive-sources-and-shape-guided-cam-cg01)
+and [bitmap contract](structure_spec.md#native-bitmap-artwork-registration)
+own supported representations, fidelity and dependency limits. These additions
+do not infer arbitrary image-to-CAD intent, support overhanging surfaces, or
+establish controller/physical cutting acceptance. NC02 remains unchanged.
+
 ## 0.6.0 external-program interchange
 
 Checkpoint date: 2026-10-26. This additive checkpoint introduces native NCFile

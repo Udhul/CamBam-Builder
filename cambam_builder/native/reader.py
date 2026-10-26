@@ -27,6 +27,7 @@ from .cam import (
 from .transformations import identity_matrix, from_cambam_matrix_str # For parsing matrix
 from .region import Region, parse_region_geometry
 from .surface import Surface, surface_geometry_from_xml
+from .bitmap import CADBitmap, bitmap_geometry_from_xml
 from .tags import decode_tag
 
 logger = logging.getLogger(__name__)
@@ -54,6 +55,7 @@ PRIMITIVE_TAG_TO_CLASS = {
     "text": Text,
     "Region": Region,
     "surface": Surface,
+    "bitmap": CADBitmap,
     # Add mappings for other primitive types ("surface", "region", etc.)
 }
 
@@ -1148,6 +1150,8 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
              prim_specific_kwargs = parse_region_geometry(prim_elem)
         elif prim_class is Surface:
              prim_specific_kwargs = surface_geometry_from_xml(prim_elem)
+        elif prim_class is CADBitmap:
+             prim_specific_kwargs = bitmap_geometry_from_xml(prim_elem)
 
     except Exception as e:
         raise CamBamReaderError(f"Invalid geometry for primitive XML ID {xml_id}: {e}") from e

@@ -34,6 +34,7 @@ from .cam import (
 )
 from .region import Region
 from .surface import Surface
+from .bitmap import CADBitmap
 
 logger = logging.getLogger(__name__)
 
@@ -802,6 +803,29 @@ class CamBamProject:
         return primitive
 
     # --- Public API: Concrete Primitive Adders ---
+
+    def add_bitmap(self, layer: Identifiable, source_file: str, *,
+                   position: tuple[float, float, float] = (0.0, 0.0, 0.0),
+                   width: float = 1.0, height: float = 1.0,
+                   identifier: str | None = None, groups: list[str] | None = None,
+                   description: str = "", parent: Identifiable | None = None,
+                   display_bitmap: bool = True, display_vectors: bool = False,
+                   invert: bool = False, threshold: float = 0.4,
+                   smoothing: bool = False, smooth_pixels: float = 3.0,
+                   local_z_offset: float = 0.0) -> CADBitmap | None:
+        """Add external reference artwork without opening or copying its image.
+
+        Position is lower-left XYZ and dimensions are positive drawing units.
+        Relative sources resolve from the eventual .cb directory. Use explicit
+        bitmap dependency capture to check or package the image. Returns None
+        for invalid input, following the other primitive adders.
+        """
+        return self._add_primitive_internal(
+            CADBitmap, layer, identifier, groups, description, parent,
+            source_file=source_file, position=position, width=width, height=height,
+            display_bitmap=display_bitmap, display_vectors=display_vectors,
+            invert=invert, threshold=threshold, smoothing=smoothing,
+            smooth_pixels=smooth_pixels, local_z_offset=local_z_offset)
 
     def add_surface(self, layer: Identifiable, vertices: Sequence[VertexInput],
                     faces: Sequence[tuple[int, int, int]],

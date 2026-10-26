@@ -2590,6 +2590,41 @@ regressions require no repeated manual observation. The
 [acceptance record](REVIEW.md#nr03-native-relief-milestone---2026-10-26) records
 the installed native API observations, exact inputs/results and their limits.
 
+### Constructive artwork bundle
+
+The [constructive source contract](structure_spec.md#constructive-sources-and-shape-guided-cam-cg01)
+and [bitmap contract](structure_spec.md#native-bitmap-artwork-registration)
+own behavior and boundaries. Run focused checks and both base-library consumers:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py --pattern test_constructive.py --pattern test_constructive_cam.py --pattern test_native_constructive.py --pattern test_native_bitmap.py --pattern test_bitmap_bundle.py --pattern test_relief.py --pattern test_relief_stock.py --pattern test_relief_finishing.py
+& .\.venv\Scripts\python.exe demos/constructive_workflow.py
+$BitmapOutput = Join-Path 'output' ('bitmap-' + [guid]::NewGuid().ToString('N').Substring(0,8))
+& .\.venv\Scripts\python.exe demos/native_bitmap_workflow.py $BitmapOutput
+```
+
+The constructive consumer creates a unique ignored output directory with compact
+source JSON, three native resolutions per shape (including a fixed .05-mm
+fidelity ceiling), edited regeneration, decoded programs and comparison evidence.
+Inspect its fixed candidate domain, finish constraint, objective, located detail
+and gains/losses. Its deterministic synthetic
+reconstruction retains input correspondences and reports ground-truth and ambiguous
+cases. Program hashes identify the exact bytes independently decoded and replayed;
+no native/controller runtime is inferred. The bitmap consumer separately checks
+placement/edit/roundtrip and moved exact-byte image dependencies.
+
+Shared native reader and relief verification changes require full checkout
+discovery. Build with `uv build` before package-content checks, and use `--package`
+with the focused patterns above for the Python 3.12/3.13 wheel/sdist matrix. Copy
+the unmodified consumers outside the source tree and run with `-I` under the
+base-only installed interpreter. Logs/results remain under the task's ignored
+output root. Installed native serializer/API observations must cover changed
+bitmap placement/schema or constructive source-envelope claims. Source-bound
+Surface checks require millimeters (including the native XML default) and
+canonical world geometry.
+Native save/reopen does not establish a new machining carrier; no manual
+physical cutting or GUI observation is required for this offline contract.
+
 ### NC02 external-program consumer
 
 The [NC02 contract](structure_spec.md#external-program-native-interchange-nc02)
