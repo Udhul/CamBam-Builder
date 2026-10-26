@@ -215,6 +215,13 @@ Behavior/native/installed evidence is reused for this strictly nonsemantic edit.
 The accepted source SHA-256 is
 `8efb407cd68fe314d16f26901889b6646f09bd5d39730843e3f3f6089ea5c0f9`;
 after cleanup it is `ade3768b6a1fa54c9601538b68fa9233d45ac330b7a6491f03b1f28cc4bfbc7b`.
+The authorized checkout/merge then normalized line endings in 8 identity-bound
+Python files. All 260 accepted source/config identities and both installed
+consumer scripts are either byte identical or equal after CRLF/LF normalization;
+affected Python ASTs including locations are identical. Hash-bound historical
+fixtures are unchanged. These
+mechanical proofs preserve evidence applicability without repeating behavior
+checks; `output/cg01-117bb482/final-source-applicability.json` retains the details.
 
 The final wheel Python 3.12/3.13 and sdist Python 3.12 selection passes **195 tests
 in 24 modules**, with zero skips, plus all four installed/base-only smoke checks:

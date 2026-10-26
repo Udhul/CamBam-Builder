@@ -2,8 +2,10 @@
 
 Status updated 2026-10-26: **CADBitmap artwork registration and CG01 constructive
 geometry/shape-guided CAM are implemented, verified and accepted by engineering.**
-The 0.7.0 bundle is ready to commit on `feat/constructive-artwork`, from local
-`main` at `d0dcaed`; authorized local `--no-ff` delivery is the remaining step.
+The 0.7.0 bundle is delivered on local `main` through authorized `--no-ff`
+merge `f2e0719` (feature `c2ca118` on `feat/constructive-artwork`, base
+`d0dcaed`). The merge preserves the accepted feature tree; source equivalence
+checks confirm verification still applies after checkout line-ending normalization.
 The [consumer checkpoint](RELEASE_NOTES.md#070-constructive-sources-and-reference-artwork)
 owns release scope and the [bundle record](REVIEW.md#constructive-artwork-bundle---2026-10-26)
 owns acceptance evidence. No product decision or external observation is pending.
@@ -33,8 +35,9 @@ decoded-stock comparisons, installed consumers and native observations satisfy
 CADBitmap separately satisfies native placement/save and exact image-dependency
 acceptance. The [bundle review](REVIEW.md#constructive-artwork-bundle---2026-10-26)
 owns measured gains/losses, complete verification and remaining bounds. The
-implementation/acceptance stopping condition is satisfied; local delivery is
-authorized and being completed. NC02 acceptance remains valid.
+implementation, acceptance and authorized local delivery stopping condition is
+satisfied. NC02 acceptance remains valid. No further manual validation is required
+for the accepted offline/native serialization scope.
 
 **Next priority: a native Triangle holding-tab consumer.** After the source/CAM
 and image-registration bundle, close the concrete native parameter/output gap
@@ -44,7 +47,7 @@ This broadens the native foundation for callers; additional constructive shapes,
 fitting families and routing refinements remain conditional on a named consumer
 or contradictory evidence, rather than automatically extending CG01.
 
-This is a good fresh-session breakpoint after local delivery: contracts,
+This is a good fresh-session breakpoint: contracts,
 acceptance, measured limits and next priority are persisted in their owners,
 and the next consumer has a distinct scope. No conversational decision, pending
 test or manual observation is required to resume it.
@@ -179,7 +182,7 @@ outcome using the [strategy checkpoint](WORKFLOW.md#strategy-checkpoint).
 | Delivered on local main at `bb2ff2b` | **SF01** | Complete bounded relief/contact/stock and finishing bundle; [acceptance evidence](REVIEW.md#sf01-bounded-relief-finishing---2026-10-26). |
 | Delivered on local main at `30df33f` | **NR03: bounded native relief interchange** | Complete native Surface/3D MOP, editable source-bound relief and actual-post stock bundle; [acceptance evidence](REVIEW.md#nr03-native-relief-milestone---2026-10-26). |
 | Delivered on local main at `fc86840` | **NC02: external-program consumer** | Editable NCFile, explicit dependency bundles and native empty-value repair; [acceptance evidence](REVIEW.md#nc02-external-program-consumer---2026-10-26). |
-| Accepted; local delivery pending | **CADBitmap + CG01** | Editable constructive sources, shape-guided CAM and native reference artwork; [acceptance evidence](REVIEW.md#constructive-artwork-bundle---2026-10-26). |
+| Delivered on local main at `f2e0719` | **CADBitmap + CG01** | Editable constructive sources, shape-guided CAM and native reference artwork; [acceptance evidence](REVIEW.md#constructive-artwork-bundle---2026-10-26). |
 
 NR03 closes the native relief capability following NC01-A and SF01. Its bounded
 non-overhanging mesh/native-operation stopping condition is satisfied. Further
