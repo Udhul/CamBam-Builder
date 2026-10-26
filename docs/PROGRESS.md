@@ -1,7 +1,8 @@
 # Current status
 
-Status updated 2026-10-26: **CADBitmap artwork registration and CG01 constructive
-geometry/shape-guided CAM are implemented, verified and accepted by engineering.**
+Status updated 2026-10-26: **Native Triangle holding-tab consumer active.**
+CADBitmap artwork registration and CG01 constructive geometry/shape-guided CAM
+remain implemented, verified and accepted by engineering.
 The 0.7.0 bundle is delivered on local `main` through authorized `--no-ff`
 merge `f2e0719` (feature `c2ca118` on `feat/constructive-artwork`, base
 `d0dcaed`). The merge preserves the accepted feature tree; source equivalence
@@ -39,18 +40,20 @@ implementation, acceptance and authorized local delivery stopping condition is
 satisfied. NC02 acceptance remains valid. No further manual validation is required
 for the accepted offline/native serialization scope.
 
-**Next priority: a native Triangle holding-tab consumer.** After the source/CAM
-and image-registration bundle, close the concrete native parameter/output gap
-in [the ordered backlog](#remaining-backlog-in-order). Compare fresh Triangle
-output with the accepted Square behavior, preserving retained-stock semantics.
-This broadens the native foundation for callers; additional constructive shapes,
-fitting families and routing refinements remain conditional on a named consumer
-or contradictory evidence, rather than automatically extending CG01.
-
-This is a good fresh-session breakpoint: contracts,
-acceptance, measured limits and next priority are persisted in their owners,
-and the next consumer has a distinct scope. No conversational decision, pending
-test or manual observation is required to resume it.
+**Active bundle: native Triangle holding-tab consumer.** Author fresh centered,
+moved and five-tab Manual Triangle cutouts, paired with Square controls. Preserve
+the accepted Square consumer and verify complete actual Default posts against
+source intent, ramp geometry and independently sectioned retained stock. Owners:
+`integrations/cambam/native_tabs.py`, its synthetic tests and
+`demos/native_tabs_workflow.py`; [existing Manual contract](structure_spec.md#profilepocket-subtype-and-nested-field-inventory).
+The user authorized autonomous implementation, commits and local merges.
+Stopping condition: document/edit/reopen behavior, fresh native posts, fault-sensitive
+stock/motion checks and required installed checks are accepted and locally merged.
+General ramp replay, other contours/tab modes and physical holding strength are
+outside this bundle. The implementation and synthetic correctness review are
+complete; actual-post calibration and installed checks remain. Native Manual-tab
+loading requires CamBam's application context, which the task-local validation
+host is being adapted to supply. No product decision is pending.
 
 ### Native engine delivery bundle
 
@@ -198,7 +201,6 @@ These are planned or conditional items, not additional active implementation.
 
 | Scope | Promotion trigger and owner |
 | --- | --- |
-| Native Triangle holding-tab consumer | **Next priority.** Produce fresh native Triangle output, compare retained bridges with the accepted Square-tab behavior, and close the bounded native parameter/output gap. Preserve existing Square acceptance; [manual tab evidence](REVIEW.md#manual-profile-tab-native-fixture--2026-09-27) and [native field coverage](NATIVE_COVERAGE.md) define the starting point. Broader tab shapes need a distinct consumer. |
 | Constructive geometry and shape-guided CAM extensions | CG01's first complete reusable capability is accepted. Reopen for a named richer source/reconstruction consumer, unsupported constraint, changed native carrier or a numerical counterexample. [Implemented contract](structure_spec.md#constructive-sources-and-shape-guided-cam-cg01) and [acceptance limits](REVIEW.md#constructive-artwork-bundle---2026-10-26). |
 | Existing engine edge cases | BO01's integrated closed-offset repair covers the tapered-plug zero-length segment. Hard overlap caps, fitted paths and lateral low cleared links need a named consumer and continuous containment/access evidence. [RP01 limits](structure_spec.md#feature-aware-planar-vrest-candidates-rp01). |
 | Further native parameter/shape variants | Native field/state coverage belongs to NC01, not MCP parity. Promote from the [coverage map](NATIVE_COVERAGE.md) for a concrete consumer; CADBitmap placement and image dependencies are accepted, while vectorization/GUI behavior and general Save As rebasing remain unclaimed. |
