@@ -170,6 +170,10 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
         "Version": "0.9.8.0",
         "Name": project.project_name
     })
+    if project.units is not None:
+        root.set("units", project.units)
+    if getattr(project, "_xml_tag", None) is not None:
+        root.append(deepcopy(project._xml_tag))
 
     # Retain imported machining context, including CAM style inheritance.
     # The framework does not evaluate external CamBam style libraries.
@@ -194,6 +198,8 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
 
         # Create the <layer> element itself
         layer_elem = layer.to_xml_element()
+        if getattr(layer, "_xml_tag", None) is not None:
+            layer_elem.append(deepcopy(layer._xml_tag))
         layers_container.append(layer_elem)
 
         # Create the <objects> container within this layer
@@ -274,6 +280,22 @@ def build_xml_tree(project: CamBamProject) -> ET.ElementTree:
             if not emitted_nesting and not _nesting_is_default(part):
                 if generated_nesting is not None:
                     part_elem.append(deepcopy(generated_nesting))
+        if part.nesting_method == "PointList":
+            points = project.get_part_nesting_points(part)
+            if points is None:
+                raise ValueError(f"Part '{part.user_identifier}' PointList nesting requires Points")
+            layer_id = project._primitive_layer_assignment.get(points.internal_id)
+            if (layer_id not in project._layer_order
+                    or points.internal_id not in project._layer_primitive_membership.get(layer_id, set())):
+                raise ValueError(f"Part '{part.user_identifier}' PointList Points are not on an exported layer")
+            # Patch after native subtree preservation so attributes, ordering and
+            # method-specific payload survive while numeric IDs always follow
+            # the current document's owned Points identity.
+            nesting = part_elem.find("Nesting")
+            reference = nesting.find("PointListID")
+            if reference is None:
+                reference = ET.SubElement(nesting, "PointListID")
+            reference.text = str(uuid_to_xml_id[points.internal_id])
         if (hasattr(part, "_xml_tool_diameter_value")
                 and part.default_tool_diameter == part._xml_tool_diameter_value):
             insertion_index = 2  # After the modeled Stock and MachiningOrigin.

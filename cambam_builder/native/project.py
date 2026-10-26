@@ -16,7 +16,7 @@ import uuid
 import weakref
 import logging
 from copy import deepcopy
-from typing import Dict, List, Set, FrozenSet, Tuple, Optional, Union, Type, TypeVar, Any, Sequence
+from typing import Dict, List, Set, FrozenSet, Tuple, Optional, Union, Type, TypeVar, Any, Sequence, Literal
 
 import numpy as np
 
@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 EntityType = TypeVar('EntityType', bound=CamBamEntity)
 # Type for identifiers (UUID, user identifier string, or entity object itself)
 Identifiable = Union[str, uuid.UUID, CamBamEntity]
+DrawingUnits = Literal["Millimeters", "Inches"] | None
 
 
 class CamBamProject:
@@ -47,8 +48,15 @@ class CamBamProject:
     Manages all entities and their relationships within a CamBam project.
     Acts as the central registry and source of truth for the project structure.
     """
-    def __init__(self, project_name: str, default_tool_diameter: float = 6.0):
+    def __init__(self, project_name: str, default_tool_diameter: float = 6.0,
+                 *, units: DrawingUnits = "Millimeters") -> None:
+        """Create a document whose numeric dimensions use the given unit label.
+
+        ``None`` represents unspecified native units. Assigning ``units`` never
+        scales geometry, tool sizes, stock or machining parameters.
+        """
         self.project_name: str = project_name
+        self.units = units
         self.default_tool_diameter: float = default_tool_diameter
         self.output_decimals: int = 9 # Decimal precision when generating the output CamBam xml file
 
@@ -76,6 +84,7 @@ class CamBamProject:
         # MOP <-> Part
         self._mop_part_assignment: Dict[uuid.UUID, uuid.UUID] = {} # MOP UUID -> Part UUID
         self._mop_targets: Dict[uuid.UUID, Union[str, FrozenSet[uuid.UUID]]] = {}
+        self._part_nesting_points: dict[uuid.UUID, uuid.UUID] = {}
         # Note: MOP order within a part is handled by _mop_order_in_part
 
         # Primitive <-> Group (Classification / MOP Targeting)
@@ -92,6 +101,17 @@ class CamBamProject:
         self._cursor: Tuple[float, float] = (0.0, 0.0)
 
         logger.info(f"Initialized CamBamProject: {self.project_name}")
+
+    @property
+    def units(self) -> DrawingUnits:
+        """Native drawing units, or ``None`` when the document is unspecified."""
+        return self._units
+
+    @units.setter
+    def units(self, value: DrawingUnits) -> None:
+        if value is not None and value not in ("Millimeters", "Inches"):
+            raise ValueError("units must be 'Millimeters', 'Inches', or None")
+        self._units: DrawingUnits = value
 
     def clone(self) -> "CamBamProject":
         """Return an independent copy of this project and its entity graph.
@@ -241,6 +261,9 @@ class CamBamProject:
         for mop_id, selection in self._mop_targets.items():
             if not isinstance(selection, str):
                 self._mop_targets[mop_id] = selection - {primitive_uuid}
+        for part_id, points_id in list(self._part_nesting_points.items()):
+            if points_id == primitive_uuid:
+                del self._part_nesting_points[part_id]
 
     def _cleanup_layer_relationships(self, layer_uuid: uuid.UUID):
         """Handles layer removal: unassigns its primitives."""
@@ -253,6 +276,7 @@ class CamBamProject:
 
     def _cleanup_part_relationships(self, part_uuid: uuid.UUID):
         """Handles part removal: unassigns its MOPs."""
+        self._part_nesting_points.pop(part_uuid, None)
         mop_ids_in_part = list(self._mop_order_in_part.pop(part_uuid, []))
         if mop_ids_in_part:
             logger.warning(f"Part {part_uuid} removed. Contained MOPs {mop_ids_in_part} are now unassigned. Consider removing or reassigning them.")
@@ -602,19 +626,30 @@ class CamBamProject:
     def add_part(self, identifier: str, enabled: bool = True, stock_thickness: float = 12.5,
                  stock_width: float = 1220.0, stock_height: float = 2440.0,
                  stock_material: str = "MDF", stock_color: str = "210,180,140",
-                 machining_origin: Tuple[float, float] = (0.0, 0.0),
-                 default_tool_diameter: Optional[float] = None,
-                 default_spindle_speed: Optional[int] = None,
-                 *, target_identifier: Optional[Identifiable] = None,
+                 machining_origin: tuple[float, float] = (0.0, 0.0),
+                 default_tool_diameter: float | None = None,
+                 default_spindle_speed: int | None = None,
+                 *, target_identifier: Identifiable | None = None,
                  place_last: bool = True,
                  nesting_method: str = "None", nesting_rows: int = 1,
                  nesting_columns: int = 1, nesting_spacing: float = 0.0,
                  nesting_grid_order: str = "RightUp",
                  nesting_grid_alternate: bool = False,
-                 stock_offset: Tuple[float, float] = (0.0, 0.0),
+                 stock_offset: tuple[float, float] = (0.0, 0.0),
                  stock_surface: float = 0.0,
-                 stock_present: Optional[bool] = None) -> Optional[Part]:
-        """Creates or updates a part and adds it to the project."""
+                 stock_present: bool | None = None,
+                 nesting_point_list: Identifiable | None = None) -> Part | None:
+        """Create/update a Part, optionally binding PointList nesting to owned Points.
+
+        An omitted layout retains an existing PointList binding. Switching to
+        another nesting method clears it. PointList export requires a binding;
+        it may be assigned later with :meth:`set_part_nesting_points`.
+        """
+        points_id = None
+        if nesting_point_list is not None:
+            points_id = self._resolve_identifier(nesting_point_list, Points)
+            if points_id is None or nesting_method != "PointList":
+                raise ValueError("PointList nesting requires owned Points and nesting_method='PointList'")
         existing_uuid = self._resolve_identifier(identifier, Part)
         if existing_uuid:
             part = self._parts[existing_uuid]
@@ -641,6 +676,10 @@ class CamBamProject:
             if part.internal_id not in self._part_order:
                  pos = self._find_insert_position(target_identifier, self._part_order, place_last)
                  self._part_order.insert(pos, part.internal_id)
+            if nesting_method != "PointList":
+                self._part_nesting_points.pop(part.internal_id, None)
+            elif points_id is not None:
+                self._part_nesting_points[part.internal_id] = points_id
             return part
         else:
             new_part = Part(user_identifier=identifier, enabled=enabled, stock_thickness=stock_thickness,
@@ -659,8 +698,47 @@ class CamBamProject:
             self._part_order.insert(pos, new_part.internal_id)
             # Initialize MOP order registry
             self._mop_order_in_part[new_part.internal_id] = []
+            if points_id is not None:
+                self._part_nesting_points[new_part.internal_id] = points_id
             logger.info(f"Added new part '{identifier}' ({new_part.internal_id})")
             return new_part
+
+    def set_part_nesting_points(self, part: Identifiable,
+                                points: Identifiable | None) -> None:
+        """Bind owned Points to a Part and select PointList nesting.
+
+        Passing None clears the relationship without changing the method.
+        Deleting/transferring the Points also clears it; an active PointList
+        Part must be rebound or switched to another method before export.
+        Invalid identifiers raise ValueError without changing the relationship.
+        """
+        part_id = self._resolve_identifier(part, Part)
+        if part_id is None:
+            raise ValueError("PointList nesting requires an owned Part")
+        if points is None:
+            self._part_nesting_points.pop(part_id, None)
+            return
+        points_id = self._resolve_identifier(points, Points)
+        if points_id is None:
+            raise ValueError("PointList nesting requires an owned Points primitive")
+        self._part_nesting_points[part_id] = points_id
+        self._parts[part_id].nesting_method = "PointList"
+
+    def get_part_nesting_points(self, part: Identifiable) -> Points | None:
+        """Return a Part's bound Points, or None when unbound.
+
+        Invalid Parts or stale/wrong-kind stored references raise ValueError.
+        """
+        part_id = self._resolve_identifier(part, Part)
+        if part_id is None:
+            raise ValueError("PointList nesting requires an owned Part")
+        points_id = self._part_nesting_points.get(part_id)
+        if points_id is None:
+            return None
+        points = self._primitives.get(points_id)
+        if not isinstance(points, Points):
+            raise ValueError("PointList nesting reference must resolve to owned Points")
+        return points
 
     def _add_primitive_internal(self, PrimitiveClass: Type[Primitive],
                                 layer_identifier: Identifiable,

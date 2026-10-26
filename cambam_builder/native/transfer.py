@@ -33,6 +33,7 @@ def _snapshot(project: "CamBamProject") -> Dict[str, object]:
         "_primitive_children_link": {k: set(v) for k, v in project._primitive_children_link.items()},
         "_mop_part_assignment": project._mop_part_assignment.copy(),
         "_mop_targets": project._mop_targets.copy(),
+        "_part_nesting_points": project._part_nesting_points.copy(),
         "_primitive_groups": {k: set(v) for k, v in project._primitive_groups.items()},
         "_primitive_group_membership": {k: set(v) for k, v in project._primitive_group_membership.items()},
         "_identifier_registry": project._identifier_registry.copy(),
@@ -234,6 +235,14 @@ def _copy_tree(source: "CamBamProject", root: "Identifiable", target: "CamBamPro
         ordered_parts = [uid for uid in source._part_order if uid in part_ids]
         if set(ordered_parts) != part_ids:
             raise ValueError("Included parts must have valid source order entries")
+        for part_id in ordered_parts:
+            part = source._parts[part_id]
+            if part.nesting_method == "PointList":
+                points = source.get_part_nesting_points(part)
+                if points is None:
+                    raise ValueError("Included PointList Part has no nesting Points")
+                if points.internal_id not in included_set:
+                    raise ValueError("Included Part nesting Points are outside the primitive subtree")
         entities.extend(source._parts[uid] for uid in ordered_parts)
         ordered_mops: List[uuid.UUID] = []
         for part_id in ordered_parts:
@@ -347,6 +356,9 @@ def _copy_tree(source: "CamBamProject", root: "Identifiable", target: "CamBamPro
             destination["_parts"][new_id] = clones[entity.internal_id]  # type: ignore[index]
             destination["_part_order"].append(new_id)  # type: ignore[union-attr]
             destination["_mop_order_in_part"].setdefault(new_id, [])  # type: ignore[index]
+            if entity.nesting_method == "PointList":
+                points_id = source._part_nesting_points[entity.internal_id]
+                destination["_part_nesting_points"][new_id] = uuid_map[points_id]  # type: ignore[index]
         elif isinstance(entity, Mop):
             destination["_mops"][new_id] = clones[entity.internal_id]  # type: ignore[index]
             part_id = source._mop_part_assignment[entity.internal_id]
@@ -366,6 +378,9 @@ def _copy_tree(source: "CamBamProject", root: "Identifiable", target: "CamBamPro
         source_primitives = {uid: source._primitives[uid] for uid in primitive_ids}
         copied_primitives = set(primitive_ids)
         copied_mops = set(mop_ids)
+        for part_id, points_id in list(source_state["_part_nesting_points"].items()):  # type: ignore[union-attr]
+            if points_id in copied_primitives:
+                source_state["_part_nesting_points"].pop(part_id)  # type: ignore[union-attr]
         for primitive_id in copied_primitives:
             source_state["_primitives"].pop(primitive_id, None)  # type: ignore[union-attr]
             layer_id = source_state["_primitive_layer_assignment"].pop(primitive_id, None)  # type: ignore[union-attr]

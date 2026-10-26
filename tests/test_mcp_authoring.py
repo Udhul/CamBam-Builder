@@ -491,13 +491,14 @@ class AuthoringTests(unittest.TestCase):
                     stock_thickness=0, stock_material="",
                     default_tool_diameter=0,
                     nesting_method="Manual" if index % 2 == 0 else "PointList",
+                    nesting_point_list="nest-locations" if index % 2 else None,
                     nesting_grid_order=order,
                     stock_offset=(12.5, -3.0), stock_surface=7.25,
                 )
             tree = build_xml_tree(source)
             point_xml_id = tree.getroot().find(".//points").get("id")
             point_part = tree.getroot().find("./parts/part[@Name='P1']/Nesting")
-            ET.SubElement(point_part, "PointListID").text = point_xml_id
+            point_part.find("PointListID").text = point_xml_id
             ET.SubElement(point_part, "GCodeOrder").text = "Auto"
             content = ET.tostring(tree.getroot(), encoding="unicode")
 

@@ -4,7 +4,6 @@ import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass, field
-import json
 import logging
 import math
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, TYPE_CHECKING
@@ -13,6 +12,7 @@ import numpy as np
 
 from .core import CamBamEntity
 from .cad import Pline
+from .tags import encode_tag
 
 if TYPE_CHECKING:
     from .project import CamBamProject
@@ -311,6 +311,8 @@ class Mop(CamBamEntity, ABC):
     Abstract Base Class for Machine Operations (MOPs).
     Holds intrinsic machining parameters.
     Targets and part assignment are owned by the project.
+    ``native_tag`` retains operator text separately from framework identity;
+    ``None`` removes the note and export rejects other non-string values.
     """
     # Intrinsic Attributes
     name: str = "MOP" # User-visible name in CamBam UI MOP tree
@@ -333,6 +335,8 @@ class Mop(CamBamEntity, ABC):
     max_crossover_distance: float = 0.7 # Multiplier of tool diameter
     custom_mop_header: str = ""
     custom_mop_footer: str = ""
+    # Opaque operator text, separate from framework identity metadata.
+    native_tag: str | None = field(default=None, kw_only=True)
     # Note: No part_id or _resolved_xml_primitive_ids here. Managed by Project/Writer.
 
     def __setattr__(self, name, value):
@@ -389,7 +393,8 @@ class Mop(CamBamEntity, ABC):
         if tag is None:
             tag = ET.Element("Tag")
             root.insert(1, tag)
-        tag.text = json.dumps({"user_id": self.user_identifier, "internal_id": str(self.internal_id)}, separators=(",", ":"))
+        tag.text = encode_tag({"user_id": self.user_identifier,
+                               "internal_id": str(self.internal_id)}, self.native_tag)
 
         primitive = root.find("primitive")
         if primitive is None:
@@ -511,9 +516,9 @@ class Mop(CamBamEntity, ABC):
     def _add_common_mop_elements(self, mop_root_elem: ET.Element, project: "CamBamProject", resolved_primitive_xml_ids: List[int]):
         """Adds common XML sub-elements shared by all MOP types."""
         ET.SubElement(mop_root_elem, "Name").text = self.name # Use MOP's intrinsic name
-        ET.SubElement(mop_root_elem, "Tag").text = json.dumps({
+        ET.SubElement(mop_root_elem, "Tag").text = encode_tag({
             "user_id": self.user_identifier, "internal_id": str(self.internal_id),
-        })
+        }, self.native_tag)
 
         for field_name, policy in MOP_COMMON_FIELD_POLICIES.items():
             value = getattr(self, field_name)
