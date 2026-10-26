@@ -2,14 +2,16 @@
 
 ## SF01 bounded relief finishing - 2026-10-26
 
-**Implementation and offline consumer acceptance:** engineering accepts the
+**Outcome:** implementation, automated verification and offline consumer
+acceptance are complete. Engineering accepts the
 bounded contact/stock/finishing outcome described below. Work began from clean
-local `main` at `1e48609` on `feat/sf01-relief-finishing`; implementation milestone
+local `main` at `6b3088c` on `feat/sf01-relief-finishing` (the documentation tip
+after the accepted `1e48609` merge); implementation milestone
 `edba2dd` adds the 0.4.0 API. The [contract](structure_spec.md#bounded-relief-contact-stock-and-finishing-sf01)
 owns supported behavior, the [runbook](DEVELOPMENT.md#sf01-bounded-relief-finishing)
-owns reproduction, and PROGRESS owns bundle delivery state. Final broader and
-installed verification is recorded below when complete; implementation closure
-alone does not imply merge readiness.
+owns reproduction, and PROGRESS owns bundle delivery state. Final runtime
+`cb1aeb2` includes the dependency-boundary and two baseline regression repairs;
+the later acceptance commit changes documentation only.
 
 ### Correctness and independent evidence
 
@@ -100,7 +102,97 @@ allowance supplies a meaningful finish workload without weakening that gate.
 All seven source workflows and exact program identities are recorded in
 `output/sf01-20261026-4b9f938d/final-consumer/comparison.json`.
 
+Durable design SHA-256 identities are
+`8f27c48b09d6ca3d1333209f5ccf49d309a5f3ed4730ee1b4f8534b08e2d7652`
+(valley/ridge) and
+`925e8c8374c5a38b9a4043fc7aae16658dcd652b5b11876995c8a38c0cc1c4ef`
+(bilinear ornament). The complete output-set digest is
+`b9549b784c1eeb7d140f6756f648862341a6b500691c2eaf16852b6835c70c54`:
+SHA-256 of compact sorted-key JSON mapping `<design>/<strategy>` and
+`evolving-stock` to their ordered program-SHA arrays. It covers all eight NC
+files. The unmodified consumer script's SHA-256 is
+`d756a68b9beba805cbea4d1d63f4f0c45c09a7b0da33d80db15e505d2646ba7f`.
+
 ### Delivery verification and evidence reuse
+
+Complete checkout discovery was partitioned into four disjoint filename ranges,
+covering **111 modules and 838 tests**. The final disposition is **835 passing,
+three named skips**, with explicit reuse after the two narrow repairs below.
+No failed or interrupted runner report is relabeled as green.
+
+| Discovery scope | Tests | Original result / final disposition | Report under `output/` |
+| --- | --- | --- | --- |
+| `test_[a-d]*.py` | 99 | Pass; unchanged evidence retained | `verification-20261026-125553-415b1acd/report.json` |
+| `test_[e-n]*.py` | 347 | MCP inventory failure repaired; all other modules retained | `verification-20261026-125555-02d33e40/report.json` |
+| `test_[o-r]*.py` | 219 | Optimizer fixture failure repaired; all other modules retained | `verification-20261026-125557-9962ae3a/report.json` |
+| `test_[s-z]*.py` | 173 | Pass; unchanged evidence retained | `verification-20261026-125559-6f879d7a/report.json` |
+
+The original groups took 1304.525, 1655.692, 696.624 and 561.468 seconds
+respectively, running concurrently. The only failures were already present on
+`main`: the optimizer fixture helper injected a duplicate `units` attribute
+after the native writer began owning it, and the MCP parity inventory omitted
+the core `native_tag` note field. Repair `cb1aeb2` removes only the redundant
+attribute insertion and classifies note text as excluded from MCP authoring,
+opaque to typed inspection and outside executable field policies. The
+[MCP parity contract](MCP_CONTRACT.md#frameworkmcp-mop-parity-matrix) records that
+existing surface; schemas, service behavior and native Tag preservation are
+unchanged. Existing regression cases failed before and pass after the repairs.
+
+The final focused run passed **21 tests, zero skips, in 6.135 s** across
+`test_optimizer_corpus`, `test_mcp_mop_parity` and `test_relief_finishing`:
+`output/verification-20261026-132428-25540b64/report.json`. Exact source-input
+comparison finds only the optimizer helper and parity test changed since full
+discovery; all other runtime/test/tool inputs and dependencies match. Repaired
+modules retain identical test-ID inventories. Engineering reuses **109 unchanged
+modules** and replaces the two failing module results with these passing results;
+the complete inventory and hash reconciliation is recorded in
+`output/sf01-20261026-4b9f938d/reconciled-checkout.json`. This is explicit scoped
+evidence reuse, not a fictitious fresh all-green full-run report.
+
+The three skips are the Windows symlink-privilege case (junction/reparse checks
+still run), absent retained M1 native-post input, and absent retained B/C tabbed
+cutout inputs. Those native observations retain their unchanged earlier scope;
+none is a missing SF01 observation. An earlier full-run attempt was stopped when
+the base-import repair changed its inputs and supplies no complete-suite claim.
+
+The repaired `988a12e` runtime passed **147 tests in 15 installed module
+executions, zero skips**, plus four installed smoke gates, in **376.809 s**:
+`output/verification-20261026-125617-82ab5011/report.json`. Wheel installations
+on Python 3.12.10/3.13.5 and independent sdist installation on 3.12.10 each ran
+49 selected tests; the base-only 3.12.10 wheel passed native/optional-boundary
+smoke with Shapely/MCP absent. Full installations use NumPy 2.5.4, Shapely 2.1.2
+and MCP 2.2.0. Archive contents, distributed regressions, version 0.4.0,
+site-packages provenance and the unchanged Python/dependency policy pass.
+The earlier package attempt hit sandbox cache access before building; the first
+successful matrix preceded the base-import repair and is superseded here.
+
+The unmodified application was copied under task output and run with `-I` from
+external empty working directories against the **base-only 3.12** and **full
+3.13** wheels. All **14 installed workflows** passed, including both designs,
+all three candidates and cumulative stock. Their eight NC files are byte-for-byte
+identical to the source consumer's output set above. Installed module provenance,
+commands, script/result hashes and summaries are in
+`output/sf01-20261026-4b9f938d/installed-consumers.json`. This specifically closes
+the base-install failure; it is not inferred from a full installation that happens
+to have Shapely. Source-free tests cover the independent sdist as well.
+
+After the two baseline repairs, the final `cb1aeb2` wheel/sdist matrix passed
+**63 tests in nine installed module executions, zero skips**, plus all four
+smoke gates in **99.145 s**:
+`output/verification-20261026-132456-0466d314/report.json`. It runs the three
+focused modules above in both supported wheels and the independent sdist.
+Installed file hashes differ from the accepted 147-test/consumer artifacts only
+in `integrations/cambam/optimizer_corpus.py`; all relief, output, occupancy and
+consumer dependencies are byte-identical. The earlier math/body tests and all
+14 installed consumer workflows therefore retain their exact scope. These
+overlapping test groups are not summed as unique coverage.
+
+Final artifact SHA-256 values:
+
+- `cambam_builder-0.4.0-py3-none-any.whl`:
+  `b86754956b765c278240c235449685964b120958fc313c7790823b8f2cb1f116`.
+- `cambam_builder-0.4.0.tar.gz`:
+  `a7db2d6fb0314adefb8890548c03bb1e0c3436c00096acc48c155f496e88c169`.
 
 The native writer, native bundle/post adapters, parsers, planar generators and
 BO01/CF02 contracts are unchanged. Their [0.3.0 evidence](#native-engine-delivery-bundle---2026-10-26)
@@ -114,6 +206,15 @@ Physical machining, load, material finish, arbitrary meshes/overhangs, tapered
 profiles and native Surface/3D MOP posting remain separate named limits. Reopen
 the corresponding boundary for a concrete consumer requiring it; do not extend
 SF01 merely to refine nearby heuristic cases.
+
+Correctness review covers the complete branch changes against `main` at
+`6b3088c`; a successful final fetch confirms `origin/main` at the same base.
+No unresolved engineering or user-observation gate remains. Final acceptance
+documentation changes no runtime, test, dependency, package input or consumer
+byte. Delivery is committed on the feature branch; no SF01 merge, push, tag or
+registry publication is implied. The next distinct native consumer is tracked
+in [PROGRESS](PROGRESS.md#post-merge-task-queue), and this is a self-contained
+fresh-session breakpoint.
 
 ## Native engine delivery bundle - 2026-10-26
 
