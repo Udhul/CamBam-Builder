@@ -146,6 +146,11 @@ MOP_XML_FIELD_PATHS: Dict[str, Tuple[str, ...]] = {
     'dwell': ('Dwell',), 'hole_diameter': ('HoleDiameter',),
     'drill_lead_out': ('DrillLeadOut',), 'spiral_flat_base': ('SpiralFlatBase',),
     'lead_out_length': ('LeadOutLength',), 'custom_script': ('CustomScript',),
+    'profile_3d_method': ('Profile3DMethod',), 'resolution': ('Resolution',),
+    'start_corner': ('StartCorner',), 'boundary_method': ('BoundaryMethod',),
+    'boundary_margin': ('BoundaryMargin',), 'backface_culling': ('BackFaceCulling',),
+    'auto_arc_fitting': ('AutoArcFitting',), 'mold': ('Mold',),
+    'additive': ('Additive',), 'backface': ('BackFace',),
 }
 MOP_XML_PATH_TO_FIELD = {path: field for field, path in MOP_XML_FIELD_PATHS.items()}
 
@@ -276,6 +281,17 @@ MOP_ENGRAVE_FIELD_POLICIES: Dict[str, MopSubtypeFieldEncodingPolicy] = {
     'final_depth_increment': MopSubtypeFieldEncodingPolicy(
         ('FinalDepthIncrement',), omit_when_none=True),
     'cut_ordering': MopSubtypeFieldEncodingPolicy(('CutOrdering',)),
+}
+
+
+MOP_SURFACE3D_FIELD_POLICIES: Dict[str, MopSubtypeFieldEncodingPolicy] = {
+    field_name: MopSubtypeFieldEncodingPolicy(MOP_XML_FIELD_PATHS[field_name])
+    for field_name in (
+        'stepover', 'resolution', 'start_corner', 'profile_3d_method',
+        'backface_culling', 'auto_arc_fitting', 'mold', 'additive', 'backface',
+        'cut_ordering', 'milling_direction', 'boundary_method', 'boundary_margin',
+        'roughing_finishing',
+    )
 }
 
 
@@ -431,7 +447,7 @@ class Mop(CamBamEntity, ABC):
                 state = "Default" if current is None else "Value"
             if len(path) == 1 or "state" in element.attrib or path[0] == "LeadInMove":
                 element.set("state", state)
-            element.text = self._format_mop_parameter(current)
+            element.text = self._format_mop_parameter(current, field_name)
             # A nested child edit must opt the native container into Value as
             # well, otherwise CamBam can continue inheriting the whole group.
             for depth in range(1, len(path)):
@@ -441,9 +457,17 @@ class Mop(CamBamEntity, ABC):
         return root
 
     @staticmethod
-    def _format_mop_parameter(value: Any) -> str:
+    def _format_mop_parameter(value: Any, field_name: str | None = None) -> str:
         if value is None:
             return ""
+        if field_name in {'spindle_speed', 'tool_number'}:
+            # CamBam's CBValue<Int32> does not accept decimal lexical forms:
+            # "10000.0" silently deserializes as zero, despite being integral.
+            if (isinstance(value, bool) or not isinstance(value, (int, float))
+                    or not math.isfinite(value) or value != int(value)
+                    or not -(2 ** 31) <= value < 2 ** 31):
+                raise ValueError(f'MOP {field_name} must be a finite Int32 integer')
+            return str(int(value))
         if isinstance(value, bool):
             return str(value).lower()
         return str(value)
@@ -463,7 +487,7 @@ class Mop(CamBamEntity, ABC):
                 element = ET.SubElement(parent, path[-1])
             state = self._xml_parameter_states[field_name]
             element.set("state", state)
-            element.text = self._format_mop_parameter(getattr(self, field_name))
+            element.text = self._format_mop_parameter(getattr(self, field_name), field_name)
             if path[:-1]:
                 ancestor = root.find(path[0])
                 if ancestor is not None:
@@ -530,7 +554,7 @@ class Mop(CamBamEntity, ABC):
                 continue
             ET.SubElement(
                 mop_root_elem, policy.xml_tag, {"state": "Value"}
-            ).text = self._format_mop_parameter(value)
+            ).text = self._format_mop_parameter(value, field_name)
 
         # Add primitive references (using the resolved XML IDs passed by the writer)
         primitive_container = ET.SubElement(mop_root_elem, "primitive")
@@ -983,6 +1007,98 @@ class EngraveMop(Mop):
         self._add_subtype_mop_elements(mop_elem, MOP_ENGRAVE_FIELD_POLICIES)
         self._apply_explicit_parameter_states(mop_elem)
         return mop_elem
+
+
+@dataclass
+class Surface3DMop(Mop):
+    """Native parallel ball finishing over a triangle Surface.
+
+    ``stepover`` and ``resolution`` are fractions of cutter diameter: distance
+    between scanlines and distance between height samples along each scanline.
+    This class authors Horizontal/Vertical, BoundingBox, front-face finishing.
+    Imported fields outside that slice remain opaque native template state;
+    untouched values are preserved rather than interpreted as supported modes.
+    Native generation and posted-motion verification remain separate steps.
+    """
+
+    tool_profile: str = 'BallNose'
+    profile_3d_method: str = 'Horizontal'
+    stepover: float = 0.2
+    resolution: float = 0.1
+    roughing_finishing: str = 'Finishing'
+    start_corner: str = 'BottomLeft'
+    boundary_method: str = 'BoundingBox'
+    boundary_margin: float = 0.0
+    backface_culling: bool = True
+    auto_arc_fitting: bool = False
+    mold: bool = False
+    additive: bool = False
+    backface: bool = False
+    cut_ordering: str = 'LevelFirst'
+    milling_direction: str = 'Mixed'
+
+    def _validate_surface_encoding(self) -> None:
+        """Validate authoring/edits without rewriting unedited native state."""
+        template = getattr(self, '_xml_template', None)
+        baseline = getattr(self, '_xml_parameter_baseline', {})
+        dirty = getattr(self, '_xml_dirty_parameters', set())
+        explicit_states = getattr(self, '_xml_explicit_parameter_states', set())
+
+        def edited(name: str) -> bool:
+            return (template is None or name in dirty or name in explicit_states
+                    or getattr(self, name) != baseline.get(name))
+
+        if (template is not None and edited('profile_3d_method')
+                and baseline.get('profile_3d_method') not in {'Horizontal', 'Vertical'}):
+            raise ValueError('Cannot change an imported unsupported Surface3D profile_3d_method')
+
+        enums = {
+            'profile_3d_method': {'Horizontal', 'Vertical'},
+            'roughing_finishing': {'Finishing'}, 'tool_profile': {'BallNose'},
+            'boundary_method': {'BoundingBox'},
+            'start_corner': {'BottomLeft', 'BottomRight', 'TopLeft', 'TopRight'},
+            'cut_ordering': {'LevelFirst', 'DepthFirst'},
+            'milling_direction': {'Mixed', 'Conventional', 'Climb'},
+        }
+        for name, allowed in enums.items():
+            if edited(name) and getattr(self, name) not in allowed:
+                raise ValueError(f'Unsupported Surface3D {name}: {getattr(self, name)!r}')
+        for name in ('backface_culling', 'auto_arc_fitting', 'mold', 'additive', 'backface'):
+            value = getattr(self, name)
+            if edited(name) and (type(value) is not bool or
+                    (name in {'mold', 'additive', 'backface', 'auto_arc_fitting'} and value)):
+                raise ValueError(f'Unsupported Surface3D {name}: {value!r}')
+        numeric_fields = (
+            'stepover', 'resolution', 'boundary_margin', 'target_depth',
+            'depth_increment', 'stock_surface', 'roughing_clearance',
+            'clearance_plane', 'spindle_speed', 'tool_diameter', 'tool_number',
+            'plunge_feedrate', 'cut_feedrate', 'max_crossover_distance',
+        )
+        optional = {'target_depth', 'depth_increment', 'spindle_speed', 'tool_diameter', 'cut_feedrate'}
+        for name in numeric_fields:
+            if not edited(name):
+                continue
+            value = getattr(self, name)
+            if value is None and name in optional:
+                continue
+            if (isinstance(value, bool) or not isinstance(value, (int, float))
+                    or not math.isfinite(value)):
+                raise ValueError(f'Surface3D {name} must be finite')
+            if name in {'stepover', 'resolution'} and not 0 < value <= 1:
+                raise ValueError(f'Surface3D {name} must be in (0, 1]')
+            if name in {'tool_diameter', 'cut_feedrate', 'plunge_feedrate'} and value <= 0:
+                raise ValueError(f'Surface3D {name} must be positive')
+
+    def to_xml_element(self, project: "CamBamProject", resolved_primitive_xml_ids: List[int]) -> ET.Element:
+        self._validate_surface_encoding()
+        native = self._native_mop_element(project, resolved_primitive_xml_ids)
+        if native is not None:
+            return native
+        element = ET.Element('surface3d', {'Enabled': str(self.enabled).lower()})
+        self._add_common_mop_elements(element, project, resolved_primitive_xml_ids)
+        self._add_subtype_mop_elements(element, MOP_SURFACE3D_FIELD_POLICIES)
+        self._apply_explicit_parameter_states(element)
+        return element
 
 
 @dataclass

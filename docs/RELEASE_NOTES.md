@@ -5,6 +5,42 @@ These notes define versioned consumer scope. Package metadata comes from
 [PROGRESS](PROGRESS.md). A version in source or a locally built archive does not
 mean a tag, registry release or public distribution has been delivered.
 
+## 0.5.0 native relief interchange
+
+Checkpoint date: 2026-10-26. This additive checkpoint connects SF01 bilinear
+reliefs to editable native Surface/3D finishing intent and complete actual-post
+stock auditing. Python 3.12/3.13 and the base/optional dependency split are
+unchanged; the complete NR03 consumer needs neither Shapely nor MCP.
+
+- `native.surface.Surface` and `CBProject.add_surface` expose indexed triangle
+  meshes with editable vertices/faces, native display state, relationship identity
+  and winding-aware XY affine placement plus Z translation.
+- `native.cam.Surface3DMop` and `add_surface3d_mop` add bounded native parallel
+  ball finishing. Imported unsupported methods remain preserved-only.
+- `integrations.cambam.native_relief` provides `mesh_relief`, `ReliefSettings`,
+  `create_document` and `audit_post`. The [contract](structure_spec.md#bounded-native-relief-interchange-nr03)
+  owns numerical, source, setup and posted-motion limits; the
+  [consumer](../demos/native_relief_workflow.py) demonstrates author/reopen/edit.
+- Native `SpindleSpeed` and `ToolNumber` now serialize integral numeric values as integer
+  text. This fixes CamBam silently interpreting `SpindleSpeed=10000.0` as zero.
+  Fractional, nonfinite, boolean and out-of-Int32 authored/edited values reject;
+  untouched imported raw fields retain existing preservation semantics.
+- Native Part stock accepts XY endpoint shorthand as Z=0. This preserves stock
+  dimensions through native saves; malformed endpoints in strict imports reject
+  instead of substituting default stock.
+- Relief stock replay version `bounded-relief-ball-stock-v2` accepts proved
+  vertical rapid withdrawals from cleared feed endpoints without removal credit.
+  Regenerate relief audit reports after upgrading; existing detached path
+  generation is unchanged.
+
+Native automation remains an evidence procedure using the installed application,
+not a new public service or runtime dependency. Fixtures/holders, controllers,
+physical finish, arbitrary mesh-to-relief inference and broader 3D MOP modes
+remain outside this audit. Use the existing
+[installation workflow](#installation-and-environment-compatibility) with version
+`0.5.0`; [NR03 acceptance](REVIEW.md#nr03-native-relief-milestone---2026-10-26)
+owns native and installed verification. No registry publication is implied.
+
 ## 0.4.0 bounded relief finishing
 
 Checkpoint date: 2026-10-26. This additive checkpoint introduces the bounded

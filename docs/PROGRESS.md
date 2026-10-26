@@ -1,69 +1,40 @@
 # Current status
 
-Status updated 2026-10-26: PK01 is delivered on local `main` through authorized
-`--no-ff` merge `2fd43b1` of `feat/pk01-consumer-checkpoint` at `f872d02`. Its
-[acceptance record](REVIEW.md#pk01-consumer-checkpoint---2026-10-26) owns package
-verification and CF02 evidence reuse; [release notes](RELEASE_NOTES.md) define
-the version 0.2.0 consumer scope. CF02 is committed on local `main`; the
-[CF02 acceptance record](REVIEW.md#cf02-manufacturing-composition---2026-10-26)
-owns its verification and scope. The larger autonomous native engine delivery
-bundle is delivered on local `main` through authorized `--no-ff` merge `1e48609`
-of `feat/native-engine-delivery-bundle` at `a8d3b2f`.
-BO01 integration is committed at `9216298`, native implementation at `5afc0f7`,
-shared-endpoint post support at `bb8f5ea` and clearance hardening at `607da15`.
-Implementation, native post and installed consumer acceptance are complete for
-the [0.3.0 checkpoint](RELEASE_NOTES.md#030-native-engine-delivery); the
-[acceptance record](REVIEW.md#native-engine-delivery-bundle---2026-10-26) owns
-results and limits. The merge preserves the accepted feature tree unchanged.
-No push, tag or registry publication was performed.
-NC01-A is delivered on local `main` through the
-authorized `--no-ff` merge of `feat/nc01-a-native-geometry` (reviewed tip
-`dc962a1`) into `6514305`. The SF01 session's successful fetch confirms
-`origin/main` and the SF01 base at `6b3088c`, including CF02, PK01 and the native
-engine bundle. Local `main` now includes the SF01 merge below; it has not been pushed. The
-[merge review](REVIEW.md#nc01-a-merge-review---2026-10-26) records acceptance
-and evidence reuse.
-CF01 remains delivered locally through merge `9289d4b`. The remote inventory below remains the earlier
-audit snapshot at `b400610`; it is not a new remote delivery check. This page owns
-live priority and delivery state. The
-[product direction](structure_spec.md#product-priority-and-library-consumers),
-[implemented contracts](structure_spec.md#0-implemented-architecture-and-change-ownership)
-and [dated audit evidence](REVIEW.md#project-direction-and-foundation-audit---2026-10-26)
-own requirements, behavior and findings respectively.
+Status updated 2026-10-26: **NR03 implementation, automated verification,
+native save/post and installed consumer acceptance are complete.** The accepted
+bundle is on `feat/nr03-native-relief`; local `main` remains the starting base
+`1e06d33` until the authorized merge. The
+[0.5.0 checkpoint](RELEASE_NOTES.md#050-native-relief-interchange) owns consumer
+scope, the [NR03 record](REVIEW.md#nr03-native-relief-milestone---2026-10-26)
+owns evidence, and this page owns delivery state and next priority.
+
+Earlier accepted local integrations remain in the baseline: CF01 `9289d4b`,
+PK01 `2fd43b1` (feature `f872d02`), native engine bundle `1e48609` (feature
+`a8d3b2f`), NC01-A `6514305` (reviewed tip `dc962a1`), and SF01 `bb2ff2b`
+(feature `89e80b7`, base `6b3088c`). Their acceptance owners are linked below.
+The SF01 fetch observed `origin/main` at `6b3088c`; the remote inventory later
+on this page retains its earlier `b400610` audit scope. Neither is a new NR03
+remote-delivery check. No remote publication is part of this local bundle.
 
 ## Active work and next priority
 
 <a id="doc01-documentation-consolidation-backlog"></a>
 
-**PK01 implementation, automated checks and engineering acceptance are complete.**
-The native foundation now has an explicitly versioned consumer contract and
-compatibility notes, with installed wheel/sdist evidence and reusable CF02 proof.
-No manual observation is required for this package/document-authoring checkpoint.
+**NR03 is accepted as one complete autonomous bundle (2026-10-26).** Native
+Surface/3D MOP interchange now connects SF01 bilinear reliefs to the primary
+editable-CamBam workflow. Native save/reopen, edit/export, whole actual-post
+motion/stock and installed consumer gates pass for a controlled ridge and the
+exact original SF01 ornament. The [acceptance record](REVIEW.md#nr03-native-relief-milestone---2026-10-26)
+owns regression reconciliation, numeric results, repairs and remaining limits.
+The stopping condition is met; only the authorized local merge remains.
+No product decision or external observation is outstanding for this scope.
 
-**SF01 implementation, automated verification and engineering acceptance are
-complete and merged into local `main` at `bb2ff2b`.** The authorized `--no-ff`
-merge joins `feat/sf01-relief-finishing` at `89e80b7` to base `6b3088c` and
-preserves the accepted feature tree unchanged. The
-[0.4.0 checkpoint](RELEASE_NOTES.md#040-bounded-relief-finishing) establishes
-bounded relief contact, continuous ball-cutter protection, evolving stock and
-measured finishing comparisons on an analytic valley/ridge and a reusable
-bilinear relief. The [acceptance record](REVIEW.md#sf01-bounded-relief-finishing---2026-10-26)
-owns independent review, full-discovery reconciliation, installed evidence,
-two repaired pre-existing regression gaps and explicit 0.3.0 evidence reuse.
-The stopping condition is met; no product decision or external observation
-blocks this offline scope. Existing verification applies to the identical merged
-tree; no new behavior tests were required. No SF01 push/tag/publication was performed.
-
-This is a good fresh-session breakpoint: contracts, reproducible consumers,
-numeric evidence and remaining limits are persisted. NR03 has a distinct native
-interchange scope and needs no unsaved conversational context.
-
-**Native engine delivery is complete.** Finite search now connects
-to editable source-bound native output, complete actual-post audits and installed
-ornament/front-back consumers. BO01-C and the planned native-library workflow
-close together. SF01 extends that accepted output foundation with bounded
-relief contact/stock and measured shape-aware finishing. Native Surface/3D MOP
-interchange remains the separate next capability.
+**Next priority after this bundle:** select the next concrete unsupported native
+entity/MOP consumer from the [remaining backlog](#remaining-backlog-in-order),
+then bound its native-save, identity/dependency and interchange acceptance.
+Native coverage still serves the primary editable-library workflow; additional
+relief heuristics or surface search remain conditional on measured caller need.
+No adjacent mode or unrelated epic becomes active merely because NR03 closes.
 
 ### Native engine delivery bundle
 
@@ -193,19 +164,15 @@ outcome using the [strategy checkpoint](WORKFLOW.md#strategy-checkpoint).
 | --- | --- | --- |
 | Delivered on local main | **BO01-C + native extended-engine output + manufacturing consumers** | [Accepted bundle](#native-engine-delivery-bundle); versioned search-to-native-library outcome with native and installed evidence. |
 | Delivered on local main at `bb2ff2b` | **SF01** | Complete bounded relief/contact/stock and finishing bundle; [acceptance evidence](REVIEW.md#sf01-bounded-relief-finishing---2026-10-26). |
-| Next, fresh session | **NR03: bounded native relief interchange** | Use the reusable SF01 relief as a controlled native Surface/3D MOP consumer. Establish native-saved mesh/schema and state semantics, import/edit/export fidelity, then actual-post motion/stock evidence. [Native reopening criteria](NATIVE_COVERAGE.md). |
+| Accepted; local merge next | **NR03: bounded native relief interchange** | Complete native Surface/3D MOP, editable source-bound relief and actual-post stock bundle; [acceptance evidence](REVIEW.md#nr03-native-relief-milestone---2026-10-26). |
 
-NC01-A closes the first native slice. Further NC01 classes/preservation and NR03
-Surface/3D interchange are conditional on a concrete consumer and the
+NR03 closes the native relief capability following NC01-A and SF01. Its bounded
+non-overhanging mesh/native-operation stopping condition is satisfied. Further
+native classes, preservation and 3D modes need a concrete consumer and the
 [coverage map's evidence criteria](NATIVE_COVERAGE.md); they do not require
-independent 3D path generation. Detailed engine
+independent 3D path generation. Select the next native coverage consumer before
+deepening detached relief heuristics or surface bundle search. Detailed engine
 proposals stay in the [rest/V design](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers).
-NR03 matters next because it connects the new relief capability to the primary
-editable-CamBam library workflow. More relief heuristics or surface bundle search
-would deepen the detached engine while leaving that native consumer unsupported.
-Stop NR03 at one controlled non-overhanging mesh and bounded 3D operation state
-with native save/reopen and actual-post acceptance; broader variants remain
-explicitly unsupported until required by another consumer.
 
 ## Remaining backlog, in order
 
@@ -270,7 +237,8 @@ Closed arithmetic scope; [evidence and reopening conditions](REVIEW.md#r1-r3-rep
 
 ## Blockers and decisions
 
-CF01 has no outstanding acceptance blocker. Full native parity and production readiness
+NR03 and the earlier accepted milestones have no outstanding acceptance blocker.
+Full native parity and production readiness
 are not established. Required native/controller/physical observations
 are specific to each advertised capability; preserve previous acceptance and do
 not re-request it just because a branch merged.

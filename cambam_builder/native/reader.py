@@ -21,11 +21,12 @@ from .core import Primitive, Vertex
 from .cad import Layer, Pline, Circle, Rect, Arc, Points, Text, Line, Spline
 from .cam import (
     Part, Mop,
-    ProfileMop, PocketMop, EngraveMop, DrillMop,
+    ProfileMop, PocketMop, EngraveMop, DrillMop, Surface3DMop,
     MOP_XML_PATH_TO_FIELD,
 )
 from .transformations import identity_matrix, from_cambam_matrix_str # For parsing matrix
 from .region import Region, parse_region_geometry
+from .surface import Surface, surface_geometry_from_xml
 from .tags import decode_tag
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,7 @@ MOP_TAG_TO_CLASS = {
     "pocket": PocketMop,
     "engrave": EngraveMop,
     "drill": DrillMop,
+    "surface3d": Surface3DMop,
     # Add mappings for other MOP types if implemented (e.g., "lathe", "script")
 }
 
@@ -50,6 +52,7 @@ PRIMITIVE_TAG_TO_CLASS = {
     "points": Points,
     "text": Text,
     "Region": Region,
+    "surface": Surface,
     # Add mappings for other primitive types ("surface", "region", etc.)
 }
 
@@ -242,12 +245,12 @@ def _parse_point_2d(value: Optional[str]) -> Optional[Tuple[float, float]]:
     return None
 
 def _parse_point_3d(value: Optional[str]) -> Optional[Tuple[float, float, float]]:
-    """Safely parse 'x,y,z' strings into (x, y, z)."""
+    """Read native Point3F text; CamBam omits the third coordinate at Z=0."""
     if value is None: return None
     try:
         parts = [float(p.strip()) for p in value.split(',')]
-        if len(parts) == 3:
-            return parts[0], parts[1], parts[2]
+        if len(parts) in (2, 3) and np.isfinite(parts).all():
+            return parts[0], parts[1], parts[2] if len(parts) == 3 else 0.0
     except (ValueError, TypeError, AttributeError):
         pass
     return None
@@ -621,6 +624,10 @@ def _reconstruct_part(project: CamBamProject, part_elem: ET.Element, *, strict: 
         pmax_str = stock_node.findtext("PMax")
         pmin = _parse_point_3d(pmin_str)
         pmax = _parse_point_3d(pmax_str)
+        if strict and (pmin is None or pmax is None):
+            raise CamBamReaderError(
+                f"Part '{name}' Stock PMin/PMax must be finite XY or XYZ coordinates"
+            )
         if pmin and pmax:
             stock_width = abs(pmax[0] - pmin[0])
             stock_height = abs(pmax[1] - pmin[1])
@@ -802,6 +809,24 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
         mop_specific_kwargs["roughing_finishing"] = parameter("RoughingFinishing", parse_string, "Roughing")
         mop_specific_kwargs["final_depth_increment"] = parameter("FinalDepthIncrement", _parse_float, 0.0, True)
         mop_specific_kwargs["cut_ordering"] = parameter("CutOrdering", parse_string, "DepthFirst")
+    elif mop_class is Surface3DMop:
+        for field_name, tag, parser, default in (
+            ('profile_3d_method', 'Profile3DMethod', parse_string, 'Horizontal'),
+            ('stepover', 'StepOver', _parse_float, 0.2),
+            ('resolution', 'Resolution', _parse_float, 0.1),
+            ('roughing_finishing', 'RoughingFinishing', parse_string, 'Finishing'),
+            ('start_corner', 'StartCorner', parse_string, 'BottomLeft'),
+            ('boundary_method', 'BoundaryMethod', parse_string, 'BoundingBox'),
+            ('boundary_margin', 'BoundaryMargin', _parse_float, 0.0),
+            ('backface_culling', 'BackFaceCulling', _parse_bool, True),
+            ('auto_arc_fitting', 'AutoArcFitting', _parse_bool, False),
+            ('mold', 'Mold', _parse_bool, False),
+            ('additive', 'Additive', _parse_bool, False),
+            ('backface', 'BackFace', _parse_bool, False),
+            ('cut_ordering', 'CutOrdering', parse_string, 'LevelFirst'),
+            ('milling_direction', 'MillingDirection', parse_string, 'Mixed'),
+        ):
+            mop_specific_kwargs[field_name] = parameter(tag, parser, default)
     elif mop_class is DrillMop:
         mop_specific_kwargs["drilling_method"] = parameter("DrillingMethod", parse_string, "CannedCycle")
         mop_specific_kwargs["peck_distance"] = parameter("PeckDistance", _parse_float, 0.0)
@@ -1100,6 +1125,8 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
              prim_specific_kwargs["text_content"] = text_content
         elif prim_class is Region:
              prim_specific_kwargs = parse_region_geometry(prim_elem)
+        elif prim_class is Surface:
+             prim_specific_kwargs = surface_geometry_from_xml(prim_elem)
 
     except Exception as e:
         raise CamBamReaderError(f"Invalid geometry for primitive XML ID {xml_id}: {e}") from e

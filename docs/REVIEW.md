@@ -1,5 +1,192 @@
 # Review and acceptance history
 
+## NR03 native relief milestone - 2026-10-26
+
+**Outcome:** implementation, automated verification, native save/post and
+installed consumer acceptance are complete, accepted by engineering. Work began from clean
+`main` at `1e06d33` on `feat/nr03-native-relief`. `8819eba` introduces native
+Surface/3D MOP interchange and the withdrawal proof; `d1fbd9a` adds source-bound
+native relief auditing and native-save repairs. Three Astra workstreams covered
+mesh, MOP/native execution and relief integration, with independent cross-review.
+The [contract](structure_spec.md#bounded-native-relief-interchange-nr03) owns
+behavior; the [runbook](DEVELOPMENT.md#nr03-native-relief-workflow) owns commands.
+
+| Changed claim / owner | Positive and fault-sensitive evidence | Disposition / limits |
+| --- | --- | --- |
+| Indexed mesh / `native.surface` | Independent native XML, strict malformed/index/degeneracy rejection, exact native reflected/sheared/Z-shifted bake comparison; mutable numeric export and rounding collapse tests | Native mesh interchange accepted; no manifold, solid or automatic relief inference |
+| Native operation states / `native.cam`, `reader` | Native omitted/Default-cache/Value observations, edit/reopen tests; unsupported method switches and explicit-state activation reject | Bounded parallel ball finishing; unsupported imported modes preserved-only |
+| Integer and stock interoperability / common encoder, reader | Actual native spindle decimal-to-zero witness repaired; fresh/inherited/edited/state integer tests; native XY Stock endpoint roundtrip and malformed strict rejection | SpindleSpeed/ToolNumber and zero-Z Point3F shorthand repaired across their owning contracts |
+| Project relationships / `project` | Group targeting, parent placement, identities, operator note, two edited roundtrips, clone isolation and copied/baked mesh with MOP references | Same registry/ownership model reused; no parallel document model |
+| Mesh approximation / `native_relief` | Bilinear mixed-term analytic bound, dense triangle oracle, large-coordinate arithmetic witness and unrepresentable-subdivision refusal | Exact source is the bilinear graph; mesh/sampling error never permits overcut |
+| Source and whole-post authority / `native_relief` | Reauthor from target/settings; reject substituted mesh/source/tool/feed, unknown XML, arcs, missing G61, active blending, unsafe rapids, gouge, truncation and insufficient finish | Native-save equivalence admits only evidenced defaults/presentation; caller proof assumptions remain explicit |
+| Vertical withdrawal / `relief_stock` | Endpoint envelope containment; independent 1/3/10 split withdrawals retain identical residual bounds and receive no removal credit; predecessor-free, lateral and descending withdrawals reject | Fixed-axis ball plus above-stock shank only; no general cleared-space travel |
+
+Independent review reproduced and closed two bridge defects before acceptance:
+the decoder's incoming motion-mode assumption initially admitted missing G61;
+the mesh error initially omitted scale-dependent floating arithmetic (a flat
+height near `-1e8` differed by `1.49e-8` against a claimed `5e-10` bound).
+Explicit exact-stop admission and scale-aware padding repair those witnesses.
+Subdivision that collapses finite grid coordinates now rejects before returning
+a mesh. Native-save equivalence was independently attacked with 14 changes to
+units, enabled/state/tool/feed/margin, mesh/winding, fast plunge, stock, nesting
+and unknown fields; all changed its signature. No runtime defect remains from
+those reviews. Tests use self-contained synthetic inputs, not retained posts.
+MCP remains the existing four-family authoring/inspection slice; its mapped
+fields/defaults and schema definitions are unchanged. Its spindle input is
+already integer 1..1000000 and its tool-number pin is 0, within the corrected
+native integer encoding. Surface and Surface3DMop add no MCP authoring promises.
+
+### Installed native schema, saves and actual output
+
+An isolated hidden 32-bit process used installed CamBam CAD **1.0.7364.41819**
+and Geom **1.0.7364.41817**, initialized configuration/styles with settings-save
+disabled, opened the source, called `GenerateToolpaths(file, true)` and
+`MachineOpToGCode(...).GetGCode()` with Default. Both MOPs reported `OK`;
+source/configuration hashes were unchanged, and no UI was created. This is
+actual native output, not synthetic transcription or controller execution.
+Default-post SHA-256:
+`adc3034633f0f6ad6ddc4c9eabc63844cb59173be8ee780ac47e198a7145c263`;
+configuration SHA-256:
+`2077820e148d7a7d6ed6ddde8fc69b62cd255cbf69899ff632b86cf6228234ed`.
+
+Native Surface uses `verts/v` XYZ and `faces/f` zero-based triples. Point3F
+stores doubles despite its name; native XML writes about 15 significant digits.
+ModificationCount 17 became 18 on read and is deliberately not preserved as
+semantic state. Native reflection flips winding. Native readback of Python
+baked/unbaked shear/reflection/Z outputs gave the same vertices
+`[(10,-4,4),(-6,-4,5),(0,14,6),(16,14,5)]`, faces
+`[(0,2,1),(0,3,2)]`, ID 73 and DisplayEdges=true.
+Native MOP probes preserved `StepOver Default` with cache 0.37 and
+`Resolution Value` 0.04. Native metric saves omit `units` because Millimeters
+is the serializer default; the general library reader still distinguishes
+unspecified units. Native Point3F omits zero Z, which exposed the repaired
+Part-stock fallback on library reexport.
+
+The first post exposed two real native differences. `SpindleSpeed=10000.0`
+became `M3 S0`, repaired by integer lexical encoding. With BoundingBox margin
+zero, native center motion extended beyond the mesh. Its first feed endpoint
+`(2.23,-0.2,-0.6236)` was about **0.2436 mm** below the original bilinear
+design's clamped-extension contact at **-0.38 mm**. Setting margin to **-radius**
+keeps this controlled consumer's centers inside the intended rectangle. The
+first attempt was inspected independently; its now-invalid source was not
+passed off as a final audit run.
+
+Both accepted consumers use T1 ball diameter **0.5 mm**, cutting length **2 mm**,
+StepOver **0.2 diameter / 0.1 mm**, Resolution **0.04 diameter / 0.02 mm sampling**,
+allowance **0.02 mm**, boundary margin **-0.25 mm**, clearance **2 mm**,
+cut/plunge feeds **240/120 mm/min**, spindle **10000 rpm**, Horizontal Finishing,
+ExactStop, zero crossover and FastPlungeHeight=0. Independent proof assumptions
+are pitch **0.1 mm**, contact tolerance **0.001 mm**, and maximum virgin stepdown
+and entry depth **1 mm**. Stock depth is **1.2 mm**. Cutting length, proof pitch,
+contact tolerance and entry limit are caller assumptions, not native XML facts.
+
+The [small ridge recipe](../demos/native_relief_workflow.py) is a bilinear design
+on `[0,2] x [0,1.5]` with original 0.5 mm grid spacing. The second case reuses
+the exact `designs()["sampled-ornament"]` from the
+[SF01 consumer](../demos/relief_finishing.py), on `[-1.5,1.5] x [0,2]` at the same
+original spacing. Two subdivisions per cell produce 63/96 vertices/triangles
+and 117/192 respectively. Initial tips are `(-1,-1,2)` and `(-2.5,-1,2)`.
+Sampling recipes are not asserted as continuous designs between samples.
+
+| Measure | Small ridge | Original SF01 ornament |
+| --- | ---: | ---: |
+| Mesh error upper (mm) | 0.001250001 | 0.001031199 |
+| Complete moves / rapid withdrawals | 432 / 14 | 982 / 19 |
+| Feed sweeps / continuous proof splits | 404 / 71 | 944 / 185 |
+| Residual volume interval (mm3) | [0, 0.347277006] | [0, 0.730839647] |
+| Maximum residual thickness interval (mm) | [0, 0.126934495] | [0, 0.136523138] |
+| Removed volume lower (mm3) | 1.194122995 | 2.835893688 |
+| Protected overcut upper (mm3) | 0 | 0 |
+| Minimum shank clearance (mm) | 1.4076 | 1.2813 |
+| Predeclared volume / thickness ceilings | 0.5 mm3 / 0.25 mm | 0.8 mm3 / 0.25 mm |
+
+Both complete audits pass against the actual native-saved candidate bytes.
+Two native save/reopen cycles on the small ridge also produce **439 identical
+noncomment post lines**. Hashes are SHA-256:
+
+| Artifact | Small ridge | Original SF01 ornament |
+| --- | --- | --- |
+| Authored `.cb` | `6ad2be07ebdd717b34fcd7072214d9f46edb239f2c99a025f9bf71bbff1a4c11` | `77e5b2372354b01cd1a75f6235b22fde989bd70488947ed3e2178dfe3e8d8997` |
+| Native-saved `.cb` | `59bd95a5f4dd7f656b1d95c8402fe1dec43bc4de586e31148045f9e6711aec3e` | `77b7bbf30ffbb86d6b0793f320c267666c9c30c48e66b7026af0353986042bc4` |
+| Actual `.nc` | `995525dfe585939f9f14375aefe8349cd90d1000f8f575311aded66b3edafb2f` | `f9215dc3c48775c823596b8f12636b76c82d9291295124754e1608345fa37424` |
+
+The second small-ridge native save is
+`f010e1fedf0825f647967543dea674e20bba3a2a03380156ac7999b897627e2a`;
+its post is `4a9ee9b19b73f01357a463d43b8e986e6e6bd01ecee944771bc6776bae45a676`.
+Native metadata/helpers are under `output/nr03-mop-20261026-01/`, mesh probes
+under `output/nr03-surface-20261026-01/`, and complete audit reports under
+`output/nr03-relief-20261026-bridge-v2/` and
+`output/nr03-relief-20261026-sf01/`. These ignored artifacts are supporting
+evidence only; the recipes, parameters, hashes and conclusions above survive
+a fresh checkout. No versioned `.cb`/`.nc` fixture was introduced.
+
+### Final regression and installed consumer verification
+
+Full checkout discovery covered **115 modules and 865 tests: 862 passed and
+three named skips**, with exact engineering reconciliation of a distribution
+inventory change. The four concurrent filename partitions were:
+
+| Scope | Modules / tests | Wall seconds | Report under `output/` |
+| --- | ---: | ---: | --- |
+| `test_[a-d]*.py` | 11 / 99 | 1388.080 | `verification-20261026-141756-6e3186f3/report.json` |
+| `test_[e-n]*.py` | 54 / 373 | 1746.691 | `verification-20261026-141756-3ad117b8/report.json` |
+| `test_[o-r]*.py` | 27 / 220 | 827.933 | `verification-20261026-141756-fe8709d7/report.json` |
+| `test_[s-z]*.py` | 23 / 173 | 653.878 | `verification-20261026-141756-20b7d192/report.json` |
+
+Every module completed with return code zero and a passing worker record.
+The runner correctly retained top-level **incomplete** status because the
+concurrent package build refreshed setuptools' generated source inventory.
+The final distribution-file probe added exactly `native/surface.py` and
+`integrations/cambam/native_relief.py`; both already appeared with the same
+SHA-256 in every initial source identity. All existing inventory entries,
+runtime/test/tool/config bytes, interpreter and dependency identities are
+unchanged. The reconciliation verifies each hashed worker record, completion,
+selected test IDs, outcomes, retained observation inputs and complete disjoint
+module coverage. Independent review confirmed the interpretation and the
+completed s-z records. The resulting engineering acceptance is recorded in
+`output/nr03-delivery-20261026-b6a7e2/reconciled-checkout.json`; no original
+incomplete report is relabeled as green. The runbook now sequences package
+build before checkout discovery to avoid this bookkeeping mismatch.
+
+The skips are unavailable Windows symlink privilege (junction/reparse tests run),
+absent retained M1 post, and absent retained B/C tabbed-cutout observations.
+Their previous observation scopes remain unchanged; none is an NR03 gate.
+The first short broad native-run attempt was stopped while the native integer
+repair was changing inputs and is not passing evidence. The completed full
+discovery above uses the stable runtime and includes the required MCP modules.
+
+The clean installed matrix passed **108 tests in 15 module executions, zero
+skips**, plus four installed smoke gates, in **247.306 s**. It ran the five
+focused NR03/stock modules in Python **3.12.10** and **3.13.5** wheels and an
+independent Python 3.12.10 sdist; each executed **36 tests**. NumPy is **2.5.4**;
+full environments also contain Shapely **2.1.2** and MCP **2.2.0**. Archive
+contents, site-packages import provenance, distributed tests, version 0.5.0 and
+base-only absence boundaries passed. Report:
+`output/verification-20261026-141943-ffa1b917/report.json`.
+The prior package attempt failed on sandbox access to uv's cache before build;
+the authorized retry above supplies the complete evidence.
+
+The unchanged consumer was copied outside the source import path and run with
+`-I` from external empty working directories against the **base-only 3.12** and
+**full 3.13** wheels. Both completed author/reopen/edit and actual native-post
+audit, with stock reports exactly matching the small-ridge reference above.
+The base environment contains no Shapely or MCP. Provenance, commands, hashes
+and reports are in `output/nr03-delivery-20261026-b6a7e2/installed-consumers.json`.
+The fast selected tests take at most 1.586 s per installed module here; the
+documented five-module gate avoids repeating unrelated search/inlay calculations
+during ordinary NR03 development. No new test framework or dependency was added.
+
+Built wheel SHA-256:
+`e5fef366170e61c8a9033ae2a68ed0a5c2ea14f3e95e6e12d2be59decc5460cd`;
+sdist SHA-256:
+`543e67f7765e53e919115100d7c933d3946037f9ffee5ae666ecd6b6a5b241c8`.
+Documentation-only closure follows those builds; the tested runtime is unchanged.
+
+No controller, physical-cut, holder/fixture,
+load/dynamics, roughing/waterline or general mesh-to-relief claim is made.
+The native API observations supply the missing external evidence for this
+bounded milestone; no additional user observation is needed for that scope.
+
 ## SF01 bounded relief finishing - 2026-10-26
 
 **Outcome:** implementation, automated verification and offline consumer
