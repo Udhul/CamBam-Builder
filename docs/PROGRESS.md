@@ -1,9 +1,10 @@
 # Current status
 
 Status updated 2026-10-26: **NR03 implementation, automated verification,
-native save/post and installed consumer acceptance are complete.** The accepted
-bundle is on `feat/nr03-native-relief`; local `main` remains the starting base
-`1e06d33` until the authorized merge. The
+native save/post and installed consumer acceptance are complete.** Delivered
+on local `main` through authorized `--no-ff` merge `30df33f` of
+`feat/nr03-native-relief` at `bd6730d` into base `1e06d33`. The merge preserves
+the accepted feature tree and verified source bytes. The
 [0.5.0 checkpoint](RELEASE_NOTES.md#050-native-relief-interchange) owns consumer
 scope, the [NR03 record](REVIEW.md#nr03-native-relief-milestone---2026-10-26)
 owns evidence, and this page owns delivery state and next priority.
@@ -26,8 +27,13 @@ editable-CamBam workflow. Native save/reopen, edit/export, whole actual-post
 motion/stock and installed consumer gates pass for a controlled ridge and the
 exact original SF01 ornament. The [acceptance record](REVIEW.md#nr03-native-relief-milestone---2026-10-26)
 owns regression reconciliation, numeric results, repairs and remaining limits.
-The stopping condition is met; only the authorized local merge remains.
+The stopping condition is met and the authorized local merge is complete.
 No product decision or external observation is outstanding for this scope.
+
+This is a good fresh-session breakpoint: the editable native relief workflow is
+implemented, verified and accepted, with contracts, reproducible recipes and
+evidence in their owners. The next native consumer has a distinct scope and
+needs no unsaved session context. No further NR03 work is pending.
 
 **Next priority after this bundle:** select the next concrete unsupported native
 entity/MOP consumer from the [remaining backlog](#remaining-backlog-in-order),
@@ -164,7 +170,7 @@ outcome using the [strategy checkpoint](WORKFLOW.md#strategy-checkpoint).
 | --- | --- | --- |
 | Delivered on local main | **BO01-C + native extended-engine output + manufacturing consumers** | [Accepted bundle](#native-engine-delivery-bundle); versioned search-to-native-library outcome with native and installed evidence. |
 | Delivered on local main at `bb2ff2b` | **SF01** | Complete bounded relief/contact/stock and finishing bundle; [acceptance evidence](REVIEW.md#sf01-bounded-relief-finishing---2026-10-26). |
-| Accepted; local merge next | **NR03: bounded native relief interchange** | Complete native Surface/3D MOP, editable source-bound relief and actual-post stock bundle; [acceptance evidence](REVIEW.md#nr03-native-relief-milestone---2026-10-26). |
+| Delivered on local main at `30df33f` | **NR03: bounded native relief interchange** | Complete native Surface/3D MOP, editable source-bound relief and actual-post stock bundle; [acceptance evidence](REVIEW.md#nr03-native-relief-milestone---2026-10-26). |
 
 NR03 closes the native relief capability following NC01-A and SF01. Its bounded
 non-overhanging mesh/native-operation stopping condition is satisfied. Further

@@ -182,6 +182,15 @@ sdist SHA-256:
 `543e67f7765e53e919115100d7c933d3946037f9ffee5ae666ecd6b6a5b241c8`.
 Documentation-only closure follows those builds; the tested runtime is unchanged.
 
+Delivery checks compared the exact base-to-feature diff, required a clean
+three-commit feature branch and confirmed the merge tree equals its accepted
+tip. Windows checkout changed only line endings in seven new Python files;
+their exact verified bytes were restored with unchanged Git blob content.
+All **249** source/test/tool/config/demo hashes then matched the pre-merge
+snapshot, and Git was clean. Identity evidence is in
+`output/nr03-delivery-20261026-b6a7e2/delivered-source.json`; no new behavior
+run was needed for the unchanged merged runtime. PROGRESS owns the merge IDs.
+
 No controller, physical-cut, holder/fixture,
 load/dynamics, roughing/waterline or general mesh-to-relief claim is made.
 The native API observations supply the missing external evidence for this
