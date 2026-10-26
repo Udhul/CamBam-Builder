@@ -2,8 +2,9 @@
 
 Status updated 2026-10-26: **NC02 implementation, automated verification,
 native save/inclusion and installed consumer acceptance are complete.** The
-accepted feature is on `feat/nc02-ncfile-consumer`, based on `fcacbd8`, with
-the user-authorized local `--no-ff` merge pending final delivery checks. The
+accepted feature `e7c21a9` on `feat/nc02-ncfile-consumer` is delivered on local
+`main` through authorized `--no-ff` merge `fc86840`, based on `fcacbd8`. The merge
+preserves the accepted feature tree and verified source bytes. The
 [0.6.0 checkpoint](RELEASE_NOTES.md#060-external-program-interchange) owns consumer
 scope, the [NC02 record](REVIEW.md#nc02-external-program-consumer---2026-10-26)
 owns evidence, and this page owns delivery state and next priority.
@@ -27,7 +28,7 @@ all direct source dependencies and move the complete portable bundle. Native
 save/edit/post acceptance also repaired a shared empty-parameter serialization
 defect. The [acceptance record](REVIEW.md#nc02-external-program-consumer---2026-10-26)
 owns independent review, actual native evidence and installed checks.
-Implementation and acceptance are complete; local delivery is pending as above.
+Implementation, acceptance and authorized local delivery are complete.
 No product choice or external observation is outstanding. Controller/physical
 execution and a general NC interpreter remain outside this completed scope.
 
@@ -39,7 +40,7 @@ and an explicit image dependency policy; NCFile integrity does not establish
 image semantics. ScriptEntity execution, further 3D modes and detached relief
 heuristics remain conditional on a stronger concrete consumer.
 
-After the authorized local merge this is a good fresh-session breakpoint:
+This is a good fresh-session breakpoint:
 NC02 is a coherent accepted outcome, its contracts/limits/evidence are persisted,
 and the next image consumer has a distinct scope with no unsaved context.
 
@@ -172,7 +173,7 @@ outcome using the [strategy checkpoint](WORKFLOW.md#strategy-checkpoint).
 | Delivered on local main | **BO01-C + native extended-engine output + manufacturing consumers** | [Accepted bundle](#native-engine-delivery-bundle); versioned search-to-native-library outcome with native and installed evidence. |
 | Delivered on local main at `bb2ff2b` | **SF01** | Complete bounded relief/contact/stock and finishing bundle; [acceptance evidence](REVIEW.md#sf01-bounded-relief-finishing---2026-10-26). |
 | Delivered on local main at `30df33f` | **NR03: bounded native relief interchange** | Complete native Surface/3D MOP, editable source-bound relief and actual-post stock bundle; [acceptance evidence](REVIEW.md#nr03-native-relief-milestone---2026-10-26). |
-| Accepted; local merge pending | **NC02: external-program consumer** | Editable NCFile, explicit dependency bundles and native empty-value repair; [acceptance evidence](REVIEW.md#nc02-external-program-consumer---2026-10-26). |
+| Delivered on local main at `fc86840` | **NC02: external-program consumer** | Editable NCFile, explicit dependency bundles and native empty-value repair; [acceptance evidence](REVIEW.md#nc02-external-program-consumer---2026-10-26). |
 
 NR03 closes the native relief capability following NC01-A and SF01. Its bounded
 non-overhanging mesh/native-operation stopping condition is satisfied. Further

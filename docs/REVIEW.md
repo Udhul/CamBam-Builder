@@ -135,6 +135,11 @@ the installed copied-demo hash also matches the delivered script. Wheel SHA-256
 is `1b6bf71da40f820f3e701483d5c7aeebc151ff5d591a659e75afc1c3d4738762`;
 sdist is `cde98b7fd9169fc1acf9d3b4542f8c9ba57d642b4fc8aa12a5cee036d896976c`.
 Delivery bookkeeping/docs after those checks do not change runtime behavior.
+After the local merge, Git's Windows checkout changed only line endings in four
+new Python files. Their exact tested bytes were restored with unchanged Git blob
+content. All 251 source identities and the copied-demo hash match both final
+gates; no behavior rerun was needed. Task-local delivery evidence is in
+`output/nc02-delivery-20261026-a1/delivery-check.json`.
 
 The stopping condition is satisfied. No user observation remains necessary for
 this bounded native document/text-inclusion scope. Whole-program modal safety,
