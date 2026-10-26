@@ -2590,6 +2590,42 @@ regressions require no repeated manual observation. The
 [acceptance record](REVIEW.md#nr03-native-relief-milestone---2026-10-26) records
 the installed native API observations, exact inputs/results and their limits.
 
+### NC02 external-program consumer
+
+The [NC02 contract](structure_spec.md#external-program-native-interchange-nc02)
+separates native references from explicit dependency capture. Run the focused
+entity/dependency checks and the self-contained base-library consumer:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py --pattern test_native_ncfile.py --pattern test_ncfile_bundle.py
+$NCFileOutput = Join-Path 'output' ('ncfile-' + [guid]::NewGuid().ToString('N').Substring(0,8))
+& .\.venv\Scripts\python.exe demos/native_ncfile_workflow.py $NCFileOutput
+```
+
+The example requires a new output directory. It creates a synthetic supplied NC
+fragment, two native Engraves around an NCFile operation, portable and edited
+bundles, and `report.json`. Inspect all ten checks and both integrity reports.
+Copy the script outside the checkout and run with an installed base library for
+consumer acceptance. No Shapely, MCP or native installation is needed for these
+checks. A portable directory must move with its `sources/` and manifest; saving
+only its `.cb` elsewhere does not relocate dependencies.
+
+Shared reader/MOP/relationship changes also select the affected interchange,
+strict import, MOP identity/parameter/context, clone/copy, export and MCP checks
+under [the native runbook](#native-interchange-integrity-checks). Build before
+checkout runner invocation when package contents change. For this new package
+module, run the installed matrix with both focused patterns above and inspect
+the base-only copied consumer separately.
+
+New native schema/inclusion claims require actual installed observations. Before
+native generation, verify source existence and bytes; a missing source stalled
+the recorded native probe. Generate the complete mixed-job post, check every
+supplied source line in order between the two native operations, and perform
+native-save/library-edit/native-save cycles retaining framework UUIDs, modes,
+order and relative references. The [NC02 record](REVIEW.md#nc02-external-program-consumer---2026-10-26)
+owns observed parameters, hashes, limitations and acceptance. Text inclusion
+does not certify modal continuity, backplot interpretation or machine safety.
+
 ### Packet 3 spherical-bowl ball finish and rest
 
 Run the detached synthetic regression from the repository root:

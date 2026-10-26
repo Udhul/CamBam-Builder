@@ -1,48 +1,47 @@
 # Current status
 
-Status updated 2026-10-26: **NR03 implementation, automated verification,
-native save/post and installed consumer acceptance are complete.** Delivered
-on local `main` through authorized `--no-ff` merge `30df33f` of
-`feat/nr03-native-relief` at `bd6730d` into base `1e06d33`. The merge preserves
-the accepted feature tree and verified source bytes. The
-[0.5.0 checkpoint](RELEASE_NOTES.md#050-native-relief-interchange) owns consumer
-scope, the [NR03 record](REVIEW.md#nr03-native-relief-milestone---2026-10-26)
+Status updated 2026-10-26: **NC02 implementation, automated verification,
+native save/inclusion and installed consumer acceptance are complete.** The
+accepted feature is on `feat/nc02-ncfile-consumer`, based on `fcacbd8`, with
+the user-authorized local `--no-ff` merge pending final delivery checks. The
+[0.6.0 checkpoint](RELEASE_NOTES.md#060-external-program-interchange) owns consumer
+scope, the [NC02 record](REVIEW.md#nc02-external-program-consumer---2026-10-26)
 owns evidence, and this page owns delivery state and next priority.
 
-Earlier accepted local integrations remain in the baseline: CF01 `9289d4b`,
+Earlier accepted local integrations remain in the baseline: NR03 `30df33f`
+(feature `bd6730d`, base `1e06d33`), CF01 `9289d4b`,
 PK01 `2fd43b1` (feature `f872d02`), native engine bundle `1e48609` (feature
 `a8d3b2f`), NC01-A `6514305` (reviewed tip `dc962a1`), and SF01 `bb2ff2b`
 (feature `89e80b7`, base `6b3088c`). Their acceptance owners are linked below.
-The SF01 fetch observed `origin/main` at `6b3088c`; the remote inventory later
-on this page retains its earlier `b400610` audit scope. Neither is a new NR03
-remote-delivery check. No remote publication is part of this local bundle.
+The NC02 fetch observed `origin/main` at `fcacbd8`; the remote inventory later
+on this page retains its earlier `b400610` audit scope. No remote publication
+is part of this local bundle.
 
 ## Active work and next priority
 
 <a id="doc01-documentation-consolidation-backlog"></a>
 
-**NC02: editable external-program consumer — active (2026-10-26).** Add the
-native NCFile MOP so an application can combine a supplied NC program with
-ordinary native operations in one editable Part. This closes a concrete native
-class gap and tests external dependency handling without expanding detached
-machining engines or requiring controller execution. NR03 remains accepted;
-its [record](REVIEW.md#nr03-native-relief-milestone---2026-10-26) owns that evidence.
+**NC02 is accepted by engineering (2026-10-26).** Applications can combine
+native operations and supplied NC programs in an editable job, capture/check
+all direct source dependencies and move the complete portable bundle. Native
+save/edit/post acceptance also repaired a shared empty-parameter serialization
+defect. The [acceptance record](REVIEW.md#nc02-external-program-consumer---2026-10-26)
+owns independent review, actual native evidence and installed checks.
+Implementation and acceptance are complete; local delivery is pending as above.
+No product choice or external observation is outstanding. Controller/physical
+execution and a general NC interpreter remain outside this completed scope.
 
-The autonomous bundle owns native model/reader/project integration, an explicit
-source-dependency boundary in `integrations.cambam`, a self-contained mixed-job
-consumer, and a versioned installed checkpoint. Import/save must not implicitly
-read or execute external files. Acceptance requires observed native schema,
-save/reopen and actual inclusion behavior; targetless Part/order/identity and
-clone tests; explicit missing/changed dependency rejection; source provenance;
-affected regression/MCP checks and installed Python 3.12/3.13 consumers.
-Inspect native optimizer behavior before making an applicability claim.
+**Next priority:** scope CADBitmap artwork registration from the
+[remaining backlog](#remaining-backlog-in-order). This advances native entity
+coverage for applications that retain a visual reference alongside editable
+machining geometry. It needs independent native image-placement/save evidence
+and an explicit image dependency policy; NCFile integrity does not establish
+image semantics. ScriptEntity execution, further 3D modes and detached relief
+heuristics remain conditional on a stronger concrete consumer.
 
-Stopping condition: the complete consumer is implemented, independently reviewed,
-verified and accepted for document interchange/inclusion, with limits recorded
-and an authorized local `--no-ff` merge. Physical/controller execution and a
-general NC interpreter remain outside this bundle. No product decision is
-outstanding. The user authorized work, commits and local merges on 2026-10-26;
-remote publication is not part of that authorization.
+After the authorized local merge this is a good fresh-session breakpoint:
+NC02 is a coherent accepted outcome, its contracts/limits/evidence are persisted,
+and the next image consumer has a distinct scope with no unsaved context.
 
 ### Native engine delivery bundle
 
@@ -173,6 +172,7 @@ outcome using the [strategy checkpoint](WORKFLOW.md#strategy-checkpoint).
 | Delivered on local main | **BO01-C + native extended-engine output + manufacturing consumers** | [Accepted bundle](#native-engine-delivery-bundle); versioned search-to-native-library outcome with native and installed evidence. |
 | Delivered on local main at `bb2ff2b` | **SF01** | Complete bounded relief/contact/stock and finishing bundle; [acceptance evidence](REVIEW.md#sf01-bounded-relief-finishing---2026-10-26). |
 | Delivered on local main at `30df33f` | **NR03: bounded native relief interchange** | Complete native Surface/3D MOP, editable source-bound relief and actual-post stock bundle; [acceptance evidence](REVIEW.md#nr03-native-relief-milestone---2026-10-26). |
+| Accepted; local merge pending | **NC02: external-program consumer** | Editable NCFile, explicit dependency bundles and native empty-value repair; [acceptance evidence](REVIEW.md#nc02-external-program-consumer---2026-10-26). |
 
 NR03 closes the native relief capability following NC01-A and SF01. Its bounded
 non-overhanging mesh/native-operation stopping condition is satisfied. Further
@@ -188,6 +188,7 @@ These are conditional/deferred items, not additional active work.
 
 | Scope | Promotion trigger and owner |
 | --- | --- |
+| Native CADBitmap artwork registration | **Recommended next scope.** Use a synthetic image beside editable geometry; establish native placement, save/reopen, identity and external-image dependency behavior before choosing the API. This is the next concrete unsupported native entity consumer, not image-to-toolpath generation. [Coverage requirement](NATIVE_COVERAGE.md#geometry-classes-and-drawing-commands). |
 | Existing engine edge cases | BO01's integrated closed-offset repair covers the tapered-plug zero-length segment. Hard overlap caps, fitted paths and lateral low cleared links need a named consumer and continuous containment/access evidence. [RP01 limits](structure_spec.md#feature-aware-planar-vrest-candidates-rp01). |
 | Further native parameter/shape variants | Broader tab geometry and fresh Triangle output need named native observations; retain accepted Square-tab evidence. [Manual tab evidence](REVIEW.md#manual-profile-tab-native-fixture--2026-09-27). Native field/state coverage belongs to NC01, not MCP parity. |
 | Full independent G-code / optional native automation bridge | Future capability with explicit controller/post semantics and actual runtime acceptance where claimed. Existing bounded adapters stay supported; native `.cb` export and core engine development must not wait. [Execution boundary](REST_MACHINING_PLAN.md#programmatic-execution-requirement). |
@@ -245,7 +246,7 @@ Closed arithmetic scope; [evidence and reopening conditions](REVIEW.md#r1-r3-rep
 
 ## Blockers and decisions
 
-NR03 and the earlier accepted milestones have no outstanding acceptance blocker.
+NC02, NR03 and the earlier accepted milestones have no outstanding acceptance blocker.
 Full native parity and production readiness
 are not established. Required native/controller/physical observations
 are specific to each advertised capability; preserve previous acceptance and do
@@ -271,7 +272,6 @@ and [verification](REVIEW.md#export-failure-and-state-path-verification).
 
 ## Completion and verification
 
-PK01 is merged with its accepted evidence unchanged. The larger native engine
-delivery bundle is in progress; continue across internal milestones under the
-user's autonomous-work authorization. Its native-output contract, current probes
-and acceptance results must be persisted before any later session handoff.
+The [current status and next priority](#active-work-and-next-priority) own delivery
+and remaining work. Accepted evidence remains in its linked REVIEW record;
+earlier completed bundles are not active merely because historical plans remain.

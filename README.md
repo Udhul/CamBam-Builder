@@ -21,7 +21,7 @@ python -m pip install .
 Install `".[planar]"` when using the Shapely-backed planar engines. The base library
 needs neither CamBam installed nor an MCP server for document authoring. This is a
 source installation instruction, not a claim that a release is published on PyPI.
-The [0.5.0 consumer checkpoint and compatibility notes](docs/RELEASE_NOTES.md#050-native-relief-interchange)
+The [0.6.0 consumer checkpoint and compatibility notes](docs/RELEASE_NOTES.md#060-external-program-interchange)
 define the accepted scope, public imports and upgrade expectations.
 For development use [the environment and verification runbook](docs/DEVELOPMENT.md#environment-and-setup).
 
@@ -56,6 +56,14 @@ The [board example](demos/native_board.py) demonstrates editing and reopening a
 complete direct-library job. Unsupported native classes and arbitrary unknown
 XML still have limits; the [native coverage map](docs/NATIVE_COVERAGE.md)
 distinguishes current support from the full-coverage goal.
+
+An editable job can also include caller-supplied NC text using
+`add_ncfile_mop(part, "accent.nc")`. Document import/export retains that reference
+without reading the file. Explicit [NCFile dependency capture and packaging](docs/structure_spec.md#external-program-native-interchange-nc02)
+copies exact source bytes into a portable directory and checks for changed or
+missing inputs. The [mixed native/NCFile example](demos/native_ncfile_workflow.py)
+demonstrates editing, rebinding and reopening. File integrity does not establish
+that the included program is safe to run.
 
 For repeated components and separate face outputs, use the
 [manufacturing composition API](docs/structure_spec.md#reusable-manufacturing-composition-cf02).

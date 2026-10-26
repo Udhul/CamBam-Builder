@@ -18,6 +18,11 @@ derivation or the unmerged BO01 search APIs. The [mapping below](#tools-and-publ
 owns exact tool behavior; [the library capability map](structure_spec.md#capability-and-public-api-boundary-map)
 owns the wider API. Do not advertise core support as MCP support.
 
+Imported core NCFile operations remain opaque to MCP inspection and cannot be
+retargeted through its machining tools (`UNSUPPORTED_OPERATION`, no mutation).
+Open/export retain their native reference without accessing the external source;
+NCFile authoring and dependency packaging are direct-library capabilities only.
+
 The packaged consumer template applies only to projects deliberately choosing
 this MCP workflow. A direct-library application should use its own agent policy,
 call the package and retain document state there. Do not bypass a live adapter's
