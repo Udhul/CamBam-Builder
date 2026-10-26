@@ -1,12 +1,14 @@
 # Current status
 
 Status updated 2026-10-26: **Native Triangle holding-tab consumer accepted by
-engineering; authorized local integration pending.** Fresh paired native posts,
+engineering and delivered on local `main`.** Fresh paired native posts,
 retained-stock checks and installed consumers close the bounded output gap.
 The [review record](REVIEW.md#native-triangle-holding-tab-consumer---2026-10-26)
 owns evidence and limits. The existing Square consumer and native writer remain
-unchanged. Work is on `feat/native-triangle-tabs`, based on local `main` at
-`0d1f56d`; no remote publication is authorized or required.
+unchanged. Authorized `--no-ff` merge `003f227` integrates feature `18163bc`
+on `feat/native-triangle-tabs` from base `0d1f56d`. The merged tree equals the
+accepted feature tree; source-text/AST checks confirm verification applicability
+after checkout line-ending normalization. No remote publication was performed.
 
 CADBitmap artwork registration and CG01 constructive geometry/shape-guided CAM
 remain implemented, verified and accepted by engineering.
@@ -39,8 +41,9 @@ controls, independent retained-stock checks, edit/reopen behavior and clean
 installed-consumer evidence. The [contract](structure_spec.md#bounded-native-triangle-tab-consumer)
 and [review](REVIEW.md#native-triangle-holding-tab-consumer---2026-10-26) own
 scope and evidence. No product decision or user observation is pending.
-The remaining authorized action is local integration; general ramp replay,
-other contours/tab modes and physical holding strength remain outside this bundle.
+The implementation, acceptance and authorized local delivery stopping condition
+is satisfied. General ramp replay, other contours/tab modes and physical holding
+strength remain outside this bundle.
 
 **Next priority: native Profile entry/exit consumer for board cutouts.** Close
 the concrete fresh-authoring gap for Tangent lead-in and independent lead-out
@@ -50,7 +53,7 @@ actual output at the beginning/end of a cut. It takes priority over more tab
 shapes or constructive refinements, which need distinct consumers. Existing
 None/Spiral and accepted Square/Triangle behavior must stay intact.
 
-After local integration this is a good fresh-session breakpoint: the complete
+This is a good fresh-session breakpoint: the complete
 tab outcome, native observations, limits and next scope are persisted. The next
 consumer needs no unsaved decision, pending result or conversational context.
 
@@ -185,7 +188,7 @@ outcome using the [strategy checkpoint](WORKFLOW.md#strategy-checkpoint).
 | Delivered on local main at `30df33f` | **NR03: bounded native relief interchange** | Complete native Surface/3D MOP, editable source-bound relief and actual-post stock bundle; [acceptance evidence](REVIEW.md#nr03-native-relief-milestone---2026-10-26). |
 | Delivered on local main at `fc86840` | **NC02: external-program consumer** | Editable NCFile, explicit dependency bundles and native empty-value repair; [acceptance evidence](REVIEW.md#nc02-external-program-consumer---2026-10-26). |
 | Delivered on local main at `f2e0719` | **CADBitmap + CG01** | Editable constructive sources, shape-guided CAM and native reference artwork; [acceptance evidence](REVIEW.md#constructive-artwork-bundle---2026-10-26). |
-| Accepted; local integration pending | **Native Triangle holding tabs** | Fresh editable Manual Triangle cutouts, paired Square posts and retained-stock evidence; [acceptance record](REVIEW.md#native-triangle-holding-tab-consumer---2026-10-26). |
+| Delivered on local main at `003f227` | **Native Triangle holding tabs** | Fresh editable Manual Triangle cutouts, paired Square posts and retained-stock evidence; [acceptance record](REVIEW.md#native-triangle-holding-tab-consumer---2026-10-26). |
 
 NR03 closes the native relief capability following NC01-A and SF01. Its bounded
 non-overhanging mesh/native-operation stopping condition is satisfied. Further

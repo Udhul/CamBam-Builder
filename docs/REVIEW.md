@@ -130,6 +130,14 @@ at `0d1f56d`; feature/delivery revisions are recorded in PROGRESS after the
 authorized local integration. General automated hosting and physical machining
 remain outside this accepted capability.
 
+After integration, the Git tree exactly matched accepted feature `18163bc`.
+Checkout converted the new integration, test and demo Python files from LF to
+CRLF; normalized source text and Python ASTs were identical. These were the
+only runtime/test verification-identity differences. Engineering therefore
+reuses the recorded checks for the merged tree; no runner report was relabeled
+and no behavior rerun was implied. The supporting comparison is retained in
+`output/triangle-tabs-20261026-a1/merge-equivalence.json`.
+
 ## Constructive artwork bundle - 2026-10-26
 
 **Outcome:** CADBitmap registration and CG01 implementation, automated checks,
