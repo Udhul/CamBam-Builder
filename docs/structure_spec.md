@@ -22,7 +22,7 @@ are outside that runtime package list.
 | `cambam_builder/native/project.py` | UUID entity registries, identifier lookup, ordered layers/parts/MOPs, relationship updates, transform orchestration and persistence | Public creation/query/mutation APIs and relationship invariants |
 | `cambam_builder/native/transfer.py` | Transactional primitive-tree copy/transfer staging, identity mapping, collision validation and relationship publication | Copy/transfer semantics and atomic registry updates; inspect project wrappers and tests |
 | `cambam_builder/native/core.py` | Shared vertex/bounds/numeric foundations, `CamBamEntity`, and `Primitive`, including local and parent-composed transforms | Identity, base inheritance, shared validation, bounds foundations, or primitive transform context |
-| `cambam_builder/native/cad.py` | `Layer` plus ordinary Pline/Circle/Rect/Arc/Points/Text geometry and XML behavior | Ordinary CAD fields, geometry, bounds, baking, or entity XML |
+| `cambam_builder/native/cad.py` | `Layer` plus ordinary Line/Spline/Pline/Circle/Rect/Arc/Points/Text geometry and XML behavior | Ordinary CAD fields, geometry, supported bounds/baking, or entity XML |
 | `cambam_builder/native/region.py` | Owned Region contours, planar curved topology validation and typed Region XML; depends directly on core and ordinary CAD owners | Region geometry and interchange; project and reader use this owner |
 | `cambam_builder/native/cam.py` | `Part`, MOP classes, and MOP XML path/encoding policy inventories | Part stock/nesting or MOP parameters and XML policy |
 | `cambam_builder/cambam_entities.py` and nine old root module paths | Compatibility/discovery imports of canonical native objects; no native implementation remains at root | Preserve public and documented direct imports; implementation modules import owners directly |
@@ -3000,6 +3000,66 @@ geometry, identity, operation order and notes are covered by
 [the CF01 evidence](REVIEW.md#cf01-native-interchange-integrity---2026-10-26).
 Final native toolpath generation and G-code export remain CamBam workflows.
 
+### Native Line and Spline interchange (NC01-A)
+
+The [maintained native coverage map](NATIVE_COVERAGE.md) distinguishes class and
+variant support from independent CAM calculation. `native.cad.Line` and `Spline`
+are distinct owned primitives, verified against the installed CamBam 1.0 classes
+and serializer in [NC01-A evidence](REVIEW.md#nc01-a-native-geometry-coverage---2026-10-26).
+They use the existing units, Tags, UUID identity, layers, groups, hierarchy,
+clone/copy/transfer and native MOP targeting contracts. No new MCP authoring API
+is introduced; the adapter's advertised geometry slice remains unchanged.
+
+`add_line(layer, points, ...)` authors native `line/pts/p` connected open straight
+segments from at least two finite XY/XYZ points. Stored edits use `.vertices`
+containing `Vertex` records with zero bulge. This is not a Pline alias. World
+XYZ queries, affine XY transforms with Z translation, exact straight-segment
+bounds and baking are supported.
+
+`add_spline(layer, control_points, knots, degree=3, ...)` authors an editable
+native `spline` without fitting or tessellation. Controls and optional fit points
+use the same finite XYZ records without bulges. The supported definition has a
+positive integer degree, at least `degree + 1` controls, a nondecreasing finite
+knot vector of length `control_count + degree + 1`, a nonempty domain
+`[knots[degree], knots[control_count]]`, and one positive finite weight per
+control. Both the adder and direct `Spline` constructor author explicit unit
+weights when `weights=None`; import
+of missing/empty weights rejects because the native evaluator does not supply
+them. Empty, fit-only or incomplete definitions, invalid numbers and malformed
+point/number records reject instead of being replaced by another curve.
+
+Spline stores `degree`, `control_points`, `knots`, `weights`, `fit_points`,
+`flags`, `start_tangent`, `end_tangent`, `knot_tolerance`,
+`control_point_tolerance` and `fit_tolerance`. Flags retain a nonnegative signed
+32-bit integer; tolerances retain nonnegative finite values. Flag bits do not
+authorize a framework interpretation of closure or periodicity. Optional tangent
+triples are retained native data: they remain unchanged under transforms, matching
+the installed native implementation. A missing/empty tangent means `None`.
+These fields do not establish a general fit-point or tangent-constrained engine.
+
+Both Spline coordinate-query methods return a detached `SplineGeometry` dictionary
+with world XYZ control/fit points and the remaining native defining fields.
+Control points are not samples on the curve. Affine XY matrices and inherited Z
+translation transform control/fit points exactly; baking retains degree, knots,
+weights, flags, tolerances and raw tangents. Coordinate output follows the
+existing `output_decimals` policy; knots, weights, tolerances and raw tangents
+retain their precision independently of spatial rounding.
+
+Spline curve evaluation, tessellation, exact bounds and center queries are
+unavailable. `get_bounding_box()` raises `NotImplementedError`, including a project
+bound containing an included Spline, so an incomplete box is never presented as
+the whole drawing. Rotation, scale and mirror conveniences require explicit
+pivots/axes for a Spline; omission returns `False` without mutation. Alignment
+requiring unavailable curve bounds likewise cannot complete. General matrices,
+translation and hierarchy edits remain available. Any future approximation must
+be an explicit caller operation with a stated tolerance and independent evidence.
+
+Direct classes raise validation errors; project adders retain the existing
+`None`-on-failure convention. Mutable stored fields are revalidated on use/export.
+The [direct component example](../demos/native_curved_component.py) demonstrates
+two file cycles and native Engrave targets. Serialization and target retention
+do not establish CamBam toolpath behavior, controller or physical acceptance.
+
 ### Shape elevation and Region contract
 
 Pline and Points use one canonical `Vertex` record with finite `x`, `y`, `z`
@@ -3495,7 +3555,8 @@ opaque. This
 inspection contract does not authorize parameter mutation or evaluate CAM styles.
 
 This is supported-MOP interchange, not full CamBam format or toolpath coverage.
-Unsupported MOP types are warned and skipped; arbitrary references inside unknown
+Unsupported MOP types reject in strict byte import; the compatibility file and
+non-strict readers warn and skip them. Arbitrary references inside unknown
 extensions are not interpreted or remapped. Native application acceptance is
 tracked separately in the [runbook](DEVELOPMENT.md#manual-mop-core-model-and-cambam-interchange-acceptance).
 

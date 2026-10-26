@@ -27,7 +27,7 @@ from .transformations import (
 )
 # Import entity types from their implementation owners.
 from .core import CamBamEntity, Primitive, BoundingBox, VertexInput
-from .cad import Layer, Pline, Circle, Rect, Arc, Points, Text
+from .cad import Layer, Pline, Circle, Rect, Arc, Points, Text, Line, Spline
 from .cam import (
     Part, Mop, MopType, ProfileMop, PocketMop, EngraveMop, DrillMop,
 )
@@ -800,6 +800,42 @@ class CamBamProject:
         return primitive
 
     # --- Public API: Concrete Primitive Adders ---
+
+    def add_line(self, layer: Identifiable, points: Sequence[VertexInput],
+                 identifier: str | None = None, groups: list[str] | None = None,
+                 description: str = "", parent: Identifiable | None = None, *,
+                 local_z_offset: float = 0.0) -> Line | None:
+        """Add native connected straight segments from at least two XY/XYZ points.
+
+        Returns None for invalid input, following the primitive-adder contract.
+        """
+        return self._add_primitive_internal(
+            Line, layer, identifier, groups, description, parent,
+            vertices=points, local_z_offset=local_z_offset)
+
+    def add_spline(self, layer: Identifiable, control_points: Sequence[VertexInput],
+                   knots: Sequence[float], degree: int = 3,
+                   identifier: str | None = None, groups: list[str] | None = None,
+                   description: str = "", parent: Identifiable | None = None, *,
+                   weights: Sequence[float] | None = None,
+                   fit_points: Sequence[VertexInput] = (), flags: int = 0,
+                   start_tangent: tuple[float, float, float] | None = None,
+                   end_tangent: tuple[float, float, float] | None = None,
+                   knot_tolerance: float = 0.0, control_point_tolerance: float = 0.0,
+                   fit_tolerance: float = 0.0, local_z_offset: float = 0.0) -> Spline | None:
+        """Add an editable native control spline without approximation.
+
+        Controls are XY/XYZ; knots have control_count+degree+1 values. Omitted
+        weights author explicit units. Optional native metadata is preserved;
+        see Spline for evaluation limits. Returns None for invalid geometry.
+        """
+        return self._add_primitive_internal(
+            Spline, layer, identifier, groups, description, parent,
+            control_points=control_points, knots=knots, degree=degree,
+            weights=weights, fit_points=fit_points, flags=flags,
+            start_tangent=start_tangent, end_tangent=end_tangent,
+            knot_tolerance=knot_tolerance, control_point_tolerance=control_point_tolerance,
+            fit_tolerance=fit_tolerance, local_z_offset=local_z_offset)
     # These now just call _add_primitive_internal
 
     def add_pline(self, layer: Identifiable, points: Sequence[VertexInput],
@@ -1115,6 +1151,9 @@ class CamBamProject:
         if cx is None or cy is None:
             try:
                 center_x, center_y = primitive.get_geometric_center()
+            except NotImplementedError as e:
+                logger.error("Explicit rotation center required: %s", e)
+                return False
             except Exception as e:
                 logger.error(f"Could not get geometric center for '{primitive.user_identifier}' to rotate: {e}")
                 center_x, center_y = 0.0, 0.0 # Fallback to origin? Or fail? Let's use origin.
@@ -1130,6 +1169,9 @@ class CamBamProject:
         if not primitive: return False
         if cx is None or cy is None:
              try: center_x, center_y = primitive.get_geometric_center()
+             except NotImplementedError:
+                 logger.error("Explicit scale center required for this primitive")
+                 return False
              except Exception: center_x, center_y = 0.0, 0.0
         else: center_x, center_y = cx, cy
         return self.transform_primitive(primitive_identifier, scale_matrix(sx, sy, center_x, center_y), bake=bake)
@@ -1141,6 +1183,9 @@ class CamBamProject:
         if not primitive: return False
         if cy is None:
              try: _, center_y = primitive.get_geometric_center(); cy = center_y
+             except NotImplementedError:
+                 logger.error("Explicit mirror axis required for this primitive")
+                 return False
              except Exception: cy = 0.0
         return self.transform_primitive(primitive_identifier, mirror_x_matrix(cy), bake=bake)
 
@@ -1151,6 +1196,9 @@ class CamBamProject:
         if not primitive: return False
         if cx is None:
              try: center_x, _ = primitive.get_geometric_center(); cx = center_x
+             except NotImplementedError:
+                 logger.error("Explicit mirror axis required for this primitive")
+                 return False
              except Exception: cx = 0.0
         return self.transform_primitive(primitive_identifier, mirror_y_matrix(cx), bake=bake)
 
@@ -1165,6 +1213,9 @@ class CamBamProject:
         if not primitive: return False
         if cx is None or cy is None:
              try: center_x, center_y = primitive.get_geometric_center()
+             except NotImplementedError:
+                 logger.error("Explicit rotation center required for this primitive")
+                 return False
              except Exception: center_x, center_y = 0.0, 0.0
         else: center_x, center_y = cx, cy
         return self.transform_primitive(primitive_identifier, rotation_matrix_rad(angle_rad, center_x, center_y), bake=bake)
@@ -1571,6 +1622,9 @@ class CamBamProject:
                     prim_bb = primitive.get_bounding_box()
                     if prim_bb.is_valid():
                         overall_bb = overall_bb.union(prim_bb)
+                except NotImplementedError:
+                    # A partial bound would silently exclude supported geometry.
+                    raise
                 except Exception as e:
                     logger.error(f"Error getting bounding box for primitive {primitive.user_identifier}: {e}")
 

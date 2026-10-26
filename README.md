@@ -52,7 +52,7 @@ and operator Tags coexist with framework metadata under the
 [native interchange contract](docs/structure_spec.md#native-interchange-integrity-cf01).
 The [board example](demos/native_board.py) demonstrates editing and reopening a
 complete direct-library job. Unsupported native classes and arbitrary unknown
-XML still have limits; the [native inventory](docs/REST_MACHINING_PLAN.md#inventoried-baseline-and-prepared-slice-2026-09-23)
+XML still have limits; the [native coverage map](docs/NATIVE_COVERAGE.md)
 distinguishes current support from the full-coverage goal.
 
 ## Capabilities and project documentation

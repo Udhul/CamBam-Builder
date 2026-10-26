@@ -7,6 +7,7 @@ Read this map after the root README; follow only the relevant owner.
 | Agent operational rules | [AGENTS.md](../AGENTS.md) | Compact mandatory context |
 | Framework direction, current architecture, package migration, code ownership and intended domain relationships | [structure_spec.md](structure_spec.md#framework-direction-and-extension-principles) | Section 0 distinguishes implemented owners, extension principles and staged target; remaining sections: domain design |
 | Current baseline, priority, backlog, blockers | [PROGRESS.md](PROGRESS.md) | Single status surface; pending items live here |
+| Native class coverage and interchange variants | [NATIVE_COVERAGE.md](NATIVE_COVERAGE.md) | Maintained class-to-API/test/evidence map; authorable, editable, preserved-only and unsupported forms |
 | Development commands, code clarity and troubleshooting | [DEVELOPMENT.md](DEVELOPMENT.md) | Setup, typing/docstring conventions, checks and artifact handling |
 | Delegation, lifecycle, acceptance ownership and handoff | [WORKFLOW.md](WORKFLOW.md) | Engineering closure versus concrete user observations; reusable working procedures |
 | Model selection and cost-aware routing | [MODEL_ROUTING.md](MODEL_ROUTING.md) | Reusable risk model for main-thread and worker selection |

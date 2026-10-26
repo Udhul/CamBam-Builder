@@ -6,7 +6,7 @@ import logging
 import math
 import uuid
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING, TypedDict
 
 import numpy as np
 from .tags import encode_tag
@@ -26,6 +26,260 @@ if TYPE_CHECKING:
     from .project import CamBamProject
 
 logger = logging.getLogger(__name__)
+
+
+def _transform_vertices(vertices: list[Vertex], matrix: np.ndarray,
+                        z_offset: float = 0.0) -> list[Vertex]:
+    """Transform defining points without dropping overflowed coordinates."""
+    result = []
+    for vertex in vertices:
+        xy = matrix @ np.array((vertex.x, vertex.y, 1.0))
+        result.append(Vertex(xy[0], xy[1], vertex.z + z_offset))
+    return result
+
+
+def _point_text(vertex: Vertex, decimals: int | None) -> str:
+    values = tuple(_finite_float(value, "point coordinate")
+                   for value in (vertex.x, vertex.y, vertex.z))
+    if decimals is not None:
+        values = tuple(round(value, decimals) for value in values)
+    return ",".join(str(value) for value in values)
+
+
+@dataclass
+class Line(Primitive):
+    """Native connected straight segments, preserving their XYZ defining points.
+
+    CamBam's Line stores an ordered point array, including more than two points.
+    Tuple input means XY or XYZ, and bulges are not supported. The public stored
+    records are ``Vertex`` values, just as for Pline and Points.
+    """
+
+    vertices: list[Vertex] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.vertices = _normalize_vertices(self.vertices, allow_bulge=False)
+        self._validated_vertices()
+
+    def _validated_vertices(self) -> list[Vertex]:
+        vertices = _validate_stored_vertices(self.vertices, allow_bulge=False)
+        if len(vertices) < 2:
+            raise ValueError("Line requires at least two points")
+        return vertices
+
+    def _calculate_absolute_geometry(self, total_transform: np.ndarray) -> list[tuple[float, float]]:
+        return [(v.x, v.y) for v in _transform_vertices(self._validated_vertices(), total_transform)]
+
+    def _calculate_absolute_geometry_xyz(
+        self, total_transform: np.ndarray, total_z_offset: float,
+    ) -> list[tuple[float, float, float]]:
+        return [(v.x, v.y, v.z) for v in
+                _transform_vertices(self._validated_vertices(), total_transform, total_z_offset)]
+
+    def _calculate_bounding_box(self, absolute_geometry: list[tuple[float, float]]) -> BoundingBox:
+        return BoundingBox.from_points(absolute_geometry)
+
+    def get_geometric_center(self) -> tuple[float, float]:
+        bounds = self.get_bounding_box()
+        if not bounds.is_valid():
+            raise ValueError("Cannot determine the center of invalid Line geometry")
+        return ((bounds.min_x + bounds.max_x) / 2, (bounds.min_y + bounds.max_y) / 2)
+
+    def shift_geometry_z(self, dz: float) -> None:
+        self.vertices = _transform_vertices(
+            self._validated_vertices(), identity_matrix(), _finite_float(dz, "dz"))
+
+    def bake_geometry(self, transform_to_bake: np.ndarray | None = None) -> None:
+        """Bake an affine XY transform atomically, retaining intrinsic Z."""
+        matrix = _affine_matrix_or_none(
+            self.effective_transform if transform_to_bake is None else transform_to_bake)
+        if matrix is None:
+            raise ValueError("Expected a finite affine 3x3 matrix")
+        vertices = _transform_vertices(self._validated_vertices(), matrix)
+        self.vertices = vertices
+        if transform_to_bake is None:
+            self.effective_transform = identity_matrix()
+
+    def to_xml_element(self, xml_primitive_id: int, parent_uuid: uuid.UUID | None) -> ET.Element:
+        element = ET.Element("line")
+        points = ET.SubElement(element, "pts")
+        for vertex in self._validated_vertices():
+            ET.SubElement(points, "p").text = _point_text(vertex, self.output_decimals)
+        self._add_common_xml_attributes(element, xml_primitive_id, parent_uuid)
+        return element
+
+
+class SplineGeometry(TypedDict):
+    """World control/fit points plus raw native data; not a sampled curve."""
+
+    degree: int
+    flags: int
+    control_points: list[tuple[float, float, float]]
+    fit_points: list[tuple[float, float, float]]
+    knots: list[float]
+    weights: list[float]
+    start_tangent: tuple[float, float, float] | None
+    end_tangent: tuple[float, float, float] | None
+    knot_tolerance: float
+    control_point_tolerance: float
+    fit_tolerance: float
+
+
+@dataclass
+class Spline(Primitive):
+    """Native control-point spline, retained without tessellation or refitting.
+
+    This slice requires a positive degree, at least degree+1 control points and
+    a complete nondecreasing knot vector with a nonempty parameter domain.
+    Weights must be positive and match the controls; omitted constructor weights
+    author explicit units, whereas an explicit empty vector is invalid. Native flags,
+    fit data, tangents and tolerances are preserved, without inferring their
+    influence on CamBam's curve evaluation. Optional tangent records retain
+    native data unchanged, including during transformations, as CamBam does.
+
+    Coordinate queries expose control/fit points in the supported world pose;
+    all other fields retain their native values. Curve evaluation, exact bounds and center
+    calculations are unavailable; callers must not interpret control points as
+    points on the curve. Fields are mutable and revalidated on use/export.
+    """
+
+    degree: int = 3
+    control_points: list[Vertex] = field(default_factory=list)
+    knots: list[float] = field(default_factory=list)
+    weights: list[float] | None = None
+    fit_points: list[Vertex] = field(default_factory=list)
+    flags: int = 0
+    start_tangent: tuple[float, float, float] | None = None
+    end_tangent: tuple[float, float, float] | None = None
+    knot_tolerance: float = 0.0
+    control_point_tolerance: float = 0.0
+    fit_tolerance: float = 0.0
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.control_points = _normalize_vertices(self.control_points, allow_bulge=False)
+        self.fit_points = _normalize_vertices(self.fit_points, allow_bulge=False)
+        self.knots = [_finite_float(value, "knot") for value in self.knots]
+        self.weights = ([1.0] * len(self.control_points) if self.weights is None else
+                        [_finite_float(value, "weight") for value in self.weights])
+        for name in ("knot_tolerance", "control_point_tolerance", "fit_tolerance"):
+            setattr(self, name, _finite_float(getattr(self, name), name))
+        for name in ("start_tangent", "end_tangent"):
+            value = getattr(self, name)
+            if value is not None:
+                setattr(self, name, tuple(_finite_float(component, name) for component in value))
+        self._validate_geometry()
+
+    def _validate_geometry(self) -> None:
+        if isinstance(self.degree, bool) or not isinstance(self.degree, int) or self.degree < 1:
+            raise ValueError("Spline degree must be a positive integer; empty/fit-only splines are unsupported")
+        controls = _validate_stored_vertices(self.control_points, allow_bulge=False)
+        _validate_stored_vertices(self.fit_points, allow_bulge=False)
+        if len(controls) < self.degree + 1:
+            raise ValueError("Spline needs at least degree+1 control points; fit-only splines are unsupported")
+        knots = [_finite_float(value, "knot") for value in self.knots]
+        if len(knots) != len(controls) + self.degree + 1:
+            raise ValueError("Spline knot count must equal control point count + degree + 1")
+        if any(a > b for a, b in zip(knots, knots[1:])):
+            raise ValueError("Spline knots must be nondecreasing")
+        if knots[self.degree] >= knots[len(controls)]:
+            raise ValueError("Spline knot parameter domain must be nonempty")
+        weights = [_finite_float(value, "weight") for value in self.weights]
+        if len(weights) != len(controls) or any(value <= 0 for value in weights):
+            raise ValueError("Spline weights must be positive and match the control point count")
+        if isinstance(self.flags, bool) or not isinstance(self.flags, int) or not 0 <= self.flags <= 2147483647:
+            raise ValueError("Spline flags must be a nonnegative signed 32-bit integer")
+        for name in ("knot_tolerance", "control_point_tolerance", "fit_tolerance"):
+            if _finite_float(getattr(self, name), name) < 0:
+                raise ValueError(f"Spline {name} must be nonnegative")
+        for name in ("start_tangent", "end_tangent"):
+            tangent = getattr(self, name)
+            if tangent is not None:
+                if len(tangent) != 3:
+                    raise ValueError(f"Spline {name} must be an XYZ vector")
+                for value in tangent:
+                    _finite_float(value, name)
+
+    def _world_definition(self, matrix: np.ndarray, z_offset: float) -> SplineGeometry:
+        self._validate_geometry()
+        def points(vertices: list[Vertex]) -> list[tuple[float, float, float]]:
+            return [(v.x, v.y, v.z) for v in _transform_vertices(vertices, matrix, z_offset)]
+        def tangent(value: tuple[float, float, float] | None) -> tuple[float, float, float] | None:
+            if value is None:
+                return None
+            return (_finite_float(value[0], "tangent X"), _finite_float(value[1], "tangent Y"),
+                    _finite_float(value[2], "tangent Z"))
+        return SplineGeometry(
+            degree=self.degree, flags=self.flags, control_points=points(self.control_points),
+            fit_points=points(self.fit_points),
+            knots=[_finite_float(value, "knot") for value in self.knots],
+            weights=[_finite_float(value, "weight") for value in self.weights],
+            start_tangent=tangent(self.start_tangent), end_tangent=tangent(self.end_tangent),
+            knot_tolerance=_finite_float(self.knot_tolerance, "knot_tolerance"),
+            control_point_tolerance=_finite_float(self.control_point_tolerance, "control_point_tolerance"),
+            fit_tolerance=_finite_float(self.fit_tolerance, "fit_tolerance"))
+
+    def _calculate_absolute_geometry(self, total_transform: np.ndarray) -> SplineGeometry:
+        return self._world_definition(total_transform, self.get_total_z_offset())
+
+    def _calculate_absolute_geometry_xyz(
+        self, total_transform: np.ndarray, total_z_offset: float,
+    ) -> SplineGeometry:
+        return self._world_definition(total_transform, total_z_offset)
+
+    def _calculate_bounding_box(self, absolute_geometry: SplineGeometry) -> BoundingBox:
+        raise NotImplementedError("Exact Spline curve bounds are not implemented")
+
+    def get_bounding_box(self) -> BoundingBox:
+        """Reject unavailable curve bounds instead of returning control bounds."""
+        raise NotImplementedError("Exact Spline curve bounds are not implemented")
+
+    def get_geometric_center(self) -> tuple[float, float]:
+        raise NotImplementedError("Spline curve center calculation is not implemented")
+
+    def shift_geometry_z(self, dz: float) -> None:
+        self._validate_geometry()
+        delta = _finite_float(dz, "dz")
+        controls = _transform_vertices(self.control_points, identity_matrix(), delta)
+        fits = _transform_vertices(self.fit_points, identity_matrix(), delta)
+        self.control_points, self.fit_points = controls, fits
+
+    def bake_geometry(self, transform_to_bake: np.ndarray | None = None) -> None:
+        """Bake control/fit points atomically; preserve other native data."""
+        matrix = _affine_matrix_or_none(
+            self.effective_transform if transform_to_bake is None else transform_to_bake)
+        if matrix is None:
+            raise ValueError("Expected a finite affine 3x3 matrix")
+        definition = self._world_definition(matrix, 0.0)
+        controls = [Vertex(*point) for point in definition["control_points"]]
+        fits = [Vertex(*point) for point in definition["fit_points"]]
+        self.control_points, self.fit_points = controls, fits
+        self.start_tangent, self.end_tangent = definition["start_tangent"], definition["end_tangent"]
+        if transform_to_bake is None:
+            self.effective_transform = identity_matrix()
+
+    def to_xml_element(self, xml_primitive_id: int, parent_uuid: uuid.UUID | None) -> ET.Element:
+        self._validate_geometry()
+        element = ET.Element("spline", {
+            "deg": str(self.degree), "flags": str(self.flags),
+            "ktol": str(_finite_float(self.knot_tolerance, "knot_tolerance")),
+            "cptol": str(_finite_float(self.control_point_tolerance, "control_point_tolerance")),
+            "ftol": str(_finite_float(self.fit_tolerance, "fit_tolerance"))})
+        for name, tangent in (("starttan", self.start_tangent), ("endtan", self.end_tangent)):
+            if tangent is not None:
+                element.set(name, _point_text(Vertex(*tangent), None))
+        # Knot/weight precision is curve-defining: do not apply spatial rounding.
+        for name, child_name, values in (("knots", "k", self.knots), ("weights", "w", self.weights)):
+            container = ET.SubElement(element, name)
+            for value in values:
+                ET.SubElement(container, child_name).text = str(_finite_float(value, name))
+        for name, vertices in (("ctrl", self.control_points), ("fit", self.fit_points)):
+            container = ET.SubElement(element, name)
+            for vertex in vertices:
+                ET.SubElement(container, "p").text = _point_text(vertex, self.output_decimals)
+        self._add_common_xml_attributes(element, xml_primitive_id, parent_uuid)
+        return element
 
 @dataclass
 class Layer(CamBamEntity):

@@ -18,7 +18,7 @@ import numpy as np # For matrix conversion
 
 from .project import CamBamProject
 from .core import Primitive, Vertex
-from .cad import Layer, Pline, Circle, Rect, Arc, Points, Text
+from .cad import Layer, Pline, Circle, Rect, Arc, Points, Text, Line, Spline
 from .cam import (
     Part, Mop,
     ProfileMop, PocketMop, EngraveMop, DrillMop,
@@ -41,6 +41,8 @@ MOP_TAG_TO_CLASS = {
 
 # Mapping from CamBam Primitive XML tag names to our Primitive classes
 PRIMITIVE_TAG_TO_CLASS = {
+    "line": Line,
+    "spline": Spline,
     "pline": Pline,
     "circle": Circle,
     "rect": Rect,
@@ -868,7 +870,8 @@ def _primitive_type(element):
     typed = element.get("{http://www.w3.org/2001/XMLSchema-instance}type")
     if typed:
         return {"Polyline": "pline", "Circle": "circle", "Rectangle": "rect",
-                "Arc": "arc", "PointList": "points", "Text": "text"}.get(typed, typed)
+                "Arc": "arc", "PointList": "points", "Text": "text",
+                "Line": "line", "Spline": "spline"}.get(typed, typed)
     return element.tag
 
 
@@ -878,6 +881,35 @@ def _geometry_point(value):
     if len(parts) not in (2, 3) or not np.isfinite(parts).all():
         raise ValueError(f"Expected a finite XY or XYZ coordinate, got {value!r}")
     return parts if len(parts) == 3 else (*parts, 0.0)
+
+
+def _native_spline_points(element: ET.Element, name: str) -> list[Vertex]:
+    """Read a native point array, rejecting bulges or unmodeled point records."""
+    containers = element.findall(name)
+    if len(containers) > 1:
+        raise ValueError(f"Duplicate {name} point array")
+    if not containers:
+        return []
+    result = []
+    for point in containers[0]:
+        if point.tag != "p" or point.attrib or len(point):
+            raise ValueError(f"Unsupported {name} point record")
+        result.append(Vertex(*_geometry_point(point.text)))
+    return result
+
+
+def _native_spline_numbers(element: ET.Element, name: str, child_name: str) -> list[float]:
+    containers = element.findall(name)
+    if len(containers) > 1:
+        raise ValueError(f"Duplicate spline {name} array")
+    if not containers:
+        return []
+    result = []
+    for child in containers[0]:
+        if child.tag != child_name or child.attrib or len(child):
+            raise ValueError(f"Unsupported spline {name} record")
+        result.append(float(child.text))
+    return result
 
 
 def _geometry_float(value, default: float, field_name: str, strict: bool) -> float:
@@ -979,7 +1011,22 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
     # --- Parse Primitive-Specific Geometry ---
     prim_specific_kwargs = {}
     try:
-        if prim_class is Pline:
+        if prim_class is Line:
+            prim_specific_kwargs["vertices"] = _native_spline_points(prim_elem, "pts")
+        elif prim_class is Spline:
+            prim_specific_kwargs.update(
+                degree=int(prim_elem.get("deg", "0")), flags=int(prim_elem.get("flags", "0")),
+                control_points=_native_spline_points(prim_elem, "ctrl"),
+                fit_points=_native_spline_points(prim_elem, "fit"),
+                knots=_native_spline_numbers(prim_elem, "knots", "k"),
+                weights=_native_spline_numbers(prim_elem, "weights", "w"),
+                knot_tolerance=float(prim_elem.get("ktol", "0")),
+                control_point_tolerance=float(prim_elem.get("cptol", "0")),
+                fit_tolerance=float(prim_elem.get("ftol", "0")))
+            for xml_name, field_name in (("starttan", "start_tangent"), ("endtan", "end_tangent")):
+                value = prim_elem.get(xml_name)
+                prim_specific_kwargs[field_name] = _geometry_point(value) if value else None
+        elif prim_class is Pline:
             vertices = []
             pts_node = prim_elem.find("pts")
             if pts_node is not None:
