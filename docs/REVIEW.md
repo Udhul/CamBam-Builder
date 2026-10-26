@@ -182,8 +182,10 @@ smoke gates in **99.145 s**:
 `output/verification-20261026-132456-0466d314/report.json`. It runs the three
 focused modules above in both supported wheels and the independent sdist.
 Installed file hashes differ from the accepted 147-test/consumer artifacts only
-in `integrations/cambam/optimizer_corpus.py`; all relief, output, occupancy and
-consumer dependencies are byte-identical. The earlier math/body tests and all
+in `integrations/cambam/optimizer_corpus.py`; all other `cambam_builder`
+runtime/resource files, including relief, ordered output and occupancy, are
+byte-identical. Third-party dependency versions match; no byte-identity claim
+is made for entire rebuilt environments. The earlier math/body tests and all
 14 installed consumer workflows therefore retain their exact scope. These
 overlapping test groups are not summed as unique coverage.
 
