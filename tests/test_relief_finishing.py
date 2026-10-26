@@ -2,6 +2,9 @@
 
 from dataclasses import replace
 import hashlib
+import subprocess
+import sys
+import textwrap
 import unittest
 from unittest.mock import patch
 
@@ -41,6 +44,28 @@ def proposal(target=None, strategy="guided", **options):
 
 
 class ReliefFinishingTests(unittest.TestCase):
+    def test_relief_output_does_not_import_optional_backends(self):
+        # A fresh process prevents earlier planar tests from hiding an eager
+        # import. The same test runs in source-free installed snapshots.
+        script = textwrap.dedent('''
+            import importlib.abc
+            import sys
+            class WithoutOptional(importlib.abc.MetaPathFinder):
+                def find_spec(self, fullname, path=None, target=None):
+                    if fullname.split('.')[0] in ('shapely', 'mcp'):
+                        raise ImportError('optional backend imported: ' + fullname)
+            sys.meta_path.insert(0, WithoutOptional())
+            from tests.test_relief_finishing import proposal
+            from cambam_builder.integrations.ordered_output import emit
+            for dialect in ('uccnc', 'grbl'):
+                files, report = emit(proposal(), dialect)
+                assert report['stock_access_residual']['status'] == 'pass'
+                assert report['tool_fixture_occupancy']['status'] == 'pass'
+        ''')
+        result = subprocess.run([sys.executable, '-c', script],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_analytic_and_two_dimensional_consumers_decode_both_dialects(self):
         for target in (analytic_target(), grid_target()):
             job = proposal(target)
