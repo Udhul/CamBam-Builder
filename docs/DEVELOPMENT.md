@@ -41,6 +41,33 @@ Without a project environment, the available interpreter can perform baseline
 checks if dependencies are already present; record that limitation. The initial
 review did this without installing or changing dependencies.
 
+## Code clarity and public contracts
+
+Write code a mid-level Python developer can follow. Prefer descriptive names,
+ordinary control flow and small domain values. Extract a module or abstraction
+when it removes repeated semantics or gives a responsibility a clear owner;
+avoid generic frameworks, parallel models and wrappers without a concrete caller.
+Keep validation at the owning boundary and distinguish invalid input from a
+supported request whose calculation is unavailable.
+
+For new or materially changed public APIs, use Python 3.12-compatible annotations
+consistently (`list[T]`, `tuple[T, ...]`, `T | None`), including returns. Preserve
+local conventions in a small unrelated edit; migrate older `typing` forms when
+touching that contract, not in a repository-wide cosmetic pass. Avoid `Any` or
+`object` where an actual domain type is available.
+
+Docstrings should explain purpose, typical use, units/frames, meaningful inputs
+and outputs, mutation, errors and important limits where needed. Inline comments
+explain reasoning, invariants or numerical subtleties. Do not narrate obvious
+assignments or copy the same contract into comments and several documents.
+
+Keep the base library install and first useful CAD-to-MOP export simple; advanced
+engines and optional dependencies must remain opt-in. Establish a stable release
+checkpoint with a version, compatibility notes and installed-package checks before
+promising consumers a stable API. The compatibility policy remains in
+[the specification](structure_spec.md#development-compatibility-policy), and
+release work is tracked in PROGRESS.
+
 ## Verification entry points
 
 The optional MCP document foundation is described in the

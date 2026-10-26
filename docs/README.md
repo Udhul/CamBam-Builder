@@ -7,14 +7,14 @@ Read this map after the root README; follow only the relevant owner.
 | Agent operational rules | [AGENTS.md](../AGENTS.md) | Compact mandatory context |
 | Framework direction, current architecture, package migration, code ownership and intended domain relationships | [structure_spec.md](structure_spec.md#framework-direction-and-extension-principles) | Section 0 distinguishes implemented owners, extension principles and staged target; remaining sections: domain design |
 | Current baseline, priority, backlog, blockers | [PROGRESS.md](PROGRESS.md) | Single status surface; pending items live here |
-| Development commands and troubleshooting | [DEVELOPMENT.md](DEVELOPMENT.md) | Setup, checks and artifact handling |
+| Development commands, code clarity and troubleshooting | [DEVELOPMENT.md](DEVELOPMENT.md) | Setup, typing/docstring conventions, checks and artifact handling |
 | Delegation, lifecycle, acceptance ownership and handoff | [WORKFLOW.md](WORKFLOW.md) | Engineering closure versus concrete user observations; reusable working procedures |
 | Model selection and cost-aware routing | [MODEL_ROUTING.md](MODEL_ROUTING.md) | Reusable risk model for main-thread and worker selection |
 | Review evidence and rejected approaches | [REVIEW.md](REVIEW.md) | Dated findings, acceptance evidence and reopening conditions; not a second backlog |
 | Historical rest/V branch review programme | [BRANCH_REVIEW_PLAN.md](BRANCH_REVIEW_PLAN.md) | Closed session scopes and routes to dated REVIEW evidence; current procedures stay in WORKFLOW |
 | Historical local MCP delivery outline | [MCP_PLAN.md](MCP_PLAN.md) | Closed increments and routes to current contract, commands and acceptance evidence |
 | Local MCP protocol, state, tools and compatibility contract | [MCP_CONTRACT.md](MCP_CONTRACT.md) and [tool schemas](../cambam_builder/mcp_adapter/contract_v1.schema.json) | Document state, modern/legacy protocols, native authoring and transport boundaries |
-| Reusable consuming-project agent policy | [consumer_AGENTS.template.md](../cambam_builder/mcp_adapter/consumer_AGENTS.template.md) | Copy-and-customize bootstrap plus daily natural-language CamBam collaboration workflow; not repository development policy |
+| Optional MCP consuming-project agent policy | [consumer_AGENTS.template.md](../cambam_builder/mcp_adapter/consumer_AGENTS.template.md) | Copy only for a deliberately chosen MCP workflow; not the default direct-library or repository development policy |
 | Historical Region and all-shape Z-coordinate parity plan | [SHAPE_PARITY_PLAN.md](SHAPE_PARITY_PLAN.md) | Closed scope and routes to implemented shape contracts and native acceptance evidence |
 | Rest machining, V-cutter and shared CAM execution design | [REST_MACHINING_PLAN.md](REST_MACHINING_PLAN.md) | Product intent, proposed extensions, research and acceptance criteria; closed packets link to current contracts/evidence and priority stays in PROGRESS |
 | Package metadata, dependencies and source-archive contents | `pyproject.toml`, `MANIFEST.in` | `pyproject.toml` owns published metadata/direct dependencies; `MANIFEST.in` includes the existing regression fixture data in the sdist |

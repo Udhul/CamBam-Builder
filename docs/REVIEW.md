@@ -10946,3 +10946,139 @@ The merge state, priorities and next packet are durable, making
 a fresh implementation session appropriate. These documentation edits are ready
 to commit; no commit or further merge is authorized or performed here.
 Suggested commit: `docs: plan standalone V verification and regression hardening`.
+
+
+## Project direction and foundation audit - 2026-10-26
+
+**Scope:** reconcile the user's library-first direction with current repository
+state, native compatibility evidence, engine boundaries and working practice.
+Audit base is fetched `origin/main` **`b400610`**. Runtime source was not changed;
+findings below remain open until their repair is verified. Current task state
+and acceptance live only in [PROGRESS](PROGRESS.md#active-work-and-next-priority).
+
+### Repository and delivery evidence
+
+The initial clean checkout was local `main` at `853f749` (2025-07-02). A remote
+query and fetch found 205 newer mainline commits and the feature branches listed
+in PROGRESS. The audit was performed on `docs/project-strategy-audit`, created
+from remote main, leaving local main unchanged. All remote feature tips except
+`feat/tool-path-bundle-search` are ancestors of main. That branch is exactly
+three commits ahead and zero behind, with no patch-equivalent duplicates:
+`7ab21cc`, `6686adb`, `06509e4`. Its 16-file diff is +2256/-67 and passes
+`git diff --check origin/main...origin/feat/tool-path-bundle-search`. This is
+structural evidence, not a correctness/merge-readiness review of BO01.
+
+Main's status still described the feature-aware branch repairs and RQ01 as
+uncommitted although `9b4ba03` was merged in `b400610`. BO01's own last status
+calls B ready to commit although `06509e4` contains it. These are stale delivery
+claims, not new missing implementation. No tags or stashes existed; one worktree
+was registered. The public GitHub API returned zero open issues/PRs; all-state
+PR/issue requests (100-item page, only one result) contain only
+[PR #1](https://github.com/Udhul/CamBam-Builder/pull/1), merged 2025-07-02,
+and no standalone issues. No BO01 PR exists at this observation. No CI/check-run
+or external-project inventory was performed.
+
+### Material findings
+
+| Finding | Evidence and consequence | Disposition |
+| --- | --- | --- |
+| Drawing units disappear | `native/reader.py` imports selected root context; `native/writer.py:build_xml_tree` constructs a new root without units. The installed native sample `opto_input.pcb.output_back.cb` strictly imports 425 primitives with source `units="Inches"`; re-export has no units attribute. Synthetic input reproduces it. No numeric conversion is performed. | Confirmed interchange defect; CF01. Do not claim lossless unit semantics or a specific observed CamBam display result from this XML probe. |
+| PointList nesting references become dangling | Import retains `Part._xml_nesting`; writer assigns new primitive IDs and copies `PointListID` unchanged. Synthetic source rect ID 10, points ID 20 and PointListID 20 export as IDs 1/2 with reference still 20. Existing `test_mop_context` uses stable generated IDs and misses the nonconsecutive case. | Confirmed reference defect; CF01. Exercise identity changes rather than asserting only raw-subtree equality. |
+| Native operator notes and other metadata are lost | A plain primitive Tag `operator note` is replaced with framework JSON. Unknown synthetic root/layer/primitive attributes and children are not retained; selected MachiningOptions, Part and MOP context have stronger preservation. | Tag retention in CF01; wider context/payload in NC01. Arbitrary metadata preservation was not a current guarantee, but is a gap against the requested foundation. |
+| Full native coverage is incomplete | Reader maps support Pline, Circle, Rect, Arc, Points, Text and Region plus Profile, Pocket, Engrave and Drill. Strict import rejects unsupported native classes. Existing inventory includes native Line/Spline/Surface, ScriptEntity/Bitmap, Surface3D/NCFile and Lathe gaps. | Stage native authoring/interchange under NC01/NR03 independently of detached-engine support. No claim that all native classes are preserved opaquely. |
+| Spatial querying/setup is bounded | Native transforms support XY affine with Z translation, not arbitrary tilted 3D poses. A reflected Arc's legacy XY query reports start 30/sweep +60 while XYZ reports the geometrically correct 330/-60. A diameter-2 Circle scaled (2,1) reports diameter 3 through legacy XY; XYZ rejects circular representation. | Existing documented compatibility limits, not newly introduced regressions. Prefer documented XYZ queries; CF02 must make front/back setup/frame semantics explicit instead of assuming a general 3D transform API. |
+| MCP does not cover the engines | The 37-tool schema and `DocumentService` expose native document operations and bounded pass planning; service imports no `cam_core`, `cam_extensions` or integration engine owners. Rest/V generation, ordered verification, native-rest derivation, inlay evaluators and BO01 are not tools. | Scope and deferral now explicit in MCP_CONTRACT; the MCP-only consumer template is no longer presented as default library policy. Slow agentic use is user-reported, not measured by this audit. |
+
+### Core quality and engine assessment
+
+The existing ownership split is a sound foundation: canonical native entities,
+project-managed relationships and ordered MOPs, transactional copy/transfer,
+atomic export, explicit imported MOP states/templates, and optional Shapely/MCP
+extras. Preserve these strengths rather than rewriting the framework.
+
+Source inspection of `cam_core/v_region.py` and
+`integrations/cambam/native_rest.py`, their tests and the existing contracts shows
+that engines distinguish design geometry from cutter geometry and bind native
+rest to predecessor/source evidence. RP01, NR01 and IN01 have substantial bounded
+acceptance records. Those records remain scoped: no general volume/3D, arbitrary
+controller or physical-production certification follows. In particular, native
+XYZ/Engrave geometry can show the cut while the whole posted approach/retract/setup
+sequence fails the existing execution contract. Do not hide that gap by calling
+all generated paths production-ready, and do not make solving every direct-post
+case a prerequisite for useful native library authoring.
+
+Readability is mixed. Native and adapter owners are identifiable, but large
+orchestration modules (`native/project.py`, 1623 lines; MCP `service.py`, 1882)
+and uneven annotation/docstring detail increase change-locality cost. File length
+alone is not a defect or a reason to split them. Apply the new clarity conventions
+to changed contracts and extract responsibilities only where they reduce real
+coupling. Existing docs are large (pre-audit specification about 3775 lines,
+DEVELOPMENT 3667, REVIEW 10948); some current priorities had become buried in
+historical narratives. This audit repaired the live status and linked authoritative
+policy rather than rewriting or duplicating the historical evidence.
+
+The package is still `0.1.0`, with no repository release tags found. That is not
+proof that no distribution exists elsewhere. An installed consumer checkpoint,
+version/compatibility record and simple direct-library workflow are needed before
+claiming a stable downstream integration surface. Registry publishing is not
+required to use a locally built/installed wheel.
+
+### CamBam source reconciliation
+
+Consulted official documentation/search results and the installed CamBam Plus 1.0
+help. The [CAD API index](https://www.cambam.info/doc/api/CamBam.CADNamespace.htm)
+is explicitly a **0.9.8** reference; it is useful evidence for class names, not a
+complete version-matched 1.0 serialization specification. Installed help and
+native examples supplement it under the established
+[CamBam build baseline](DEVELOPMENT.md#cambam-validation-baseline).
+
+- [Native entities](https://www.cambam.info/doc/1.0/cad/entities.html) and local
+  `help/cad/entities.html` describe Line, Spline and triangle-mesh Surface in
+  addition to the currently modeled families. The existing inventory is therefore
+  a useful starting point, not proof of complete API support.
+- [Engrave](https://www.cambam.info/doc/plus/cam/Engrave.htm) and installed
+  `help/cam/engrave.html` confirm Z-following and the addition of TargetDepth to
+  source geometry Z. This supports the user's native carrier concept; it does
+  not prove whole-motion equivalence for every generated file.
+- [Pocket](https://cambam.us/doc/1.0/cam/pocket.html) documents signed roughing
+  clearance: positive retains material and negative permits oversize cuts.
+  Engine overlap controls must respect this intent without conflating cleared
+  overlap with altered finish geometry.
+- [MOP automation](https://www.cambam.info/ref/script.mop-automate) demonstrates
+  native scripting and G-code generation; installed `help/automation.html`
+  describes scripts/.NET plugins. This does not establish a supported independent
+  headless service. The product now explicitly permits the manual CamBam generation
+  step while preserving future automation as a separate capability.
+
+Some direct website opens timed out; readable search results and installed help
+were used rather than claiming every live page was fetched. No CamBam process,
+controller or physical machining was run in this audit. The sample under
+`C:/ProgramData/CamBam plus 1.0/samples/` was read in place and not copied into the
+repository. A future checkout can reproduce the units/reference failures with
+synthetic XML, without that installation.
+
+### Performed verification and limits
+
+Environment: Python **3.13.5**, NumPy **2.5.4**, Shapely **2.1.2**, installed using
+`uv sync --python 3.13 --extra planar`. The following focused unittest modules
+passed: `test_mop_context` (5), `test_shape_parity` (10),
+`test_global_transforms` (8), `test_strict_import` (10): **33 tests** total.
+These passing tests coexist with the newly reproduced gaps; they are not a full
+library or native application certification.
+
+The README's direct-library example created an outline, Part and Outside Profile,
+saved the `.cb`, and strictly reopened with matching shape/MOP count and profile
+side. Synthetic probes reproduced lost units, dangling PointListID and replaced
+Tag; the installed inches sample reproduced units loss. Disposable probe/example
+files are under ignored `output/project-audit-20261026/`; the descriptions above
+are the durable evidence. The example uses this editable install, not a fresh
+wheel-install test. No full suite, package matrix, MCP client, BO01 branch suite or
+native toolpath run was repeated for this documentation audit.
+The final documentation diff passed an independent bounded consistency review,
+66 newly added local link targets resolved, and `git diff --check` passed.
+
+**Decision:** CF01 is the next implementation outcome. Keep accepted engine work,
+retain unmerged BO01 A/B for later bounded closure, and restore native foundations
+and consumer usability to the front of the queue. Reopen this assessment when a
+repair, new native source observation or changed consumer requirement invalidates
+its specific evidence; do not turn it into a perpetual general audit gate.

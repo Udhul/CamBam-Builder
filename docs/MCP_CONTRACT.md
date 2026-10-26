@@ -1,5 +1,29 @@
 # Local MCP adapter contract
 
+## Maintenance priority and coverage
+
+**Policy updated 2026-10-26:** MCP is an optional compatibility interface for its
+existing native-document workflow. The user reports that agentic use is slow;
+no general performance benchmark is claimed. Direct Python library use is the
+preferred integration for consuming applications and advanced engine work.
+MCP feature parity is not a gate for core or engine development. Fix shared core
+defects at their owner; document adapter discrepancies and defer new tools or
+transport work until a named consumer justifies them.
+
+The current 37-tool schema exposes document lifecycle/inspection, ordinary CAD,
+groups/transforms, copy/transfer, native Part/MOP authoring and bounded depth-pass
+planning. It does not expose `cam_core`/`cam_extensions` rest/V generators,
+paired-inlay/assembly evaluators, ordered stock verification, native-rest boundary
+derivation or the unmerged BO01 search APIs. The [mapping below](#tools-and-public-api-mapping)
+owns exact tool behavior; [the library capability map](structure_spec.md#capability-and-public-api-boundary-map)
+owns the wider API. Do not advertise core support as MCP support.
+
+The packaged consumer template applies only to projects deliberately choosing
+this MCP workflow. A direct-library application should use its own agent policy,
+call the package and retain document state there. Do not bypass a live adapter's
+revision/transaction state while pretending it is synchronized; use explicit
+save/reopen when transferring a document between workflows.
+
 Contract version 1, decided 2026-09-10 for backlog 4a. This is the authoritative
 implementation contract; all thirty-seven version 1 document, planning and authoring tools
 are implemented, including cross-document copy/transfer between two open

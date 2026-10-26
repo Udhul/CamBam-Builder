@@ -24,6 +24,27 @@ the active item in the remaining backlog. If an external issue tracker is design
 it owns task state/acceptance and the repository status links to the active issue;
 the repository continues to own contracts and verification instructions.
 
+## Strategy checkpoint
+
+At task selection, after a coherent outcome, and before following a substantial
+subproblem, compare the work with the [product priority](structure_spec.md#product-priority-and-library-consumers)
+and PROGRESS. State the useful caller capability, the evidence still missing,
+and the stopping condition. If a subproblem does not change correctness, enable
+that capability or remove a demonstrated development obstacle, defer it with a
+reopening trigger. Do not turn every limitation into another active increment.
+
+Meaningful progress may be a working capability, a reproduced defect with a bounded
+repair, a resolved design decision or reconciled delivery state. More tests,
+documents, abstractions or smaller tickets are not outcomes by themselves.
+After closing one workstream, compare the next adjacent task with core compatibility
+and consumer needs rather than automatically extending the same engine.
+
+The user's current feedback can supersede an older plan. Update its authoritative
+owner and remove conflicting current instructions; retain dated acceptance as
+history. On an audit or merge handoff, fetch when possible and distinguish the
+local checkout, remote main, unmerged commits and unavailable issue/PR metadata.
+Do not call a merged branch active because its last status document predates merge.
+
 ## Acceptance ownership
 
 The lead owns technical choices and evidence assessment within the user's stated

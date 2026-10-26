@@ -1,5 +1,12 @@
 # CamBam project agent instructions
 
+This template is for projects that deliberately choose the optional MCP authoring
+workflow. It is not the default policy for applications using the Python library.
+MCP does not expose the advanced rest/V/inlay engines; use a direct-library workflow
+and an application-specific policy when those capabilities are needed. MCP parity
+is not a prerequisite for using the framework. The rules below govern this selected
+MCP workflow and its document state only.
+
 Use the configured `cambam_*` MCP tools for CamBam document, geometry and machining
 state. Use ordinary local filesystem tools only for exact file staging, delivery and
 hash verification.

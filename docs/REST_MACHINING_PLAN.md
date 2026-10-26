@@ -8,6 +8,10 @@ observations, acceptance and delivery evidence. Completed packet anchors below
 route to those owners; proposed work does not authorize machine execution.
 
 Requested 2026-09-08 and expanded 2026-09-22/23.
+The [2026-10-26 product clarification](structure_spec.md#product-priority-and-library-consumers)
+supersedes older priority statements in this plan: native library foundations
+come first; full independent G-code and MCP parity do not gate `.cb` capability.
+Historical execution-route acceptance remains valid only for its recorded scope.
 The five original outcomes below are retained. Historical design refinements and
 decisions are in [Design refinement](#design-refinement---2026-09-22)
 and the [execution architecture refinement](#execution-architecture-refinement---2026-09-23).
@@ -987,7 +991,9 @@ these contracts. These checks are separate from native motion and machine accept
 
 ### Delivery recommendation and open decisions
 
-Keep rest/V-carving as the active capability driving the shared core. Do not expand
+**Historical 2026-09-23 recommendation; current selection belongs to
+[PROGRESS](PROGRESS.md#active-work-and-next-priority).** At that checkpoint,
+rest/V-carving was the active capability driving the shared core. Do not expand
 the immediate task to all native MOPs, a generic optimizer, general 3D stock, or a
 CamBam postprocessor interpreter. The earlier fixed-section work supplies useful
 regression evidence, but another isolated capsule refinement does not by itself

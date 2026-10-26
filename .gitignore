@@ -9,3 +9,4 @@ output
 /.venv/
 /.uv-cache/
 /uv.lock
+scratchpad.md

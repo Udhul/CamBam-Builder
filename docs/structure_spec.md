@@ -115,6 +115,73 @@ or imports that already exist.
 
 ### Framework direction and extension principles
 
+#### Product priority and library consumers
+
+**Authoritative product clarification, 2026-10-26.** The primary product is an
+installable Python CAD/CAM library that other applications use to build and manage
+machinable geometry, associate native MOPs, and export editable, fully compatible
+CamBam files. Full core CamBam capability is the target, not a claim about current
+coverage. The [native class inventory](REST_MACHINING_PLAN.md#inventoried-baseline-and-prepared-slice-2026-09-23)
+and [current capability map](#capability-and-public-api-boundary-map) delimit today.
+
+Development priority is:
+
+1. A simple, strong native foundation: geometry, entities, groups and inherited
+   transforms, references and operation order, native value/inheritance semantics,
+   faithful import/edit/export, and an accessible programmatic API.
+2. Reusable engines that extend those capabilities through ordinary supported
+   CamBam shapes, regions and MOPs: rest machining, variable-depth V carving,
+   V rest cleanup and inlays. Engines calculate paths and compositions; callers
+   retain original design geometry and editable output.
+3. A fully featured independent G-code engine and removal of manual generation.
+   Existing bounded controller adapters remain useful; their generalization is
+   future work and must not gate native library or engine progress.
+
+This is a priority policy, not a requirement to finish every native feature before
+any engine increment. Repair high-impact foundation gaps first, then select the
+next meaningful capability from the single backlog. Inventory/stock logistics,
+sheet selection and bin packing are deferred support features. This deferral does
+not remove native Part stock fields or the removal/remaining-stock calculations
+required by rest engines.
+
+The normal intermediate workflow is intentionally useful: a consuming application
+creates the CAD/CAM document, then the operator opens it in CamBam, inspects or
+repositions the job for available stock, generates final toolpaths and exports
+G-code. Preserve this workflow alongside future automation. Operator edits must
+invalidate affected derived paths and stock evidence before those results are
+reused. In-application scripting/plugins are documented by CamBam; a supported
+standalone headless bridge is not established. Neither that bridge nor controller
+parity is a prerequisite for ordinary native authoring.
+
+**Cabinet manufacturing is a representative consumer, not a special core mode.**
+A design application owns cabinet dimensions, arbitrary room divisions and joint
+design. This library must be able to represent the resulting boards, outlines,
+grooves, slots and machining operations; organize groups and parent transforms;
+and separate material, thickness, tools and front/back setups into appropriate
+manufacturing outputs. Board layout and repetition must preserve MOP bindings.
+Provide reusable frame/setup and grouping capabilities where missing, with caller
+control over stock batches and operation order. Do not embed cabinet recipes or
+require a stock inventory, nesting solver, MCP server or controller to create a
+first useful file. Support 2D, 2.5D and eventually native 3D interchange independently
+of the subset that detached path/stock evaluators can currently prove.
+
+**Machining boundaries have distinct meanings.** Preserve original finish/protected
+geometry, required rest, permitted overlap into previously machined material and
+derived MOP boundaries separately. Allow overlap only within its requested and
+supported removal/access contract; it must not expand the finished shape. CamBam's
+signed roughing clearance convention remains meaningful: positive leaves stock,
+negative explicitly permits overcut. Do not clamp negative values as a universal
+safety policy or infer that every engine already implements them. Unsupported
+combinations require an explicit diagnostic, not changed intent. XYZ Plines with
+Engrave are a native carrier for variable-depth paths, subject to TargetDepth/Z
+semantics and the [existing whole-motion limits](#bounded-variable-depth-v-groove-and-cambam-carrier).
+
+MCP is optional and lower priority; its [maintenance and coverage policy](MCP_CONTRACT.md#maintenance-priority-and-coverage)
+does not constrain the direct API. Core architecture should favor the simplest
+correct solution, narrow reusable boundaries and readable typed code. Stable
+versioned checkpoints should make downstream adoption predictable; current
+pre-1.0 implementation and acceptance limits must remain explicit.
+
 **User intent and engineering direction, 2026-09-26.** Build a reusable CAM
 framework with strong, editable CamBam interchange, its own machining analysis
 and path calculation, and supported combinations of native and generated work.
