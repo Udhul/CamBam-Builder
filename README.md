@@ -21,7 +21,7 @@ python -m pip install .
 Install `".[planar]"` when using the Shapely-backed planar engines. The base library
 needs neither CamBam installed nor an MCP server for document authoring. This is a
 source installation instruction, not a claim that a release is published on PyPI.
-The [0.6.0 consumer checkpoint and compatibility notes](docs/RELEASE_NOTES.md#060-external-program-interchange)
+The [0.7.0 consumer checkpoint and compatibility notes](docs/RELEASE_NOTES.md#070-constructive-sources-and-reference-artwork)
 define the accepted scope, public imports and upgrade expectations.
 For development use [the environment and verification runbook](docs/DEVELOPMENT.md#environment-and-setup).
 
@@ -88,6 +88,16 @@ authors an editable triangle Surface and bounded native 3D ball finish, checks
 reopening/edits, and separately audits actual CamBam Default posts against the
 original bilinear relief. See the [native relief contract](docs/structure_spec.md#bounded-native-relief-interchange-nr03)
 for source binding, approximation, motion and acceptance limits.
+
+For compact editable source construction, use
+[`ConstructiveSource` and `SweptRidge`](docs/structure_spec.md#constructive-sources-and-shape-guided-cam-cg01).
+The [constructive consumer](demos/constructive_workflow.py) retains repeat/scale
+and swept-profile intent, compares spine/section tracing against raster paths,
+and independently checks decoded motion against the original design. Native
+Surface handoff carries the source recipe and a verifiable approximation bound.
+Reference artwork can be registered with `add_bitmap`; the
+[bitmap consumer](demos/native_bitmap_workflow.py) demonstrates editable placement
+and explicit portable image dependencies. Images remain visual context.
 
 ## Capabilities and project documentation
 

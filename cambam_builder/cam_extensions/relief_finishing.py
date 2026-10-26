@@ -26,7 +26,7 @@ def _axis(start: float, stop: float, step: float) -> list[float]:
     return [start + (stop - start) * i / count for i in range(count + 1)]
 
 
-def _guided_stations(target: relief.CubicRelief | relief.HeightField,
+def _guided_stations(target: relief.Relief,
                      cross_axis: int, step: float) -> list[float]:
     bounds = target.stock_xy
     low, high = bounds[cross_axis], bounds[cross_axis + 2]
@@ -75,7 +75,7 @@ def _guided_stations(target: relief.CubicRelief | relief.HeightField,
             if i == 0 or value - ordered[i - 1] > 1e-7]
 
 
-def _raster_paths(target: relief.CubicRelief | relief.HeightField,
+def _raster_paths(target: relief.Relief,
                   strategy: str, stepover: float,
                   sample_step: float) -> list[list[tuple[float, float]]]:
     x0, y0, x1, y1 = target.stock_xy
@@ -96,7 +96,7 @@ def _raster_paths(target: relief.CubicRelief | relief.HeightField,
     return paths
 
 
-def _waterline_paths(target: relief.CubicRelief | relief.HeightField,
+def _waterline_paths(target: relief.Relief,
                      tip, grid_step: float, level_step: float
                      ) -> list[list[tuple[float, float]]]:
     """March contact-height levels; ambiguous saddles stay separate segments.
@@ -165,14 +165,37 @@ def _join_fragments(fragments: list[list[tuple[float, float]]]
     return paths
 
 
-def generate(target: relief.CubicRelief | relief.HeightField, strategy: str, *,
+def _constructive_paths(target: relief.ConstructiveSource, family: str,
+                        stepover: float, sample_step: float
+                        ) -> list[list[tuple[float, float]]]:
+    """Trace authored features, then cover the intervening/background stock.
+
+    A ridge network alone does not cover a relief. Section fill runs transverse
+    to the sweep; spine fill runs along its axis. These candidates trade added
+    motion for authored detail, with the stock verifier deciding the result.
+    """
+    paths = [list(path) for path in target.trace_xy(
+        family, spacing_mm=stepover, sample_step_mm=sample_step)]
+    if family == "spine":
+        paths.extend(_raster_paths(target, "parallel", stepover, sample_step))
+    else:
+        x0, y0, x1, y1 = target.stock_xy
+        along = _axis(y0, y1, sample_step)
+        for index, x in enumerate(_axis(x0, x1, stepover)):
+            values = along if index % 2 == 0 else list(reversed(along))
+            paths.append([(x, y) for y in values])
+    return paths
+
+
+def generate(target: relief.Relief, strategy: str, *,
              tool: ToolBody, stepover_mm: float, sample_step_mm: float,
              safe_z_mm: float, feed_mm_min: float, plunge_mm_min: float,
              rpm: float, axial_limits: AxialLimits,
              pitch_mm: float = 0.1, contact_tolerance_mm: float = 0.001,
              allowance_mm: float = 0.001,
              waterline_step_mm: float = 0.1,
-             fixtures: tuple[Box, ...] = ()) -> Job:
+             fixtures: tuple[Box, ...] = (),
+             depth_cap_mm: float | None = None) -> Job:
     """Propose one complete high-link finishing job with explicit tool/process.
 
     ``stepover_mm`` is a maximum XY spacing, not a finish guarantee. Bilinear
@@ -181,11 +204,19 @@ def generate(target: relief.CubicRelief | relief.HeightField, strategy: str, *,
     Feed entries cut virgin stock under conservative absolute axial limits;
     no pre-roughing, cleared links, engagement or load is silently assumed.
     Call ``ordered_output.emit`` to obtain actual decoded stock/body evidence.
+    Constructive ``spine``/``section`` candidates keep source feature traces plus
+    coverage fill. A depth cap raises paths and leaves stock; it never changes
+    the design. Entry/stepdown and whole-tool limits are checked on decoded
+    output, without implying cutting-load or machine-dynamics proof.
     """
-    if type(target) not in (relief.CubicRelief, relief.HeightField):
+    if type(target) not in (relief.CubicRelief, relief.HeightField, relief.ConstructiveSource):
         raise ValueError("supported relief target required")
-    if strategy not in ("parallel", "waterline", "guided"):
+    if strategy not in ("parallel", "waterline", "guided", "spine", "section"):
         raise ValueError("unsupported relief finishing strategy")
+    if strategy in ("spine", "section") and type(target) is not relief.ConstructiveSource:
+        raise ValueError("authored constructive source required for feature tracing")
+    if depth_cap_mm is not None:
+        _positive(depth_cap_mm, "depth cap")
     if type(tool) is not ToolBody or type(axial_limits) is not AxialLimits:
         raise ValueError("declared tool body and axial limits required")
     for value, label in ((stepover_mm, "stepover"), (sample_step_mm, "sample step"),
@@ -206,7 +237,9 @@ def generate(target: relief.CubicRelief | relief.HeightField, strategy: str, *,
                                        tolerance_mm=contact_tolerance_mm).upper_tip_z_mm
         return cache[key]
 
-    if strategy == "waterline":
+    if strategy in ("spine", "section"):
+        paths = _constructive_paths(target, strategy, stepover_mm, sample_step_mm)
+    elif strategy == "waterline":
         paths = _waterline_paths(target, tip, stepover_mm, waterline_step_mm)
     else:
         paths = _raster_paths(target, strategy, stepover_mm, sample_step_mm)
@@ -237,6 +270,11 @@ def generate(target: relief.CubicRelief | relief.HeightField, strategy: str, *,
             margins[index + 1] = max(margins[index + 1], margin)
         points = [(x, y, tip(x, y) + margins[i] + allowance_mm)
                   for i, (x, y) in enumerate(path)]
+        if depth_cap_mm is not None:
+            # Nearest output rounding could otherwise cut beyond a non-grid
+            # cap. Round the allowed depth toward stock before rounding XYZ.
+            cap_z = math.ceil(-depth_cap_mm * 10000) / 10000
+            points = [(x, y, max(z, cap_z)) for x, y, z in points]
         if strategy == "waterline":
             level = max(p[2] for p in points)
             points = [(x, y, level) for x, y, _ in points]
@@ -300,6 +338,24 @@ def sequence(*jobs: Job, boundary: str = "split") -> Job:
             operation=replace(stage.operation, name=name), transition=transition))
     return replace(first, stages=tuple(stages), occupancy_setup=replace(
         first.occupancy_setup, tools=tuple(tools.values())))
+
+
+def check_source(job: Job, current_source: relief.Relief) -> None:
+    """Reject derived motion/evidence when the caller's current source changed.
+
+    Sources and jobs are immutable snapshots. Applications must pass their
+    current source at reuse boundaries; an old snapshot cannot observe edits
+    elsewhere. Regenerate after parameter, modifier or provenance changes.
+    """
+    if (type(job) is not Job or
+            type(current_source) not in (relief.CubicRelief, relief.HeightField,
+                                         relief.ConstructiveSource) or
+            job.source_fingerprint != current_source.fingerprint or
+            any(stage.relief_operation is None or
+                stage.source_revision != current_source.fingerprint or
+                stage.relief_operation.target != current_source
+                for stage in job.stages)):
+        raise ValueError("relief job source is stale; regenerate derived paths and evidence")
 
 
 def motion_cost(job: Job, *, rapid_mm_min: float) -> dict[str, float | int | str]:

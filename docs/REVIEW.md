@@ -1,5 +1,241 @@
 # Review and acceptance history
 
+## Constructive artwork bundle - 2026-10-26
+
+**Outcome:** CADBitmap registration and CG01 implementation, automated checks,
+independent correctness review, installed consumers and required native
+observations are accepted by engineering. Local delivery state is owned by
+[PROGRESS](PROGRESS.md#active-work-and-next-priority). The
+[constructive contract](structure_spec.md#constructive-sources-and-shape-guided-cam-cg01)
+and [bitmap contract](structure_spec.md#native-bitmap-artwork-registration)
+own lasting behavior. Work starts from clean local `main` at `d0dcaed` (NC02 plus its bundle plan) on
+`feat/constructive-artwork`. NC02 runtime and accepted source/post bytes are
+unchanged; this bundle does not recertify NC02 or introduce a machining carrier.
+
+| Changed claim / owning boundary | Consumer and fault-sensitive evidence | Disposition |
+| --- | --- | --- |
+| Compact source / `cam_core.constructive` | Frieze and changing-section moulding; [source tests](../tests/test_constructive.py) challenge sampling bounds, modifiers, reconstruction ambiguity and numeric endpoints | Analytic design remains authoritative; bounded correspondence-based reconstruction only |
+| Shape-guided motion / `relief_finishing`, shared contact/stock | [CAM tests](../tests/test_constructive_cam.py), independently decoded comparisons, evolving stock, unreachable valley and unsafe depth/link witnesses | Spine/section candidates are checked against the fixed source; finite choices, measured losses and unsupported dynamics remain explicit |
+| Native source binding / `native_constructive` | [Native tests](../tests/test_native_constructive.py), eight actual native save/reopen cases, units/UUID/geometry/bound mutations | Editable source and derived Surface stay verifiably bound; no new MOP/carrier |
+| Reference image / `native.bitmap`, `bitmap_bundle` | [Placement tests](../tests/test_native_bitmap.py), [dependency tests](../tests/test_bitmap_bundle.py), actual native placement/save/relocation and malformed-inventory witnesses | Explicit image capture and byte-preserving bundles; no image-to-CAD or vectorization claim |
+
+### Constructive consumers and independent comparisons
+
+The reproducible [consumer](../demos/constructive_workflow.py) retains a 755-byte
+frieze source (two crossing cosine/tent swept petals, repeated twice) and a
+545-byte changing-section moulding source (one uncapped cosine sweep). Template
+dimensions are 3 by 1.5 by 0.6 mm, base Z=-0.3; frieze repetition makes its stock
+6 by 1.5 mm. Petal centers change .35 to 1.15 and 1.15 to .35, half widths
+.14 to .22 and .22 to .14, heights .12 to .18 and .18 to .12, with opposite
+.08-mm sinusoidal bends. The consumer owns the remaining explicit parameters.
+Width/height edits, XYZ scale (1.15,.9,1.05), repeat changes where capped,
+JSON reload and native regeneration retain source identity and reject stale
+paths/native derivations. Frieze repeat joins pass one-sided height checks.
+
+All candidates use the original analytic design, T1 ball radius .12 mm,
+1-mm cutting length, contiguous shank/holder bands, .15-mm stepover,
+.04-mm path sampling, .05-mm stock pitch, .002-mm contact tolerance,
+.003-mm allowance, safe Z1, feed/plunge 240/120 mm/min, 10000 rpm and .6-mm
+virgin-stock depth/entry limits. The fixed global residual ceiling is .22 mm.
+Exact emitted UCCNC bytes are independently decoded and continuously checked
+for gouge, axial limits, non-cutting bodies and evolving swept-ball union stock.
+The direct tests also decode Grbl and reject unsafe depth, non-grid depth-cap
+rounding, below-stock rapids, fixtures and stale source revisions.
+
+| Shape / tracing | Maximum residual upper (mm) | Residual-volume upper (mm3) | Estimated minutes |
+| --- | ---: | ---: | ---: |
+| Frieze / parallel | .163867461 | .774021344 | .515374554 |
+| Frieze / spine with fill | .141810701 | .741472282 | 1.247398477 |
+| Frieze / section with transverse fill | .193427181 | .906047620 | 3.032451616 |
+| Moulding / parallel | .091161386 | .305959844 | .370206786 |
+| Moulding / spine with fill | .091161386 | .277710738 | .689172469 |
+| Moulding / section with transverse fill | .125471206 | .361914579 | 1.134420370 |
+
+All six meet the declared ceiling; minimum programmed-feed time selects parallel
+on both fixtures. Spine improves residual bounds at added motion cost; section
+loses global finish/time here. These results establish neither universal
+superiority nor global route optimality. Reports include cutting, entry/retract
+and rapid distances, turn-angle measures, tool changes and located residual
+intervals at background, narrow, sharp, branch and repeat features. Depth follows
+geometry: frieze parallel ranges .1222–.2742 mm and spine .1180–.2742; moulding
+parallel .1131–.2916 and spine .1084–.2916. Timing excludes acceleration,
+installation time and cutting-load behavior.
+
+Both feature families have located benefits despite the section strategy's global
+losses. A supplementary independent `residual_at` scan of the decoded NC sweeps
+at 39x19 interior coordinates found frieze point (4.8,.9): parallel residual
+.081805244 mm, spine .039229270, section .044584761. On the moulding, (.6,.375)
+improves from .034725029 to .010668883 with spine; (.15,.975) improves from
+.034791314 to .015288616 with section. The baseline lower versus feature upper
+intervals certify gains .042575974/.037220483 mm for the frieze and
+.024056147/.019502698 mm for the moulding. These are post-hoc located diagnostics,
+not a changed search objective or a universal finish claim; the original
+decoded-stock evidence and motion bytes are unchanged.
+
+Exact audited comparison-program SHA-256:
+
+| Shape / family | Program |
+| --- | --- |
+| Frieze / parallel | `320228b10804b6578e7f0d45c5c7f540b3f0b28eeba2c6707d3d40f1852cf491` |
+| Frieze / spine | `133231937792079d5a449cb7da32fa01b112f33c0597adf3b3fddfbb46353c20` |
+| Frieze / section | `34fbd0fb59f21738a983232e07a3b55335d9214c742e7a3bd669e78ab9bfaea5` |
+| Moulding / parallel | `f7d57540bbdd9d23fdbeac92d8e578662ba5a25d02a703c2edf4c0549cd35a07` |
+| Moulding / spine | `725f140aa11d2a49052d2f866de6e3a190243c2ef575dac0a1b9ebeb6e0001ab` |
+| Moulding / section | `d12edcecaccc935282b302ca6934b08a5030e183de2192ff304aa2c1ffc4a6c6` |
+
+A .05-mm depth-capped stage followed by frieze spine finishing reduces residual
+volume upper from 2.554960410 to .741472282 mm3, with 1.180560389 mm3 certified
+new removal in the finish. A separate exact sharp V-valley oracle retains the
+unreachable design vertex: ball radius .12 and flank slope .3 imply centered
+contact excess `.12*(sqrt(1+.3^2)-1)` = .005283678107 mm, enclosed by the independent
+contact interval. A peak-based narrow-valley test also proves >.06-mm inaccessible
+detail. These are geometric access limits, not silent design rounding.
+
+The exhaustive two-choice flat 2 by .5-mm example has independently counted
+3 versus 9 entries and analytic constant-feed times .0869846273 versus
+.2016846273 minutes. The measured choice matches the known long-axis best.
+Reconstruction preserves degraded synthetic observations and hashes, candidate
+correspondence/residual/rank evidence, and a known-ground-truth uniform spine
+error bound .003819642526 mm. The ambiguous straight case selects no recovered
+intent. It establishes only the declared correspondence-based sine family.
+
+### Native fidelity and source handoff
+
+Both sources lower at 25x17, 49x33 and 129x97 samples; the last has 12,513 vertices
+and 24,576 triangles. Independent parsed-triangle barycentric checks, positive
+orientation, edge incidence, Euler characteristic 1 and a 448-edge manifold
+boundary verify the fine projection. Certified vertical bounds are .045208181691
+mm for the frieze and .010650181916 mm for the moulding, below a fixed .05-mm
+native fidelity ceiling. Maximum sampled deviations are .006731922285 and
+.000147804214 mm respectively. The coarse views report their larger bounds;
+their meshes never become design authority.
+
+Installed CamBam serializer/API save/reopen passes eight cases: each shape's two
+initial resolutions, source-edited regeneration and fine projection. Native
+Tags retain complete source JSON/provenance, UUIDs and geometry relationships.
+Actual native XML omits `units="Millimeters"`; reflection verifies
+`DrawingUnits` XML `DefaultValue(0)` with enum 0=Millimeters. Only this bound
+adapter normalizes the omitted default. Explicit Inches still rejects; the
+general reader continues to distinguish unspecified units.
+
+SHA-256 witnesses for the fine handoffs:
+
+| Shape | Authored native document | Native saved document |
+| --- | --- | --- |
+| Frieze | `2b4a930cc038fdb98b5908f37a0634c04ca38164ae012dc2e2ccfcd7361a4523` | `0abe04648d7839257cb93121b43b701cd94cb76ea4cdcc50454c72540b704fb5` |
+| Moulding | `74d3c7ef457c3d2ea02417f4bd3dfac86d9ba879bbf8c82b8e0ff8aaef23aeef` | `4cd7941d896aa9db027706c3497eb344a8002bf4f0d1adfd05eb6c708a8eef74` |
+
+Source fingerprints are
+`09e8e775051e82c29f5864d9c2207042f28a1d0f0d581f4b007fe40fb5af037b` (frieze) and
+`49603375a4e6a232ba252e00136bbae32df8b7072c922dc5c41fc4803ebef77c` (moulding).
+Native handoff here is editable geometry plus retained source. It creates no
+new MOP, so no new native post claim or physical cutting observation is required.
+
+### CADBitmap native and dependency acceptance
+
+The [standalone consumer](../demos/native_bitmap_workflow.py) registers an 8x4
+synthetic PNG beside editable geometry. Installed native load/serializer-save,
+library edit, second native save/reopen and moved-bundle load with a different
+working directory preserve image identity, UUIDs, notes and relative reference.
+Decoded pixels remain red on the left and blue on the right. Initial placement
+(3,5,0), 40x20 has bounds (3,5)–(43,25); edited placement (10,11,2), 24x12 has
+bounds (10,11)–(34,23). XY matrix `[[0,-2,100],[3,0,-7],[0,0,1]]` with Z+4
+produces native extrema (50,2,4)–(90,122,4), matching library world corners.
+
+PNG SHA-256 is `ec784dc4b56b1ede99361967b168f3668d42e6f28af6dc63e5ab80803a2253a2`.
+Relocated input document is `c640950e66dab3779ae745ba87f9588acc31264a50897fca122b4c71c22908d6`;
+first native save is `6eaf48c687650b4d2cff44a18dec39ff415dfcec8c0549bcb7bf4515c1420d9e`;
+edited native save is `304ef8a938c78d12515b35427323c634f343bbca1be699a87af36f015f5eacb7`.
+Missing/changed image and document dependencies, malformed inventories, traversal
+and link escapes reject. Shared images retain exact bytes. Independent mutations
+with recomputed document hashes still reject duplicate layers, objects and
+misplaced bitmap dependencies.
+
+This evidence uses the established CamBam CAD/Geom versions. GUI rendering,
+native vectorization and general Save As rebasing are unobserved. A task-owned
+`CADFile.Save(filename)` probe became modal and was terminated; it supplies no
+acceptance evidence. Successful serializer save/reopen and relocated load close
+the specified bounded native dependency gate.
+
+Combined native handoffs also place this exact image beside each fine constructive
+Surface: frieze artwork at (7,0,0), 4x2 mm; moulding artwork at (4,0,0), 3x1.5 mm.
+Two additional installed serializer save/reopen cases retain the original source
+fingerprints, verified meshes and bitmap UUID/reference/placement/dimensions.
+Explicit capture and relocated-bundle verification retain the same PNG bytes
+under its content-addressed path. Neither document contains a MOP. This establishes
+composition of the accepted source and reference-artwork capabilities without a
+new machining claim. The reproducible one-off runner and accepted report are at
+`output/cg01-117bb482/combined-artwork/`; an initial 64-bit host could not load
+the installed 32-bit assembly and supplies no evidence; the accepted probes use
+32-bit PowerShell and return success.
+
+| Combined handoff | Native saved document SHA-256 | Relocated portable document SHA-256 |
+| --- | --- | --- |
+| Frieze | `ccbdde62dc32d1203c79c029459871ccdfa0fb124108f10387a0d4162a9ac368` | `1ef8ca4371e1ea31c28b74354ca272b75540415cb4bb094b56b62e2151cc85b1` |
+| Moulding | `4df78a85c3d0456e22ceb078bcc8c2e0e3270bf79d816deb233448148db39c30` | `cebf0eb3801a5e20b7f6f151d97f6356e2e9c651004257251249814451063ed3` |
+
+### Review, verification and reopening scope
+
+Independent review reproduced and closed native units/UUID/bound tampering,
+subnanometer edits hidden by repeated coordinate rounding, understated grid
+spacing after large translation, ill-conditioned descriptor cancellation and
+depth-cap output rounding. Numeric guards now reject unresolved descriptors and
+include admitted arithmetic uncertainty in range/sampling bounds. A separate
+bitmap review closed native Single overflow and non-atomic overflowing bakes.
+It independently reran 8 bitmap checks; constructive review reran 27 new/changed
+and 30 existing relief checks, plus 20 targeted checks after native-default
+normalization. No substantive finding remains in the bounded contracts.
+
+Full current checkout discovery accounts for **924 tests in 122 modules**:
+921 passed and three named skips. Verification was partitioned into a-d (14
+completed modules from `verification-20261026-164311-aaa3de16`), e-n (58,
+`verification-20261026-165340-49922429`), o-r (27,
+`verification-20261026-165339-67634d3c`) and s-z (23,
+`verification-20261026-165340-45694261`). The first serial parent was intentionally
+stopped after a-d to avoid duplicate concurrent work; its overall status remains
+incomplete. Engineering reconciliation checks exact disjoint current discovery,
+complete worker test IDs/outcomes and result hashes, identical source/config and
+target-environment identities, and unchanged observation inputs. It accepts the
+completed workers, not the interrupted parent. The audit is retained at
+`output/cg01-117bb482/checkout-reconciliation.json`.
+
+The three skips are `DocumentTests.test_symlink_rejection` (Windows symlink
+privilege absent; junction/reparse tests ran),
+`NativeSeriesTests.test_retained_m1_actual_native_post_normalizes_without_stock_authority`
+(retained M1 output absent), and
+`NativeTabbedCutoutObservationTests.test_actual_b_and_c_posts_leave_retained_bridges`
+(accepted one-off B/C inputs absent). They do not skip any new bundle acceptance
+claim or invalidate the unchanged earlier observations.
+
+After all checks, removing two extra EOF newline bytes from `native_constructive.py`
+resolved the staged whitespace gate. The accepted and final source have identical
+ASTs including locations and identical compiled code; the exact before/after
+hashes and proof are retained at `output/cg01-117bb482/final-whitespace-equivalence.json`.
+Behavior/native/installed evidence is reused for this strictly nonsemantic edit.
+The accepted source SHA-256 is
+`8efb407cd68fe314d16f26901889b6646f09bd5d39730843e3f3f6089ea5c0f9`;
+after cleanup it is `ade3768b6a1fa54c9601538b68fa9233d45ac330b7a6491f03b1f28cc4bfbc7b`.
+
+The final wheel Python 3.12/3.13 and sdist Python 3.12 selection passes **195 tests
+in 24 modules**, with zero skips, plus all four installed/base-only smoke checks:
+`output/verification-20261026-164325-6d88bf12/`. The earlier package attempt
+correctly refused source drift and is not used as final acceptance. Consumer
+copies also pass outside the checkout with `-I` under the base-only Python 3.12
+wheel: both copied scripts match the final tracked consumer hashes, and all six
+constructive NC program hashes and stock reports exactly match checkout results.
+Installed evidence is in `output/cg01-installed-20261026-a1/`; its constructive
+run took 785.516 seconds under concurrent regression load (verification cost,
+not machining time). No Shapely, MCP or installed CamBam is needed for these
+base consumers. Source consumer
+results are retained in `output/cg01-constructive-final-283c17/`, bitmap observations
+in `output/bitmap-20261026-a1/`, and numeric review witnesses in their task-owned
+output directories. No `.cb`/`.nc` fixture is versioned.
+
+Reopen only for a concrete richer source/reconstruction consumer, unsupported
+geometry or constraint, a changed native schema/carrier, or a numerical witness
+outside these proved bounds. General solids/overhangs, mesh/photo reconstruction,
+smooth low links, machine dynamics and physical cutting remain extensions.
+
 ## NC02 external-program consumer - 2026-10-26
 
 **Outcome:** implementation, automated checks, actual native save/inclusion and

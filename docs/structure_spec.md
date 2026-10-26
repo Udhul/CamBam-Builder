@@ -205,9 +205,9 @@ own detailed product behavior and staged acceptance. PROGRESS owns priority.
 **Constructive-source clarification, 2026-10-26.** Compact, editable construction
 intent should drive geometry and shape-aware tracing/depth choices; tessellation
 is a derived representation. The [CG01 requirement and acceptance](REST_MACHINING_PLAN.md#constructive-geometry-and-shape-guided-cam-cg01)
-own the user's modifier/edge-flow analogy, explicit reconstruction limits and
-proposed CAD/CAM mechanisms. This is planned direction, not an expansion of
-today's spline, Surface or relief coverage claims.
+own the user's modifier/edge-flow analogy and complete consumer acceptance.
+The [implemented constructive contract](#constructive-sources-and-shape-guided-cam-cg01)
+supports bounded swept reliefs without expanding arbitrary spline or solid coverage.
 
 **Fundamentals-first clarification, 2026-09-30.** These consumers expose domain
 requirements; they do not enumerate the framework's possible workflows or define
@@ -1652,6 +1652,106 @@ The [consumer](../demos/native_relief_workflow.py),
 the accepted slice. General mesh-to-relief inference, overhang machining,
 waterline/roughing modes and native automation as a supported public service
 remain outside it.
+
+### Constructive sources and shape-guided CAM (CG01)
+
+`cam_core.constructive` owns immutable `ConstructiveSource` and `SweptRidge`
+values in millimeters. A source keeps a rectangular template and stock depth,
+base height, named swept profiles, X repetition, positive XYZ scale, XY origin,
+source identity and provenance. Linear center/width/amplitude variation and a
+sinusoidal spine retain editable construction. Cosine sections preserve smooth
+support boundaries; tent sections preserve sharp ridges/support creases. Raised
+profiles combine by maximum, retaining crossing seams. Capped ends join the
+base continuously; uncapped sections span the template, with matching periodic
+sections required for repetition. These are graph reliefs, not arbitrary solids,
+overhangs, general modifier graphs or editable spline evaluation.
+
+Canonical source JSON and its SHA-256 fingerprint include all parameters and
+provenance. `dataclasses.replace` edits preserve the caller's source identity and
+change the fingerprint. Height, rectangular interval ranges and conservative
+global derivative bounds evaluate the source directly. `sample_heightfield`
+produces a disposable bilinear grid with a vertical deviation bound valid also
+for either triangle diagonal. The bound uses actual emitted grid gaps and
+scale-aware arithmetic allowances; it remains conservative at sharp/max/repeat
+seams. Refinement changes output resolution, not source authority. Unrepresentable
+dimensions, discontinuous uncapped joins and exhausted budgets reject.
+
+`trace_xy` derives spine/isoprofile and transverse-section polylines from the
+same descriptors. `cam_extensions.relief_finishing.generate` combines those
+features with rectangular coverage fill in `spine` and `section` candidates;
+`parallel` is the common raster baseline. Spacing controls XY parameter/fill
+spacing, not guaranteed scallop or surface arc length. Ball contact adjusts Z
+against the fixed original source. Conservative segment margins and output
+rounding allowances protect continuous cuts. A requested depth cap raises the
+path and leaves residual stock; it never changes the design. Axial limits cap
+absolute virgin-stock cutting/entry depth. Links stay above stock; unsupported
+low-link credit, engagement/load and machine dynamics are not inferred.
+
+The existing relief contact branch-and-bound and decoded swept-ball stock replay
+check these sources independently of tracing. They bound protected-surface
+contact, evolving union stock, residual volume/thickness and located residuals;
+whole-tool bands and box fixtures remain the occupancy owner's responsibility.
+Sharp or narrow details may remain unreachable. Strategies are candidates;
+finite comparisons report their declared finish constraint and programmed-feed
+time objective, including losses. There is no universal optimum or superiority
+claim. `check_source(job, current_source)` is required at application reuse
+boundaries: immutable snapshots cannot observe edits elsewhere. Stale source,
+modifier or provenance revisions require regenerating paths and evidence.
+
+`reconstruct_spine` fits an explicitly enumerated linear-plus-sine family to
+caller-supplied XY observations with known X correspondence. It retains input
+values/hash, candidate ranks, located/max/RMS residuals and ambiguity diagnostics.
+It selects only a uniquely admissible identifiable candidate. Residuals bound
+observations; unsampled error needs independent ground truth or other evidence.
+Profiles, widths, topology and author intent are not recovered. The result never
+claims original intent, including when one candidate fits well.
+
+`integrations.cambam.native_constructive` authors an editable Surface with a
+versioned Tag containing canonical source JSON, source/geometry identities,
+sampling parameters, native UUID and the full source-to-native error bound.
+`read_document` reconstructs and verifies the derivation. Checks require
+millimeters (including the evidenced omitted native XML default) and the exact
+canonical native world vertices/faces; source, units,
+identity, placement, native mesh and bound edits invalidate the relationship.
+Regeneration creates a new derived Surface while retaining the source identity.
+The reported bound adds the source sampling and NR03 mesh bounds, conservatively
+including XML/arithmetic effects. Native tessellation remains derived. This
+adapter authors no machining operation: direct decoded output is independently
+verified, and no new native post/carrier claim is made.
+
+The [consumer](../demos/constructive_workflow.py) demonstrates a decorative
+repeated frieze and a changing-section moulding. Acceptance evidence and numeric
+limits belong to [REVIEW](REVIEW.md#constructive-artwork-bundle---2026-10-26);
+commands belong to [DEVELOPMENT](DEVELOPMENT.md#constructive-artwork-bundle).
+
+### Native bitmap artwork registration
+
+`native.bitmap.CADBitmap` and `CBProject.add_bitmap` model reference artwork as
+an external path, lower-left XYZ position, positive drawing-unit width/height,
+native display flags and vectorizer control values. Pixel dimensions do not set
+drawing size. Native affine XY placement and Z translation are retained; baking
+supports positive axis scale/translation and refuses transformations that would
+discard image orientation. Native controls are retained state, not a library
+vectorization or photograph-to-CAD capability. Artwork never defines machining
+geometry or supersedes a constructive source.
+
+Ordinary import, edit, clone and export retain paths without image IO.
+`integrations.cambam.bitmap_bundle.capture` explicitly snapshots every bitmap
+dependency within a selected source directory, including hidden artwork, and
+binds exact bytes to document/entity identities. `check_current` detects source
+or document changes. `write_bundle` writes captured bytes beneath content-addressed
+`images/` paths and rewrites the native references; `verify_bundle` checks the
+complete image inventory, hashes and sizes against its manifest. Move the whole
+bundle. Missing/changed images, traversal, drive-relative paths and link escapes
+reject. These are byte-integrity checks, not authentication or image decoding.
+NCFile dependencies retain their separate owner; bitmap packaging does not
+silently capture other external resource types.
+
+The [bitmap consumer](../demos/native_bitmap_workflow.py) combines a synthetic
+image and editable geometry. Installed native placement/save/reopen and dependency
+observations belong to the [bundle review](REVIEW.md#constructive-artwork-bundle---2026-10-26).
+GUI rendering, native vectorization and general Save As relocation behavior are
+not established by serializer/API observations.
 
 ### External-program native interchange (NC02)
 

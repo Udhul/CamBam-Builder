@@ -18,6 +18,8 @@ import hashlib
 import heapq
 import math
 
+from .constructive import ConstructiveSource
+
 
 VERSION = "bounded-relief-contact-v1"
 
@@ -273,7 +275,7 @@ class HeightField:
                              (mean - root, mean + root))
 
 
-Relief = CubicRelief | HeightField
+Relief = CubicRelief | HeightField | ConstructiveSource
 
 
 @dataclass(frozen=True)
@@ -294,6 +296,10 @@ def _tangent_upper(surface: Relief, rect: tuple[float, float, float, float],
     The ordinary height hull remains useful when that maximum is outside it.
     At grid or clamping seams this optional accelerator returns infinity.
     """
+    if type(surface) is ConstructiveSource:
+        # Swept sections can meet at max-union seams and sharp profile tips.
+        # Their interval hull remains valid there; a bilinear tangent does not.
+        return math.inf
     left, bottom, right, top = rect
     sx0, sy0, sx1, sy1 = surface.stock_xy
     if ((left < sx0 < right) or (left < sx1 < right) or
@@ -336,7 +342,7 @@ def contact(surface: Relief, radius_mm: float, x: float, y: float, *,
     arithmetic allowance and must fit the requested tolerance before returning.
     Contact is a geometric query, without cutting-length, stock or body proof.
     """
-    if (type(surface) not in (CubicRelief, HeightField) or
+    if (type(surface) not in (CubicRelief, HeightField, ConstructiveSource) or
             not _number(radius_mm) or radius_mm <= 0 or
             not _number(tolerance_mm) or tolerance_mm <= 0 or
             type(max_cells) is not int or max_cells < 1):
