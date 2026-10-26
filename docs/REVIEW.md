@@ -1,5 +1,126 @@
 # Review and acceptance history
 
+## NC01-A native geometry coverage - 2026-10-26
+
+**Outcome:** accepted by engineering for the
+[Line/Spline interchange contract](structure_spec.md#native-line-and-spline-interchange-nc01-a).
+The [maintained coverage map](NATIVE_COVERAGE.md) replaces the historical class
+tables and distinguishes author/edit, preserved-only and unsupported forms.
+Work started from clean local `main` at `6514305` on
+`feat/nc01-a-native-geometry`; implementation commit is `f95fea3`. Astra agents
+independently established installed-native evidence, implemented the shape slice,
+built the map and reviewed correctness. The lead integrated the direct consumer,
+checks and documentation. Merging and pushing were not authorized or performed.
+
+### Installed native representation evidence
+
+Read installed help and reflected the native types and XML attributes using
+32-bit Windows PowerShell. Native `XmlSerializer` wrote/read entities and a Layer;
+the private native `Spline._CalcPoint` supplied an independent geometry oracle,
+not a new production dependency. Baseline and SHA-256:
+
+| Installed source | Version / SHA-256 |
+| --- | --- |
+| `C:/Program Files (x86)/CamBam plus 1.0/CamBam.CAD.dll` | `1.0.7364.41819`; `a9a6fc32dfdd439232455c73b2e92163ebb3acc852b198d24a3d6530baa77438` |
+| Same directory, `CamBam.Geom.dll` | `1.0.7364.41817`; `98bfc5a28e7f4a96a332ff1879da60317bccb1dd032844ea529dc6d5a47ae92e` |
+| Same installation, `help/cad/entities.html` | `4b539d9190e9ba9e59f22950242262f9aee362c322c16cae8ac86754d620d92e` |
+
+`CamBam.CAD.Line` is distinct from Polyline. Its XML is `line` with `pts/p`
+comma-separated XYZ text. Native `ToPolyline` preserves ordered point arrays as
+connected open segments with zero bulge, including three points; the library's
+two-point minimum is an engineering policy for usable geometry.
+
+`CamBam.CAD.Spline` serializes `deg`, `flags`, `ktol`, `cptol`, `ftol`, optional
+`starttan`/`endtan`, `knots/k`, `weights/w`, `ctrl/p` and `fit/p`. Empty native
+construction has degree/flags/tolerances zero, while library authoring defaults
+degree to three. Undefined tangents serialize absent; zero tangents serialize
+explicitly. Native flag bits 1/2/4/8/16 expose Closed/Periodic/Rational/Planar/Linear
+properties described as currently unused. Flags alone neither close the curve
+nor substitute for its defining arrays.
+
+Independent native numeric witnesses used cubic controls
+`[(0,0,1),(0,3,2),(4,3,3),(4,0,4)]`, knots `[0,0,0,0,1,1,1,1]`:
+unit weights give `u=0.25 -> (0.625,1.6875,1.75)` and
+`u=0.5 -> (2,2.25,2.5)`; weights `[1,2,2,1]` give
+`u=0.5 -> (2,18/7,2.5)`, irrespective of the Rational flag. Empty weights remain
+empty after native `Update` and evaluation throws `IndexOutOfRange`; import must
+not infer units. A quadratic with controls `[(0,0,0),(1,2,3),(2,0,6)]`, knots
+`[2,2,2,5,5,5]`, unit weights evaluates `u=3.5 -> (1,1,3)`, proving that knot
+domains need not be `[0,1]`. Added fit points/tangents did not alter that sample.
+Native translation, nonuniform scale and Z rotation transform control/fit points
+but leave stored nonzero tangents unchanged, as the implementation now does.
+
+Native Layer serialization produced the verified class forms (source SHA-256
+`8a17903ce5eedafbde26f41077ffb8cfb86fdb0eb5661205fbe36cfc5412154f`).
+Headless `CADFile` construction terminated its host, so this evidence makes no
+full-application loading, GUI or posting claim. Entity/Layer serialization and
+evaluation supply the specific native evidence needed for this slice.
+
+### Consumer, correctness and verification
+
+The [direct component example](../demos/native_curved_component.py) authors a
+Line base and cubic Spline edge with ordered native Engrave targets, then edits
+defining points, placement, depth and notes across two file cycles. Both emitted
+layers were independently deserialized by installed CamBam into concrete
+Line/Spline objects. After native `ApplyTransformation`, the edited line is
+`[(15,15,2),(15,57,2)]`; curve controls are
+`[(15,57,2),(-15,55,4),(-21,15,4),(15,15,2)]`, within `1e-10`. Native curve
+evaluation at `u=0.5` independently gives `(-9.75,35.25,3.5)`. Units are
+Millimeters, geometry IDs are 1/2, operation target order is 2 then 1, and the
+child Tag's parent identity matches the Line. Observed original/edited file
+SHA-256 values are respectively
+`e47ce6e2aa6d0c30df67545738697b736cb5c828920d6ad79892616ab2675f42` and
+`a090b08588af81e33d9fe77a242aff89564459961088fea4f5b65b68d2cb3041`.
+
+| Changed claim / owner and consumer | Positive and fault-sensitive evidence | Disposition / limit |
+| --- | --- | --- |
+| Native shape definition and XML; `cad`/`reader`, direct consumer | [Focused tests](../tests/test_native_spline.py): connected Line XYZ, complete Spline arrays, non-unit knot domain, scalar precision, absent/zero tangent distinction; reject missing weights, malformed/duplicate arrays, bulges, invalid degree/domain/nonfinite values and fit-only records. Installed serializer/evaluator witnesses above are independent of the Python writer. | Accepted; no inferred closure, automatic repair or approximation. |
+| World pose and unavailable computations; `cad`/`project` | Analytic shear/reflection/Z expectations, atomic bake rejection, explicit-pivot success; omitted pivots/alignment return failure without mutation and project bounds cannot silently omit a Spline. | Accepted for affine XY plus Z translation; no curve evaluator, exact Spline bounds/center or general 3D transform. |
+| Owned identity, references and mixed workflow; `project`/`reader`/generic writer/transfer | [Integration tests](../tests/test_native_geometry_interchange.py): two file cycles, UUIDs, layers/groups/parents, control/fit points, weights/knots/tangents, MOP targets/order, clone isolation and fresh-ID subtree copy with baking. Independent inches XML uses IDs 93/7, a new leading layer forces export renumbering, and live group targets survive. | Accepted as interchange; native MOP execution/toolpath effects are not asserted. |
+| Mutable numeric edits; `cad` serialization | Independent review found that float-convertible mutations could serialize as `True` or `1/3`. Repaired normalization; regression and separate probes mutate bool/Fraction/numeric strings and strictly reopen them as float values. | Review finding resolved; export must remain readable after supported edits. |
+| Existing native/adapter contracts | Required native neighbors and all six mandatory MCP regression modules pass; advertised MCP fields/defaults and both schema copies are unchanged, and new classes remain outside its authoring/geometry slice. | Accepted compatibility; no MCP parity expansion. |
+
+Final repository gate: Python **3.13.5**, NumPy **2.5.4**, MCP **2.2.0**;
+`tools/verify.py` selected **33 modules, 242 tests passed, zero skips**, including
+all **13 new Line/Spline tests**. Modules were `test_native_spline`,
+`test_native_geometry_interchange`, `test_native_units`, `test_pointlist_nesting`,
+`test_native_tags`, `test_native_interchange`, `test_strict_import`,
+`test_mop_context`, `test_mop_roundtrip`, `test_mop_parameters`,
+`test_mop_native_edits`, `test_parent_roundtrip`, `test_global_transforms`,
+`test_copy_transfer`, `test_project_clone`, `test_shape_parity`,
+`test_shape_elevation`, `test_region`, `test_rect_bake_defect`, `test_curved_bounds`,
+`test_export_failures`, `test_state_persistence`, `test_native_owner_migration`,
+`test_mop_group_sources`, `test_full_bake`, `test_parity_bake_failures`,
+`test_parent_cycles`, plus MCP `authoring`, `geometry`, `text_region`, `mops`,
+`relationships_transforms` and `cross_document`. Syntax compilation passed.
+The final report is `output/verification-20261026-093633-1d829a79/report.json`:
+the runner reconciled and reused 27 completed modules from an interrupted log-file
+replacement, then ran the remaining six in 6.51 seconds. The interrupted report
+is not itself a passing run. Reconciliation checked unchanged runtime/test inputs;
+only documentation closure followed. Detached CAM suites were outside these changes.
+
+A fresh base-only wheel ran the copied example with `python -I` from an isolated
+environment outside the checkout: **nine consumer checks passed**, Python 3.13.5 /
+NumPy 2.5.4, no MCP or Shapely. Import provenance is that environment's
+`Lib/site-packages`; all **11 native module files** match the tested source bytes.
+Wheel SHA-256 is `6181559b7c90e1bb0878800bd777daee15497c013c44aeac93008f7309f1b874`;
+archive inspection found no session `.cb`/`.nc` files. This is the requested
+small installed consumer, not the future PK01 release matrix/publication.
+
+Session-only probes, native files and logs remain under
+`output/nc01-a-evidence-20261026-01/`, `output/nc01-a-review-20261026-01/` and
+`output/nc01-a-sprint-20261026-01/`. Tests generate their own inputs and do not
+depend on those retained files. No native byte fixture was added to the branch.
+
+**Acceptance and closure:** implementation and independent correctness review are
+complete, with the one material review finding repaired and independently checked.
+The target is local `main` at `6514305`; `f95fea3` owns the tested implementation,
+with the documentation closure reviewed as part of the full branch diff. No
+manual user observation is required for these serialization claims: the installed
+native readback adds the necessary independent evidence. No controller, physical
+machining or general spline CAM acceptance is implied. The coverage map owns
+unsupported variants and reopening criteria; PROGRESS owns the next priority.
+
 ## CF01 native interchange integrity - 2026-10-26
 
 **Outcome:** engineering acceptance complete for the

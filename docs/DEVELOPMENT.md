@@ -101,6 +101,28 @@ and run with a freshly installed base wheel; it requires NumPy but no planar
 extra, MCP or CamBam process. Pass its output directory explicitly. The example
 checks an edit/save/reopen cycle; it does not certify native toolpaths.
 
+### Native Line and Spline coverage checks
+
+The NC01-A direct-library checks exercise native shape definitions, malformed
+variants, affine/world pose, identity, copying, MOP targeting and two save/reopen
+cycles, including independently specified inches XML with nonconsecutive IDs:
+
+```powershell
+& $ProjectPython tools/verify.py --pattern test_native_spline.py --pattern test_native_geometry_interchange.py
+$CurvedExampleOutput = Join-Path 'output' ('native-curves-' + [guid]::NewGuid().ToString('N').Substring(0,8))
+& $ProjectPython demos/native_curved_component.py $CurvedExampleOutput
+```
+
+For changes to the shared native reader/project paths, include the affected
+CF01, strict import, shape/Region, transform, copy, MOP and export/state tests
+and the six adapter modules required by the [workflow](WORKFLOW.md#verification-and-handoff-checklist).
+The example can be copied and run from outside the checkout with a freshly
+installed base-only wheel. It needs NumPy, without MCP, planar extras or a native
+process. The [coverage map](NATIVE_COVERAGE.md) owns unsupported variants;
+[NC01-A review](REVIEW.md#nc01-a-native-geometry-coverage---2026-10-26) records
+independent installed-native serializer/evaluator observations. No manual GUI
+check is needed to repeat those specific serialization claims.
+
 Run applicable commands from the repository root, using the interpreter selected above:
 
 ```powershell

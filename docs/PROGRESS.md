@@ -1,8 +1,9 @@
 # Current status
 
-Status updated 2026-10-26: CF01 is delivered on local `main` through a `--no-ff`
-merge of `feat/cf01-native-interchange` at `9289d4b`, based on clean local `main`
-at `78fe421`. The merge is not pushed. The remote inventory below remains the earlier
+Status updated 2026-10-26: NC01-A implementation and engineering acceptance are
+complete on `feat/nc01-a-native-geometry`, based on local `main` at `6514305`.
+The branch is unmerged and unpushed; this sprint does not authorize either action.
+CF01 remains delivered locally through merge `9289d4b`. The remote inventory below remains the earlier
 audit snapshot at `b400610`; it is not a new remote delivery check. This page owns
 live priority and delivery state. The
 [product direction](structure_spec.md#product-priority-and-library-consumers),
@@ -14,15 +15,18 @@ own requirements, behavior and findings respectively.
 
 <a id="doc01-documentation-consolidation-backlog"></a>
 
-**CF01 implementation and engineering acceptance are complete.** The native
-integrity repairs, direct board consumer and verification are recorded in
-[REVIEW](REVIEW.md#cf01-native-interchange-integrity---2026-10-26). The branch was
-merged after the [authorized merge review](REVIEW.md#cf01-merge-review---2026-10-26).
-**Next recommended
-implementation: NC01's first native geometry coverage increment.** Establish the
-maintained native coverage map and advance Line/Spline interchange from its
-explicit unsupported state. This addresses the next native compatibility gap
-for consuming applications. BO01 remains separate and unchanged.
+**NC01-A implementation and engineering acceptance are complete.** The
+[native coverage map](NATIVE_COVERAGE.md) and editable Line/Spline slice close
+the first native geometry gap with a direct consumer and installed native
+evidence; [REVIEW](REVIEW.md#nc01-a-native-geometry-coverage---2026-10-26) owns
+verification and limits. CF01 remains locally merged.
+
+**Next recommended implementation: CF02 reusable manufacturing composition.**
+Use the stronger native foundation for a multi-board library consumer and
+separate front/back outputs, proving reusable setup/frame needs with a distinct
+non-cabinet job. This delivers a caller workflow now; another native class or
+spline calculation should be promoted only for a concrete consumer gap.
+The [post-merge queue](#post-merge-task-queue) owns the scope. BO01 remains separate.
 
 ### CF01: native interchange integrity
 
@@ -40,46 +44,22 @@ and MCP parity remain outside CF01. No BO01 search changes were integrated.
 
 ### NC01-A: native geometry coverage sprint
 
-**State:** next implementation; a bounded one-session Ultra sprint, targeted at
-one to two agentic work hours with parallel evidence/implementation/review and
-meaningful commits. Time is a planning estimate, not permission to weaken
-acceptance. **Why now:** native Line/Spline input remains outside the supported
-inventory; a direct library consumer needs a trustworthy editable CAD foundation
-before broader manufacturing composition or additional search engines.
+**State:** implemented and accepted by engineering within the
+[Line/Spline interchange contract](structure_spec.md#native-line-and-spline-interchange-nc01-a).
+The historical inventory is now the maintained class-to-API/test/evidence map.
+Native Line and Spline remain editable through author/import/edit/export,
+hierarchy, transforms, ownership and MOP targeting. The mixed component and
+independent inches input establish two-cycle interchange; native serializer and
+evaluator probes settle the new representation claims. The
+[acceptance record](REVIEW.md#nc01-a-native-geometry-coverage---2026-10-26) owns
+the exact evidence, reviewed repair and package provenance.
 
-**Outcome:** promote the [existing native inventory](REST_MACHINING_PLAN.md#inventoried-baseline-and-prepared-slice-2026-09-23)
-into one maintained class-to-API/test/evidence coverage map, and deliver the first
-evidence-backed Line/Spline author/import/edit/export capability through existing
-native entity ownership. Distinguish authorable, editable, preserved-only and
-explicitly unsupported variants. Verify real native class/XML forms first;
-historical inventory labels are evidence to check, not a reason to invent a new
-class where CamBam uses an existing representation.
-
-**Acceptance:**
-
-- Confirm native representations and supported parameter/geometry semantics from
-  installed/manual/API/native-saved evidence. Preserve editable curve intent;
-  any approximation must be an explicit caller operation with a stated tolerance.
-- Integrate the supported shapes with units, Tags, owned identity, layers,
-  groups/hierarchy, supported transforms, clone/copy and applicable native MOP
-  targeting. Diagnose unsupported variants without silently changing geometry.
-- Prove a direct-library mixed straight/curved component workflow through
-  editing and two save/reopen cycles. Include independently specified native
-  input, nonconsecutive IDs and inches coverage. Assert numeric geometry/world
-  pose, shape-defining data, reference identity and MOP targets/order.
-- Add fault-sensitive regressions, run affected native checks and a small
-  installed-base-package consumer outside the checkout. Use native observation
-  only for a specific serialization claim not settled by existing evidence;
-  prepare any necessary synthetic files and exact acceptance criteria first.
-- Update authoritative contracts, evidence and status. Review the complete
-  branch and commit coherent bundles; merge requires session authorization.
-
-**Stopping condition:** the mapped supported Line/Spline slice is implemented,
-verified and usable by the direct consumer, with unsupported variants and their
-reopening evidence explicit. Reassess scope only if native evidence contradicts
-the assumed representations. Do not expand into Surface/3D MOPs, a general spline
-CAM engine, universal unknown-XML preservation, setup/frame design, MCP parity,
-BO01, bin packing, release publication or G-code generation.
+The stopping condition is satisfied. No unanswered product choice or manual
+observation blocks this serialization slice. Spline evaluation/bounds, fit-only
+records, Surface/3D MOPs, general unknown-XML preservation, MCP parity, setup/frame
+design, BO01, G-code generation and release publication remain outside this
+sprint. Reopen the mapped limits for a concrete consumer or contradictory native
+file, rather than automatically extending the nearby geometry workstream.
 
 ### Current branch closure
 
@@ -127,15 +107,16 @@ outcome using the [strategy checkpoint](WORKFLOW.md#strategy-checkpoint).
 
 | Order | Increment | Useful outcome / scope |
 | --- | --- | --- |
-| 1 | **NC01: native coverage and preservation** | Promote the existing native inventory into a maintained manual/API-to-code/test coverage map and select the first Line/Spline interchange increment. Stage Surface/3D MOP support plus safe preservation of unmodeled document context separately. Surface/3D interchange is **NR03**; it does not require independent 3D path generation. Select one useful native slice at a time, with explicit import/author/preserve/unsupported and evidence levels. Include NCFile, Lathe, scripts and external bitmap assets in the map with explicit dependencies, not implicit full-support claims. |
-| 2 | **CF02: reusable manufacturing composition** | A simple installed-library cabinet consumer with multiple boards, groups/inherited transforms, grooves/slots, materials/thicknesses and separate front/back setup outputs. Establish missing reusable setup/frame APIs from this consumer and a distinct non-cabinet job. Keep cabinet design rules in the caller and stock placement manual initially. |
-| 3 | **PK01: consumer release checkpoint** | Build/install wheel and sdist outside the checkout, verify documented public imports and simple CAD/MOP export on supported Python versions, version the accepted scope and publish compatibility notes. No tag or published-release claim until actually delivered; package registry publishing remains separately authorized. |
-| 4 | **BO01-C** | Close/reconcile the existing committed search branch; preserve useful work without expanding the search epic. May be a bounded maintenance interlude sooner if independent and cheap, not a competing active priority. |
-| 5 | **Native extended-engine output** | Improve reusable rest/V/inlay attachment through ordinary Regions/Plines and MOPs for a named consumer. Retain protected boundaries, signed allowances and specified overlap. Existing XYZ/Engrave whole-motion gaps remain explicit; inspectable path geometry alone is not a complete execution certificate. |
-| 6 | **SF01** | Generalize bounded relief contact/stock and shape-aware finishing when the native/library foundation and a concrete consumer justify it. NR03 remains a separate native interchange capability. |
+| 1 | **CF02: reusable manufacturing composition** | A simple installed-library cabinet consumer with multiple boards, groups/inherited transforms, grooves/slots, materials/thicknesses and separate front/back setup outputs. Establish missing reusable setup/frame APIs from this consumer and a distinct non-cabinet job. Keep cabinet design rules in the caller and stock placement manual initially. |
+| 2 | **PK01: consumer release checkpoint** | Build/install wheel and sdist outside the checkout, verify documented public imports and simple CAD/MOP export on supported Python versions, version the accepted scope and publish compatibility notes. No tag or published-release claim until actually delivered; package registry publishing remains separately authorized. |
+| 3 | **BO01-C** | Close/reconcile the existing committed search branch; preserve useful work without expanding the search epic. May be a bounded maintenance interlude sooner if independent and cheap, not a competing active priority. |
+| 4 | **Native extended-engine output** | Improve reusable rest/V/inlay attachment through ordinary Regions/Plines and MOPs for a named consumer. Retain protected boundaries, signed allowances and specified overlap. Existing XYZ/Engrave whole-motion gaps remain explicit; inspectable path geometry alone is not a complete execution certificate. |
+| 5 | **SF01** | Generalize bounded relief contact/stock and shape-aware finishing when the native/library foundation and a concrete consumer justify it. NR03 remains a separate native interchange capability. |
 
-This order does not require completing all possible NC01 classes before CF02 or a
-useful extension. Close a coherent native slice and re-evaluate. Detailed engine
+NC01-A closes the first native slice. Further NC01 classes/preservation and NR03
+Surface/3D interchange are conditional on a concrete consumer and the
+[coverage map's evidence criteria](NATIVE_COVERAGE.md); they do not require
+independent 3D path generation. Detailed engine
 proposals stay in the [rest/V design](REST_MACHINING_PLAN.md#follow-up-contracts-and-representative-consumers).
 
 ## Remaining backlog, in order
@@ -226,8 +207,9 @@ and [verification](REVIEW.md#export-failure-and-state-path-verification).
 
 ## Completion and verification
 
-CF01's implementation, automated checks and engineering acceptance are complete;
-[REVIEW](REVIEW.md#cf01-native-interchange-integrity---2026-10-26) records the
-evidence and limits. A fresh session is appropriate for NC01: CF01 has a coherent
-verified outcome and no unresolved product decision or pending native observation.
-The next task has distinct class-coverage scope and does not depend on this chat.
+NC01-A's implementation, automated checks and engineering acceptance are complete;
+[REVIEW](REVIEW.md#nc01-a-native-geometry-coverage---2026-10-26) records the
+evidence and limits. This is a good fresh-session breakpoint: the native slice
+is coherent and verified, and CF02 has distinct consumer/setup scope. Its durable
+requirements are in the queue; no unresolved decision, pending result or unsaved
+context is needed to start it after the user-owned integration decision.
