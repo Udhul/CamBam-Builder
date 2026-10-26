@@ -3279,12 +3279,21 @@ production toolpath correctness.
 
 ### Development compatibility policy
 
-User clarifications, 2026-09-08 and 2026-09-09 (unreleased, no API consumers): the framework is in development and no important
-files depend on older framework versions. Prioritize a correct, coherent core
-model. Breaking Python API, internal storage and pickle changes are permitted;
-do not add legacy adapters, duplicate storage or old-pickle migration solely to
-preserve unused framework versions. Update repository callers, examples and tests
-together when changing the model. Old pickle files are not a compatibility target.
+The [0.2.0 consumer checkpoint](RELEASE_NOTES.md#020-consumer-checkpoint) establishes
+a bounded pre-1.0 Python API baseline. Patch versions within 0.2.x preserve its
+documented imports and supported caller behavior; fixes may reject previously
+accepted invalid or unsupported input, with a compatibility note. Intentional
+breaking changes to that scope require a new minor version and migration notes.
+Consumers should pin a tested version, or constrain upgrades to `>=0.2,<0.3` when
+they can run their own regression checks. Internal helpers and undocumented
+behavior are outside this promise; 1.0 stability is not claimed.
+
+This refines the user's 2026-09-08/09 development policy (then unreleased, with no
+API consumers) for the newly versioned scope. A correct, coherent core still takes
+priority: breaking changes remain possible with the versioning above. Do not add
+legacy adapters, duplicate storage or old-pickle migration solely to preserve
+unused pre-checkpoint builds. Update repository callers, examples and tests together
+when changing the model. Old pickle files are not a compatibility target.
 
 In tests and documentation, **fresh/imported behavior** means fresh optimal CamBam
 XML output versus input saved by CamBam or another XML producer. It does not mean

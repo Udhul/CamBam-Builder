@@ -1,9 +1,10 @@
 # Current status
 
-Status updated 2026-10-26: CF02 is implemented and accepted by engineering,
-with uncommitted changes on local `main` at `a603d90`, ready to commit. The
+Status updated 2026-10-26: PK01 is active on `feat/pk01-consumer-checkpoint`,
+based on clean local `main` at `19cecba`. CF02 is committed there and accepted by engineering. The
 [CF02 acceptance record](REVIEW.md#cf02-manufacturing-composition---2026-10-26)
-owns verification and scope. No commit, merge or push was performed for CF02.
+owns its verification and scope. This session is authorized to commit PK01;
+merging and registry publishing remain separate delivery actions.
 NC01-A is delivered on local `main` through the
 authorized `--no-ff` merge of `feat/nc01-a-native-geometry` (reviewed tip
 `dc962a1`) into `6514305`. The merge is not pushed. The
@@ -24,14 +25,26 @@ own requirements, behavior and findings respectively.
 **CF02 implementation and engineering acceptance are complete.** Reusable native
 composition now supports a multi-board cabinet and a distinct sensor-fixture
 consumer with separate front/back stock outputs. CF01 and NC01-A remain locally
-merged; CF02 is ready to commit.
+merged; CF02 is committed on local `main` at `19cecba`.
 
-**Next recommended implementation: PK01 consumer release checkpoint.** The native
+**Active: PK01 consumer release checkpoint.** The native
 foundation now has two reusable manufacturing consumers, making an explicitly
 versioned consumer contract and compatibility notes useful for adoption. Reuse
 CF02's package evidence where applicable and establish the remaining release
 scope; do not automatically extend adjacent frame, tab or native-class limits.
 The [post-merge queue](#post-merge-task-queue) owns the scope. BO01 remains separate.
+
+### PK01: consumer release checkpoint
+
+**State:** active; no blocker. Establish version 0.2.0 and its bounded consumer
+compatibility notes, then verify fresh wheel/sdist installation on the declared
+Python matrix. Owners are the package version/manifest, installed package smoke,
+[release notes](RELEASE_NOTES.md) and the specification's compatibility policy.
+Acceptance requires documented public imports and simple CAD/Part/MOP export
+outside the checkout, package metadata/provenance/asset checks, explicit CF02
+evidence reuse, and a reviewed clean committed branch against `main`.
+Stop when that checkpoint is accepted; no runtime engine expansion, tag or registry
+publication is needed. Next action: build and inspect the versioned packages.
 
 ### CF02: reusable manufacturing composition
 

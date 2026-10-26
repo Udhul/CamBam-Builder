@@ -240,14 +240,16 @@ a local import does not prove them.
 
 ## Packaging and supported Python validation
 
-The rest/V branch's refreshed package evidence is recorded in
-[session 5](REVIEW.md#branch-review-session-5---2026-09-29). Package acceptance
+Versioned consumer scope and upgrade notes are in
+[RELEASE_NOTES](RELEASE_NOTES.md); the current checkpoint's package evidence is in
+[PK01](REVIEW.md#pk01-consumer-checkpoint---2026-10-26). Package acceptance
 requires installed behavior, not an editable-checkout import. For a new package
 change, use a unique ignored `output/<task>-<unique>/` directory and:
 
 1. Run `uv build --out-dir output/<task>-<unique>/dist`. Inspect both archives:
    all declared modern/native/core/integration and legacy modules, MCP schema
-   and consumer template, license and metadata must be present. The sdist must
+   and consumer template, license and metadata must be present. The sdist includes
+   `docs/RELEASE_NOTES.md` and must
    also contain the tracked regression fixture data and
    `demos/mcp_client_acceptance_verify.py`, selected by `MANIFEST.in`; the wheel
    does not ship the tests. Confirm that ignored session artifacts/cache files
@@ -259,8 +261,9 @@ change, use a unique ignored `output/<task>-<unique>/` directory and:
    environment. Both extras have the same Python minimum as the base library.
    Do not use an editable install or add the source package to `PYTHONPATH`.
 3. From a working directory outside the checkout, verify version/dependency
-   metadata, modern/legacy construction, native Rect XML write/read, all supported
-   module imports and packaged MCP resources. Assert that imported package paths
+   metadata, public native aliases, modern/legacy construction, the README's
+   Rect/Part/Profile MOP XML workflow, all supported module imports and packaged
+   MCP resources. Assert that imported package paths
    belong to the selected environment's `site-packages`, including subprocesses
    used by tests. The dormant legacy CLI module is outside the supported import
    surface. Record interpreter, NumPy, Shapely/GEOS and MCP versions.

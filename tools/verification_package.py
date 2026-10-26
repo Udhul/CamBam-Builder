@@ -27,7 +27,8 @@ ASSETS = (
     "cambam_builder/mcp_adapter/contract_v1.schema.json",
     "cambam_builder/mcp_adapter/consumer_AGENTS.template.md",
 )
-SDIST_ROOT_FILES = ("LICENSE", "README.md", "pyproject.toml", "MANIFEST.in")
+SDIST_ROOT_FILES = ("LICENSE", "README.md", "pyproject.toml", "MANIFEST.in",
+                    "docs/RELEASE_NOTES.md")
 DEMO = "demos/mcp_client_acceptance_verify.py"
 RUNNERS = ("tools/verify.py", "tools/verification_package.py")
 FORBIDDEN_PARTS = {"__pycache__", "output", ".venv", ".git", ".pytest_cache"}
@@ -321,6 +322,13 @@ def smoke(kind: str) -> dict:
     import cambam_builder
     import legacy_cambam_builder
     import numpy
+    from cambam_builder import CBProject, CamBamProject, Vertex
+    from cambam_builder.cambam_reader import read_cambam_bytes as compatibility_reader
+    from cambam_builder.cambam_writer import serialize_cambam_bytes as compatibility_writer
+    from cambam_builder.native.core import Vertex as NativeVertex
+    from cambam_builder.native.manufacturing import (
+        ComponentPlacement, SetupFrame, SetupStock, compose_setup,
+    )
     from cambam_builder.native.reader import read_cambam_bytes
     from cambam_builder.native.writer import serialize_cambam_bytes
     from cambam_builder.planar import (Circle, ErrorBudget, PlanarFrame,
@@ -329,7 +337,10 @@ def smoke(kind: str) -> dict:
     imports = {}
     if kind == "base":
         module_names = (
-            "cambam_builder", "cambam_builder.native", "cambam_builder.native.project",
+            "cambam_builder", "cambam_builder.cambam_reader",
+            "cambam_builder.cambam_writer", "cambam_builder.native",
+            "cambam_builder.native.core", "cambam_builder.native.manufacturing",
+            "cambam_builder.native.project",
             "cambam_builder.native.reader", "cambam_builder.native.writer",
             "cambam_builder.planar", "legacy_cambam_builder",
             "legacy_cambam_builder.legacy_cambam_project",
@@ -352,11 +363,50 @@ def smoke(kind: str) -> dict:
     for name in module_names:
         imports[name] = _assert_installed(importlib.import_module(name))
 
-    project = cambam_builder.CBProject("package-smoke")
+    assert CBProject is CamBamProject is cambam_builder.CBProject
+    assert Vertex is NativeVertex
+    assert compatibility_reader is read_cambam_bytes
+    assert compatibility_writer is serialize_cambam_bytes
+    assert callable(compose_setup)
+    assert SetupStock(100, 50, 12, "example material").width == 100
+    assert SetupFrame().reflect_x is False
+
+    project = CBProject("board")
     layer = project.add_layer("Geometry")
-    project.add_rect(layer, identifier="outline", width=10, height=5)
+    outline = project.add_rect(layer=layer, identifier="outline", width=100, height=50)
+    part = project.add_part(
+        "Board", stock_width=100, stock_height=50, stock_thickness=12,
+        stock_material="example material",
+    )
+    mop = project.add_profile_mop(
+        part, targets=[outline], identifier="cutout", profile_side="Outside",
+        target_depth=-12, depth_increment=3, tool_diameter=6,
+    )
+    assert mop is not None
+    assert isinstance(ComponentPlacement(project, outline, "board", ("Board",), SetupFrame()),
+                      ComponentPlacement)
     xml = serialize_cambam_bytes(project)
-    assert read_cambam_bytes(xml).get_primitive("outline") is not None
+    restored = read_cambam_bytes(xml, source_name="board.cb")
+    restored_outline = restored.get_primitive("outline")
+    restored_part = restored.get_part("Board")
+    restored_mops = restored.get_mops_in_part("Board")
+    assert isinstance(restored, CamBamProject) and restored is not project
+    assert restored_outline is not None and restored_outline is not outline
+    assert (restored_outline.width, restored_outline.height) == (100, 50)
+    assert restored.units == "Millimeters"
+    assert restored_part is not None and restored_part is not part
+    assert (restored_part.stock_width, restored_part.stock_height,
+            restored_part.stock_thickness, restored_part.stock_material) == (
+                100, 50, 12, "example material")
+    assert [item.user_identifier for item in restored_mops] == ["cutout"]
+    restored_mop = restored_mops[0]
+    assert restored_mop is not mop
+    target_ids = restored.get_mop_targets(restored_mop)
+    assert [restored.get_primitive(identifier).user_identifier
+            for identifier in target_ids] == ["outline"]
+    assert (restored_mop.profile_side, restored_mop.target_depth,
+            restored_mop.depth_increment, restored_mop.tool_diameter) == (
+                "Outside", -12, 3, 6)
     assert legacy_cambam_builder.LegacyCBProject("legacy-package-smoke").name == "legacy-package-smoke"
     frame = PlanarFrame("mm", "package-smoke", (0, 0), 0)
     budget = ErrorBudget(.001, .01)
@@ -397,7 +447,9 @@ def smoke(kind: str) -> dict:
         else:
             raise AssertionError("backend-dependent CAM import unexpectedly succeeded")
     return {"kind": kind, "versions": versions, "imports": imports,
-            "xml_bytes": len(xml), "resources": list(ASSETS)}
+            "xml_bytes": len(xml), "resources": list(ASSETS),
+            "consumer_api": {"root_aliases": True, "compatibility_aliases": True,
+                             "board_roundtrip": True}}
 
 
 def main() -> None:
