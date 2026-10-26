@@ -36,6 +36,9 @@
 - Keep each fact/rule in one authoritative owner; follow
   [documentation maintenance](docs/README.md#maintenance-rules). Update only owners
   whose facts changed; use direct links instead of copied rules, evidence or status.
+  Session bootstraps and handoffs contain only the task objective, owner links and
+  session-specific authorization or exceptions; do not repeat this agreement or
+  instructions already available through those owners.
 - Capture consequential user feedback when it arises, including during unrelated
   work: product intent belongs in the relevant design owner, priority in PROGRESS,
   and reusable agent behavior here or in WORKFLOW. Distinguish the user's requirement
