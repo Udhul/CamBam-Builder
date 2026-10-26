@@ -36,6 +36,49 @@ user observation is required for these serialization claims. General unknown XML
 full native class coverage, arbitrary 3D setups, bin packing, G-code generation
 and MCP parity remain outside CF01. No BO01 search changes were integrated.
 
+### NC01-A: native geometry coverage sprint
+
+**State:** next implementation; a bounded one-session Ultra sprint, targeted at
+one to two agentic work hours with parallel evidence/implementation/review and
+meaningful commits. Time is a planning estimate, not permission to weaken
+acceptance. **Why now:** native Line/Spline input remains outside the supported
+inventory; a direct library consumer needs a trustworthy editable CAD foundation
+before broader manufacturing composition or additional search engines.
+
+**Outcome:** promote the [existing native inventory](REST_MACHINING_PLAN.md#inventoried-baseline-and-prepared-slice-2026-09-23)
+into one maintained class-to-API/test/evidence coverage map, and deliver the first
+evidence-backed Line/Spline author/import/edit/export capability through existing
+native entity ownership. Distinguish authorable, editable, preserved-only and
+explicitly unsupported variants. Verify real native class/XML forms first;
+historical inventory labels are evidence to check, not a reason to invent a new
+class where CamBam uses an existing representation.
+
+**Acceptance:**
+
+- Confirm native representations and supported parameter/geometry semantics from
+  installed/manual/API/native-saved evidence. Preserve editable curve intent;
+  any approximation must be an explicit caller operation with a stated tolerance.
+- Integrate the supported shapes with units, Tags, owned identity, layers,
+  groups/hierarchy, supported transforms, clone/copy and applicable native MOP
+  targeting. Diagnose unsupported variants without silently changing geometry.
+- Prove a direct-library mixed straight/curved component workflow through
+  editing and two save/reopen cycles. Include independently specified native
+  input, nonconsecutive IDs and inches coverage. Assert numeric geometry/world
+  pose, shape-defining data, reference identity and MOP targets/order.
+- Add fault-sensitive regressions, run affected native checks and a small
+  installed-base-package consumer outside the checkout. Use native observation
+  only for a specific serialization claim not settled by existing evidence;
+  prepare any necessary synthetic files and exact acceptance criteria first.
+- Update authoritative contracts, evidence and status. Review the complete
+  branch and commit coherent bundles; merge requires session authorization.
+
+**Stopping condition:** the mapped supported Line/Spline slice is implemented,
+verified and usable by the direct consumer, with unsupported variants and their
+reopening evidence explicit. Reassess scope only if native evidence contradicts
+the assumed representations. Do not expand into Surface/3D MOPs, a general spline
+CAM engine, universal unknown-XML preservation, setup/frame design, MCP parity,
+BO01, bin packing, release publication or G-code generation.
+
 ### Current branch closure
 
 | Remote branch | Tip at audit | Delivery state relative to `origin/main` |

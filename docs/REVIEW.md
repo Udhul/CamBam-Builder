@@ -87,6 +87,29 @@ assumptions or a consumer failure within this contract. CF01's original stopping
 condition is satisfied; the next distinct scope and delivery state live only in
 [PROGRESS](PROGRESS.md#active-work-and-next-priority).
 
+### CF01 merge review - 2026-10-26
+
+The lead reviewed the complete CF01 change against local `main` **`78fe421`**,
+with implementation tip **`f763c77`**, reusing the distinct implementation and
+independent correctness passes above. The user explicitly authorized merge once
+ready. No unresolved correctness or scope blocker was found.
+
+| Changed invariant / boundary | Consumer and fault-sensitive evidence | Disposition |
+| --- | --- | --- |
+| Units remain labels; no implicit dimensional conversion | Direct metric/inches board consumers, invalid/absent-unit regressions and the installed 425-primitive inches source | Correct within the documented exact-label policy. |
+| PointList references use owned identity | Import/export and copy/transfer tests force numeric/UUID changes; invalid targets, missing bindings and duplicate Nesting reject | Correct; deletion/transfer intentionally requires rebinding or changing an active Part's method before saving. |
+| Operator text coexists with framework metadata | Primitive/MOP notes, native context, collision, copy/Rect conversion and malformed-parent recovery tests | Correct within the reserved-signature policy; unknown XML remains outside the claim. |
+
+The worktree was clean, `main` remained the branch base, and
+`git diff --check main...HEAD` passed. The prior passing runner's complete
+source/test/configuration fingerprint matched the committed tree exactly:
+124 passes and 13 explicitly named skips, plus the previously completed isolated
+base-wheel consumer. No runtime change invalidated those results, so repeating
+the same behavior suite would add no evidence. The optional MCP and retained
+native-observation skips do not gate the direct-library CF01 contract. No new
+manual observation is required. Subsequent changes in this review are delivery
+status and next-sprint documentation only; merge delivery is owned by PROGRESS.
+
 Entries below are dated historical evidence, including superseded decisions and
 checkpoints. [PROGRESS](PROGRESS.md) owns current priority and state; the
 [specification](structure_spec.md) and [MCP contract](MCP_CONTRACT.md) own current
