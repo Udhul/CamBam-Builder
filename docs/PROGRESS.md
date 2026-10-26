@@ -1,12 +1,17 @@
 # Current status
 
-Status updated 2026-10-26: CF02 is implemented and accepted by engineering,
-with uncommitted changes on local `main` at `a603d90`, ready to commit. The
+Status updated 2026-10-26: PK01 is implemented and accepted by engineering on
+`feat/pk01-consumer-checkpoint`, targeting local `main` at `19cecba`. Its
+[acceptance record](REVIEW.md#pk01-consumer-checkpoint---2026-10-26) owns package
+verification and CF02 evidence reuse; [release notes](RELEASE_NOTES.md) define
+the version 0.2.0 consumer scope. CF02 is committed on local `main`; the
 [CF02 acceptance record](REVIEW.md#cf02-manufacturing-composition---2026-10-26)
-owns verification and scope. No commit, merge or push was performed for CF02.
+owns its verification and scope. PK01 is a local committed checkpoint; no merge,
+tag, push or package registry publication was performed in this session.
 NC01-A is delivered on local `main` through the
 authorized `--no-ff` merge of `feat/nc01-a-native-geometry` (reviewed tip
-`dc962a1`) into `6514305`. The merge is not pushed. The
+`dc962a1`) into `6514305`. Fetching origin in this session confirms that merge
+is on `origin/main` at `a603d90`; local `main` is one CF02 commit ahead. The
 [merge review](REVIEW.md#nc01-a-merge-review---2026-10-26) records acceptance
 and evidence reuse.
 CF01 remains delivered locally through merge `9289d4b`. The remote inventory below remains the earlier
@@ -21,17 +26,26 @@ own requirements, behavior and findings respectively.
 
 <a id="doc01-documentation-consolidation-backlog"></a>
 
-**CF02 implementation and engineering acceptance are complete.** Reusable native
-composition now supports a multi-board cabinet and a distinct sensor-fixture
-consumer with separate front/back stock outputs. CF01 and NC01-A remain locally
-merged; CF02 is ready to commit.
+**PK01 implementation, automated checks and engineering acceptance are complete.**
+The native foundation now has an explicitly versioned consumer contract and
+compatibility notes, with installed wheel/sdist evidence and reusable CF02 proof.
+No manual observation is required for this package/document-authoring checkpoint.
 
-**Next recommended implementation: PK01 consumer release checkpoint.** The native
-foundation now has two reusable manufacturing consumers, making an explicitly
-versioned consumer contract and compatibility notes useful for adoption. Reuse
-CF02's package evidence where applicable and establish the remaining release
-scope; do not automatically extend adjacent frame, tab or native-class limits.
-The [post-merge queue](#post-merge-task-queue) owns the scope. BO01 remains separate.
+**Next recommended implementation: BO01-C.** Close and reconcile the existing
+committed search branch before expanding native engine output. This preserves
+already implemented search capability and resolves its outstanding delivery
+gate; it does not reopen continuous optimization or add search features.
+The [post-merge queue](#post-merge-task-queue) owns the scope.
+
+### PK01: consumer release checkpoint
+
+**State:** accepted; no blocker. Version 0.2.0 and the
+[compatibility notes](RELEASE_NOTES.md#020-consumer-checkpoint) define the bounded
+consumer baseline. The [acceptance record](REVIEW.md#pk01-consumer-checkpoint---2026-10-26)
+records fresh installed imports, CAD/Part/MOP export, metadata/provenance/assets,
+supported Python checks and exact CF02 reuse. The stopping condition is satisfied.
+Runtime engines are unchanged. Tags and registry publishing remain separate,
+explicitly authorized delivery work, not an outstanding PK01 implementation gate.
 
 ### CF02: reusable manufacturing composition
 
@@ -128,10 +142,9 @@ outcome using the [strategy checkpoint](WORKFLOW.md#strategy-checkpoint).
 
 | Order | Increment | Useful outcome / scope |
 | --- | --- | --- |
-| 1 | **PK01: consumer release checkpoint** | Build/install wheel and sdist outside the checkout, verify documented public imports and simple CAD/MOP export on supported Python versions, version the accepted scope and publish compatibility notes. Reuse applicable CF02 evidence. No tag or published-release claim until actually delivered; package registry publishing remains separately authorized. |
-| 2 | **BO01-C** | Close/reconcile the existing committed search branch; preserve useful work without expanding the search epic. May be a bounded maintenance interlude sooner if independent and cheap, not a competing active priority. |
-| 3 | **Native extended-engine output** | Improve reusable rest/V/inlay attachment through ordinary Regions/Plines and MOPs for a named consumer. Retain protected boundaries, signed allowances and specified overlap. Existing XYZ/Engrave whole-motion gaps remain explicit; inspectable path geometry alone is not a complete execution certificate. |
-| 4 | **SF01** | Generalize bounded relief contact/stock and shape-aware finishing when the native/library foundation and a concrete consumer justify it. NR03 remains a separate native interchange capability. |
+| 1 | **BO01-C** | Close/reconcile the existing committed search branch against the current foundation and consumer compatibility policy; preserve useful work without expanding the search epic. Reuse applicable branch evidence and repair material defects or integration conflicts. |
+| 2 | **Native extended-engine output** | Improve reusable rest/V/inlay attachment through ordinary Regions/Plines and MOPs for a named consumer. Retain protected boundaries, signed allowances and specified overlap. Existing XYZ/Engrave whole-motion gaps remain explicit; inspectable path geometry alone is not a complete execution certificate. |
+| 3 | **SF01** | Generalize bounded relief contact/stock and shape-aware finishing when the native/library foundation and a concrete consumer justify it. NR03 remains a separate native interchange capability. |
 
 NC01-A closes the first native slice. Further NC01 classes/preservation and NR03
 Surface/3D interchange are conditional on a concrete consumer and the
@@ -227,10 +240,10 @@ and [verification](REVIEW.md#export-failure-and-state-path-verification).
 
 ## Completion and verification
 
-CF02's implementation, automated checks and engineering acceptance are complete;
-[REVIEW](REVIEW.md#cf02-manufacturing-composition---2026-10-26) records the
-evidence and limits. This is a good fresh-session breakpoint: the composition
-outcome is coherent and verified, while PK01 has a distinct release-contract
-scope. Its durable requirements are in the queue; no unresolved decision,
-pending result or unsaved context is needed to start it. Committing/integration
-of the current changes remains user-owned.
+PK01's implementation, automated checks and engineering acceptance are complete;
+[REVIEW](REVIEW.md#pk01-consumer-checkpoint---2026-10-26) records the evidence and
+limits. This is a good fresh-session breakpoint: the consumer checkpoint is
+coherent and verified, while BO01-C has a distinct branch-reconciliation scope.
+Its durable requirements are in the queue; no unresolved decision, pending result
+or unsaved context is needed to start it. PK01 commits were authorized; merging
+into `main` remains user-owned.

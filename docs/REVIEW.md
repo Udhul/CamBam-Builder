@@ -1,5 +1,99 @@
 # Review and acceptance history
 
+## PK01 consumer checkpoint - 2026-10-26
+
+**Outcome:** accepted by engineering for the
+[0.2.0 consumer scope](RELEASE_NOTES.md#020-consumer-checkpoint). Work started from
+clean local `main` at `19cecba` (CF02), on `feat/pk01-consumer-checkpoint`.
+Implementation commit `be05243` versions the baseline, records the bounded
+patch/minor compatibility policy, ships the notes in the sdist and strengthens
+the existing installed package smoke. Runtime code changes only the version
+constant; no native/CAM algorithm or dependency constraint changed.
+
+### Fresh package and consumer evidence
+
+The declared interpreter ran:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py --pattern test_verification_package.py
+& .\.venv\Scripts\python.exe tools/verify.py --package --pattern test_native_owner_migration.py --pattern test_native_interchange.py
+```
+
+The package-helper fault checks passed **3 tests**. The installed run passed
+**9 tests in 6 module executions, zero skips**, plus all four installed smoke
+gates, in 148.850 seconds. Its scope is the selected consumer modules, not the
+whole regression suite. Local report:
+`output/verification-20261026-103902-fff68c33/report.json`.
+
+| Fresh installation | Python | Dependencies and result |
+| --- | --- | --- |
+| Wheel, both extras | 3.12.10 | NumPy 2.5.4, Shapely 2.1.2 / GEOS 3.13.1, MCP 2.2.0; 3 tests and installed smoke pass |
+| Wheel, both extras | 3.13.5 | Same dependency versions; 3 tests and installed smoke pass |
+| Independent sdist, both extras | 3.12.10 | Same dependency versions; 3 tests from distributed sources and installed smoke pass |
+| Base-only wheel | 3.12.10 | NumPy 2.5.4; Shapely/MCP absent; installed native consumer and optional-backend refusal smoke pass |
+
+Archive checks verify declared runtime modules, MCP resources, license, metadata,
+distributed tests/fixtures and release notes against source bytes, excluding
+ignored output/cache files. All installed imports resolve to the selected
+environment's `site-packages`, with external working directories and a source-free
+test snapshot. Each full smoke imports 94 package/dependency modules; the base
+smoke imports 12. Installed metadata and `__version__` agree on 0.2.0, Python
+eligibility and optional dependency declarations are checked, and the MCP entry
+point loads without making MCP a base dependency.
+
+The expanded smoke checks public root/native/compatibility aliases and the README
+board: 100 by 50 geometry, 12-thick stock, Outside Profile target `outline`, depth
+-12, increment 3 and tool diameter 6, with millimetre units and operation order
+after XML reconstruction. Existing tests add independent native XML, Region/MOP
+identity, stock-offset, hierarchy, unit and edit-cycle witnesses.
+
+The unmodified `demos/native_board.py` was copied under
+`output/pk01-20261026-9c4d61a2/` and executed with `-I` from an empty external
+working directory in **all four environments**. Every run passed its **10 checks**
+and produced original/edited `.cb` files: edited width 620, world origin (20,25),
+owned placement X=660, groove depth -7, retained hierarchy/notes and ordered
+grooves/drilling/cutout with the outline target. The wrapper independently checks
+installed provenance and version. Script/output hashes, command vectors and logs
+are retained in `installed-consumers.json` in that task directory. These are
+native author/edit/save/reopen results, not generated toolpath acceptance.
+
+Built artifact SHA-256 values:
+
+- Wheel `cambam_builder-0.2.0-py3-none-any.whl`:
+  `7ad80b4cdea8a0938da4ed9b496adb8be65c0fad6350d1dcc45f1b8eb2474995`.
+- Sdist `cambam_builder-0.2.0.tar.gz`:
+  `0ededb67579952bd9ca1bc550a529609d38ab0d527cc1de2e39d7db38ebff191`.
+
+### CF02 evidence reuse and acceptance boundary
+
+The retained CF02 wheel/sdist hashes match the
+[CF02 acceptance record](#cf02-manufacturing-composition---2026-10-26).
+Comparing all **95 runtime/resource files** shows only `__init__.py` differs;
+replacing its 0.2.0 version literal with 0.1.0 restores exact bytes. All **122
+distributed test/fixture files** are byte-identical. Fresh Python, NumPy,
+Shapely/GEOS and MCP versions match the corresponding CF02 installed environments.
+This explicitly reuses CF02's 58 checkout tests, 48 installed tests and four
+cabinet/fixture demo runs for unchanged composition behavior. It is an engineering
+applicability comparison, not runner resume or a claim those tests ran again.
+The one-off comparison and its result are in the same PK01 task directory;
+the counts, hashes and scope here remain usable without ignored artifacts.
+
+Independent review of `main...be05243` found no material correctness or contract
+issue. The lead reviewed the complete branch changes and fresh results. The
+acceptance/status documentation added after package verification changes no build
+input or executable behavior. Required package/document-authoring gates are closed;
+manual GUI validation would add no missing evidence for this increment. Existing
+CamBam/native, controller and physical acceptance limits remain unchanged. Reopen
+for changed runtime/dependency/archive inputs, a new supported interpreter/platform,
+or a named consumer outside the documented compatibility boundary.
+
+Target base is local `main` at `19cecba`; branch scope is implementation `be05243`
+plus this acceptance/status closure. Final clean-worktree, commit-range, ancestry
+and exact `main...HEAD` diff gates are checked after the closing commit. Git fetch
+confirmed `origin/main` at `a603d90`; CF02 and PK01 remain local. No merge, tag,
+push or registry release was performed. Current priority/delivery state belongs
+to [PROGRESS](PROGRESS.md), not the package version alone.
+
 ## CF02 manufacturing composition - 2026-10-26
 
 **Outcome:** accepted by engineering for the

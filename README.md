@@ -21,6 +21,8 @@ python -m pip install .
 Install `".[planar]"` when using the Shapely-backed planar engines. The base library
 needs neither CamBam installed nor an MCP server for document authoring. This is a
 source installation instruction, not a claim that a release is published on PyPI.
+The [0.2.0 consumer checkpoint and compatibility notes](docs/RELEASE_NOTES.md#020-consumer-checkpoint)
+define the accepted scope, public imports and upgrade expectations.
 For development use [the environment and verification runbook](docs/DEVELOPMENT.md#environment-and-setup).
 
 ```python
