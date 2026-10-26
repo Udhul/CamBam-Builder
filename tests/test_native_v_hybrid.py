@@ -111,7 +111,7 @@ class NativeVHybridTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "occupancy stock differs"):
                 write_bundle(root / "wrong-stock", replace(
                     job, occupancy_setup=replace(occupancy_setup,
-                    stock=Box("initial stock", (0, 0, -3, 10, 10, 0)))),
+                    stock=Box("initial stock", (0.1, 0, -3, 10, 10, 0)))),
                     "uccnc", source_binding=binding)
 
     def test_native_arc_predecessor_roundtrips_continuously_in_both_dialects(self):

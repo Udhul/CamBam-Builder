@@ -126,6 +126,9 @@ class Bundle:
     unproved_floor_area_mm2: object
     cost: Cost
     program_sha256: tuple
+    # Source bytes alone do not identify the independently declared cap/angle.
+    # Empty marks older caller-built snapshots that need regeneration for native binding.
+    design_fingerprint: str = ""
 
 
 @dataclass(frozen=True)
@@ -285,7 +288,7 @@ def _evaluate(actions, target, tools, families, constraints, model, setup,
                 v.section_evidence(prior, cusp_depth).known_free_inner).area
         bundle = Bundle(job, files, dialect, tuple(v.section_report(prior, depth)),
             tuple(v.volume_bounds(prior)), depth, floor_gap, cost,
-            tuple(report['motion_equivalence']['program_sha256']))
+            tuple(report['motion_equivalence']['program_sha256']), target.fingerprint)
         reasons = _limit_reasons(bundle.area_mm2, bundle.volume_mm3, cost, constraints)
         if floor_gap is not None and floor_gap > 0:
             reasons.append('floor cusp unproved over located floor area')

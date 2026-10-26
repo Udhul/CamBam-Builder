@@ -97,6 +97,7 @@ class BundleOracleTests(unittest.TestCase):
         result = self.results['residual']
         for assessment in result.assessments:
             bundle = assessment.bundle
+            self.assertEqual(bundle.design_fingerprint, self.target.fingerprint)
             names = {action[0] for action in assessment.executed_actions}
             length = 5 if 'T1' in names else 2 if 'T2' in names else 0
             removed = length + math.pi*.25 if length else 0

@@ -622,7 +622,8 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
             if op is not None:
                 target = op.target
                 x0, y0, x1, y1 = target.stock_xy
-                stock_depth = target.stock_depth_mm
+                stock_depth = (target.stock_depth_mm if stage.surface_operation is not None
+                               else target.stock_depth)
                 cutter_radius = op.radius_mm
                 cutting_length = op.cutting_length_mm
             elif type(stage.operation) is replay.Operation:
@@ -639,8 +640,18 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
                 cutting_length = plan.tool.cutting_length
             else:
                 raise ValueError("tool-body occupancy requires supported stock operation")
-            if setup.stock.bounds != (x0, y0, -stock_depth, x1, y1, 0):
-                raise ValueError("occupancy stock differs from stage target")
+            required_stock = (x0, y0, -stock_depth, x1, y1, 0)
+            if op is not None:
+                # Surface/volume targets explicitly own their physical stock.
+                if setup.stock.bounds != required_stock:
+                    raise ValueError("occupancy stock differs from stage target")
+            elif not all(setup.stock.bounds[axis] <= required_stock[axis] and
+                         setup.stock.bounds[axis + 3] >= required_stock[axis + 3]
+                         for axis in range(3)):
+                raise ValueError("occupancy stock differs from or does not enclose planar stage target")
+            # Planar targets continue to own allowed removal and residuals.
+            # A larger physical box grants no removal/access credit; every
+            # noncutting body band is checked against that complete box below.
             body = bodies.get(stage.tool_id)
             if body is None or (body.bands[0].radius_mm < cutter_radius or
                                 body.bands[0].top_mm != cutting_length):

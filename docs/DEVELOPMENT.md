@@ -2065,6 +2065,36 @@ full checkout discovery (`tools/verify.py`) under
 [mixed/paired contract](structure_spec.md#mixed-tool-and-paired-inlay-search-bo01-b)
 and [BO01-B evidence](REVIEW.md#bo01-b-mixed-and-paired-search---2026-10-03).
 
+### Native selected-bundle output checks
+
+The [source-bound native contract](structure_spec.md#source-bound-native-bundle-documents-and-posted-motion)
+adds document authoring and a complete native post gate to finite planar search.
+Use the `planar` extra, then run:
+
+```powershell
+& $ProjectPython tools/verify.py --pattern test_bundle_document.py --pattern test_bundle_post.py --pattern test_rc01_native.py --pattern test_occupancy.py
+$NativeSearchOutput = Join-Path 'output' ('native-search-' + [guid]::NewGuid().ToString('N').Substring(0,8))
+& $ProjectPython demos/native_search_workflow.py $NativeSearchOutput
+```
+
+The demo returns live `NativeDocument` values through `build_workflows(directory)`
+for callers that generate actual posts and invoke `bundle_post.audit_post` in the
+same workflow. Keep the original exact source and candidate bytes; do not rebuild
+random-ID sources to audit an earlier post. `check_document` alone grants only
+document fidelity. Use the same explicit finish limits when auditing actual
+native bytes; inspect each reported assumption and result. Native toolpath generation
+is optional to authoring and is not needed for base-library installation.
+Pass the full selected Part stock box to search, not just the removal target's
+bounding box or depth. Keep the reopened project alive while inspecting inherited
+geometry; extracted children alone do not own their parents.
+
+Shared Default-parser changes also select the existing native-series, native V,
+arc replay and literal-post callers affected by the edit. The deterministic test
+posts are parser/adapter regressions; actual native evidence must identify the
+installed application and complete generated files separately. For package changes,
+run the focused installed matrix with `--package` and both new test modules;
+copy the demo outside the checkout and assert installed package provenance.
+
 ### Editable native rest preparation and actual-post gate
 
 NR01's [contract](structure_spec.md#editable-native-rest-boundaries-and-mops-nr01)

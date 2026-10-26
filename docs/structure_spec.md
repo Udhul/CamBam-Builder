@@ -1003,6 +1003,12 @@ Dominance requires a competitor's residual **upper** bounds to be no greater
 than the other's **lower** bounds, plus no-worse cost/change/setup metrics and
 at least one strict improvement; overlapping uncertainty is retained.
 
+Each `Bundle` retains the fixed `design_fingerprint` as well as the source and
+program identities. This distinguishes independently declared cap/angle/frame
+from source bytes, including cylinder-only selections. The default empty value
+keeps older caller-built values constructible; native binding requires a fresh
+nonempty design identity. Cached scores remain observations, not audit authority.
+
 `SearchResult` exposes requested/executed/omitted orders, rejected reasons,
 verified `Bundle` job/bytes/hashes and measurements, frontier, total/evaluated
 counts, enumeration completeness and unresolved failures. Exhausting all orders
@@ -1106,6 +1112,88 @@ is inferred. Short closed offset rings retain nonzero traversal after coordinate
 rounding; the strict motion verifier still rejects invalid paths. The
 [BO01-B evidence](REVIEW.md#bo01-b-mixed-and-paired-search---2026-10-03) records
 generated benefits, supported profile/dialect challenges and remaining limits.
+
+### Source-bound native bundle documents and posted motion
+
+`integrations.cambam.bundle_document` connects the finite planar search to the
+native library. It requires the `planar` extra. `bind_design(source_bytes,
+primitive_identifier, part_identifier, cap_depth_mm=..., design_angle_degrees=...,
+frame=...)` creates a `NativeDesign` from exact source bytes and one straight,
+closed Rect/Pline/Region at world Z=0. Source geometry may inherit transforms;
+holes remain protected. Cap and angle belong to the design independently of the
+cutter. Explicit millimetres, an enabled stock-bearing Part containing the target,
+zero stock top/machining origin and no nesting are required. Existing MOPs must
+be disabled; their XML remains design context. Curved outlines and automatic
+unit conversion are outside this boundary.
+
+Stock bounds and Part origin must be explicit, finite native records; missing,
+ambiguous or malformed records cannot inherit permissive reader defaults.
+Selected geometry and inherited matrix records must also have unambiguous native
+structure. The job's occupancy stock box must equal the selected Part's complete
+stock extent, including material below or around the removal target. Planar
+ordered jobs permit that stock box to enclose their target; removal evidence
+remains confined to the target while shank/holder checks use the full stock box.
+Surface/volume jobs retain their separate exact stock contracts.
+
+Search uses `design.target`. `author(design, selected_bundle, name=...)` verifies
+the design fingerprint, source/frame, complete selected program bytes and hashes,
+decoded stock, axial controls and tool-body/fixture evidence before authoring.
+Cylinder-only sweeps are also checked against the original tapered design;
+matching a source hash or planar outline alone is insufficient. Linear V and
+cylindrical stages with zero translations/tool offsets and a common safe Z are
+supported. Original source CAD, stock, Tags and disabled MOPs remain intact.
+
+The returned `NativeDocument` holds immutable candidate bytes, the design,
+bundle and generated MOP identifiers. Each stage becomes ordinary editable XYZ
+Plines and an Engrave MOP, with explicit tools, feeds, spindle and ExactStop
+settings. `TargetDepth=0` preserves authored XYZ depths; it does not mean the
+geometry is at stock top. Global native `FastPlungeHeight=0` feeds entries from
+clearance. Each MOP footer retracts to safe Z; a footer stops the spindle before
+a change of tool. These are setup controls, not literal cutting scripts.
+Roughing clearance is zero and no relief or extra allowed removal is inferred.
+Existing signed native allowances retain their separate contracts.
+
+Generated paths are in world XYZ and deliberately unparented. Compose design
+components/setups with CF02 **before** binding and searching. Any later layout,
+geometry, MOP, tool or source change requires rebinding/replanning/reposting as
+appropriate; moving a native file does not move its evidence. Document
+`check_document(candidate_bytes, source_bytes=...)` regenerates the expected
+document and checks complete XML fidelity, including unknown additions. It accepts
+equivalent numeric spelling, XML-ID renumbering and MOP target-set order across
+library save/reopen cycles. It does not erase unknown XML through normalization.
+
+`integrations.cambam.bundle_post.audit_post(document, post_bytes,
+max_residual_area_mm2=..., max_residual_volume_mm3=...)` supplies a separate
+whole-post gate. Optional current source/candidate bytes are checked against the
+binding. It decodes the complete bounded straight **Default** post, requires
+native MOP stage order, tools, feeds, spindle state and safe boundaries, and
+matches the complete cutting-edge multiset at `ordered_job.MATCH_TOLERANCE_MM`.
+Within-stage path order/direction may change; missing, repeated or extra edges,
+low links, diagonal entries, unsupported commands and unplanned movements reject.
+G64 is a modal condition: only motion actually executed under blending needs
+unresolved-trajectory evidence. A header G64 replaced by G61 before motion does
+not invalidate ExactStop output, and a later G61 cannot excuse an earlier blended
+move. The pre-tool no-op clearance command retains the explicit initial-pose
+assumption.
+
+All actual entries, cuts, links and retracts undergo axial and whole-body/box-fixture
+checks. Actual native cutting coordinates reconstruct V sweeps and cylindrical
+traces against the same fixed design; their stock union supplies fresh residual
+area at `min(1 mm, design cap)` and volume bounds. Cached search scores and section
+depth cannot select or weaken these gates. Explicit caller finish limits must
+pass. The report binds source/candidate/post/job hashes and states initial tip,
+frame, full selected-Part virgin stock box, fixture and tool-body assumptions.
+This does not certify undeclared material, controller motion, physical setup or
+machining forces.
+Search time, dominance and optimum claims do not transfer to regenerated native
+motion, and no synthetic post is represented as native observation.
+
+The [native search consumer](../demos/native_search_workflow.py) keeps ornament
+recipes and reflected insert-face layouts in application code. The
+[runbook](DEVELOPMENT.md#native-selected-bundle-output-checks) owns verification
+commands; dated acceptance owns the installed CamBam observations. This adds an
+ordinary native path carrier without changing existing native-rest, literal-motion,
+paired-inlay or controller adapters into a universal execution backend.
 
 ### Editable native rest boundaries and MOPs (NR01)
 
@@ -3435,13 +3523,14 @@ production toolpath correctness.
 
 ### Development compatibility policy
 
-The [0.2.0 consumer checkpoint](RELEASE_NOTES.md#020-consumer-checkpoint) establishes
-a bounded pre-1.0 Python API baseline. Patch versions within 0.2.x preserve its
+The [consumer checkpoints](RELEASE_NOTES.md) establish bounded pre-1.0 Python API
+baselines. Patch versions within each documented minor series preserve its
 documented imports and supported caller behavior; fixes may reject previously
 accepted invalid or unsupported input, with a compatibility note. Intentional
 breaking changes to that scope require a new minor version and migration notes.
-Consumers should pin a tested version, or constrain upgrades to `>=0.2,<0.3` when
-they can run their own regression checks. Internal helpers and undocumented
+Consumers should pin a tested version, or constrain upgrades to their tested
+minor series (for example `>=0.3,<0.4`) when they can run their own regression checks.
+Internal helpers and undocumented
 behavior are outside this promise; 1.0 stability is not claimed.
 
 This refines the user's 2026-09-08/09 development policy (then unreleased, with no
