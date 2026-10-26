@@ -74,6 +74,49 @@ class VRegionTests(unittest.TestCase):
                 self.assertTrue(any(path.points[0][0] < 10
                                     for path in result.paths))
 
+    def test_short_closed_contour_sampling_preserves_traversal_and_closure(self):
+        from shapely.geometry import LineString
+        ring = LineString(((0, 0), (.01, 0), (.01, .01), (0, .01), (0, 0)))
+        points = v_region._sample(ring, .6)
+        self.assertGreaterEqual(len(set(points)), 3)
+        self.assertEqual(points[0], points[-1])
+        self.assertTrue(all(a != b for a, b in zip(points, points[1:])))
+        # Rounding can collapse an open sub-resolution segment; it must not
+        # become a zero-length cutting motion with an invented positive depth.
+        tiny = LineString(((0, 0), (1e-9, 0)))
+        self.assertEqual(v_region._sample(tiny, .6), ((0, 0),))
+
+    def test_generated_tapered_inlay_offset_keeps_short_closed_paths(self):
+        from shapely.geometry import box
+        from cambam_builder.cam_core import ornamental_inlay, tapered_inlay
+        design = tapered_inlay.Design(ornamental_inlay.Design(
+            "short-offset-rings", box(0, 0, 3, 3), box(-1, -1, 4, 4),
+            .35, .05, .05, 1, 3, .18, .3, .2, 1), 30, .35, .35)
+        tool = v_region.VProfile("flat", 30, .03, 2, 2)
+        for side in ("receiver", "plug"):
+            for target in design.targets(side):
+                with self.subTest(side=side, target=target.source_id):
+                    plan = v_region.plan(target, tool, stepover_mm=.10,
+                        xy_step_mm=.6, margin_mm=.002, safe_z=3,
+                        fill_pattern="offset")
+                    self.assertTrue(plan.paths)
+                    self.assertIs(v_region.verify(plan), plan)
+                    self.assertEqual(plan.target.fingerprint, target.fingerprint)
+                    closed = []
+                    for path in plan.paths:
+                        self.assertTrue(all(a[:2] != b[:2]
+                            for a, b in zip(path.points, path.points[1:])))
+                        if path.points[0][:2] == path.points[-1][:2]:
+                            closed.append(path)
+                            self.assertGreaterEqual(
+                                len({p[:2] for p in path.points}), 3)
+                    self.assertTrue(closed)
+                    # Preserve the formerly collapsed terminal contours as
+                    # positive-length loops, rather than silently dropping them.
+                    self.assertTrue(any(sum(math.dist(a[:2], b[:2])
+                        for a, b in zip(path.points, path.points[1:])) < .6
+                        for path in closed))
+
     def test_short_flute_makes_partial_cut_and_keeps_deep_target_rest(self):
         target = v_region.VTarget.polygon("deep", ((0, 0), (10, 0),
             (10, 10), (0, 10)), (), 2)

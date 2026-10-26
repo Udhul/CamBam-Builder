@@ -51,6 +51,22 @@ class NativeRC01Tests(unittest.TestCase):
             with self.subTest(changed=changed), self.assertRaises(ValueError):
                 read_default_post(changed, allow_drill_wrappers=True)
 
+    def test_blending_warning_tracks_motion_under_the_active_mode(self):
+        header = "G21 G90 G64 G40\nG0 Z5\nT1 M6\nG61 G17\nM3 S12000\n"
+        body = "G1 F60 Z-1\nG1 F240 X7\nG0 Z5\nM5\nM30\n"
+        _, warnings = read_default_post(header + body)
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("initial machine position", warnings[0])
+        for changed in (
+            header + body.replace("G1 F240 X7", "G64\nG1 F240 X7\nG61"),
+            header + body.replace("G0 Z5", "G64\nG0 Z5\nG61"),
+            header + body.replace("G1 F240 X7", "G64 G1 F240 X7\nG61"),
+        ):
+            with self.subTest(post=changed):
+                _, warnings = read_default_post(changed)
+                self.assertEqual(sum("G64 blending" in item for item in warnings), 1)
+
+
     def test_reader_rejects_hidden_control_separators_before_line_splitting(self):
         valid = "G21 G90 G17\nT1 M6\nM3 S12000\nG1 F60 Z-1\nG0 Z5\nM5\nM30\n"
         self.assertEqual(read_default_post(valid),

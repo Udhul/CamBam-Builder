@@ -39,6 +39,7 @@ def read_default_post(data, *, allow_arcs=False, allow_drill_wrappers=False,
     items, warnings = [], []
     stopped = False
     spindle_running = False
+    blending = False
     for number, raw in enumerate(data.splitlines(), 1):
         line = _COMMENT.sub("", raw).strip()
         if not line or line == "%":
@@ -95,8 +96,10 @@ def read_default_post(data, *, allow_arcs=False, allow_drill_wrappers=False,
                 plane = True
             elif g in (0, 1, 2, 3):
                 motion = g
+            elif g == 61:
+                blending = False
             elif g == 64:
-                warnings.append(f"line {number}: G64 blending needs trajectory evidence")
+                blending = True
         values = {a: v for a, v in codes if a in "XYZFST"}
         offsets = {a: v for a, v in codes if a in "IJ"}
         if offsets and (motion not in (2, 3) or set(offsets) != {"I", "J"}):
@@ -126,6 +129,11 @@ def read_default_post(data, *, allow_arcs=False, allow_drill_wrappers=False,
                         start_radius <= 0 or abs(start_radius - end_radius) > 0.001):
                     raise ValueError(f"line {number}: inconsistent arc radii")
             if end != at:
+                # CamBam's Default header selects G64 before an ExactStop MOP
+                # selects G61. Only motion executed under G64 needs a blending
+                # caveat; a later G61 cannot erase an earlier blended move.
+                if blending:
+                    warnings.append(f"line {number}: G64 blending needs trajectory evidence")
                 if motion in (1, 2, 3) and "F" not in values and feed is None:
                     raise ValueError(f"line {number}: feed move without feed")
                 item = {"type": "move", "tool": f"T{tool}",

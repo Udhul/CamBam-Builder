@@ -60,7 +60,7 @@ class NativeSeriesTests(unittest.TestCase):
                     forged.check_freshness(candidate, candidate, post)
 
     def make_case(self, directory):
-        project = CBProject("series")
+        project = CBProject("series", units="Millimeters")
         layer = project.add_layer("Geometry")
         part = project.add_part("Part", stock_thickness=1, stock_width=10,
                                 stock_height=10, stock_surface=0,
@@ -78,7 +78,6 @@ class NativeSeriesTests(unittest.TestCase):
         post = directory / "candidate.nc"
         project.save(str(candidate))
         content = candidate.read_text(encoding="utf-8")
-        content = content.replace("<CADFile ", '<CADFile units="Millimeters" ', 1)
         content = content.replace("<MachiningOptions>",
                                   "<MachiningOptions><PostProcessor>Default</PostProcessor>", 1)
         candidate.write_text(content, encoding="utf-8")

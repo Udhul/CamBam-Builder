@@ -2035,6 +2035,66 @@ it does not require unrelated endmill/surface recipes. Changes to shared replay
 or stock enclosure owners still require full discovery under
 [required checks](#required-checks-by-change).
 
+### Finite planar bundle search checks
+
+BO01-A/B search and its RP01/supplied-selection boundaries use:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py --pattern test_bundle_search.py --pattern test_planar_rest.py --pattern test_strategy_selection.py
+& .\.venv\Scripts\python.exe tools/verify.py --pattern test_mixed_bundle_search.py --pattern test_inlay_search.py --pattern test_planar_cylinder.py --pattern test_v_region.py --pattern test_fixed_v_design.py
+```
+
+Self-contained tests enumerate an analytic capsule space with three objective
+winners and a generated protected-island ornament, challenge another
+design/profile through Grbl, verify decoded constant-feed cost and depth/setup
+accounting, and reject mutated travel, fixtures, entries, unproved cusp and
+invalid/extreme controls. Manual orders and budget/failure quality are covered
+without caller-asserted audit authority. Inputs/output bytes are generated in
+memory; the verification runner owns ignored session logs. See the
+[search contract](structure_spec.md#finite-planar-toolpath-bundle-search-bo01-a)
+and [evidence](REVIEW.md#bo01-a-finite-planar-bundle-search---2026-10-03).
+
+BO01-B adds generated cylindrical/V protected-island orders, a changed
+motif/profile with Grbl, original-target cylinder-only scoring, independent
+tapered receiver/plug orders, decoded insertion and final facing, compound cost
+ranking and unsupported/setup/part/facing diagnostics. The generated offset
+consumer reopened the short closed-contour sampler gap; its strict-verifier
+regressions cover both part targets. Changes to this shared path sampler require
+full checkout discovery (`tools/verify.py`) under
+[required checks](#required-checks-by-change). See the
+[mixed/paired contract](structure_spec.md#mixed-tool-and-paired-inlay-search-bo01-b)
+and [BO01-B evidence](REVIEW.md#bo01-b-mixed-and-paired-search---2026-10-03).
+
+### Native selected-bundle output checks
+
+The [source-bound native contract](structure_spec.md#source-bound-native-bundle-documents-and-posted-motion)
+adds document authoring and a complete native post gate to finite planar search.
+Use the `planar` extra, then run:
+
+```powershell
+& $ProjectPython tools/verify.py --pattern test_bundle_document.py --pattern test_bundle_post.py --pattern test_rc01_native.py --pattern test_occupancy.py
+$NativeSearchOutput = Join-Path 'output' ('native-search-' + [guid]::NewGuid().ToString('N').Substring(0,8))
+& $ProjectPython demos/native_search_workflow.py $NativeSearchOutput
+```
+
+The demo returns live `NativeDocument` values through `build_workflows(directory)`
+for callers that generate actual posts and invoke `bundle_post.audit_post` in the
+same workflow. Keep the original exact source and candidate bytes; do not rebuild
+random-ID sources to audit an earlier post. `check_document` alone grants only
+document fidelity. Use the same explicit finish limits when auditing actual
+native bytes; inspect each reported assumption and result. Native toolpath generation
+is optional to authoring and is not needed for base-library installation.
+Pass the full selected Part stock box to search, not just the removal target's
+bounding box or depth. Keep the reopened project alive while inspecting inherited
+geometry; extracted children alone do not own their parents.
+
+Shared Default-parser changes also select the existing native-series, native V,
+arc replay and literal-post callers affected by the edit. The deterministic test
+posts are parser/adapter regressions; actual native evidence must identify the
+installed application and complete generated files separately. For package changes,
+run the focused installed matrix with `--package` and both new test modules;
+copy the demo outside the checkout and assert installed package provenance.
+
 ### Editable native rest preparation and actual-post gate
 
 NR01's [contract](structure_spec.md#editable-native-rest-boundaries-and-mops-nr01)

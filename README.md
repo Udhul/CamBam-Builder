@@ -21,7 +21,7 @@ python -m pip install .
 Install `".[planar]"` when using the Shapely-backed planar engines. The base library
 needs neither CamBam installed nor an MCP server for document authoring. This is a
 source installation instruction, not a claim that a release is published on PyPI.
-The [0.2.0 consumer checkpoint and compatibility notes](docs/RELEASE_NOTES.md#020-consumer-checkpoint)
+The [0.3.0 consumer checkpoint and compatibility notes](docs/RELEASE_NOTES.md#030-native-engine-delivery)
 define the accepted scope, public imports and upgrade expectations.
 For development use [the environment and verification runbook](docs/DEVELOPMENT.md#environment-and-setup).
 
@@ -63,6 +63,13 @@ The [multi-board cabinet](demos/manufacturing_cabinet.py) and
 [aluminum sensor fixture](demos/manufacturing_fixture.py) consumers keep their
 design recipes and manual stock layouts in ordinary application code. Both run
 with the installed base library and verify editable front/back files.
+
+With the `planar` extra, [finite tool/path search](docs/structure_spec.md#finite-planar-toolpath-bundle-search-bo01-a)
+can feed [source-bound editable native jobs](docs/structure_spec.md#source-bound-native-bundle-documents-and-posted-motion).
+The [native search workflow](demos/native_search_workflow.py) demonstrates an
+ornament and composed front/back insert setups. Generate the actual post in
+CamBam and audit its complete motion before using its geometric execution
+evidence; document export alone does not establish that evidence.
 
 ## Capabilities and project documentation
 

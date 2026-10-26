@@ -5,6 +5,53 @@ These notes define versioned consumer scope. Package metadata comes from
 [PROGRESS](PROGRESS.md). A version in source or a locally built archive does not
 mean a tag, registry release or public distribution has been delivered.
 
+## 0.3.0 native engine delivery
+
+Checkpoint date: 2026-10-26. This additive checkpoint connects finite planar
+tool/path selection to source-bound editable native files and a separate audit
+of their complete CamBam-generated posts. It retains the 0.2.0 base-library
+surface and dependency policy. Registry delivery is not implied.
+The [acceptance record](REVIEW.md#native-engine-delivery-bundle---2026-10-26)
+owns the BO01 reuse, native post observations and installed-package evidence.
+
+- `cam_extensions.bundle_search` and `inlay_search` add the bounded BO01 planar,
+  mixed-tool and paired-inlay search APIs. Finite budgets, manual choices,
+  unresolved alternatives and estimated costs remain explicit; see the
+  [search contracts](structure_spec.md#finite-planar-toolpath-bundle-search-bo01-a).
+- With the `planar` extra, `integrations.cambam.bundle_document` exposes
+  `bind_design`, `author`, `NativeDesign` and `NativeDocument`.
+  `integrations.cambam.bundle_post.audit_post` checks actual Default-post bytes.
+  The [native output contract](structure_spec.md#source-bound-native-bundle-documents-and-posted-motion)
+  owns supported source geometry, motion, stock and freshness boundaries,
+  including proved vertical feed continuations and partial retracts between
+  shared path endpoints.
+- `Bundle.design_fingerprint` identifies the independently declared fixed design.
+  Existing positional construction remains possible, but an empty or mismatched
+  fingerprint cannot enter native binding. Regenerate old/unbound search snapshots;
+  changing that string alone does not establish geometric safety.
+- Default-post parsing now tracks active G64/G61 mode. G64 in a header followed by
+  G61 before motion is accepted; actual blended motion remains unverified. Earlier
+  blended motion cannot be cleared by a later G61.
+- Planar ordered jobs accept an occupancy stock box enclosing the removal target;
+  native bundle binding requires that box to match the complete selected Part
+  stock. Removal bounds stay target-specific and tool-body checks use full stock.
+  Surface/volume stock matching is unchanged; the volume occupancy branch now
+  reads the layered target's actual depth field instead of raising an attribute error.
+- The short closed-offset sampling repair from BO01 preserves nonzero traversal
+  and rounded-coordinate uniqueness; existing strict geometry gates remain.
+
+The [native search example](../demos/native_search_workflow.py) combines these
+APIs with CF02 setup composition. Geometry and MOPs stay editable, but edits or
+placement changes invalidate the corresponding source/plan/post evidence. Native
+post acceptance does not transfer selected search timing/optimality and does not
+claim controller execution or physical cutting. Full 3D surfaces, wider native
+classes, packing and unrestricted posts remain outside this checkpoint.
+
+Build/install as in the [0.2.0 local artifact instructions](#installation-and-environment-compatibility),
+using artifact version `0.3.0`; use `[planar]` for these engines. Python support and
+the base/optional split are unchanged. The [compatibility policy](structure_spec.md#development-compatibility-policy)
+applies within each documented minor version.
+
 ## 0.2.0 consumer checkpoint
 
 Checkpoint date: 2026-10-26. This is the first explicitly scoped consumer baseline
