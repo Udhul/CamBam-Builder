@@ -29,7 +29,7 @@ this implementation's actual schema and text-inclusion scope.
 Independent review reproduced a complete-dependency gap: a second `machineops`
 container was ignored by the general reader, allowing bundle verification to
 report only the first source after a manifest hash was recomputed. A shared raw
-structure guard now rejects that ambiguity before dependency access/trust, with
+structure guard now rejects that ambiguity before accepting a snapshot or manifest, with
 five structural mutation cases through both snapshot and persisted verification.
 The reviewer independently reran 25 focused tests and closed the model/bundle/MCP
 review. The lead assessed the later one-line standard serializer change against
