@@ -1181,6 +1181,9 @@ contained in the already checked full retract from the preceding cut endpoint;
 it grants no additional removal. Actual tool-body checks still cover that motion.
 Other low rapids, rising feed joins, diagonal moves and unmatched continuation
 endpoints remain rejected; no lateral cleared-cavity travel is inferred.
+High travel, full-clearance boundaries and tool/spindle events require strictly
+positive actual Z independently of matching tolerance. A tiny positive declared
+clearance cannot admit zero or negative rapid travel by tolerance alone.
 G64 is a modal condition: only motion actually executed under blending needs
 unresolved-trajectory evidence. A header G64 replaced by G61 before motion does
 not invalidate ExactStop output, and a later G61 cannot excuse an earlier blended

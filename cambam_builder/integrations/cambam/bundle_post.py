@@ -129,12 +129,13 @@ def _classify(stage, items, safe_z):
         start, end = tuple(item["start"]), tuple(item["end"])
         vertical = start[:2] == end[:2]
         g, feed = item["g"], item["feed"]
-        if g == 0 and min(start[2], end[2]) >= safe_z - _TOL:
+        if (g == 0 and min(start[2], end[2]) > 0 and
+                min(start[2], end[2]) >= safe_z - _TOL):
             if points is not None:
                 raise ValueError(f"stage {stage.id}: rapid before path retract")
             role = "rapid"
         elif (vertical and end[2] > start[2] and
-              abs(end[2] - safe_z) <= _TOL and points is not None and
+              end[2] > 0 and abs(end[2] - safe_z) <= _TOL and points is not None and
               len(points) >= 2):
             if g == 1 and not any(abs(feed - f) <= _TOL for f in cut_feed | entry_feed):
                 raise ValueError(f"stage {stage.id}: unbound native retract feed")
@@ -142,7 +143,7 @@ def _classify(stage, items, safe_z):
             paths.append(tuple(points))
             points = None
         elif (g == 1 and vertical and points is None and
-              abs(start[2] - safe_z) <= _TOL and end[2] < 0):
+              start[2] > 0 and abs(start[2] - safe_z) <= _TOL and end[2] < 0):
             if not any(abs(feed - f) <= _TOL for f in entry_feed):
                 raise ValueError(f"stage {stage.id}: native entry feed differs")
             role = "entry"
@@ -246,12 +247,13 @@ def audit_post(document: NativeDocument, post_bytes: bytes, *,
     stage_index = -1
     for item in items:
         while marker_index < len(markers) and markers[marker_index] < item["line"]:
-            if abs(at[2] - safe_z) > _TOL:
+            if at[2] <= 0 or abs(at[2] - safe_z) > _TOL:
                 raise ValueError("native MOP boundary is below declared clearance")
             stage_index = marker_index
             marker_index += 1
         if item["type"] == "event":
-            if abs(at[2] - safe_z) > _TOL or tuple(item["position"]) != at:
+            if (at[2] <= 0 or abs(at[2] - safe_z) > _TOL or
+                    tuple(item["position"]) != at):
                 raise ValueError("native spindle/tool event outside declared safe plane")
             kind, tool = item["kind"], item["tool"]
             if kind == "tool_change":
@@ -278,7 +280,8 @@ def audit_post(document: NativeDocument, post_bytes: bytes, *,
             raise ValueError("native stock movement requires bound running spindle/rpm")
         groups[stage_index].append(item)
         at = tuple(item["end"])
-    if marker_index != len(markers) or abs(at[2] - safe_z) > _TOL or running:
+    if (marker_index != len(markers) or at[2] <= 0 or
+            abs(at[2] - safe_z) > _TOL or running):
         raise ValueError("native post lacks complete stages and stopped safe return")
     expected_events = []
     previous = None

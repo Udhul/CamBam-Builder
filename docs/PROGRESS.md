@@ -6,10 +6,12 @@ Status updated 2026-10-26: PK01 is delivered on local `main` through authorized
 verification and CF02 evidence reuse; [release notes](RELEASE_NOTES.md) define
 the version 0.2.0 consumer scope. CF02 is committed on local `main`; the
 [CF02 acceptance record](REVIEW.md#cf02-manufacturing-composition---2026-10-26)
-owns its verification and scope. The user authorized a larger autonomous native
-engine delivery bundle, active on `feat/native-engine-delivery-bundle` from that
-merged baseline. Commits are authorized; no push, tag or registry publication is
-authorized by this bundle.
+owns its verification and scope. The larger autonomous native engine delivery
+bundle is on `feat/native-engine-delivery-bundle` from that merged baseline.
+BO01 integration is committed at `9216298`, native implementation at `5afc0f7`
+and shared-endpoint post support at `bb8f5ea`. Final clearance hardening and
+installed consumer acceptance are underway. Commits are authorized; no push,
+tag or registry publication is authorized by this bundle.
 NC01-A is delivered on local `main` through the
 authorized `--no-ff` merge of `feat/nc01-a-native-geometry` (reviewed tip
 `dc962a1`) into `6514305`. Fetching origin in this session confirms that merge
@@ -127,7 +129,11 @@ design, BO01, G-code generation and release publication remain outside this
 sprint. Reopen the mapped limits for a concrete consumer or contradictory native
 file, rather than automatically extending the nearby geometry workstream.
 
-### Current branch closure
+### Earlier remote branch inventory
+
+This table is the historical audit snapshot. BO01 has since been integrated into
+the native delivery branch at `9216298`; current acceptance and remaining work
+belong to the [bundle status](#native-engine-delivery-bundle).
 
 | Remote branch | Tip at audit | Delivery state relative to `origin/main` |
 | --- | --- | --- |
@@ -141,21 +147,12 @@ file, rather than automatically extending the nearby geometry workstream.
 | `mop-export-policy-audit` | `cb72be7` | Merged; ancestor of main. |
 | `dev/create-progress.md-plan-for-framework-development` | `284a947` | Merged historical tracker branch. |
 
-BO01 commits are `7ab21cc` (finite planar search), `6686adb` (routing docs) and
-`06509e4` (mixed-tool/paired-inlay search and offset repair). Its tree changes 16
-files; it is not part of the installed mainline baseline. Branch-local PROGRESS
-still calls B ready to commit, but B is committed. The feature branch's
-`REST_MACHINING_PLAN.md` BO01 epic, contracts and dated REVIEW entries own its
-implementation details until integration; inspect them with `git show` or on that
-branch. This audit did not certify BO01 merge readiness or rerun its behavior tests.
-
-When BO01-C is selected, reconcile the final branch diff and existing evidence,
-fix material defects only, and reconcile this newer direction with its changes to
-AGENTS, PROGRESS, the specification and model routing. Do not overwrite the new
-priority or reintroduce stale status during integration. No model refresh is
-required. Close the bounded scope; continuous optimization and further search
-features stay deferred. Commit/merge are user-owned unless explicitly delegated;
-use the existing readiness gate and visible `--no-ff` integration preference.
+BO01 commits `7ab21cc`, `6686adb` and `06509e4` are now ancestors of the native
+delivery branch. Integration retained the newer operating agreement, model
+routing and project direction. The earlier audit itself supplied no new BO01
+test evidence; the bundle's [acceptance record](REVIEW.md#native-engine-delivery-bundle---2026-10-26)
+owns the later review and verification. Continuous optimization and broader
+search remain deferred.
 
 At that earlier audit, local `main` was left at `853f749` (205 commits behind fetched main); the audit
 branch was created from `origin/main` to avoid modifying that older branch. No tags
@@ -188,7 +185,7 @@ These are conditional/deferred items, not additional active work.
 
 | Scope | Promotion trigger and owner |
 | --- | --- |
-| Existing engine edge cases | Tapered plug offset candidate can emit a zero-length V segment on main; BO01-B reports a repair, so inspect/reuse it before duplicating work. Hard overlap caps, fitted paths and low cleared links need a named consumer and continuous containment/access evidence. [RP01 limits](structure_spec.md#feature-aware-planar-vrest-candidates-rp01). |
+| Existing engine edge cases | BO01's integrated closed-offset repair covers the tapered-plug zero-length segment. Hard overlap caps, fitted paths and lateral low cleared links need a named consumer and continuous containment/access evidence. [RP01 limits](structure_spec.md#feature-aware-planar-vrest-candidates-rp01). |
 | Further native parameter/shape variants | Broader tab geometry and fresh Triangle output need named native observations; retain accepted Square-tab evidence. [Manual tab evidence](REVIEW.md#manual-profile-tab-native-fixture--2026-09-27). Native field/state coverage belongs to NC01, not MCP parity. |
 | Full independent G-code / optional native automation bridge | Future capability with explicit controller/post semantics and actual runtime acceptance where claimed. Existing bounded adapters stay supported; native `.cb` export and core engine development must not wait. [Execution boundary](REST_MACHINING_PLAN.md#programmatic-execution-requirement). |
 | Controller runtime and physical validation | Promote for a real cutting job with actual tooling/material/setup. [Runtime boundary](REVIEW.md#m5-controller-runtime-evidence-scope---2026-09-26). No pending physical observation blocks the accepted offline baseline. |

@@ -23,7 +23,7 @@ except ModuleNotFoundError as exc:
 
 
 def _document(specs=(("T1", .5, "v"),), *, fixtures=(), cap_depth=1,
-              supplied_paths=None, axial_limits=None):
+              supplied_paths=None, axial_limits=None, safe_z=3):
     project = CBProject("synthetic source")
     layer = project.add_layer("design")
     project.add_rect(layer=layer, identifier="opening", width=10, height=8)
@@ -31,14 +31,14 @@ def _document(specs=(("T1", .5, "v"),), *, fixtures=(), cap_depth=1,
     source = serialize_cambam_bytes(project)
     design = native.bind_design(source, "opening", "Part", cap_depth_mm=cap_depth,
                                 design_angle_degrees=90)
-    start, stages, sweeps = (-1, -1, 3), [], []
+    start, stages, sweeps = (-1, -1, safe_z), [], []
     profile = v.VProfile("pointed", 90, 0, 2, 2)
     for index, (tool, depth, kind) in enumerate(specs):
         paths = supplied_paths or (
             v.VPath("fill", ((3, 3, depth), (5, 3, depth), (6, 3, depth))),
             v.VPath("fill", ((3, 5, depth), (6, 5, depth))))
-        plan = v.VPlan(design.target, profile, paths, v._motions(paths, 3),
-                       3, .02, 1, "partial", "small supplied witness")
+        plan = v.VPlan(design.target, profile, paths, v._motions(paths, safe_z),
+                       safe_z, .02, 1, "partial", "small supplied witness")
         motions = tuple(oj.JobMove(m.role, m.start, m.end,
             0 if m.role == "rapid" else 120 if m.role == "entry" else 300)
             for m in v.complete_motion(plan, start))
@@ -75,7 +75,7 @@ def _document(specs=(("T1", .5, "v"),), *, fixtures=(), cap_depth=1,
     setup = occupancy.OccupancySetup("program",
         occupancy.Box("declared Part stock", (0, 0, -cap_depth, 10, 8, 0)), fixtures, tuple(tools))
     job = oj.Job(design.source_sha256, tuple(stages), start, occupancy_setup=setup)
-    files, _ = emit(job, "uccnc")
+    files, _ = emit(job, "uccnc", coordinate_decimals=6)
     composition = v.VComposition(design.target, tuple(sweeps))
     bundle = b.Bundle(job, files, "uccnc", v.section_report(composition, .25),
         v.volume_bounds(composition), .25, None,
@@ -87,9 +87,10 @@ def _document(specs=(("T1", .5, "v"),), *, fixtures=(), cap_depth=1,
 def _post(document, *, reverse=False):
     """Independent native-like writer; this is never production adapter input generation."""
     project = read_cambam_bytes(document.xml_bytes)
+    safe_z = f"{document.bundle.job.initial_tip[2]:.9f}".rstrip("0").rstrip(".")
     lines = ["( Made using CamBam - http://www.cambam.co.uk )",
              "( synthetic 10/26/2026 12:00:00 PM )", "( Post processor: Default )",
-             "G21 G90 G64 G40", "G0 Z3"]
+             "G21 G90 G64 G40", f"G0 Z{safe_z}"]
     previous = None
     for stage, identifier in zip(document.bundle.job.stages, document.stage_mop_identifiers):
         if stage.tool_id != previous:
@@ -119,7 +120,7 @@ def _post(document, *, reverse=False):
             lines.extend((f"G0 X{x} Y{y}", f"G1 F120 Z{z}"))
             for x, y, z in path[1:]:
                 lines.append(f"G1 F300 X{x} Y{y} Z{z}")
-            lines.append("G0 Z3")
+            lines.append(f"G0 Z{safe_z}")
         previous = stage.tool_id
     lines.extend(("M5", "M30"))
     return ("\n".join(lines) + "\n").encode()
@@ -318,6 +319,21 @@ class BundlePostTests(unittest.TestCase):
         post = _post(document).replace(b"G0 X3 Y3", b"G0 X20 Y20\nG0 X3 Y3", 1)
         with self.assertRaisesRegex(ValueError, "fixture tall clamp"):
             self.audit(document, post)
+
+    def test_clearance_tolerance_never_allows_stock_contact_or_negative_xy_rapid(self):
+        document = _document(safe_z=.00001)
+        posted = _post(document)
+        boundary = b"G0 Z0.00001\nG0 X3 Y5"
+        self.assertEqual(posted.count(boundary), 1)
+        self.audit(document, posted)
+        # Positive numeric rounding remains allowed, but positional tolerance
+        # cannot turn the independently required Z>0 clearance into Z<=0.
+        self.audit(document, posted.replace(boundary, b"G0 Z0.000005\nG0 X3 Y5"))
+        for z in (b"0", b"-0.00001"):
+            with self.subTest(z=z), self.assertRaises(ValueError):
+                self.audit(document, posted.replace(boundary, b"G0 Z" + z + b"\nG0 X3 Y5"))
+            with self.subTest(final_z=z), self.assertRaises(ValueError):
+                self.audit(document, posted.replace(b"G0 Z0.00001\nM5", b"G0 Z" + z + b"\nM5"))
 
     def test_missing_extra_or_modified_cut_edges_fail(self):
         original = _post(self.single)
