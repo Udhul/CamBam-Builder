@@ -5,6 +5,37 @@ These notes define versioned consumer scope. Package metadata comes from
 [PROGRESS](PROGRESS.md). A version in source or a locally built archive does not
 mean a tag, registry release or public distribution has been delivered.
 
+## 0.4.0 bounded relief finishing
+
+Checkpoint date: 2026-10-26. This additive checkpoint introduces the bounded
+[SF01 contact, stock and finishing contract](structure_spec.md#bounded-relief-contact-stock-and-finishing-sf01)
+without changing native interchange or dependency requirements. All SF01 APIs
+work with the base installation on Python 3.12 and 3.13. The previous native
+and planar consumer scope remains as documented under [0.3.0](#030-native-engine-delivery).
+
+- `cam_core.relief.CubicRelief`, `HeightField` and `contact` separate relief
+  design identity, normal/curvature queries and bounded ball contact.
+- `cam_core.relief_stock.ReliefOperation`, `replay_stages` and `residual_at`
+  establish continuous linear-motion protection and evolving residual bounds.
+  Complete ordered output dispatches homogeneous relief jobs to this evaluator;
+  unsupported mixtures retain an explicit unsupported result.
+- `cam_extensions.relief_finishing.generate`, `sequence` and `motion_cost`
+  supply bounded comparison policies and caller-owned stage composition. The
+  [application example](../demos/relief_finishing.py) retains both successful
+  and inferior strategies under identical stock/output gates.
+
+No existing public constructor changes. Existing native, planar, slope and bowl
+job fingerprints retain their prior semantics; new relief jobs bind the complete
+design and operation values. Regenerate relief evidence after any design, tool,
+motion, setup or query-setting change. The representation is an exact cubic or
+piecewise bilinear graph, not a certified approximation to arbitrary mesh input.
+Tapered cutters, overhangs, native 3D classes, surface bundle optimization,
+controller execution and physical cutting are outside this checkpoint.
+
+Use the existing [local installation workflow](#installation-and-environment-compatibility)
+with version `0.4.0`. The [SF01 acceptance record](REVIEW.md#sf01-bounded-relief-finishing---2026-10-26)
+owns verification, numerical results and the explicit 0.3.0 evidence reuse.
+
 ## 0.3.0 native engine delivery
 
 Checkpoint date: 2026-10-26. This additive checkpoint connects finite planar

@@ -9,7 +9,7 @@ from dataclasses import dataclass, replace
 import hashlib
 import math
 
-from . import replay, v_region
+from . import replay
 
 
 VERSION = "ordered-job-v6-mixed-v-stock"
@@ -165,15 +165,19 @@ class Stage:
                     (op.name != self.id or op.tool.name != self.tool_id)):
                 raise ValueError("stage endmill operation identity differs")
             if type(op) is not replay.Operation:
-                from . import inlay, surface3d, volume3d
-                if type(op) not in (volume3d.VolumeOperation,
-                                    surface3d.SurfaceOperation,
-                                    inlay.InlayOperation):
-                    raise ValueError("unsupported stage operation")
+                from . import relief_stock
+                if type(op) is not relief_stock.ReliefOperation:
+                    from . import inlay, surface3d, volume3d
+                    if type(op) not in (volume3d.VolumeOperation,
+                                        surface3d.SurfaceOperation,
+                                        inlay.InlayOperation):
+                        raise ValueError("unsupported stage operation")
                 if op.name != self.id or op.tool_id != self.tool_id:
                     raise ValueError("stage operation identity differs")
-        if self.v_plan is not None and type(self.v_plan) is not v_region.VPlan:
-            raise ValueError("stage V plan required")
+        if self.v_plan is not None:
+            from . import v_region
+            if type(self.v_plan) is not v_region.VPlan:
+                raise ValueError("stage V plan required")
         at = self.motions[0].start
         for motion in self.motions:
             if motion.start != at:
@@ -193,6 +197,11 @@ class Stage:
     def surface_operation(self):
         from . import surface3d
         return self.operation if type(self.operation) is surface3d.SurfaceOperation else None
+
+    @property
+    def relief_operation(self):
+        from . import relief_stock
+        return self.operation if type(self.operation) is relief_stock.ReliefOperation else None
 
 
 @dataclass(frozen=True)
@@ -270,6 +279,7 @@ def from_prior_v(plan, prior, start, *, tool_id="T3", rpm=12000,
                  entry_feed=60, cut_feed=300, translation_xyz_mm=(0, 0, 0),
                  boundary="split"):
     """Adapt existing verified endmill/V values without choosing a strategy."""
+    from . import v_region
     if (type(prior) is not replay.Trace or type(plan) is not v_region.VPlan or
             len(prior.operations) != 1 or prior.initial_position != start or
             prior.source_fingerprint != plan.target.source_id):
@@ -357,6 +367,7 @@ def _replay_endmills(job, stages, motions, *, initial_tip=None):
 
 def _decoded_v_plan(plan, motions):
     """Rebuild V paths from decoded coordinates before stock calculations."""
+    from . import v_region
     if any(motion.arc_g for motion in motions):
         raise ValueError("Region V stock supports linear motion only")
     intended = v_region.complete_motion(plan, motions[0].start)
@@ -457,6 +468,7 @@ def _axial_evidence(stages, motions):
 
 
 def _mixed_v_stock(job, actual):
+    from . import v_region
     target = next(s.v_plan.target for s in job.stages if s.v_plan is not None)
     sweeps, cumulative = [], []
     depth = min(1, target.cap_depth)
@@ -556,6 +568,10 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
                 job.source_fingerprint != stage.v_plan.target.source_id or
                 stage.v_plan.target.frame not in (None, job.program_frame)):
             raise ValueError("stale V stage revision or source")
+        if stage.relief_operation is not None and (
+                stage.source_revision != stage.relief_operation.target.fingerprint or
+                job.source_fingerprint != stage.relief_operation.target.fingerprint):
+            raise ValueError("stale relief stage revision or source")
     all_v = all(stage.v_plan is not None for stage in job.stages)
     if all_v and any(stage.v_plan.target.fingerprint !=
                      job.stages[0].v_plan.target.fingerprint for stage in job.stages):
@@ -598,6 +614,8 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
                                            "reason": "no supplied initial stock"}
         return report
     v_count = sum(s.v_plan is not None for s in job.stages)
+    if v_count:
+        from . import v_region
     mixed = (0 < v_count < len(job.stages) and
              all(s.v_plan is not None or type(s.operation) is replay.Operation
                  for s in job.stages) and
@@ -605,24 +623,30 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
     if mixed and (job.occupancy_setup is None or
                   any(s.axial_limits is None for s in job.stages)):
         raise ValueError("mixed V composition requires whole-tool setup and axial entry limits")
-    if any(s.axial_limits is not None for s in job.stages):
-        report["axial_process_limits"] = _axial_evidence(job.stages, actual)
-    from . import inlay
-    if all(type(s.operation) is inlay.InlayOperation for s in job.stages):
-        if job.occupancy_setup is not None:
-            raise ValueError("inlay tool-body occupancy is unsupported")
-        report["stock_access_residual"] = inlay.replay_stages(job.stages, actual)
+    relief_count = sum(s.relief_operation is not None for s in job.stages)
+    if relief_count and relief_count != len(job.stages):
+        report["stock_access_residual"] = {"status": "unsupported",
+                                           "reason": "mixed relief stock evaluators"}
         return report
+    if not relief_count and any(s.axial_limits is not None for s in job.stages):
+        report["axial_process_limits"] = _axial_evidence(job.stages, actual)
+    if not relief_count:
+        from . import inlay
+        if all(type(s.operation) is inlay.InlayOperation for s in job.stages):
+            if job.occupancy_setup is not None:
+                raise ValueError("inlay tool-body occupancy is unsupported")
+            report["stock_access_residual"] = inlay.replay_stages(job.stages, actual)
+            return report
     if job.occupancy_setup is not None:
         from . import occupancy
         setup = job.occupancy_setup
         bodies = {tool.tool_id: tool for tool in setup.tools}
         for stage in job.stages:
-            op = stage.surface_operation or stage.volume_operation
+            op = stage.relief_operation or stage.surface_operation or stage.volume_operation
             if op is not None:
                 target = op.target
                 x0, y0, x1, y1 = target.stock_xy
-                stock_depth = (target.stock_depth_mm if stage.surface_operation is not None
+                stock_depth = (target.stock_depth_mm if stage.surface_operation is not None or stage.relief_operation is not None
                                else target.stock_depth)
                 cutter_radius = op.radius_mm
                 cutting_length = op.cutting_length_mm
@@ -658,6 +682,10 @@ def audit(job, decoded, *, dialect, expected_fingerprint=None):
                 raise ValueError("occupancy cutter differs from stage tool")
         report["tool_fixture_occupancy"] = occupancy.verify(
             setup, job.stages, actual)
+    if relief_count:
+        from . import relief_stock
+        report["stock_access_residual"] = relief_stock.replay_stages(job.stages, tuple(actual))
+        return report
     if mixed:
         report["stock_access_residual"] = _mixed_v_stock(job, actual)
         return report

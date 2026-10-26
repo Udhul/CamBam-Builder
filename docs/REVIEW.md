@@ -1,5 +1,223 @@
 # Review and acceptance history
 
+## SF01 bounded relief finishing - 2026-10-26
+
+**Outcome:** implementation, automated verification and offline consumer
+acceptance are complete. Engineering accepts the
+bounded contact/stock/finishing outcome described below. Work began from clean
+local `main` at `6b3088c` on `feat/sf01-relief-finishing` (the documentation tip
+after the accepted `1e48609` merge); implementation milestone
+`edba2dd` adds the 0.4.0 API. The [contract](structure_spec.md#bounded-relief-contact-stock-and-finishing-sf01)
+owns supported behavior, the [runbook](DEVELOPMENT.md#sf01-bounded-relief-finishing)
+owns reproduction, and PROGRESS owns bundle delivery state. Final runtime
+`cb1aeb2` includes the dependency-boundary and two baseline regression repairs;
+the later acceptance commit changes documentation only.
+
+### Correctness and independent evidence
+
+| Claim / owner | Positive and fault-sensitive evidence | Disposition / limit |
+| --- | --- | --- |
+| Cutter-independent cubic/bilinear design and contact (`relief`) | Exact affine-ball offset, interior cubic extrema and curvature, saddle differentials, clipped-grid extrema, dense disk oracle, translation and budget/arithmetic refusals in `test_relief` | Bounded fixed-axis contact accepted; clamped exterior is conservative, grid seams have no unique differential sample. |
+| Continuous cutter protection (`relief_stock`) | Interior-ridge gouge with safe endpoints rejects; unsupported arcs, roles, discontinuities, low rapid, stock/flute and process faults reject in `test_relief_stock` | Directional Lipschitz endpoint margin proves the entire segment; exact tangency can remain unresolved and reject. |
+| Evolving stock and useful removal (`relief_stock`) | Independent straight-sweep envelope/analytic volume, refinement enclosures, point detail, cumulative/retrace witnesses and same-cell gain | Complete entry/cut/retract union accepted; finite pitch can give broad bounds, and no volume is credited twice. |
+| Source, output and physical setup (`ordered_job`, `ordered_output`, occupancy) | Both dialects and both representations; explicitly supplied subprecision coordinates reach stock replay only after decoding; changed bytes/source/revision, mismatched stock/body/fixture, and incompatible sequence metadata reject in `test_relief_finishing` | Complete bounded offline output accepted. Unsupported stock mixtures remain explicit; no native 3D or controller evidence inferred. |
+| Strategy and reusable consumer (`relief_finishing`, demo) | Independent replay of parallel, guided and joined waterline paths; analytic moulding and genuinely two-dimensional bilinear ornament; later-stage positive removal | Slope/feature-guided policy accepted for the measured alternatives. No curvature-based constant-scallop or globally optimal strategy claim. |
+
+Independent review checked the contact and continuous-motion mathematics and
+ran **60 randomized cubic contacts**, including clamped edges, against independent
+scalar extrema at **0.000001 mm** requested tolerance; every result was enclosed.
+It reproduced a floating-point sphere-rim membership discontinuity; the final
+radius inflation/deflation guard encloses it. Sequence composition now checks
+source/frame/translation/stock semantics, and generator proposals coalesce
+four-decimal zero motions before output. Joined contour tests preserve every
+fragment once for shuffled chains, cycles, branches and disconnected components;
+joined cubic/saddle waterlines pass four complete UCCNC/Grbl stock/body audits.
+No unresolved correctness finding remains. Local independent artifacts are
+`output/sf01-review-20261026-7a43/cubic-oracle.json` and `joined-waterline.json`.
+
+The focused owner/caller run passed **65 tests in nine modules, zero skips**, in
+**70.795 s** with Python 3.13.5. Report:
+`output/verification-20261026-124230-f3efe424/report.json`. It includes all
+28 initial geometry/stock/finishing checks plus existing slope, bowl, layered
+volume, ordered output and occupancy checks. The later base-install probe found
+that `ordered_job` eagerly imported Shapely through V/inlay/volume owners. Repair
+`988a12e` loads those existing owners only on their applicable paths; a new
+fresh-process test blocks Shapely/MCP imports and completes both relief output
+dialects. Independent review found no changed old-family dispatch or missing
+local import. The **29 final SF01 tests** include this import-boundary regression;
+the final package and full checkout gates below supersede earlier package results.
+
+### Two representations and measured strategy outcomes
+
+`demos/relief_finishing.py` owns the reproducible application recipe. The analytic
+stock is X=[-2,2], Y=[0,3], depth 1.2 mm, with
+`h(x,y)=-0.55-0.3*x+0.1*x**3`; the ridge at X=-1 is Z=-0.35 and valley at X=1
+is Z=-0.75. The ornament uses X=(-1.5,-1,-0.5,0,0.5,1,1.5),
+Y=(0,0.5,1,1.5,2), depth 1.2, and grid heights
+`-0.55+0.16*cos(pi*x)+0.07*sin(pi*y/2)*(x/1.5)`.
+The bilinear interpolation of those values is the actual design, not a guarantee
+about the trigonometric recipe between samples.
+
+All candidates use a 0.25 mm ball radius, 2 mm flute, contiguous shank to 3 mm
+and 0.5 mm-radius holder to 4 mm, safe Z=2, no fixtures, 240 mm/min cut feed,
+120 mm/min plunge/retract, 10000 rpm and 1 mm absolute axial/entry limits.
+Contact tolerance is 0.001 mm, finish allowance 0.001 mm, stock pitch 0.1 mm,
+and path sampling step 0.04 mm. Guided and waterline XY spacing is 0.3 mm;
+parallel spacing is 0.16 mm; waterline level increment is 0.07 mm. These are
+declared synthetic process values, not material-specific cutting recommendations.
+The same **0.20 mm** whole-domain residual ceiling applies to every candidate.
+
+| Design / strategy | Residual volume interval (mm3) | Maximum thickness upper (mm) | Decoded feed travel (mm) | Estimated minutes | Meets finish ceiling |
+| --- | --- | --- | --- | --- | --- |
+| Valley/ridge guided | [0, 1.366200] | 0.173535 | 144.9338 | 0.989448 | Yes |
+| Valley/ridge parallel | [0, 1.396563] | 0.187154 | 184.2223 | 1.188385 | Yes |
+| Valley/ridge waterline | [0.690090, 2.592648] | 0.750001 | 159.7806 | 1.194979 | No |
+| Bilinear ornament guided | [0, 0.681036] | 0.181957 | 121.1277 | 0.873089 | Yes |
+| Bilinear ornament parallel | [0, 0.642448] | 0.123388 | 115.0533 | 0.779091 | Yes |
+| Bilinear ornament waterline | [0.047851, 1.144473] | 0.751200 | 99.1821 | 0.757407 | No |
+
+Table upper bounds round outward. Time uses decoded feed/rapid distance with
+1200 mm/min rapid, excluding dynamics and installation time. Waterlines join
+unambiguous degree-two endpoints; this is still a bounded comparison baseline,
+not a production contour optimizer. All motions pass cutter/body protection;
+the failed finish rows retain partial coverage instead of acquiring completion
+from contact agreement.
+
+At analytic ridge/valley witnesses (-1,1.5)/(1,1.5), guided residual upper bounds
+are **0.001001 / 0.001301 mm**, versus **0.031777 / 0.032077 mm** for parallel.
+Guided feed travel is **21.3267% lower** at the shared finish ceiling. On the
+ornament, guided witness upper bounds at (-1,1), (0,1), (1,1) are
+**0.019367 / 0.003001 / 0.019414 mm**, versus
+**0.038930 / 0.019922 / 0.034697 mm** for parallel. Guided retains those details
+better, while parallel has a tighter global bound and lower motion cost. This
+counterexample to universal guided superiority is preserved in the application.
+
+The cumulative consumer starts with parallel spacing 0.6 mm, sample step 0.12 mm
+and allowance 0.20 mm, then uses the guided finish above. Prefix residual volume
+changes from **[2.657111, 5.346462]** to **[0, 1.366200] mm3**; same-cell evidence
+proves at least **1.650911 mm3** of useful later-stage removal. A pilot using
+0.001 mm coarse allowance proved only 0.060867 mm3 at this pitch and correctly
+failed the application's 0.1 mm3 acceptance threshold. The explicit roughing
+allowance supplies a meaningful finish workload without weakening that gate.
+All seven source workflows and exact program identities are recorded in
+`output/sf01-20261026-4b9f938d/final-consumer/comparison.json`.
+
+Durable design SHA-256 identities are
+`8f27c48b09d6ca3d1333209f5ccf49d309a5f3ed4730ee1b4f8534b08e2d7652`
+(valley/ridge) and
+`925e8c8374c5a38b9a4043fc7aae16658dcd652b5b11876995c8a38c0cc1c4ef`
+(bilinear ornament). The complete output-set digest is
+`b9549b784c1eeb7d140f6756f648862341a6b500691c2eaf16852b6835c70c54`:
+SHA-256 of compact sorted-key JSON mapping `<design>/<strategy>` and
+`evolving-stock` to their ordered program-SHA arrays. It covers all eight NC
+files. The unmodified consumer script's SHA-256 is
+`d756a68b9beba805cbea4d1d63f4f0c45c09a7b0da33d80db15e505d2646ba7f`.
+
+### Delivery verification and evidence reuse
+
+Complete checkout discovery was partitioned into four disjoint filename ranges,
+covering **111 modules and 838 tests**. The final disposition is **835 passing,
+three named skips**, with explicit reuse after the two narrow repairs below.
+No failed or interrupted runner report is relabeled as green.
+
+| Discovery scope | Tests | Original result / final disposition | Report under `output/` |
+| --- | --- | --- | --- |
+| `test_[a-d]*.py` | 99 | Pass; unchanged evidence retained | `verification-20261026-125553-415b1acd/report.json` |
+| `test_[e-n]*.py` | 347 | MCP inventory failure repaired; all other modules retained | `verification-20261026-125555-02d33e40/report.json` |
+| `test_[o-r]*.py` | 219 | Optimizer fixture failure repaired; all other modules retained | `verification-20261026-125557-9962ae3a/report.json` |
+| `test_[s-z]*.py` | 173 | Pass; unchanged evidence retained | `verification-20261026-125559-6f879d7a/report.json` |
+
+The original groups took 1304.525, 1655.692, 696.624 and 561.468 seconds
+respectively, running concurrently. The only failures were already present on
+`main`: the optimizer fixture helper injected a duplicate `units` attribute
+after the native writer began owning it, and the MCP parity inventory omitted
+the core `native_tag` note field. Repair `cb1aeb2` removes only the redundant
+attribute insertion and classifies note text as excluded from MCP authoring,
+opaque to typed inspection and outside executable field policies. The
+[MCP parity contract](MCP_CONTRACT.md#frameworkmcp-mop-parity-matrix) records that
+existing surface; schemas, service behavior and native Tag preservation are
+unchanged. Existing regression cases failed before and pass after the repairs.
+
+The final focused run passed **21 tests, zero skips, in 6.135 s** across
+`test_optimizer_corpus`, `test_mcp_mop_parity` and `test_relief_finishing`:
+`output/verification-20261026-132428-25540b64/report.json`. Exact source-input
+comparison finds only the optimizer helper and parity test changed since full
+discovery; all other runtime/test/tool inputs and dependencies match. Repaired
+modules retain identical test-ID inventories. Engineering reuses **109 unchanged
+modules** and replaces the two failing module results with these passing results;
+the complete inventory and hash reconciliation is recorded in
+`output/sf01-20261026-4b9f938d/reconciled-checkout.json`. This is explicit scoped
+evidence reuse, not a fictitious fresh all-green full-run report.
+
+The three skips are the Windows symlink-privilege case (junction/reparse checks
+still run), absent retained M1 native-post input, and absent retained B/C tabbed
+cutout inputs. Those native observations retain their unchanged earlier scope;
+none is a missing SF01 observation. An earlier full-run attempt was stopped when
+the base-import repair changed its inputs and supplies no complete-suite claim.
+
+The repaired `988a12e` runtime passed **147 tests in 15 installed module
+executions, zero skips**, plus four installed smoke gates, in **376.809 s**:
+`output/verification-20261026-125617-82ab5011/report.json`. Wheel installations
+on Python 3.12.10/3.13.5 and independent sdist installation on 3.12.10 each ran
+49 selected tests; the base-only 3.12.10 wheel passed native/optional-boundary
+smoke with Shapely/MCP absent. Full installations use NumPy 2.5.4, Shapely 2.1.2
+and MCP 2.2.0. Archive contents, distributed regressions, version 0.4.0,
+site-packages provenance and the unchanged Python/dependency policy pass.
+The earlier package attempt hit sandbox cache access before building; the first
+successful matrix preceded the base-import repair and is superseded here.
+
+The unmodified application was copied under task output and run with `-I` from
+external empty working directories against the **base-only 3.12** and **full
+3.13** wheels. All **14 installed workflows** passed, including both designs,
+all three candidates and cumulative stock. Their eight NC files are byte-for-byte
+identical to the source consumer's output set above. Installed module provenance,
+commands, script/result hashes and summaries are in
+`output/sf01-20261026-4b9f938d/installed-consumers.json`. This specifically closes
+the base-install failure; it is not inferred from a full installation that happens
+to have Shapely. Source-free tests cover the independent sdist as well.
+
+After the two baseline repairs, the final `cb1aeb2` wheel/sdist matrix passed
+**63 tests in nine installed module executions, zero skips**, plus all four
+smoke gates in **99.145 s**:
+`output/verification-20261026-132456-0466d314/report.json`. It runs the three
+focused modules above in both supported wheels and the independent sdist.
+Installed file hashes differ from the accepted 147-test/consumer artifacts only
+in `integrations/cambam/optimizer_corpus.py`; all other `cambam_builder`
+runtime/resource files, including relief, ordered output and occupancy, are
+byte-identical. Third-party dependency versions match; no byte-identity claim
+is made for entire rebuilt environments. The earlier math/body tests and all
+14 installed consumer workflows therefore retain their exact scope. These
+overlapping test groups are not summed as unique coverage.
+
+Final artifact SHA-256 values:
+
+- `cambam_builder-0.4.0-py3-none-any.whl`:
+  `b86754956b765c278240c235449685964b120958fc313c7790823b8f2cb1f116`.
+- `cambam_builder-0.4.0.tar.gz`:
+  `a7db2d6fb0314adefb8890548c03bb1e0c3436c00096acc48c155f496e88c169`.
+
+The native writer, native bundle/post adapters, parsers, planar generators and
+BO01/CF02 contracts are unchanged. Their [0.3.0 evidence](#native-engine-delivery-bundle---2026-10-26)
+remains applicable to those native bytes and geometric claims. SF01 does not
+repeat or expand the actual CamBam observations, and installed tests do not
+convert the new direct NC files into actual native/controller evidence.
+
+No user observation is required to close this offline scope: automated analytic,
+fault-sensitive, decoded-output and installed checks supply the relevant evidence.
+Physical machining, load, material finish, arbitrary meshes/overhangs, tapered
+profiles and native Surface/3D MOP posting remain separate named limits. Reopen
+the corresponding boundary for a concrete consumer requiring it; do not extend
+SF01 merely to refine nearby heuristic cases.
+
+Correctness review covers the complete branch changes against `main` at
+`6b3088c`; a successful final fetch confirms `origin/main` at the same base.
+No unresolved engineering or user-observation gate remains. Final acceptance
+documentation changes no runtime, test, dependency, package input or consumer
+byte. Delivery is committed on the feature branch; no SF01 merge, push, tag or
+registry publication is implied. The next distinct native consumer is tracked
+in [PROGRESS](PROGRESS.md#post-merge-task-queue), and this is a self-contained
+fresh-session breakpoint.
+
 ## Native engine delivery bundle - 2026-10-26
 
 **Outcome:** implementation, native post and installed consumer gates are

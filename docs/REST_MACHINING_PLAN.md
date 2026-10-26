@@ -57,7 +57,7 @@ derived machining boundaries and output authority distinct.
 | Calculate the best tool/path bundle under user constraints | BO01-A generates and audits finite planar V orders under declared limits; [implemented search contract](structure_spec.md#finite-planar-toolpath-bundle-search-bo01-a). `strategy.select_strategy` retains supplied-audit ranking. | [Bounded BO01 epic](#bo01-bounded-search-epic) adds mixed/paired consumers; SF01 reuse waits for surface evaluators. |
 | Fully native CamBam rest machining using derived primitives/MOPs | NR01's bounded editable Regions/native Pocket and complete actual-post replay are accepted; [contract and limits](structure_spec.md#editable-native-rest-boundaries-and-mops-nr01). | Wider native strategies require a named consumer and their own source/post evidence. |
 | Shape tracing with tools fitting local geometry; decorative planar detail | RP01 implements bounded contact contours and sampled-medial guidance; [contract](structure_spec.md#feature-aware-planar-vrest-candidates-rp01). | Generic fitting, hard overlap caps and low links remain conditional in PROGRESS; BO01 consumes these verified generators. |
-| Shape-aware 3D relief/ornament routing rather than one universal fill pattern | Analytic stepped, sloped and spherical jobs verify supplied paths; there is no general relief contact backend or freeform strategy generator. | SF01 establishes bounded surface/contact and stock queries, then feature-guided, contour/flow/morph/pencil/scallop candidates and suitable tool selection. |
+| Shape-aware 3D relief/ornament routing rather than one universal fill pattern | [SF01](structure_spec.md#bounded-relief-contact-stock-and-finishing-sf01) supplies bounded cubic/bilinear contact, evolving ball stock and measured guided/parallel/waterline consumers. | Broader profile, flow/morph/scallop and surface-search policies need a demonstrated consumer gap; there is no universal best strategy claim. |
 | Native CamBam 3D operations for those shapes | General native Surface/3D Surface authoring/normalization is outside current interchange support. | NR03 is a separate mesh/entity/MOP/post compatibility slice; detached shape-aware paths can precede it. |
 
 These are achievable development goals within declared geometry, tooling and
@@ -209,15 +209,15 @@ remain outside those shared mechanisms.
   [composite finishing contract](structure_spec.md#composite-stock-facing-and-final-inlay-verification-in01).
   The declared sanding envelope remains a separate process model; shaped
   finishing and physical coupons require their own named acceptance scope.
-- **SF01: shape-aware 3D relief foundation and routing.** Begin with an analytic
-  curved moulding/valley and ridge motif, then a bounded non-overhanging relief
-  representation. Establish contact/normal/curvature queries, whole cutter/body
-  occupancy, evolving stock and error/coverage bounds before a general strategy
-  claim. Compare a guided contour/flow or pencil-plus-surface-finish candidate
-  against waterline/parallel baselines with ball, tapered-ball or other justified
-  profiles. Measure detail retention, scallop/residual thickness and motion cost;
-  contact agreement alone is insufficient. **NR03** separately binds native mesh
-  entities/3D MOP states and actual posts if fully native 3D output is required.
+- **SF01: shape-aware 3D relief foundation and routing.** The implemented
+  [bounded relief contract](structure_spec.md#bounded-relief-contact-stock-and-finishing-sf01)
+  establishes contact/normal/curvature, whole cutter/body occupancy, evolving
+  stock and spatial residual bounds through an analytic valley/ridge moulding
+  and a reusable bilinear ornament. The [acceptance record](REVIEW.md#sf01-bounded-relief-finishing---2026-10-26)
+  owns the guided-flow/pencil, parallel and waterline comparisons, including
+  measured non-improvement and remaining profile/representation limits.
+  **NR03** separately binds native mesh entities/3D MOP states and actual posts;
+  native interoperability is not implied by detached SF01 output.
 - **BO01: constrained bundle generation and search.** The [bounded epic](#bo01-bounded-search-epic) scopes the dedicated track. Use a finite tool inventory
   and at least two independently verified strategy families on the ornament/rest
   job. Generate single/multiple-tool and useful-order alternatives, replay each,

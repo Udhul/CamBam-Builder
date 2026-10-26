@@ -170,11 +170,10 @@ def _snapshot(path, mode):
 
 
 def _pin_document_settings(path):
-    """Add native 1.0 document settings absent from the framework writer model."""
+    """Pin corpus post/style settings while retaining writer-owned units."""
     content = path.read_text(encoding="utf-8")
     if content.count("<CADFile ") != 1 or content.count("<MachiningOptions>") != 1:
         raise ValueError("unexpected writer XML structure")
-    content = content.replace("<CADFile ", '<CADFile units="Millimeters" ', 1)
     content = content.replace(
         "<MachiningOptions>",
         "<MachiningOptions>\n    <PostProcessor>Default</PostProcessor>"

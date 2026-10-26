@@ -1500,6 +1500,80 @@ distance or curved surface backend. See the
 [runbook](DEVELOPMENT.md#sloped-surface-and-ball-cutter-evidence) and
 [evidence](REVIEW.md#sloped-surface-and-ball-cutter-evidence---2026-09-26).
 
+### Bounded relief contact, stock and finishing (SF01)
+
+`cam_core.relief` owns fixed-axis design queries independently of tools:
+`CubicRelief(stock_xy, stock_depth_mm, coefficients)` is an analytic cubic
+extruded along Y, and `HeightField(xs, ys, heights, stock_depth_mm)` is an exact
+piecewise bilinear graph. Heights are in millimetres within stock from
+`-stock_depth_mm` to Z=0. Grid rows follow Y. The grid is the design itself;
+sampling another surface does not establish approximation error to that source.
+Overhangs, mesh interchange and arbitrary poses are unsupported. Fingerprints
+bind the complete design values, never a selected cutter or generated path.
+
+Both representations provide height extrema, global directional gradient
+bounds and regular-point normal/principal-curvature queries. Bilinear cell seams
+reject differential queries because there need not be a unique normal. Height
+queries outside XY clamp to the stock rectangle. This conservative extension
+may prevent otherwise possible edge cuts; it never grants removal outside the
+declared stock. `contact` bounds the maximum of
+`h(q) - R + sqrt(R**2 - |q-centre_xy|**2)` over the ball disk. Rectangular
+branch-and-bound combines height hulls with local plane/Taylor bounds and real
+surface witnesses. Only the upper tip-Z bound grants contact clearance. Contact
+tolerance and finite refinement budget are explicit; unresolved arithmetic or
+budget exhaustion raises `ValueError`.
+
+`cam_core.relief_stock.ReliefOperation` attaches a ball radius, cutting length,
+query pitch/tolerance and descriptive strategy to that design. Ordered jobs
+require matching design/source revisions even without stock evaluation. Complete
+decoded linear motion feeds `replay_stages`; unsupported mixed stock families
+remain explicitly unsupported. Every feed segment is checked continuously: the
+contact envelope is directionally Lipschitz with the design gradient bounds,
+so endpoint clearance of `(Lx*abs(dx)+Ly*abs(dy))/2` proves its interpolated path.
+Unproved segments subdivide under a finite budget; safe endpoints alone do not
+prove an interior ridge. Exact tangency may be unresolved and is not accepted
+by a permissive tolerance. High rapids, vertical monotonic entries/retracts and
+arbitrary straight cutting segments are supported; arcs and cleared descents
+are not. Supplied axial limits conservatively cap absolute virgin-stock depth,
+without predecessor retrace credit. Engagement, cutting load and machine
+dynamics remain unassessed.
+
+Stock starts at Z=0. Every prefix unions all decoded entry, cut and retract
+sweeps. At each XY cell centre, continuous analytic sphere-sweep depth with
+radii `R - cell_half_diagonal` and `R + cell_half_diagonal` bounds removal over
+the complete cell. Design height extrema then bound residual volume, maximum
+residual thickness and a worst-bound cell location. Same-cell comparison of
+new lower removal against prior upper removal establishes useful-removal lower
+bounds without summing overlap. `residual_at` supplies a point thickness bracket
+for caller-supplied sphere-centre sweeps; it alone grants no provenance, gouge
+or process evidence. Pitch is a requested spatial enclosure, not a guarantee of
+a narrow result. The implementation records floating-point guards, conservatively
+adjusts footprint radii at numerical boundaries and refuses unrepresentable
+inputs; it does not promise exact-real arithmetic at arbitrary scales.
+
+The complete cutter envelope is a lower hemisphere plus cylindrical flutes;
+cutting length must reach the ball equator and remain above initial stock.
+Existing `OccupancySetup` checks cutter/fixtures and shank/holder against the full
+initial stock using continuous bounding bands. The occupancy box must equal the
+relief stock. Fixture geometry remains axis-aligned boxes, with no credit for
+cleared cavities. `ordered_output` supplies the existing independently decoded
+UCCNC/Grbl byte, motion, process and transition gates. Those bounded outputs
+do not imply native Surface/3D MOP, controller-runtime or physical-cut acceptance.
+
+`cam_extensions.relief_finishing.generate` supplies parallel, guided-flow and
+waterline candidates. Guided flow chooses the less variable direction, adjusts
+transverse spacing by surface distance, and adds passes at analytic extrema or
+grid creases. Waterline extraction joins unambiguous contact-level fragments and
+keeps each resulting path at one conservative Z. It can miss flat floors and
+extrema; residual verification preserves that incomplete result. All strategies
+use explicit bodies/process parameters, high links, contact clearance and
+four-decimal motion proposals. `sequence` preserves design, physical setup and
+frame identity across independently proposed stages. `motion_cost` measures
+distance and constant-feed time only, excluding dynamics and installation time.
+These are bounded policies, not a universal best strategy, constant-scallop
+algorithm or BO01 surface search. The [consumer](../demos/relief_finishing.py)
+compares every candidate through the same stock/body/output gates.
+
 ### Bounded spherical-bowl ball finish and rest
 
 `cam_core.surface3d.SphericalBowlTarget` adds one non-overhanging spherical-cap

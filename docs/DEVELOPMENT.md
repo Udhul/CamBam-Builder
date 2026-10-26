@@ -2500,6 +2500,45 @@ evidence. The [contract](structure_spec.md#bounded-sloped-surface-and-ball-cutte
 and [review](REVIEW.md#sloped-surface-and-ball-cutter-evidence---2026-09-26)
 define the bounded claim and measured result.
 
+### SF01 bounded relief finishing
+
+The [implemented contract](structure_spec.md#bounded-relief-contact-stock-and-finishing-sf01)
+owns representation, contact, continuous-motion, stock and strategy limits.
+Run the geometry/stock and complete-output regressions with the base package:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py --pattern test_relief.py --pattern test_relief_stock.py --pattern test_relief_finishing.py
+& .\.venv\Scripts\python.exe demos/relief_finishing.py
+```
+
+The consumer creates a unique ignored `output/sf01-relief-<unique>/` directory.
+`--output <new-directory>` selects another task-owned result directory. It writes
+six source-bound ordered bundles (analytic cubic and bilinear ornament, each
+guided/parallel/waterline), one two-stage evolving-stock bundle, and
+`comparison.json`. Every final NC file is independently decoded and replayed;
+the report includes design/job/program identities, prefix volume/thickness
+bounds, located detail witnesses, body evidence and decoded motion estimates.
+The declared finish ceiling is 0.20 mm; waterline results can fail that ceiling
+while their individual motions still pass protection checks. Guided moulding
+detail is checked against 0.005 mm, with useful later-stage removal above
+0.1 mm3. The application explicitly reports the sampled ornament where the
+parallel candidate is better. These checks require no manual CamBam observation.
+
+For installed coverage use the repository matrix, then run an unmodified copy
+of the demo with the base-only Python 3.12 and full Python 3.13 interpreters using
+`-I`, from their external empty working directories, writing artifacts back
+under the task's ignored output root:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py --package --pattern test_relief.py --pattern test_relief_stock.py --pattern test_relief_finishing.py --pattern test_ordered_job.py --pattern test_occupancy.py
+```
+
+The base-only environment can run the relief consumer without Shapely/MCP.
+Unchanged native 0.3.0 observations may be reused only under their recorded
+scope; the new NC files establish offline geometry, not controller execution,
+cutting-load acceptance or native Surface/3D MOP interoperability. There is no
+physical cutting or new native post gate to ask the user to perform for SF01.
+
 ### Packet 3 spherical-bowl ball finish and rest
 
 Run the detached synthetic regression from the repository root:
