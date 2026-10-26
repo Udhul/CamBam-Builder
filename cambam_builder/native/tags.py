@@ -3,6 +3,8 @@
 Legacy objects with only recognized keys and a nonempty ``user_id`` are reserved
 for primitive metadata; MOP metadata also requires a valid ``internal_id`` UUID.
 An exact legacy signature is inherently ambiguous and wins over operator text.
+An invalid optional parent value is ignored without dropping the remaining
+metadata, preserving the legacy parentless world-pose recovery behavior.
 All other text, including unknown/malformed JSON objects, stays opaque. Callers
 can author any text, even a reserved signature, through ``native_tag``: it is
 stored inside a versioned envelope alongside the existing identity fields.
@@ -54,14 +56,7 @@ def decode_tag(text: str | None, *, primitive: bool) -> tuple[TagMetadata, str |
     if "parent" in data and data["parent"] is not None:
         parent = data["parent"]
         if not isinstance(parent, (str, int)) or isinstance(parent, bool):
-            return {}, text
-        try:
-            uuid.UUID(str(parent))
-        except ValueError:
-            try:
-                int(str(parent))
-            except ValueError:
-                return {}, text
+            data["parent"] = None
     note = data.pop("native_tag") if versioned else None
     data.pop("_cambam_builder", None)
     return data, note

@@ -77,6 +77,30 @@ below for installation and protocol acceptance. The base library needs no MCP SD
 Select checks using [proportional effort and evidence reuse](WORKFLOW.md#proportional-effort-and-evidence-reuse)
 and [required checks by change](#required-checks-by-change).
 
+### Native interchange integrity checks
+
+The fast CF01 regression gate covers units, PointList identity, Tag collision
+policy and two direct board workflows. Run from the repository root:
+
+```powershell
+& $ProjectPython tools/verify.py --pattern test_native_units.py --pattern test_pointlist_nesting.py --pattern test_native_tags.py --pattern test_native_interchange.py
+$NativeExampleOutput = Join-Path 'output' ('native-board-' + [guid]::NewGuid().ToString('N').Substring(0,8))
+& $ProjectPython demos/native_board.py $NativeExampleOutput
+```
+
+Use a unique task directory for session examples. For shared native reader/writer
+or ownership edits, also select the existing strict-import, MOP roundtrip/context,
+native-MOP edits, parent/global-transform, copy/transfer, shape-parity and
+export/state tests affected by the change. Select the MCP authoring test if its
+Part fixture/API changes. Detached CAM strategy/stock/controller suites do not
+add evidence for these serialization-only changes and need not run on every
+native edit. Keep their regressions for changes to their own contracts.
+
+The self-contained `demos/native_board.py` can be copied outside the checkout
+and run with a freshly installed base wheel; it requires NumPy but no planar
+extra, MCP or CamBam process. Pass its output directory explicitly. The example
+checks an edit/save/reopen cycle; it does not certify native toolpaths.
+
 Run applicable commands from the repository root, using the interpreter selected above:
 
 ```powershell

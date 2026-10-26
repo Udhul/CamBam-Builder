@@ -2946,6 +2946,60 @@ remains separate. Neither entry point guarantees preservation of arbitrary XML
 metadata or computes CamBam toolpaths. Adapter opens/saves always diagnose this
 interchange limit and assert units explicitly.
 
+### Native interchange integrity (CF01)
+
+`CamBamProject(name, *, units="Millimeters")` defaults new documents to metric.
+`project.units` accepts the exact native labels `"Millimeters"`, `"Inches"`, or
+`None`. The writer uses the root `units` attribute; absence imports as `None` and
+exports without that attribute. Other explicit labels reject with `ValueError`
+(the compatibility file reader returns `None` on invalid input). Assignment and
+import never convert geometry, transforms, stock, tool dimensions or MOP values.
+Callers choose dimensionally consistent values; unit conversion is not provided.
+Copying a primitive tree also retains numeric values and the destination's unit
+label, so cross-unit conversion remains the caller's responsibility.
+
+PointList nesting is an owned Part-to-Points relationship in the project, using
+the same UUID identity as geometry and MOP targets. Author with
+`add_part(..., nesting_method="PointList", nesting_point_list=points)` or use
+`set_part_nesting_points(part, points)`; the latter selects PointList.
+`get_part_nesting_points(part)` returns the owned `Points` or `None`. Native
+`PointListID` resolves after geometry import and is regenerated from the current
+export ID map. Missing, malformed, duplicate, unresolved and wrong-kind active
+references reject. An active layout must belong to an exported layer.
+Valid imported nesting payload is retained, with its reference patched; switching
+methods drops method-specific payload as before.
+
+Deleting/transferring the referenced Points or explicitly clearing the binding
+leaves the Part unbound. An active PointList Part then fails export until rebound
+or switched to another method. Copy/transfer remaps included Part bindings to
+the copied Points, including fresh UUIDs; an included Part whose layout is
+outside the selected subtree rejects before either project is changed. Whole
+project cloning retains the binding and rebinds geometry ownership as usual.
+
+`Primitive.native_tag` and `Mop.native_tag` hold operator text (`str | None`).
+One native string Tag carries the existing flat framework identity/classification
+JSON plus `_cambam_builder: 1` and `native_tag` when operator text exists. Text
+survives edits, Rect-to-Pline export, copying and reopen; it is readable inside
+the JSON Tag in CamBam, not a separate native notes property. Setting `None`
+removes the note; an empty string remains an empty note. Root/layer Tags are
+retained as imported context, and Part Tags retain their existing context path.
+
+The collision policy reserves legacy objects containing only recognized keys
+and a nonempty string `user_id`; primitive metadata may omit `internal_id`, while
+MOP metadata requires a valid UUID. Present UUID, groups and description values
+must have their expected types. Invalid optional legacy parent values remain
+parentless without losing identity or exported world pose. All other text/JSON is opaque operator
+text, including unknown envelope versions. An exact legacy or supported-envelope
+signature is interpreted as metadata; its origin cannot be inferred. Assigning
+that same text through `native_tag` safely nests it as an operator note. This is
+a bounded Tag contract, not preservation of arbitrary unknown XML or classes.
+
+The [direct board example](../demos/native_board.py) demonstrates authoring and
+editing with native MOPs, hierarchy, groups and PointList placement. Numeric
+geometry, identity, operation order and notes are covered by
+[the CF01 evidence](REVIEW.md#cf01-native-interchange-integrity---2026-10-26).
+Final native toolpath generation and G-code export remain CamBam workflows.
+
 ### Shape elevation and Region contract
 
 Pline and Points use one canonical `Vertex` record with finite `x`, `y`, `z`

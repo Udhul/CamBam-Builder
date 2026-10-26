@@ -60,6 +60,18 @@ class PointListNestingTests(unittest.TestCase):
         self.assertEqual("Auto", nesting.findtext("GCodeOrder"))
         self.assertEqual(mapping[replacement.internal_id], target.get_part_nesting_points(mapping[part.internal_id]).internal_id)
 
+    def test_duplicate_nesting_containers_reject(self):
+        for method in ("PointList", "Grid", "None"):
+            root = ET.fromstring(native_source())
+            part = root.find("./parts/part")
+            part.find("Nesting/NestMethod").text = method
+            duplicate = ET.SubElement(part, "Nesting")
+            ET.SubElement(duplicate, "NestMethod").text = "PointList"
+            ET.SubElement(duplicate, "PointListID").text = "999"
+            with self.subTest(method=method):
+                with self.assertRaisesRegex(ValueError, "duplicate Nesting"):
+                    read_cambam_bytes(ET.tostring(root), strict=True)
+
     def make_board(self):
         project = CBProject("board")
         layer = project.add_layer("Geometry")

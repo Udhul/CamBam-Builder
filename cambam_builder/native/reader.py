@@ -634,7 +634,10 @@ def _reconstruct_part(project: CamBamProject, part_elem: ET.Element, *, strict: 
     default_tool_dia = _parse_float(part_elem.findtext("ToolDiameter"), None) # Use None if not present
     # SpindleSpeed default seems not stored at Part level in standard XML?
     default_spindle_speed = None # Assume None
-    nesting = part_elem.find("Nesting")
+    nesting_elements = part_elem.findall("Nesting")
+    if len(nesting_elements) > 1:
+        raise CamBamReaderError(f"Part '{name}' contains duplicate Nesting elements")
+    nesting = nesting_elements[0] if nesting_elements else None
     nesting_method = nesting.findtext("NestMethod", "None") if nesting is not None else "None"
     nesting_rows = _parse_int(nesting.findtext("Rows"), 1) if nesting is not None else 1
     nesting_columns = _parse_int(nesting.findtext("Columns"), 1) if nesting is not None else 1
@@ -944,7 +947,13 @@ def _reconstruct_primitive(project: CamBamProject, prim_elem: ET.Element, layer_
             try:
                 parent_ref = uuid.UUID(str(parent_ref_str))
             except ValueError:
-                parent_ref = int(str(parent_ref_str))
+                try:
+                    parent_ref = int(str(parent_ref_str))
+                except ValueError:
+                    logger.warning(
+                        "Invalid parent reference '%s' in Tag for XML ID %s",
+                        parent_ref_str, xml_id,
+                    )
 
     # If internal UUID wasn't in Tag, generate a new one
     if internal_uuid is None:
