@@ -7,18 +7,19 @@ verification and CF02 evidence reuse; [release notes](RELEASE_NOTES.md) define
 the version 0.2.0 consumer scope. CF02 is committed on local `main`; the
 [CF02 acceptance record](REVIEW.md#cf02-manufacturing-composition---2026-10-26)
 owns its verification and scope. The larger autonomous native engine delivery
-bundle is on `feat/native-engine-delivery-bundle` from that merged baseline.
+bundle is delivered on local `main` through authorized `--no-ff` merge `1e48609`
+of `feat/native-engine-delivery-bundle` at `a8d3b2f`.
 BO01 integration is committed at `9216298`, native implementation at `5afc0f7`,
 shared-endpoint post support at `bb8f5ea` and clearance hardening at `607da15`.
 Implementation, native post and installed consumer acceptance are complete for
 the [0.3.0 checkpoint](RELEASE_NOTES.md#030-native-engine-delivery); the
 [acceptance record](REVIEW.md#native-engine-delivery-bundle---2026-10-26) owns
-results and limits. Integration of this bundle into `main` remains pending.
+results and limits. The merge preserves the accepted feature tree unchanged.
 No push, tag or registry publication was performed.
 NC01-A is delivered on local `main` through the
 authorized `--no-ff` merge of `feat/nc01-a-native-geometry` (reviewed tip
 `dc962a1`) into `6514305`. Fetching origin in this session confirms that merge
-is on `origin/main` at `a603d90`; CF02 and PK01 remain local additions. The
+is on `origin/main` at `a603d90`; CF02, PK01 and the native engine bundle remain local additions. The
 [merge review](REVIEW.md#nc01-a-merge-review---2026-10-26) records acceptance
 and evidence reuse.
 CF01 remains delivered locally through merge `9289d4b`. The remote inventory below remains the earlier
@@ -47,8 +48,8 @@ distinct geometric capability rather than another nearby planar edge case.
 
 ### Native engine delivery bundle
 
-**State:** accepted by engineering and committed on the feature branch, against
-local `main` at `2fd43b1`; merge remains pending. The user-authorized bundle closed
+**State:** accepted by engineering and merged into local `main` at `1e48609`,
+from the reviewed `2fd43b1` baseline. The user-authorized bundle closed
 these connected outcomes:
 
 1. **BO01-C:** integrated finite, mixed-tool and paired-inlay search; reconciled
@@ -171,7 +172,7 @@ outcome using the [strategy checkpoint](WORKFLOW.md#strategy-checkpoint).
 
 | Order | Increment | Useful outcome / scope |
 | --- | --- | --- |
-| Complete, merge pending | **BO01-C + native extended-engine output + manufacturing consumers** | [Accepted bundle](#native-engine-delivery-bundle); versioned search-to-native-library outcome with native and installed evidence. |
+| Delivered on local main | **BO01-C + native extended-engine output + manufacturing consumers** | [Accepted bundle](#native-engine-delivery-bundle); versioned search-to-native-library outcome with native and installed evidence. |
 | Next, fresh session | **SF01** | Establish bounded relief contact/stock and shape-aware finishing through one concrete reusable consumer, using the accepted native/output foundation. NR03 remains a separate native interchange capability. |
 
 NC01-A closes the first native slice. Further NC01 classes/preservation and NR03
