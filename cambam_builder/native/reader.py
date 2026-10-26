@@ -245,12 +245,12 @@ def _parse_point_2d(value: Optional[str]) -> Optional[Tuple[float, float]]:
     return None
 
 def _parse_point_3d(value: Optional[str]) -> Optional[Tuple[float, float, float]]:
-    """Safely parse 'x,y,z' strings into (x, y, z)."""
+    """Read native Point3F text; CamBam omits the third coordinate at Z=0."""
     if value is None: return None
     try:
         parts = [float(p.strip()) for p in value.split(',')]
-        if len(parts) == 3:
-            return parts[0], parts[1], parts[2]
+        if len(parts) in (2, 3) and np.isfinite(parts).all():
+            return parts[0], parts[1], parts[2] if len(parts) == 3 else 0.0
     except (ValueError, TypeError, AttributeError):
         pass
     return None
@@ -624,6 +624,10 @@ def _reconstruct_part(project: CamBamProject, part_elem: ET.Element, *, strict: 
         pmax_str = stock_node.findtext("PMax")
         pmin = _parse_point_3d(pmin_str)
         pmax = _parse_point_3d(pmax_str)
+        if strict and (pmin is None or pmax is None):
+            raise CamBamReaderError(
+                f"Part '{name}' Stock PMin/PMax must be finite XY or XYZ coordinates"
+            )
         if pmin and pmax:
             stock_width = abs(pmax[0] - pmin[0])
             stock_height = abs(pmax[1] - pmin[1])

@@ -1042,9 +1042,10 @@ class Surface3DMop(Mop):
         template = getattr(self, '_xml_template', None)
         baseline = getattr(self, '_xml_parameter_baseline', {})
         dirty = getattr(self, '_xml_dirty_parameters', set())
+        explicit_states = getattr(self, '_xml_explicit_parameter_states', set())
 
         def edited(name: str) -> bool:
-            return (template is None or name in dirty
+            return (template is None or name in dirty or name in explicit_states
                     or getattr(self, name) != baseline.get(name))
 
         if (template is not None and edited('profile_3d_method')

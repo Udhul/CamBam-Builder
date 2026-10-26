@@ -28,6 +28,27 @@ def encoded_mop(project):
 
 
 class NativeSurfaceMopTests(unittest.TestCase):
+    def test_native_stock_zero_z_abbreviation_round_trip(self):
+        data = native_document().replace(
+            b'<part Name="Part">',
+            b'<part Name="Part"><Stock><PMin>-1,0.5,-1.2</PMin>'
+            b'<PMax>2,1.5</PMax></Stock>')
+        project = read_cambam_bytes(data)
+        part = project.get_part('Part')
+        self.assertEqual((part.stock_width, part.stock_height, part.stock_thickness), (3, 1, 1.2))
+        self.assertEqual(part.stock_offset, (-1, .5))
+        self.assertEqual(part.stock_surface, 0)
+        reopened = read_cambam_bytes(serialize_cambam_bytes(project))
+        actual = reopened.get_part('Part')
+        self.assertEqual((actual.stock_width, actual.stock_height, actual.stock_thickness), (3, 1, 1.2))
+        self.assertEqual(actual.stock_offset, (-1, .5))
+        for value in ('2', '2,1.5,0,4', 'nan,1.5', '2,inf', '2,bad', ''):
+            with self.subTest(value=value):
+                malformed = data.replace(b'<PMax>2,1.5</PMax>', f'<PMax>{value}</PMax>'.encode())
+                with self.assertLogs('cambam_builder.native.reader', level='ERROR'):
+                    with self.assertRaisesRegex(ValueError, 'Stock PMin/PMax'):
+                        read_cambam_bytes(malformed)
+
     def test_native_integer_fields_emit_integer_lexical_forms(self):
         project = CBProject('integer')
         layer = project.add_layer('geometry')
@@ -115,6 +136,12 @@ class NativeSurfaceMopTests(unittest.TestCase):
             with self.assertLogs('cambam_builder.native.writer', level='ERROR'):
                 encoded_mop(project)
         mop.profile_3d_method = 'Horizontal'
+        with self.assertRaisesRegex(ValueError, 'imported unsupported'):
+            with self.assertLogs('cambam_builder.native.writer', level='ERROR'):
+                encoded_mop(project)
+        project = read_cambam_bytes(native_document(
+            '<Profile3DMethod state="Default">WaterlineRough</Profile3DMethod>'))
+        project.list_mops()[0].set_parameter_state('profile_3d_method', 'Value')
         with self.assertRaisesRegex(ValueError, 'imported unsupported'):
             with self.assertLogs('cambam_builder.native.writer', level='ERROR'):
                 encoded_mop(project)
