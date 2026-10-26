@@ -1009,6 +1009,118 @@ class EngraveMop(Mop):
         return mop_elem
 
 
+NCFILE_XML_FIELDS = {
+    'source_file': ('SourceFile', ''),
+    'distance_mode': ('DistanceMode', 'Absolute'),
+    'arc_center_mode': ('ArcCenterMode', 'Default'),
+}
+NCFILE_DISTANCE_MODES = frozenset({'Absolute', 'Incremental'})
+NCFILE_ARC_CENTER_MODES = frozenset({
+    'Default', 'Absolute', 'IncrementalFromP1', 'IncrementalToP1',
+    'IncrementalFromP2', 'IncrementalToP2',
+})
+
+
+@dataclass
+class NCFileMop(Mop):
+    """An ordered, targetless native operation referencing an external program.
+
+    ``source_file`` is the literal native path, retained without reading,
+    resolving or copying the file. ``distance_mode`` and ``arc_center_mode``
+    describe native backplot interpretation; these plain enum fields have no
+    Default/Value inheritance state. Native posting and explicit dependency
+    checks are separate from document import/export. No motion is interpreted
+    by this entity.
+    """
+
+    source_file: str = ''
+    distance_mode: str = 'Absolute'
+    arc_center_mode: str = 'Default'
+
+    def __post_init__(self):
+        super().__post_init__()
+        # Make later common-field assignments intentional even before the
+        # first export, when a same-default value would otherwise be omitted.
+        self._xml_explicit_parameter_states = set()
+
+    def __setattr__(self, name, value):
+        if name in NCFILE_XML_FIELDS and '_xml_ncfile_baseline' in self.__dict__:
+            self.__dict__.setdefault('_xml_ncfile_dirty', set()).add(name)
+        super().__setattr__(name, value)
+
+    def _validate_ncfile_encoding(self) -> None:
+        """Reject unsupported authored/edited state, retaining untouched imports."""
+        baseline = getattr(self, '_xml_ncfile_baseline', None)
+        dirty = getattr(self, '_xml_ncfile_dirty', set())
+
+        def edited(name: str) -> bool:
+            return baseline is None or name in dirty or getattr(self, name) != baseline[name]
+
+        if edited('source_file'):
+            if not isinstance(self.source_file, str) or not self.source_file.strip():
+                raise ValueError('NCFile source_file must be a nonempty path string')
+            if any(ord(character) < 32 for character in self.source_file):
+                raise ValueError('NCFile source_file cannot contain control characters')
+        if (baseline is not None and not baseline['enabled'] and self.enabled
+                and not self.source_file.strip()):
+            raise ValueError('Cannot activate an imported NCFile without a source_file')
+        for name, allowed in (
+                ('distance_mode', NCFILE_DISTANCE_MODES),
+                ('arc_center_mode', NCFILE_ARC_CENTER_MODES)):
+            if baseline is not None and baseline[name] not in allowed:
+                if edited(name) or (not baseline['enabled'] and self.enabled):
+                    raise ValueError(f'Cannot activate or change imported unsupported NCFile {name}')
+            if edited(name) and (not isinstance(getattr(self, name), str)
+                                 or getattr(self, name) not in allowed):
+                raise ValueError(f'Unsupported NCFile {name}: {getattr(self, name)!r}')
+
+    def to_xml_element(self, project: "CamBamProject", resolved_primitive_xml_ids: List[int]) -> ET.Element:
+        """Encode a reference only; this method performs no source-file IO."""
+        if resolved_primitive_xml_ids:
+            raise ValueError('NCFile operations cannot target drawing primitives')
+        if project is not None and self.internal_id in project._mop_targets:
+            selection = project._mop_targets[self.internal_id]
+            if isinstance(selection, str) or selection:
+                raise ValueError('NCFile operations cannot target primitives or groups')
+        self._validate_ncfile_encoding()
+        element = self._native_mop_element(project, [])
+        if element is None:
+            element = ET.Element('ncfile', {'Enabled': str(self.enabled).lower()})
+            ET.SubElement(element, 'Name').text = self.name
+            ET.SubElement(element, 'Tag').text = encode_tag({
+                'user_id': self.user_identifier, 'internal_id': str(self.internal_id),
+            }, self.native_tag)
+            # Unlike drawing-based MOPs, native NCFile has no fresh machining
+            # parameter payload. Retain explicitly requested inherited metadata.
+            for name, policy in MOP_COMMON_FIELD_POLICIES.items():
+                value = getattr(self, name)
+                if (value == Mop.__dataclass_fields__[name].default
+                        and name not in getattr(self, '_xml_dirty_parameters', set())):
+                    continue
+                if policy.omit_when_none and value is None:
+                    continue
+                if policy.omit_when_empty and value == '':
+                    continue
+                ET.SubElement(element, policy.xml_tag, {'state': 'Value'}).text = (
+                    self._format_mop_parameter(value, name))
+            self._apply_explicit_parameter_states(element)
+        primitive = element.find('primitive')
+        if primitive is not None:
+            element.remove(primitive)
+        baseline = getattr(self, '_xml_ncfile_baseline', None)
+        dirty = getattr(self, '_xml_ncfile_dirty', set())
+        for name, (tag, default) in NCFILE_XML_FIELDS.items():
+            value = getattr(self, name)
+            if baseline is not None and name not in dirty and value == baseline[name]:
+                continue
+            child = element.find(tag)
+            if child is None and value != default:
+                child = ET.SubElement(element, tag)
+            if child is not None:
+                child.text = value
+        return element
+
+
 @dataclass
 class Surface3DMop(Mop):
     """Native parallel ball finishing over a triangle Surface.

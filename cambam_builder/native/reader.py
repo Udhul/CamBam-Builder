@@ -21,8 +21,8 @@ from .core import Primitive, Vertex
 from .cad import Layer, Pline, Circle, Rect, Arc, Points, Text, Line, Spline
 from .cam import (
     Part, Mop,
-    ProfileMop, PocketMop, EngraveMop, DrillMop, Surface3DMop,
-    MOP_XML_PATH_TO_FIELD,
+    ProfileMop, PocketMop, EngraveMop, DrillMop, Surface3DMop, NCFileMop,
+    MOP_XML_PATH_TO_FIELD, NCFILE_XML_FIELDS,
 )
 from .transformations import identity_matrix, from_cambam_matrix_str # For parsing matrix
 from .region import Region, parse_region_geometry
@@ -38,6 +38,7 @@ MOP_TAG_TO_CLASS = {
     "engrave": EngraveMop,
     "drill": DrillMop,
     "surface3d": Surface3DMop,
+    "ncfile": NCFileMop,
     # Add mappings for other MOP types if implemented (e.g., "lathe", "script")
 }
 
@@ -770,7 +771,22 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
     # Parse all fields emitted by each supported MOP encoder. Missing fields use
     # dataclass defaults; malformed values are handled by the safe parsers.
     mop_specific_kwargs: Dict[str, Any] = {}
-    if mop_class is ProfileMop:
+    if mop_class is NCFileMop:
+        containers = mop_elem.findall('primitive')
+        if (len(containers) > 1 or any(len(node) or node.attrib
+                or (node.text or '').strip() for node in containers)):
+            raise CamBamReaderError('NCFile operations cannot contain primitive targets')
+        for field_name, (tag, default) in NCFILE_XML_FIELDS.items():
+            nodes = mop_elem.findall(tag)
+            if len(nodes) > 1:
+                raise CamBamReaderError(f'Duplicate NCFile {tag} element')
+            if nodes and (len(nodes[0]) or nodes[0].attrib):
+                raise CamBamReaderError(f'NCFile {tag} must be a plain scalar element')
+            value = (nodes[0].text or '') if nodes else default
+            if field_name != 'source_file' and not value.strip():
+                raise CamBamReaderError(f'NCFile {tag} must be a nonempty enum value')
+            mop_specific_kwargs[field_name] = value
+    elif mop_class is ProfileMop:
         mop_specific_kwargs["stepover"] = parameter("StepOver", _parse_float, 0.4)
         mop_specific_kwargs["profile_side"] = parameter("InsideOutside", parse_string, "Inside")
         mop_specific_kwargs["milling_direction"] = parameter("MillingDirection", parse_string, "Conventional")
@@ -866,6 +882,11 @@ def _reconstruct_mop(project: CamBamProject, mop_elem: ET.Element, part_uuid: uu
             **mop_specific_kwargs
         )
         mop.internal_id = internal_id
+        if isinstance(mop, NCFileMop):
+            mop._xml_ncfile_baseline = {
+                **{name: getattr(mop, name) for name in NCFILE_XML_FIELDS},
+                'enabled': mop.enabled,
+            }
         for field_name in MOP_XML_PATH_TO_FIELD.values():
             if hasattr(mop, field_name):
                 parameter_baseline.setdefault(field_name, getattr(mop, field_name))

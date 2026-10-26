@@ -247,6 +247,36 @@ class PreservationAwareMopInspectionTests(unittest.TestCase):
 
         self.run_async(body)
 
+    def test_imported_ncfile_is_opaque_and_retarget_rejects_without_mutation(self):
+        async def body():
+            project = CBProject("external-program")
+            layer = project.add_layer("Geometry")
+            outline = project.add_rect(layer, identifier="outline")
+            part = project.add_part("Part")
+            mop = project.add_ncfile_mop(part, "missing.nc", identifier="external")
+            path = self.root / "external.cb"
+            project.save(str(path))
+            opened = await self.call("document_open", self.args(path=path.name, units="mm"))
+            self.assertTrue(opened["ok"], opened)
+            handle = opened["document"]
+            inspected = await self.inspect(handle)
+            record = next(e for e in inspected["data"]["entities"] if e["kind"] == "mop")
+            self.assertEqual(record["unsupported_fields"], ["operation"])
+            self.assertEqual(record["parameters"], {})
+            before = self.service.documents[handle]
+            revision = before.revision
+            changed = await self.call("machining_set_mop_targets", self.args(
+                document=handle, expected_revision=revision, mop_id=str(mop.internal_id),
+                targets=[str(outline.internal_id)]))
+            self.assertFalse(changed["ok"], changed)
+            self.assertEqual(changed["error"]["code"], "UNSUPPORTED_OPERATION")
+            self.assertEqual(self.service.documents[handle].revision, revision)
+            self.assertIs(self.service.documents[handle].project, before.project)
+            self.assertEqual(before.project.get_mop("external").source_file, "missing.nc")
+            self.assertFalse((self.root / "missing.nc").exists())
+
+        self.run_async(body)
+
 
 if __name__ == "__main__":
     unittest.main()

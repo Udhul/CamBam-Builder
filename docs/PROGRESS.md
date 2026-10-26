@@ -21,26 +21,28 @@ remote-delivery check. No remote publication is part of this local bundle.
 
 <a id="doc01-documentation-consolidation-backlog"></a>
 
-**NR03 is accepted as one complete autonomous bundle (2026-10-26).** Native
-Surface/3D MOP interchange now connects SF01 bilinear reliefs to the primary
-editable-CamBam workflow. Native save/reopen, edit/export, whole actual-post
-motion/stock and installed consumer gates pass for a controlled ridge and the
-exact original SF01 ornament. The [acceptance record](REVIEW.md#nr03-native-relief-milestone---2026-10-26)
-owns regression reconciliation, numeric results, repairs and remaining limits.
-The stopping condition is met and the authorized local merge is complete.
-No product decision or external observation is outstanding for this scope.
+**NC02: editable external-program consumer — active (2026-10-26).** Add the
+native NCFile MOP so an application can combine a supplied NC program with
+ordinary native operations in one editable Part. This closes a concrete native
+class gap and tests external dependency handling without expanding detached
+machining engines or requiring controller execution. NR03 remains accepted;
+its [record](REVIEW.md#nr03-native-relief-milestone---2026-10-26) owns that evidence.
 
-This is a good fresh-session breakpoint: the editable native relief workflow is
-implemented, verified and accepted, with contracts, reproducible recipes and
-evidence in their owners. The next native consumer has a distinct scope and
-needs no unsaved session context. No further NR03 work is pending.
+The autonomous bundle owns native model/reader/project integration, an explicit
+source-dependency boundary in `integrations.cambam`, a self-contained mixed-job
+consumer, and a versioned installed checkpoint. Import/save must not implicitly
+read or execute external files. Acceptance requires observed native schema,
+save/reopen and actual inclusion behavior; targetless Part/order/identity and
+clone tests; explicit missing/changed dependency rejection; source provenance;
+affected regression/MCP checks and installed Python 3.12/3.13 consumers.
+Inspect native optimizer behavior before making an applicability claim.
 
-**Next priority after this bundle:** select the next concrete unsupported native
-entity/MOP consumer from the [remaining backlog](#remaining-backlog-in-order),
-then bound its native-save, identity/dependency and interchange acceptance.
-Native coverage still serves the primary editable-library workflow; additional
-relief heuristics or surface search remain conditional on measured caller need.
-No adjacent mode or unrelated epic becomes active merely because NR03 closes.
+Stopping condition: the complete consumer is implemented, independently reviewed,
+verified and accepted for document interchange/inclusion, with limits recorded
+and an authorized local `--no-ff` merge. Physical/controller execution and a
+general NC interpreter remain outside this bundle. No product decision is
+outstanding. The user authorized work, commits and local merges on 2026-10-26;
+remote publication is not part of that authorization.
 
 ### Native engine delivery bundle
 
