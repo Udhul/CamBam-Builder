@@ -73,6 +73,9 @@ def create_document(*, style: str = "Triangle",
     The 3 mm endmill cuts 3 mm stock in 1 mm levels, with 6 x 1 mm tab
     parameters. Points must satisfy the native writer's corner/overlap limits;
     its 1e-6 mm edge-distance tolerance projects points onto the straight edge.
+    Tangential placement must use 0.0001 mm increments, matching the observed
+    Default post's four-decimal coordinate output. The general native writer
+    retains its broader point-authoring domain.
     Only Square and Triangle are admitted. This creates no toolpaths or G-code.
     """
     if style not in ("Square", "Triangle"):
@@ -92,6 +95,9 @@ def create_document(*, style: str = "Triangle",
 def _author_bytes(style: str, points: tuple[tuple[float, float], ...]) -> bytes:
     if style not in ("Square", "Triangle") or len(points) not in (4, 5):
         raise ValueError("unsupported bounded native tab intent")
+    for centers in _tabs_by_edge(points):
+        if any(abs(q - round(q, 4)) > 1e-9 for q in centers):
+            raise ValueError("bounded Default-post tab positions require 0.0001 mm tangential increments")
     project = CBProject(f"manual-{style.lower()}-tabs")
     outline = project.add_pline("Geometry", OUTLINE, closed=True, identifier="outline")
     part = project.add_part("Part", stock_width=80.0, stock_height=50.0,
@@ -171,7 +177,11 @@ def _edge_move(a: tuple, b: tuple) -> tuple[int, float, float] | None:
 def _depth_function(style: str, centers: tuple[float, ...], q: float) -> float:
     if style == "Square":
         return -2.0 if any(abs(q - c) < HALF_GAP - TOLERANCE for c in centers) else -3.0
-    return -3.0 + max((max(0.0, 1 - abs(q - c) / HALF_GAP) for c in centers), default=0.0)
+    # Native Triangle compensation has a cutter-diameter plateau. Each side
+    # ramps over half the requested 6 mm stock width, not half the 9 mm gap.
+    return -3.0 + max((min(1.0, max(0.0, (HALF_GAP - abs(q - c)) /
+                                            (HALF_GAP - RADIUS)))
+                       for c in centers), default=0.0)
 
 
 def _check_edge_depth(style: str, centers: tuple[float, ...], qa: float, qb: float,
@@ -184,7 +194,8 @@ def _check_edge_depth(style: str, centers: tuple[float, ...], qa: float, qb: flo
     # Endpoint checks alone cannot distinguish a missing tab or a chord through
     # its apex. Every depth-function breakpoint inside this move is checked.
     for center in centers:
-        for breakpoint in (center - HALF_GAP, center, center + HALF_GAP):
+        for breakpoint in (center - HALF_GAP, center - RADIUS, center,
+                           center + RADIUS, center + HALF_GAP):
             if qa < breakpoint < qb:
                 samples.append((breakpoint - qa) / (qb - qa))
     for t in samples:
@@ -288,7 +299,7 @@ def _stock_sections(document: NativeTabDocument, moves: list[dict]) -> list[dict
         if overcut > 0.2:
             raise ValueError("posted cutter removes protected cutout stock")
         expected_width = (6.0 if document.style == "Square" else
-                          max(0.0, 9 * (depth - 2) - 3))
+                          6 * (depth - 2))
         widths = []
         for edge, centers in enumerate(_tabs_by_edge(document.points)):
             for q in centers:

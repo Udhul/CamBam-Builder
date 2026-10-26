@@ -1,6 +1,13 @@
 # Current status
 
-Status updated 2026-10-26: **Native Triangle holding-tab consumer active.**
+Status updated 2026-10-26: **Native Triangle holding-tab consumer accepted by
+engineering; authorized local integration pending.** Fresh paired native posts,
+retained-stock checks and installed consumers close the bounded output gap.
+The [review record](REVIEW.md#native-triangle-holding-tab-consumer---2026-10-26)
+owns evidence and limits. The existing Square consumer and native writer remain
+unchanged. Work is on `feat/native-triangle-tabs`, based on local `main` at
+`0d1f56d`; no remote publication is authorized or required.
+
 CADBitmap artwork registration and CG01 constructive geometry/shape-guided CAM
 remain implemented, verified and accepted by engineering.
 The 0.7.0 bundle is delivered on local `main` through authorized `--no-ff`
@@ -26,34 +33,26 @@ is part of this local bundle.
 
 <a id="doc01-documentation-consolidation-backlog"></a>
 
-**Constructive artwork bundle: accepted by engineering (2026-10-26).** Compact
-editable sources drive two constrained tracing families and geometry-dependent
-depth on a decorative frieze and a changing-section moulding. Source edits,
-repeat/scale modifiers, bounded reconstruction and regeneration retain design
-authority through native handoff. Independent fidelity, topology, contact,
-decoded-stock comparisons, installed consumers and native observations satisfy
-[CG01](REST_MACHINING_PLAN.md#constructive-geometry-and-shape-guided-cam-cg01).
-CADBitmap separately satisfies native placement/save and exact image-dependency
-acceptance. The [bundle review](REVIEW.md#constructive-artwork-bundle---2026-10-26)
-owns measured gains/losses, complete verification and remaining bounds. The
-implementation, acceptance and authorized local delivery stopping condition is
-satisfied. NC02 acceptance remains valid. No further manual validation is required
-for the accepted offline/native serialization scope.
+**Native Triangle bundle: accepted by engineering.** Centered, moved and
+five-tab Manual sources now have fresh actual Default posts, paired Square
+controls, independent retained-stock checks, edit/reopen behavior and clean
+installed-consumer evidence. The [contract](structure_spec.md#bounded-native-triangle-tab-consumer)
+and [review](REVIEW.md#native-triangle-holding-tab-consumer---2026-10-26) own
+scope and evidence. No product decision or user observation is pending.
+The remaining authorized action is local integration; general ramp replay,
+other contours/tab modes and physical holding strength remain outside this bundle.
 
-**Active bundle: native Triangle holding-tab consumer.** Author fresh centered,
-moved and five-tab Manual Triangle cutouts, paired with Square controls. Preserve
-the accepted Square consumer and verify complete actual Default posts against
-source intent, ramp geometry and independently sectioned retained stock. Owners:
-`integrations/cambam/native_tabs.py`, its synthetic tests and
-`demos/native_tabs_workflow.py`; [existing Manual contract](structure_spec.md#profilepocket-subtype-and-nested-field-inventory).
-The user authorized autonomous implementation, commits and local merges.
-Stopping condition: document/edit/reopen behavior, fresh native posts, fault-sensitive
-stock/motion checks and required installed checks are accepted and locally merged.
-General ramp replay, other contours/tab modes and physical holding strength are
-outside this bundle. The implementation and synthetic correctness review are
-complete; actual-post calibration and installed checks remain. Native Manual-tab
-loading requires CamBam's application context, which the task-local validation
-host is being adapted to supply. No product decision is pending.
+**Next priority: native Profile entry/exit consumer for board cutouts.** Close
+the concrete fresh-authoring gap for Tangent lead-in and independent lead-out
+settings in [the ordered backlog](#remaining-backlog-in-order). This continues
+the native foundation's caller value after tabs: editable process intent and
+actual output at the beginning/end of a cut. It takes priority over more tab
+shapes or constructive refinements, which need distinct consumers. Existing
+None/Spiral and accepted Square/Triangle behavior must stay intact.
+
+After local integration this is a good fresh-session breakpoint: the complete
+tab outcome, native observations, limits and next scope are persisted. The next
+consumer needs no unsaved decision, pending result or conversational context.
 
 ### Native engine delivery bundle
 
@@ -186,6 +185,7 @@ outcome using the [strategy checkpoint](WORKFLOW.md#strategy-checkpoint).
 | Delivered on local main at `30df33f` | **NR03: bounded native relief interchange** | Complete native Surface/3D MOP, editable source-bound relief and actual-post stock bundle; [acceptance evidence](REVIEW.md#nr03-native-relief-milestone---2026-10-26). |
 | Delivered on local main at `fc86840` | **NC02: external-program consumer** | Editable NCFile, explicit dependency bundles and native empty-value repair; [acceptance evidence](REVIEW.md#nc02-external-program-consumer---2026-10-26). |
 | Delivered on local main at `f2e0719` | **CADBitmap + CG01** | Editable constructive sources, shape-guided CAM and native reference artwork; [acceptance evidence](REVIEW.md#constructive-artwork-bundle---2026-10-26). |
+| Accepted; local integration pending | **Native Triangle holding tabs** | Fresh editable Manual Triangle cutouts, paired Square posts and retained-stock evidence; [acceptance record](REVIEW.md#native-triangle-holding-tab-consumer---2026-10-26). |
 
 NR03 closes the native relief capability following NC01-A and SF01. Its bounded
 non-overhanging mesh/native-operation stopping condition is satisfied. Further
@@ -201,6 +201,7 @@ These are planned or conditional items, not additional active implementation.
 
 | Scope | Promotion trigger and owner |
 | --- | --- |
+| Native Profile entry/exit consumer | **Next priority.** Author/edit/reopen a board-cutout job with bounded Tangent lead-in and independent lead-out parameters, compare fresh native Default output with existing None/Spiral controls, and preserve accepted tab behavior. Stop when the parameter/state contract and native entry/exit output have fault-sensitive evidence. Start from the [Profile lead contract](structure_spec.md#profilepocket-subtype-and-nested-field-inventory) and [coverage map](NATIVE_COVERAGE.md); general ramp replay and physical process validation remain separate. |
 | Constructive geometry and shape-guided CAM extensions | CG01's first complete reusable capability is accepted. Reopen for a named richer source/reconstruction consumer, unsupported constraint, changed native carrier or a numerical counterexample. [Implemented contract](structure_spec.md#constructive-sources-and-shape-guided-cam-cg01) and [acceptance limits](REVIEW.md#constructive-artwork-bundle---2026-10-26). |
 | Existing engine edge cases | BO01's integrated closed-offset repair covers the tapered-plug zero-length segment. Hard overlap caps, fitted paths and lateral low cleared links need a named consumer and continuous containment/access evidence. [RP01 limits](structure_spec.md#feature-aware-planar-vrest-candidates-rp01). |
 | Further native parameter/shape variants | Native field/state coverage belongs to NC01, not MCP parity. Promote from the [coverage map](NATIVE_COVERAGE.md) for a concrete consumer; CADBitmap placement and image dependencies are accepted, while vectorization/GUI behavior and general Save As rebasing remain unclaimed. |

@@ -13,7 +13,7 @@ from cambam_builder.native.reader import read_cambam_bytes
 from cambam_builder.native.writer import serialize_cambam_bytes
 
 
-def synthetic_post(style="Triangle", *, left=(25,)):
+def synthetic_post(style="Triangle", *, left=(25,), bottom=40):
     """Hand-constructed offset rectangle; round corners have radius1.5 mm."""
     lines = ["( Made using CamBam - http://www.cambam.co.uk )",
              "( synthetic native-tabs regression )", "( Post processor: Default )",
@@ -23,7 +23,7 @@ def synthetic_post(style="Triangle", *, left=(25,)):
                "G3 X8.5 Y40 I0 J-1.5", "G3 X10 Y8.5 I1.5 J0")
     # Components use actual drawing coordinates and explicit direction, rather
     # than importing the integration's tab/depth/section calculations.
-    edges = (("X", 70, (40,), 1), ("Y", 40, (25,), 1),
+    edges = (("X", 70, (bottom,), 1), ("Y", 40, (25,), 1),
              ("X", 10, (40,), -1), ("Y", 10, tuple(sorted(left, reverse=True)), -1))
     for depth in (1, 2, 3):
         lines.append(f"G1 F80 Z{-depth}")
@@ -35,7 +35,8 @@ def synthetic_post(style="Triangle", *, left=(25,)):
                 for center in centers:
                     lines.append(f"G1 F250 {axis}{center - direction * 4.5}")
                     if style == "Triangle":
-                        lines.extend((f"G1 {axis}{center} Z-2",
+                        lines.extend((f"G1 {axis}{center - direction * 1.5} Z-2",
+                                      f"G1 {axis}{center + direction * 1.5}",
                                       f"G1 {axis}{center + direction * 4.5} Z-3"))
                     else:
                         lines.extend(("G0 Z-2", f"G1 F250 {axis}{center + direction * 4.5}",
@@ -87,18 +88,24 @@ class NativeTabDocumentTests(unittest.TestCase):
 
 
 class NativeTabPostTests(unittest.TestCase):
+    def test_default_post_precision_is_explicit_at_authoring_boundary(self):
+        points = ((40.1234, 10),) + DEFAULT_POINTS[1:]
+        self.assertEqual(audit_post(create_document(points=points),
+                                   synthetic_post(bottom=40.1234))["status"], "pass")
+        with self.assertRaisesRegex(ValueError, r"0\.0001 mm"):
+            create_document(points=((40.12345, 10),) + DEFAULT_POINTS[1:])
+
     def test_native_edge_projection_tolerance_reaches_posted_audit(self):
         for distance in (1e-9, 0.5e-6, 1e-6):
             with self.subTest(distance=distance):
                 points = DEFAULT_POINTS[:-1] + ((10 + distance, 25),)
                 document = create_document(points=points)
                 self.assertEqual(audit_post(document, synthetic_post())["status"], "pass")
-        with self.assertLogs("cambam_builder.native.writer", level="ERROR"):
-            with self.assertRaises(ValueError):
-                create_document(points=DEFAULT_POINTS[:-1] + ((10 + 1.1e-6, 25),))
+        with self.assertRaises(ValueError):
+            create_document(points=DEFAULT_POINTS[:-1] + ((10 + 1.1e-6, 25),))
 
     def test_triangle_sections_clip_ramps_and_square_retains_full_width(self):
-        for style, expected in (("Triangle", (0, 1.5, 3.75, 6)),
+        for style, expected in (("Triangle", (1.5, 3, 4.5, 6)),
                                 ("Square", (6, 6, 6, 6))):
             with self.subTest(style=style):
                 report = audit_post(create_document(style=style), synthetic_post(style))
@@ -126,9 +133,10 @@ class NativeTabPostTests(unittest.TestCase):
         document, post = create_document(), synthetic_post()
         for replacement in (b"G1 X44.5 Z-3", b"G1 X40 Z-2.1\nG1 X44.5 Z-3",
                             b"G1 X41 Z-2\nG1 X45.5 Z-3",
+                            b"G1 X40 Z-2\nG1 X44.5 Z-3",
                             b"G0 Z-2\nG1 X44.5\nG1 F80 Z-3"):
             with self.subTest(replacement=replacement), self.assertRaises(ValueError):
-                audit_post(document, post.replace(b"G1 X40 Z-2\nG1 X44.5 Z-3", replacement, 1))
+                audit_post(document, post.replace(b"G1 X38.5 Z-2\nG1 X41.5\nG1 X44.5 Z-3", replacement, 1))
         with self.assertRaises(ValueError):
             audit_post(document, synthetic_post("Square"))
 
@@ -138,7 +146,7 @@ class NativeTabPostTests(unittest.TestCase):
                    (b"F250", b"F251"), (b"G61", b"G64"),
                    (b"G61", b"G40"), (b"G90", b"G91"),
                    (b"G0 X10 Y8.5", b"G0 Z-1\nG0 X10 Y8.5"),
-                   (b"G1 X40 Z-2", b"G0 X40 Z-2"),
+                   (b"G1 X38.5 Z-2", b"G0 X38.5 Z-2"),
                    (b"G3 X71.5 Y10 I0 J1.5", b"G3 X71.5 Y10 I0 J1.4"),
                    (b"G3 X71.5 Y10 I0 J1.5", b"G2 X71.5 Y10 I0 J1.5"),
                    (b"G1 F250 X70\n", b"G1 F250 X69\n"),

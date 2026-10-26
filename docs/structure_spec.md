@@ -4130,9 +4130,11 @@ Switching away from an imported Manual method remains unsupported. The native
 posts establish Square lifts and Triangle ramps for this contour. Fresh B/C
 Square output now has its own accepted CamBam Default posts: every machine
 command matches the corresponding native B/C post after comments are removed.
-This proves native output for the observed rectangular slice. Fresh Triangle,
-transformed, curved, reversed and multi-target Manual Profiles remain outside
-that output-acceptance bound.
+This proves native output for the observed rectangular slice. Fresh Triangle
+now has a separate [source-bound native consumer](#bounded-native-triangle-tab-consumer)
+and [actual-post evidence](REVIEW.md#native-triangle-holding-tab-consumer---2026-10-26).
+Transformed, curved, reversed and multi-target Manual Profiles remain outside
+these output-acceptance bounds.
 
 An untouched imported lead/tab subtree retains its container/leaf states, cached
 text, unknown children, and independent lead-out. Editing a modeled nested leaf
@@ -4140,6 +4142,60 @@ activates its container. Switching `None`/`Spiral` or `None`/`Automatic` rebuild
 the applicable modeled siblings and removes modeled dependents that became
 irrelevant, while preserving unknown children. This prevents a mode switch from
 combining stale cached children with a new discriminator.
+
+#### Bounded native Triangle tab consumer
+
+`integrations.cambam.native_tabs` composes the existing native writer with a
+separate source-bound Default-post audit. `create_document(style=..., points=...)`
+returns a `NativeTabDocument`; `check_document` verifies complete document intent
+and library round trips, and `audit_post` checks current complete source/post
+bytes. Recreate the binding and regenerate the native post after intended edits.
+The [consumer](../demos/native_tabs_workflow.py) demonstrates centered, moved and
+five-tab Square/Triangle comparisons, including ordinary reopened-MOP edits.
+
+The consumer bounds are a root, identity-posed counterclockwise 60 x 30 mm
+rectangle from `(10,10)` to `(70,40)`, 80 x 50 x 3 mm stock, Outside Profile,
+3 mm cylindrical endmill, target `-3`, three 1 mm depth levels, and Manual tabs
+of width 6 and height 1 mm without lead-ins. It accepts four or five positions
+within the native writer's edge/corner/overlap contract, with tangential
+placement on 0.0001 mm increments to match the observed Default post precision.
+The writer's 0.000001 mm perpendicular edge-projection tolerance still applies;
+the general native authoring API retains its broader placement domain. Parameters and all
+unmodeled XML remain part of the checked source; the audit does not infer
+authority from tab count, a displayed preview, or a caller-supplied certificate.
+
+Every decoded cutting move must lie on the complete prescribed offset contour,
+with exact per-level coverage and the requested tab depth function. The audit
+checks process events, numbered tool, spindle, feeds, explicit exact-stop mode,
+travel and final clearance. Missing/repeated contour intervals, chords through
+a Triangle apex, changed tab positions, wrong corner direction and unsupported
+low rapids reject. This bounded integration does not relax the shared native
+series or core replay guards for general straight ramps.
+
+Stock sections clip each continuous straight cylinder sweep to the portion
+reaching that depth, including both ascending and descending ramps. Native
+corner arcs use chord-error and circumscribed cutter-disk covers. Remaining
+stock is therefore a conservative lower set; reported widths round downward
+and protected-part overcut bounds round upward. Width means the minimum retained
+width across the cutter channel, not the width at the original part edge.
+Observed native Triangle tool-center motion uses a 3 mm ascending ramp, a
+3 mm plateau at `Z=-2` and a 3 mm descending ramp; the plateau compensates
+for the tool diameter. At section depth `d` in `(2,3]` mm, its uncut center-path
+gap is `3 + 6(d-2)` mm. Subtracting the cutter diameter gives ideal minimum
+stock width `6(d-2)` mm: 1.5, 3, 4.5 and 6 mm at depths 2.25, 2.5, 2.75 and
+3 mm. Square retains 6 mm throughout these sections. The conservative
+geometric report has less than 0.002 mm width shortfall for the accepted cases;
+all four sections connect the part to surrounding stock. A two-ramp path
+without the plateau has different stock and is rejected.
+
+The section report distinguishes connectivity to surrounding stock from the
+nominal tab parameters. Runtime/controller behavior, fixtures, cutter shanks,
+cutting loads and physical holding strength are outside this evidence.
+
+Commands live in [DEVELOPMENT](DEVELOPMENT.md#native-square-and-triangle-tab-consumer);
+the unchanged Square cutout/interior-V packet keeps its own existing evidence.
+Other contours, placements, tab modes and independent general ramp replay need
+a distinct consumer and their own native motion/access evidence.
 
 #### Engrave subtype inventory
 
