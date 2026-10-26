@@ -1,6 +1,10 @@
 # Current status
 
-Status updated 2026-10-26: NC01-A is delivered on local `main` through the
+Status updated 2026-10-26: CF02 is implemented and accepted by engineering,
+with uncommitted changes on local `main` at `a603d90`, ready to commit. The
+[CF02 acceptance record](REVIEW.md#cf02-manufacturing-composition---2026-10-26)
+owns verification and scope. No commit, merge or push was performed for CF02.
+NC01-A is delivered on local `main` through the
 authorized `--no-ff` merge of `feat/nc01-a-native-geometry` (reviewed tip
 `dc962a1`) into `6514305`. The merge is not pushed. The
 [merge review](REVIEW.md#nc01-a-merge-review---2026-10-26) records acceptance
@@ -17,18 +21,33 @@ own requirements, behavior and findings respectively.
 
 <a id="doc01-documentation-consolidation-backlog"></a>
 
-**NC01-A implementation and engineering acceptance are complete.** The
-[native coverage map](NATIVE_COVERAGE.md) and editable Line/Spline slice close
-the first native geometry gap with a direct consumer and installed native
-evidence; [REVIEW](REVIEW.md#nc01-a-native-geometry-coverage---2026-10-26) owns
-verification and limits. CF01 remains locally merged.
+**CF02 implementation and engineering acceptance are complete.** Reusable native
+composition now supports a multi-board cabinet and a distinct sensor-fixture
+consumer with separate front/back stock outputs. CF01 and NC01-A remain locally
+merged; CF02 is ready to commit.
 
-**Next recommended implementation: CF02 reusable manufacturing composition.**
-Use the stronger native foundation for a multi-board library consumer and
-separate front/back outputs, proving reusable setup/frame needs with a distinct
-non-cabinet job. This delivers a caller workflow now; another native class or
-spline calculation should be promoted only for a concrete consumer gap.
+**Next recommended implementation: PK01 consumer release checkpoint.** The native
+foundation now has two reusable manufacturing consumers, making an explicitly
+versioned consumer contract and compatibility notes useful for adoption. Reuse
+CF02's package evidence where applicable and establish the remaining release
+scope; do not automatically extend adjacent frame, tab or native-class limits.
 The [post-merge queue](#post-merge-task-queue) owns the scope. BO01 remains separate.
+
+### CF02: reusable manufacturing composition
+
+**State:** complete within the
+[manufacturing composition contract](structure_spec.md#reusable-manufacturing-composition-cf02).
+Caller-owned designs compose repeated components, groups and inherited transforms
+into material/thickness batches with explicit face selection and placement.
+Cabinet and aluminum-fixture consumers prove whole-sheet registration, operation
+order, native bindings and editable installed-library outputs. The
+[acceptance record](REVIEW.md#cf02-manufacturing-composition---2026-10-26) owns
+numeric witnesses, review repairs, package evidence and limits.
+
+The stopping condition is satisfied. No user observation is needed for these
+document-composition claims. Manual holding-tab placement, arbitrary 3D frames,
+packing/workholding, actual toolpaths and physical cutting remain separate;
+reopen a limit for a named consumer requiring it, rather than extending CF02.
 
 ### CF01: native interchange integrity
 
@@ -109,11 +128,10 @@ outcome using the [strategy checkpoint](WORKFLOW.md#strategy-checkpoint).
 
 | Order | Increment | Useful outcome / scope |
 | --- | --- | --- |
-| 1 | **CF02: reusable manufacturing composition** | A simple installed-library cabinet consumer with multiple boards, groups/inherited transforms, grooves/slots, materials/thicknesses and separate front/back setup outputs. Establish missing reusable setup/frame APIs from this consumer and a distinct non-cabinet job. Keep cabinet design rules in the caller and stock placement manual initially. |
-| 2 | **PK01: consumer release checkpoint** | Build/install wheel and sdist outside the checkout, verify documented public imports and simple CAD/MOP export on supported Python versions, version the accepted scope and publish compatibility notes. No tag or published-release claim until actually delivered; package registry publishing remains separately authorized. |
-| 3 | **BO01-C** | Close/reconcile the existing committed search branch; preserve useful work without expanding the search epic. May be a bounded maintenance interlude sooner if independent and cheap, not a competing active priority. |
-| 4 | **Native extended-engine output** | Improve reusable rest/V/inlay attachment through ordinary Regions/Plines and MOPs for a named consumer. Retain protected boundaries, signed allowances and specified overlap. Existing XYZ/Engrave whole-motion gaps remain explicit; inspectable path geometry alone is not a complete execution certificate. |
-| 5 | **SF01** | Generalize bounded relief contact/stock and shape-aware finishing when the native/library foundation and a concrete consumer justify it. NR03 remains a separate native interchange capability. |
+| 1 | **PK01: consumer release checkpoint** | Build/install wheel and sdist outside the checkout, verify documented public imports and simple CAD/MOP export on supported Python versions, version the accepted scope and publish compatibility notes. Reuse applicable CF02 evidence. No tag or published-release claim until actually delivered; package registry publishing remains separately authorized. |
+| 2 | **BO01-C** | Close/reconcile the existing committed search branch; preserve useful work without expanding the search epic. May be a bounded maintenance interlude sooner if independent and cheap, not a competing active priority. |
+| 3 | **Native extended-engine output** | Improve reusable rest/V/inlay attachment through ordinary Regions/Plines and MOPs for a named consumer. Retain protected boundaries, signed allowances and specified overlap. Existing XYZ/Engrave whole-motion gaps remain explicit; inspectable path geometry alone is not a complete execution certificate. |
+| 4 | **SF01** | Generalize bounded relief contact/stock and shape-aware finishing when the native/library foundation and a concrete consumer justify it. NR03 remains a separate native interchange capability. |
 
 NC01-A closes the first native slice. Further NC01 classes/preservation and NR03
 Surface/3D interchange are conditional on a concrete consumer and the
@@ -209,9 +227,10 @@ and [verification](REVIEW.md#export-failure-and-state-path-verification).
 
 ## Completion and verification
 
-NC01-A's implementation, automated checks and engineering acceptance are complete;
-[REVIEW](REVIEW.md#nc01-a-native-geometry-coverage---2026-10-26) records the
-evidence and limits. This is a good fresh-session breakpoint: the native slice
-is coherent and verified, and CF02 has distinct consumer/setup scope. Its durable
-requirements are in the queue; no unresolved decision, pending result or unsaved
-context is needed to start it after the user-owned integration decision.
+CF02's implementation, automated checks and engineering acceptance are complete;
+[REVIEW](REVIEW.md#cf02-manufacturing-composition---2026-10-26) records the
+evidence and limits. This is a good fresh-session breakpoint: the composition
+outcome is coherent and verified, while PK01 has a distinct release-contract
+scope. Its durable requirements are in the queue; no unresolved decision,
+pending result or unsaved context is needed to start it. Committing/integration
+of the current changes remains user-owned.

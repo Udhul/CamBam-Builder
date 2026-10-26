@@ -1,5 +1,75 @@
 # Review and acceptance history
 
+## CF02 manufacturing composition - 2026-10-26
+
+**Outcome:** accepted by engineering for the
+[manufacturing composition contract](structure_spec.md#reusable-manufacturing-composition-cf02).
+Work began with clean local `main` at `a603d90`. The native composition owner
+reuses transactional tree copy; it does not introduce a second entity model.
+Caller demos own cabinet/fixture design and stock layout. No user observation is
+required to close these offline document-authoring claims; this entry does not
+establish native generated toolpaths, controller execution or physical machining.
+Delivery status and next priority remain in [PROGRESS](PROGRESS.md).
+
+Representative installed consumers use illustrative millimetre dimensions:
+
+| Consumer | Durable inputs and independent witnesses |
+| --- | --- |
+| Cabinet | Two 600×700×18 birch-plywood sides and a 560×160×18 shelf on 2000×800 stock; one 1200×700×6 melamine-MDF panel on 1280×780 stock. Four separate material/face outputs. Plywood front X offsets 30, 700 and 1370 map to back frames 1970, 1300 and 630 with X reflection. The asymmetric left-side slot begins at (1802,166) on the back, from source (168,126) and front Y offset 40. All matching outline/feature vertices satisfy back X = sheet width − front X, with unchanged Y. Board envelopes are disjoint and inside stock. Front grooves use T1/6 mm; back slots use T2/4 mm, followed by T1 outside profiles through the declared thickness. |
+| Sensor fixture | Two 160×100×12 aluminum 6061 blanks on 400×250 stock. Front placements are T(25,35) and T(365,35)R90; back placements T(375,35)reflectX and T(35,35)R−90 reflectX. Asymmetric front hole witnesses (53,59) and rotated (341,63) map to back (347,59) and (59,63). A back relief corner is (281,92), depth −2; front recess depth −3.5 and drill depth −12. Front T1/6 mm recess and T2/5 mm drill precede back T3/4 mm relief and T1 outside profile. Blank footprints are disjoint. |
+
+Both consumers check native target identity/order, material/thickness, reflected
+or rotated coordinates and export/reopen. The cabinet changes a groove depth to
+−6 and reopens again; the fixture edits a MOP depth on each face and reopens.
+Geometry on the unused face remains editable design context, with only the
+selected face's operations present. These are independent in-memory outputs;
+editing one does not mutate its source or another placement.
+
+Verification and reproducibility:
+
+- The [focused runbook command](DEVELOPMENT.md#manufacturing-composition-checks)
+  passed **58 checkout tests in 9 modules, no skips**, on Python 3.13.5. This
+  includes composition, both consumers, tree copy, global/parent transforms,
+  MOP context, native interchange and cloning. Local report:
+  `output/verification-20261026-100536-b1ca25a0/report.json`.
+- `tools/verify.py --package --pattern 'test_manufacturing*.py'` passed
+  **48 installed tests**: 16 each on wheel Python 3.12.10, wheel Python 3.13.5
+  and independent sdist Python 3.12.10, with no skips. It also passed archive,
+  import/provenance and base-only boundary checks. NumPy was 2.5.4. Local report:
+  `output/verification-20261026-100656-b7144c48/report.json`. The fixture test's
+  temporary-output location was corrected after the checkout run; these installed
+  runs cover that final test file. Runtime code did not change after the checks.
+- Both copied demos ran with isolated Python imports and a working directory
+  outside the checkout, using base-only Python 3.12.10 (neither MCP nor Shapely
+  installed) and the Python 3.13.5 wheel environment. All four runs passed:
+  five cabinet and four fixture `.cb` artifacts per interpreter, including the
+  edited outputs. Script hashes, installed module paths, output hashes and logs
+  are in `output/cf02-20261026-2d673a69/installed-consumers.json`. The numerical
+  witnesses and reusable regression sources above remain sufficient when these
+  ignored session files are unavailable.
+- Built development artifacts remain version 0.1.0, without release publication.
+  Wheel SHA-256: `86865679db8f4b5010895b4ff67ed780ed1cd215e337cc7c8431becfa7c166d8`;
+  sdist SHA-256: `cb491fe2d82604e504c0462cbd7154e0a628428487d40a8107b05b1aa158a100`.
+  Initial package launch stopped at the sandbox's uv-cache permission boundary,
+  before building; the authorized rerun completed all gates. No tests were waived.
+
+Independent review found and closed two material issues before those installed
+checks: imported document MachiningOptions must be preserved so Default-state
+MOPs keep their inherited styles/clearance, and manual holding tabs cannot be
+silently moved under their existing native pose contract. Common native context
+is now deep-copied and incompatible contexts reject; explicit manual-tab Parts
+reject early. The reviewer reran all 14 core composition tests and independently
+checked imported Part stock replacement/style preservation over two XML cycles,
+with unchanged source bytes. No material review findings remained.
+
+Reopen for a named consumer needing manual-tab remapping, nonzero source machining
+origins/native nesting, mixed document contexts or arbitrary 3D setup transforms.
+Packing/workholding, machining feasibility and physical registration require their
+own evidence; the simple footprint and registration checks do not claim those
+capabilities. Manual validation adds no missing evidence to this completed native
+composition scope. No existing native serializer behavior or detached CAM engine
+was changed, so unrelated planner/controller suites were not rerun.
+
 ## NC01-A merge review - 2026-10-26
 
 The user authorized merging after final task-acceptance, implementation-quality

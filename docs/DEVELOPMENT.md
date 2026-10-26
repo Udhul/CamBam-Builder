@@ -101,6 +101,29 @@ and run with a freshly installed base wheel; it requires NumPy but no planar
 extra, MCP or CamBam process. Pass its output directory explicitly. The example
 checks an edit/save/reopen cycle; it does not certify native toolpaths.
 
+### Manufacturing composition checks
+
+CF02's self-contained tests cover composition boundaries plus independent cabinet
+and sensor-fixture consumers. Run from the repository root:
+
+```powershell
+& $ProjectPython tools/verify.py --pattern 'test_manufacturing*.py' --pattern test_copy_transfer.py --pattern test_global_transforms.py --pattern test_parent_roundtrip.py --pattern test_mop_context.py --pattern test_native_interchange.py --pattern test_project_clone.py
+$ManufacturingOutput = Join-Path 'output' ('manufacturing-' + [guid]::NewGuid().ToString('N').Substring(0,8))
+& $ProjectPython demos/manufacturing_cabinet.py $ManufacturingOutput
+& $ProjectPython demos/manufacturing_fixture.py $ManufacturingOutput
+```
+
+Copy both demos outside the checkout and run them with a freshly installed base
+wheel on supported Python versions, asserting the package resolves inside that
+environment's `site-packages`. They require neither Shapely nor MCP. Pass an
+explicit task-owned output directory. Check asymmetric face coordinates, whole-sheet
+registration, stock metadata, MOP order/targets and edited second round trips.
+These are native document-authoring checks; physical setup and final native
+toolpaths are separate claims. The
+[contract](structure_spec.md#reusable-manufacturing-composition-cf02) owns the
+supported composition boundary; [acceptance evidence](REVIEW.md#cf02-manufacturing-composition---2026-10-26)
+owns the recorded results.
+
 ### Native Line and Spline coverage checks
 
 The NC01-A direct-library checks exercise native shape definitions, malformed

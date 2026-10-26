@@ -21,6 +21,7 @@ are outside that runtime package list.
 | --- | --- | --- |
 | `cambam_builder/native/project.py` | UUID entity registries, identifier lookup, ordered layers/parts/MOPs, relationship updates, transform orchestration and persistence | Public creation/query/mutation APIs and relationship invariants |
 | `cambam_builder/native/transfer.py` | Transactional primitive-tree copy/transfer staging, identity mapping, collision validation and relationship publication | Copy/transfer semantics and atomic registry updates; inspect project wrappers and tests |
+| `cambam_builder/native/manufacturing.py` | Stock-batch setup composition, explicit face-Part selection, scoped component copies and planar placement frames | Repeated native components and separate editable manufacturing outputs; caller owns design and layout |
 | `cambam_builder/native/core.py` | Shared vertex/bounds/numeric foundations, `CamBamEntity`, and `Primitive`, including local and parent-composed transforms | Identity, base inheritance, shared validation, bounds foundations, or primitive transform context |
 | `cambam_builder/native/cad.py` | `Layer` plus ordinary Line/Spline/Pline/Circle/Rect/Arc/Points/Text geometry and XML behavior | Ordinary CAD fields, geometry, supported bounds/baking, or entity XML |
 | `cambam_builder/native/region.py` | Owned Region contours, planar curved topology validation and typed Region XML; depends directly on core and ordinary CAD owners | Region geometry and interchange; project and reader use this owner |
@@ -2999,6 +3000,69 @@ editing with native MOPs, hierarchy, groups and PointList placement. Numeric
 geometry, identity, operation order and notes are covered by
 [the CF01 evidence](REVIEW.md#cf01-native-interchange-integrity---2026-10-26).
 Final native toolpath generation and G-code export remain CamBam workflows.
+
+### Reusable manufacturing composition (CF02)
+
+`cambam_builder.native.manufacturing` exposes `SetupStock`, `SetupFrame`,
+`ComponentPlacement` and `compose_setup`. The cabinet and sensor-fixture
+[consumers](../README.md#start-with-the-library) establish the same API for
+different products without adding recipes to the library.
+
+```python
+from cambam_builder.native.manufacturing import (
+    ComponentPlacement, SetupFrame, SetupStock, compose_setup,
+)
+
+# design is a caller-authored CBProject: an outline subtree with front/back Parts.
+back = compose_setup("back", SetupStock(1000, 600, 18, "Plywood"), [
+    ComponentPlacement(design, "outline", "left", ("back",),
+                       SetupFrame(x=980, y=20, reflect_x=True)),
+])
+back.save("back.cb")
+```
+
+The frame applies to source **world XY**, including inherited transforms, in
+the order X reflection, counterclockwise rotation, then translation. It leaves
+Z and native machining values unchanged. For stock width W and front placement
+`T(x,y) R(angle)`, the same sheet flipped about its vertical centreline uses
+`SetupFrame(W-x, y, -angle, reflect_x=True)`. The examples check asymmetric
+features against this equation. This is an explicit planar coordinate mapping;
+back operations are separately authored relative to that setup's stock top.
+It does not infer a 3D flip, reverse depths or relocate coordinate-bearing MOP
+settings, scripts, generated paths or stock-removal evidence.
+
+Each placement selects one complete primitive subtree and a nonempty ordered
+list of native Parts. Every selected operation must have nonempty targets wholly
+within that subtree. Other Parts are excluded, while all subtree geometry remains
+editable design context, including the unused face. Placement order, selected
+Part order and each Part's MOP order determine output order. Source projects are
+unchanged on success or failure. Every copied entity has a fresh UUID; identifiers
+and groups become `placement-name/original-name`. Live groups remain scoped and
+live in memory; native XML stores explicit target snapshots under the existing
+[target contract](#mop-target-ownership-contract). Hierarchy and world geometry
+survive native interchange, including Rect-to-Pline representation changes.
+
+One output represents one declared stock batch. Units must be explicit and equal;
+there is no numeric conversion. Selected source Parts must have stock with matching
+material, thickness and top Z, zero machining origin and no native nesting. Every
+output Part receives the setup's common width, height and drawing-space stock
+origin; the stock box is not transformed by the component frame. Part machining
+defaults and native context are retained. Source document tool defaults and
+MachiningOptions XML must agree across placements; the common XML is deep-copied
+to preserve inherited values, styles and post context. XML comparison is
+conservative, including formatting. Different contexts require separate setups
+or deliberate caller normalization, not silent choice of the first source.
+
+Manual holding tabs reject early: their native parametric/normal records and
+fresh-authoring pose constraints need placement-aware reconstruction. Automatic
+tabs remain native intent. Names, units, selection closure and supported context
+are validated; stock fit, overlap, registration hardware, workholding and
+machining feasibility remain caller responsibilities. Example-specific footprint
+checks do not constitute a nesting or collision engine. Recompose after source
+changes, or edit the returned project and recompute affected derived results.
+Arbitrary 3D frames, inventory/packing, G-code generation and MCP parity remain
+outside this API. Existing native primitives, Parts and MOPs are the sole output
+model; no alternate geometry or operation graph is introduced.
 
 ### Native Line and Spline interchange (NC01-A)
 

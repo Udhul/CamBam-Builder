@@ -55,6 +55,13 @@ complete direct-library job. Unsupported native classes and arbitrary unknown
 XML still have limits; the [native coverage map](docs/NATIVE_COVERAGE.md)
 distinguishes current support from the full-coverage goal.
 
+For repeated components and separate face outputs, use the
+[manufacturing composition API](docs/structure_spec.md#reusable-manufacturing-composition-cf02).
+The [multi-board cabinet](demos/manufacturing_cabinet.py) and
+[aluminum sensor fixture](demos/manufacturing_fixture.py) consumers keep their
+design recipes and manual stock layouts in ordinary application code. Both run
+with the installed base library and verify editable front/back files.
+
 ## Capabilities and project documentation
 
 - [Current work, delivered branches and ordered backlog](docs/PROGRESS.md)
