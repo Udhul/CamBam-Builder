@@ -61,8 +61,8 @@ PARITY = {
             "collision_detection", "lead_in_type", "lead_in_spiral_angle",
             "final_depth_increment", "cut_ordering",
         },
-        "excluded": set(),
-        "inspection_opaque": set(),
+        "excluded": {"native_tag"},
+        "inspection_opaque": {"native_tag"},
     },
     "pocket": {
         "class": PocketMop,
@@ -81,8 +81,8 @@ PARITY = {
             "region_fill_style", "finish_stepover",
             "finish_stepover_at_target_depth", "roughing_finishing",
         },
-        "excluded": set(),
-        "inspection_opaque": set(),
+        "excluded": {"native_tag"},
+        "inspection_opaque": {"native_tag"},
     },
     "engrave": {
         "class": EngraveMop,
@@ -98,8 +98,8 @@ PARITY = {
             "custom_mop_header", "custom_mop_footer", "roughing_finishing",
             "final_depth_increment", "cut_ordering",
         },
-        "excluded": set(),
-        "inspection_opaque": set(),
+        "excluded": {"native_tag"},
+        "inspection_opaque": {"native_tag"},
     },
     "drill": {
         "class": DrillMop,
@@ -116,8 +116,8 @@ PARITY = {
             "optimisation_mode", "tool_number", "max_crossover_distance",
             "custom_mop_header", "custom_mop_footer",
         },
-        "excluded": {"custom_script"},
-        "inspection_opaque": {"custom_script"},
+        "excluded": {"custom_script", "native_tag"},
+        "inspection_opaque": {"custom_script", "native_tag"},
     },
 }
 
@@ -170,7 +170,7 @@ class McpMopParityTests(unittest.TestCase):
             with self.subTest(family=family):
                 modeled_parameters = (
                     contract["author"] | contract["pinned"] | contract["excluded"]
-                ) - {"enabled"} - COMPOSITE_FIELDS
+                ) - {"enabled", "native_tag"} - COMPOSITE_FIELDS
                 self.assertEqual(common | subtype_policies[family], modeled_parameters)
 
     def test_author_classification_matches_closed_tool_inputs(self):

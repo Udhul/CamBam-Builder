@@ -561,9 +561,11 @@ parameter.
 The rows account for all 18 common, 18 Profile, 12 Pocket, 3 Engrave and 9 Drill
 executable field-policy slots. `enabled` is listed with the common authoring controls
 but is an XML attribute rather than one of those 60 policy slots.
+`native_tag` is operator note text, also outside those executable parameter slots.
 
 | Capability / modeled fields | Core A/R/E/P | MCP author | MCP inspect | MCP mutate | Classification |
 | --- | --- | --- | --- | --- | --- |
+| Operator notes: `native_tag` in the MOP's single XML `Tag` | Yes; core preserves note text alongside framework identity metadata | No | No typed note field | No | Core round-trip support; deliberately outside the current MCP authoring and typed inspection surface |
 | Common explicit controls: `enabled`, `target_depth`, `depth_increment`, `stock_surface`, `roughing_clearance`, `clearance_plane`, `spindle_speed`, `tool_diameter`, `plunge_feedrate`, `cut_feedrate` | Yes | Explicit for all four families; CannedCycle authoring alone requires zero roughing clearance | Every present modeled raw value is returned with native state and applicability, independently of authoring pins and targets | No | Supported; required safety/cutting inputs stay explicit for authoring |
 | Common pins: `spindle_direction`, `velocity_mode`, `work_plane`, `optimisation_mode`, `tool_number`, `max_crossover_distance`, `custom_mop_header`, `custom_mop_footer` | Yes | `CW`, `ExactStop`, `XY`, `Standard`, `0`, `0.7`, empty, empty | Present alternate values and nonempty header/footer text are returned; omitted fields remain absent rather than becoming constructor defaults | No | Deliberate bounded-authoring policy, not a core limitation |
 | Common `tool_profile` | Yes | Profile/Pocket `EndMill`; Engrave `EndMill` or `VCutter`; Drill `Drill`, `EndMill` or `Unspecified` with method-aware default | Any present modeled raw string is returned; this does not expand authoring support | No | Evidence-backed family authoring restriction |
