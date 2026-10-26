@@ -21,7 +21,7 @@ python -m pip install .
 Install `".[planar]"` when using the Shapely-backed planar engines. The base library
 needs neither CamBam installed nor an MCP server for document authoring. This is a
 source installation instruction, not a claim that a release is published on PyPI.
-The [0.4.0 consumer checkpoint and compatibility notes](docs/RELEASE_NOTES.md#040-bounded-relief-finishing)
+The [0.5.0 consumer checkpoint and compatibility notes](docs/RELEASE_NOTES.md#050-native-relief-interchange)
 define the accepted scope, public imports and upgrade expectations.
 For development use [the environment and verification runbook](docs/DEVELOPMENT.md#environment-and-setup).
 
@@ -75,7 +75,11 @@ The base installation also supports [bounded relief finishing](docs/structure_sp
 The [relief consumer](demos/relief_finishing.py) compares guided, parallel and
 waterline ball paths on an analytic moulding and a caller-owned bilinear relief,
 then verifies evolving stock through decoded output. It reports residual/detail
-bounds and motion costs; native Surface/3D MOP interchange remains separate.
+bounds and motion costs. The [native relief consumer](demos/native_relief_workflow.py)
+authors an editable triangle Surface and bounded native 3D ball finish, checks
+reopening/edits, and separately audits actual CamBam Default posts against the
+original bilinear relief. See the [native relief contract](docs/structure_spec.md#bounded-native-relief-interchange-nr03)
+for source binding, approximation, motion and acceptance limits.
 
 ## Capabilities and project documentation
 

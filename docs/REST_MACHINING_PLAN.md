@@ -58,7 +58,7 @@ derived machining boundaries and output authority distinct.
 | Fully native CamBam rest machining using derived primitives/MOPs | NR01's bounded editable Regions/native Pocket and complete actual-post replay are accepted; [contract and limits](structure_spec.md#editable-native-rest-boundaries-and-mops-nr01). | Wider native strategies require a named consumer and their own source/post evidence. |
 | Shape tracing with tools fitting local geometry; decorative planar detail | RP01 implements bounded contact contours and sampled-medial guidance; [contract](structure_spec.md#feature-aware-planar-vrest-candidates-rp01). | Generic fitting, hard overlap caps and low links remain conditional in PROGRESS; BO01 consumes these verified generators. |
 | Shape-aware 3D relief/ornament routing rather than one universal fill pattern | [SF01](structure_spec.md#bounded-relief-contact-stock-and-finishing-sf01) supplies bounded cubic/bilinear contact, evolving ball stock and measured guided/parallel/waterline consumers. | Broader profile, flow/morph/scallop and surface-search policies need a demonstrated consumer gap; there is no universal best strategy claim. |
-| Native CamBam 3D operations for those shapes | General native Surface/3D Surface authoring/normalization is outside current interchange support. | NR03 is a separate mesh/entity/MOP/post compatibility slice; detached shape-aware paths can precede it. |
+| Native CamBam 3D operations for those shapes | [NR03](structure_spec.md#bounded-native-relief-interchange-nr03) supplies indexed Surface and bounded parallel ball finishing with source/post audit. | Broader strategies, mesh-to-relief inference and tool profiles require a concrete native consumer and independent stock evidence. |
 
 These are achievable development goals within declared geometry, tooling and
 machine-access limits. They are not claims that current examples already deliver
@@ -216,7 +216,8 @@ remain outside those shared mechanisms.
   and a reusable bilinear ornament. The [acceptance record](REVIEW.md#sf01-bounded-relief-finishing---2026-10-26)
   owns the guided-flow/pencil, parallel and waterline comparisons, including
   measured non-improvement and remaining profile/representation limits.
-  **NR03** separately binds native mesh entities/3D MOP states and actual posts;
+  The implemented [NR03 contract](structure_spec.md#bounded-native-relief-interchange-nr03)
+  separately binds native mesh entities/3D MOP states and actual posts;
   native interoperability is not implied by detached SF01 output.
 - **BO01: constrained bundle generation and search.** The [bounded epic](#bo01-bounded-search-epic) scopes the dedicated track. Use a finite tool inventory
   and at least two independently verified strategy families on the ornament/rest
@@ -243,9 +244,10 @@ BO01 generates finite tool/family/order alternatives, independently decodes
 and audits them, applies caller constraints and ranks their declared outcomes.
 DT01 fixes design identity, MV01/MX01 supply ordered stock and setup verification,
 and IN01 supplies independent part, assembly and final-facing evaluators. NR01
-remains the accepted native workflow; a native BO01 route requires fresh actual
-post evidence if introduced. SF01's relief geometry/contact foundation and NR03
-native 3D interoperability remain distinct successors, not branch prerequisites.
+supplies the accepted native rest workflow. The native BO01 route is delivered
+under the [source-bound bundle contract](structure_spec.md#source-bound-native-bundle-documents-and-posted-motion).
+SF01 relief geometry/contact and NR03 native 3D interoperability are separate
+delivered capabilities with their own acceptance scope.
 
 The bounded epic establishes useful planar ornamental and paired-inlay search,
 with honest finite-space quality and cost confidence. Live task states and the

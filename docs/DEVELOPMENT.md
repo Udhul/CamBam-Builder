@@ -321,6 +321,14 @@ wheel checks.
 & $ProjectPython tools/verify.py --package --pattern test_native_owner_migration.py
 ```
 
+When a change adds package modules and needs both checkout and package gates,
+finish the package build before starting checkout discovery. Setuptools updates
+the generated source-file inventory; a concurrent build can change the runner's
+distribution-file fingerprint even when every source byte and dependency is
+unchanged. Keep the refusal visible and follow the evidence-reuse procedure
+below if this occurs; do not relabel the report or repeat expensive behavior
+checks before diagnosing the exact difference.
+
 Every invocation creates `output/verification-<timestamp>-<unique>/` and prints
 its `report.json` path before setup. The report stores commit/worktree identity,
 SHA-256 identities for runtime/test/tool/configuration inputs and artifacts,
@@ -2538,6 +2546,49 @@ Unchanged native 0.3.0 observations may be reused only under their recorded
 scope; the new NC files establish offline geometry, not controller execution,
 cutting-load acceptance or native Surface/3D MOP interoperability. There is no
 physical cutting or new native post gate to ask the user to perform for SF01.
+
+### NR03 native relief workflow
+
+The [native relief contract](structure_spec.md#bounded-native-relief-interchange-nr03)
+owns the mesh, 3D MOP, source-binding and posted-stock limits. The fast local
+selection covers mesh geometry, MOP states, document ownership, post admission
+and the shared rapid-withdrawal proof:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/verify.py --pattern test_native_surface.py --pattern test_native_surface_mop.py --pattern test_native_relief_interchange.py --pattern test_native_relief.py --pattern test_relief_stock.py
+& .\.venv\Scripts\python.exe demos/native_relief_workflow.py
+```
+
+The example writes a unique ignored `output/nr03-relief-<unique>/` containing
+`native-relief.cb`, its library-reopened and edited counterparts, and `report.json`.
+The process edit changes the feed to 180 mm/min and verifies a second round trip;
+it does not retain the original source binding. The original file is the native
+generation input. Open it in the established CamBam version, generate toolpaths
+and the complete Default post, preserving its explicit process and exact-stop
+settings. This example performs no native automation or generated substitute.
+Audit the actual post into another new task directory with:
+
+```powershell
+& .\.venv\Scripts\python.exe demos/native_relief_workflow.py output/nr03-audit-<unique> --post output/<native-task>/actual.nc
+```
+
+The complete post must pass source/process/motion admission, continuous cutter
+protection, shank/axial limits, residual volume <=0.5 mm3 and maximum residual
+thickness <=0.25 mm. The report records source/document/post identities, mesh
+error, native sampling/allowance, caller-supplied proof assumptions and stock
+bounds. To check a native-saved candidate, call `document.check_document(bytes)`
+or pass `candidate_bytes` to `audit_post`; only evidenced native-save defaults
+and display bookkeeping are normalized. General import still preserves
+unspecified units distinctly. Fixtures, holders and controller/physical cutting
+are not covered by this audit.
+
+Use the same five test patterns with `--package` for the supported wheel/sdist
+matrix. Copy the unmodified demo outside the checkout and run with `-I` under
+the base-only wheel to check the dependency boundary. Native observation is
+required for a new native schema/post claim; ordinary unchanged synthetic
+regressions require no repeated manual observation. The
+[acceptance record](REVIEW.md#nr03-native-relief-milestone---2026-10-26) records
+the installed native API observations, exact inputs/results and their limits.
 
 ### Packet 3 spherical-bowl ball finish and rest
 

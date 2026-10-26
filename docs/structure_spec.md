@@ -25,6 +25,7 @@ are outside that runtime package list.
 | `cambam_builder/native/core.py` | Shared vertex/bounds/numeric foundations, `CamBamEntity`, and `Primitive`, including local and parent-composed transforms | Identity, base inheritance, shared validation, bounds foundations, or primitive transform context |
 | `cambam_builder/native/cad.py` | `Layer` plus ordinary Line/Spline/Pline/Circle/Rect/Arc/Points/Text geometry and XML behavior | Ordinary CAD fields, geometry, supported bounds/baking, or entity XML |
 | `cambam_builder/native/region.py` | Owned Region contours, planar curved topology validation and typed Region XML; depends directly on core and ordinary CAD owners | Region geometry and interchange; project and reader use this owner |
+| `cambam_builder/native/surface.py` | Indexed triangle meshes, winding-aware XY affine placement, native mesh arrays and strict parsing | Native Surface geometry/interchange; relief admission belongs to the integration |
 | `cambam_builder/native/cam.py` | `Part`, MOP classes, and MOP XML path/encoding policy inventories | Part stock/nesting or MOP parameters and XML policy |
 | `cambam_builder/cambam_entities.py` and nine old root module paths | Compatibility/discovery imports of canonical native objects; no native implementation remains at root | Preserve public and documented direct imports; implementation modules import owners directly |
 | `cambam_builder/native/transformations.py` | NumPy matrix construction, composition, decomposition and XML matrix conversion | Numerical conventions; inspect entity and project callers together |
@@ -435,7 +436,7 @@ the initial behavior-to-test matrix and audit gaps belong in REVIEW.
 
 | Capability / entry points | Owner and dependencies | Supported domain and exclusions | Status, evidence and extension seam |
 | --- | --- | --- | --- |
-| Document creation, mutation, XML: `CBProject`, `native.reader.read_cambam_bytes`, `native.writer.serialize_cambam_bytes` | `native.project/core/cad/region/cam/reader/writer/transfer/transformations`; NumPy transforms | Mutable CAD/MOP intent, typed supported XML fields, UUID relationships; no toolpath parity from XML success. Old root imports resolve to canonical objects; same-version snapshots only. | Public native API; identity and synthetic round-trip tests plus bounded CamBam observations. Add entity/field semantics here, never to an output adapter. Manual-tab parent references follow geometry ID renumbering. |
+| Document creation, mutation, XML: `CBProject`, `native.reader.read_cambam_bytes`, `native.writer.serialize_cambam_bytes` | `native.project/core/cad/region/surface/cam/reader/writer/transfer/transformations`; NumPy transforms | Mutable CAD/MOP intent, typed supported XML fields, UUID relationships; no toolpath parity from XML success. Old root imports resolve to canonical objects; same-version snapshots only. | Public native API; identity and synthetic round-trip tests plus bounded CamBam observations. Add entity/field semantics here, never to an output adapter. Manual-tab parent references follow geometry ID renumbering. |
 | Native intent versus actual motion: `native_variable_v.normalize_bytes`, `native_series.normalize_native_series`, `NativeSeries.to_trace` | `integrations.cambam`; native owners and replay | Explicit supported units/frames/tools, one bounded Part and supported MOP/post subset. Intent can normalize without proving removal; actual post parsing still requires replay. Unsupported effects and unresolved setup reject. | Public bounded adapters; source/candidate/post and setup freshness. No native algorithm parity beyond specifically observed cases. Extend normalization and emitted-motion evidence together. |
 | Planar geometry/access: `planar.RegionSet`, `ErrorBudget`, `PlanarFrame`, `feasible_centers` | Root `planar`; private `_planar_shapely` adapter | Nominal planar regions, analytic primitives and optional pinned GEOS operations; explicit mm/inch input frames, millimetre results and uncertainty. Native curves require an adapter. | Public bounded foundation; analytic and conditional numerical evidence. Missing backend/capability is diagnostic, not clearance. Backend seam stays private. |
 | Section stock: `stock.SectionTarget`, `SectionMotionPath`, `verify_section_motion`, `compose_target_rest_bounds` | Root `stock`; exact rational section geometry | Rectangular stock/target and supplied disk-sweep section motion; explicit section depth and units. Not an XYZ generator or a general solid engine. | Public analytic/conditional foundation. RC01 consumes it; future representations must preserve enclosure directions. |
@@ -452,6 +453,7 @@ the initial behavior-to-test matrix and audit gaps belong in REVIEW.
 | Finite bundle search: `cam_extensions.bundle_search.search`, `inlay_search.search_pair` | Detached search policy over existing planar generators, ordered output and IN01 | Declared cylindrical/V inventory, explicit passes, decoded cumulative stock, whole-tool setup, finish/cost limits, finite orders and conservative dominance; independent tapered parts plus insertion and final facing. | Public bounded planar and paired search; [foundation](#finite-planar-toolpath-bundle-search-bo01-a) and [BO01-B consumers](#mixed-tool-and-paired-inlay-search-bo01-b). Surface search remains later scope. |
 | Caller-owned execution: `ordered_job.Job/Stage/Transition/AxialLimits`, `from_prior_v`, `audit` | `cam_core.ordered_job`; replay, V and bounded 3D evaluators | Caller labels/tools/order/feed/RPM; resolved mm/G54 translation. All-cylinder, standalone/cumulative all-V, bounded mixed cylinder/V, homogeneous layered/surface/inlay sequences have distinct evaluators. Mixed V requires explicit axial/entry limits and whole-tool setup. | Public bounded composition. `audit` consumes already-decoded values; `ordered_output` is the complete-byte/native-binding authority. Unsupported mixtures must not be read as stock success. |
 | Editable native rest: `rest_boundaries.derive`, `native_rest.prepare/author/audit`, `RestBinding` | Detached boundary derivation plus native integration | [NR01 contract](#editable-native-rest-boundaries-and-mops-nr01); compensated planar Regions, native Pocket and original-design certification | Public bounded API; synthetic offline evidence and actual native planner acceptance are separate. |
+| Editable native relief: `native_relief.mesh_relief/create_document/audit_post` | Native Surface/3D MOP integration, existing Default decoder and SF01 stock replay; base package | [NR03 contract](#bounded-native-relief-interchange-nr03); source-bound bilinear mesh and one native parallel ball finish, complete actual-post protection and residual bounds | Public bounded API; native save/post and installed consumers observed. No general mesh inference, fixture/holder or physical-cut claim. |
 | Native/generated composition: `native_ordered_job.from_native_series/from_native_v`, `NativeBinding.check` | Native integration to detached ordered job | Repeated tools and supported native stage order; one native cylinder plus source-bound V finish. `from_native_circle_cleanup` is specifically the diameter-24/depth-2/T1-T2 observed recipe. | Public bounded adapter plus named reference helper. Source/current-post binding is required at output; no mandatory global document session. |
 | Output and evidence: `ordered_dialects.render/decode`, `ordered_output.emit/audit_files/write_bundle/audit_bundle`; `direct_variable_v`/`direct_rc01` | `integrations`; core values, strict independent decoders | UCCNC split and Grbl pause profiles, explicit offset/transition effects, 4/6 decimal coordinates. Older `direct_*` writers use a strict reference dialect, not machine profiles. File helpers have fixed artifacts; in-memory emit/decode do not require them. | Public output adapters and bounded reference conveniences. `direct_rc01` reuses the CamBam Default-post reader; it is not fully independent of that adapter package. Runtime/physical setup remain unassessed. |
 | Agent protocol: document/MOP tools and schema | `mcp_adapter.service/schema/server/paths`; native project and existing planning owners | Volatile document sessions, validated requests and workspace transport. No exposure of arbitrary detached CAM/replay/controller entry points through MCP. | Public versioned tool contract, separate from direct Python API. Mirror supported native authoring changes in schema/service/tests; do not relocate machining truth into protocol handlers. |
@@ -1508,7 +1510,9 @@ extruded along Y, and `HeightField(xs, ys, heights, stock_depth_mm)` is an exact
 piecewise bilinear graph. Heights are in millimetres within stock from
 `-stock_depth_mm` to Z=0. Grid rows follow Y. The grid is the design itself;
 sampling another surface does not establish approximation error to that source.
-Overhangs, mesh interchange and arbitrary poses are unsupported. Fingerprints
+Overhangs and arbitrary poses are unsupported by these design queries. The
+[NR03 integration](#bounded-native-relief-interchange-nr03) separately lowers a
+bilinear design to native mesh intent. Fingerprints
 bind the complete design values, never a selected cutter or generated path.
 
 Both representations provide height extrema, global directional gradient
@@ -1533,7 +1537,11 @@ so endpoint clearance of `(Lx*abs(dx)+Ly*abs(dy))/2` proves its interpolated pat
 Unproved segments subdivide under a finite budget; safe endpoints alone do not
 prove an interior ridge. Exact tangency may be unresolved and is not accepted
 by a permissive tolerance. High rapids, vertical monotonic entries/retracts and
-arbitrary straight cutting segments are supported; arcs and cleared descents
+arbitrary straight cutting segments are supported. A vertical upward rapid
+withdrawal may start at the preceding verified feed endpoint, including chained
+upward segments. Raising the fixed-axis ball raises its lower envelope at every
+XY coordinate, so this sweep is contained in the already cleared endpoint
+envelope and receives no removal credit. Lateral/descending low rapids, arcs and cleared descents
 are not. Supplied axial limits conservatively cap absolute virgin-stock depth,
 without predecessor retrace credit. Engagement, cutting load and machine
 dynamics remain unassessed.
@@ -1573,6 +1581,70 @@ distance and constant-feed time only, excluding dynamics and installation time.
 These are bounded policies, not a universal best strategy, constant-scallop
 algorithm or BO01 surface search. The [consumer](../demos/relief_finishing.py)
 compares every candidate through the same stock/body/output gates.
+
+### Bounded native relief interchange (NR03)
+
+`native.surface.Surface` and `CamBamProject.add_surface` own an indexed triangle
+mesh in drawing units. `vertices` contains editable zero-bulge XYZ `Vertex`
+records; `faces` contains oriented zero-based index triples. Native XML uses
+`surface/verts/v` and `surface/faces/f`, plus the usual identity, Tag and matrix.
+`DisplayEdges` is modeled display state. Native `ModificationCount` is a volatile
+counter, emitted as zero without preservation semantics. Missing arrays, invalid
+indices, nonfinite coordinates, degenerate triangles and unsupported mesh XML
+reject. Export also rejects triangles collapsed by decimal rounding.
+
+Surface placement follows the shared XY affine and Z-translation contract.
+World geometry returns `vertices` and `faces`; XY reflections reverse face winding
+as native CamBam does. Bounds are exact XY vertex bounds. Bakes preserve world
+geometry and fail atomically when the mesh becomes degenerate. A Surface does
+not imply a manifold, closed solid, upward-facing relief or machinability.
+
+`native.cam.Surface3DMop` and `add_surface3d_mop` write native `surface3d`.
+The authored slice is Horizontal/Vertical ball-nose Finishing with BoundingBox
+boundaries. Common MOP fields use the existing encoding policy. Additional
+modeled fields live in `MOP_SURFACE3D_FIELD_POLICIES`:
+
+| Fields | Meaning / authored boundary |
+| --- | --- |
+| `profile_3d_method`, `roughing_finishing`, `tool_profile` | Horizontal or Vertical; Finishing; BallNose |
+| `stepover`, `resolution` | Positive fractions of tool diameter up to 1; transverse scanline spacing and longitudinal sampling spacing, respectively. Neither promises a numerical contact error. |
+| `boundary_method`, `boundary_margin` | BoundingBox plus signed native margin in drawing units |
+| `start_corner`, `cut_ordering`, `milling_direction` | Native corner/order/direction selections; these do not establish stock or runtime safety |
+| `backface_culling` | Native boolean face-selection state |
+| `auto_arc_fitting`, `mold`, `additive`, `backface` | False in authored bounded operations; broader modes are outside authoring support |
+
+Fresh modeled choices are explicit Value records. Imported omission,
+Default/Value and cached state follow the existing native template contract;
+Python fallback values do not evaluate native styles. Unsupported imported modes
+are preserved-only, and switching an unsupported method to a supported method
+rejects rather than reinterpreting stale native payload. Unknown MOP content
+retains the existing preservation limits. Native creation/editing does not itself
+certify a target or generate a toolpath.
+
+`integrations.cambam.native_relief` connects the SF01 bilinear design to this
+native slice. `mesh_relief` samples each original grid cell with optional uniform
+subdivision and upward triangles. The exact bilinear-to-triangle vertical error
+is bounded by `abs(z00-z10-z01+z11)/(4*n*n)` for subdivision count `n`, plus
+explicit numerical/export guards. The bilinear graph remains the independent
+protected design. Native sampling, mesh error and finishing allowance never
+authorize a gouge; complete posted motion must pass the SF01 contact proof.
+
+`create_document`, `ReliefSettings` and `NativeReliefDocument` provide one native
+mesh, Part stock and T1 ball finish with explicit process settings. The separate
+`audit_post` binds the source and candidate, decodes the complete CamBam Default
+post, requires supported straight motion and explicit exact-stop/process state,
+then replays cutter protection, shank clearance, axial limits and residual stock.
+Caller limits on residual volume and maximum thickness must both pass.
+The initial machine tip is a declared assumption. Fixtures, holders, dynamics,
+cutting loads, controller execution and physical finish are not assessed by this
+bounded native audit. Changed design/settings require a new binding and post.
+
+The [consumer](../demos/native_relief_workflow.py),
+[verification commands](DEVELOPMENT.md#nr03-native-relief-workflow) and
+[native evidence](REVIEW.md#nr03-native-relief-milestone---2026-10-26) establish
+the accepted slice. General mesh-to-relief inference, overhang machining,
+waterline/roughing modes and native automation as a supported public service
+remain outside it.
 
 ### Bounded spherical-bowl ball finish and rest
 
