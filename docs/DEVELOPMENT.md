@@ -2355,6 +2355,29 @@ owns dimensions, equations and supported motion; a passing tab count alone is
 insufficient. New source edits require fresh generation and binding. The
 historically accepted Square packet above remains a separate unchanged consumer.
 
+### Native execution host probe and promotion
+
+The successful 2026-10-26 document-only host source is currently local at
+`output/triangle-tabs-consumer-20261026-a2/NativeTabsHost.cs`, with its compiled
+32-bit executable, `minimal-host.log` and per-post `.native.json` provenance.
+The [review](REVIEW.md#native-host-and-acceptance-boundaries) records the mechanism,
+native versions, hashes and measured output; [NH01](structure_spec.md#native-cambam-execution-adapter-nh01)
+owns the proposed maintained adapter and acceptance criteria.
+
+This is documented experimental evidence, not a reproducible installed tool:
+the successful host's source/build launcher is not maintained in tracked code,
+the directory may be absent in a fresh checkout, and its private application
+context shim is specific to the observed assemblies. The local `run-native.ps1`
+invokes the unsuccessful PowerShell UI-constructor attempt; it is not the launcher
+for the successful compiled document-only host. Do not publish that launcher or
+present the local executable as a supported general automation entry point.
+
+The first NH01 implementation must supply tracked host/build/run instructions,
+native installation/context detection, a complete callable consumer and native
+integration checks. Native-enabled tests must report unavailable installations
+explicitly while ordinary library tests remain independent of CamBam. Promote
+the host only with its observed lifecycle and version constraints preserved.
+
 ### Packet 2 helical Pocket native post preparation
 
 This post gate passed; the steps below describe the local source/post workflow.

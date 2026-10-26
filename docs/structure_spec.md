@@ -152,9 +152,10 @@ creates the CAD/CAM document, then the operator opens it in CamBam, inspects or
 repositions the job for available stock, generates final toolpaths and exports
 G-code. Preserve this workflow alongside future automation. Operator edits must
 invalidate affected derived paths and stock evidence before those results are
-reused. In-application scripting/plugins are documented by CamBam; a supported
-standalone headless bridge is not established. Neither that bridge nor controller
-parity is a prerequisite for ordinary native authoring.
+reused. The separate [native execution adapter proposal](#native-cambam-execution-adapter-nh01)
+targets unattended use of the real CamBam runtime. A supported adapter is not yet
+implemented; neither it nor controller parity is a prerequisite for ordinary
+native authoring or independent engines.
 
 **Cabinet manufacturing is a representative consumer, not a special core mode.**
 A design application owns cabinet dimensions, arbitrary room divisions and joint
@@ -351,6 +352,125 @@ workflow merely because a sample script did not use it.
 The reader's `PRIMITIVE_TAG_TO_CLASS` and `MOP_TAG_TO_CLASS` are the executable
 supported-tag inventory, not a claim of complete CamBam coverage. Consult those
 maps and corresponding entity encoders before adding a type.
+
+### Native CamBam execution adapter (NH01)
+
+**User requirement, 2026-10-26:** maintain a distinct native execution capability
+that allows other frameworks to use the real installed CamBam program
+programmatically for its intended CAD, MOP, toolpath, file and production-output
+operations. Full native feature integration is the target. Expose native API
+names/objects and optionally a Python convenience interface. Use this runtime
+both as a comparison reference for our own implementation and as a native
+export/production backend. This adds a capability; it does not replace or make
+CamBam a dependency of the existing document library, independent CAM engines,
+direct output routes or ongoing native coverage work.
+
+**Current evidence:** the [Triangle native host](REVIEW.md#native-host-and-acceptance-boundaries)
+opened files, generated Profile toolpaths and produced real Default posts in
+an isolated 32-bit process. Earlier native consumers provide additional bounded
+save/geometry/post observations. These are probes, not an implemented public
+execution adapter. The working tab host remains in ignored session output and
+uses `FormatterServices.GetUninitializedObject`, a private `MainUI` setter and
+the obfuscated active-view field `CaxM7JpQqL`. That field is evidence for the
+observed assembly only, not a stable API name or a reusable initialization contract.
+The normal UI constructor attempts did not establish a general hosted runtime.
+
+CamBam's [official automation documentation](https://www.cambam.info/doc/plus/Automation.htm)
+and [MOP Automate example](https://www.cambam.info/ref/script.mop-automate)
+establish scripting/plugin API access to file opening, native geometry and MOP
+creation, saving and posting. The example also demonstrates active-view and
+asynchronous edit-mode dependencies. Its presence does not establish standalone
+headless coverage; the [published API reference](https://www.cambam.info/doc/api/Introduction.htm)
+identifies itself as 0.9.8 and
+must be checked against the actual installed version.
+
+#### Proposed architecture and interface fidelity
+
+The following is an engineering design proposal, not an existing API:
+
+| Boundary | Responsibility |
+| --- | --- |
+| Optional native worker | Own installed CLR assemblies, application/document context, native object lifetimes, selected libraries/posts and job execution. Match the native architecture (32-bit for the observed build) independently of the caller's Python architecture. |
+| Native API surface | Expose qualified native type/member names, object handles, constructors, properties, methods and collections. Preserve enums, overload selection, native identity/references, `CBValue` Value/Default/Auto states, returned values and native diagnostics. Reflection/discovery alone does not establish supported execution. |
+| Python convenience surface | Provide document, geometry, MOP, generate and export helpers over the same worker and object state. Preserve access to native operations/values that have no convenience wrapper. Do not introduce a second CAD/CAM model or substitute our algorithms for requested native computation. |
+| Framework adapter | Translate explicit framework jobs into native requests and return native artifacts/results with provenance. Native-object callers need not route through `CBProject`, and the independent core must not import the worker. |
+
+Start with a local, versioned subprocess protocol so non-Python frameworks can
+also drive the worker. Native objects remain in their owning process; handles
+and explicit typed values cross the process boundary. That transport is a thin
+representation layer, not a reimplementation of CamBam semantics. Keep native
+names available while allowing idiomatic Python wrappers. Packaging and concrete
+module names are to be settled on the first complete consumer; add no empty
+packages or new runtime dependency to the base library in advance.
+
+Headless acceptance requires programmatic completion without visible windows,
+keystrokes, mouse input or manual dialogs. A hidden application host that still
+requires a Windows desktop/message pump must be labeled separately from a
+desktop-independent worker/service. UI-context, asynchronous commands, rendering
+and plugin dependencies must be investigated instead of silently omitted from
+the full-coverage target. Prefer documented/public native lifecycle methods;
+any necessary private compatibility shim must be isolated, version/hash guarded,
+tested and rejected on unknown builds. Do not normalize an uninitialized UI
+object or an obfuscated field name into a permanent universal contract.
+
+#### Coverage, maintenance and comparison contract
+
+"Fully supported" means maintained by this project for an explicit native
+version, installation/plugin set and operating environment. It does not mean
+vendor endorsement. "100% feature integrated" is the completion target for an
+enumerated native operation inventory, not a claim supported by the current
+six posts, public method counts or an unrestricted reflection endpoint.
+Unimplemented or interactive-only operations remain visible gaps against that
+target. An optional plugin or another native release has its own declared scope;
+do not promise compatibility with unknown future versions/plugins.
+
+The [native coverage map](NATIVE_COVERAGE.md#native-execution-coverage-nh01)
+owns cumulative operation coverage, distinct from document interchange support.
+Inventory shape creation/query/edit/transform/conversion, document import/save/
+export, Parts and MOP types/states/order, tool/style libraries, native toolpath
+generation/query/regeneration, optimizers, posts/macros/output grouping and
+relevant plugins. Each operation records native entry point, lifecycle/context
+needs, version, evidence and status (unassessed, exposed, verified or unsupported
+in a named environment). Support needs a callable contract, native success and
+fault-sensitive evidence, not merely an exposed method.
+
+Two consumers establish different claims:
+
+- **Comparison reference:** send the same explicit geometry/process/setup to our
+  code and native CamBam; compare shape geometry/topology/placement, MOP values
+  and states, save/reopen semantics, native toolpaths and complete actual posts.
+  Use documented numeric tolerances and normalize only irrelevant identifiers/
+  timestamps. Require matching native behavior where compatibility is claimed;
+  assess intentional algorithm differences by declared geometry/stock/process
+  criteria rather than requiring every independent path to match CamBam.
+- **Native production backend:** create or open a native job, edit shapes/MOPs,
+  generate/regenerate selected or complete jobs and save/export through the real
+  runtime. Bind outputs to exact input revisions, native assemblies, effective
+  settings, tools/styles/posts and external dependencies. Invalidate dependent
+  paths after edits. A partial/failed generation must not publish a successful
+  production result; program emission does not itself certify machine execution.
+
+Worker lifecycle must cover single-owner native state, job isolation, timeouts,
+cancellation, worker restart and native errors/dialog attempts. Preserve caller
+files and installed settings; stage requested outputs before publishing a
+complete result. Native-enabled integration tests explicitly require an installed
+runtime; ordinary library tests remain runnable without CamBam. Establish the
+installation, licensing and unattended deployment requirements for each supported
+environment without redistributing proprietary assemblies as part of this library.
+
+#### First implementation outcome and stopping condition
+
+Promote the probe into tracked host source, build/run instructions and automated
+native smoke tests with explicit version/context detection. Demonstrate a whole
+editable job: open/inspect, create/edit geometry and a MOP, save/reopen, generate
+native toolpaths, retrieve their data and post through selected native settings.
+Exercise both native-name access and the thin Python interface, using Square/
+Triangle and an independent geometry/MOP consumer to challenge context assumptions.
+Prove stale-state invalidation, process/config isolation, timeouts/failures and
+matching complete native output. Stop that first increment at a reproducible,
+maintained execution slice plus a measured inventory of remaining native gaps.
+That milestone enables later native field consumers and broader production
+integration; it is not closure of the full feature-coverage target.
 
 ### Execution boundary and detached CAM core
 

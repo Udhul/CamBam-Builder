@@ -828,26 +828,29 @@ stock-verifier endorsement; apply [the algorithm ownership policy](#algorithm-ow
 
 ## Programmatic execution requirement
 
-The framework must calculate supported geometry and paths programmatically and
-load/save CamBam files without running CamBam. No supported standalone headless
-CamBam engine has been established for this workflow. CamBam does expose
-in-application scripting/plugins, including a G-code generation example; that is
-different from an independently callable, supported headless service. Do not design around GUI automation,
-CamBam plugins/scripts, or manual toolpath extraction as execution dependencies.
-Implement the needed geometry, cutter and supported MOP path algorithms in the
-framework, using an appropriate programmatic geometry library where justified.
-For existing native-MOP authoring, CamBam remains the toolpath generator and
-postprocessor: opening the `.cb` and generating/exporting G-code is required.
-For future framework-generated motion, CamBam is an optional inspection/editing
-environment and one possible output route. A direct postprocessor is a separate
-capability; calculating paths alone does not yet make the workflow headless to G-code.
+The independent framework must calculate supported geometry and paths
+programmatically and load/save CamBam files without running CamBam. Its normal
+operation and tests must not acquire GUI, native plugin/script or manually
+extracted-toolpath dependencies. Implement its needed geometry/cutter/path
+algorithms in the framework, using a programmatic geometry library where justified.
+
+**User clarification, 2026-10-26:** the separate
+[native CamBam execution adapter (NH01)](structure_spec.md#native-cambam-execution-adapter-nh01)
+is intended to invoke the real installed native program for comparison and
+complete native export/production workflows. That opt-in capability intentionally
+depends on CamBam and may use its native APIs/scripts/plugins; the independence
+rule above applies to the independent routes, not to NH01's explicit purpose.
+Native feature coverage remains the target even where current probes are narrow.
+A supported public headless adapter is not yet implemented. Preserve the useful
+manual native workflow while it develops, and keep independent direct G-code
+generation as its own capability. Neither route substitutes for the other.
 
 The useful proxy here is a **file representation**: calculate XYZ tool-center
 paths ourselves, save them as shapes and attach an Engrave MOP. It is not a way
 to invoke CamBam's calculations. Manually exported CamBam paths may serve as
-optional comparison fixtures, but normal operation and automated tests must not
-require them. CamBam's scripting examples document possible file/motion behavior;
-they are not a runtime interface for this framework.
+optional comparison fixtures, but independent operation and automated tests must
+not require them. NH01's native-enabled tests and execution interface have their
+own explicit installation requirements and evidence boundaries.
 
 **Output direction clarified 2026-09-24 after the variable-depth post:** the
 user wants the computed V-carve path inspectable as a CamBam toolpath. The
@@ -912,9 +915,11 @@ describes opening a source file, inserting operations and producing G-code.
 Its [script instructions](https://www.cambam.info/ref/script) run inside CamBam.
 Therefore "CamBam has no API/automation" is too strong. These sources do not
 establish a supported standalone headless engine or its deployment/licensing
-contract; no such integration was tested here. Reopen an optional native bridge
-only with a supported interface and concrete consumer need. It must not become
-a dependency of the independent core.
+contract; no such integration was tested in that September audit. The subsequent
+[NH01 requirement](structure_spec.md#native-cambam-execution-adapter-nh01) supplies
+the concrete consumer need and a separate development track, supported by the
+later bounded native-host observations. Native lifecycle/interface support still
+needs to be established. It must not become a dependency of the independent core.
 
 ### Execution authority and compatibility
 

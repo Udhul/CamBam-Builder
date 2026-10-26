@@ -53,6 +53,14 @@ actual output at the beginning/end of a cut. It takes priority over more tab
 shapes or constructive refinements, which need distinct consumers. Existing
 None/Spiral and accepted Square/Triangle behavior must stay intact.
 
+**Separate capability proposed by the user: NH01 native execution adapter.**
+The [target and first implementation outcome](structure_spec.md#native-cambam-execution-adapter-nh01)
+are documented; maintained runtime implementation is backlog. It will expose
+the real CamBam API and an optional Python interface for native comparison and
+production-output consumers. Full native feature integration is the target;
+current local probes are not a supported adapter. This adds a track without
+replacing Profile entry/exit, native interchange or independent engine work.
+
 This is a good fresh-session breakpoint: the complete
 tab outcome, native observations, limits and next scope are persisted. The next
 consumer needs no unsaved decision, pending result or conversational context.
@@ -205,10 +213,11 @@ These are planned or conditional items, not additional active implementation.
 | Scope | Promotion trigger and owner |
 | --- | --- |
 | Native Profile entry/exit consumer | **Next priority.** Author/edit/reopen a board-cutout job with bounded Tangent lead-in and independent lead-out parameters, compare fresh native Default output with existing None/Spiral controls, and preserve accepted tab behavior. Stop when the parameter/state contract and native entry/exit output have fault-sensitive evidence. Start from the [Profile lead contract](structure_spec.md#profilepocket-subtype-and-nested-field-inventory) and [coverage map](NATIVE_COVERAGE.md); general ramp replay and physical process validation remain separate. |
+| NH01 native CamBam execution adapter | **Separate planned capability, proposed 2026-10-26.** Promote the successful probe into a tracked, reproducible native worker and native-name/Python interfaces; complete a native open/edit/save/generate/query/post consumer with lifecycle and compatibility evidence. Maintain an explicit full-coverage target and inventory of gaps. [Design and acceptance](structure_spec.md#native-cambam-execution-adapter-nh01); [execution coverage](NATIVE_COVERAGE.md#native-execution-coverage-nh01). Existing tracks remain active in their own order. |
 | Constructive geometry and shape-guided CAM extensions | CG01's first complete reusable capability is accepted. Reopen for a named richer source/reconstruction consumer, unsupported constraint, changed native carrier or a numerical counterexample. [Implemented contract](structure_spec.md#constructive-sources-and-shape-guided-cam-cg01) and [acceptance limits](REVIEW.md#constructive-artwork-bundle---2026-10-26). |
 | Existing engine edge cases | BO01's integrated closed-offset repair covers the tapered-plug zero-length segment. Hard overlap caps, fitted paths and lateral low cleared links need a named consumer and continuous containment/access evidence. [RP01 limits](structure_spec.md#feature-aware-planar-vrest-candidates-rp01). |
 | Further native parameter/shape variants | Native field/state coverage belongs to NC01, not MCP parity. Promote from the [coverage map](NATIVE_COVERAGE.md) for a concrete consumer; CADBitmap placement and image dependencies are accepted, while vectorization/GUI behavior and general Save As rebasing remain unclaimed. |
-| Full independent G-code / optional native automation bridge | Future capability with explicit controller/post semantics and actual runtime acceptance where claimed. Existing bounded adapters stay supported; native `.cb` export and core engine development must not wait. [Execution boundary](REST_MACHINING_PLAN.md#programmatic-execution-requirement). |
+| Full independent G-code | Future capability with explicit controller/post semantics and actual runtime acceptance where claimed. Existing bounded adapters stay supported; native `.cb` export and core engine development must not wait. NH01 is a separate native-runtime track. [Execution boundary](REST_MACHINING_PLAN.md#programmatic-execution-requirement). |
 | Controller runtime and physical validation | Promote for a real cutting job with actual tooling/material/setup. [Runtime boundary](REVIEW.md#m5-controller-runtime-evidence-scope---2026-09-26). No pending physical observation blocks the accepted offline baseline. |
 | Stock logistics and bin packing | Inventory, sheet/offcut selection, allocation across materials/thicknesses, packing and scheduling are later support features, promoted when integration cost is low and a caller needs them. Preserve native stock fields and engine removal-state semantics now. |
 | Broader geometric/fixture backends | Non-box fixtures, arbitrary 3D frames, general surfaces/volumes, transition/holder envelopes and numerical refinement need a consumer and independent error/coverage evidence. [Capability map](structure_spec.md#capability-and-public-api-boundary-map). |

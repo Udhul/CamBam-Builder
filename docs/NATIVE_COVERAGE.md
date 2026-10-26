@@ -107,6 +107,25 @@ document round trips. Tests distinguish untouched imported templates from edits:
 | Tags | Primitive/MOP operator notes coexist with framework metadata; imported root/layer/Part Tag paths retain their bounded context. [CF01 contract](structure_spec.md#native-interchange-integrity-cf01), [test_native_tags.py](../tests/test_native_tags.py). |
 | Unknown classes, arbitrary root/geometry XML and references inside opaque extensions | **Unsupported preservation guarantee.** Strict class admission and known reference remapping do not interpret arbitrary extension references. A new preservation capability needs explicit source examples and an identity/dependency contract. |
 
+## Native execution coverage (NH01)
+
+The [NH01 target](structure_spec.md#native-cambam-execution-adapter-nh01) covers
+programmatic execution in the real native runtime. The class/interchange tables
+above do not establish this execution coverage. There is currently **no supported
+NH01 runtime API**; the following evidence is a starting point for promotion:
+
+| Execution family | Current evidence | Remaining support gap |
+| --- | --- | --- |
+| Host and document context | [Triangle host](REVIEW.md#native-host-and-acceptance-boundaries) supplies enough context for Manual-tab loading without forms | Tracked reproducible lifecycle, version detection, process isolation/recovery and broader application-context needs |
+| File opening/saving and native objects | Bounded native observations linked in the class tables; Triangle host opens unchanged fresh sources | Unified native object access, edits/references, complete file/conversion operation inventory and save/reopen contracts |
+| Native MOP generation and posts | Actual Profile posts in the Triangle consumer; other bounded native consumers in REVIEW | All MOP/toolpath/query/regeneration and post/library/output modes, with explicit success/failure behavior |
+| Application commands and plugins | Official scripting examples demonstrate active-view and asynchronous edit dependencies | Enumerate and verify each operation's noninteractive execution requirements; plugin/version scope stays explicit |
+
+When the maintained worker is implemented, extend this owner with its actual
+operation inventory and evidence. Preserve unassessed/unsupported entries as
+gaps toward full native coverage; do not equate reflection visibility, one native
+post or an existing `.cb` writer with verified native execution support.
+
 ## Shared integration and evidence owners
 
 These tests cover behavior shared by the modeled classes. Class-specific rows
