@@ -1,5 +1,147 @@
 # Review and acceptance history
 
+## NC02 external-program consumer - 2026-10-26
+
+**Outcome:** implementation, automated checks, actual native save/inclusion and
+installed consumer acceptance are complete, accepted by engineering. Work began
+from clean local `main` at `fcacbd8` on `feat/nc02-ncfile-consumer`; implementation
+milestone `818e7c9` adds NCFile authoring and dependency bundles. A subsequent
+native cycle exposed and repaired shared empty-parameter XML serialization.
+The [NC02 contract](structure_spec.md#external-program-native-interchange-nc02)
+owns behavior, the [runbook](DEVELOPMENT.md#nc02-external-program-consumer) owns
+commands, and [PROGRESS](PROGRESS.md) owns delivery state and next priority.
+
+NCFile was selected over ScriptEntity and CADBitmap because it enables a useful
+mixed native/supplied-program job while exercising a missing native MOP and its
+external dependency. Script execution and image geometry require distinct
+consumers. The [native documentation](https://cambamcnc.org/doc/1.0/cam/back-plotting.html)
+describes NCFile inclusion/backplotting; installed observations below establish
+this implementation's actual schema and text-inclusion scope.
+
+| Changed claim / owner | Positive and fault-sensitive evidence | Disposition / limits |
+| --- | --- | --- |
+| NCFile entity / native cam, reader, project | Native plain scalar schema; two-cycle UUID/order/note preservation; enum cross-product; malformed/duplicate fields, unsupported mode activation and primitive/group targets reject; import/export does no external IO | Editable source references accepted; unknown imported modes and empty sources remain preserved-only |
+| Explicit dependencies / integrations.cambam.ncfile | Exact CRLF bytes, disabled MOPs, shared assets and relocation; missing/changed source, document/mode/order edits, drive-relative/traversal/link escapes reject | Direct SourceFile dependencies only; snapshot write uses captured bytes, explicit check_current supplies freshness |
+| Complete manifest / same owner | Recomputed document hashes cannot hide duplicate/misplaced operation containers; missing/extra/duplicate identity records, changed references/hash/length reject; real Windows junction escape witnesses | Byte integrity relative to the supplied manifest, no authentication or program interpretation |
+| Native empty values / writer | Independent native failing long-empty versus passing self-closing CustomMOPHeader/Footer witnesses; lexical two-cycle Default/Value regression and intentional whitespace/text retention | Standard self-closing XML repairs native readback/generation; reexported byte-bound evidence must be recaptured |
+| MCP boundary / service | Imported NCFile inspection remains opaque; retarget returns UNSUPPORTED_OPERATION without changing project or revision, even when source is missing | Existing four-family MCP scope preserved; no NCFile tools or schemas added |
+
+Independent review reproduced a complete-dependency gap: a second `machineops`
+container was ignored by the general reader, allowing bundle verification to
+report only the first source after a manifest hash was recomputed. A shared raw
+structure guard now rejects that ambiguity before accepting a snapshot or manifest, with
+five structural mutation cases through both snapshot and persisted verification.
+The reviewer independently reran 25 focused tests and closed the model/bundle/MCP
+review. The lead assessed the later one-line standard serializer change against
+the independent native isolates, lexical regression and refreshed gates below.
+
+### Installed native schema and complete inclusion
+
+A hidden 32-bit process used installed CAD **1.0.7364.41819** and Geom
+**1.0.7364.41817**, with settings-save disabled, native CADFile save,
+GenerateToolpaths and MachineOpToGCode/Default. No GUI, machine or controller was
+used. Config SHA-256 remained
+`2077820e148d7a7d6ed6ddde8fc69b62cd255cbf69899ff632b86cf6228234ed`;
+Default post SHA-256 remained
+`adc3034633f0f6ad6ddc4c9eabc63844cb59173be8ee780ac47e198a7145c263`.
+
+Native `MOPNCFile` serializes `ncfile` with plain SourceFile, DistanceMode and
+ArcCenterMode. Empty source, Absolute distance and Default arc modes are omitted.
+Relative source resolution uses the `.cb` directory, not process cwd. Native
+Save As retains the path without copying/rebasing the dependency. Generation
+renames the display Name to the source filename; Tag identity remains intact.
+Seven initial posts covered absolute/relative paths, None/Standard/Experimental
+optimization and nondefault distance/arc modes. Supplied comments, M7 and numeric
+lexical forms were included unchanged inside the native wrapper. These mode
+witnesses establish inclusion, not alternate-motion/backplot interpretation.
+Missing-source generation and unknown-enum loading stalled their isolated probes
+until timeout; neither failed attempt was counted as acceptance.
+
+The final [consumer recipe](../demos/native_ncfile_workflow.py) uses an 8×6×1 mm
+stock box offset (-1,-1), native Engrave lines at Y=0 and Y=4, and a supplied
+accent at Y=2. Native operations use T1 diameter 1 mm, depth/increment -0.2/0.2 mm,
+clearance 5 mm, cutting/plunge feed 250/100 mm/min and spindle 10000 rpm. The
+eight-line ASCII/CRLF fragment explicitly selects G21/G90/G17, retracts to Z5,
+moves to (0,2), plunges to -0.2, feeds to (5,2), retracts and retains its two
+marker comments. Fragment SHA-256:
+`6099951d47d1fe768b2a4abef4a31f900827c7888d43a1f64105d212eb6030d2`.
+
+Four final cases each reported **three OK operations** and included all eight
+supplied lines contiguously **exactly once, starting at post line 18**, between
+native before/after engravings. UUIDs, notes, targets, order, source references
+and modes survived native save and generated save. Actual native G1 endpoints
+reflected X5, X6 and X7 geometry edits. The relocated case moved the entire
+bundle and used a different process cwd. The second edit started from a native
+generated save, then used strict Python import, tag/mode/geometry edits, ordinary
+bundle authoring and another native save/post; modes became Incremental/Absolute.
+Hashes are SHA-256:
+
+| Final case | Authored document | Native-saved document | Actual native post |
+| --- | --- | --- | --- |
+| Original | `1da1bee588f053892c30605916a6069bd563b770443fe5597751226eb6ba4080` | `27de97e8b646374f38f676e13b7b4317f09446cfb53ce6a4c2e8e50ddafb5cee` | `3db86bde6ab3998012eb5c6c517d401b88612cd0138b440fec56933a40513dd4` |
+| X6 edit | `fc5992d515ad5e61ca4ca757521f0013d0ee3daa382c5042336771d80f9e4b83` | `1436f426e2c34679214c4024a6d93278a5fd7d2277ffa156f27541d783825288` | `56dff7c83eb416ad3f42e50ccaf5dfa88d2f22ce99e1ab3bc9471752b13cf2d9` |
+| Native-save/X7 edit | `ea195c1a6cfb2c1a2d98303d22550a9a37a0ea8ca854b0019443edf306aef9ad` | `02db21f49becf1ccba61f47a0e0d3abd86e3c9cbdb216eb48b636b45d30484a5` | `01f778cf686e2a42cc6db50db8be51076a95614d3179844a183f9c2e9e826f9b` |
+
+Relocated source/native-save hashes equal Original; its post hash is
+`1004862ae28f83cc78f2dde6bd7d0ec62e53a10df5f9ce9dca1405693096c0a2`.
+Reports/probes remain under `output/nc02-native-20261026-a1/`, with final results
+in `consumer-final/acceptance.json`. The durable recipe/parameters above do not
+depend on those ignored files. No `.cb`/`.nc` fixture was added to Git.
+
+### Native empty-value defect and repair
+
+The first native-save/library-export cycle hung in the first Engrave generation.
+Baseline SHA-256 `ef1fe70017c0e0eade72f2392a6893bcb33e7cdcd394f5712e4aa02a0b4646fd`
+contained long-empty CustomMOPHeader/Footer state scalars. Changing only their
+six empty elements to self-closing produced passing document
+`e0f861498bedaa979a4d6351ce74312ff9cc074b4eeb878198060da8f8d28eb7`.
+Header-only, footer-only, StartPoint-only and BasePoint-only transformations
+still timed out; all empty state elements and all empty elements self-closing
+both passed. Native StartPoint readback also differed, but no internal parser
+mechanism is asserted. `consumer/serialization-witness.json` retains every
+separate witness. The final four cases above use the repaired public writer
+directly, without manual XML substitution.
+
+### Final verification and installed checkpoint
+
+After the last runtime edit, checkout runner **40 modules / 292 tests** passed
+with one named Windows symlink-privilege skip; actual junction/reparse tests ran.
+It took **122.795 s**. Selected patterns cover native/MOP interchange, ownership,
+transform/copy/shape/export/state, manufacturing, all MCP modules, NCFile and the
+source-bound relief/bundle consumers. Report:
+`output/verification-20261026-152059-ade175da/report.json`.
+The change does not alter G-code parsers, stock/replay algorithms or detached
+planners; full detached-engine discovery was not repeated.
+
+Fresh wheel Python **3.12.10/3.13.5** and independent sdist Python **3.12.10**
+checks passed **249 tests / 27 module executions, zero skips**, plus four
+installed smoke gates, in **161.230 s**. The nine modules are native_ncfile,
+ncfile_bundle, mop_parameters, mop_context, native_interchange, strict_import,
+mcp_mop_inspection, native_relief and bundle_document. Report:
+`output/verification-20261026-151958-8b5b20cd/report.json`.
+The copied unmodified demo separately passed all ten checks from external
+working directories with isolated imports against the **base-only 3.12** and
+**full 3.13** installations; site-packages provenance and absent Shapely/MCP in
+the base environment are recorded in
+`output/nc02-delivery-20261026-a1/installed-consumers.json`.
+
+Earlier passing pre-repair runs (270 checkout and 168 installed tests) are
+superseded by these final gates. The first sandboxed package attempt failed on
+uv cache access before build; its authorized retry and the final rebuilt matrix
+completed. No interrupted/failed run is relabeled as passing.
+
+Final checkout and package reports have identical **251-file** source identities;
+the installed copied-demo hash also matches the delivered script. Wheel SHA-256
+is `1b6bf71da40f820f3e701483d5c7aeebc151ff5d591a659e75afc1c3d4738762`;
+sdist is `cde98b7fd9169fc1acf9d3b4542f8c9ba57d642b4fc8aa12a5cee036d896976c`.
+Delivery bookkeeping/docs after those checks do not change runtime behavior.
+
+The stopping condition is satisfied. No user observation remains necessary for
+this bounded native document/text-inclusion scope. Whole-program modal safety,
+subprogram dependency discovery, toolpath interpretation, production/controller
+or physical cutting are unverified. Reopen for contradictory native evidence or
+a concrete consumer needing those contracts, not merely to expand this slice.
+
 ## NR03 native relief milestone - 2026-10-26
 
 **Outcome:** implementation, automated verification, native save/post and

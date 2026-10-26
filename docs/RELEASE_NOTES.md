@@ -5,6 +5,39 @@ These notes define versioned consumer scope. Package metadata comes from
 [PROGRESS](PROGRESS.md). A version in source or a locally built archive does not
 mean a tag, registry release or public distribution has been delivered.
 
+## 0.6.0 external-program interchange
+
+Checkpoint date: 2026-10-26. This additive checkpoint introduces native NCFile
+operations and explicit source dependency handling. Python 3.12/3.13 and all
+dependencies are unchanged; the consumer needs only the base installation.
+
+- `native.cam.NCFileMop` and `CBProject.add_ncfile_mop` add targetless, ordered
+  external-program references with editable native interpretation modes,
+  framework identity and operator notes. Import and ordinary save perform no
+  external file IO. Unknown imported modes remain preserved-only.
+- `integrations.cambam.ncfile.capture` snapshots the document and all NCFile
+  dependencies within an explicit source directory. `check_current` detects
+  changed documents or dependencies; `write_bundle` copies exact source bytes
+  and rewrites references into a portable directory. `verify_bundle` checks
+  document/source integrity against its manifest.
+- NCFile rejects primitive and group targeting; ordinary geometry MOP behavior
+  is unchanged. A project clone retains reference strings; primitive-tree copy
+  does not select unrelated targetless operations or copy files.
+- Native XML now emits self-closing empty elements, matching CamBam's serializer.
+  This repairs imported empty CustomMOPHeader/Footer values that could disrupt
+  native parameter loading and stall subsequent toolpath generation. Generated
+  XML bytes change; recapture byte-bound document evidence after reexport. Existing
+  saved source/post artifacts are unchanged.
+
+The [NC02 contract](structure_spec.md#external-program-native-interchange-nc02)
+owns the path policy, native save behavior and integrity limits. The
+[consumer](../demos/native_ncfile_workflow.py) is runnable outside the checkout.
+NCFile inclusion adds no general G-code interpreter, motion certificate,
+controller support or implicit asset packaging to ordinary document save.
+Native observations and installed verification belong to the
+[acceptance record](REVIEW.md#nc02-external-program-consumer---2026-10-26).
+No registry publication is implied.
+
 ## 0.5.0 native relief interchange
 
 Checkpoint date: 2026-10-26. This additive checkpoint connects SF01 bilinear

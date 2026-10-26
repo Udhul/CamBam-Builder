@@ -1535,7 +1535,9 @@ class DocumentService:
                 raise DomainError("ENTITY_NOT_FOUND", "MOP was not found", "mop_id")
             if not isinstance(mop_entity, Mop):
                 raise DomainError("UNSUPPORTED_OPERATION", "Entity is not a supported MOP", "mop_id")
-            kind = self.MOP_KIND_BY_CLASS[type(mop_entity)]
+            kind = self.MOP_KIND_BY_CLASS.get(type(mop_entity))
+            if kind is None:
+                raise DomainError("UNSUPPORTED_OPERATION", "MOP targeting is outside the supported slice", "mop_id")
             targets = [self._require_mop_target(staged, target, kind)
                        for target in args["targets"]]
             staged.set_mop_targets(mop_entity.internal_id,

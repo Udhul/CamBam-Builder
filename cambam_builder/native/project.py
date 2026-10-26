@@ -29,7 +29,8 @@ from .transformations import (
 from .core import CamBamEntity, Primitive, BoundingBox, VertexInput
 from .cad import Layer, Pline, Circle, Rect, Arc, Points, Text, Line, Spline
 from .cam import (
-    Part, Mop, MopType, ProfileMop, PocketMop, EngraveMop, DrillMop, Surface3DMop,
+    Part, Mop, MopType, ProfileMop, PocketMop, EngraveMop, DrillMop, Surface3DMop, NCFileMop,
+    MOP_COMMON_FIELD_POLICIES,
 )
 from .region import Region
 from .surface import Surface
@@ -947,6 +948,37 @@ class CamBamProject:
 
     # --- Public API: Concrete MOP Adders ---
 
+    def add_ncfile_mop(self, part: Identifiable, source_file: str,
+                       name: str = 'NC File', identifier: str | None = None,
+                       target_mop: Identifiable | None = None, place_last: bool = True,
+                       *, distance_mode: str = 'Absolute', arc_center_mode: str = 'Default',
+                       **kwargs) -> NCFileMop | None:
+        """Add an external-program reference without reading or executing it.
+
+        NCFile has no primitive/group targets. The literal path is retained;
+        callers perform source resolution/dependency checks explicitly. Returns
+        None for invalid source or enum authoring, like other entity adders.
+        """
+        if 'targets' in kwargs or 'target_group' in kwargs:
+            raise ValueError('NCFile operations cannot target primitives or groups')
+        try:
+            candidate = NCFileMop(source_file=source_file, distance_mode=distance_mode,
+                                  arc_center_mode=arc_center_mode)
+            candidate._validate_ncfile_encoding()
+        except (TypeError, ValueError) as exc:
+            logger.error('Cannot add NCFile operation: %s', exc)
+            return None
+        mop = self._add_mop_internal(
+            NCFileMop, part, (), name, identifier, target_mop, place_last,
+            source_file=source_file, distance_mode=distance_mode,
+            arc_center_mode=arc_center_mode, **kwargs)
+        if mop is not None:
+            for field_name in kwargs:
+                if field_name in MOP_COMMON_FIELD_POLICIES:
+                    value = getattr(mop, field_name)
+                    mop.set_parameter_state(field_name, 'Default' if value is None else 'Value')
+        return mop
+
     def add_surface3d_mop(self, part: Identifiable, targets: Sequence[Identifiable] = (),
                           name: str = "3D Surface", identifier: str | None = None,
                           target_mop: Identifiable | None = None, place_last: bool = True,
@@ -1588,11 +1620,15 @@ class CamBamProject:
         """Atomically replace a MOP selection with explicit primitive targets."""
         mop_id = self._require_mop_id(mop)
         selection = self._validate_mop_selection(targets)
+        if isinstance(self._mops[mop_id], NCFileMop) and selection:
+            raise ValueError('NCFile operations cannot target drawing primitives')
         self._mop_targets[mop_id] = selection
 
     def set_mop_target_group(self, mop: Identifiable, group: str):
         """Select a live named group, including future members of that name."""
         mop_id = self._require_mop_id(mop)
+        if isinstance(self._mops[mop_id], NCFileMop):
+            raise ValueError('NCFile operations cannot target drawing groups')
         if not isinstance(group, str) or not group:
             raise ValueError("group must be a nonempty group name")
         selection = self._validate_mop_selection((), group)

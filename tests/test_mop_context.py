@@ -7,7 +7,7 @@ from pathlib import Path
 
 from cambam_builder import CBProject
 from cambam_builder.cambam_reader import read_cambam_bytes, read_cambam_file
-from cambam_builder.cambam_writer import build_xml_tree
+from cambam_builder.cambam_writer import build_xml_tree, serialize_cambam_bytes
 
 
 def signature(element):
@@ -18,6 +18,37 @@ def signature(element):
 
 
 class MopContextTests(unittest.TestCase):
+    def test_native_empty_parameter_values_use_self_closing_xml(self):
+        # Installed CamBam saves these empty CBValue strings as self-closing.
+        # Long-empty forms are XML-equivalent but change native parameter
+        # readback and can stall actual generation.
+        source = b'''<CADFile Version="0.9.8.0"><layers/>
+          <parts><part Name="Part"><machineops><engrave Enabled="true">
+          <Name>Native</Name><CustomMOPHeader state="Default" />
+          <CustomMOPFooter state="Value" /><StartPoint state="Default" />
+          <TargetDepth state="Value">-0.2</TargetDepth>
+          <CutFeedrate state="Value">250</CutFeedrate>
+          </engrave></machineops></part></parts></CADFile>'''
+        for pretty in (False, True):
+            project = read_cambam_bytes(source)
+            for _ in range(2):
+                data = serialize_cambam_bytes(project, pretty_print=pretty)
+                for name, state in (("CustomMOPHeader", "Default"),
+                                    ("CustomMOPFooter", "Value"),
+                                    ("StartPoint", "Default")):
+                    self.assertIn(f'<{name} state="{state}" />'.encode(), data)
+                    self.assertNotIn(f'</{name}>'.encode(), data)
+                project = read_cambam_bytes(data)
+                self.assertEqual(project.list_mops()[0].target_depth, -0.2)
+                self.assertEqual(project.list_mops()[0].cut_feedrate, 250)
+            mop = project.list_mops()[0]
+            mop.custom_mop_header = '(keep <literal> & text)\nG90'
+            mop.custom_mop_footer = ' '
+            data = serialize_cambam_bytes(project, pretty_print=pretty)
+            element = ET.fromstring(data).find('./parts/part/machineops/engrave')
+            self.assertEqual(element.findtext('CustomMOPHeader'), '(keep <literal> & text)\nG90')
+            self.assertEqual(element.findtext('CustomMOPFooter'), ' ')
+
     def test_point_list_nesting_is_preserved_and_not_mixed_into_grid(self):
         project = CBProject("native-nesting")
         layer = project.add_layer("Geometry")

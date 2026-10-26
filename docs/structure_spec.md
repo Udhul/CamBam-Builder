@@ -1646,6 +1646,78 @@ the accepted slice. General mesh-to-relief inference, overhang machining,
 waterline/roughing modes and native automation as a supported public service
 remain outside it.
 
+### External-program native interchange (NC02)
+
+`native.cam.NCFileMop` represents the installed `MOPNCFile` class and native
+`ncfile` XML. `CamBamProject.add_ncfile_mop(part, source_file, ...)` adds a
+targetless operation to the existing Part/order/identity model. Name, Enabled,
+framework Tag identity and operator notes follow the shared MOP contract. Fresh
+authoring requires a nonempty path string; invalid authoring returns `None`.
+Primitive/group targets reject at the public relationship boundaries and export;
+nonempty or ambiguous native target payloads reject during import. Cloning copies
+the reference string. Primitive-tree copying includes only operations selected
+by that geometry, so it excludes NCFile and never copies external files.
+
+`source_file`, `distance_mode` and `arc_center_mode` are plain XML scalars
+(`SourceFile`, `DistanceMode`, `ArcCenterMode`), without inheritance states.
+Distance modes are Absolute (default) and Incremental. Arc-center modes are
+Default, Absolute, IncrementalFromP1, IncrementalToP1, IncrementalFromP2 and
+IncrementalToP2. Fresh default mode elements are omitted; explicit edits and
+untouched imported encodings retain their meaning. Duplicate, nested or
+state-bearing own fields reject. Untouched unknown imported enum values and
+empty source references are preserved-only, not supported authoring; unsupported
+mode changes or activation reject. Native inherited machining metadata can be
+retained or explicitly edited without promising that it changes included text.
+
+Ordinary library import, export and clone do **not** read, resolve, copy, execute
+or parse the source program. The path is literal. Installed CamBam resolves a
+relative path against the `.cb` directory. Its Save As preserves that literal
+without rebasing or copying the source, so moving only the document can break
+the dependency. Native generation can change the display name to the source
+filename; framework identity remains independent of that name.
+
+`integrations.cambam.ncfile` owns the explicit dependency workflow:
+
+- `capture(project, source_directory=...)` snapshots serialized document bytes
+  and exact bytes for every NCFile source, including disabled operations. The
+  source directory is explicit and must exist. References resolve within that
+  directory; absolute references are accepted only when their resolved files
+  remain inside it. Missing files, empty references, directory references,
+  drive-relative paths and escapes through traversal or links reject. This
+  containment policy belongs to capture, not the native entity's path vocabulary.
+- The immutable snapshot's `check_current(project, source_directory=...)`
+  rechecks the complete serialized document, reference identities and source
+  bytes. Any document or source change requires a new capture. This deliberately
+  includes presentation edits and disabled operations; it is byte freshness,
+  not a semantic equivalence classifier. Writing a previously captured snapshot
+  intentionally uses its retained bytes even if originals have since changed;
+  call `check_current` explicitly when current-source freshness is required.
+  Capture/write leave the caller unchanged.
+- `write_bundle(directory)` requires a new destination and writes `job.cb`,
+  `sources/<sha256>.nc` assets and `manifest.json`. Only SourceFile references
+  change in the copied document; identical source bytes share one asset. The
+  manifest records original/output document hashes and per-operation identity,
+  reference, asset hash and length. Files remain byte-for-byte unchanged; the
+  complete directory can be moved. Existing destinations are never overwritten.
+  An IO failure can leave an incomplete directory; the manifest is written last.
+- `verify_bundle(directory)` checks the manifest, document, exact assets and the
+  complete NCFile identity/reference set. Malformed paths, changed or missing
+  files and missing/extra dependency records reject. Additional unrelated files
+  are permitted, so native saves and posts can be kept beside the bundle.
+
+These checks establish integrity relative to the supplied manifest and snapshot,
+not authenticated origin or safe motion. A manifest can be intentionally replaced
+along with its content; it is not a signed trust boundary. Capture covers direct
+SourceFile dependencies only, not subprograms or other dependencies mentioned in
+arbitrary NC text. Native generation/posting remains separate. Tested native
+None/Standard/Experimental optimizer modes include the supplied lines unchanged;
+DistanceMode/ArcCenterMode govern interpretation rather than rewriting that text.
+No tool, modal transition, stock, setup, unit-conversion, controller or physical
+cutting guarantee follows from inclusion. The
+[native evidence](REVIEW.md#nc02-external-program-consumer---2026-10-26) records
+the exact observed text/save scope; the [consumer](../demos/native_ncfile_workflow.py)
+demonstrates mixed operation order, editing, rebinding and portable dependencies.
+
 ### Bounded spherical-bowl ball finish and rest
 
 `cam_core.surface3d.SphericalBowlTarget` adds one non-overhanging spherical-cap
@@ -3657,6 +3729,14 @@ Replacement is filesystem-dependent, does not preserve destination inode metadat
 or symlink-following behavior, and is not a power-loss durability guarantee.
 Export still assigns project output precision to primitive instances.
 
+Serialization uses self-closing empty elements, matching native CamBam output.
+Although XML regards an empty start/end pair as equivalent, installed CamBam's
+parameter readers do not: long-empty CustomMOPHeader/Footer fields changed
+native readback and stalled generation in the
+[NC02 observation](REVIEW.md#nc02-external-program-consumer---2026-10-26).
+Nonempty text, including intentional whitespace, is retained. Reexport can change
+XML bytes; any byte-bound evidence must bind the new bytes before reuse.
+
 `save_state()` accepts bare filenames in the current directory and creates nested
 parent directories. Directory creation and pickle-writing errors propagate;
 successful calls return `None`. Pickle writing remains direct/non-atomic. Load only
@@ -3665,7 +3745,7 @@ defaults or old-layout migration are provided.
 
 ### XML MOP identity contract
 
-All four supported MOP encoders write JSON `Tag` fields `user_id` and
+Supported native MOP encoders write JSON `Tag` fields `user_id` and
 `internal_id` (UUID string), independently of display `Name`. The reader restores
 identity before registration and preserves XML operation order within each part.
 MOPs load after other entities: complete valid metadata colliding with an existing

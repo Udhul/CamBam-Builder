@@ -359,8 +359,11 @@ def serialize_cambam_bytes(project: CamBamProject, pretty_print: bool = True) ->
             logger.warning("XML pretty-printing (indentation) requires Python 3.9 or later.")
 
     stream = io.BytesIO()
+    # Native CBValue readers distinguish a self-closing empty value from a
+    # start/end pair. Long-empty CustomMOPHeader/Footer can change native
+    # parameter readback and leave toolpath generation stalled.
     tree.write(
-        stream, encoding="utf-8", xml_declaration=True, short_empty_elements=False
+        stream, encoding="utf-8", xml_declaration=True, short_empty_elements=True
     )
     return stream.getvalue()
 
