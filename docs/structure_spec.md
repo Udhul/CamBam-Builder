@@ -370,10 +370,15 @@ opened files, generated Profile toolpaths and produced real Default posts in
 an isolated 32-bit process. Earlier native consumers provide additional bounded
 save/geometry/post observations. These are probes, not an implemented public
 execution adapter. The working tab host remains in ignored session output and
-uses `FormatterServices.GetUninitializedObject`, a private `MainUI` setter and
-the obfuscated active-view field `CaxM7JpQqL`. That field is evidence for the
-observed assembly only, not a stable API name or a reusable initialization contract.
-The normal UI constructor attempts did not establish a general hosted runtime.
+uses `FormatterServices.GetUninitializedObject`, reflection to set `MainUI` and
+the obfuscated active-view field `CaxM7JpQqL`. The
+[hosting evidence pass](REVIEW.md#nh01-hosting-boundary-evidence---2026-10-26)
+corrected the earlier visibility claim: both `MainUI` and `ActiveView` setters
+are public in the installed build, and direct assignment replaces those two
+reflection accesses in a successful bounded probe. It does **not** replace the
+uninitialized object. The public `CamBamUI(ICADView)` constructor initializes
+WinForms controls and enters license-related code; neither the prior constructor
+attempts nor official documentation establish a desktop-independent lifecycle.
 
 CamBam's [official automation documentation](https://www.cambam.info/doc/plus/Automation.htm)
 and [MOP Automate example](https://www.cambam.info/ref/script.mop-automate)
@@ -402,6 +407,19 @@ representation layer, not a reimplementation of CamBam semantics. Keep native
 names available while allowing idiomatic Python wrappers. Packaging and concrete
 module names are to be settled on the first complete consumer; add no empty
 packages or new runtime dependency to the base library in advance.
+
+Preserve declared types and overloads, ordered collections, entity IDs and
+object identity separately from transport handles. Handles belong to one worker
+generation/document lifetime; reopening or restarting must invalidate old handles.
+Represent `CBValue<T>` state explicitly, including native `Error` and `Undefined`
+as well as Value/Default/Auto, without collapsing stored and resolved/cached values.
+Distinguish native boolean returns, exceptions (including inner causes), messages,
+MOP status and toolpath presence from transport failure/timeout. A successful
+method return or `MachineOpStatus.OK` alone is not a fresh-output guarantee.
+The observed TargetDepth setter leaves existing paths/status intact, so the
+adapter must track edits and explicitly invalidate/regenerate dependent results.
+`Save(path)` also changes native filename/name state: preserve that observable
+behavior while mapping task-local staging paths deliberately.
 
 Headless acceptance requires programmatic completion without visible windows,
 keystrokes, mouse input or manual dialogs. A hidden application host that still
@@ -459,6 +477,18 @@ installation, licensing and unattended deployment requirements for each supporte
 environment without redistributing proprietary assemblies as part of this library.
 
 #### First implementation outcome and stopping condition
+
+The hosting research does not advance NH01 ahead of existing priorities. When
+NH01 implementation is selected, first establish one maintained, version-gated
+subprocess transaction for an explicit untabbed Profile: open/inspect, edit,
+save/reopen to fresh paths, generate/query and Default-post, with revision-bound
+results, structured failures and a parent-enforced timeout. Use the public
+native calls measured in the [execution map](NATIVE_COVERAGE.md#native-execution-coverage-nh01);
+keep tab deserialization as an explicit application-context capability until
+normal initialization is proven or an isolated compatibility shim is deliberately
+supported. Do not start with unrestricted reflection or general UI automation.
+This is the first implementation slice within the following NH01 milestone,
+not a reduction of its full native coverage target.
 
 Promote the probe into tracked host source, build/run instructions and automated
 native smoke tests with explicit version/context detection. Demonstrate a whole

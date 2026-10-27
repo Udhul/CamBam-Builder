@@ -121,6 +121,21 @@ NH01 runtime API**; the following evidence is a starting point for promotion:
 | Native MOP generation and posts | Actual Profile posts in the Triangle consumer; other bounded native consumers in REVIEW | All MOP/toolpath/query/regeneration and post/library/output modes, with explicit success/failure behavior |
 | Application commands and plugins | Official scripting examples demonstrate active-view and asynchronous edit dependencies | Enumerate and verify each operation's noninteractive execution requirements; plugin/version scope stays explicit |
 
+The [2026-10-26 hosting evidence](REVIEW.md#nh01-hosting-boundary-evidence---2026-10-26)
+adds this bounded context map for the installed 1.0 build. These are observations,
+not promoted adapter support; no operation has been verified in a desktop-less
+Windows service/session.
+
+| Representative entry point | Observed/documented context | Status and limit |
+| --- | --- | --- |
+| `CamBamConfig.ReadConfigFile/Initialise`, `CAMStyleManager.Initialise` | Explicit installed config/styles in a 32-bit STA process | Used successfully; installed libraries/config remain dependencies |
+| `CADFile.Open(string)`, `Save(string)` and reopen of untabbed Profile | `MainUI == null`, no application message loop, fresh output filename | Verified bounded document path; tabbed input and existing output paths do not share this result |
+| `MOPProfile.TargetDepth`, `GenerateToolpaths(file, true)`, `HasToolpathSequence`, `ClearToolpaths`, `MachineOpToGCode.GetGCode` | Untabbed Profile works without `MainUI` or message loop; Default post selected | Verified bounded edit/generate/post and regeneration; setter alone leaves stale paths/status; detailed path-data traversal and other MOP types unassessed |
+| Manual Triangle `HoldingTab.ParametricPoint` load plus the same Profile pipeline | Uninitialized `CamBamUI`, public `MainUI`/`ActiveView` setters, document-only `ICADView`, `OpeningFile` flag | Verified no-form/no-pump probe; direct XML load without context throws, `CADFile.Open` times out |
+| `CamBamUI(ICADView)` | Public constructor creates WinForms controls and enters license-related code | Signature/IL inspected only in this pass; no supported standalone initialization established |
+| UI `SetActiveFile`, scripted `OpenFile`/edit-mode commands, plugins | Native control dispatch; official scripts use active view and poll edit completion; plugins receive an already-created UI | Application/UI-context route; unattended pump, cancellation and completion requirements unverified |
+| Invalid primitive reference during generation; saving to an existing path | Both stalled until external timeout in bounded probes | Failure paths are not reliably represented by exceptions/return codes alone; exact blocked mechanism remains unresolved |
+
 When the maintained worker is implemented, extend this owner with its actual
 operation inventory and evidence. Preserve unassessed/unsupported entries as
 gaps toward full native coverage; do not equate reflection visibility, one native

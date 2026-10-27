@@ -60,6 +60,9 @@ the real CamBam API and an optional Python interface for native comparison and
 production-output consumers. Full native feature integration is the target;
 current local probes are not a supported adapter. This adds a track without
 replacing Profile entry/exit, native interchange or independent engine work.
+The scoped [hosting evidence pass](REVIEW.md#nh01-hosting-boundary-evidence---2026-10-26)
+is complete; its [recommended first slice](structure_spec.md#first-implementation-outcome-and-stopping-condition)
+is recorded for when this separate track is selected. Priority order is unchanged.
 
 This is a good fresh-session breakpoint: the complete
 tab outcome, native observations, limits and next scope are persisted. The next

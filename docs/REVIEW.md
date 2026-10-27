@@ -1,5 +1,137 @@
 # Review and acceptance history
 
+## NH01 hosting boundary evidence - 2026-10-26
+
+**Outcome: scoped research complete; no adapter implemented or priority changed.**
+The [NH01 design](structure_spec.md#native-cambam-execution-adapter-nh01) owns
+the interface implications and recommended first slice; the
+[execution map](NATIVE_COVERAGE.md#native-execution-coverage-nh01) owns cumulative
+context coverage. Accepted Square/Triangle behavior and all development tracks
+remain intact. No new manual/user acceptance is required for this evidence pass.
+
+### Initialization: public access is not a complete lifecycle
+
+Observed installed metadata contradicts the earlier description of a private
+`MainUI` setter: `CamBamUI.MainUI` and `ActiveView` both have **public setters**.
+Direct C# assignments compiled and ran successfully in the bounded Triangle
+probe. The private active-view field is therefore unnecessary for that probe.
+The `ActiveView` setter stores the view and invokes an event if subscribed;
+`MainUI` also binds native logger/property-grid references and flushes buffered
+logs. These are not arbitrary field writes or interchangeable transport values.
+
+The installed public constructors are `CamBamUI()` and `CamBamUI(ICADView)`.
+Focused IL inspection of the latter shows a license-related call, style-manager
+initialization, creation of file/system trees, ListBox and property-grid controls,
+a new document, menus/undo state and prompt-history loading. Supplying `ICADView`
+avoids its default `CADView` construction branch, but does not remove the other
+WinForms dependencies. The successful setter probe still uses
+`FormatterServices.GetUninitializedObject`; it does not validate normal lifecycle
+or licensing behavior. No constructor was retried in this pass.
+
+Official sources checked on 2026-10-26 establish **in-application** automation:
+
+- [Automation](https://www.cambam.info/doc/plus/Automation.htm) and the
+  [API introduction](https://www.cambam.info/doc/api/Introduction.htm) describe
+  scripts/plugins; the API reference identifies itself as 0.9.8, revision 1.0,
+  dated 2011-09-28.
+- [Plugin creation](https://www.cambam.info/doc/api/CreatingAPlugin.htm) specifies
+  startup discovery and `InitPlugin(CamBamUI ui)`: CamBam supplies the UI instance.
+  The [CamBamUI reference](https://www.cambam.info/doc/api/CamBamUI.htm) documents
+  MainUI/ActiveView access but supplies no standalone bootstrap procedure.
+- [MOP Automate](https://www.cambam.info/ref/script.mop-automate), dated
+  2012-11-28, uses `MainUI.OpenFile`, the active drawing and polling of
+  `CurrentEditMode` with `app.Sleep(1)` for asynchronous GUI operations.
+  [Script usage](https://www.cambam.info/ref/script) runs through the script editor
+  and directs diagnostics to CamBam's message pane.
+
+**Conclusion:** no documented standalone initialization replacement was found in
+these scoped official sources. Public setters remove the private-field dependency;
+the public constructor is a UI-host candidate, not demonstrated desktop-independent
+initialization. This is not proof that no other vendor-supported route exists.
+
+### Bounded execution and failure observations
+
+Task-local artifacts are in `output/nh01-host-boundary-20261026-6c226f18/`:
+`Inspect.cs`/inspection logs, `Probe-fault.cs`, final `Probe.cs`, `run.py`, logs,
+copied/synthetic inputs, saved documents and posts. Each execution child had an
+external 12-second deadline; metadata inspection had 15 seconds. All stalled
+children were terminated and no probe process remained. No GUI automation was
+used. Positive runs used 32-bit .NET Framework, STA, en-US numeric culture,
+installed configuration plus initialized CAM styles and selected Default post.
+
+| Probe | Observed result |
+| --- | --- |
+| Untabbed synthetic Profile, derived by removing `Tabs` and `HoldingTabs` from the existing Square source | `MainUI == null`, `Application.MessageLoop == false`; open, save to fresh path, reopen, generation and NC emission completed; exit 0 |
+| Unchanged centered Triangle source with public setters, document-only proxy view and scoped `OpeningFile` flag | Same successful pipeline, no message loop or form construction by the harness; exit 0. Nonblank non-comment NC lines exactly match the accepted Triangle post |
+| Triangle source through `CADFile.Open` without MainUI | Stalled at open; killed at 12 seconds |
+| Same source through direct `XmlSerializer.Deserialize` without MainUI | Returned exception chain `InvalidOperationException -> TargetInvocationException -> NullReferenceException`, through `HoldingTab.set_ParametricPoint` and its entity lookup |
+| Set TargetDepth from -3 to -2 after successful generation | Existing `HasToolpathSequence()` remained true and `MachineOpStatus` stayed `OK` in both positive cases; `ClearToolpaths()` changed presence to false but left status `OK`; explicit regeneration restored paths with `OK` |
+| After clearing, replace `PrimitiveIds` with `[999999]` and generate | Both contexts stalled inside generation; killed at 12 seconds. No completion/status result was available |
+| Repeat save to already-existing task-local destination | Both contexts stalled inside `Save(string)`; killed at 12 seconds. Fresh destinations completed. No overwrite prompt was inspected, so a modal-dialog explanation is an inference |
+
+The initial post precedes the depth edit; regeneration was observed separately,
+not compared as a second accepted machining output. Fresh positive runs completed
+together in about 2.4 seconds including the Python launcher. Timeout is evidence
+of noncompletion within the bound, not proof of a permanent hang. Exact causes
+of the blocked native wrapper/error/save paths remain unresolved; do not claim
+they throw clean exceptions or that all native diagnostics reach stdout.
+
+This separates synchronous native document/CAM work from application-state
+requirements: Manual-tab deserialization needs context even before generating
+toolpaths. It does **not** prove desktop independence: all probes ran in the
+existing Windows user session. Native `SetActiveFile` IL uses view controls and
+conditional `Control.Invoke`; official edit-mode commands require completion
+handling. Hidden normal UI hosting, message-pump lifecycle, interactive selection,
+rendering and plugin execution were not tested. A public method's existence alone
+does not establish unattended operation.
+
+### Native state and version evidence
+
+Focused metadata confirms `GenerateToolpaths(CADFile)` and
+`GenerateToolpaths(CADFile, bool)` return void; `Open/Save(string)` return bool;
+`GetGCode()` returns string. `MachineOpStatus` is a public field with
+Unknown/OK/Errors/Warnings values. `CBValue<T>` exposes Value, Cached, State and
+cache state; its enum includes Default/Value/Auto/**Error/Undefined**. These must
+not be collapsed into a numeric value or a single success flag. The installed
+`Save(string)` assigns Filename/Name and raises an event before calling WriteFile;
+`Open(string)` checks Modified, clears the document and invokes ReadFile.
+Consequently failed operations cannot be assumed transactional or state-neutral.
+Native identity, Part/MOP order and primitive references must survive the boundary;
+transport handles and restart/reopen invalidation are adapter responsibilities.
+
+Assembly versions are CAD **1.0.7364.41819**, Geom **1.0.7364.41817** and
+application **1.0.7364.41821** (the established installation baseline). Observed
+SHA-256 values:
+
+| Input/runtime | SHA-256 |
+| --- | --- |
+| CamBam.CAD.dll | `a9a6fc32dfdd439232455c73b2e92163ebb3acc852b198d24a3d6530baa77438` |
+| CamBam.Geom.dll | `98bfc5a28e7f4a96a332ff1879da60317bccb1dd032844ea529dc6d5a47ae92e` |
+| CamBam.exe | `c032a1df12e12f1d2672b678ed71d2c287155f9e57548c4bf16c49fcd7dca41b` |
+| Current CamBam1.0.config | `2e743bee1c751eb4e80c2f131e0459646227b3688d04c22a48f9d577c9d378a5` |
+| Untabbed synthetic source | `66cb88d3c8109f41dfa0544421b299d8d87bc1a21e8aa2f806079f991b04ca57` |
+| Public-setter Triangle post | `ba5fa9d8fee33c07bbc9e727770b656f5a9a080eb8354ff4bdb1a58b67a7fa03` |
+
+The Triangle input is the previously recorded centered source
+`536a206a0a270cefe5b77ed23a21de012442b9ad3d853c12375688942b0a6137`.
+Default-post hash remains `adc3034633f0f6ad6ddc4c9eabc63844cb59173be8ee780ac47e198a7145c263`.
+Current configuration differs from the earlier Triangle session; it was not
+reset to that historical configuration. Before/after hashes were identical for
+the two installed `.config` files, Default post, original host source and original
+Triangle source/post. SaveSettingsOnExit and ShowLicenseForm were disabled only
+in process memory. No installed settings or existing input/output files were
+deliberately modified; all generated files stayed in this pass's ignored directory.
+
+**Remaining questions/reopening criteria:** supported normal constructor/license
+initialization outside the application; desktop-less/service deployment; complete
+diagnostic capture and blocked-call cause; detailed toolpath object access;
+other MOPs, import/export handlers, plugins and asynchronous UI operations.
+Reopen only for the selected first implementation slice, another native build or
+contradictory evidence. No general API enumeration or full adapter work follows
+from this research. Documentation diff/link checks complete this pass; existing
+behavior tests are unaffected and were not rerun. A fresh session can resume the
+unchanged Profile entry/exit priority using the persisted owners.
+
 ## Native Triangle holding-tab consumer - 2026-10-26
 
 **Outcome: accepted by engineering.** Fresh centered, moved and five-tab Manual Triangle cutouts, paired

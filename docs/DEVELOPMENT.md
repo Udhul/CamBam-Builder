@@ -2372,6 +2372,27 @@ invokes the unsuccessful PowerShell UI-constructor attempt; it is not the launch
 for the successful compiled document-only host. Do not publish that launcher or
 present the local executable as a supported general automation entry point.
 
+The [NH01 hosting evidence pass](REVIEW.md#nh01-hosting-boundary-evidence---2026-10-26)
+contains a public-setter correction, measured context/failure boundaries and
+version hashes. Its disposable sources/logs are in
+`output/nh01-host-boundary-20261026-6c226f18/`; they are research artifacts,
+not an installed launcher. The probes compiled with the installed
+`C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe`, `/platform:x86`,
+referencing installed `CamBam.CAD.dll`/`CamBam.Geom.dll` and framework assemblies.
+Execution used STA and en-US numeric culture. Each execution child had an
+external 12-second deadline and was killed on timeout; metadata-only inspection
+had a 15-second deadline. Run repository Python helpers with
+`.\.venv\Scripts\python.exe` from the repository root.
+
+Future bounded host checks must use fresh task-local save destinations for every
+run: this pass stalled inside `Save(string)` when its destination already existed.
+Capture native return values, status, toolpath presence and exception chains;
+retain timeout as a separate outcome. Explicitly clear/regenerate after edits.
+Keep before/after hashes of input/config/post files, disable configuration saving
+in memory, and do not infer that `ShowLicenseForm=false` suppresses other dialogs.
+No normal UI-constructor retry, GUI automation or service deployment is needed
+to reproduce the established no-UI Profile slice.
+
 The first NH01 implementation must supply tracked host/build/run instructions,
 native installation/context detection, a complete callable consumer and native
 integration checks. Native-enabled tests must report unavailable installations
